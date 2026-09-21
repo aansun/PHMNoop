@@ -8,6 +8,7 @@ enum AIProvider: String, CaseIterable, Identifiable {
     case anthropic
     case gemini
     case custom
+    case appleIntelligence   // === PHM OVERLAY (PHMNOOP): on-device Apple Intelligence ===
 
     var id: String { rawValue }
 
@@ -17,6 +18,7 @@ enum AIProvider: String, CaseIterable, Identifiable {
         case .anthropic: return "Anthropic"
         case .gemini:    return "Google Gemini"
         case .custom:    return "Custom (OpenAI-compatible)"
+        case .appleIntelligence: return "Apple Intelligence"
         }
     }
 
@@ -26,6 +28,7 @@ enum AIProvider: String, CaseIterable, Identifiable {
         case .anthropic: return "claude-sonnet-4-6"
         case .gemini:    return "gemini-flash-latest"   // stable alias → current Flash, no version churn (#400)
         case .custom:    return ""   // the user picks the model their server serves
+        case .appleIntelligence: return AppleIntelligenceClient.modelId
         }
     }
 
@@ -76,6 +79,8 @@ enum AIProvider: String, CaseIterable, Identifiable {
             ]
         case .custom:
             return []   // populated from the server's /models (refreshModels) or typed in
+        case .appleIntelligence:
+            return [AppleIntelligenceClient.modelId]   // one on-device system model
         }
     }
 
@@ -85,6 +90,7 @@ enum AIProvider: String, CaseIterable, Identifiable {
         case .anthropic: return URL(string: "https://api.anthropic.com/v1/messages")!
         case .gemini:    return URL(string: "https://generativelanguage.googleapis.com/v1beta/models")!
         case .custom:    return AIProvider.customURL(path: "/chat/completions")
+        case .appleIntelligence: return URL(string: "about:blank")!   // on-device: no network endpoint
         }
     }
 
@@ -94,6 +100,7 @@ enum AIProvider: String, CaseIterable, Identifiable {
         case .anthropic: return URL(string: "https://api.anthropic.com/v1/models")!
         case .gemini:    return URL(string: "https://generativelanguage.googleapis.com/v1beta/models")!
         case .custom:    return AIProvider.customURL(path: "/models")
+        case .appleIntelligence: return URL(string: "about:blank")!   // on-device: no network endpoint
         }
     }
 
@@ -103,6 +110,7 @@ enum AIProvider: String, CaseIterable, Identifiable {
         case .anthropic: return AnthropicClient()
         case .gemini:    return GeminiClient()
         case .custom:    return CustomClient()
+        case .appleIntelligence: return AppleIntelligenceClient()
         }
     }
 

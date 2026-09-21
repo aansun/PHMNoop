@@ -410,11 +410,26 @@ final class AICoachEngine: ObservableObject {
     /// True once the coach can actually send: a stored key for the cloud providers, or, for the
     /// Custom (local) provider, a committed base URL (a key is optional there, as local servers
     /// usually need none). Gates the setup card vs. the live chat.
-    var isConfigured: Bool { provider == .custom ? customConnected : hasKey }
+    var isConfigured: Bool {
+        switch provider {
+        case .custom: return customConnected
+        // === PHM OVERLAY (PHMNOOP) === on-device Apple Intelligence needs no key; it's "configured"
+        // whenever the device can actually run it. When unavailable we stay on the setup card so the
+        // reason (`appleIntelligenceUnavailableReason`) is shown instead of a dead chat.
+        case .appleIntelligence: return AppleIntelligenceClient.isAvailable
+        default: return hasKey
+        }
+    }
+
+    /// === PHM OVERLAY (PHMNOOP) === nil when on-device AI can run, else a human-readable reason it can't.
+    var appleIntelligenceUnavailableReason: String? { AppleIntelligenceClient.unavailableReason }
 
     /// The key to send with a request: the stored key, or an empty string for the keyless Custom
     /// provider. `nil` means "not configured", the caller surfaces `.noKey`.
     private var resolvedKey: String? {
+        // === PHM OVERLAY (PHMNOOP) === on-device Apple Intelligence takes no key; "" = configured,
+        // keyless (same sentinel the Custom local provider uses), so the ask flow never surfaces .noKey.
+        if provider == .appleIntelligence { return "" }
         if let k = AIKeyStore.read() {
             // Only send the stored key to the provider it was SAVED for, never Bearer one provider's
             // key (e.g. a cloud OpenAI/Anthropic secret) to another provider's endpoint, above all the
