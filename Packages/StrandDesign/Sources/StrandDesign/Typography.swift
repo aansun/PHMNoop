@@ -5,122 +5,170 @@ import UIKit
 import AppKit
 #endif
 
+// MARK: - Typography preset (§ PHM: WHOOP typography system)
+//
+// A selectable typography personality applied app-wide through `StrandFont`. Because every view reads
+// its font from `StrandFont.*`, switching the preset re-skins the whole app with no per-view change.
+//
+// - `.standard` — NOOP's SF Rounded house style (the original).
+// - `.whoop`    — WHOOP-inspired (see WHOOP_Typography_Development_Guide.md): geometric SF Pro text,
+//   heavier body weights, tracked ALL-CAPS labels, and distinct tabular numerals. Uses SYSTEM fonts
+//   (SF Pro / SF Pro's tabular digits), NOT WHOOP's commercial Proxima Nova / DINPro — the guide flags
+//   those as licensed and the repo bars shipping WHOOP font binaries. The open-source Inter / Inter
+//   Tight fallbacks the guide recommends can be bundled later; this preset captures the CHARACTER with
+//   zero bundled binaries and no licensing risk.
+public enum TypographyPreset: String, CaseIterable, Sendable, Identifiable {
+    case standard
+    case whoop
+
+    public var id: String { rawValue }
+    public static let storageKey = "typography.preset"
+
+    public var displayName: String {
+        switch self {
+        case .standard: return "Default"
+        case .whoop:    return "WHOOP"
+        }
+    }
+
+    /// The active preset, read from UserDefaults (defaults to `.standard`). nonisolated so `StrandFont`
+    /// can read it from anywhere; UserDefaults keeps the value in memory so this is cheap per access.
+    public static var active: TypographyPreset {
+        TypographyPreset(rawValue: UserDefaults.standard.string(forKey: storageKey) ?? "") ?? .standard
+    }
+}
+
 // MARK: - Strand Typography (§9.2)
 //
-// SF Rounded follows the supplied reference's friendly Apple-native geometry. Tabular digits keep live
-// metrics stable, while named text styles retain Dynamic Type scaling. SF Mono remains reserved for logs.
-//
-// All numeric styles use `.monospacedDigit()` so live values don't reflow.
+// SF Rounded (`.standard`) follows the reference's friendly Apple-native geometry; the `.whoop` preset
+// swaps to SF Pro with heavier text weights for a sharper, metrics-forward feel. Tabular digits keep
+// live metrics stable in both, while named text styles retain Dynamic Type scaling. SF Mono stays for logs.
 
 public enum StrandFont {
 
-    // MARK: Family
+    // MARK: Preset-driven family
 
-    private static func roundedSystem(_ size: CGFloat, weight: Font.Weight) -> Font {
-        .system(size: size, weight: weight, design: .rounded)
+    /// Text/number design for the active preset: rounded for `.standard`, default (SF Pro) for `.whoop`.
+    private static var design: Font.Design {
+        TypographyPreset.active == .whoop ? .default : .rounded
+    }
+
+    /// Body/caption weight — the `.whoop` preset leans on Medium (its "heavy use of Semibold/Bold"
+    /// character) where `.standard` uses Regular.
+    private static var textWeight: Font.Weight {
+        TypographyPreset.active == .whoop ? .medium : .regular
+    }
+
+    private static func sysFont(_ size: CGFloat, weight: Font.Weight) -> Font {
+        .system(size: size, weight: weight, design: design)
     }
 
     // MARK: Scale (§9.2)
 
-    /// Display 64–80 / Bold — the gauge score number. Helvetica Neue 700 with tight
-    /// tracking (≈ -0.04em), tabular digits so a changing value never reflows.
+    /// Display 64–80 / Bold — the gauge score number. Tight tracking (≈ -0.04em), tabular digits so a
+    /// changing value never reflows.
     public static func display(_ size: CGFloat = 72) -> Font {
-        roundedSystem(size, weight: .bold).monospacedDigit()
+        sysFont(size, weight: .bold).monospacedDigit()
     }
 
-    /// The tight tracking for big display numbers (≈ -0.04em). Apply alongside
-    /// `display(_:)` at the use site, e.g. `.tracking(StrandFont.displayTracking(72))`.
+    /// The tight tracking for big display numbers (≈ -0.04em). Apply alongside `display(_:)` at the use
+    /// site, e.g. `.tracking(StrandFont.displayTracking(72))`.
     public static func displayTracking(_ size: CGFloat = 72) -> CGFloat {
         -size * 0.04
     }
 
-    /// A Helvetica-Neue numeric style at an arbitrary size/weight — the house
-    /// numeral. Tabular so live values align. Use anywhere a score/number is shown.
+    /// A numeric style at an arbitrary size/weight — the house numeral. Tabular so live values align.
     public static func rounded(_ size: CGFloat, weight: Font.Weight = .bold) -> Font {
-        roundedSystem(size, weight: weight).monospacedDigit()
+        sysFont(size, weight: weight).monospacedDigit()
     }
 
     /// Title1 28 / Bold. Scales with Dynamic Type.
-    public static let title1 = Font.system(.title, design: .rounded, weight: .bold)
+    public static var title1: Font { .system(.title, design: design, weight: .bold) }
 
     /// Title2 22 / Semibold. Scales with Dynamic Type.
-    public static let title2 = Font.system(.title2, design: .rounded, weight: .semibold)
+    public static var title2: Font { .system(.title2, design: design, weight: .semibold) }
 
     /// Headline 17 / Semibold. Scales with Dynamic Type.
-    public static let headline = Font.system(.headline, design: .rounded, weight: .semibold)
+    public static var headline: Font { .system(.headline, design: design, weight: .semibold) }
 
-    /// Body 15 / Regular. Scales with Dynamic Type.
-    public static let body = Font.system(.body, design: .rounded, weight: .regular)
+    /// Body 15. Regular (`.standard`) / Medium (`.whoop`). Scales with Dynamic Type.
+    public static var body: Font { .system(.body, design: design, weight: textWeight) }
 
     /// Subhead 13. Scales with Dynamic Type.
-    public static let subhead = Font.system(.subheadline, design: .rounded, weight: .regular)
+    public static var subhead: Font { .system(.subheadline, design: design, weight: textWeight) }
 
     /// Caption 12. Scales with Dynamic Type.
-    public static let caption = Font.system(.caption, design: .rounded, weight: .regular)
+    public static var caption: Font { .system(.caption, design: design, weight: textWeight) }
 
     /// Footnote 11. Scales with Dynamic Type.
-    public static let footnote = Font.system(.footnote, design: .rounded, weight: .regular)
+    public static var footnote: Font { .system(.footnote, design: design, weight: textWeight) }
 
-    /// Overline 11 / Bold, +1.4 tracking (apply `.tracking(1.4)` at use site;
-    /// `overlineText(_:)` does it for you). Sparing ALL-CAPS labels. Scales with Dynamic Type.
-    ///
-    /// Also the face for compact status copy in constrained chrome (the Today header's sync capsule),
-    /// used there WITHOUT the tracking — that is sentence case, not an overline, and the letter-spacing
-    /// is what makes an overline read as one.
-    public static let overline = Font.system(.caption2, design: .rounded, weight: .semibold)
+    /// Overline 11 / Semibold, tracked ALL-CAPS label (apply `.tracking(overlineTracking)`;
+    /// `overlineText(_:)` does it for you). Scales with Dynamic Type.
+    public static var overline: Font { .system(.caption2, design: design, weight: .semibold) }
 
-    /// `overline` at a custom point size — same Helvetica face, weight and Dynamic-Type scaling
-    /// (relativeTo `.caption2`), just smaller. Passing 11 returns exactly `.overline`. Lets a caller
-    /// shrink an ALL-CAPS label to fit a small container without losing accessibility text-scaling.
+    /// `overline` at a custom point size — same face, weight and Dynamic-Type scaling (relativeTo
+    /// `.caption2`), just smaller. Passing 11 returns exactly `.overline`.
     public static func overlineScaled(_ size: CGFloat) -> Font {
+        let uiDesign: SystemFontDesign = (TypographyPreset.active == .whoop) ? .default : .rounded
         #if canImport(UIKit)
         let base = UIFont.systemFont(ofSize: size, weight: .semibold)
-        let descriptor = base.fontDescriptor.withDesign(.rounded) ?? base.fontDescriptor
-        let rounded = UIFont(descriptor: descriptor, size: size)
-        return Font(UIFontMetrics(forTextStyle: .caption2).scaledFont(for: rounded))
+        let descriptor = base.fontDescriptor.withDesign(uiDesign) ?? base.fontDescriptor
+        let styled = UIFont(descriptor: descriptor, size: size)
+        return Font(UIFontMetrics(forTextStyle: .caption2).scaledFont(for: styled))
         #elseif canImport(AppKit)
         let base = NSFont.systemFont(ofSize: size, weight: .semibold)
-        guard let descriptor = base.fontDescriptor.withDesign(.rounded),
-              let rounded = NSFont(descriptor: descriptor, size: size) else {
+        guard let descriptor = base.fontDescriptor.withDesign(uiDesign),
+              let styled = NSFont(descriptor: descriptor, size: size) else {
             return Font(base)
         }
-        return Font(rounded)
+        return Font(styled)
         #else
-        return roundedSystem(size, weight: .semibold)
+        return sysFont(size, weight: .semibold)
         #endif
     }
 
-    /// Mono 13 (SF Mono) — raw / log views. Tabular by nature.
+    /// Mono 13 (SF Mono) — raw / log views. Tabular by nature. Not preset-driven.
     public static let mono = Font.system(size: 13, weight: .regular, design: .monospaced)
 
     // MARK: Numeric variants (tabular digits)
 
-    /// A numeric style at an arbitrary size/weight, for live values — Helvetica
-    /// Neue, tabular digits. This is the tile/value numeral.
+    /// A numeric style at an arbitrary size/weight, for live values — tabular digits. The tile/value numeral.
     public static func number(_ size: CGFloat, weight: Font.Weight = .semibold) -> Font {
-        roundedSystem(size, weight: weight).monospacedDigit()
+        sysFont(size, weight: weight).monospacedDigit()
     }
 
-    /// Helvetica-Neue body number — for inline live values that should align. Scales with Dynamic
-    /// Type alongside its sibling `body`/`caption` labels so a value and its label stay matched.
-    public static let bodyNumber = Font.system(.body, design: .rounded, weight: .medium).monospacedDigit()
+    /// Body number — for inline live values that should align. Scales with Dynamic Type alongside its
+    /// sibling `body`/`caption` labels so a value and its label stay matched.
+    public static var bodyNumber: Font { .system(.body, design: design, weight: .medium).monospacedDigit() }
 
-    /// Helvetica-Neue caption number — for small live values (sparklines, chips). Scales with Dynamic Type.
-    public static let captionNumber = Font.system(.caption, design: .rounded, weight: .medium).monospacedDigit()
+    /// Caption number — for small live values (sparklines, chips). Scales with Dynamic Type.
+    public static var captionNumber: Font { .system(.caption, design: design, weight: .medium).monospacedDigit() }
 
     /// Mono at an arbitrary size.
     public static func mono(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
         .system(size: size, weight: weight, design: .monospaced)
     }
 
-    /// The recommended tracking for overline text (wide ALL-CAPS labels, ≈ 0.13em).
-    public static let overlineTracking: CGFloat = 0.45
+    /// The recommended tracking for overline text (wide ALL-CAPS labels). The `.whoop` preset widens it
+    /// toward the guide's +0.06em label tracking; `.standard` keeps the original.
+    public static var overlineTracking: CGFloat {
+        TypographyPreset.active == .whoop ? 0.6 : 0.45
+    }
 }
+
+#if canImport(UIKit)
+private typealias SystemFontDesign = UIFontDescriptor.SystemDesign
+#elseif canImport(AppKit)
+private typealias SystemFontDesign = NSFontDescriptor.SystemDesign
+#else
+private enum SystemFontDesign { case rounded, `default` }
+#endif
 
 // MARK: - Text helpers
 
 public extension Text {
-    /// Style as an overline label: ALL-CAPS, bold, +1.4 tracking, tertiary text.
+    /// Style as an overline label: ALL-CAPS, bold, tracked, secondary text.
     func strandOverline() -> some View {
         self.font(StrandFont.overline)
             .tracking(StrandFont.overlineTracking)
@@ -144,7 +192,7 @@ public extension View {
             Text("Title 1 / Bold 28").font(StrandFont.title1).foregroundStyle(StrandPalette.textPrimary)
             Text("Title 2 / Semibold 22").font(StrandFont.title2).foregroundStyle(StrandPalette.textPrimary)
             Text("Headline / Semibold 17").font(StrandFont.headline).foregroundStyle(StrandPalette.textPrimary)
-            Text("Body / Regular 15 — the thread of you, read in full.")
+            Text("Body / 15 — the thread of you, read in full.")
                 .font(StrandFont.body).foregroundStyle(StrandPalette.textPrimary)
             Text("Subhead 13").font(StrandFont.subhead).foregroundStyle(StrandPalette.textSecondary)
             Text("Caption 12").font(StrandFont.caption).foregroundStyle(StrandPalette.textSecondary)
