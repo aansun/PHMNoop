@@ -261,33 +261,53 @@ struct CoachView: View {
                 // Model
                 modelSelector
 
-                // Key
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(coach.provider == .custom ? "API key (optional)" : "API key").strandOverline()
-                    SecureField(coach.provider == .custom
-                                ? "Only if your server requires one"
-                                : "Paste your \(coach.provider.displayName) API key", text: $keyDraft)
-                        .textFieldStyle(.plain)
-                        .font(StrandFont.body)
-                        .foregroundStyle(StrandPalette.textPrimary)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 9)
-                        .background(StrandPalette.surfaceInset, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .strokeBorder(StrandPalette.hairline, lineWidth: 1))
-                        .onSubmit { coach.provider == .custom ? connectCustom() : saveKey() }
-                        .accessibilityLabel("API key")
-                }
-
-                HStack {
-                    if coach.provider == .custom {
-                        NoopButton("Connect", systemImage: "link", kind: .primary, action: connectCustom)
-                            .disabled(coach.customBaseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                    } else {
-                        NoopButton("Save key", systemImage: "key.fill", kind: .primary, action: saveKey)
-                            .disabled(keyDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                // === PHM OVERLAY (PHMNOOP) === Apple Intelligence is on-device and keyless: no API-key
+                // field, no Save/Connect. When it's available `isConfigured` is already true so this card
+                // never shows; it only appears when the device can't run it, so we explain why here.
+                if coach.provider == .appleIntelligence {
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "apple.intelligence").foregroundStyle(StrandPalette.accent)
+                                .accessibilityHidden(true)
+                            Text(coach.appleIntelligenceUnavailableReason ?? "Apple Intelligence is ready. Ask away — nothing leaves \(Platform.deviceNounPhrase).")
+                                .font(StrandFont.subhead)
+                                .foregroundStyle(StrandPalette.textSecondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Text("On-device AI: no API key, no account, no network. Requires an Apple-Intelligence-capable device.")
+                            .font(StrandFont.footnote)
+                            .foregroundStyle(StrandPalette.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
-                    Spacer()
+                } else {
+                    // Key
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(coach.provider == .custom ? "API key (optional)" : "API key").strandOverline()
+                        SecureField(coach.provider == .custom
+                                    ? "Only if your server requires one"
+                                    : "Paste your \(coach.provider.displayName) API key", text: $keyDraft)
+                            .textFieldStyle(.plain)
+                            .font(StrandFont.body)
+                            .foregroundStyle(StrandPalette.textPrimary)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 9)
+                            .background(StrandPalette.surfaceInset, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .strokeBorder(StrandPalette.hairline, lineWidth: 1))
+                            .onSubmit { coach.provider == .custom ? connectCustom() : saveKey() }
+                            .accessibilityLabel("API key")
+                    }
+
+                    HStack {
+                        if coach.provider == .custom {
+                            NoopButton("Connect", systemImage: "link", kind: .primary, action: connectCustom)
+                                .disabled(coach.customBaseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        } else {
+                            NoopButton("Save key", systemImage: "key.fill", kind: .primary, action: saveKey)
+                                .disabled(keyDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                        }
+                        Spacer()
+                    }
                 }
 
                 // Whatever the last attempt from THIS card ran into. The setup card had no error line
