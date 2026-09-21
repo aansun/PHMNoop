@@ -298,8 +298,10 @@ final class AICoachEngine: ObservableObject {
     var systemPrompt: String {
         let stored = UserDefaults.standard.string(forKey: Self.systemPromptKey)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        if let stored, !stored.isEmpty { return stored }
-        return Self.defaultSystemPrompt
+        let base = (stored?.isEmpty == false) ? stored! : Self.defaultSystemPrompt
+        // === PHM OVERLAY (PHMNOOP) === fold the user's ACTIVE Coach memories into every request so
+        // saved goals/events/preferences steer replies. Empty when none exist (prompt unchanged).
+        return base + CoachMemoryStore.activePromptBlock()
     }
 
     /// The user's stored prompt override, or the default when nothing custom is set. The UI binds its
