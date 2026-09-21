@@ -782,6 +782,10 @@ final class AICoachEngine: ObservableObject {
 
         errorText = nil
         appendMessage(ChatMessage(role: .user, text: trimmed))
+        // === PHM OVERLAY (PHMNOOP) === capture durable facts (goals/events/preferences) from the
+        // user's message into Memory, alongside manual entry. Runs here — the provider-agnostic egress
+        // — so it applies to EVERY model. Deduped; user can delete any in Coach settings › Memory.
+        CoachMemoryStore.autoCapture(from: trimmed)
         sending = true
         // K2: persist once the turn is fully settled (success, mid-stream error, or empty-stream
         // removal) — not per streamed chunk, so a long reply doesn't hammer the store.

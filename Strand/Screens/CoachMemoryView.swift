@@ -132,8 +132,15 @@ private struct CoachMemoryCard: View {
                     StatusPill(active: memory.isActive)
                     CategoryTag(memory.category)
                 }
-                Text("Start date: \(memory.createdAt, format: .dateTime.month(.abbreviated).day().year())")
-                    .font(StrandFont.footnote).foregroundStyle(StrandPalette.textTertiary)
+                HStack(spacing: 6) {
+                    Text("Start date: \(memory.createdAt, format: .dateTime.month(.abbreviated).day().year())")
+                    if memory.fromConversation {
+                        Text("·").opacity(0.6)
+                        Label("from chat", systemImage: "text.bubble")
+                            .labelStyle(.titleAndIcon)
+                    }
+                }
+                .font(StrandFont.footnote).foregroundStyle(StrandPalette.textTertiary)
             }
         }
     }

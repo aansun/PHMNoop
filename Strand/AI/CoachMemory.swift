@@ -33,6 +33,13 @@ enum CoachMemoryCategory: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+/// Where a memory came from. Optional in the model so JSON saved before this field decodes fine
+/// (a missing value reads as manual).
+enum CoachMemorySource: String, Codable {
+    case manual
+    case conversation
+}
+
 struct CoachMemory: Identifiable, Codable, Equatable {
     var id: UUID = UUID()
     var title: String
@@ -40,6 +47,70 @@ struct CoachMemory: Identifiable, Codable, Equatable {
     var category: CoachMemoryCategory
     var isActive: Bool = true
     var createdAt: Date = Date()
+    var source: CoachMemorySource? = .manual
+
+    var fromConversation: Bool { source == .conversation }
+}
+
+// MARK: - Auto-capture from conversation
+
+/// Pure, on-device extractor: turns a user's Coach message into at most ONE candidate memory when it
+/// clearly states a durable preference / goal / event / remember-directive. Conservative by design —
+/// most chat is not memory-worthy, and everything captured is user-deletable. No network, no LLM.
+enum CoachMemoryExtractor {
+    static func extract(from message: String) -> (title: String, detail: String, category: CoachMemoryCategory)? {
+        let text = message.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard text.count >= 6, text.count <= 280 else { return nil }
+        let lower = text.lowercased()
+
+        // 1) Explicit "remember this" directive (highest signal) — strip the cue for a cleaner title.
+        let rememberCues = ["ingat kalau", "ingat bahwa", "ingatlah", "tolong ingat", "catat kalau",
+                            "catat bahwa", "simpan bahwa", "remember that", "please remember", "note that"]
+        for cue in rememberCues where lower.contains(cue) {
+            let captured = after(cue, in: text) ?? text
+            return (summaryTitle(captured), captured, .note)
+        }
+
+        // 2) Coaching preferences.
+        let prefCues = ["lebih suka", "lebih memilih", "aku suka", "saya suka", "prefer", "panggil aku",
+                        "panggil saya", "gunakan bahasa", "pakai bahasa", "tolong selalu", "selalu gunakan",
+                        "jangan pernah", "tolong jangan"]
+        if prefCues.contains(where: { lower.contains($0) }) {
+            return (summaryTitle(text), text, .preference)
+        }
+
+        // 3) Goals.
+        let goalCues = ["target", "aku mau", "saya mau", "aku ingin", "saya ingin", "pengen", "pengin",
+                        "goal", "mau capai", "ingin capai", "aim for", "minimum pace", "mau lari",
+                        "turun berat", "naik berat"]
+        if goalCues.contains(where: { lower.contains($0) }) {
+            return (summaryTitle(text), text, .goal)
+        }
+
+        // 4) Events (a date/time cue).
+        let eventCues = ["besok", "lusa", "minggu depan", "tanggal", "pukul", " jam ", "senin", "selasa",
+                         "rabu", "kamis", "jumat", "sabtu", "januari", "februari", "maret", "april", "mei",
+                         "juni", "juli", "agustus", "september", "oktober", "november", "desember"]
+        if eventCues.contains(where: { lower.contains($0) }) {
+            return (summaryTitle(text), text, .event)
+        }
+        return nil
+    }
+
+    /// First ~8 words (≤ 60 chars) of `text`, trailing punctuation trimmed, first letter capitalised.
+    private static func summaryTitle(_ text: String) -> String {
+        let words = text.split(separator: " ").prefix(8).joined(separator: " ")
+        var t = String(words.prefix(60)).trimmingCharacters(in: CharacterSet(charactersIn: " .,;:!?"))
+        if let first = t.first { t.replaceSubrange(t.startIndex...t.startIndex, with: String(first).uppercased()) }
+        return t.isEmpty ? text : t
+    }
+
+    /// The remainder of `text` after the first occurrence of `cue` (case-insensitive), or nil.
+    private static func after(_ cue: String, in text: String) -> String? {
+        guard let r = text.range(of: cue, options: .caseInsensitive) else { return nil }
+        let rest = text[r.upperBound...].trimmingCharacters(in: CharacterSet(charactersIn: " :,-—"))
+        return rest.isEmpty ? nil : rest
+    }
 }
 
 /// On-device store for Coach memories. Single JSON blob in UserDefaults — no schema migration, and
@@ -105,7 +176,28 @@ final class CoachMemoryStore: ObservableObject {
             let d = m.detail.isEmpty ? "" : " — \(m.detail)"
             return "- [\(m.category.displayName)] \(m.title)\(d)"
         }
-        return "\n\nThe user has saved these coaching memories. Honour them in every reply:\n"
+        return "\n\nBefore anything else, apply these saved memories the user set. Honour them in every reply:\n"
             + lines.joined(separator: "\n")
+    }
+
+    /// Auto-capture a memory from a user's Coach message (called on every send, any provider). Saves at
+    /// most one candidate, skips duplicates (same detail or title, case-insensitive). Off-actor so the
+    /// send flow can call it without hopping. Everything captured is user-deletable in My Memory.
+    nonisolated static func autoCapture(from message: String) {
+        guard let cand = CoachMemoryExtractor.extract(from: message) else { return }
+        var all = loadAll()
+        let normDetail = cand.detail.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        let normTitle = cand.title.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        let dup = all.contains { m in
+            m.detail.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) == normDetail
+                || m.title.lowercased().trimmingCharacters(in: .whitespacesAndNewlines) == normTitle
+        }
+        guard !dup else { return }
+        all.insert(CoachMemory(title: cand.title, detail: cand.detail,
+                               category: cand.category, source: .conversation),
+                   at: 0)
+        if let data = try? JSONEncoder().encode(all) {
+            UserDefaults.standard.set(data, forKey: defaultsKey)
+        }
     }
 }
