@@ -16,6 +16,7 @@ import StrandDesign
 /// an enclosing NavigationStack.
 struct CoachSettingsView: View {
     @EnvironmentObject var coach: AICoachEngine
+    @State private var showMemory = false   // === PHM OVERLAY (PHMNOOP) ===
     @Environment(\.dismiss) private var dismiss
 
     /// Morning-brief settings, read from `CoachBriefScheduler` on init exactly as `CoachView` did
@@ -55,8 +56,11 @@ struct CoachSettingsView: View {
             if coach.dataConsent { onDeviceSignalsBar }
             if coach.dataConsent && coach.provider == .gemini { multimodalChartBar }
             systemPromptBar
+            memoryBar   // === PHM OVERLAY (PHMNOOP) ===
             morningBriefBar
         }
+        // === PHM OVERLAY (PHMNOOP) === My Memory manager (add / toggle / delete saved coach memories).
+        .sheet(isPresented: $showMemory) { CoachMemoryView() }
         // Opening this screen is the moment a stale catalogue is worth refreshing: a key exists here by
         // definition, and the picker above is about to be read. Rate-limited and silent on failure.
         .task { await coach.refreshModelsIfStale() }
@@ -103,6 +107,32 @@ struct CoachSettingsView: View {
                 .accessibilityLabel("Model")
             }
         }
+    }
+
+    /// === PHM OVERLAY (PHMNOOP) === Entry to the My Memory manager: saved goals / events / coaching
+    /// preferences the coach remembers. Tappable card that opens the memory sheet.
+    private var memoryBar: some View {
+        Button { showMemory = true } label: {
+            NoopCard(padding: 14, tint: StrandPalette.chargeColor) {
+                HStack(spacing: 10) {
+                    Image(systemName: "brain.head.profile")
+                        .foregroundStyle(StrandPalette.accent)
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("Memory")
+                            .font(StrandFont.subhead).foregroundStyle(StrandPalette.textPrimary)
+                        Text("What the coach remembers — goals, events, preferences. Add, pause or delete any.")
+                            .font(StrandFont.footnote).foregroundStyle(StrandPalette.textTertiary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer(minLength: 8)
+                    Image(systemName: "chevron.right")
+                        .font(.footnote).foregroundStyle(StrandPalette.textTertiary)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Open memory")
     }
 
     /// Explicit, revocable permission for the coach to read & send the user's data. Off by default.
