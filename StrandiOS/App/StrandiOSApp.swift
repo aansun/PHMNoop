@@ -360,6 +360,9 @@ struct StrandiOSApp: App {
                                 authorized: health.auth == .authorized)
                         }
                     )
+                    // === PHM OVERLAY (PHMNOOP) === pull the latest Apple Health waist reading into
+                    // the profile after each sync (no-op unless authorized & a sample exists). === END ===
+                    await model.profile.phmImportWaistFromHealth()
                     await WidgetSnapshot.publish(from: model)
                     // Push the wrist on the SAME refresh as the Home-screen widget so the watch, the
                     // widget and Today never disagree about which day they describe. Without this the

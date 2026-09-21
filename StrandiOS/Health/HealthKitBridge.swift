@@ -106,6 +106,7 @@ final class HealthKitBridge: ObservableObject {
     private var writeTypes: Set<HKSampleType> {
         var s = Set<HKSampleType>()
         for id in HealthKitBridge.quantityWriteIds + HealthKitBridge.highResQuantityWriteIds
+            + HealthKitBridge.phmStepWriteIds   // === PHM OVERLAY (PHMNOOP): write strap steps ===
             where !HealthKitBridge.writeDenied.contains(id) {
             if let t = HKObjectType.quantityType(forIdentifier: id) { s.insert(t) }
         }
@@ -124,6 +125,11 @@ final class HealthKitBridge: ObservableObject {
         // Body composition — READ-ONLY (#20). Imported under the apple-health source like the file
         // importer already ingests; deliberately NOT in quantityWriteIds (we never write these back).
         .bodyMass, .bodyFatPercentage, .leanBodyMass, .bodyMassIndex,
+        // === PHM OVERLAY (PHMNOOP) === waist circumference, READ-ONLY. Consumed by the app (it fills
+        // `profile.waistCm` for the VO₂max/Fitness Age estimate — see PHMWaistHealthImport), just not
+        // into DayAgg, so it stays out of the daily series. Kept in this consolidated read request so
+        // the user is asked once. === PHM OVERLAY END ===
+        .waistCircumference,
         // Water — READ-ONLY (#949), so drinks logged in a dedicated hydration app (or by a smart bottle)
         // show up without being typed in twice. Lands in the hydration source rather than apple-health,
         // because the hydration screen is what consumes it. Never written back.
@@ -154,6 +160,14 @@ final class HealthKitBridge: ObservableObject {
     private static let highResQuantityWriteIds: [HKQuantityTypeIdentifier] = [
         .heartRate, .activeEnergyBurned, .distanceWalkingRunning, .distanceCycling
     ]
+    // === PHM OVERLAY (PHMNOOP) START ===
+    // Step write-back. Upstream NOOP reads steps from Apple Health but never writes; a strap-only
+    // wearer's NOOP step ESTIMATE therefore never reaches Health. This set adds `.stepCount` to the
+    // share request so `writeSteps` (below) can push NOOP's computed daily steps out. Reads stay safe
+    // from double-counting: every step read already carries `notNoopAuthored`, which excludes
+    // HKSource.default() (this app), so a sample we write is never re-imported as a phone step.
+    private static let phmStepWriteIds: [HKQuantityTypeIdentifier] = [.stepCount]
+    // === PHM OVERLAY (PHMNOOP) END ===
 
     // MARK: - Authorization
 
@@ -803,6 +817,8 @@ final class HealthKitBridge: ObservableObject {
         // gated by a UserDefaults flag, BEFORE the new-key writes so nothing is lost.
         await attempt { try await migrateStrandedHealthRecords(fromTs: fromTs, nowTs: nowTs) }
         await attempt { try await writeVitals(whoopStore: whoopStore, days: days, sessions: sessions) }
+        // === PHM OVERLAY (PHMNOOP): push NOOP's computed daily steps to Apple Health ===
+        await attempt { try await writeSteps(whoopStore: whoopStore, days: days) }
         await attempt { try await writeSleep(sessions: sessions) }
         await attempt { try await writeHeartRate(whoopStore: whoopStore, fromTs: fromTs, nowTs: nowTs) }
         await attempt { try await writeWorkouts(whoopStore: whoopStore, fromTs: fromTs, toTs: nowTs) }
@@ -971,6 +987,60 @@ final class HealthKitBridge: ObservableObject {
         }
         try await self.store.save(candidates.map { $0.sample })
     }
+
+    // === PHM OVERLAY (PHMNOOP) START ===
+    /// Write NOOP's COMPUTED daily step count to Apple Health, so a strap-only wearer's step estimate
+    /// leaves the app. Source precedence matches `writeVitals`: computed (`deviceId + "-noop"`) dailies,
+    /// overridden by any imported (`noopDeviceId`) row — deliberately NOT the `appleDeviceId`
+    /// ("apple-health") rows, which ARE the phone's own steps and would only be echoed back.
+    ///
+    /// Each day becomes ONE cumulative `.stepCount` sample spanning [local midnight, min(now, next
+    /// midnight)) — a real interval, not a fabricated point, so Health attributes it to the correct day.
+    /// Dedup mirrors `writeVitals`: a deterministic `HKMetadataKeyExternalUUID` (`noop:<id>:<day>`) plus
+    /// a delete-then-save scoped to our own `HKSource`, so a re-sync replaces rather than duplicates.
+    /// Reads never re-ingest these — every step read carries `notNoopAuthored`.
+    private func writeSteps(whoopStore: WhoopStore, days: Int) async throws {
+        guard let type = HKQuantityType.quantityType(forIdentifier: .stepCount),
+              store.authorizationStatus(for: type) == .sharingAuthorized else { return }
+        let cal = Calendar.current
+        let now = Date()
+        let to = HealthKitBridge.dayString(now)
+        guard let fromDate = cal.date(byAdding: .day, value: -days, to: now) else { return }
+        let from = HealthKitBridge.dayString(fromDate)
+
+        let computed = (try? await whoopStore.dailyMetrics(deviceId: computedDeviceId, from: from, to: to)) ?? []
+        let imported = (try? await whoopStore.dailyMetrics(deviceId: noopDeviceId, from: from, to: to)) ?? []
+        var stepsByDay: [String: Int] = [:]
+        for r in computed { if let s = r.steps { stepsByDay[r.day] = s } }
+        for r in imported { if let s = r.steps { stepsByDay[r.day] = s } }   // imported overrides computed
+
+        var samples: [HKQuantitySample] = []
+        var keys: [String] = []
+        for (day, steps) in stepsByDay where steps > 0 {
+            guard let date = HealthKitBridge.date(from: day) else { continue }
+            let dayStart = cal.startOfDay(for: date)
+            let dayEnd = cal.date(byAdding: .day, value: 1, to: dayStart) ?? dayStart
+            // Never claim steps in the future: today's still-forming total ends at `now`.
+            let end = min(dayEnd, now)
+            guard end > dayStart else { continue }
+            let key = HealthWriteback.appleHealthVitalKey(metricId: HKQuantityTypeIdentifier.stepCount.rawValue, day: day)
+            keys.append(key)
+            samples.append(HKQuantitySample(
+                type: type,
+                quantity: .init(unit: .count(), doubleValue: Double(steps)),
+                start: dayStart, end: end,
+                metadata: [HKMetadataKeyExternalUUID: key]))
+        }
+        guard !samples.isEmpty else { return }
+
+        let bySource = HKQuery.predicateForObjects(from: HKSource.default())
+        let byKey = HKQuery.predicateForObjects(withMetadataKey: HKMetadataKeyExternalUUID,
+                                                allowedValues: Array(Set(keys)))
+        let pred = NSCompoundPredicate(andPredicateWithSubpredicates: [bySource, byKey])
+        _ = try? await self.store.deleteObjects(of: type, predicate: pred)
+        try await self.store.save(samples)
+    }
+    // === PHM OVERLAY (PHMNOOP) END ===
 
     /// Write each BRIDGED NIGHT (#364) as one `.inBed` sample plus one category sample per stage
     /// segment (`deep → .asleepDeep`, `rem → .asleepREM`, `light → .asleepCore`, `wake → .awake`) —
