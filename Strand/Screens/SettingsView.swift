@@ -208,6 +208,9 @@ struct SettingsView: View {
     @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
     // Chart colour style: Titanium (brand) or Classic (throwback red→green). Re-colours gauges + charts.
     @AppStorage(ChartStyle.storageKey) private var chartStyleRaw = ChartStyle.titanium.rawValue
+    // === PHM OVERLAY (PHMNOOP) === Typography preset: Default (SF Rounded) or WHOOP (SF Pro, heavier,
+    // tracked labels — see WHOOP_Typography_Development_Guide.md). Read app-wide by StrandFont.
+    @AppStorage(TypographyPreset.storageKey) private var typographyPresetRaw = TypographyPreset.standard.rawValue
     // Sleep tab stage-CHART shape: Classic per-stage rows, or the WHOOP-style stepped hypnogram Filled/Ribbon.
     @AppStorage(SleepChartStyle.storageKey) private var sleepChartStyleRaw = SleepChartStyle.classic.rawValue
     // Chrome accent colour (mint / WHOOP blue / custom). Chrome only — never the data colour worlds.
@@ -1340,6 +1343,20 @@ struct SettingsView: View {
                     .pickerStyle(.menu)
                     .tint(StrandPalette.accent)
                     .accessibilityLabel("Trend chart style")
+                }
+                // === PHM OVERLAY (PHMNOOP) === Typography preset (cross-platform). Applies app-wide via
+                // StrandFont; existing screens pick it up as they re-render, fully on the next launch.
+                rowDivider
+                FormRow(label: "Typography") {
+                    Picker("Typography", selection: $typographyPresetRaw) {
+                        ForEach(TypographyPreset.allCases) { p in
+                            Text(p.displayName).tag(p.rawValue)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .tint(StrandPalette.accent)
+                    .accessibilityLabel("Typography")
                 }
                 #if os(iOS)
                 rowDivider   // #79: separator before App icon (inside #if so macOS keeps a single divider)
