@@ -1,6 +1,7 @@
 #if os(iOS)
 import Foundation
 import ActivityKit
+import OSLog
 
 /// Starts, updates, and ends the live-HR Live Activity. The activity appears on the Lock Screen and
 /// in the Dynamic Island while the strap is bonded and streaming heart rate.
@@ -8,10 +9,11 @@ import ActivityKit
 final class LiveActivityController {
     private var activity: Activity<NOOPActivityAttributes>?
     private var lastPush: Date = .distantPast
-    /// Cached `ActivityAuthorizationInfo` — `update` runs at ~1 Hz off the live HR stream, and
-    /// instantiating this system bridge per tick is needless allocation. ActivityKit's auth status
-    /// only changes via Settings, so caching for the controller's lifetime is safe.
-    private let authInfo = ActivityAuthorizationInfo()
+    /// Activity permission is read for each update. Users can change Live Activities in Settings
+    /// while NOOP remains alive; caching this bridge made the Lock Screen stay disabled until the
+    /// process was relaunched.
+    private var activitiesEnabled: Bool { ActivityAuthorizationInfo().areActivitiesEnabled }
+    private let logger = Logger(subsystem: "com.phm.noop", category: "LiveActivity")
     /// Synchronous gate against concurrent `Activity.request` calls. The `else` branch below is
     /// re-entered while the first request is still in flight (it hasn't assigned `self.activity`
     /// yet), so without this guard two close-together HR samples could both fire `Activity.request`
@@ -26,8 +28,9 @@ final class LiveActivityController {
     /// Drive the activity from the latest live values. Lazily starts when the strap is CONNECTED (the
     /// live link, not the sticky "paired" flag) and a heart rate is present; ends the moment the link
     /// drops. Throttled to ~once every 2 s so we stay well under the Live Activity update budget.
-    func update(bpm: Int?, recovery: Int?, connected: Bool, effort: Int? = nil) {
-        guard authInfo.areActivitiesEnabled else { return }
+    func update(bpm: Int?, recovery: Int?, connected: Bool, effort: Int? = nil,
+                heartRateZone: Int? = nil, distance: String? = nil, speed: String? = nil) {
+        guard activitiesEnabled else { return }
 
         // Re-adopt an activity that outlived a previous app session. ActivityKit keeps Live Activities
         // alive across launches/relaunches, but a fresh controller starts with `activity == nil`, so
@@ -53,8 +56,14 @@ final class LiveActivityController {
         }
         guard bpm != nil else { return }
 
-        let state = NOOPActivityAttributes.ContentState(bpm: bpm, recovery: recovery, bonded: connected,
-                                                        effort: effort)
+        let state = NOOPActivityAttributes.ContentState(
+            bpm: bpm,
+            recovery: recovery,
+            bonded: connected,
+            effort: effort,
+            heartRateZone: heartRateZone,
+            distance: distance,
+            speed: speed)
         let staleDate = Date().addingTimeInterval(Self.staleAfter)
 
         if let activity {
@@ -76,6 +85,7 @@ final class LiveActivityController {
                 lastPush = Date()
             } catch {
                 activity = nil
+                logger.error("Live HR activity request refused: \(String(describing: error), privacy: .public)")
             }
             isStarting = false
         }

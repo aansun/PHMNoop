@@ -1,4 +1,21 @@
 import Foundation
+#if canImport(Security)
+import Security
+#endif
+
+#if os(iOS)
+// The iOS SDK ships these Security symbols but does not expose SecTask.h to Swift. Keep the
+// declarations local to this shared iOS source instead of adding a new framework or app target.
+@_silgen_name("SecTaskCreateFromSelf")
+private func noopSecTaskCreateFromSelf(_ allocator: CFAllocator?) -> CFTypeRef?
+
+@_silgen_name("SecTaskCopyValueForEntitlement")
+private func noopSecTaskCopyValueForEntitlement(
+    _ task: CFTypeRef,
+    _ entitlement: CFString,
+    _ error: UnsafeMutablePointer<CFError?>?
+) -> CFTypeRef?
+#endif
 
 /// Small, Codable glance snapshot shared between the iOS app and its widget/Live-Activity extension
 /// via an App Group. The app writes it; the widget reads it. Keeping it tiny avoids any cross-process
@@ -98,7 +115,9 @@ public struct WidgetSnapshot: Codable, Equatable {
     /// key is somehow absent (each process reads its OWN bundle, so the app and the widget extension
     /// each carry the key in their generated Info.plist).
     public static let suiteName: String = {
-        resolveSuiteName(infoDictionary: Bundle.main.infoDictionary ?? [:])
+        resolveSuiteName(
+            infoDictionary: Bundle.main.infoDictionary ?? [:],
+            provisionedGroups: signedApplicationGroups())
     }()
     public static let storageKey = "noop.widget.snapshot"
 
@@ -111,12 +130,23 @@ public struct WidgetSnapshot: Codable, Equatable {
     /// in a sideloaded build, even though the host app and widget extension were both signed correctly.
     ///
     /// Normal Xcode builds don't carry `ALTAppGroups`, so they keep using `AppGroupIdentifier`.
-    static func resolveSuiteName(infoDictionary: [String: Any]) -> String {
+    static func resolveSuiteName(infoDictionary: [String: Any],
+                                 provisionedGroups: [String] = []) -> String {
         let configured = (infoDictionary["AppGroupIdentifier"] as? String)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
         let altGroups = (infoDictionary["ALTAppGroups"] as? [String])?
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { $0.hasPrefix("group.") && !$0.isEmpty } ?? []
+        let signedGroups = provisionedGroups
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { $0.hasPrefix("group.") && !$0.isEmpty }
+
+        // The signed entitlement is authoritative. A sideloader can rewrite the requested group
+        // during free-account provisioning without copying that rewritten value into ALTAppGroups.
+        // Both NOOP targets carry one App Group, so the first provisioned group is the shared suite.
+        if let signedGroup = signedGroups.first {
+            return signedGroup
+        }
 
         if let configured, !configured.isEmpty,
            let provisioned = altGroups.first(where: {
@@ -131,6 +161,28 @@ public struct WidgetSnapshot: Codable, Equatable {
             return configured
         }
         return "group.com.noopapp.noop"
+    }
+
+    /// Read the App Group entitlement granted to THIS process after signing.
+    ///
+    /// This is needed for sideloaded builds: the IPA contains a requested group, but the sideloader
+    /// may provision a team-scoped group when it re-signs the app and widget extension. Looking only
+    /// at the build-time Info.plist cannot see that rewrite. Security returns the same group from the
+    /// app and extension, allowing both processes to open the same UserDefaults suite.
+    private static func signedApplicationGroups() -> [String] {
+#if os(iOS)
+        guard let task = noopSecTaskCreateFromSelf(nil),
+              let value = noopSecTaskCopyValueForEntitlement(
+                task,
+                "com.apple.security.application-groups" as CFString,
+                nil
+              ) as? [String] else {
+            return []
+        }
+        return value
+#else
+        return []
+#endif
     }
 
     /// Debug-only canary: trips on the first run after a misprovisioning so the silent no-op gets

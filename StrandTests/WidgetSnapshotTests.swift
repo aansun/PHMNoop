@@ -14,6 +14,23 @@ final class WidgetSnapshotTests: XCTestCase {
         )
     }
 
+    func testSignedEntitlementWinsOverBuildTimeAndAltStoreMetadata() {
+        let configured = "group.com.noopapp.noop.staging"
+        let metadataGroup = configured + ".ALTTEAM"
+        let signedGroup = "group.SIGNEDTEAM.noop.staging"
+
+        XCTAssertEqual(
+            WidgetSnapshot.resolveSuiteName(
+                infoDictionary: [
+                    "AppGroupIdentifier": configured,
+                    "ALTAppGroups": [metadataGroup]
+                ],
+                provisionedGroups: [signedGroup]
+            ),
+            signedGroup
+        )
+    }
+
     func testXcodeBuildFallsBackToConfiguredGroup() {
         XCTAssertEqual(
             WidgetSnapshot.resolveSuiteName(infoDictionary: [

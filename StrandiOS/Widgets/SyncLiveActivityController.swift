@@ -31,7 +31,8 @@ final class SyncLiveActivityController {
     private var startedAt = Date()
     private var lastPush: Date = .distantPast
     private var lastPushedChunks = -1
-    private let authInfo = ActivityAuthorizationInfo()
+    /// Read at request time so a Live Activities Settings change takes effect without relaunching NOOP.
+    private var activitiesEnabled: Bool { ActivityAuthorizationInfo().areActivitiesEnabled }
     private var isStarting = false
     /// How long iOS may show the activity as fresh without a push. Generous: a long history recovery can
     /// go minutes between acked chunks, and a shortcut-launched "connecting" run has no pushes at all
@@ -144,7 +145,7 @@ final class SyncLiveActivityController {
     private func request(state: SyncActivityAttributes.ContentState) {
         // Each refusal names its gate. These are rare-event lines (one per attempted start), so they stay
         // always-on rather than behind a Test Centre domain.
-        guard authInfo.areActivitiesEnabled else {
+        guard activitiesEnabled else {
             live?.append(log: "Sync activity: not started — Live Activities are off for NOOP in iOS Settings")
             return
         }

@@ -47,6 +47,8 @@ struct StrandiOSApp: App {
     /// kg vs lb for the Lift Log Live Activity's "8 x 30 kg" line — the app formats it, because the
     /// unit preference lives here and not in the widget extension.
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
+    /// Exercise distance/speed may use a separate imperial preference from body measurements.
+    @AppStorage(UnitPrefs.distanceSystemKey) private var distanceSystemRaw = ""
 
     init() {
         // #1008: pin the pre-change Overnight-only default for existing installs before
@@ -211,28 +213,25 @@ struct StrandiOSApp: App {
                     // which kept pointing at yesterday's scored row after Today had moved on).
                     // Memoized: this closure fires on EVERY live-HR tick, so re-deriving the anchor here
                     // scanned the whole history + hit the DateFormatter lock ~1-3x/sec (#1051-shaped).
-                    let day = model.repo.cachedWidgetAnchor()
-                    liveActivity.update(
-                        bpm: model.live.connected ? (model.bpm ?? model.live.heartRate) : nil,
-                        recovery: day?.recovery.map { Int($0.rounded()) },
-                        // While a sync runs its own activity is the useful banner; don't stack the HR one.
-                        connected: model.live.connected && !liftSession.isActive && !model.live.backfilling,
-                        effort: day?.strain.map { Int($0.rounded()) }
-                    )
+                    pushLiveActivity()
                     pushLiftActivity()
                 }
                 // End the Live Activity the moment the link drops, even if no further HR tick arrives.
-                .onReceive(model.live.$connected) { isConnected in
+                .onReceive(model.live.$connected) { _ in
                     // #911: same shared anchor as the heartRate site above, so the Live Activity, the
                     // widget, the watch and Today never disagree about which day they describe. Memoized
                     // (shares the heartRate site's cache; recomputes only on a data refresh or day-roll).
-                    let day = model.repo.cachedWidgetAnchor()
-                    liveActivity.update(
-                        bpm: isConnected ? (model.bpm ?? model.live.heartRate) : nil,
-                        recovery: day?.recovery.map { Int($0.rounded()) },
-                        connected: isConnected && !liftSession.isActive && !model.live.backfilling,
-                        effort: day?.strain.map { Int($0.rounded()) }
-                    )
+                    pushLiveActivity()
+                }
+                // GPS distance and standard-sensor speed can change without a new HR sample. Keep the
+                // Lock Screen's lower metrics moving independently from the HR stream.
+                .onReceive(model.gpsRecorder.$distanceM) { _ in
+                    pushLiveActivity()
+                    pushLiftActivity()
+                }
+                .onReceive(model.live.$sensorSpeedKmh) { _ in
+                    pushLiveActivity()
+                    pushLiftActivity()
                 }
                 // The gym session's own banner. Driven off the session's 1 Hz tick so a stage change
                 // reaches the Lock Screen promptly; the controller decides what is actually worth
@@ -315,6 +314,9 @@ struct StrandiOSApp: App {
                 // supported, so this is safe on every device/simulator combination.
                 .task {
                     watch.activate()
+                    // Seed the App Group before waiting for the watch transport. This covers a fresh
+                    // install where no repository refresh signal has fired yet.
+                    await WidgetSnapshot.publish(from: model)
                     await watch.pushLatest(from: model)
                 }
         }
@@ -349,6 +351,9 @@ struct StrandiOSApp: App {
                 // opened, which is a worse regression than the bug being fixed. `analyzeRecent`
                 // serialises itself, so overlapping with the sync this foreground also kicks off is safe.
                 Task { await model.runDeferredRescoreIfOwed() }
+                // Publish immediately on foreground. The optional HealthKit catch-up below may take
+                // a while, and widgets must not remain empty merely because that refresh is running.
+                Task { await WidgetSnapshot.publish(from: model) }
                 Task {
                     health.refreshAuthIfPreviouslyGranted()
                     HealthWritebackBackgroundScheduler.updateSchedule(
@@ -399,12 +404,51 @@ struct StrandiOSApp: App {
     /// rate is the app's smoothed value, and only while the strap is actually connected — a frozen
     /// last-known bpm on a Lock Screen reads as live and is not.
     @MainActor
+    private func pushLiveActivity() {
+        let day = model.repo.cachedWidgetAnchor()
+        let bpm = model.live.connected ? (model.bpm ?? model.live.heartRate) : nil
+        let metrics = liveActivityMetrics(bpm: bpm)
+        liveActivity.update(
+            bpm: bpm,
+            recovery: day?.recovery.map { Int($0.rounded()) },
+            // While a sync or lift session runs its own activity is the useful banner; don't stack the HR one.
+            connected: model.live.connected && !liftSession.isActive && !model.live.backfilling,
+            effort: day?.strain.map { Int($0.rounded()) },
+            heartRateZone: metrics.zone,
+            distance: metrics.distance,
+            speed: metrics.speed)
+    }
+
+    @MainActor
+    private func liveActivityMetrics(bpm: Int?) ->
+        (zone: Int?, distance: String?, speed: String?) {
+        let zone = bpm.map { model.profile.hrZoneSet.zoneNumber(forBPM: Double($0)) }
+        let unitSystem = UnitSystem(rawValue: unitSystemRaw) ?? .metric
+        let distanceSystem = UnitPrefs.resolveDistance(
+            system: unitSystem,
+            override: distanceSystemRaw)
+        let distance: String? = {
+            guard model.activeWorkout != nil,
+                  model.gpsRecorder.isRecording,
+                  model.gpsRecorder.pointCount > 0 else { return nil }
+            return UnitFormatter.distanceFromMeters(model.gpsRecorder.distanceM, system: distanceSystem)
+        }()
+        let speedKmh = model.live.sensorSpeedKmh ?? model.gpsRecorder.paceSecPerKm.flatMap {
+            $0 > 0 ? 3600 / $0 : nil
+        }
+        let speed = UnitFormatter.speedFromKilometersPerHour(speedKmh, system: distanceSystem)
+        return (zone, distance, speed)
+    }
+
+    @MainActor
     private func pushLiftActivity() {
         let system = UnitSystem(rawValue: unitSystemRaw) ?? .metric
         guard let p = liftSession.presentation(system: system) else {
             liftActivity.update(programName: "", state: nil)
             return
         }
+        let bpm = model.live.connected ? (model.bpm ?? model.live.heartRate) : nil
+        let metrics = liveActivityMetrics(bpm: bpm)
         liftActivity.update(
             programName: liftSession.programName ?? String(localized: "Session"),
             state: LiftActivityAttributes.ContentState(
@@ -412,10 +456,13 @@ struct StrandiOSApp: App {
                 exercise: p.exercise,
                 status: p.status,
                 detail: p.detail,
-                bpm: model.live.connected ? (model.bpm ?? model.live.heartRate) : nil,
+                bpm: bpm,
                 progress: String(localized: "\(p.setsDone) of \(p.setsPlanned) sets done"),
                 stageStartedAt: p.stageStartedAt,
-                restEndsAt: p.restEndsAt))
+                restEndsAt: p.restEndsAt,
+                heartRateZone: metrics.zone,
+                distance: metrics.distance,
+                speed: metrics.speed))
     }
 }
 

@@ -31,6 +31,11 @@ public struct LiftActivityAttributes: ActivityAttributes {
         /// every word it renders has to arrive already translated — the same reason `status` and
         /// `detail` are strings rather than numbers.
         public var progress: String
+        /// Live HR zone resolved in the app from the user's HR-zone set.
+        public var heartRateZone: Int?
+        /// Pre-formatted workout metrics; nil means no live GPS/sensor reading exists yet.
+        public var distance: String?
+        public var speed: String?
         /// When the current stage began — the widget counts UP from here while working.
         public var stageStartedAt: Date
         /// When the running rest is due to end; the widget counts DOWN to it. Nil while working.
@@ -38,7 +43,8 @@ public struct LiftActivityAttributes: ActivityAttributes {
 
         public init(isResting: Bool, exercise: String, status: String, detail: String?,
                     bpm: Int?, progress: String,
-                    stageStartedAt: Date, restEndsAt: Date?) {
+                    stageStartedAt: Date, restEndsAt: Date?, heartRateZone: Int? = nil,
+                    distance: String? = nil, speed: String? = nil) {
             self.isResting = isResting
             self.exercise = exercise
             self.status = status
@@ -47,6 +53,9 @@ public struct LiftActivityAttributes: ActivityAttributes {
             self.progress = progress
             self.stageStartedAt = stageStartedAt
             self.restEndsAt = restEndsAt
+            self.heartRateZone = heartRateZone
+            self.distance = distance
+            self.speed = speed
         }
     }
 

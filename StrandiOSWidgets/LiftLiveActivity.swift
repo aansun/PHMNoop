@@ -67,55 +67,56 @@ struct LiftLiveActivity: Widget {
 
     private func lockScreen(_ state: LiftActivityAttributes.ContentState,
                             program: String) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: "dumbbell.fill")
-                .font(.system(size: 18, weight: .semibold))
-                .foregroundStyle(tint(state))
+        VStack(spacing: 10) {
+            HStack(spacing: 12) {
+                Image(systemName: "dumbbell.fill")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(tint(state))
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(state.exercise)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(state.exercise)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(StrandPalette.textPrimary)
+                        .lineLimit(1)
+                    Text(state.detail.map { "\(state.status) — \($0)" } ?? state.status)
+                        .font(.caption)
+                        .foregroundStyle(StrandPalette.textSecondary)
+                        .lineLimit(1)
+                    HStack(spacing: 6) {
+                        Text(state.progress)
+                        Text(program)
+                    }
+                    .font(.caption2)
+                    .foregroundStyle(StrandPalette.textTertiary)
+                    .lineLimit(1)
+                }
+
+                Spacer(minLength: 8)
+                HStack(spacing: 10) {
+                    Label {
+                        Text(state.bpm.map(String.init) ?? "—").monospacedDigit()
+                    } icon: {
+                        Image(systemName: "heart.fill")
+                    }
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(StrandPalette.textPrimary)
-                    .lineLimit(1)
-                Text(state.detail.map { "\(state.status) — \($0)" } ?? state.status)
-                    .font(.caption)
-                    .foregroundStyle(StrandPalette.textSecondary)
-                    .lineLimit(1)
-                // Two variables in an HStack rather than one interpolated string: the extension has
-                // no catalog, so a literal separator here would be untranslatable copy shipped to
-                // ten locales. Everything user-facing arrives pre-localized from the app.
-                HStack(spacing: 6) {
-                    Text(state.progress)
-                    Text(program)
+                    .foregroundStyle(state.bpm == nil
+                                     ? StrandPalette.textTertiary
+                                     : StrandPalette.metricRose)
+                    clock(state, tint: tint(state))
+                        .font(.system(size: 22, weight: .bold, design: .rounded))
                 }
-                .font(.caption2)
-                .foregroundStyle(StrandPalette.textTertiary)
-                .lineLimit(1)
             }
-
-            Spacer(minLength: 8)
-
-            // Heart rate then clock, side by side — the minimised bar's layout, because this is the
-            // same bar seen from the Lock Screen. Stacking them looked misaligned:
-            // `Text(timerInterval:)` reserves width for the widest value it could show, so a
-            // trailing-aligned timer does not visually line up with the text under it.
-            //
-            // The heart rate is ALWAYS present, dash and all. A readout that vanishes when the strap
-            // stops reading is indistinguishable from a missing feature — which is exactly how it
-            // was first reported.
-            HStack(spacing: 10) {
-                Label {
-                    Text(state.bpm.map(String.init) ?? "—").monospacedDigit()
-                } icon: {
-                    Image(systemName: "heart.fill")
-                }
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(state.bpm == nil
-                                 ? StrandPalette.textTertiary
-                                 : StrandPalette.metricRose)
-
-                clock(state, tint: tint(state))
-                    .font(.system(size: 22, weight: .bold, design: .rounded))
+            Rectangle()
+                .fill(StrandPalette.hairline)
+                .frame(height: 1)
+            NOOPHeartRateZoneRail(zone: state.heartRateZone)
+            HStack(spacing: 0) {
+                NOOPLiveMetric(label: "DISTANCE", value: state.distance ?? "—")
+                Rectangle()
+                    .fill(StrandPalette.hairline)
+                    .frame(width: 1, height: 34)
+                    .padding(.horizontal, 12)
+                NOOPLiveMetric(label: "SPEED", value: state.speed ?? "—")
             }
         }
         .padding()
