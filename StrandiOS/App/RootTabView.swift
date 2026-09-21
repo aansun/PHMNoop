@@ -71,7 +71,15 @@ struct RootTabView: View {
 
     /// The Today tab root, honouring the liquid/classic preference.
     @ViewBuilder private var todayTabRoot: some View {
-        if liquidTodayEnabled { LiquidTodayView() } else { TodayView() }
+        ZStack(alignment: .topTrailing) {
+            if liquidTodayEnabled { LiquidTodayView() } else { TodayView() }
+            // The shared Liquid header omits its strap control when a ring is the active device.
+            // Keep the iOS-only fallback in the scaffold layer and reserve the rightmost header slot
+            // so the active device's battery is still reachable on Today.
+            PHMTodayBatteryFallback()
+                .padding(.top, NoopMetrics.space3)
+                .padding(.trailing, NoopMetrics.compactControlSize + NoopMetrics.space2)
+        }
     }
 
     /// Native tab selection binding. SwiftUI sends taps on the already-selected item through the

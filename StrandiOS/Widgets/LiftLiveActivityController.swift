@@ -1,6 +1,7 @@
 #if os(iOS)
 import Foundation
 import ActivityKit
+import OSLog
 
 /// Starts, updates and ends the Lift Log session Live Activity.
 ///
@@ -19,9 +20,9 @@ final class LiftLiveActivityController {
     private var activity: Activity<LiftActivityAttributes>?
     private var lastPush: Date = .distantPast
     private var lastSignature: String?
-    /// Cached for the controller's lifetime — the same reasoning as `LiveActivityController`: this is
-    /// consulted on every session tick and its value only changes via Settings.
-    private let authInfo = ActivityAuthorizationInfo()
+    /// Read on every session tick so a Settings change takes effect without relaunching NOOP.
+    private var activitiesEnabled: Bool { ActivityAuthorizationInfo().areActivitiesEnabled }
+    private let logger = Logger(subsystem: "com.phm.noop", category: "LiveActivity")
     /// Guards against two ticks both firing `Activity.request` before the first has returned.
     private var isStarting = false
     /// Heart rate moves constantly; everything else does not. A change in HR alone is worth a push,
@@ -34,7 +35,7 @@ final class LiftLiveActivityController {
     /// Drive the activity from the session's current state. `state` nil means no session is running,
     /// which ends any activity that is showing.
     func update(programName: String, state: LiftActivityAttributes.ContentState?) {
-        guard authInfo.areActivitiesEnabled else { return }
+        guard activitiesEnabled else { return }
 
         // Re-adopt an activity that outlived a previous app session — ActivityKit keeps them alive
         // across relaunches, and a fresh controller starts with `activity == nil`. Without this we
@@ -81,6 +82,7 @@ final class LiftLiveActivityController {
                 lastPush = Date()
             } catch {
                 activity = nil
+                logger.error("Lift activity request refused: \(String(describing: error), privacy: .public)")
             }
             isStarting = false
         }

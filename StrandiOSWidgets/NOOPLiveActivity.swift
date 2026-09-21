@@ -8,26 +8,34 @@ struct NOOPLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: NOOPActivityAttributes.self) { context in
             // Lock Screen / banner presentation.
-            HStack(spacing: 14) {
-                Image(systemName: "waveform.path.ecg")
-                    .font(.title2)
-                    .foregroundStyle(StrandPalette.statusCritical)
-                VStack(alignment: .leading, spacing: 2) {
+            VStack(spacing: 10) {
+                HStack(spacing: 10) {
+                    Image(systemName: "heart.fill")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(StrandPalette.statusCritical)
                     Text(context.attributes.title)
-                        .font(.caption).foregroundStyle(StrandPalette.textSecondary)
-                    Text("\(context.state.bpm.map(String.init) ?? "–") bpm")
+                        .font(.caption)
+                        .foregroundStyle(StrandPalette.textSecondary)
+                    Spacer(minLength: 8)
+                    Text(context.state.bpm.map { "\($0)" } ?? "–")
                         .font(.system(size: 26, weight: .bold, design: .rounded))
+                        .monospacedDigit()
                         .foregroundStyle(StrandPalette.textPrimary)
+                    Text("bpm")
+                        .font(.caption)
+                        .foregroundStyle(StrandPalette.textSecondary)
                 }
-                Spacer()
-                // Charge + Effort (#446) on the banner, mirroring the Dynamic Island expanded stats.
-                HStack(spacing: 12) {
-                    if let r = context.state.recovery {
-                        bannerStat(label: "Charge", value: "\(r)%")
-                    }
-                    if let e = context.state.effort {
-                        bannerStat(label: "Effort", value: "\(e)")
-                    }
+                Rectangle()
+                    .fill(StrandPalette.hairline)
+                    .frame(height: 1)
+                NOOPHeartRateZoneRail(zone: context.state.heartRateZone)
+                HStack(spacing: 0) {
+                    NOOPLiveMetric(label: "DISTANCE", value: context.state.distance ?? "—")
+                    Rectangle()
+                        .fill(StrandPalette.hairline)
+                        .frame(width: 1, height: 34)
+                        .padding(.horizontal, 12)
+                    NOOPLiveMetric(label: "SPEED", value: context.state.speed ?? "—")
                 }
             }
             .padding()
@@ -81,6 +89,7 @@ private func bannerStat(label: String, value: String) -> some View {
     .multilineTextAlignment(.center)
     .fixedSize()
 }
+
 
 /// Dynamic Island expanded-region stat column (label over value). File-scope for the same reason as
 /// `bannerStat`. #759 - centre-aligned + `fixedSize` for the same value-under-its-label fix as the banner.

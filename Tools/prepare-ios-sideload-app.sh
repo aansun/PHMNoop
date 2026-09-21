@@ -27,6 +27,20 @@ WIDGET_GROUP=$(/usr/libexec/PlistBuddy -c 'Print :AppGroupIdentifier' "$WIDGET_I
   exit 1
 }
 
+# AltStore / SideStore may re-sign the requested App Group with a team-specific suffix. Keep the
+# original requested group in ALTAppGroups so WidgetSnapshot.resolveSuiteName can discover the
+# provisioned group that the sideloader writes into the signed bundle. The app and extension must
+# carry the same metadata or they can silently use different UserDefaults suites after re-signing.
+set_alt_groups() {
+  local info="$1"
+  /usr/libexec/PlistBuddy -c 'Delete :ALTAppGroups' "$info" 2>/dev/null || true
+  /usr/libexec/PlistBuddy -c 'Add :ALTAppGroups array' "$info"
+  /usr/libexec/PlistBuddy -c "Add :ALTAppGroups:0 string $APP_GROUP" "$info"
+}
+
+set_alt_groups "$APP_INFO"
+set_alt_groups "$WIDGET_INFO"
+
 ENTITLEMENTS_DIR=$(mktemp -d /tmp/noop-sideload-entitlements.XXXXXX)
 cleanup() {
   if [ -n "${ENTITLEMENTS_DIR:-}" ] && [ -d "$ENTITLEMENTS_DIR" ]; then
