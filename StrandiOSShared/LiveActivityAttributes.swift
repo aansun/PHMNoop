@@ -10,6 +10,8 @@ public struct NOOPActivityAttributes: ActivityAttributes {
         public var bpm: Int?
         public var recovery: Int?
         public var bonded: Bool
+        /// Latest strap battery percentage. Optional so activities created by older builds still decode.
+        public var batteryPct: Int?
         // Effort / strain on NOOP's 0–100 axis (#446) — one more stat in the Dynamic Island expanded
         // region. OPTIONAL with a nil default so an activity started by an older build still decodes.
         public var effort: Int?
@@ -31,7 +33,8 @@ public struct NOOPActivityAttributes: ActivityAttributes {
         /// Kept for decoding content created by older builds. New live-HR content uses `pace`.
         public var speed: String?
 
-        public init(bpm: Int?, recovery: Int?, bonded: Bool, effort: Int? = nil,
+        public init(bpm: Int?, recovery: Int?, bonded: Bool, batteryPct: Int? = nil,
+                    effort: Int? = nil,
                     heartRateZone: Int? = nil, activityName: String? = nil,
                     activityStartedAt: Date? = nil,
                     averageBPM: Int? = nil, peakBPM: Int? = nil,
@@ -39,6 +42,7 @@ public struct NOOPActivityAttributes: ActivityAttributes {
             self.bpm = bpm
             self.recovery = recovery
             self.bonded = bonded
+            self.batteryPct = batteryPct
             self.effort = effort
             self.heartRateZone = heartRateZone
             self.activityName = activityName

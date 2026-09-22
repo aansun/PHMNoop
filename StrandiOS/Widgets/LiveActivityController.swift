@@ -3,8 +3,10 @@ import Foundation
 import ActivityKit
 import OSLog
 
-/// Starts, updates, and ends the live-HR Live Activity. The activity appears on the Lock Screen and
-/// in the Dynamic Island while the strap is bonded and streaming heart rate.
+/// Starts, updates, and ends the Live Activity. A workout owns the activity lifecycle: it starts as
+/// soon as the workout starts, even before the first HR sample or when the optional Live HR setting is
+/// off, and remains visible until the workout ends. Outside a workout it falls back to the optional
+/// connected-and-streaming live-HR activity.
 @MainActor
 final class LiveActivityController {
     private var activity: Activity<NOOPActivityAttributes>?
@@ -25,14 +27,22 @@ final class LiveActivityController {
     /// on top of the connected-driven end below).
     private static let staleAfter: TimeInterval = 120
 
-    /// Drive the activity from the latest live values. Lazily starts when the strap is CONNECTED (the
-    /// live link, not the sticky "paired" flag) and a heart rate is present; ends the moment the link
-    /// drops. Throttled to ~once every 2 s so we stay well under the Live Activity update budget.
-    func update(bpm: Int?, recovery: Int?, connected: Bool, effort: Int? = nil,
+    /// Whether the current activity was started for a workout. This is kept separately from the
+    /// content state so the transition from workout → ordinary live HR can end cleanly when the
+    /// workout finishes without relying on a final HR sample.
+    private var workoutIsActive = false
+
+    /// Drive the activity from the latest live values. A workout starts immediately and is allowed to
+    /// continue through a strap disconnect; the Lock Screen then shows the last known/empty HR while
+    /// the workout clock and sport remain live. Outside a workout, the legacy connected + HR policy
+    /// remains in place. Throttled to ~once every 2 s so we stay well under the Live Activity budget.
+    func update(bpm: Int?, recovery: Int?, connected: Bool, batteryPct: Int? = nil,
+                effort: Int? = nil,
                 heartRateZone: Int? = nil, activityName: String? = nil,
                 activityStartedAt: Date? = nil,
                 averageBPM: Int? = nil, peakBPM: Int? = nil,
-                distance: String? = nil, pace: String? = nil, speed: String? = nil) {
+                distance: String? = nil, pace: String? = nil, speed: String? = nil,
+                workoutActive: Bool = false) {
         guard activitiesEnabled else { return }
 
         // Re-adopt an activity that outlived a previous app session. ActivityKit keeps Live Activities
@@ -43,26 +53,39 @@ final class LiveActivityController {
         // `Activity.activities` isn't reliably hydrated at the instant of process launch.
         if activity == nil { activity = Activity<NOOPActivityAttributes>.activities.first }
 
-        // User opt-out (#336): if the in-app toggle is off, never start — and end any activity that's
-        // already showing (the user just turned it off; this fires on the next ~1 Hz HR tick).
-        guard UnitPrefs.liveActivityEnabled() else {
+        // A workout is a first-class Live Activity, not a variation of the optional live-HR setting.
+        // Users may turn off the latter while still expecting a started workout to remain visible.
+        if !workoutActive && workoutIsActive {
+            workoutIsActive = false
+            // If there is no ordinary live-HR activity to fall back to, remove the workout banner
+            // immediately. If HR is available and the setting is on, the existing activity below is
+            // converted to the normal live-HR presentation instead of briefly disappearing.
+            if !UnitPrefs.liveActivityEnabled() || !connected || bpm == nil {
+                Task { await end() }
+                return
+            }
+        }
+
+        // User opt-out (#336) applies only to ordinary live HR. A running workout bypasses this app
+        // preference; the system-level Live Activities permission above remains authoritative.
+        guard workoutActive || UnitPrefs.liveActivityEnabled() else {
             if activity != nil { Task { await end() } }
             return
         }
 
-        // End the moment the live link drops — `bonded` stays true across every disconnect (it means
-        // "this strap is paired"), so keying off it left a frozen, fabricated "live" HR on the Lock
-        // Screen / Dynamic Island indefinitely after the strap went out of range.
-        if !connected {
+        // End the ordinary live-HR activity when the live link drops. A workout deliberately stays up
+        // through that disconnect so the user can finish the session and its timer remains visible.
+        if !connected && !workoutActive {
             Task { await end() }
             return
         }
-        guard bpm != nil else { return }
+        guard workoutActive || bpm != nil else { return }
 
         let state = NOOPActivityAttributes.ContentState(
             bpm: bpm,
             recovery: recovery,
             bonded: connected,
+            batteryPct: batteryPct,
             effort: effort,
             heartRateZone: heartRateZone,
             activityName: activityName,
@@ -73,6 +96,10 @@ final class LiveActivityController {
             pace: pace,
             speed: speed)
         let staleDate = Date().addingTimeInterval(Self.staleAfter)
+        // Track the lifecycle even when the content update is throttled. A workout can start within
+        // two seconds of the previous live-HR tick, and its later end must still be able to close the
+        // activity without waiting for another HR sample.
+        workoutIsActive = workoutActive
 
         if let activity {
             guard Date().timeIntervalSince(lastPush) > 2 else { return }
@@ -107,6 +134,7 @@ final class LiveActivityController {
             await act.end(nil, dismissalPolicy: .immediate)
         }
         self.activity = nil
+        self.workoutIsActive = false
     }
 }
 #endif

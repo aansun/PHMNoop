@@ -9,39 +9,37 @@ struct NOOPLiveActivity: Widget {
         ActivityConfiguration(for: NOOPActivityAttributes.self) { context in
             // Lock Screen / banner presentation.
             VStack(spacing: 10) {
-                HStack(alignment: .top, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 0) {
-                        HStack(alignment: .firstTextBaseline, spacing: 4) {
-                            Text(context.state.bpm.map { "\($0)" } ?? "–")
-                                .font(.system(size: 30, weight: .bold, design: .rounded))
-                                .monospacedDigit()
-                                .foregroundStyle(StrandPalette.textPrimary)
-                            Text("bpm")
-                                .font(.caption)
-                                .foregroundStyle(StrandPalette.textSecondary)
-                        }
-                        Text("HEART RATE")
-                            .font(.caption2)
-                            .tracking(0.8)
-                            .foregroundStyle(StrandPalette.textSecondary)
-                    }
-                    Spacer(minLength: 8)
-                    VStack(alignment: .trailing, spacing: 2) {
+                ZStack {
+                    HStack(alignment: .center, spacing: 0) {
                         if let startedAt = context.state.activityStartedAt {
                             Text(timerInterval: startedAt...startedAt.addingTimeInterval(86_400),
                                  countsDown: false)
-                                .font(.system(size: 22, weight: .bold, design: .rounded))
+                                .font(.system(size: 35, weight: .bold, design: .rounded))
                                 .monospacedDigit()
                                 .foregroundStyle(StrandPalette.textPrimary)
+                        } else {
+                            Text("—")
+                                .font(.system(size: 35, weight: .bold, design: .rounded))
+                                .foregroundStyle(StrandPalette.textPrimary)
                         }
-                        Text(context.state.activityName ?? context.attributes.title)
-                            .font(.caption2)
-                            .foregroundStyle(StrandPalette.textSecondary)
-                            .lineLimit(1)
-                            .minimumScaleFactor(0.7)
-                            .multilineTextAlignment(.trailing)
+                        Spacer(minLength: 12)
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            Image(systemName: "heart.fill")
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundStyle(StrandPalette.statusCritical)
+                            Text(context.state.bpm.map { "\($0)" } ?? "–")
+                                .font(.system(size: 35, weight: .bold, design: .rounded))
+                                .monospacedDigit()
+                                .foregroundStyle(StrandPalette.textPrimary)
+                            Text("bpm")
+                                .font(.system(size: 17, weight: .semibold))
+                                .foregroundStyle(StrandPalette.textSecondary)
+                        }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    NOOPBatteryRing(percent: context.state.batteryPct)
                 }
+                .frame(maxWidth: .infinity, minHeight: 50, alignment: .center)
                 Rectangle()
                     .fill(StrandPalette.hairline)
                     .frame(height: 1)
@@ -79,33 +77,102 @@ struct NOOPLiveActivity: Widget {
         } dynamicIsland: { context in
             DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    Label("\(context.state.bpm.map(String.init) ?? "–")", systemImage: "heart.fill")
-                        .foregroundStyle(StrandPalette.statusCritical)
+                    if let startedAt = context.state.activityStartedAt {
+                        Text(timerInterval: startedAt...startedAt.addingTimeInterval(86_400),
+                             countsDown: false)
+                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .monospacedDigit()
+                            .foregroundStyle(StrandPalette.textPrimary)
+                    } else {
+                        Text("—")
+                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .foregroundStyle(StrandPalette.textPrimary)
+                    }
+                }
+                DynamicIslandExpandedRegion(.center) {
+                    NOOPBatteryRing(percent: context.state.batteryPct, size: 36)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    // Charge + Effort (#446) — one more stat alongside the leading live HR.
-                    HStack(spacing: 10) {
-                        if let r = context.state.recovery {
-                            statColumn(label: "Charge", value: "\(r)%")
-                        }
-                        if let e = context.state.effort {
-                            statColumn(label: "Effort", value: "\(e)")
-                        }
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundStyle(StrandPalette.statusCritical)
+                        Text(context.state.bpm.map(String.init) ?? "–")
+                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .monospacedDigit()
+                            .foregroundStyle(StrandPalette.textPrimary)
+                        Text("bpm")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(StrandPalette.textSecondary)
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    Text(context.state.activityName ?? context.attributes.title)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                    VStack(spacing: 6) {
+                        NOOPHeartRateZoneRail(zone: context.state.heartRateZone)
+                        HStack(spacing: 0) {
+                            NOOPLiveMetric(label: "AVG", value: context.state.averageBPM.map(String.init) ?? "—")
+                            Rectangle()
+                                .fill(StrandPalette.hairline)
+                                .frame(width: 1, height: 24)
+                                .padding(.horizontal, 8)
+                            NOOPLiveMetric(label: "PEAK", value: context.state.peakBPM.map(String.init) ?? "—")
+                            Rectangle()
+                                .fill(StrandPalette.hairline)
+                                .frame(width: 1, height: 24)
+                                .padding(.horizontal, 8)
+                            NOOPLiveMetric(label: "EFFORT", value: context.state.effort.map(String.init) ?? "—")
+                        }
+                    }
                 }
             } compactLeading: {
-                Image(systemName: "heart.fill").foregroundStyle(StrandPalette.statusCritical)
+                if let startedAt = context.state.activityStartedAt {
+                    Text(timerInterval: startedAt...startedAt.addingTimeInterval(86_400), countsDown: false)
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .monospacedDigit()
+                } else {
+                    Text("—")
+                }
             } compactTrailing: {
-                Text("\(context.state.bpm.map(String.init) ?? "–")")
+                HStack(spacing: 3) {
+                    Image(systemName: "heart.fill")
+                        .foregroundStyle(StrandPalette.statusCritical)
+                    Text("\(context.state.bpm.map(String.init) ?? "–")")
+                        .monospacedDigit()
+                }
             } minimal: {
-                Image(systemName: "heart.fill").foregroundStyle(StrandPalette.statusCritical)
+                NOOPBatteryRing(percent: context.state.batteryPct, size: 24)
             }
         }
+    }
+}
+
+/// Compact strap-battery ring used in the open centre of the Lock Screen banner.
+private struct NOOPBatteryRing: View {
+    let percent: Int?
+    var size: CGFloat = 48
+
+    private var progress: CGFloat {
+        guard let percent else { return 0 }
+        return CGFloat(min(max(percent, 0), 100)) / 100
+    }
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .stroke(StrandPalette.hairline, lineWidth: 2)
+            Circle()
+                .trim(from: 0, to: progress)
+                .stroke(
+                    StrandPalette.chargeColor,
+                    style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+            Text(percent.map { "\($0)%" } ?? "—")
+                .font(.system(size: 11, weight: .bold, design: .rounded))
+                .monospacedDigit()
+                .foregroundStyle(StrandPalette.textPrimary)
+        }
+        .frame(width: size, height: size)
+        .accessibilityLabel(percent.map { "Battery \($0) percent" } ?? "Battery unavailable")
     }
 }
 

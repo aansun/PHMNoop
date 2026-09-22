@@ -241,6 +241,19 @@ struct RootTabView: View {
                 // Trends is a primary tab on iPhone (not a pillar sheet) — switch to it.
                 withAnimation(.timingCurve(0.22, 1, 0.36, 1, duration: 0.24)) { selectedTab = 1 }
                 router.requestedDestination = nil
+            case .workouts:
+                // Workouts lives behind More on iPhone. Reset that tab's stack first so finishing a
+                // session always lands on the log root, not on a stale Settings/Devices screen.
+                quickAction = nil
+                showQuickStartedWorkout = false
+                showDevices = false
+                routedPillar = nil
+                tabPaths[4] = NavigationPath()
+                withAnimation(.timingCurve(0.22, 1, 0.36, 1, duration: 0.24)) {
+                    selectedTab = 4
+                    tabPaths[4].append(MoreDestination.workouts)
+                }
+                router.requestedDestination = nil
             case .activeWorkout:
                 // The Today active-workout indicator opens Live through the quick-action Live sheet; once
                 // it's up, LiveView consumes the one-shot `presentActiveWorkout` flag and presents the
@@ -345,6 +358,9 @@ struct RootTabView: View {
                 // requestedDestination handler switches `selectedTab` instead), but the switch must stay
                 // exhaustive. Fall back to Trends inside the sheet host if it ever arrives here.
                 case .trends: TrendsView()
+                // .workouts switches to the More tab (handled above); keep a direct fallback here so the
+                // route remains total if it is ever presented as a sheet by another entry point.
+                case .workouts: WorkoutsView()
                 // .activeWorkout routes through the quick-action Live sheet (handled above); this keeps the
                 // switch exhaustive and falls back to Live if it ever reaches the pillar host.
                 case .activeWorkout: LiveView()
