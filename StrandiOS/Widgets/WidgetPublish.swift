@@ -29,8 +29,9 @@ extension WidgetSnapshot {
     ///
     /// `async` because the Rest score (#446) lives in a computed metric series, not a `DailyMetric`
     /// column, so it needs an `exploreSeries` read. The sole caller already runs inside a `Task`, so it
-    /// just gains an `await`. Charge / Effort / HRV / Resting HR all read synchronously off the SAME
-    /// anchor day, so the richer fields and the headline never disagree about which day they describe.
+    /// just gains an `await`. Charge stays on the recovery anchor, while Effort / Rest / HRV / Resting HR
+    /// follow the same current-day resolution as Today. This keeps the widget useful during the rollover
+    /// window, when today's live metrics exist before today's Charge has been scored.
     ///
     /// #911: the anchor is resolved the way Today resolves it (the current LOGICAL local day, `Date()`
     /// read here so the day rolls live as the extension republishes), NOT "the most recent day with any
@@ -53,20 +54,25 @@ extension WidgetSnapshot {
         // inside the helper (matching `TodayView.selectedDayKey`) means a stale scored row can never
         // re-surface AS today.
         let day = Repository.widgetAnchor(days: days, now: now)
-        // Rest (sleep_performance) for that same anchor day. exploreSeries merges imported + on-device,
-        // exactly like the Today Rest tile. The tail fallback (restSeries.last) is ONLY valid when the
-        // anchor day IS the local today: early in a fresh day today's Rest row may not exist yet, so we
-        // borrow the latest value. For an anchor that is NOT today, borrowing the tail would surface a
-        // DIFFERENT day's Rest as this day's (the cross-day bug), so we leave it nil. Mirrors TodayView's
-        // `restByDay[selectedDayKey] ?? (selectedDayOffset == 0 ? restSeries.last?.value : nil)` and the
-        // matching guard in WatchSessionBridge.
+        // Today can have live Rest/Effort/vitals while Charge still carries the last scored day. Resolve
+        // the current row independently from the recovery anchor so the widget cannot mix yesterday's
+        // Rest with today's live values. This mirrors TodayView's fresh-rest rule, including its
+        // freshness guard for the tail fallback.
+        let todayRow = Repository.resolveToday(
+            days: days,
+            logicalKey: Repository.logicalDayKey(now),
+            localKey: Repository.localDayKey(now)
+        )
+        let todayKey = todayRow?.day ?? Repository.logicalDayKey(now)
         var restScore: Double?
-        if let day {
-            let restSeries = await model.repo.exploreSeries(key: "sleep_performance", source: "my-whoop")
-            let restByDay = Dictionary(restSeries.map { ($0.day, $0.value) }, uniquingKeysWith: { _, last in last })
-            let anchorIsToday = day.day == Repository.localDayKey(now)
-            restScore = restByDay[day.day] ?? (anchorIsToday ? restSeries.last?.value : nil)
-        }
+        let restSeries = await model.repo.exploreSeries(key: "sleep_performance", source: "my-whoop")
+        let restByDay = Dictionary(restSeries.map { ($0.day, $0.value) }, uniquingKeysWith: { _, last in last })
+        restScore = Self.freshRestScore(
+            todayValue: restByDay[todayKey],
+            lastDay: restSeries.last?.day,
+            lastValue: restSeries.last?.value,
+            todayKey: todayKey
+        )
         // #313: honour the user's Effort scale at publish time. The widget extension cannot read the
         // app's plain `@AppStorage(UnitPrefs.effortScaleKey)` (it is not in the App Group), so we
         // pre-format the display string here and keep the 0–100 int for the ring fill (the fill
@@ -76,11 +82,6 @@ extension WidgetSnapshot {
         // the widget lag behind the app until the next heavy scoring pass (and could even show the
         // previous day's Effort after the logical-day rollover). Keep Charge on the shared recovery
         // anchor, but resolve Effort from today's row/live HR exactly as Today does.
-        let todayRow = Repository.resolveToday(
-            days: days,
-            logicalKey: Repository.logicalDayKey(now),
-            localKey: Repository.localDayKey(now)
-        )
         let liveStrain = await currentLiveEffort(from: model, now: now)
         let strain = liveStrain ?? todayRow?.strain ?? day?.strain
         let effortDisplay: String? = strain.map { Self.effortDisplay($0, scale: effortScale) }
@@ -111,8 +112,8 @@ extension WidgetSnapshot {
             // Stored 0–100 axis for ring fill; display string carries the #313 scale.
             effort: strain.map { Int($0.rounded()) },
             rest: restScore.map { Int($0.rounded()) },
-            hrv: day?.avgHrv.map { Int($0.rounded()) },
-            restingHr: day?.restingHr,
+            hrv: (todayRow?.avgHrv ?? day?.avgHrv).map { Int($0.rounded()) },
+            restingHr: todayRow?.restingHr ?? day?.restingHr,
             effortDisplay: effortDisplay,
             effortWhoop: effortScale == .whoop,
             // nil when the curve could not be scored at all, which must not blank a widget that already
@@ -121,6 +122,26 @@ extension WidgetSnapshot {
             stressDay: stress?.day ?? storedStress?.stressDay
         )
         saveAndReloadIfChanged(snap)
+    }
+
+    /// Rest resolution shared in behavior with TodayView: today's value wins, otherwise the latest
+    /// scored night is carried only while it is still fresh. The widget always represents today.
+    private static func freshRestScore(todayValue: Double?, lastDay: String?, lastValue: Double?,
+                                       todayKey: String) -> Double? {
+        if let todayValue { return todayValue }
+        guard let lastDay, let lastValue,
+              !isCarryStale(priorDayKey: lastDay, todayKey: todayKey) else { return nil }
+        return lastValue
+    }
+
+    private static func isCarryStale(priorDayKey: String, todayKey: String) -> Bool {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "yyyy-MM-dd"
+        guard let prior = formatter.date(from: priorDayKey),
+              let today = formatter.date(from: todayKey) else { return false }
+        let days = Calendar.current.dateComponents([.day], from: prior, to: today).day ?? 0
+        return days > 2
     }
 
     /// Publish fields that come directly from the live BLE state without re-reading the Rest metric

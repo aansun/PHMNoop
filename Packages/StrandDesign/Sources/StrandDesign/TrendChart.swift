@@ -246,6 +246,11 @@ public struct TrendChart: View {
     public var body: some View {
         // Resolve against current data so the marker and readout never refer to a removed date.
         let currentSelection = selectedPoint.flatMap { selected in points.first { $0.date == selected.date } }
+        // Sparse windows often carry long day/time labels. Asking Swift Charts for five ticks when
+        // there are only two or three readings creates labels that collide at the bottom of the plot.
+        // Keep dense charts at the existing five-tick cadence, but let sparse charts use their actual
+        // point count and let the axis hide any remaining collision rather than drawing unreadable text.
+        let xAxisDesiredCount = max(2, min(5, points.count))
         VStack(alignment: .leading, spacing: 8) {
         if largeSelection {
             let point = currentSelection ?? points.last
@@ -351,9 +356,10 @@ public struct TrendChart: View {
             if showsBarValues { plotArea.padding(.top, 18) } else { plotArea.clipped() }
         }
         .chartXAxis {
-            AxisMarks(values: .automatic(desiredCount: 5)) { _ in
+            AxisMarks(values: .automatic(desiredCount: xAxisDesiredCount)) { _ in
                 AxisGridLine().foregroundStyle(StrandPalette.hairline.opacity(0.4))
-                AxisValueLabel().foregroundStyle(StrandPalette.textTertiary)
+                AxisValueLabel(collisionResolution: .greedy)
+                    .foregroundStyle(StrandPalette.textTertiary)
                     .font(StrandFont.footnote)
             }
         }

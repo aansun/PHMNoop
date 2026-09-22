@@ -910,6 +910,10 @@ private struct OverlayChart: View {
 
     var body: some View {
         let model = currentModel
+        // The axis is shared by every compared series, so use unique days rather than the flattened
+        // per-series plot count when choosing tick density. Collision resolution keeps sparse labels
+        // readable without changing the normalized data or the comparison model.
+        let xAxisDesiredCount = max(2, min(5, model.dayIndex.count))
         Chart(model.plots) { p in
             LineMark(
                 x: .value("Date", p.date),
@@ -967,9 +971,10 @@ private struct OverlayChart: View {
             }
         }
         .chartXAxis {
-            AxisMarks(values: .automatic(desiredCount: 5)) { _ in
+            AxisMarks(values: .automatic(desiredCount: xAxisDesiredCount)) { _ in
                 AxisGridLine().foregroundStyle(StrandPalette.hairline.opacity(0.4))
-                AxisValueLabel().foregroundStyle(StrandPalette.textTertiary)
+                AxisValueLabel(collisionResolution: .greedy)
+                    .foregroundStyle(StrandPalette.textTertiary)
                     .font(StrandFont.footnote)
             }
         }
