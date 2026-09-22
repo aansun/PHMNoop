@@ -1950,6 +1950,9 @@ private struct WorkoutRecoveryTrendChart: View {
     }
 
     var body: some View {
+        // Date labels are short, but sparse workout history still does not need four ticks for one or
+        // two workouts. Keep the same collision policy as the shared chart components.
+        let xAxisDesiredCount = max(2, min(4, points.count))
         Chart(displayPlots) { point in
             LineMark(
                 x: .value("Workout", point.date),
@@ -1970,9 +1973,9 @@ private struct WorkoutRecoveryTrendChart: View {
         )
         .chartLegend(.hidden)
         .chartXAxis {
-            AxisMarks(values: .automatic(desiredCount: 4)) { value in
+            AxisMarks(values: .automatic(desiredCount: xAxisDesiredCount)) { value in
                 AxisGridLine().foregroundStyle(StrandPalette.hairline)
-                AxisValueLabel(format: .dateTime.month(.abbreviated).day())
+                AxisValueLabel(format: .dateTime.month(.abbreviated).day(), collisionResolution: .greedy)
                     .foregroundStyle(StrandPalette.textTertiary)
             }
         }

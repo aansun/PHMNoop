@@ -452,6 +452,8 @@ private struct LiveTimeChart: View {
     }
 
     var body: some View {
+        // Keep live time labels readable when the short rolling window has only a few samples.
+        let xAxisDesiredCount = max(2, min(4, samples.count))
         Chart(samples) { s in
             AreaMark(
                 x: .value("Time", s.date),
@@ -478,9 +480,9 @@ private struct LiveTimeChart: View {
         // plot so nothing bleeds below the card (mirrors TrendChart's fix for #104).
         .chartPlotStyle { plotArea in plotArea.clipped() }
         .chartXAxis {
-            AxisMarks(values: .automatic(desiredCount: 4)) { _ in
+            AxisMarks(values: .automatic(desiredCount: xAxisDesiredCount)) { _ in
                 AxisGridLine().foregroundStyle(StrandPalette.hairline.opacity(0.4))
-                AxisValueLabel(format: .dateTime.hour().minute().second())
+                AxisValueLabel(format: .dateTime.hour().minute().second(), collisionResolution: .greedy)
                     .foregroundStyle(StrandPalette.textTertiary)
                     .font(StrandFont.footnote)
             }

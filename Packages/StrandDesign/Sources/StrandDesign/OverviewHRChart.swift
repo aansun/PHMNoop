@@ -418,6 +418,10 @@ public struct OverviewHRChart: View {
     // MARK: Body
 
     public var body: some View {
+        // Sparse HR windows have long time labels, so five automatic ticks can overlap even when
+        // only two or three readings are present. Match the tick budget to the available points and
+        // let Swift Charts suppress any remaining collision.
+        let xAxisDesiredCount = max(2, min(5, points.count))
         Chart { marks }
         .chartXScale(domain: xDomain)
         .chartYScale(domain: valueRange)
@@ -425,9 +429,10 @@ public struct OverviewHRChart: View {
         // unclipped — clip the plot so a spiky HR curve doesn't bleed past the chart (see TrendChart).
         .chartPlotStyle { plotArea in plotArea.clipped() }
         .chartXAxis {
-            AxisMarks(values: .automatic(desiredCount: 5)) { _ in
+            AxisMarks(values: .automatic(desiredCount: xAxisDesiredCount)) { _ in
                 AxisGridLine().foregroundStyle(StrandPalette.hairline.opacity(0.4))
-                AxisValueLabel().foregroundStyle(StrandPalette.textTertiary)
+                AxisValueLabel(collisionResolution: .greedy)
+                    .foregroundStyle(StrandPalette.textTertiary)
                     .font(StrandFont.footnote)
             }
         }
