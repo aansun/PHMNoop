@@ -196,6 +196,15 @@ final class HealthWritebackTests: XCTestCase {
                        "the vital key must not embed a device id (#1503)")
     }
 
+    func testIncrementalStepsWritesOnlyThePositiveDifference() {
+        XCTAssertEqual(HealthWriteback.incrementalSteps(current: 5_640, previous: nil), 5_640)
+        XCTAssertEqual(HealthWriteback.incrementalSteps(current: 5_729, previous: 5_640), 89)
+        XCTAssertEqual(HealthWriteback.incrementalSteps(current: 5_729, previous: 5_729), 0)
+        // A reset/correction must not create a negative HealthKit quantity.
+        XCTAssertEqual(HealthWriteback.incrementalSteps(current: 289, previous: 5_729), 0)
+        XCTAssertEqual(HealthWriteback.incrementalSteps(current: 0, previous: 5_729), 0)
+    }
+
     func testSleepKeyHasNoDeviceIdSegment() {
         let startTs = 1_700_000_000
         let key = HealthWriteback.appleHealthSleepKey(startTs: startTs)

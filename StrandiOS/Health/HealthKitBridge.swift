@@ -178,6 +178,14 @@ final class HealthKitBridge: ObservableObject {
     /// below). Set once the first hourly-step HealthKit query actually returns rows; every later
     /// `sync()` only walks the same window the daily collectors already use.
     private static let hourlyStepsBackfilledKey = "applehealth.hourlySteps.backfilled"
+    /// Versioned migration marker for the step write-back format. The previous implementation wrote
+    /// one cumulative daily sample and could leave several copies in HealthKit after repeated syncs.
+    /// The first incremental write-back removes only this app's old step samples, then starts with a
+    /// clean baseline so the next sample preserves the same daily total without inflating it.
+    private static let stepWritebackMigrationKey = "applehealth.stepWriteback.incremental.v1"
+    /// JSON-encoded `[localDay: lastCumulativeTotalWritten]`. The value is kept locally so an unchanged
+    /// daily total produces no new HealthKit sample and an increased total writes only the difference.
+    private static let stepWritebackStateKey = "applehealth.stepWriteback.state.v1"
 
     /// A stable fingerprint of the read types currently requested.
     private static var readTypeSignature: String {
@@ -1036,14 +1044,28 @@ final class HealthKitBridge: ObservableObject {
     /// overridden by any imported (`noopDeviceId`) row — deliberately NOT the `appleDeviceId`
     /// ("apple-health") rows, which ARE the phone's own steps and would only be echoed back.
     ///
-    /// Each day becomes ONE cumulative `.stepCount` sample spanning [local midnight, min(now, next
-    /// midnight)) — a real interval, not a fabricated point, so Health attributes it to the correct day.
-    /// Dedup mirrors `writeVitals`: a deterministic `HKMetadataKeyExternalUUID` (`noop:<id>:<day>`) plus
-    /// a delete-then-save scoped to our own `HKSource`, so a re-sync replaces rather than duplicates.
+    /// HealthKit's `.stepCount` is additive, so each write contains only the positive difference from the
+    /// last cumulative total written for that day. An unchanged total emits nothing; a counter reset or
+    /// correction updates the baseline without writing a negative sample. This is important because
+    /// writing the whole daily total on every sync makes HealthKit sum the same steps twice or three times.
+    /// Every incremental sample gets a key based on the resulting cumulative total, making retries
+    /// idempotent even if the process is interrupted after HealthKit saves but before UserDefaults updates.
     /// Reads never re-ingest these — every step read carries `notNoopAuthored`.
     private func writeSteps(whoopStore: WhoopStore, days: Int) async throws {
         guard let type = HKQuantityType.quantityType(forIdentifier: .stepCount),
               store.authorizationStatus(for: type) == .sharingAuthorized else { return }
+
+        // Remove samples made by the old cumulative writer before switching formats. This is scoped to
+        // this app's HealthKit source, so phone/watch/other-app step data is never touched. If the delete
+        // fails, stop before writing the new format; otherwise both formats could coexist and inflate the
+        // Health total during the migration.
+        let defaults = UserDefaults.standard
+        if !defaults.bool(forKey: Self.stepWritebackMigrationKey) {
+            let bySource = HKQuery.predicateForObjects(from: HKSource.default())
+            try await store.deleteObjects(of: type, predicate: bySource)
+            defaults.set(true, forKey: Self.stepWritebackMigrationKey)
+        }
+
         let cal = Calendar.current
         let now = Date()
         let to = HealthKitBridge.dayString(now)
@@ -1056,31 +1078,58 @@ final class HealthKitBridge: ObservableObject {
         for r in computed { if let s = r.steps { stepsByDay[r.day] = s } }
         for r in imported { if let s = r.steps { stepsByDay[r.day] = s } }   // imported overrides computed
 
+        let decoder = JSONDecoder()
+        let encoder = JSONEncoder()
+        var lastWrittenByDay: [String: Int] = {
+            guard let data = defaults.data(forKey: Self.stepWritebackStateKey),
+                  let state = try? decoder.decode([String: Int].self, from: data) else { return [:] }
+            return state
+        }()
         var samples: [HKQuantitySample] = []
         var keys: [String] = []
-        for (day, steps) in stepsByDay where steps > 0 {
-            guard let date = HealthKitBridge.date(from: day) else { continue }
+        for (day, steps) in stepsByDay.sorted(by: { $0.key < $1.key }) {
+            guard steps >= 0 else { continue }
+            let previous = lastWrittenByDay[day]
+            let delta = HealthWriteback.incrementalSteps(current: steps, previous: previous)
+            // Always advance the baseline, including a reset/correction, but never emit a negative
+            // quantity. A later increase will then be measured from this corrected total.
+            lastWrittenByDay[day] = steps
+            guard delta > 0,
+                  let date = HealthKitBridge.date(from: day) else { continue }
             let dayStart = cal.startOfDay(for: date)
             let dayEnd = cal.date(byAdding: .day, value: 1, to: dayStart) ?? dayStart
-            // Never claim steps in the future: today's still-forming total ends at `now`.
-            let end = min(dayEnd, now)
-            guard end > dayStart else { continue }
-            let key = HealthWriteback.appleHealthVitalKey(metricId: HKQuantityTypeIdentifier.stepCount.rawValue, day: day)
+            // No event-level timestamps are available from a daily metric. Place the increment at the
+            // current time for today, or at the end of its local day for a historical backfill, while
+            // keeping the one-second interval inside the correct calendar day.
+            let end = min(max(now, dayStart.addingTimeInterval(1)), dayEnd)
+            let start = max(dayStart, end.addingTimeInterval(-1))
+            guard end > start else { continue }
+            let key = HealthWriteback.appleHealthExternalUUID(
+                kind: HKQuantityTypeIdentifier.stepCount.rawValue,
+                identity: "\(day):\(steps)")
             keys.append(key)
             samples.append(HKQuantitySample(
                 type: type,
-                quantity: .init(unit: .count(), doubleValue: Double(steps)),
-                start: dayStart, end: end,
+                quantity: .init(unit: .count(), doubleValue: Double(delta)),
+                start: start, end: end,
                 metadata: [HKMetadataKeyExternalUUID: key]))
         }
-        guard !samples.isEmpty else { return }
+        guard !samples.isEmpty else {
+            if let data = try? encoder.encode(lastWrittenByDay) {
+                defaults.set(data, forKey: Self.stepWritebackStateKey)
+            }
+            return
+        }
 
         let bySource = HKQuery.predicateForObjects(from: HKSource.default())
         let byKey = HKQuery.predicateForObjects(withMetadataKey: HKMetadataKeyExternalUUID,
                                                 allowedValues: Array(Set(keys)))
         let pred = NSCompoundPredicate(andPredicateWithSubpredicates: [bySource, byKey])
-        _ = try? await self.store.deleteObjects(of: type, predicate: pred)
+        try await self.store.deleteObjects(of: type, predicate: pred)
         try await self.store.save(samples)
+        if let data = try? encoder.encode(lastWrittenByDay) {
+            defaults.set(data, forKey: Self.stepWritebackStateKey)
+        }
     }
     // === PHM OVERLAY (PHMNOOP) END ===
 
