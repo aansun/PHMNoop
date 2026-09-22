@@ -81,15 +81,32 @@ struct CoachView: View {
                 } else {
                     suggestionChips
                 }
-                composer
-                // K12: show a rough token estimate when the draft is non-empty.
-                if !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
-                   let tokens = coach.estimatedTokens(forDraft: draft) {
-                    tokenEstimateBar(tokens)
-                }
                 privacyFootnote
             } else {
                 setupCard
+            }
+        }
+        // Keep the composer reachable like a conventional AI chat: the conversation scrolls behind it
+        // while the input remains docked above the keyboard/tab bar instead of becoming another message
+        // in the page scroll.
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if coach.isConfigured {
+                VStack(spacing: NoopMetrics.space2) {
+                    if !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                       let tokens = coach.estimatedTokens(forDraft: draft) {
+                        tokenEstimateBar(tokens)
+                    }
+                    composer
+                }
+                .padding(.horizontal, NoopMetrics.screenHPadding)
+                .padding(.top, NoopMetrics.space2)
+                .padding(.bottom, NoopMetrics.space1)
+                .background {
+                    NoopPanelSurface(tint: StrandPalette.chargeColor,
+                                     cornerRadius: 0,
+                                     elevated: true,
+                                     surfaceOpacity: 0.98)
+                }
             }
         }
         // macOS only. On iOS these two live in `connectionMenu` instead, because this bar is hidden for
@@ -216,7 +233,7 @@ struct CoachView: View {
                         }
                     }
                     .labelsHidden()
-                    .pickerStyle(.segmented)
+                    .pickerStyle(.menu)
                     .accessibilityLabel("Provider")
                 }
 
@@ -409,7 +426,7 @@ struct CoachView: View {
 
     private var connectedHeader: some View {
         HStack(spacing: 10) {
-            StatePill("\(coach.provider.displayName) · \(coach.model)", tone: .accent, showsDot: true)
+            providerSwitcher
             Spacer()
             if coach.sending {
                 StatePill("Thinking", tone: .accent, pulsing: true)
@@ -428,6 +445,31 @@ struct CoachView: View {
             connectionMenu
             #endif
         }
+    }
+
+    /// Provider selection remains available after a provider is configured. The setup card used to be
+    /// the only provider picker, so selecting keyless Apple Intelligence made every other provider
+    /// unreachable. A compact menu matches common AI chat headers and keeps provider switching one tap
+    /// away without interrupting the current conversation.
+    private var providerSwitcher: some View {
+        Menu {
+            ForEach(AIProvider.allCases) { candidate in
+                Button {
+                    coach.provider = candidate
+                } label: {
+                    if candidate == coach.provider {
+                        Label(candidate.displayName, systemImage: "checkmark")
+                    } else {
+                        Text(candidate.displayName)
+                    }
+                }
+                .disabled(coach.sending)
+            }
+        } label: {
+            StatePill("\(coach.provider.displayName) · \(coach.model)", tone: .accent, showsDot: true)
+        }
+        .accessibilityLabel("Switch AI provider")
+        .accessibilityHint("Choose Apple Intelligence, OpenAI, Anthropic, Gemini, or a custom provider")
     }
 
     #if os(iOS)
@@ -484,57 +526,65 @@ struct CoachView: View {
     }
     #endif
 
+    @ViewBuilder
     private var transcript: some View {
-        StrandCard(padding: 16) {
-            if coach.messages.isEmpty {
-                emptyTranscript
-            } else {
-                ScrollViewReader { proxy in
-                    ScrollView {
-                        // Lazy so off-screen bubbles aren't all resident/laid-out at once; with the
-                        // `maxStoredMessages` cap the transcript is already bounded, this keeps render cost flat.
-                        LazyVStack(alignment: .leading, spacing: 12) {
-                            ForEach(coach.messages) { message in
-                                bubble(message).id(message.id)
-                            }
-                            if coach.sending {
-                                typingIndicator.id("typing")
-                            }
+        if coach.messages.isEmpty {
+            emptyTranscript
+                .frame(maxWidth: .infinity, minHeight: 260, alignment: .center)
+        } else {
+            ScrollViewReader { proxy in
+                ScrollView {
+                    // Lazy so off-screen bubbles aren't all resident/laid-out at once; with the
+                    // `maxStoredMessages` cap the transcript is already bounded, this keeps render cost flat.
+                    LazyVStack(alignment: .leading, spacing: 12) {
+                        ForEach(coach.messages) { message in
+                            bubble(message).id(message.id)
                         }
-                        .padding(.vertical, 2)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        if coach.sending {
+                            typingIndicator.id("typing")
+                        }
                     }
-                    // #697 parity: this screen builds its OWN ScrollView rather than going through
-                    // ScreenScaffold, so it never inherited the scaffold's horizontal-bounce suppression and
-                    // could still rubber-band left-right on a purely vertical scroll. Same modifier, same
-                    // guard. `.basedOnSize` permits horizontal bounce only when content genuinely overflows
-                    // the width, so nothing that is meant to scroll sideways is affected. (#1532 follow-up)
-                    #if os(iOS)
-                    .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
-                    #endif
-                    .frame(minHeight: 220, maxHeight: 460)
-                    .onChangeCompat(of: coach.messages.count) { _ in
-                        scrollToEnd(proxy)
-                    }
-                    .onChangeCompat(of: coach.sending) { _ in
-                        scrollToEnd(proxy)
-                    }
+                    .padding(.vertical, 2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                // #697 parity: this screen builds its OWN ScrollView rather than going through
+                // ScreenScaffold, so it never inherited the scaffold's horizontal-bounce suppression and
+                // could still rubber-band left-right on a purely vertical scroll. Same modifier, same
+                // guard. `.basedOnSize` permits horizontal bounce only when content genuinely overflows
+                // the width, so nothing that is meant to scroll sideways is affected. (#1532 follow-up)
+                #if os(iOS)
+                .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
+                #endif
+                .frame(minHeight: 300, maxHeight: 560)
+                .onChangeCompat(of: coach.messages.count) { _ in
+                    scrollToEnd(proxy)
+                }
+                .onChangeCompat(of: coach.sending) { _ in
+                    scrollToEnd(proxy)
                 }
             }
         }
     }
 
     private var emptyTranscript: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Ask your first question")
-                .font(StrandFont.headline)
-                .foregroundStyle(StrandPalette.textPrimary)
-            Text("Coach reads a summary of your last two weeks plus 30-day averages and recent workouts, then answers in plain language. Try a suggestion below.")
-                .font(StrandFont.subhead)
-                .foregroundStyle(StrandPalette.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
+        VStack(spacing: NoopMetrics.space3) {
+            Image(systemName: "sparkles")
+                .font(StrandFont.rounded(28))
+                .foregroundStyle(StrandPalette.accent)
+                .accessibilityHidden(true)
+            VStack(spacing: NoopMetrics.space1) {
+                Text("Ask your first question")
+                    .font(StrandFont.headline)
+                    .foregroundStyle(StrandPalette.textPrimary)
+                Text("Your coach can explain your numbers, compare trends, and turn today's recovery into a practical plan.")
+                    .font(StrandFont.subhead)
+                    .foregroundStyle(StrandPalette.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
         }
-        .frame(maxWidth: .infinity, minHeight: 180, alignment: .topLeading)
+        .frame(maxWidth: 420)
+        .padding(.horizontal, NoopMetrics.space4)
     }
 
     @ViewBuilder
@@ -879,10 +929,17 @@ struct CoachView: View {
     #endif
 
     private var privacyFootnote: some View {
-        Label {
-            Text(coach.provider == .custom
-                 ? "Coach talks only to the server URL you set. Point it at a local model (Ollama, LM Studio, llama.cpp) to keep everything on your own machine. Nothing is sent until you ask."
-                 : "This is the only feature that leaves \(Platform.deviceNounPhrase). It sends a summary of your metrics to \(coach.provider.displayName) using your own key. Nothing is sent until you ask.")
+        let message: String = {
+            if coach.provider == .appleIntelligence {
+                return "Apple Intelligence runs on-device. Nothing is sent to a cloud provider, and your metrics stay on \(Platform.deviceNounPhrase)."
+            }
+            if coach.provider == .custom {
+                return "Coach talks only to the server URL you set. Point it at a local model (Ollama, LM Studio, llama.cpp) to keep everything on your own machine. Nothing is sent until you ask."
+            }
+            return "This is the only feature that leaves \(Platform.deviceNounPhrase). It sends a summary of your metrics to \(coach.provider.displayName) using your own key. Nothing is sent until you ask."
+        }()
+        return Label {
+            Text(message)
                 .font(StrandFont.footnote)
                 .foregroundStyle(StrandPalette.textTertiary)
                 .fixedSize(horizontal: false, vertical: true)

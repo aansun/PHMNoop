@@ -75,15 +75,27 @@ struct CoachSettingsView: View {
     /// disabled and the live catalogue those three publish was unreachable. A key exists by definition
     /// on this screen, so the picker and the refresh both work.
     ///
-    /// The PROVIDER deliberately stays on the setup card. A stored key records which provider it
-    /// belongs to and is never sent anywhere else, so switching provider here would leave a key that
-    /// cannot be used and a screen that cannot fix it. Kotlin twin: `CoachModelCard`.
+    /// Provider switching also lives here so a keyless on-device provider never traps the user inside
+    /// the connected chat. A stored key remains scoped to its provider; selecting another cloud provider
+    /// intentionally returns the user to setup after this sheet closes, where its own key can be saved.
+    /// Kotlin twin: `CoachModelCard`.
     private var modelBar: some View {
         NoopCard(padding: 14, tint: StrandPalette.chargeColor) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("\(coach.provider.displayName) · \(coach.model)")
-                        .font(StrandFont.subhead).foregroundStyle(StrandPalette.textPrimary)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Provider")
+                            .strandOverline()
+                        Picker("Provider", selection: $coach.provider) {
+                            ForEach(AIProvider.allCases) { provider in
+                                Text(provider.displayName).tag(provider)
+                            }
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .font(StrandFont.subhead)
+                        .accessibilityLabel("AI provider")
+                    }
                     Spacer(minLength: 8)
                     Button {
                         Task { await coach.refreshModels() }
@@ -105,6 +117,12 @@ struct CoachSettingsView: View {
                 .labelsHidden()
                 .pickerStyle(.menu)
                 .accessibilityLabel("Model")
+                if !coach.isConfigured {
+                    Text("This provider needs its own connection or API key. Close settings to finish setup.")
+                        .font(StrandFont.footnote)
+                        .foregroundStyle(StrandPalette.textTertiary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
         }
     }
