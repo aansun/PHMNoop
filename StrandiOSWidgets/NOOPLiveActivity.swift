@@ -9,33 +9,68 @@ struct NOOPLiveActivity: Widget {
         ActivityConfiguration(for: NOOPActivityAttributes.self) { context in
             // Lock Screen / banner presentation.
             VStack(spacing: 10) {
-                HStack(spacing: 10) {
-                    Image(systemName: "heart.fill")
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(StrandPalette.statusCritical)
-                    Text(context.attributes.title)
-                        .font(.caption)
-                        .foregroundStyle(StrandPalette.textSecondary)
+                HStack(alignment: .top, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        HStack(alignment: .firstTextBaseline, spacing: 4) {
+                            Text(context.state.bpm.map { "\($0)" } ?? "–")
+                                .font(.system(size: 30, weight: .bold, design: .rounded))
+                                .monospacedDigit()
+                                .foregroundStyle(StrandPalette.textPrimary)
+                            Text("bpm")
+                                .font(.caption)
+                                .foregroundStyle(StrandPalette.textSecondary)
+                        }
+                        Text("HEART RATE")
+                            .font(.caption2)
+                            .tracking(0.8)
+                            .foregroundStyle(StrandPalette.textSecondary)
+                    }
                     Spacer(minLength: 8)
-                    Text(context.state.bpm.map { "\($0)" } ?? "–")
-                        .font(.system(size: 26, weight: .bold, design: .rounded))
-                        .monospacedDigit()
-                        .foregroundStyle(StrandPalette.textPrimary)
-                    Text("bpm")
-                        .font(.caption)
-                        .foregroundStyle(StrandPalette.textSecondary)
+                    VStack(alignment: .trailing, spacing: 2) {
+                        if let startedAt = context.state.activityStartedAt {
+                            Text(timerInterval: startedAt...startedAt.addingTimeInterval(86_400),
+                                 countsDown: false)
+                                .font(.system(size: 22, weight: .bold, design: .rounded))
+                                .monospacedDigit()
+                                .foregroundStyle(StrandPalette.textPrimary)
+                        }
+                        Text(context.state.activityName ?? context.attributes.title)
+                            .font(.caption2)
+                            .foregroundStyle(StrandPalette.textSecondary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.7)
+                            .multilineTextAlignment(.trailing)
+                    }
                 }
                 Rectangle()
                     .fill(StrandPalette.hairline)
                     .frame(height: 1)
                 NOOPHeartRateZoneRail(zone: context.state.heartRateZone)
                 HStack(spacing: 0) {
-                    NOOPLiveMetric(label: "DISTANCE", value: context.state.distance ?? "—")
+                    NOOPLiveMetric(label: "AVG", value: context.state.averageBPM.map(String.init) ?? "—")
                     Rectangle()
                         .fill(StrandPalette.hairline)
                         .frame(width: 1, height: 34)
                         .padding(.horizontal, 12)
-                    NOOPLiveMetric(label: "SPEED", value: context.state.speed ?? "—")
+                    NOOPLiveMetric(label: "PEAK", value: context.state.peakBPM.map(String.init) ?? "—")
+                    Rectangle()
+                        .fill(StrandPalette.hairline)
+                        .frame(width: 1, height: 34)
+                        .padding(.horizontal, 12)
+                    NOOPLiveMetric(label: "EFFORT", value: context.state.effort.map(String.init) ?? "—")
+                }
+                if context.state.distance != nil || context.state.pace != nil {
+                    Rectangle()
+                        .fill(StrandPalette.hairline)
+                        .frame(height: 1)
+                    HStack(spacing: 0) {
+                        NOOPLiveMetric(label: "DISTANCE", value: context.state.distance ?? "—")
+                        Rectangle()
+                            .fill(StrandPalette.hairline)
+                            .frame(width: 1, height: 34)
+                            .padding(.horizontal, 12)
+                        NOOPLiveMetric(label: "PACE", value: context.state.pace ?? "—")
+                    }
                 }
             }
             .padding()
@@ -59,7 +94,9 @@ struct NOOPLiveActivity: Widget {
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    Text(context.attributes.title).font(.caption).foregroundStyle(.secondary)
+                    Text(context.state.activityName ?? context.attributes.title)
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             } compactLeading: {
                 Image(systemName: "heart.fill").foregroundStyle(StrandPalette.statusCritical)

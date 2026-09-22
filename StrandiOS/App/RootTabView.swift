@@ -25,6 +25,8 @@ struct RootTabView: View {
 
     /// The live gym session, owned at the app root — see `LiftSessionController`.
     @EnvironmentObject private var liftSession: LiftSessionController
+    /// The shared model drives the direct Quick Action workout flow.
+    @EnvironmentObject private var model: AppModel
     /// External entry points must wait until the mandatory first-run gates have completed. The root owns
     /// that state; keeping it explicit here prevents this shell's window-level sheet from covering a gate.
     let homeScreenQuickActionsEnabled: Bool
@@ -38,6 +40,8 @@ struct RootTabView: View {
 
     /// Which quick-action screen the centre FAB is presenting (nil = sheet closed).
     @State private var quickAction: QuickAction?
+    /// Presents the in-exercise screen after a Quick Action workout selection starts the session.
+    @State private var showQuickStartedWorkout = false
     /// Presents the Devices manager (pair / switch bands) when a screen asks the shell to open it.
     @State private var showDevices = false
     /// A routed v5 pillar screen (Insights hub / Lab Book / fused record / Rhythm) presented as a sheet
@@ -292,6 +296,11 @@ struct RootTabView: View {
         .sheet(isPresented: $liftSession.isPresented) {
             LiftSessionView { }
         }
+        .sheet(isPresented: $showQuickStartedWorkout) {
+            LiveWorkoutView(onClose: { showQuickStartedWorkout = false })
+                .environmentObject(model)
+                .environmentObject(model.live)
+        }
         // A session left running by a previous launch comes back as the BAR, not as a sheet thrown
         // in the user's face — they open it when they want it.
         .task {
@@ -392,7 +401,16 @@ struct RootTabView: View {
         case .live:
             quickScreen(LiveView())
         case .workout:
-            quickScreen(WorkoutsView())
+            StartWorkoutSheet { name in
+                model.startWorkout(sport: name)
+                quickAction = nil
+                // The picker dismisses the Quick Action sheet as part of its selection callback. Wait
+                // for that dismissal before presenting the workout screen to avoid two sheet transitions
+                // competing in the same run loop.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    showQuickStartedWorkout = true
+                }
+            }
         case .journal:
             quickScreen(InsightsView())
         case .breathe:
