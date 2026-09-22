@@ -181,6 +181,18 @@ public enum HealthWriteback {
         appleHealthExternalUUID(kind: metricId, identity: day)
     }
 
+    /// Returns the positive increment between two cumulative step totals.
+    ///
+    /// Apple Health's step type is additive: a write-back must contain only the new
+    /// steps since the previous write, not the whole daily counter again. A lower
+    /// current value is treated as a counter reset/correction; the caller should
+    /// store it as the new baseline without writing a negative sample.
+    public static func incrementalSteps(current: Int, previous: Int?) -> Int {
+        guard current > 0 else { return 0 }
+        guard let previous else { return current }
+        return max(0, current - previous)
+    }
+
     /// The sleep key: `noop:sleep:<startTs>`.
     public static func appleHealthSleepKey(startTs: Int) -> String {
         appleHealthExternalUUID(kind: "sleep", identity: "\(startTs)")

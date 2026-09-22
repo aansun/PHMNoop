@@ -81,6 +81,12 @@
 	<string>$(OURA_CLIENT_SECRET)</string>
 	<key>OURA_REDIRECT_URI</key>
 	<string>$(OURA_REDIRECT_URI)</string>
+	<key>STRAVA_CLIENT_ID</key>
+	<string>$(STRAVA_CLIENT_ID)</string>
+	<key>STRAVA_CLIENT_SECRET</key>
+	<string>$(STRAVA_CLIENT_SECRET)</string>
+	<key>STRAVA_REDIRECT_URI</key>
+	<string>$(STRAVA_REDIRECT_URI)</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>bluetooth-central</string>

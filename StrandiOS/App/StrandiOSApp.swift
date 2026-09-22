@@ -224,8 +224,9 @@ struct StrandiOSApp: App {
                 }
                 // Once a manual workout is saved, take the user straight to the Workouts log so the
                 // completed session and its detail are visible instead of leaving them on Today/Live.
-                .onReceive(model.$lastWorkout.compactMap { $0 }) { _ in
+                .onReceive(model.$lastWorkout.compactMap { $0 }) { row in
                     router.openWorkouts()
+                    Task { await StravaAutoUploadCoordinator.uploadIfNeeded(row) }
                 }
                 // End the Live Activity the moment the link drops, even if no further HR tick arrives.
                 .onReceive(model.live.$connected) { _ in
