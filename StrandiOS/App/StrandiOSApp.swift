@@ -259,6 +259,14 @@ struct StrandiOSApp: App {
                     // so a refresh storm can't burn the ~50/day complication transfer budget.
                     Task { await watch.pushLatest(from: model) }
                 }
+                // A scoring pass can update Rest's metric-series row without changing the merged daily
+                // cache, so Repository.refresh may legitimately keep `refreshSeq` unchanged. Observe the
+                // scorer's completion as the second score-bearing seam; otherwise Charge/Effort/Rest can
+                // remain on the previous snapshot even though Today has just rendered the new result.
+                .onReceive(model.intelligence.$computing.dropFirst().removeDuplicates()) { computing in
+                    guard !computing else { return }
+                    Task { await WidgetSnapshot.publish(from: model) }
+                }
                 // #114: strap battery % and connection are LIVE (model.live), not repo-cache, so they never
                 // bump refreshSeq — the widget's battery would otherwise never move while the app is open
                 // (the "battery not updating" report). Republish on those too, foreground-gated. Both are
@@ -284,7 +292,7 @@ struct StrandiOSApp: App {
                 .onReceive(model.$bpm.dropFirst()) { _ in
                     guard scenePhase == .active else { return }
                     guard WidgetSnapshot.HRPublishThrottle.admit() else { return }
-                    Task { await WidgetSnapshot.publishLive(from: model) }
+                    Task { await WidgetSnapshot.publishLive(from: model, includeEffort: true) }
                 }
                 .onChange(of: effortScaleRaw) { _, _ in
                     guard scenePhase == .active else { return }
@@ -408,20 +416,28 @@ struct StrandiOSApp: App {
         let day = model.repo.cachedWidgetAnchor()
         let bpm = model.live.connected ? (model.bpm ?? model.live.heartRate) : nil
         let metrics = liveActivityMetrics(bpm: bpm)
+        let workout = model.activeWorkout
+        let effort = workout.map { Int($0.liveStrain.rounded()) }
+            ?? day?.strain.map { Int($0.rounded()) }
         liveActivity.update(
             bpm: bpm,
             recovery: day?.recovery.map { Int($0.rounded()) },
             // While a sync or lift session runs its own activity is the useful banner; don't stack the HR one.
             connected: model.live.connected && !liftSession.isActive && !model.live.backfilling,
-            effort: day?.strain.map { Int($0.rounded()) },
+            effort: effort,
             heartRateZone: metrics.zone,
+            activityName: workout?.sport,
+            activityStartedAt: workout?.start,
+            averageBPM: workout.flatMap { $0.avgHr > 0 ? $0.avgHr : nil },
+            peakBPM: workout.flatMap { $0.peakHr > 0 ? $0.peakHr : nil },
             distance: metrics.distance,
-            speed: metrics.speed)
+            pace: metrics.pace,
+            speed: nil)
     }
 
     @MainActor
     private func liveActivityMetrics(bpm: Int?) ->
-        (zone: Int?, distance: String?, speed: String?) {
+        (zone: Int?, distance: String?, pace: String?, speed: String?) {
         let zone = bpm.map { model.profile.hrZoneSet.zoneNumber(forBPM: Double($0)) }
         let unitSystem = UnitSystem(rawValue: unitSystemRaw) ?? .metric
         let distanceSystem = UnitPrefs.resolveDistance(
@@ -433,11 +449,14 @@ struct StrandiOSApp: App {
                   model.gpsRecorder.pointCount > 0 else { return nil }
             return UnitFormatter.distanceFromMeters(model.gpsRecorder.distanceM, system: distanceSystem)
         }()
-        let speedKmh = model.live.sensorSpeedKmh ?? model.gpsRecorder.paceSecPerKm.flatMap {
-            $0 > 0 ? 3600 / $0 : nil
+        let pace: String? = distance.map { _ in
+            UnitFormatter.paceFromSecPerKm(model.gpsRecorder.paceSecPerKm, system: distanceSystem)
         }
-        let speed = UnitFormatter.speedFromKilometersPerHour(speedKmh, system: distanceSystem)
-        return (zone, distance, speed)
+        // Lift Log still uses the strap/sensor speed readout. The general workout activity uses the
+        // GPS pace above, matching the DistancePaceRowIfPresent on the in-app activity screen.
+        let speed = UnitFormatter.speedFromKilometersPerHour(model.live.sensorSpeedKmh,
+                                                              system: distanceSystem)
+        return (zone, distance, pace, speed)
     }
 
     @MainActor

@@ -1,6 +1,7 @@
 #if os(iOS)
 import Foundation
 import WidgetKit
+import StrandAnalytics
 
 extension WidgetSnapshot {
     /// The ACTIVE device's charge for the widget (#2075).
@@ -70,16 +71,19 @@ extension WidgetSnapshot {
         // app's plain `@AppStorage(UnitPrefs.effortScaleKey)` (it is not in the App Group), so we
         // pre-format the display string here and keep the 0–100 int for the ring fill (the fill
         // fraction is scale-independent: 38/100 == 8.0/21).
-        let effortScale = UnitPrefs.resolveEffortScale(
-            UserDefaults.standard.string(forKey: UnitPrefs.effortScaleKey) ?? ""
+        let effortScale = currentEffortScale()
+        // Today uses the in-progress HR window for today's Effort. Reading only `day.strain` here made
+        // the widget lag behind the app until the next heavy scoring pass (and could even show the
+        // previous day's Effort after the logical-day rollover). Keep Charge on the shared recovery
+        // anchor, but resolve Effort from today's row/live HR exactly as Today does.
+        let todayRow = Repository.resolveToday(
+            days: days,
+            logicalKey: Repository.logicalDayKey(now),
+            localKey: Repository.localDayKey(now)
         )
-        let strain = day?.strain
-        let effortDisplay: String? = strain.map { stored in
-            if effortScale == .whoop {
-                return String(format: "%.1f", UnitFormatter.effortValue(stored, scale: .whoop))
-            }
-            return "\(Int(stored.rounded()))"
-        }
+        let liveStrain = await currentLiveEffort(from: model, now: now)
+        let strain = liveStrain ?? todayRow?.strain ?? day?.strain
+        let effortDisplay: String? = strain.map { Self.effortDisplay($0, scale: effortScale) }
         // #2040: today's stress curve. Self-gating on a cheap heart-rate fingerprint, so a publish that
         // changed nothing costs one indexed COUNT and no rows. Only the FULL path scores it; the live
         // fast path below reuses the previous snapshot and so carries the curve forward untouched.
@@ -127,7 +131,7 @@ extension WidgetSnapshot {
     /// full build so this fast path can never publish an incomplete first glance. The first live update
     /// after a local-day rollover also takes the full path so the score anchor advances with Today.
     @MainActor
-    static func publishLive(from model: AppModel) async {
+    static func publishLive(from model: AppModel, includeEffort: Bool = false) async {
         let now = Date()
         guard var snap = load(), !liveUpdateRequiresFullBuild(previous: snap, now: now) else {
             await publish(from: model)
@@ -140,8 +144,63 @@ extension WidgetSnapshot {
         snap.bpm = model.bpm ?? model.live.heartRate
         snap.batteryPct = Self.activeBatteryPct(from: model)
         snap.bonded = model.live.bonded
+        if includeEffort {
+            let scale = currentEffortScale()
+            if let strain = await currentLiveEffort(from: model, now: now) {
+                snap.effort = Int(strain.rounded())
+                snap.effortDisplay = effortDisplay(strain, scale: scale)
+                snap.effortWhoop = scale == .whoop
+            }
+        }
         snap.updated = now
         saveAndReloadIfChanged(snap, previous: previous)
+    }
+
+    /// Optional live score used by the widget while the app is accumulating today's HR. This mirrors
+    /// TodayView's live Effort path without changing the shared/core scoring implementation.
+    @MainActor
+    private static func currentLiveEffort(from model: AppModel, now: Date) async -> Double? {
+        let end = Int(now.timeIntervalSince1970)
+        var start = Int(Repository.logicalDayStart(now).timeIntervalSince1970)
+
+        // Today can use sleep-onset as the start of the effort window. Keep that same preference here
+        // so the widget does not disagree with the ring when the user has enabled it.
+        let mode = DayCycleMode.persisted(UserDefaults.standard.string(forKey: DayCycleMode.storageKey))
+        if mode == .sleepOnset {
+            let key = Repository.logicalDayKey(now)
+            let onset = await model.repo.exploreSeries(
+                key: DayCycleIntelligenceIntegration.onsetKey, source: "my-whoop"
+            ).last(where: { $0.day <= key }).map { Int($0.value.rounded()) }
+            if let onset { start = onset }
+        }
+        guard end > start else { return nil }
+
+        let samples = await model.repo.hrSamples(from: start, to: end, limit: 200_000)
+        let maxHR = model.profile.age > 0
+            ? StrainScorer.tanakaHRmax(age: Double(model.profile.age)) : nil
+        let restingHR = model.repo.today?.restingHr.map(Double.init) ?? StrainScorer.defaultRestingHR
+        return StrainScorer.strain(
+            samples,
+            maxHR: maxHR,
+            restingHR: restingHR,
+            method: PuffinExperiment.effortMethod,
+            sex: model.profile.sex
+        )
+    }
+
+    @MainActor
+    private static func currentEffortScale() -> EffortScale {
+        UnitPrefs.resolveEffortScale(
+            UserDefaults.standard.string(forKey: UnitPrefs.effortScaleKey) ?? ""
+        )
+    }
+
+    private static func effortDisplay(_ strain: Double, scale: EffortScale) -> String {
+        if scale == .whoop {
+            return String(format: "%.1f", locale: AppLanguage.activeLocale,
+                          UnitFormatter.effortValue(strain, scale: .whoop))
+        }
+        return "\(Int(strain.rounded()))"
     }
 
     /// Persist and ask WidgetKit for a new timeline only when a rendered field changed. The snapshot's

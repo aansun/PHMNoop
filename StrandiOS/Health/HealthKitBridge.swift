@@ -527,7 +527,7 @@ final class HealthKitBridge: ObservableObject {
         await collect(.respiratoryRate, unit: HKUnit.count().unitDivided(by: .minute()), start: start, end: end, op: .discreteAverage) { day, v in
             var a = agg(day); a.respRate = v; byDay[day] = a
         }
-        await collect(.stepCount, unit: .count(), start: start, end: end, op: .cumulativeSum) { day, v in
+        await collectSteps(start: start, end: end) { day, v in
             var a = agg(day); a.steps = v; byDay[day] = a
         }
         await collect(.activeEnergyBurned, unit: .kilocalorie(), start: start, end: end, op: .cumulativeSum) { day, v in
@@ -588,6 +588,7 @@ final class HealthKitBridge: ObservableObject {
                         restingHr: a.restingHr.map { Int($0.rounded()) }, avgHrv: a.hrv,
                         recovery: nil, strain: nil, exerciseCount: nil,
                         spo2Pct: a.spo2, skinTempDevC: nil, respRateBpm: a.respRate,
+                        steps: a.steps.map { Int($0.rounded()) },
                         avgSdnn: a.hrv)   // Apple's HRV IS SDNN — mirror it into the SDNN field too
         }
         // Flatten to the generic metricSeries the shared Apple Health screen, the Today apple-health
@@ -1181,33 +1182,19 @@ final class HealthKitBridge: ObservableObject {
     /// used to decide that a Health workout has no counterpart. (#2210)
     private static let workoutReadLimit = 500
 
-    /// Delete the workouts we wrote into [fromTs, toTs] whose key is no longer among [keeping].
+    /// Find the workouts we wrote into [fromTs, toTs] that carry NOOP's external UUID.
     ///
     /// Reads the window back from Health and deletes only objects that are ours by source AND carry a
     /// `noop:workout:` external UUID, so a workout written by another app, or by us under some future
-    /// scheme, is never touched. Everything removed was observed first; nothing is deleted by range.
+    /// scheme, is never touched. The returned objects are observed first; nothing is deleted by range.
     ///
     /// A workout of ours with no external UUID at all is LEFT ALONE. It cannot be matched against the
     /// store, so deleting it would be guessing, and the #1503 sweep already exists for that class.
     ///
-    /// ONE assumption this rests on, and it is newly load-bearing: that deleting an `HKWorkout` also
-    /// removes the energy and distance samples `writeWorkouts` attached through its `HKWorkoutBuilder`.
-    /// The key-based delete already assumed it, but harmlessly, because every delete there is followed
-    /// immediately by a rewrite of the same key, so a surviving child is replaced rather than stranded.
-    /// An orphan is deleted and NOT rewritten, so if the assumption is wrong its children are left in
-    /// Health attributed to us with no workout above them, and nothing here will ever collect them.
-    ///
-    /// There is no fallback handle. `builder.addMetadata` puts the external UUID on the WORKOUT; the
-    /// samples go through `builder.addSamples` carrying no metadata at all, so they cannot be found by
-    /// key. Finding them by type and range instead would sweep `activeEnergyBurned` written by our own
-    /// vitals path and by every other source, which is precisely the blind range delete this function
-    /// exists to avoid. Verifying the assumption needs a device (#2210).
-    ///
-    /// Note also that this reads. `authorizationStatus` reports SHARE permission only, and HealthKit
-    /// does not let an app ask whether it may read. With write granted and read withheld the query
-    /// returns nothing rather than failing, so reconciliation quietly does nothing and the duplicates
-    /// stay. That fails safe, but it fails silent.
-    private func deleteOrphanedWorkouts(fromTs: Int, toTs: Int, keeping: Set<String>) async {
+    /// Read NOOP-authored workout objects in a strict start-date window. Concrete object handles are
+    /// used for deletion because older iOS versions have returned an empty result for a metadata-only
+    /// workout predicate even when the metadata is present on the `HKWorkout`.
+    private func noopWorkouts(fromTs: Int, toTs: Int, matching keys: Set<String>? = nil) async -> [HKWorkout] {
         let pred = NSCompoundPredicate(andPredicateWithSubpredicates: [
             HKQuery.predicateForObjects(from: HKSource.default()),
             // `.strictStartDate`, and it is load-bearing. A workout is an INTERVAL, and the default
@@ -1224,21 +1211,30 @@ final class HealthKitBridge: ObservableObject {
                                         end: Date(timeIntervalSince1970: TimeInterval(toTs)),
                                         options: [.strictStartDate]),
         ])
-        let orphans: [HKWorkout] = await withCheckedContinuation { (cont: CheckedContinuation<[HKWorkout], Never>) in
+        return await withCheckedContinuation { (cont: CheckedContinuation<[HKWorkout], Never>) in
             let q = HKSampleQuery(sampleType: HKObjectType.workoutType(), predicate: pred,
                                   limit: HKObjectQueryNoLimit, sortDescriptors: nil) { _, samples, _ in
-                var out: [HKWorkout] = []
-                for case let workout as HKWorkout in samples ?? [] {
+                let out = (samples ?? []).compactMap { $0 as? HKWorkout }.filter { workout in
                     guard let uuid = workout.metadata?[HKMetadataKeyExternalUUID] as? String,
-                          uuid.hasPrefix(HealthWriteback.appleHealthWorkoutKeyPrefix) else { continue }
-                    if !keeping.contains(uuid) { out.append(workout) }
+                          uuid.hasPrefix(HealthWriteback.appleHealthWorkoutKeyPrefix) else { return false }
+                    return keys == nil || keys?.contains(uuid) == true
                 }
                 cont.resume(returning: out)
             }
             store.execute(q)
         }
+    }
+
+    private func deleteOrphanedWorkouts(fromTs: Int, toTs: Int, keeping: Set<String>) async throws {
+        let workouts = await noopWorkouts(fromTs: fromTs, toTs: toTs)
+        let orphans = workouts.filter { workout in
+            guard let uuid = workout.metadata?[HKMetadataKeyExternalUUID] as? String else { return false }
+            return !keeping.contains(uuid)
+        }
         guard !orphans.isEmpty else { return }
-        _ = try? await store.delete(orphans)
+        // A failed delete must stop the rewrite. Swallowing it turns the next builder pass into an
+        // append, which is how repeated write-back produced triple workouts.
+        try await store.delete(orphans)
     }
 
     private func writeWorkouts(whoopStore: WhoopStore, fromTs: Int, toTs: Int) async throws {
@@ -1275,16 +1271,14 @@ final class HealthKitBridge: ObservableObject {
         // case where every Health copy is an orphan, and returning early would leave all of them.
         if mineRead != nil, computedRead != nil,
            mine.count < Self.workoutReadLimit, computed.count < Self.workoutReadLimit {
-            await deleteOrphanedWorkouts(fromTs: fromTs, toTs: toTs, keeping: Set(rows.map(key)))
+            try await deleteOrphanedWorkouts(fromTs: fromTs, toTs: toTs, keeping: Set(rows.map(key)))
         }
 
         guard !rows.isEmpty else { return }
-        let pred = NSCompoundPredicate(andPredicateWithSubpredicates: [
-            HKQuery.predicateForObjects(from: HKSource.default()),
-            HKQuery.predicateForObjects(withMetadataKey: HKMetadataKeyExternalUUID,
-                                        allowedValues: rows.map(key)),
-        ])
-        _ = try? await store.deleteObjects(of: .workoutType(), predicate: pred)
+        // Delete every existing copy by concrete HKWorkout handle before recreating one replacement per
+        // row. If HealthKit refuses the delete, throw instead of appending a duplicate.
+        let existing = await noopWorkouts(fromTs: fromTs, toTs: toTs, matching: Set(rows.map(key)))
+        if !existing.isEmpty { try await store.delete(existing) }
 
         for row in rows {
             let start = Date(timeIntervalSince1970: TimeInterval(row.startTs))
@@ -1421,7 +1415,7 @@ final class HealthKitBridge: ObservableObject {
         ])
         return try await withCheckedThrowingContinuation { (cont: CheckedContinuation<[(ts: Int, steps: Int)], Error>) in
             let q = HKStatisticsCollectionQuery(quantityType: type, quantitySamplePredicate: predicate,
-                                                options: .cumulativeSum, anchorDate: anchor,
+                                                options: [.cumulativeSum, .separateBySource], anchorDate: anchor,
                                                 intervalComponents: DateComponents(hour: 1))
             q.initialResultsHandler = { _, results, error in
                 if let error {
@@ -1430,12 +1424,40 @@ final class HealthKitBridge: ObservableObject {
                 }
                 var rows: [(ts: Int, steps: Int)] = []
                 results?.enumerateStatistics(from: start, to: end) { stats, _ in
-                    if let sum = stats.sumQuantity() {
-                        let steps = Int(sum.doubleValue(for: .count()).rounded())
+                    if let steps = Self.largestSourceTotal(in: stats, unit: .count()) {
                         rows.append((ts: Int(stats.startDate.timeIntervalSince1970), steps: steps))
                     }
                 }
                 cont.resume(returning: rows)
+            }
+            store.execute(q)
+        }
+    }
+
+    /// Daily step aggregate with source de-overlap. `collect()` intentionally keeps the generic
+    /// HealthKit query shape for metrics whose samples are not duplicate counters; steps need the
+    /// source-aware reduction because iPhone and Watch commonly report the same movement.
+    private func collectSteps(start: Date, end: Date,
+                              sink: @escaping (String, Double) -> Void) async -> Bool {
+        guard let type = HKQuantityType.quantityType(forIdentifier: .stepCount) else { return false }
+        let cal = Calendar.current
+        let anchor = cal.startOfDay(for: start)
+        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+            HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate),
+            Self.notNoopAuthored,
+        ])
+        return await withCheckedContinuation { (cont: CheckedContinuation<Bool, Never>) in
+            let q = HKStatisticsCollectionQuery(quantityType: type, quantitySamplePredicate: predicate,
+                                                options: [.cumulativeSum, .separateBySource], anchorDate: anchor,
+                                                intervalComponents: DateComponents(day: 1))
+            q.initialResultsHandler = { _, results, error in
+                guard error == nil, let results else { cont.resume(returning: false); return }
+                results.enumerateStatistics(from: start, to: end) { stats, _ in
+                    if let steps = Self.largestSourceTotal(in: stats, unit: .count()) {
+                        sink(HealthKitBridge.dayString(stats.startDate), Double(steps))
+                    }
+                }
+                cont.resume(returning: true)
             }
             store.execute(q)
         }
@@ -1474,6 +1496,25 @@ final class HealthKitBridge: ObservableObject {
             }
             store.execute(q)
         }
+    }
+
+    /// HealthKit can retain overlapping step samples from an iPhone and an Apple Watch. A plain
+    /// `sumQuantity()` over the collection combines both sources, so one walk can appear twice (or
+    /// more after a write-back/import cycle). Keep the largest source total for each bucket, matching
+    /// the Apple Health export importer and its source de-overlap rule. Non-step callers continue to
+    /// use `collect()` unchanged; this helper is only used by the source-aware step queries.
+    private nonisolated static func largestSourceTotal(in statistics: HKStatistics, unit: HKUnit) -> Int? {
+        var largest: Double?
+        for source in statistics.sources ?? [] {
+            guard let quantity = statistics.sumQuantity(for: source) else { continue }
+            let value = quantity.doubleValue(for: unit)
+            largest = max(largest ?? value, value)
+        }
+        // Keep a fallback for HealthKit implementations that return no source list even though the
+        // aggregate has a value (older OS/device combinations and some test stores do this).
+        let value = largest ?? statistics.sumQuantity()?.doubleValue(for: unit)
+        guard let value, value.isFinite, value >= 0 else { return nil }
+        return Int(value.rounded())
     }
 
     private func collectSleep(start: Date, end: Date,

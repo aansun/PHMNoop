@@ -47,9 +47,7 @@ struct LiveWorkoutView: View {
             VStack(alignment: .leading, spacing: NoopMetrics.sectionSpacing) {
                 let cards: [AnyView] = [
                     AnyView(header),
-                    AnyView(timeBlock),
-                    AnyView(heartRateBlock),
-                    AnyView(effortGauge),
+                    AnyView(workoutHero),
                     AnyView(zoneSection),
                     AnyView(statsGrid),
                     // Live GPS distance + pace (#1195) — a self-gating leaf owning its own recorder
@@ -152,8 +150,28 @@ struct LiveWorkoutView: View {
         .accessibilityLabel(Text("Recording workout"))
     }
 
-    /// Centered elapsed-time stack — same TimelineView source as before; card chrome removed so
-    /// TIME sits as a free hero metric above heart rate.
+    /// The single glanceable hero for an active workout. Time stays above the two live metrics so the
+    /// screen has one visual anchor instead of three large blocks competing for attention.
+    private var workoutHero: some View {
+        NoopCard(padding: NoopMetrics.cardInnerPadding, tint: StrandPalette.effortColor) {
+            VStack(spacing: NoopMetrics.space4) {
+                timeBlock
+                Rectangle()
+                    .fill(StrandPalette.hairline)
+                    .frame(height: 1)
+                HStack(alignment: .top, spacing: 0) {
+                    heartRateBlock
+                    Rectangle()
+                        .fill(StrandPalette.hairline)
+                        .frame(width: 1, height: 86)
+                        .padding(.horizontal, NoopMetrics.space3)
+                    effortGauge
+                }
+            }
+        }
+    }
+
+    /// Centered elapsed-time stack — the one and only visible workout clock.
     private var timeBlock: some View {
         Group {
             if let workout = model.activeWorkout {
@@ -173,7 +191,7 @@ struct LiveWorkoutView: View {
         }
     }
 
-    /// Centered live HR stack — bpm unit sits under the value; the zone capsule moved to `zoneSection`.
+    /// Live HR metric in the hero. The zone capsule remains in `zoneSection` so the number stays clear.
     private var heartRateBlock: some View {
         let tint = zone >= 1 ? StrandPalette.hrZoneColor(zone) : StrandPalette.effortColor
         return VStack(spacing: NoopMetrics.space1) {
@@ -183,11 +201,11 @@ struct LiveWorkoutView: View {
             if let bpm = model.bpm {
                 CountUpText(value: Double(bpm),
                             format: { "\(Int($0.rounded()))" },
-                            font: StrandFont.rounded(72, weight: .semibold),
+                            font: StrandFont.rounded(52, weight: .semibold),
                             color: tint)
             } else {
                 Text("—")
-                    .font(StrandFont.rounded(72, weight: .semibold))
+                    .font(StrandFont.rounded(52, weight: .semibold))
                     .foregroundStyle(tint)
             }
             Text("bpm")
@@ -197,9 +215,8 @@ struct LiveWorkoutView: View {
         .frame(maxWidth: .infinity)
     }
 
-    /// Centered Effort stack — same `liveStrain` / Effort-scale conversion and `StrainGauge` intensity
-    /// label as before. Card chrome and side-by-side layout removed so the value sits as a free hero
-    /// metric between heart rate and the zone rail. Display-only; captured value stays 0–100.
+    /// Effort metric in the hero. The value and its building state stay together instead of forming a
+    /// second full-width hero below heart rate. Display-only; captured value stays 0–100.
     private var effortGauge: some View {
         let strain = model.activeWorkout?.liveStrain ?? 0
         let displayEffort = UnitFormatter.effortValue(strain, scale: effortScale)
@@ -220,7 +237,7 @@ struct LiveWorkoutView: View {
                                 ? String(format: "%.1f", value)
                                 : "\(Int(value.rounded()))"
                         },
-                        font: StrandFont.rounded(56, weight: .semibold),
+                        font: StrandFont.rounded(44, weight: .semibold),
                         color: StrandPalette.textPrimary)
             .accessibilityLabel(effortAccessibilityLabel)
             .accessibilityValue(Text(StrainGauge.stateLabel(forFraction: fraction)))
@@ -321,56 +338,20 @@ struct LiveWorkoutView: View {
     /// Diameter shared by every Liquid Glass circle in the bottom capsule, so the row reads as one
     /// set of controls rather than a mix of sizes.
     ///
-    /// It used to justify itself as keeping "the centered timer optically balanced against equal side
-    /// chrome". The side chrome has not been equal since #1533 put two circles on the left and one on
-    /// the right, and the timer is no longer centred against them — see `bottomControlRow`.
     private static let bottomControlDiameter: CGFloat = 56
     /// Tight inset so the glass circles nest into the capsule ends (stopwatch-bar proportions).
     private static let bottomBarInset: CGFloat = 4
 
-    /// One shared dark floating capsule: discard · pause · elapsed · end.
-    ///
-    /// Laid out in ONE HStack, so the timer and the controls cannot overlap. #1068 built this as a
-    /// ZStack with the timer centred independently — deliberately, "so uneven label widths cannot pull
-    /// the time off-center" — and that held while the bar carried one circle per side. #1533 added the
-    /// discard and pause controls to the left group, and a centred 40pt timer then began where two
-    /// 56pt circles plus their spacing end: `0:02` merely touched the pause button, and anything wider
-    /// went under it. A field report of "two timers" was this one half-occluded, read as a duplicate of
-    /// the big TIME readout above. `.allowsHitTesting(false)` on the timer was already a tell that it
-    /// sat beneath something tappable.
-    ///
-    /// The trade is deliberate: the timer now sits centred in the space the buttons leave rather than
-    /// in the bar, so it reads slightly right of true centre because the left chrome is heavier. That
-    /// is the cost of the layout being unable to collide at all. The buttons keep the positions they
-    /// have shipped with — moving pause to the right would centre the timer better and would also move
-    /// a control under the thumb of everyone already using this screen, which is a worse trade than an
-    /// off-centre clock.
-    ///
-    /// It can still run out of ROOM, and the arithmetic is tighter than it looks: three 56pt circles
-    /// and their gaps leave the timer roughly 161pt on a 393pt screen, against about 144pt for a
-    /// `1:30:00` at 40pt monospaced. On a 375pt device, or at a larger Dynamic Type, that does not fit,
-    /// so the timer scales rather than overflowing the capsule. The alternative considered — padding
-    /// the timer clear of the widest group to keep true centring — left it barely 105pt and would have
-    /// truncated the same clock outright.
+    /// One shared dark floating capsule: discard · pause · end. The clock is intentionally absent here;
+    /// `workoutHero` owns the single visible elapsed time.
     private var bottomControlRow: some View {
-        HStack(spacing: NoopMetrics.space2) {
+        HStack(spacing: 0) {
             deleteWorkoutGlassButton
+                .frame(maxWidth: .infinity, alignment: .leading)
             pauseWorkoutGlassButton
-            Spacer(minLength: NoopMetrics.space2)
-            bottomElapsedTimer
-                .allowsHitTesting(false)
-                // Scaling down is the honest failure when the room runs out: truncating a clock to
-                // "1:30:0" would be worse than a smaller one. Same idiom the rest of this file uses.
-                .lineLimit(1)
-                .minimumScaleFactor(0.6)
-                // NO layoutPriority here, deliberately. Raising the timer's priority sizes it BEFORE
-                // the three circles, and those are fixed 56pt frames — inflexible, so when the space
-                // runs out they do not shrink, they clip. That inverts which element gives way: a
-                // half-drawn pause button is worse than a smaller clock, and a clipped control is the
-                // failure this whole change exists to remove. At equal priority the inflexible frames
-                // are satisfied first and the Text scales into what is left, which is the order wanted.
-            Spacer(minLength: NoopMetrics.space2)
+                .frame(maxWidth: .infinity, alignment: .center)
             endWorkoutGlassButton
+                .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .padding(Self.bottomBarInset)
         .background {
@@ -379,24 +360,6 @@ struct LiveWorkoutView: View {
         .padding(.horizontal, NoopMetrics.space4)
         .padding(.top, NoopMetrics.space2)
         .padding(.bottom, NoopMetrics.space3)
-    }
-
-    /// Same `activeWorkout.start` + `TimelineView` source as the hero TIME block — plain primary text,
-    /// no card / glass / capsule behind it (the shared bar owns the surface).
-    private var bottomElapsedTimer: some View {
-        Group {
-            if let workout = model.activeWorkout {
-                TimelineView(.periodic(from: .now, by: 1)) { _ in
-                    Text(Self.elapsed(seconds: workout.elapsed()))
-                        .font(StrandFont.number(40)).monospacedDigit()
-                        .foregroundStyle(StrandPalette.textPrimary)
-                        .contentTransition(.numericText())
-                }
-                .accessibilityLabel(Text("Elapsed time"))
-                .accessibilityValue(Text(Self.elapsed(seconds: workout.elapsed())))
-            }
-        }
-        .frame(maxWidth: .infinity)
     }
 
     private var endWorkoutGlassButton: some View {

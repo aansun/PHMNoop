@@ -29,7 +29,10 @@ final class LiveActivityController {
     /// live link, not the sticky "paired" flag) and a heart rate is present; ends the moment the link
     /// drops. Throttled to ~once every 2 s so we stay well under the Live Activity update budget.
     func update(bpm: Int?, recovery: Int?, connected: Bool, effort: Int? = nil,
-                heartRateZone: Int? = nil, distance: String? = nil, speed: String? = nil) {
+                heartRateZone: Int? = nil, activityName: String? = nil,
+                activityStartedAt: Date? = nil,
+                averageBPM: Int? = nil, peakBPM: Int? = nil,
+                distance: String? = nil, pace: String? = nil, speed: String? = nil) {
         guard activitiesEnabled else { return }
 
         // Re-adopt an activity that outlived a previous app session. ActivityKit keeps Live Activities
@@ -62,7 +65,12 @@ final class LiveActivityController {
             bonded: connected,
             effort: effort,
             heartRateZone: heartRateZone,
+            activityName: activityName,
+            activityStartedAt: activityStartedAt,
+            averageBPM: averageBPM,
+            peakBPM: peakBPM,
             distance: distance,
+            pace: pace,
             speed: speed)
         let staleDate = Date().addingTimeInterval(Self.staleAfter)
 
