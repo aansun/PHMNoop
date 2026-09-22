@@ -26,6 +26,7 @@ final class NavRouter: ObservableObject {
         case fusedRecord
         case rhythm
         case trends
+        case workouts
         case activeWorkout
         case liveSession
         case journal
@@ -77,6 +78,8 @@ final class NavRouter: ObservableObject {
     func openRhythm() { requestedDestination = .rhythm }
     /// Open the Trends screen (where a "new data" reading deep-links).
     func openTrends() { requestedDestination = .trends }
+    /// Open the saved-workout log after a manual session finishes.
+    func openWorkouts() { requestedDestination = .workouts }
     /// Open the active workout: route to the Live surface AND raise the one-shot flag so `LiveView`
     /// presents the in-exercise screen even when the workout is already running, in one tap from the Today
     /// indicator card. The flag is consumed (and cleared) by `LiveView.consumeActiveWorkoutRequest()`.

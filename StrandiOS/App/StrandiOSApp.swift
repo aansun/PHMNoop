@@ -216,6 +216,17 @@ struct StrandiOSApp: App {
                     pushLiveActivity()
                     pushLiftActivity()
                 }
+                // A workout must start its Lock-Screen activity immediately, before the first HR
+                // sample arrives. This also makes the workout activity independent from the optional
+                // "Live HR in Dynamic Island" setting.
+                .onReceive(model.$activeWorkout) { _ in
+                    pushLiveActivity()
+                }
+                // Once a manual workout is saved, take the user straight to the Workouts log so the
+                // completed session and its detail are visible instead of leaving them on Today/Live.
+                .onReceive(model.$lastWorkout.compactMap { $0 }) { _ in
+                    router.openWorkouts()
+                }
                 // End the Live Activity the moment the link drops, even if no further HR tick arrives.
                 .onReceive(model.live.$connected) { _ in
                     // #911: same shared anchor as the heartRate site above, so the Live Activity, the
@@ -322,6 +333,9 @@ struct StrandiOSApp: App {
                 // supported, so this is safe on every device/simulator combination.
                 .task {
                     watch.activate()
+                    // Rehydrate an in-flight workout after an OS relaunch and restore its activity
+                    // without waiting for the next heart-rate event.
+                    pushLiveActivity()
                     // Seed the App Group before waiting for the watch transport. This covers a fresh
                     // install where no repository refresh signal has fired yet.
                     await WidgetSnapshot.publish(from: model)
@@ -419,6 +433,7 @@ struct StrandiOSApp: App {
         let bpm = model.live.connected ? (model.bpm ?? model.live.heartRate) : nil
         let metrics = liveActivityMetrics(bpm: bpm)
         let workout = model.activeWorkout
+        let workoutActive = workout != nil && !liftSession.isActive && !model.live.backfilling
         let effort = workout.map { Int($0.liveStrain.rounded()) }
             ?? day?.strain.map { Int($0.rounded()) }
         liveActivity.update(
@@ -426,6 +441,7 @@ struct StrandiOSApp: App {
             recovery: day?.recovery.map { Int($0.rounded()) },
             // While a sync or lift session runs its own activity is the useful banner; don't stack the HR one.
             connected: model.live.connected && !liftSession.isActive && !model.live.backfilling,
+            batteryPct: model.live.batteryPct.map { Int($0.rounded()) },
             effort: effort,
             heartRateZone: metrics.zone,
             activityName: workout?.sport,
@@ -434,7 +450,8 @@ struct StrandiOSApp: App {
             peakBPM: workout.flatMap { $0.peakHr > 0 ? $0.peakHr : nil },
             distance: metrics.distance,
             pace: metrics.pace,
-            speed: nil)
+            speed: nil,
+            workoutActive: workoutActive)
     }
 
     @MainActor
