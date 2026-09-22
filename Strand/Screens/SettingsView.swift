@@ -153,6 +153,13 @@ struct SettingsView: View {
     /// false and get the 24/7 behaviour they were trying to avoid.
     @AppStorage(PuffinExperiment.continuousHrvOvernightOnlyKey) private var continuousHrvOvernightOnly = true
 
+    /// Battery-aware background sync controls surfaced in the separate Power saving screen. They are
+    /// included in the active-device profile so a WHOOP 4.0 can use its smaller battery more safely.
+    @AppStorage(PuffinExperiment.powerSavingKey) private var powerSavingEnabled = false
+    @AppStorage(PuffinExperiment.powerSavingBatteryPctKey) private var powerSavingBatteryPct = 20
+    @AppStorage(PuffinExperiment.pauseHrvDisabledKey) private var pauseHrvDisabled = false
+    @AppStorage(PuffinExperiment.lowRefreshKey) private var lowRefreshEnabled = false
+
     // #477 Power saving moved OUT of this screen into `PowerSavingView` — a first-class More row on
     // iPhone (between Test Centre and Settings) and its own sidebar item on macOS. Its `@AppStorage`
     // keys live there now; nothing here reads them.
@@ -258,6 +265,9 @@ struct SettingsView: View {
     /// current name stays visible separately above it.
     @State private var strapNameDraft = ""
 
+    /// Confirmation for applying the active WHOOP family's safe configuration bundle.
+    @State private var showDeviceConfigurationConfirmation = false
+
     /// Whether to surface the WHOOP 5/MG-only probes (puffin/R22/broadcast-HR/frame-capture). Gated so a
     /// confident 4.0 owner never sees 5/MG controls that can't touch their strap (#22). The model
     /// preference DEFAULTS to whoop4, so we deliberately do NOT hide on the raw default alone — the same
@@ -352,10 +362,11 @@ struct SettingsView: View {
                 unitsCard.staggeredAppear(index: 1)
                 appearanceCard.staggeredAppear(index: 2)
                 strapCard.staggeredAppear(index: 3)
-                streakCard.staggeredAppear(index: 4)
-                featuresCard.staggeredAppear(index: 5)
+                deviceConfigurationCard.staggeredAppear(index: 4)
+                streakCard.staggeredAppear(index: 5)
+                featuresCard.staggeredAppear(index: 6)
                 #if os(iOS)
-                syncCard.staggeredAppear(index: 6)
+                syncCard.staggeredAppear(index: 7)
                 #endif
 
                 // Lower-frequency sections collapse behind a single default-closed disclosure so the
@@ -373,10 +384,10 @@ struct SettingsView: View {
                     experimentalCard
                     backupCard
                 }
-                .staggeredAppear(index: 6)
+                .staggeredAppear(index: 8)
 
                 // About stays expanded at the foot (version, links and the help sheets people return to).
-                aboutCard.staggeredAppear(index: 7)
+                aboutCard.staggeredAppear(index: 9)
             }
         }
         .alert(backupAlertTitle, isPresented: $showBackupAlert) {
@@ -399,6 +410,13 @@ struct SettingsView: View {
             Button("Cancel", role: .cancel) { }
         } message: {
             Text("This restarts the roughly 4-night build-up for Charge and your HRV baseline. Your history stays. Use it if a bad first week, like wearing it while sick, set your baseline off.")
+        }
+        .confirmationDialog("Apply the recommended WHOOP configuration?",
+                            isPresented: $showDeviceConfigurationConfirmation, titleVisibility: .visible) {
+            Button("Apply configuration") { applyActiveDeviceConfiguration() }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This changes NOOP's normal data and scoring preferences for the active WHOOP. Firmware experiments and persistent strap settings are left unchanged.")
         }
         // #174: the switch going OFF is the moment to offer the undo. Declining leaves the flags set and
         // says so — which is still an improvement on the old behaviour, where the same tap silently left
@@ -1599,6 +1617,167 @@ struct SettingsView: View {
                     .fixedSize(horizontal: false, vertical: true)
                 #endif
             }
+        }
+    }
+
+    @ViewBuilder private var deviceConfigurationCard: some View {
+        if let family = activeWhoopFamily {
+            let recommended = WhoopDeviceConfiguration.recommended(for: family)
+            let isRecommended = currentWhoopConfiguration(for: family) == recommended
+            let familyName = family == .whoop4 ? "WHOOP 4.0" : "WHOOP 5.0 / MG"
+
+            SettingsSection(
+                icon: "slider.horizontal.3",
+                title: "Active device configuration",
+                blurb: "A safe starting point for \(familyName). Edit any setting below and this status becomes Custom."
+            ) {
+                VStack(alignment: .leading, spacing: NoopMetrics.rowSpacing) {
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("Active device")
+                                .font(StrandFont.subhead)
+                                .foregroundStyle(StrandPalette.textPrimary)
+                            Text(activeWhoopDevice?.displayName ?? familyName)
+                                .font(StrandFont.caption)
+                                .foregroundStyle(StrandPalette.textSecondary)
+                        }
+                        Spacer(minLength: 0)
+                        StatePill(isRecommended ? "Recommended" : "Custom",
+                                  tone: isRecommended ? .positive : .warning,
+                                  showsDot: false)
+                    }
+
+                    Text(isRecommended
+                         ? "NOOP is using the recommended balance of data quality, battery use, and scoring for this WHOOP."
+                         : "One or more device settings differ from the recommended profile. You can keep the custom setup or restore the profile below.")
+                        .font(StrandFont.caption)
+                        .foregroundStyle(StrandPalette.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    rowDivider
+                    configurationSummary(for: family)
+
+                    rowDivider
+                    Text("Experimental controls")
+                        .font(StrandFont.overline)
+                        .tracking(StrandFont.overlineTracking)
+                        .foregroundStyle(StrandPalette.textSecondary)
+                    if experimentalControlsNeedReview {
+                        Label("Review Test Centre: one or more experimental controls are enabled.", systemImage: "exclamationmark.triangle.fill")
+                            .font(StrandFont.footnote)
+                            .foregroundStyle(StrandPalette.statusWarning)
+                            .fixedSize(horizontal: false, vertical: true)
+                    } else {
+                        Text("Recommended normal state: protocol probes, R22 deep data, Broadcast HR, ECG capture, raw-frame recording, and unverified SpO₂ are off. They are not changed by this preset because some write persistent settings to the strap or are not validated.")
+                            .font(StrandFont.footnote)
+                            .foregroundStyle(StrandPalette.textTertiary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    NoopButton(isRecommended ? "Re-apply recommended" : "Use recommended configuration",
+                               systemImage: "wand.and.stars",
+                               kind: .primary) {
+                        showDeviceConfigurationConfirmation = true
+                    }
+
+                    Text("This profile does not enable firmware experiments or write persistent settings to the strap.")
+                        .font(StrandFont.footnote)
+                        .foregroundStyle(StrandPalette.textTertiary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+    }
+
+    private var activeWhoopDevice: PairedDevice? {
+        guard let registry = model.deviceRegistry else { return nil }
+        return registry.devices.first(where: { $0.id == registry.activeDeviceId })
+    }
+
+    private var activeWhoopFamily: DeviceFamily? {
+        guard let device = activeWhoopDevice,
+              device.brand.caseInsensitiveCompare("WHOOP") == .orderedSame else { return nil }
+        return DeviceFamily.forRegistryDevice(model: device.model, brand: device.brand)
+    }
+
+    private var experimentalControlsNeedReview: Bool {
+        puffinExperiments || puffinCapture || deepDataEnabled || broadcastHrEnabled ||
+            ecgRawDataEnabled || ecgEnabled || spo2CandidateDisplayEnabled
+    }
+
+    private func currentWhoopConfiguration(for family: DeviceFamily) -> WhoopDeviceConfiguration {
+        WhoopDeviceConfiguration(
+            family: family,
+            modelRaw: selectedWhoopModelRaw,
+            continuousHrv: continuousHrvEnabled,
+            continuousHrvOvernightOnly: continuousHrvOvernightOnly,
+            hrvWindowRaw: hrvWindowRaw,
+            sleepStagingV2: experimentalSleepV2Enabled,
+            motionAwareWake: motionAwareWakeEnabled,
+            effortScaleRaw: effortScaleRaw,
+            banisterEffort: banisterEffortEnabled,
+            stressPersonalBaseline: stressPersonalBaselineEnabled,
+            powerSaving: powerSavingEnabled,
+            powerSavingBatteryPct: powerSavingBatteryPct,
+            pauseHrvOnLowBattery: !pauseHrvDisabled,
+            lowRefresh: lowRefreshEnabled
+        )
+    }
+
+    private func configurationSummary(for family: DeviceFamily) -> some View {
+        let recommended = WhoopDeviceConfiguration.recommended(for: family)
+        return VStack(alignment: .leading, spacing: 8) {
+            configurationLine("HRV capture", value: recommended.continuousHrv ? "Overnight" : "Off")
+            configurationLine("HRV window", value: recommended.hrvWindowRaw == HrvWindow.whole.rawValue ? "Whole night" : "Deep sleep")
+            configurationLine("Sleep staging", value: recommended.sleepStagingV2 ? "V2" : "V1")
+            configurationLine("Motion-aware wake", value: recommended.motionAwareWake ? "On · self-gated" : "Off · sparse-safe")
+            configurationLine("Effort display", value: recommended.effortScaleRaw == EffortScale.whoop.rawValue ? "WHOOP 0–21" : "NOOP 0–100")
+            configurationLine("Low-battery protection", value: recommended.powerSaving ? "On at (recommended.powerSavingBatteryPct)%" : "Off · 5/MG battery")
+            configurationLine("Pause HRV when low", value: recommended.pauseHrvOnLowBattery ? "On" : "Off")
+            configurationLine("Background refresh", value: recommended.lowRefresh ? "Hourly" : "Normal")
+        }
+    }
+
+    private func configurationLine(_ label: String, value: String) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: "checkmark")
+                .font(StrandFont.caption.weight(.semibold))
+                .foregroundStyle(StrandPalette.accent)
+                .frame(width: 16)
+            Text(label)
+                .font(StrandFont.caption)
+                .foregroundStyle(StrandPalette.textSecondary)
+            Spacer(minLength: 0)
+            Text(value)
+                .font(StrandFont.caption.weight(.medium))
+                .foregroundStyle(StrandPalette.textPrimary)
+                .multilineTextAlignment(.trailing)
+        }
+    }
+
+    private func applyActiveDeviceConfiguration() {
+        guard let family = activeWhoopFamily else { return }
+        let recommended = WhoopDeviceConfiguration.recommended(for: family)
+
+        selectedWhoopModelRaw = recommended.modelRaw
+        continuousHrvEnabled = recommended.continuousHrv
+        continuousHrvOvernightOnly = recommended.continuousHrvOvernightOnly
+        hrvWindowRaw = recommended.hrvWindowRaw
+        experimentalSleepV2Enabled = recommended.sleepStagingV2
+        motionAwareWakeEnabled = recommended.motionAwareWake
+        effortScaleRaw = recommended.effortScaleRaw
+        banisterEffortEnabled = recommended.banisterEffort
+        stressPersonalBaselineEnabled = recommended.stressPersonalBaseline
+        powerSavingEnabled = recommended.powerSaving
+        powerSavingBatteryPct = recommended.powerSavingBatteryPct
+        pauseHrvDisabled = !recommended.pauseHrvOnLowBattery
+        lowRefreshEnabled = recommended.lowRefresh
+
+        model.ble.setKeepRealtimeForData(recommended.continuousHrv)
+        model.applyPowerSaving()
+        Task {
+            await model.intelligence.analyzeRecent()
+            await model.repo.refresh()
         }
     }
 
