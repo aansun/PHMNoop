@@ -369,8 +369,10 @@ struct StrandiOSApp: App {
                     await HealthSyncRefreshCoordinator.run(
                         sync: { await health.sync() },
                         refresh: {
+                            let hasAppleWatchSourceData = await health.hasRecentAppleWatchSourceData()
                             await model.refreshAfterAppleHealthSync(
-                                authorized: health.auth == .authorized)
+                                authorized: health.auth == .authorized,
+                                hasAppleWatchSourceData: hasAppleWatchSourceData)
                         }
                     )
                     // === PHM OVERLAY (PHMNOOP) === pull the latest Apple Health waist reading into

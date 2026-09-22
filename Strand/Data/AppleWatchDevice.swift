@@ -63,8 +63,9 @@ enum AppleWatchDevice {
     /// single usable metric (a fresh / unused watch). The capability set is the honest trim above.
     /// `now` and `addedAt` are injectable so the logic is deterministic in tests.
     static func device(daily: [DailyMetric], apple: [AppleDaily], authorized: Bool,
+                       hasAppleWatchSourceData: Bool = true,
                        existing: PairedDevice? = nil, now: Date = Date()) -> PairedDevice? {
-        guard authorized else { return nil }
+        guard authorized, hasAppleWatchSourceData else { return nil }
         let caps = capabilities(daily: daily, apple: apple)
         // No usable metric from the watch yet → don't register a device that captures nothing.
         guard !caps.isEmpty else { return nil }
@@ -118,8 +119,9 @@ enum AppleWatchDevice {
     /// HealthKit, so callers there simply never pass `true`.
     @MainActor
     static func registerIfAuthorized(registry: DeviceRegistry, store: WhoopStore,
-                                     authorized: Bool, now: Date = Date()) async {
-        guard authorized else { return }
+                                     authorized: Bool, hasAppleWatchSourceData: Bool,
+                                     now: Date = Date()) async {
+        guard authorized, hasAppleWatchSourceData else { return }
         let range = recentDayRange(now: now)
 
         let daily = (try? await store.dailyMetrics(deviceId: deviceId, from: range.from, to: range.to)) ?? []
@@ -127,6 +129,7 @@ enum AppleWatchDevice {
 
         let existing = registry.devices.first(where: { $0.id == deviceId })
         guard let device = device(daily: daily, apple: apple, authorized: authorized,
+                                  hasAppleWatchSourceData: hasAppleWatchSourceData,
                                   existing: existing, now: now) else { return }
         registry.add(device)
     }

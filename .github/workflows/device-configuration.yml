@@ -1,0 +1,25 @@
+# Keep the active-WHOOP preset synchronized with the Settings surfaces. This is intentionally a
+# lightweight repository-wide check: a new preference can arrive in a version update without touching
+# the preset file itself, so path filters would hide exactly the drift this guard is meant to catch.
+name: Device configuration coverage
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: device-configuration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Check device configuration manifest
+        run: python3 Tools/check_device_configuration.py --check

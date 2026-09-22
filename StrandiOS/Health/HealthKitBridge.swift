@@ -291,6 +291,47 @@ final class HealthKitBridge: ObservableObject {
         }
     }
 
+    /// Returns whether recent HealthKit samples came from an Apple Watch device, rather than merely
+    /// proving that HealthKit is authorized. iPhone/imported Health data can populate the same daily
+    /// rows, but must not materialize a phantom Apple Watch in NOOP's device registry.
+    func hasRecentAppleWatchSourceData(days: Int = AppleWatchDevice.recentWindowDays) async -> Bool {
+        guard auth == .authorized, HKHealthStore.isHealthDataAvailable() else { return false }
+        let end = Date()
+        let start = Calendar.current.date(byAdding: .day, value: -days, to: end) ?? end
+        let types: [HKSampleType] = [
+            HKObjectType.quantityType(forIdentifier: .heartRate),
+            HKObjectType.quantityType(forIdentifier: .stepCount),
+            HKObjectType.categoryType(forIdentifier: .sleepAnalysis),
+            HKObjectType.workoutType(),
+        ].compactMap { $0 }
+
+        for type in types where await containsAppleWatchSample(type, start: start, end: end) {
+            return true
+        }
+        return false
+    }
+
+    private func containsAppleWatchSample(_ type: HKSampleType, start: Date, end: Date) async -> Bool {
+        let predicate = NSCompoundPredicate(andPredicateWithSubpredicates: [
+            HKQuery.predicateForSamples(withStart: start, end: end, options: .strictStartDate),
+            Self.notNoopAuthored,
+        ])
+        return await withCheckedContinuation { (cont: CheckedContinuation<Bool, Never>) in
+            let q = HKSampleQuery(sampleType: type, predicate: predicate, limit: 100,
+                                  sortDescriptors: [NSSortDescriptor(key: HKSampleSortIdentifierStartDate,
+                                                                      ascending: false)]) { _, samples, error in
+                guard error == nil else { cont.resume(returning: false); return }
+                let isWatch = (samples ?? []).contains { sample in
+                    let productType = sample.sourceRevision.productType?.lowercased() ?? ""
+                    let sourceName = sample.sourceRevision.source.name.lowercased()
+                    return productType.contains("watch") || sourceName.contains("apple watch")
+                }
+                cont.resume(returning: isWatch)
+            }
+            store.execute(q)
+        }
+    }
+
     // MARK: - Live delivery (continuous ingestion)
 
     /// The QUANTITY types we want a live observer + hourly background delivery on. This is the subset of

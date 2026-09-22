@@ -1205,9 +1205,37 @@ final class AppModel: ObservableObject {
     /// Materialize Apple Health as a device and update the source that feeds Today.
     /// Only replaces the seeded WHOOP row while it is still a placeholder with no strap and no data;
     /// a physical or user-selected source always keeps priority.
-    func refreshAfterAppleHealthSync(authorized: Bool, now: Date = Date()) async {
+    func refreshAfterAppleHealthSync(authorized: Bool, hasAppleWatchSourceData: Bool = false,
+                                     now: Date = Date()) async {
         await wireSourceCoordinator()
         guard let registry = deviceRegistry, let store = await repo.storeHandle() else {
+            await repo.refresh()
+            return
+        }
+
+        // A denied/temporarily unavailable HealthKit authorization must not archive a previously
+        // configured watch just because this refresh cannot inspect its samples.
+        guard authorized else {
+            await repo.refresh()
+            return
+        }
+
+        // HealthKit authorization alone is not evidence of an Apple Watch. iPhone and imported Health
+        // data use the same `apple-health` store source, so only the iOS bridge's source-revision check
+        // may allow the synthetic watch device to be registered. Archive a stale auto-detected row
+        // without deleting its Health data; the user can still re-enable it when a real Watch sample
+        // arrives later.
+        if !hasAppleWatchSourceData {
+            if registry.activeDeviceId == AppleWatchDevice.deviceId,
+               let fallback = registry.devices.first(where: {
+                   $0.id != AppleWatchDevice.deviceId && $0.status != .archived
+               }) {
+                registry.setActive(fallback.id)
+                await adoptActiveDevice(fallback.id)
+            }
+            if registry.devices.contains(where: { $0.id == AppleWatchDevice.deviceId }) {
+                registry.archive(AppleWatchDevice.deviceId)
+            }
             await repo.refresh()
             return
         }
@@ -1224,7 +1252,8 @@ final class AppModel: ObservableObject {
         }
 
         await AppleWatchDevice.registerIfAuthorized(
-            registry: registry, store: store, authorized: authorized, now: now)
+            registry: registry, store: store, authorized: authorized,
+            hasAppleWatchSourceData: hasAppleWatchSourceData, now: now)
         guard registry.devices.contains(where: { $0.id == AppleWatchDevice.deviceId }) else {
             await repo.refresh()
             return
