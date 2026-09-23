@@ -14,6 +14,7 @@ final class AudioPromptScheduler: NSObject, @preconcurrency AVSpeechSynthesizerD
     private var isSessionActive = false
     private var finishAfterQueue = false
     private var interrupted = false
+    private var speechRateMultiplier = AudioSpeechRate.normal.multiplier
 
     override init() {
         super.init()
@@ -27,6 +28,10 @@ final class AudioPromptScheduler: NSObject, @preconcurrency AVSpeechSynthesizerD
     }
 
     deinit { NotificationCenter.default.removeObserver(self) }
+
+    func setSpeechRate(_ rate: AudioSpeechRate) {
+        speechRateMultiplier = rate.multiplier
+    }
 
     func beginSession() {
         finishAfterQueue = false
@@ -84,7 +89,7 @@ final class AudioPromptScheduler: NSObject, @preconcurrency AVSpeechSynthesizerD
         let language = Locale.preferredLanguages.first ?? "en-US"
         utterance.voice = AVSpeechSynthesisVoice(language: language)
             ?? AVSpeechSynthesisVoice(language: "en-US")
-        utterance.rate = AVSpeechUtteranceDefaultSpeechRate * 0.92
+        utterance.rate = AVSpeechUtteranceDefaultSpeechRate * speechRateMultiplier
         utterance.pitchMultiplier = 1.0
         logger.debug("Speaking \(prompt.templateName, privacy: .public)")
         synthesizer.speak(utterance)

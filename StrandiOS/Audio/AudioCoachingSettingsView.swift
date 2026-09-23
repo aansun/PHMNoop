@@ -15,6 +15,7 @@ struct AudioCoachingSettingsView: View {
     @AppStorage(AudioCoachingPreferences.distanceMilestoneKilometersKey) private var distanceMilestoneKilometers = 1
     @AppStorage(AudioCoachingPreferences.targetZoneKey) private var targetZone = 3
     @AppStorage(AudioCoachingPreferences.frequencyKey) private var frequencyRaw = AudioPromptFrequency.normal.rawValue
+    @AppStorage(AudioCoachingPreferences.speechRateKey) private var speechRateRaw = AudioSpeechRate.normal.rawValue
 
     var body: some View {
         ScreenScaffold(title: "Audio coaching",
@@ -45,29 +46,37 @@ struct AudioCoachingSettingsView: View {
             if enabled {
                 NoopCard(padding: 14, tint: StrandPalette.chargeColor) {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Prompt types")
+                        Text("Announcements")
                             .strandOverline()
                         Toggle("Workout start, pause and finish", isOn: $lifecycle)
                         Toggle("Heart-rate target", isOn: $heartRate)
                         Toggle("Distance milestones", isOn: $distance)
-                        Divider().overlay(StrandPalette.hairline)
-                        Picker("Target zone", selection: $targetZone) {
-                            Text("Off").tag(0)
-                            ForEach(1...5, id: \.self) { zone in
-                                Text("Zone \(zone)").tag(zone)
+                    }
+                }
+
+                if heartRate {
+                    NoopCard(padding: 14, tint: StrandPalette.chargeColor) {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Heart-rate alerts")
+                                .strandOverline()
+                            Picker("Target zone", selection: $targetZone) {
+                                Text("Off").tag(0)
+                                ForEach(1...5, id: \.self) { zone in
+                                    Text("Zone \(zone)").tag(zone)
+                                }
                             }
-                        }
-                        .pickerStyle(.menu)
-                        Text("Heart-rate alerts use the selected personalized zone and require a sustained violation; a short spike stays silent.")
-                            .font(StrandFont.footnote)
-                            .foregroundStyle(StrandPalette.textTertiary)
-                            .fixedSize(horizontal: false, vertical: true)
-                        Picker("Frequency", selection: $frequencyRaw) {
-                            ForEach(AudioPromptFrequency.allCases) { value in
-                                Text(value.title).tag(value.rawValue)
+                            .pickerStyle(.menu)
+                            Picker("Alert spacing", selection: $frequencyRaw) {
+                                ForEach(AudioPromptFrequency.allCases) { value in
+                                    Text(value.title).tag(value.rawValue)
+                                }
                             }
+                            .pickerStyle(.segmented)
+                            Text("Spacing controls repeated heart-rate alerts: Low 45s, Normal 20s, High 10s.")
+                                .font(StrandFont.footnote)
+                                .foregroundStyle(StrandPalette.textTertiary)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
-                        .pickerStyle(.segmented)
                     }
                 }
 
@@ -86,11 +95,28 @@ struct AudioCoachingSettingsView: View {
                                 }
                             }
                             .pickerStyle(.menu)
-                            Text("With Every 5 km selected, audio is announced at 5 km, 10 km, 15 km, and so on.")
+                            Text("Audio announces every \(distanceMilestoneKilometers) km: \(distanceMilestoneKilometers), \(distanceMilestoneKilometers * 2), \(distanceMilestoneKilometers * 3) km, and so on.")
                                 .font(StrandFont.footnote)
                                 .foregroundStyle(StrandPalette.textTertiary)
-                                .fixedSize(horizontal: false, vertical: true)
+                            .fixedSize(horizontal: false, vertical: true)
                         }
+                    }
+                }
+
+                NoopCard(padding: 14, tint: StrandPalette.chargeColor) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Voice")
+                            .strandOverline()
+                        Picker("Speech speed", selection: $speechRateRaw) {
+                            ForEach(AudioSpeechRate.allCases) { value in
+                                Text(value.title).tag(value.rawValue)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                        Text("Applies to the next announcement. Normal is recommended for clear workout cues.")
+                            .font(StrandFont.footnote)
+                            .foregroundStyle(StrandPalette.textTertiary)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
             }
@@ -100,14 +126,14 @@ struct AudioCoachingSettingsView: View {
                     Text("Test audio")
                         .font(StrandFont.subhead)
                         .foregroundStyle(StrandPalette.textPrimary)
-                    Text("Plays a sample distance milestone with distance, heart-rate zone and duration so you can verify the speech route.")
+                    Text("Uses the current distance interval, selected statistics and voice speed.")
                         .font(StrandFont.footnote)
                         .foregroundStyle(StrandPalette.textTertiary)
                         .fixedSize(horizontal: false, vertical: true)
                     Button {
                         audioCoaching.testAudio()
                     } label: {
-                        Label("Play sample", systemImage: "play.circle.fill")
+                        Label("Test current settings", systemImage: "play.circle.fill")
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
@@ -126,17 +152,6 @@ struct AudioCoachingSettingsView: View {
                 }
             }
 
-            NoopCard(padding: 14, tint: StrandPalette.chargeColor) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Local-first")
-                        .font(StrandFont.subhead)
-                        .foregroundStyle(StrandPalette.textPrimary)
-                    Text("The V1 coach uses deterministic rules, native iOS speech and the existing WHOOP/GPS live feed. It does not call AI, cloud TTS or a NOOP server.")
-                        .font(StrandFont.footnote)
-                        .foregroundStyle(StrandPalette.textTertiary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
         }
     }
 }
