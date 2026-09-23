@@ -20,6 +20,10 @@ struct StravaSettingsView: View {
         }
     }
 
+    private var pendingRouteWorkouts: [WorkoutRow] {
+        routeWorkouts.filter { model.record(for: $0) == nil }
+    }
+
     var body: some View {
         ScreenScaffold(title: "Strava", subtitle: "Experimental activity uploads",
                        onRefresh: { await loadWorkouts() }, topBackground: liquidScaffoldSky()) {
@@ -29,7 +33,7 @@ struct StravaSettingsView: View {
                 activityCard
             }
         }
-        .task(id: experimentEnabled) {
+        .task(id: "\(experimentEnabled)-\(automaticUpload)") {
             await loadWorkouts()
         }
     }
@@ -65,7 +69,7 @@ struct StravaSettingsView: View {
                             Text(model.isConnected ? "Connected" : "Not connected")
                                 .font(StrandFont.body)
                                 .foregroundStyle(StrandPalette.textPrimary)
-                            Text(model.athleteName.map { "Strava · \($0)" } ?? "OAuth scope: activity:write")
+                            Text(model.athleteName.map { "Strava · \($0)" } ?? "OAuth scope: activity:write + activity:read_all")
                                 .font(StrandFont.footnote)
                                 .foregroundStyle(StrandPalette.textSecondary)
                         }
@@ -121,15 +125,17 @@ struct StravaSettingsView: View {
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.bottom, 14)
 
-                    if routeWorkouts.isEmpty {
-                        Text("No GPS workouts are available yet.")
+                    if pendingRouteWorkouts.isEmpty {
+                        Text(routeWorkouts.isEmpty
+                             ? "No GPS workouts are available yet."
+                             : "All recent GPS workouts are already synced to Strava.")
                             .font(StrandFont.body)
                             .foregroundStyle(StrandPalette.textTertiary)
                             .padding(.vertical, 8)
                     } else {
-                        ForEach(routeWorkouts, id: \.startTs) { row in
+                        ForEach(pendingRouteWorkouts, id: \.startTs) { row in
                             activityRow(row)
-                            if row.startTs != routeWorkouts.last?.startTs {
+                            if row.startTs != pendingRouteWorkouts.last?.startTs {
                                 Divider().overlay(StrandPalette.hairline)
                             }
                         }
@@ -140,7 +146,6 @@ struct StravaSettingsView: View {
     }
 
     private func activityRow(_ row: WorkoutRow) -> some View {
-        let record = model.record(for: row)
         return HStack(alignment: .center, spacing: 12) {
             Image(systemName: sportSymbol(row.sport))
                 .font(.system(size: 17, weight: .semibold))
@@ -154,24 +159,13 @@ struct StravaSettingsView: View {
                 Text(activityDate(row.startTs))
                     .font(StrandFont.footnote)
                     .foregroundStyle(StrandPalette.textSecondary)
-                if let record {
-                    Text(record.isComplete ? "Uploaded" : "Processing")
-                        .font(StrandFont.footnote)
-                        .foregroundStyle(record.isComplete ? StrandPalette.statusPositive : StrandPalette.statusWarning)
-                }
             }
             Spacer(minLength: 8)
-            if let record {
-                Image(systemName: record.isComplete ? "checkmark.circle.fill" : "arrow.triangle.2.circlepath")
-                    .foregroundStyle(record.isComplete ? StrandPalette.statusPositive : StrandPalette.statusWarning)
-                    .accessibilityLabel(record.isComplete ? "Uploaded to Strava" : "Strava upload processing")
-            } else {
-                Button("Upload") {
-                    Task { await model.upload(row) }
-                }
-                .buttonStyle(NoopButtonStyle(.secondary, fullWidth: false))
-                .disabled(model.busy || !model.isConnected)
+            Button("Upload") {
+                Task { await model.upload(row) }
             }
+            .buttonStyle(NoopButtonStyle(.secondary, fullWidth: false))
+            .disabled(model.busy || !model.isConnected)
         }
         .padding(.vertical, 11)
     }
@@ -182,6 +176,7 @@ struct StravaSettingsView: View {
             workouts = Array(rows.filter { RouteStore.load(startTs: $0.startTs, sport: $0.sport) != nil }
                 .sorted { $0.startTs > $1.startTs }.prefix(50))
         }
+        await model.reconcileRecentUploads(rows: rows)
     }
 
     private func activityDate(_ timestamp: Int) -> String {

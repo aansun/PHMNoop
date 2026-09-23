@@ -48,6 +48,7 @@ enum StravaError: LocalizedError {
     case server(status: Int, detail: String)
     case noRoute
     case invalidUpload
+    case readAccessRequired
 
     var errorDescription: String? {
         switch self {
@@ -66,6 +67,8 @@ enum StravaError: LocalizedError {
             return String(localized: "This workout has no GPS route. Strava upload requires a route file.")
         case .invalidUpload:
             return String(localized: "Strava did not return a valid upload identifier.")
+        case .readAccessRequired:
+            return String(localized: "Reconnect Strava and allow activity read access so NOOP can verify recent uploads.")
         }
     }
 }
@@ -75,7 +78,9 @@ enum StravaOAuth {
     static let tokenEndpoint = URL(string: "https://www.strava.com/oauth/token")!
     static let deauthorizeEndpoint = URL(string: "https://www.strava.com/oauth/deauthorize")!
     static let apiBase = URL(string: "https://www.strava.com/api/v3")!
-    static let scopes = ["activity:write"]
+    // `activity:read_all` is required because uploaded activities may be private. The app only reads
+    // the last seven days and uses the result to reconcile its local upload ledger.
+    static let scopes = ["activity:write", "activity:read_all"]
 
     static func authorizeURL(credentials: StravaCredentials, state: String) -> URL {
         var components = URLComponents(url: authorizeEndpoint, resolvingAgainstBaseURL: false)!
