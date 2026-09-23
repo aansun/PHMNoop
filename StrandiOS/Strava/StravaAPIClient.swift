@@ -16,8 +16,22 @@ struct StravaUploadResponse: Decodable {
     }
 }
 
-/// Small, upload-only Strava V3 client. It intentionally has no background sync or activity read path:
-/// uploads happen only through the user's manual or explicitly enabled automatic mode.
+struct StravaActivitySummary: Decodable {
+    let id: Int?
+    let sportType: String?
+    let startDate: String?
+    let externalId: String?
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case sportType = "sport_type"
+        case startDate = "start_date"
+        case externalId = "external_id"
+    }
+}
+
+/// Small Strava V3 client for the opt-in iOS integration. Uploads are initiated by the user or
+/// the separately enabled automatic mode; the read path only reconciles the user's recent ledger.
 final class StravaAPIClient {
     private let credentials: StravaCredentials
     private let session: URLSession
@@ -62,7 +76,7 @@ final class StravaAPIClient {
             boundary: boundary,
             fields: [
                 "name": WorkoutSource.displaySport(row.sport),
-                "description": "Uploaded from NOOP",
+                "sport_type": StravaActivityType.value(for: row.sport),
                 "data_type": "fit",
                 "external_id": "noop-\(row.startTs)-\(row.sport)",
             ],
@@ -80,6 +94,71 @@ final class StravaAPIClient {
         } catch {
             throw StravaError.network(error.localizedDescription)
         }
+    }
+
+    func waitForUploadCompletion(_ initial: StravaUploadResponse,
+                                 attempts: Int = 10,
+                                 intervalNanoseconds: UInt64 = 2_000_000_000) async throws -> StravaUploadResponse {
+        guard let uploadId = initial.id, initial.activityId == nil, initial.error == nil else { return initial }
+        var latest = initial
+        for _ in 0..<max(attempts, 0) {
+            try await Task.sleep(nanoseconds: intervalNanoseconds)
+            latest = try await uploadStatus(uploadId: uploadId)
+            if latest.activityId != nil || latest.error != nil { break }
+        }
+        return latest
+    }
+
+    func uploadStatus(uploadId: Int) async throws -> StravaUploadResponse {
+        let token = try await validAccessToken()
+        var request = URLRequest(url: StravaOAuth.apiBase.appendingPathComponent("uploads/\(uploadId)"))
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        do {
+            let (data, response) = try await session.data(for: request)
+            try StravaOAuthProvider.validate(response, data: data)
+            guard let status = try? JSONDecoder().decode(StravaUploadResponse.self, from: data) else {
+                throw StravaError.invalidUpload
+            }
+            return status
+        } catch let error as StravaError {
+            throw error
+        } catch {
+            throw StravaError.network(error.localizedDescription)
+        }
+    }
+
+    func recentActivities(after: Int, before: Int, pageSize: Int = 200) async throws -> [StravaActivitySummary] {
+        let token = try await validAccessToken()
+        var all: [StravaActivitySummary] = []
+
+        for page in 1...5 {
+            var components = URLComponents(
+                url: StravaOAuth.apiBase.appendingPathComponent("athlete/activities"),
+                resolvingAgainstBaseURL: false)!
+            components.queryItems = [
+                URLQueryItem(name: "after", value: String(after)),
+                URLQueryItem(name: "before", value: String(before)),
+                URLQueryItem(name: "page", value: String(page)),
+                URLQueryItem(name: "per_page", value: String(min(max(pageSize, 1), 200))),
+            ]
+            var request = URLRequest(url: components.url!)
+            request.httpMethod = "GET"
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+            do {
+                let (data, response) = try await session.data(for: request)
+                try StravaOAuthProvider.validate(response, data: data)
+                let pageItems = try JSONDecoder().decode([StravaActivitySummary].self, from: data)
+                all.append(contentsOf: pageItems)
+                if pageItems.count < min(max(pageSize, 1), 200) { break }
+            } catch let error as StravaError {
+                throw error
+            } catch {
+                throw StravaError.network(error.localizedDescription)
+            }
+        }
+        return all
     }
 
     func deauthorize() async throws {

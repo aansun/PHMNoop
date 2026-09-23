@@ -76,4 +76,11 @@ enum StravaActivityStore {
         guard let data = try? JSONEncoder().encode(records) else { return }
         UserDefaults.standard.set(data, forKey: defaultsKey)
     }
+
+    static func remove(workoutKeys: Set<String>) {
+        guard !workoutKeys.isEmpty else { return }
+        let records = load().filter { !workoutKeys.contains($0.workoutKey) }
+        guard let data = try? JSONEncoder().encode(records) else { return }
+        UserDefaults.standard.set(data, forKey: defaultsKey)
+    }
 }
