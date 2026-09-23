@@ -539,6 +539,9 @@ struct RootTabView: View {
                     // iOS-only, default-off Strava upload experiment. The feature owns its OAuth and
                     // upload UI so no Strava surface is added to the shared macOS Settings/Data screens.
                     MoreRow("Strava (Experimental)", "figure.run.circle.fill", .strava)
+                    // iOS-only, default-off native audio coaching. The engine and TTS stay outside the
+                    // shared macOS settings so the original scaffold remains unchanged on desktop.
+                    MoreRow("Audio Coaching (Experimental)", "speaker.wave.2.circle.fill", .audioCoaching)
                     // The plain 4.0 vs 5.0/MG capability grid — what NOOP reads live off each strap.
                     MoreRow("NOOP Limitations", "list.bullet.rectangle", .noopLimitations)
                 }
@@ -646,7 +649,7 @@ struct RootTabView: View {
 private enum MoreDestination: Hashable {
     case insightsHub, intelligence, coach, insights, explore, compare
     case live, workouts, liftLog, health, labBook, stress, breathe, intervals, rhythm
-    case fusedRecord, appleHealth, miBand, dataSources, backupSync, shortcutsExport, strava, noopLimitations
+    case fusedRecord, appleHealth, miBand, dataSources, backupSync, shortcutsExport, strava, audioCoaching, noopLimitations
     case alarms, automations, testCentre, siriShortcuts, powerSaving, settings
 
     @ViewBuilder var destination: some View {
@@ -674,6 +677,7 @@ private enum MoreDestination: Hashable {
         case .backupSync:      BackupSyncView()
         case .shortcutsExport: ShortcutExportSettingsView()
         case .strava:          StravaSettingsView()
+        case .audioCoaching:  AudioCoachingSettingsView()
         case .alarms:          SmartAlarmView()
         case .automations:     AutomationsView()
         case .testCentre:      TestCentreView()

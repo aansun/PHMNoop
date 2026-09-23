@@ -25,6 +25,9 @@ struct StrandiOSApp: App {
     /// observes it and presents the Devices manager.
     @StateObject private var router: NavRouter
     @State private var liveActivity = LiveActivityController()
+    /// iOS-only offline audio coach. It observes the existing workout/HR/GPS publishers and owns the
+    /// prompt/audio lifecycle at app-root scope so dismissing the workout screen cannot silence it.
+    @StateObject private var audioCoaching = AudioCoachingCoordinator()
     /// The Lift Log session's own Live Activity. Separate from the live-HR one above: while a gym
     /// session is open this is the banner that matters (it carries the heart rate too), so the HR
     /// activity is suppressed rather than stacked beside it.
@@ -193,6 +196,7 @@ struct StrandiOSApp: App {
                 .environmentObject(router)
                 .environmentObject(UpdateStore.shared)
                 .environmentObject(liftSession)
+                .environmentObject(audioCoaching)
                 // v5 L3: the shared stress check-in nudge surface, so the Breathe screen's passive
                 // card observes the SAME instance the central detector (AppModel.evaluateStress) posts to.
                 .environment(\.stressNudgeCenter, model.stressNudgeCenter)
@@ -333,6 +337,7 @@ struct StrandiOSApp: App {
                 // waiting for the next foreground. activate() is idempotent + a no-op where WC isn't
                 // supported, so this is safe on every device/simulator combination.
                 .task {
+                    audioCoaching.attach(to: model)
                     watch.activate()
                     // Rehydrate an in-flight workout after an OS relaunch and restore its activity
                     // without waiting for the next heart-rate event.
@@ -352,6 +357,7 @@ struct StrandiOSApp: App {
         // HealthKitBridge.sync guards on `auth == .authorized`, so the scenePhase trigger stays a
         // safe no-op until the user opts in.
         .onChange(of: scenePhase) { _, phase in
+            audioCoaching.scenePhaseChanged(phase)
             if phase == .active {
                 model.drainPendingIntents(router: router)
                 // End a "Connecting…" sync island whose sync never came, rather than leave it greyed.
