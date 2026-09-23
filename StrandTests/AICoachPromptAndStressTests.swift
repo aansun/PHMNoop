@@ -69,6 +69,14 @@ final class AICoachPromptAndStressTests: XCTestCase {
         XCTAssertFalse(engine.hasCustomSystemPrompt)
     }
 
+    func testBuiltInPromptPrioritizesConciseActionableReplies() {
+        let prompt = AICoachEngine.defaultSystemPrompt
+        XCTAssertTrue(prompt.contains("Answer the user's question first"))
+        XCTAssertTrue(prompt.contains("under 120 words"))
+        XCTAssertTrue(prompt.contains("2-3 concrete actions"))
+        XCTAssertTrue(prompt.contains("Do not use tables"))
+    }
+
     // MARK: - Feature 2: derived stress line
 
     func testStressIndexSummaryFormatsOneRoundedNumber() {

@@ -48,6 +48,7 @@ enum AIProvider: String, CaseIterable, Identifiable {
             // is one extra round trip on the first message, not a per-model table to maintain.
             return [
                 "gpt-5",
+                "gpt-5.1",
                 "gpt-5-mini",
                 "gpt-5-nano",
                 "gpt-4.1",
@@ -103,6 +104,10 @@ enum AIProvider: String, CaseIterable, Identifiable {
         case .appleIntelligence: return URL(string: "about:blank")!   // on-device: no network endpoint
         }
     }
+
+    /// Responses API endpoint used by the GPT-5 family. Older GPT-4.x models stay on the existing
+    /// Chat Completions path so the provider remains compatible with both request shapes.
+    static let openAIResponsesEndpoint = URL(string: "https://api.openai.com/v1/responses")!
 
     var client: any AIProviderClient {
         switch self {

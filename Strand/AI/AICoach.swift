@@ -214,7 +214,15 @@ final class AICoachEngine: ObservableObject {
         }
     }
     @Published var model: String {
-        didSet { UserDefaults.standard.set(model, forKey: Self.modelKey) }
+        didSet {
+            UserDefaults.standard.set(model, forKey: Self.modelKey)
+            // A previous request can fail because Custom had no model selected. Once the user
+            // chooses or enters one, that stale error no longer describes the current request.
+            if model != oldValue {
+                errorText = nil
+                keyRejected = false
+            }
+        }
     }
     /// The model ids offered in the picker. Seeded from `provider.modelOptions`, reset when the
     /// provider changes, and optionally extended by `refreshModels()` with the provider's live list.
@@ -271,25 +279,24 @@ final class AICoachEngine: ObservableObject {
     /// coach. Exposed (read-only) so the UI's "Reset to default" can restore it and show it when nothing
     /// custom is stored. Editing the live prompt overrides this via `systemPromptKey`.
     static let defaultSystemPrompt = """
-    You are an elite, supportive recovery and performance coach with a real training methodology. \
-    You may be given a summary of the user's own wearable data (charge 0-100, effort 0-100, rest 0-100, \
-    sleep duration and its deep/REM/light breakdown, sleep efficiency, HRV, resting heart rate) and \
-    recent workouts. Charge is the daily recovery/readiness score, effort is the daily cardiovascular \
-    load score, and rest is the nightly sleep-quality score. A dash in the data means that value was \
-    NOT MEASURED that day — say so rather than treating it as a zero. \
-    Coach using autoregulation:
-    • Readiness → prescription: charge 67-100 = green light to build/push, higher effort is fine; \
-    34-66 = maintain, quality over volume, keep it controlled; 0-33 = active recovery only \
-    (Zone 2, mobility, extra sleep) and protect against accumulating effort debt.
-    • Workout optimisation: progressive overload, polarised ~80/20 intensity, space hard sessions, \
-    program deloads/periodisation, and treat sleep as the single biggest recovery lever.
-    • Always cite the user's ACTUAL numbers, give a concrete plan (today and the week ahead), and \
-    be specific, punchy and motivating - like a coach who knows them.
-    If no data is provided, coach generally and invite them to turn on data access for personalised \
-    advice. You are NOT a doctor - never diagnose; suggest a professional for genuine health concerns.
-    Format replies in simple Markdown, chat-sized: short paragraphs, **bold** for key numbers, \
-    bullet or numbered lists for plans, ### headings only when structure genuinely helps, and a \
-    small table only for a week-ahead plan. No code blocks.
+    You are a precise, supportive recovery and performance coach. Use the user's wearable summary \
+    when provided: charge 0-100 is readiness, effort 0-100 is cardiovascular load, and rest 0-100 is \
+    sleep quality. Sleep duration/stages, sleep efficiency, HRV, resting heart rate, and recent workouts \
+    are supporting signals. A dash means NOT MEASURED — never treat it as zero.
+    Use autoregulation: charge 67-100 supports building or pushing; 34-66 supports maintenance and \
+    controlled quality; 0-33 means active recovery such as easy Zone 2, mobility, or extra sleep. \
+    Respect progressive overload, polarized intensity, spacing of hard sessions, deloads, and sleep.
+    RESPONSE CONTRACT — follow this every time:
+    1. Answer the user's question first; do not restate the full data context.
+    2. Give only the 1-3 most relevant metrics, with their values and units when available.
+    3. Give 2-3 concrete actions the user can take next. Prefer today; include a week plan only when \
+    explicitly requested or clearly necessary.
+    4. Keep a normal answer under 120 words and no more than 6 bullets. A simple question should be \
+    answered in 1-4 sentences. Never pad with generic motivation, repeated conclusions, or long caveats.
+    5. Use plain Markdown. Use one short heading only when it improves scanning. Do not use tables, \
+    long introductions, or code blocks. Ask at most one follow-up question, and only when essential.
+    If data is unavailable, say so in one sentence and give general guidance. You are not a doctor: \
+    never diagnose; briefly recommend a qualified professional for concerning symptoms.
     """
 
     /// The system prompt actually sent, read FRESH from UserDefaults on every request so an edit in
@@ -629,6 +636,13 @@ final class AICoachEngine: ObservableObject {
             var merged = builtin + discovered
             if !merged.contains(model) { merged.insert(model, at: 0) }
             availableModels = merged
+            // A previously connected Custom provider may have an empty persisted model because its
+            // `/models` catalogue was unavailable during setup. In that case the first discovered
+            // model is a safe initial selection; an explicitly chosen model is never overwritten.
+            if model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+               let first = merged.first {
+                model = first
+            }
             // Stamp only on a SUCCESSFUL pull, so a provider that is down does not buy itself a week
             // of silence from `refreshModelsIfStale()`.
             UserDefaults.standard.set(Date().timeIntervalSince1970,
@@ -937,10 +951,11 @@ final class AICoachEngine: ObservableObject {
     /// chat) and the headless `generateBrief()` below (used by the scheduled morning-brief notification).
     /// Kept in one place so the two paths never drift.
     private static let briefInstruction = """
-    Based on the data above, give me TODAY'S coaching brief in three short parts: \
-    (1) my readiness in one line, citing charge, HRV and rest; \
-    (2) exactly what training to do today and what to avoid; \
-    (3) one specific thing to improve my charge. Be punchy and motivating.
+    Based on the data above, give me TODAY'S coaching brief in three compact parts: \
+    (1) readiness in one line with only the most relevant numbers; \
+    (2) today's training recommendation and one thing to avoid; \
+    (3) one recovery action. Keep the entire brief under 80 words, direct and actionable. \
+    Do not restate the data context or add a week plan.
     """
 
     /// K5: Generate today's coaching brief WITHOUT touching the visible chat transcript. Used by the
@@ -1168,12 +1183,12 @@ final class AICoachEngine: ObservableObject {
         }.joined(separator: "\n")
 
         let summaryPrompt = """
-        Summarize the following conversation in 2-3 sentences, preserving the key advice and \
-        any specific numbers or recommendations. This summary will be shown to you as context \
-        for the ongoing conversation.\n\n\(transcript)
+        Summarize the following conversation in one compact sentence, preserving only active goals, \
+        constraints, and the latest actionable advice. Keep important numbers; omit greetings, \
+        repetition, and motivational filler. This summary is internal context for the next reply.\n\n\(transcript)
         """
         let wire: [(role: ChatMessage.Role, content: String)] = [
-            (.user, "You are a concise summarizer. Summarize the conversation in 2-3 sentences.\n\n\(summaryPrompt)"),
+            (.user, "You are a concise conversation summarizer. Return one sentence only.\n\n\(summaryPrompt)"),
         ]
         if let summary = try? await callProvider(key: key, messages: wire) {
             droppedSummary = "Summary of earlier conversation: \(summary.trimmingCharacters(in: .whitespacesAndNewlines))"

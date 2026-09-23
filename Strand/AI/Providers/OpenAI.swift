@@ -10,6 +10,11 @@ struct OpenAIClient: AIProviderClient {
         messages: [(role: ChatMessage.Role, content: String)],
         session: URLSession
     ) async throws -> String {
+        if Self.usesResponsesAPI(model) {
+            return try await responses(key: key, model: model, systemPrompt: systemPrompt,
+                                       messages: messages, session: session)
+        }
+
         var wire: [[String: Any]] = [["role": "system", "content": systemPrompt]]
         for m in messages { wire.append(["role": m.role.rawValue, "content": m.content]) }
 
@@ -38,6 +43,12 @@ struct OpenAIClient: AIProviderClient {
         session: URLSession,
         onDelta: (String) -> Void
     ) async throws {
+        if Self.usesResponsesAPI(model) {
+            try await streamResponses(key: key, model: model, systemPrompt: systemPrompt,
+                                      messages: messages, session: session, onDelta: onDelta)
+            return
+        }
+
         var wire: [[String: Any]] = [["role": "system", "content": systemPrompt]]
         for m in messages { wire.append(["role": m.role.rawValue, "content": m.content]) }
 
@@ -75,7 +86,113 @@ struct OpenAIClient: AIProviderClient {
         }
     }
 
+    /// Pure Responses API parser. The API exposes a convenience `output_text` in some responses, while
+    /// the canonical JSON shape carries text under output message content. Accept both shapes so a
+    /// compatible gateway and the first-party API produce identical Coach replies.
+    static func parseResponsesText(_ json: [String: Any]) throws -> String {
+        if let text = (json["output_text"] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !text.isEmpty {
+            return text
+        }
+
+        guard let output = json["output"] as? [[String: Any]] else {
+            throw emptyReplyError(json)
+        }
+        let text = output.flatMap { item -> [String] in
+            guard let content = item["content"] as? [[String: Any]] else { return [] }
+            return content.compactMap { part in
+                guard part["type"] as? String == "output_text",
+                      let text = part["text"] as? String,
+                      !text.isEmpty else { return nil }
+                return text
+            }
+        }.joined()
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { throw emptyReplyError(json) }
+        return trimmed
+    }
+
+    /// Pure Responses SSE parser. Text arrives as `response.output_text.delta` events; lifecycle
+    /// events and the final response event intentionally produce no delta.
+    static func responsesDelta(_ payload: String) -> String? {
+        guard let data = payload.data(using: .utf8),
+              let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              json["type"] as? String == "response.output_text.delta" else { return nil }
+        let delta = json["delta"] as? String
+        return delta?.isEmpty == false ? delta : nil
+    }
+
     // MARK: Private
+
+    private static func usesResponsesAPI(_ model: String) -> Bool {
+        model.trimmingCharacters(in: .whitespacesAndNewlines).lowercased().hasPrefix("gpt-5")
+    }
+
+    private func responses(
+        key: String,
+        model: String,
+        systemPrompt: String,
+        messages: [(role: ChatMessage.Role, content: String)],
+        session: URLSession
+    ) async throws -> String {
+        var body: [String: Any] = [
+            "model": model,
+            "instructions": systemPrompt,
+            "input": Self.responsesInput(messages),
+            "max_output_tokens": 4096
+        ]
+        body["store"] = false
+
+        var req = URLRequest(url: AIProvider.openAIResponsesEndpoint)
+        req.httpMethod = "POST"
+        req.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        return try Self.parseResponsesText(await performRequest(req, session: session))
+    }
+
+    private func streamResponses(
+        key: String,
+        model: String,
+        systemPrompt: String,
+        messages: [(role: ChatMessage.Role, content: String)],
+        session: URLSession,
+        onDelta: (String) -> Void
+    ) async throws {
+        let body: [String: Any] = [
+            "model": model,
+            "instructions": systemPrompt,
+            "input": Self.responsesInput(messages),
+            "max_output_tokens": 4096,
+            "store": false,
+            "stream": true
+        ]
+
+        var req = URLRequest(url: AIProvider.openAIResponsesEndpoint)
+        req.httpMethod = "POST"
+        req.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        req.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+        req.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        try await performStreamingRequest(req, session: session) { payload in
+            if let delta = Self.responsesDelta(payload) {
+                onDelta(delta)
+            }
+        }
+    }
+
+    private static func responsesInput(
+        _ messages: [(role: ChatMessage.Role, content: String)]
+    ) -> [[String: Any]] {
+        messages.map { message in
+            [
+                "role": message.role.rawValue,
+                "content": [["type": "input_text", "text": message.content]]
+            ]
+        }
+    }
 
     /// `modernParams`: use `max_completion_tokens`, drop `temperature` — required by reasoning models.
     private func chat(
