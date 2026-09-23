@@ -63,6 +63,42 @@ final class AIProviderModelListTests: XCTestCase {
         XCTAssertEqual(OpenAIClient().parseModels(body), ["gpt-4o", "o3-mini"])
     }
 
+    func testOpenAIResponsesParserReadsOutputText() throws {
+        let body: [String: Any] = [
+            "output": [
+                [
+                    "type": "message",
+                    "content": [
+                        ["type": "output_text", "text": "Hello "],
+                        ["type": "output_text", "text": "world"]
+                    ]
+                ]
+            ]
+        ]
+        XCTAssertEqual(try OpenAIClient.parseResponsesText(body), "Hello world")
+    }
+
+    func testOpenAIResponsesParserAcceptsConvenienceOutputText() throws {
+        XCTAssertEqual(
+            try OpenAIClient.parseResponsesText(["output_text": "  Ready  "]),
+            "Ready"
+        )
+    }
+
+    func testOpenAIResponsesDeltaOnlyAcceptsTextDeltaEvents() {
+        XCTAssertEqual(
+            OpenAIClient.responsesDelta(
+                #"{"type":"response.output_text.delta","delta":"Hello"}"#
+            ),
+            "Hello"
+        )
+        XCTAssertNil(
+            OpenAIClient.responsesDelta(
+                #"{"type":"response.completed","response":{}}"#
+            )
+        )
+    }
+
     func testAnthropicKeepsAllNonEmptyIds() {
         let body: [String: Any] = [
             "data": [

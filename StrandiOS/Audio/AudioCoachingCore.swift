@@ -20,18 +20,20 @@ struct AudioLiveMetrics: Equatable, Sendable {
     let heartRateZone: Int?
     let distanceMeters: Double?
     let paceSecondsPerKm: Double?
+    let cadenceSPM: Double?
     let state: AudioActivityState
     let targetHeartRate: ClosedRange<Int>?
 
     init(timestamp: Date = Date(), heartRate: Int?, heartRateSampleAt: Date?, heartRateZone: Int?,
          distanceMeters: Double?, paceSecondsPerKm: Double?, state: AudioActivityState,
-         targetHeartRate: ClosedRange<Int>?) {
+         targetHeartRate: ClosedRange<Int>?, cadenceSPM: Double? = nil) {
         self.timestamp = timestamp
         self.heartRate = heartRate
         self.heartRateSampleAt = heartRateSampleAt
         self.heartRateZone = heartRateZone
         self.distanceMeters = distanceMeters
         self.paceSecondsPerKm = paceSecondsPerKm
+        self.cadenceSPM = cadenceSPM
         self.state = state
         self.targetHeartRate = targetHeartRate
     }
@@ -47,6 +49,7 @@ enum AudioActivityEvent: Equatable, Sendable {
     case heartRateAboveTarget(current: Int, targetMax: Int)
     case heartRateBelowTarget(current: Int, targetMin: Int)
     case heartRateReturnedToTarget
+    case coachingIntent(AudioCoachingIntent)
 
     var priority: AudioPromptPriority {
         switch self {
@@ -58,6 +61,8 @@ enum AudioActivityEvent: Equatable, Sendable {
             return .lap
         case .heartRateReturnedToTarget:
             return .information
+        case .coachingIntent:
+            return .coaching
         }
     }
 
@@ -72,6 +77,7 @@ enum AudioActivityEvent: Equatable, Sendable {
         case .heartRateAboveTarget: return "hr_above_target"
         case .heartRateBelowTarget: return "hr_below_target"
         case .heartRateReturnedToTarget: return "hr_returned_to_target"
+        case .coachingIntent(let intent): return intent.fingerprint
         }
     }
 }
@@ -107,6 +113,7 @@ enum AudioPromptCategory: String, Sendable {
     case lifecycle
     case heartRate
     case distance
+    case coaching
 }
 
 enum AudioPromptFrequency: String, CaseIterable, Identifiable, Equatable, Sendable {
@@ -164,21 +171,26 @@ struct AudioPromptPolicy: Equatable, Sendable {
     var lifecyclePrompts: Bool
     var heartRatePrompts: Bool
     var distancePrompts: Bool
+    var coachingPrompts: Bool
     var frequency: AudioPromptFrequency
+    var coachingFrequency: AudioPromptFrequency
     var distanceIncludesDistance: Bool
     var distanceIncludesDuration: Bool
     var distanceIncludesHeartRate: Bool
     var distanceMilestoneKilometers: Int
 
     init(enabled: Bool, lifecyclePrompts: Bool, heartRatePrompts: Bool, distancePrompts: Bool,
-         frequency: AudioPromptFrequency, distanceIncludesDistance: Bool = true,
+         frequency: AudioPromptFrequency, coachingPrompts: Bool = false,
+         coachingFrequency: AudioPromptFrequency = .normal, distanceIncludesDistance: Bool = true,
          distanceIncludesDuration: Bool = true, distanceIncludesHeartRate: Bool = true,
          distanceMilestoneKilometers: Int = 1) {
         self.enabled = enabled
         self.lifecyclePrompts = lifecyclePrompts
         self.heartRatePrompts = heartRatePrompts
         self.distancePrompts = distancePrompts
+        self.coachingPrompts = coachingPrompts
         self.frequency = frequency
+        self.coachingFrequency = coachingFrequency
         self.distanceIncludesDistance = distanceIncludesDistance
         self.distanceIncludesDuration = distanceIncludesDuration
         self.distanceIncludesHeartRate = distanceIncludesHeartRate
@@ -191,6 +203,8 @@ struct AudioPromptPolicy: Equatable, Sendable {
         heartRatePrompts: true,
         distancePrompts: true,
         frequency: .normal,
+        coachingPrompts: false,
+        coachingFrequency: .normal,
         distanceIncludesDistance: true,
         distanceIncludesDuration: true,
         distanceIncludesHeartRate: true,
@@ -421,6 +435,8 @@ final class AudioPromptEngine {
             return policy.heartRatePrompts
         case .distanceMilestone(let meters):
             return shouldSpeakDistanceMilestone(meters: meters, policy: policy)
+        case .coachingIntent:
+            return policy.coachingPrompts
         }
     }
 
@@ -442,6 +458,8 @@ final class AudioPromptEngine {
             return 30
         case .distanceMilestone, .activityStarted, .activityPaused, .activityResumed, .activityEnded:
             return 86_400
+        case .coachingIntent:
+            return policy.coachingFrequency.minimumInterval
         }
     }
 
@@ -475,6 +493,17 @@ final class AudioPromptEngine {
             expires = 10
         case .heartRateReturnedToTarget:
             template = "hr.returned_to_target"; text = "Heart rate back in target."; expires = 12
+        case .coachingIntent(let intent):
+            template = "coaching.\(intent.rawValue)"
+            switch intent {
+            case .easeOff:
+                text = "Heart rate is drifting up. Ease your effort slightly."
+            case .stabilizePace:
+                text = "Your pace is slowing. Settle into a steady pace."
+            case .maintainRhythm:
+                text = "Your cadence is dropping. Keep your rhythm steady."
+            }
+            expires = 12
         }
         return AudioPrompt(fingerprint: event.fingerprint, templateName: template, text: text,
                            priority: event.priority, createdAt: now,
@@ -496,7 +525,7 @@ final class AudioPromptEngine {
         }
         if policy.distanceIncludesHeartRate {
             if let heartRate = context.heartRate, let zone = context.heartRateZone {
-                parts.append("Heart rate \(heartRate) BPM, zone \(zone).")
+                parts.append("Heart rate zone \(zone), \(heartRate) BPM.")
             } else if let zone = context.heartRateZone {
                 parts.append("Heart rate zone \(zone).")
             } else {
@@ -542,16 +571,20 @@ enum AudioCoachingPreferences {
     static let lifecycleKey = "noop.audioCoaching.lifecycle"
     static let heartRateKey = "noop.audioCoaching.heartRate"
     static let distanceKey = "noop.audioCoaching.distance"
+    static let coachingKey = "noop.audioCoaching.coaching"
+    static let aiWordingKey = "noop.audioCoaching.aiWording"
     static let distanceIncludesDistanceKey = "noop.audioCoaching.distanceIncludesDistance"
     static let distanceIncludesDurationKey = "noop.audioCoaching.distanceIncludesDuration"
     static let distanceIncludesHeartRateKey = "noop.audioCoaching.distanceIncludesHeartRate"
     static let distanceMilestoneKilometersKey = "noop.audioCoaching.distanceMilestoneKilometers"
     static let targetZoneKey = "noop.audioCoaching.targetZone"
     static let frequencyKey = "noop.audioCoaching.frequency"
+    static let coachingFrequencyKey = "noop.audioCoaching.coachingFrequency"
     static let speechRateKey = "noop.audioCoaching.speechRate"
 
     static func policy(from defaults: UserDefaults = .standard) -> AudioPromptPolicy {
         let frequency = AudioPromptFrequency(rawValue: defaults.string(forKey: frequencyKey) ?? "") ?? .normal
+        let coachingFrequency = AudioPromptFrequency(rawValue: defaults.string(forKey: coachingFrequencyKey) ?? "") ?? .normal
         let milestoneKilometers = defaults.object(forKey: distanceMilestoneKilometersKey) as? Int ?? 1
         return AudioPromptPolicy(
             enabled: defaults.object(forKey: enabledKey) as? Bool ?? AudioPromptPolicy.default.enabled,
@@ -559,6 +592,8 @@ enum AudioCoachingPreferences {
             heartRatePrompts: defaults.object(forKey: heartRateKey) as? Bool ?? true,
             distancePrompts: defaults.object(forKey: distanceKey) as? Bool ?? true,
             frequency: frequency,
+            coachingPrompts: defaults.object(forKey: coachingKey) as? Bool ?? false,
+            coachingFrequency: coachingFrequency,
             distanceIncludesDistance: defaults.object(forKey: distanceIncludesDistanceKey) as? Bool ?? true,
             distanceIncludesDuration: defaults.object(forKey: distanceIncludesDurationKey) as? Bool ?? true,
             distanceIncludesHeartRate: defaults.object(forKey: distanceIncludesHeartRateKey) as? Bool ?? true,

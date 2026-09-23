@@ -30,6 +30,11 @@ struct CoachSettingsView: View {
     @State private var promptExpanded: Bool = false
     @State private var promptDraft: String = ""
 
+    /// Custom (OpenAI-compatible) servers are not required to expose `/models`, so the model
+    /// picker must retain a manual-entry path even when its live catalogue is empty.
+    @State private var customModelEditorPresented = false
+    @State private var customModelDraft = ""
+
     var body: some View {
         // Literals, not String(localized:): `title`/`subtitle` are LocalizedStringKey, which converts
         // from a string LITERAL only, so a String value does not type-check here. The catalog keys are
@@ -82,21 +87,28 @@ struct CoachSettingsView: View {
     private var modelBar: some View {
         NoopCard(padding: 14, tint: StrandPalette.chargeColor) {
             VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Provider")
-                            .strandOverline()
-                        Picker("Provider", selection: $coach.provider) {
-                            ForEach(AIProvider.allCases) { provider in
-                                Text(provider.displayName).tag(provider)
+                Text("Provider")
+                    .strandOverline()
+                Menu {
+                    ForEach(AIProvider.allCases) { provider in
+                        Button {
+                            coach.provider = provider
+                        } label: {
+                            if provider == coach.provider {
+                                Label(provider.displayName, systemImage: "checkmark")
+                            } else {
+                                Text(provider.displayName)
                             }
                         }
-                        .labelsHidden()
-                        .pickerStyle(.menu)
-                        .font(StrandFont.subhead)
-                        .accessibilityLabel("AI provider")
+                        .disabled(coach.sending)
                     }
-                    Spacer(minLength: 8)
+                } label: {
+                    selectionControl(coach.provider.displayName, systemImage: "chevron.up.chevron.down")
+                }
+                .accessibilityLabel("AI provider")
+
+                HStack {
+                    Spacer(minLength: 0)
                     Button {
                         Task { await coach.refreshModels() }
                     } label: {
@@ -106,17 +118,62 @@ struct CoachSettingsView: View {
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(StrandPalette.accent)
-                    .disabled(!coach.hasKey)
+                    .disabled(!canRefreshModels)
                     .accessibilityLabel("Refresh models from provider")
                 }
-                Picker("Model", selection: $coach.model) {
-                    ForEach(coach.availableModels, id: \.self) { m in
-                        Text(m).tag(m)
+
+                Text("Model")
+                    .strandOverline()
+                Menu {
+                    ForEach(coach.availableModels, id: \.self) { model in
+                        Button {
+                            customModelEditorPresented = false
+                            coach.model = model
+                        } label: {
+                            if model == coach.model {
+                                Label(model, systemImage: "checkmark")
+                            } else {
+                                Text(model)
+                            }
+                        }
+                    }
+                    if coach.provider == .custom {
+                        Divider()
+                        Button("Enter model ID…") {
+                            customModelDraft = coach.model
+                            customModelEditorPresented = true
+                        }
+                    }
+                } label: {
+                    selectionControl(coach.model.isEmpty ? "Select a model" : coach.model,
+                                     systemImage: "chevron.up.chevron.down")
+                }
+                .accessibilityLabel("Model")
+
+                if coach.provider == .custom && customModelEditorPresented {
+                    HStack(spacing: 8) {
+                        TextField("Enter a model id", text: $customModelDraft)
+                            .textFieldStyle(.plain)
+                            .font(StrandFont.body)
+                            .foregroundStyle(StrandPalette.textPrimary)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 9)
+                            .background(StrandPalette.surfaceInset, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .strokeBorder(StrandPalette.hairline, lineWidth: 1))
+                            .disableAutocorrection(true)
+                            #if os(iOS)
+                            .textInputAutocapitalization(.never)
+                            #endif
+                            .onSubmit(applyCustomModel)
+                            .accessibilityLabel("Custom model id")
+
+                        Button("Use", action: applyCustomModel)
+                            .buttonStyle(NoopButtonStyle(.secondary))
+                            .disabled(customModelDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                            .accessibilityLabel("Use custom model")
                     }
                 }
-                .labelsHidden()
-                .pickerStyle(.menu)
-                .accessibilityLabel("Model")
                 if !coach.isConfigured {
                     Text("This provider needs its own connection or API key. Close settings to finish setup.")
                         .font(StrandFont.footnote)
@@ -125,6 +182,42 @@ struct CoachSettingsView: View {
                 }
             }
         }
+    }
+
+    private func selectionControl(_ value: String, systemImage: String) -> some View {
+        HStack(spacing: 8) {
+            Text(value)
+                .font(StrandFont.subhead)
+                .foregroundStyle(StrandPalette.textPrimary)
+                .lineLimit(1)
+                .truncationMode(.middle)
+            Spacer(minLength: 8)
+            Image(systemName: systemImage)
+                .font(StrandFont.caption)
+                .foregroundStyle(StrandPalette.accent)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 10)
+        .background(StrandPalette.surfaceInset, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+            .strokeBorder(StrandPalette.hairline, lineWidth: 1))
+        .contentShape(Rectangle())
+    }
+
+    private var canRefreshModels: Bool {
+        if coach.provider == .custom {
+            return coach.customConnected
+                && !coach.customBaseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }
+        return coach.hasKey
+    }
+
+    private func applyCustomModel() {
+        let trimmed = customModelDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        coach.setCustomModel(trimmed)
+        customModelEditorPresented = false
     }
 
     /// === PHM OVERLAY (PHMNOOP) === Entry to the My Memory manager: saved goals / events / coaching

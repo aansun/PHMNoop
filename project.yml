@@ -181,6 +181,7 @@ targets:
       # Pure activity/audio rules are compiled into the macOS-hosted test bundle without adding the
       # iOS AVFoundation adapter or changing the macOS app target.
       - StrandiOS/Audio/AudioCoachingCore.swift
+      - StrandiOS/Audio/AudioCoachingV2.swift
     # Same wrapper as the app target, so the OURA_CLOUD_IMPORT-gated Oura tests compile exactly
     # when the app's Oura lane does (flag + creds both come from the untracked OuraSecrets.xcconfig).
     configFiles:

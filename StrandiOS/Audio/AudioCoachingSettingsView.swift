@@ -9,12 +9,15 @@ struct AudioCoachingSettingsView: View {
     @AppStorage(AudioCoachingPreferences.lifecycleKey) private var lifecycle = true
     @AppStorage(AudioCoachingPreferences.heartRateKey) private var heartRate = true
     @AppStorage(AudioCoachingPreferences.distanceKey) private var distance = true
+    @AppStorage(AudioCoachingPreferences.coachingKey) private var coaching = false
+    @AppStorage(AudioCoachingPreferences.aiWordingKey) private var aiWording = false
     @AppStorage(AudioCoachingPreferences.distanceIncludesDistanceKey) private var distanceIncludesDistance = true
     @AppStorage(AudioCoachingPreferences.distanceIncludesDurationKey) private var distanceIncludesDuration = true
     @AppStorage(AudioCoachingPreferences.distanceIncludesHeartRateKey) private var distanceIncludesHeartRate = true
     @AppStorage(AudioCoachingPreferences.distanceMilestoneKilometersKey) private var distanceMilestoneKilometers = 1
     @AppStorage(AudioCoachingPreferences.targetZoneKey) private var targetZone = 3
     @AppStorage(AudioCoachingPreferences.frequencyKey) private var frequencyRaw = AudioPromptFrequency.normal.rawValue
+    @AppStorage(AudioCoachingPreferences.coachingFrequencyKey) private var coachingFrequencyRaw = AudioPromptFrequency.normal.rawValue
     @AppStorage(AudioCoachingPreferences.speechRateKey) private var speechRateRaw = AudioSpeechRate.normal.rawValue
 
     var body: some View {
@@ -51,6 +54,35 @@ struct AudioCoachingSettingsView: View {
                         Toggle("Workout start, pause and finish", isOn: $lifecycle)
                         Toggle("Heart-rate target", isOn: $heartRate)
                         Toggle("Distance milestones", isOn: $distance)
+                            Toggle("Smart coaching (experimental)", isOn: $coaching)
+                    }
+                }
+
+                if coaching {
+                    NoopCard(padding: 14, tint: StrandPalette.chargeColor) {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Smart coaching")
+                                .strandOverline()
+                            Text("NOOP watches the recent HR, pace and cadence trend on-device and speaks one short cue when a pattern is reliable.")
+                                .font(StrandFont.footnote)
+                                .foregroundStyle(StrandPalette.textTertiary)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Picker("Coach spacing", selection: $coachingFrequencyRaw) {
+                                ForEach(AudioPromptFrequency.allCases) { value in
+                                    Text(value.title).tag(value.rawValue)
+                                }
+                            }
+                            .pickerStyle(.segmented)
+                            Toggle("AI wording (OpenAI-compatible)", isOn: $aiWording)
+                            Text("Low 45s, Normal 20s, High 10s. The first cue also needs about two minutes of valid trend data.")
+                                .font(StrandFont.footnote)
+                                .foregroundStyle(StrandPalette.textTertiary)
+                                .fixedSize(horizontal: false, vertical: true)
+                            Text("Uses the AI Coach key from Keychain and requires AI Coach data permission. Local fallback stays available if AI is unavailable.")
+                                .font(StrandFont.footnote)
+                                .foregroundStyle(StrandPalette.textTertiary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
                     }
                 }
 
