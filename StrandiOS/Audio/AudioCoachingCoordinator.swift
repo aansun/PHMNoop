@@ -30,6 +30,7 @@ final class AudioCoachingCoordinator: ObservableObject {
     func attach(to model: AppModel) {
         guard self.model == nil else { return }
         self.model = model
+        scheduler.setSpeechRate(AudioCoachingPreferences.speechRate)
         model.$activeWorkout
             .receive(on: DispatchQueue.main)
             .sink { [weak self] workout in self?.handleWorkoutChange(workout) }
@@ -70,9 +71,38 @@ final class AudioCoachingCoordinator: ObservableObject {
     /// Plays a deterministic sample without requiring an active workout. This is intentionally an
     /// explicit user action so it remains available while the experiment toggle is off.
     func testAudio() {
-        let prompt = promptEngine.testPrompt()
+        let storedPolicy = AudioCoachingPreferences.policy()
+        guard storedPolicy.distancePrompts else {
+            lastDecision = "Distance milestones are disabled"
+            return
+        }
+        guard storedPolicy.distanceIncludesDistance || storedPolicy.distanceIncludesDuration || storedPolicy.distanceIncludesHeartRate else {
+            lastDecision = "Enable at least one milestone detail"
+            return
+        }
+        let policy = AudioPromptPolicy(
+            enabled: true,
+            lifecyclePrompts: storedPolicy.lifecyclePrompts,
+            heartRatePrompts: storedPolicy.heartRatePrompts,
+            distancePrompts: storedPolicy.distancePrompts,
+            frequency: storedPolicy.frequency,
+            distanceIncludesDistance: storedPolicy.distanceIncludesDistance,
+            distanceIncludesDuration: storedPolicy.distanceIncludesDuration,
+            distanceIncludesHeartRate: storedPolicy.distanceIncludesHeartRate,
+            distanceMilestoneKilometers: storedPolicy.distanceMilestoneKilometers)
+        let kilometre = Double(policy.distanceMilestoneKilometers)
+        let context = AudioWorkoutContext(
+            sport: "Test",
+            state: .active,
+            duration: kilometre * 360,
+            targetHeartRate: nil,
+            heartRate: 142,
+            heartRateZone: 3,
+            distanceMeters: kilometre * 1_000)
+        scheduler.setSpeechRate(AudioCoachingPreferences.speechRate)
+        let prompt = promptEngine.testPrompt(context: context, policy: policy)
         lastPromptText = prompt.text
-        lastDecision = "Test audio queued"
+        lastDecision = "Test audio queued using current settings"
         scheduler.enqueue([prompt])
         logger.debug("Queued audio coaching test prompt")
     }
@@ -103,6 +133,7 @@ final class AudioCoachingCoordinator: ObservableObject {
         timer?.invalidate()
         _ = activityEngine.start(at: workout.start)
         promptEngine.reset()
+        scheduler.setSpeechRate(AudioCoachingPreferences.speechRate)
         if AudioCoachingPreferences.policy().enabled { scheduler.beginSession() }
         timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor in self?.ingestCurrentMetrics() }
@@ -196,6 +227,7 @@ final class AudioCoachingCoordinator: ObservableObject {
     }
 
     private func preferencesChanged() {
+        scheduler.setSpeechRate(AudioCoachingPreferences.speechRate)
         guard workout != nil else { return }
         if AudioCoachingPreferences.policy().enabled {
             scheduler.beginSession()

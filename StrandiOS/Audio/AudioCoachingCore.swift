@@ -133,6 +133,32 @@ enum AudioPromptFrequency: String, CaseIterable, Identifiable, Equatable, Sendab
     }
 }
 
+enum AudioSpeechRate: String, CaseIterable, Identifiable, Equatable, Sendable {
+    case slow
+    case normal
+    case fast
+
+    var id: String { rawValue }
+
+    /// Multiplier over AVSpeechUtterance's default rate. The values stay within a
+    /// comfortable range for short workout announcements.
+    var multiplier: Float {
+        switch self {
+        case .slow: return 0.75
+        case .normal: return 0.92
+        case .fast: return 1.15
+        }
+    }
+
+    var title: String {
+        switch self {
+        case .slow: return "Slow"
+        case .normal: return "Normal"
+        case .fast: return "Fast"
+        }
+    }
+}
+
 struct AudioPromptPolicy: Equatable, Sendable {
     var enabled: Bool
     var lifecyclePrompts: Bool
@@ -492,8 +518,12 @@ final class AudioPromptEngine {
         return "\(minutes) minutes \(seconds) seconds"
     }
 
-    func testPrompt(now: Date = Date()) -> AudioPrompt {
-        let text = "Test audio. Distance 2 kilometers. Heart rate zone 3. Duration 2 minutes 5 seconds."
+    func testPrompt(context: AudioWorkoutContext, policy: AudioPromptPolicy,
+                    now: Date = Date()) -> AudioPrompt {
+        let text = distanceMilestoneText(
+            meters: Double(policy.distanceMilestoneKilometers * 1_000),
+            context: context,
+            policy: policy)
         return AudioPrompt(
             fingerprint: "audio_coaching_test",
             templateName: "audio.test.distance_milestone",
@@ -518,6 +548,7 @@ enum AudioCoachingPreferences {
     static let distanceMilestoneKilometersKey = "noop.audioCoaching.distanceMilestoneKilometers"
     static let targetZoneKey = "noop.audioCoaching.targetZone"
     static let frequencyKey = "noop.audioCoaching.frequency"
+    static let speechRateKey = "noop.audioCoaching.speechRate"
 
     static func policy(from defaults: UserDefaults = .standard) -> AudioPromptPolicy {
         let frequency = AudioPromptFrequency(rawValue: defaults.string(forKey: frequencyKey) ?? "") ?? .normal
@@ -537,5 +568,9 @@ enum AudioCoachingPreferences {
     static var targetZone: Int {
         let raw = UserDefaults.standard.object(forKey: targetZoneKey) as? Int ?? 3
         return min(max(raw, 0), 5)
+    }
+
+    static var speechRate: AudioSpeechRate {
+        AudioSpeechRate(rawValue: UserDefaults.standard.string(forKey: speechRateKey) ?? "") ?? .normal
     }
 }
