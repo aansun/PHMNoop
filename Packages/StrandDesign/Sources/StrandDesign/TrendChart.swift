@@ -104,6 +104,10 @@ public struct TrendChart: View {
     public var valueFormat: (Double) -> String
     /// Formats a point's date for the tooltip's secondary line.
     public var dateFormat: (Date) -> String
+    /// Optional formatter for x-axis date labels. When omitted, Swift Charts keeps its automatic label format.
+    /// This is separate from `dateFormat` because tooltip/selection labels commonly need more context than
+    /// a compact axis label can fit.
+    public var xAxisDateFormat: ((Date) -> String)?
     /// Optional human-readable series name for VoiceOver (e.g. "HRV trend"). When nil the
     /// element falls back to a generic "Trend" label so it's never unlabeled.
     public var accessibilityLabel: String?
@@ -136,6 +140,7 @@ public struct TrendChart: View {
         showsHover: Bool = true,
         valueFormat: @escaping (Double) -> String = { String(Int($0.rounded())) },
         dateFormat: @escaping (Date) -> String = { TrendChart.defaultDateString($0) },
+        xAxisDateFormat: ((Date) -> String)? = nil,
         accessibilityLabel: String? = nil,
         nowCapColor: Color? = nil,
         yDomain: ClosedRange<Double>? = nil,
@@ -154,6 +159,7 @@ public struct TrendChart: View {
         self.showsHover = showsHover
         self.valueFormat = valueFormat
         self.dateFormat = dateFormat
+        self.xAxisDateFormat = xAxisDateFormat
         self.accessibilityLabel = accessibilityLabel
         self.nowCapColor = nowCapColor
         self.yDomain = yDomain
@@ -356,11 +362,19 @@ public struct TrendChart: View {
             if showsBarValues { plotArea.padding(.top, 18) } else { plotArea.clipped() }
         }
         .chartXAxis {
-            AxisMarks(values: .automatic(desiredCount: xAxisDesiredCount)) { _ in
+            AxisMarks(values: .automatic(desiredCount: xAxisDesiredCount)) { value in
                 AxisGridLine().foregroundStyle(StrandPalette.hairline.opacity(0.4))
-                AxisValueLabel(collisionResolution: .greedy)
+                if let xAxisDateFormat, let date = value.as(Date.self) {
+                    AxisValueLabel(collisionResolution: .greedy) {
+                        Text(xAxisDateFormat(date))
+                    }
                     .foregroundStyle(StrandPalette.textTertiary)
                     .font(StrandFont.footnote)
+                } else {
+                    AxisValueLabel(collisionResolution: .greedy)
+                        .foregroundStyle(StrandPalette.textTertiary)
+                        .font(StrandFont.footnote)
+                }
             }
         }
         .chartYAxis {

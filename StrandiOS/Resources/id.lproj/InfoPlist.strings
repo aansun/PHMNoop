@@ -1,0 +1,7 @@
+"NSBluetoothAlwaysUsageDescription" = "NOOP terhubung langsung ke strap WHOOP melalui Bluetooth untuk membaca Heart Rate, interval R-R, baterai, dan data sensor di iPhone. Data tidak keluar dari perangkat.";
+"NSLocationWhenInUseUsageDescription" = "NOOP merekam rute saat workout luar ruangan untuk menampilkan distance, pace, dan map. Rute tetap tersimpan di perangkat.";
+"NSHealthShareUsageDescription" = "NOOP membaca data Apple Health di perangkat untuk menghitung recovery, strain, dan sleep. Data tidak keluar dari perangkat.";
+"NSHealthUpdateUsageDescription" = "NOOP menulis metrik dari strap ke Apple Health di perangkat, hanya setelah Anda mengizinkannya.";
+"NSMotionUsageDescription" = "NOOP membaca jumlah langkah iPhone untuk workout walking atau running. Data tetap tersimpan di perangkat.";
+"NSSpeechRecognitionUsageDescription" = "NOOP mengubah pertanyaan Anda menjadi teks di perangkat agar Anda dapat berbicara dengan Coach. Audio tidak keluar dari iPhone.";
+"NSMicrophoneUsageDescription" = "NOOP menggunakan mikrofon untuk pertanyaan suara kepada Coach. Audio diproses di perangkat dan tidak dikirim keluar.";

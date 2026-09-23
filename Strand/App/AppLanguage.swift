@@ -10,6 +10,9 @@ import Foundation
 enum AppLanguage: String, CaseIterable, Identifiable {
     case system
     case english = "en"
+    #if os(iOS)
+    case indonesian = "id"
+    #endif
     case german = "de"
     case spanish = "es"
     case french = "fr"
@@ -27,6 +30,9 @@ enum AppLanguage: String, CaseIterable, Identifiable {
         switch self {
         case .system:     return ""
         case .english:    return "English"
+        #if os(iOS)
+        case .indonesian: return "Bahasa Indonesia"
+        #endif
         case .german:     return "Deutsch"
         case .spanish:    return "Español"
         case .french:     return "Français"

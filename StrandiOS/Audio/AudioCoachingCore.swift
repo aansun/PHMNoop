@@ -133,9 +133,9 @@ enum AudioPromptFrequency: String, CaseIterable, Identifiable, Equatable, Sendab
 
     var title: String {
         switch self {
-        case .low: return "Low"
-        case .normal: return "Normal"
-        case .high: return "High"
+        case .low: return String(localized: "Low")
+        case .normal: return String(localized: "Normal")
+        case .high: return String(localized: "High")
         }
     }
 }
@@ -159,9 +159,9 @@ enum AudioSpeechRate: String, CaseIterable, Identifiable, Equatable, Sendable {
 
     var title: String {
         switch self {
-        case .slow: return "Slow"
-        case .normal: return "Normal"
-        case .fast: return "Fast"
+        case .slow: return String(localized: "Slow")
+        case .normal: return String(localized: "Normal")
+        case .fast: return String(localized: "Fast")
         }
     }
 }
@@ -388,6 +388,45 @@ final class AudioActivityEngine {
 }
 
 /// Renders short deterministic spoken prompts and owns semantic cooldowns, not audio playback.
+enum AudioCoachingCopy {
+    #if os(iOS)
+    static var isIndonesian: Bool {
+        let appLanguage = Bundle.main.preferredLocalizations.first ?? ""
+        let deviceLanguage = Locale.preferredLanguages.first ?? ""
+        return appLanguage.hasPrefix("id") || deviceLanguage.hasPrefix("id")
+    }
+    #else
+    static let isIndonesian = false
+    #endif
+
+    static func distance(_ meters: Double) -> String {
+        if meters < 1_000 {
+            return isIndonesian
+                ? "Distance \(Int(meters.rounded())) meter."
+                : "Distance \(Int(meters.rounded())) meters."
+        }
+        let km = meters / 1_000
+        let formatted = km.rounded() == km ? String(Int(km)) : String(format: "%.1f", km)
+        return isIndonesian
+            ? "Distance \(formatted) kilometer."
+            : "Distance \(formatted) kilometers."
+    }
+
+    static func duration(_ duration: TimeInterval) -> String {
+        let totalSeconds = max(0, Int(duration.rounded()))
+        let minutes = totalSeconds / 60
+        let seconds = totalSeconds % 60
+        if isIndonesian {
+            if minutes == 0 { return "Durasi \(seconds) detik." }
+            if seconds == 0 { return "Durasi \(minutes) menit." }
+            return "Durasi \(minutes) menit \(seconds) detik."
+        }
+        if minutes == 0 { return "Duration \(seconds) seconds" }
+        if seconds == 0 { return "Duration \(minutes) minutes" }
+        return "Duration \(minutes) minutes \(seconds) seconds"
+    }
+}
+
 final class AudioPromptEngine {
     private var lastEmittedAt: [String: Date] = [:]
     private var lastPromptAt = Date.distantPast
@@ -470,38 +509,50 @@ final class AudioPromptEngine {
         let expires: TimeInterval
         switch event {
         case .activityStarted:
-            template = "activity.started"; text = "Workout started."; expires = 8
+            template = "activity.started"; text = AudioCoachingCopy.isIndonesian ? "Workout dimulai." : "Workout started."; expires = 8
         case .activityPaused:
-            template = "activity.paused"; text = "Workout paused."; expires = 8
+            template = "activity.paused"; text = AudioCoachingCopy.isIndonesian ? "Workout dijeda." : "Workout paused."; expires = 8
         case .activityResumed:
-            template = "activity.resumed"; text = "Workout resumed."; expires = 8
+            template = "activity.resumed"; text = AudioCoachingCopy.isIndonesian ? "Workout dilanjutkan." : "Workout resumed."; expires = 8
         case .activityEnded:
-            template = "activity.ended"; text = "Workout complete."; expires = 12
+            template = "activity.ended"; text = AudioCoachingCopy.isIndonesian ? "Workout selesai." : "Workout complete."; expires = 12
         case .distanceMilestone(let meters):
             template = "distance.milestone"
             text = distanceMilestoneText(meters: meters, context: context, policy: policy)
             expires = 15
         case .heartRateAboveTarget(let current, let targetMax):
             template = "hr.above_target"
-            text = "Heart rate \(current). Ease your effort slightly."
+            text = AudioCoachingCopy.isIndonesian
+                ? "Heart Rate \(current). Kurangi effort sedikit."
+                : "Heart rate \(current). Ease your effort slightly."
             _ = targetMax
             expires = 10
         case .heartRateBelowTarget(let current, let targetMin):
             template = "hr.below_target"
-            text = "Heart rate \(current). Increase your effort toward target."
+            text = AudioCoachingCopy.isIndonesian
+                ? "Heart Rate \(current). Tingkatkan effort menuju target."
+                : "Heart rate \(current). Increase your effort toward target."
             _ = targetMin
             expires = 10
         case .heartRateReturnedToTarget:
-            template = "hr.returned_to_target"; text = "Heart rate back in target."; expires = 12
+            template = "hr.returned_to_target"
+            text = AudioCoachingCopy.isIndonesian ? "Heart Rate kembali ke target." : "Heart rate back in target."
+            expires = 12
         case .coachingIntent(let intent):
             template = "coaching.\(intent.rawValue)"
             switch intent {
             case .easeOff:
-                text = "Heart rate is drifting up. Ease your effort slightly."
+                text = AudioCoachingCopy.isIndonesian
+                    ? "Heart Rate mulai naik. Kurangi effort sedikit."
+                    : "Heart rate is drifting up. Ease your effort slightly."
             case .stabilizePace:
-                text = "Your pace is slowing. Settle into a steady pace."
+                text = AudioCoachingCopy.isIndonesian
+                    ? "Pace melambat. Jaga pace tetap stabil."
+                    : "Your pace is slowing. Settle into a steady pace."
             case .maintainRhythm:
-                text = "Your cadence is dropping. Keep your rhythm steady."
+                text = AudioCoachingCopy.isIndonesian
+                    ? "Cadence menurun. Jaga ritme tetap stabil."
+                    : "Your cadence is dropping. Keep your rhythm steady."
             }
             expires = 12
         }
@@ -511,10 +562,7 @@ final class AudioPromptEngine {
     }
 
     private func distanceText(_ meters: Double) -> String {
-        if meters < 1_000 { return "Distance \(Int(meters.rounded())) meters." }
-        let km = meters / 1_000
-        let formatted = km.rounded() == km ? String(Int(km)) : String(format: "%.1f", km)
-        return "Distance \(formatted) kilometers."
+        AudioCoachingCopy.distance(meters)
     }
 
     private func distanceMilestoneText(meters: Double, context: AudioWorkoutContext,
@@ -525,26 +573,25 @@ final class AudioPromptEngine {
         }
         if policy.distanceIncludesHeartRate {
             if let heartRate = context.heartRate, let zone = context.heartRateZone {
-                parts.append("Heart rate zone \(zone), \(heartRate) BPM.")
+                parts.append(AudioCoachingCopy.isIndonesian
+                             ? "Heart Rate zone \(zone), \(heartRate) BPM."
+                             : "Heart rate zone \(zone), \(heartRate) BPM.")
             } else if let zone = context.heartRateZone {
-                parts.append("Heart rate zone \(zone).")
+                parts.append(AudioCoachingCopy.isIndonesian
+                             ? "Heart Rate zone \(zone)."
+                             : "Heart rate zone \(zone).")
             } else {
-                parts.append("Heart rate unavailable.")
+                parts.append(AudioCoachingCopy.isIndonesian ? "Heart Rate tidak tersedia." : "Heart rate unavailable.")
             }
         }
         if policy.distanceIncludesDuration {
-            parts.append("Duration \(durationText(context.duration)).")
+            parts.append(durationText(context.duration))
         }
         return parts.joined(separator: " ")
     }
 
     private func durationText(_ duration: TimeInterval) -> String {
-        let totalSeconds = max(0, Int(duration.rounded()))
-        let minutes = totalSeconds / 60
-        let seconds = totalSeconds % 60
-        if minutes == 0 { return "\(seconds) seconds" }
-        if seconds == 0 { return "\(minutes) minutes" }
-        return "\(minutes) minutes \(seconds) seconds"
+        AudioCoachingCopy.duration(duration)
     }
 
     func testPrompt(context: AudioWorkoutContext, policy: AudioPromptPolicy,

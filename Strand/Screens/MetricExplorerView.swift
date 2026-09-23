@@ -262,6 +262,20 @@ enum MetricDetailSteps {
         }
     }
 
+    static func axisLabel(day: String, resolution: Resolution) -> String {
+        guard let date = parseDay(day) else { return day }
+        let formatter = DateFormatter()
+        formatter.locale = AppLanguage.activeLocale
+        formatter.timeZone = TimeZone(identifier: "UTC")
+        switch resolution {
+        case .daily, .weekly:
+            formatter.dateFormat = "d MMM"
+        case .monthly:
+            formatter.dateFormat = "MMM yyyy"
+        }
+        return formatter.string(from: date)
+    }
+
     static func countCaption(count: Int, resolution: Resolution, rangeName: String) -> String {
         let noun = count == 1 ? String(localized: "bar") : String(localized: "bars")
         switch resolution {
@@ -1484,6 +1498,10 @@ struct MetricDetailView: View {
                             day: strandDayParser.string(from: date), resolution: stepsResolution)
                         : TrendChart.defaultDateString(date)
                 },
+                xAxisDateFormat: isStepsDetail ? { date in
+                    MetricDetailSteps.axisLabel(
+                        day: strandDayParser.string(from: date), resolution: stepsResolution)
+                } : nil,
                 accessibilityLabel: stepsAccessibility,
                 yAxisStep: isStepsDetail ? 5000 : nil,
                 showsBarValues: isStepsDetail && (effectiveRange == .week || effectiveRange == .twoWeeks),
