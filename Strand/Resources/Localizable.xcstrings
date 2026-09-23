@@ -12,7 +12,8 @@
         } },
         "Available": { "localizations": {
           "de": {"stringUnit": {"state": "translated", "value": "Verfügbar"}}, "es": {"stringUnit": {"state": "translated", "value": "Disponible"}}, "fr": {"stringUnit": {"state": "translated", "value": "Disponible"}}, "it": {"stringUnit": {"state": "translated", "value": "Disponibile"}}, "pl": {"stringUnit": {"state": "translated", "value": "Dostępne"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Disponível"}}, "ru": {"stringUnit": {"state": "translated", "value": "Доступно"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "可用"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "可用"}}
-        } },
+        ,
+          "id": {"stringUnit": {"state": "translated", "value": "Tersedia"}}} },
         "None added yet": { "localizations": {
           "de": {"stringUnit": {"state": "translated", "value": "Noch nichts hinzugefügt"}}, "es": {"stringUnit": {"state": "translated", "value": "Aún no has añadido ninguno"}}, "fr": {"stringUnit": {"state": "translated", "value": "Aucun ajouté pour l'instant"}}, "it": {"stringUnit": {"state": "translated", "value": "Nessuno aggiunto finora"}}, "pl": {"stringUnit": {"state": "translated", "value": "Nic jeszcze nie dodano"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Ainda não foi adicionado nenhum"}}, "ru": {"stringUnit": {"state": "translated", "value": "Пока ничего не добавлено"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "尚未添加任何内容"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "尚未新增任何項目"}}
         } },
@@ -96,7 +97,8 @@
     } },
     "Coach settings": { "localizations": {
       "de": {"stringUnit": {"state": "translated", "value": "Coach-Einstellungen"}}, "en": {"stringUnit": {"state": "translated", "value": "Coach settings"}}, "es": {"stringUnit": {"state": "translated", "value": "Ajustes del coach"}}, "fr": {"stringUnit": {"state": "translated", "value": "Réglages du coach"}}, "it": {"stringUnit": {"state": "translated", "value": "Impostazioni del coach"}}, "pl": {"stringUnit": {"state": "translated", "value": "Ustawienia trenera"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Definições do coach"}}, "ru": {"stringUnit": {"state": "translated", "value": "Настройки тренера"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "教练设置"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "教練設定"}}
-    } },
+    ,
+          "id": {"stringUnit": {"state": "translated", "value": "Pengaturan Coach"}}} },
     "Connected, authenticating…": {
       "localizations": {
         "de": {
@@ -616,8 +618,9 @@
             "state": "translated",
             "value": "Pokazuje Łączenie… / Synchronizowanie… z liczbą fragmentów i czasem trwania, gdy NOOP pobiera historię z paska, także przy synchronizacji uruchomionej skrótem Synchronizuj pasek. Niezależne od przełącznika tętna na żywo powyżej."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Menampilkan Connecting… / Syncing… beserta jumlah bagian dan durasi saat NOOP mengambil riwayat dari strap, termasuk sinkronisasi dari Shortcuts. Pengaturan ini terpisah dari Heart Rate live di atas."}}
+}
     },
     "Shows sync progress on the Lock Screen and in the Dynamic Island": {
       "localizations": {
@@ -732,8 +735,9 @@
             "state": "translated",
             "value": "Synchronizacja paska w Dynamic Island"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Sinkronisasi strap di Dynamic Island"}}
+}
     },
     "Sync didn't start": {
       "localizations": {
@@ -907,7 +911,8 @@
             "value": "Zsynchronizowano"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Sudah disinkronkan"}}}
     },
     "Synced · %lld chunks": {
       "localizations": {
@@ -1115,8 +1120,9 @@
             "state": "translated",
             "value": "Utrzymuje ekran włączony, gdy NOOP pobiera zapisaną historię z paska, aby można było zobaczyć koniec długiej synchronizacji bez blokady telefonu. Działa tylko w trakcie synchronizacji, gdy NOOP jest otwarty. Poza tym ekran wygasa normalnie. Gdy ekran pozostaje włączony, zużywa nieco więcej baterii."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Menjaga layar tetap menyala saat NOOP mengambil riwayat dari strap agar sinkronisasi panjang selesai tanpa iPhone terkunci. Hanya berlaku saat sinkronisasi berjalan dan NOOP terbuka. Di luar itu, layar bekerja normal dan penggunaan baterai sedikit lebih tinggi saat aktif."}}
+}
     },
     "How NOOP behaves while it pulls stored history from your strap.": {
       "localizations": {
@@ -1231,8 +1237,9 @@
             "state": "translated",
             "value": "Trzymaj ekran włączony podczas synchronizacji"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Pertahankan layar menyala saat sinkronisasi"}}
+}
     },
     "Last 7 days · estimated": { "localizations": {
       "de": {"stringUnit": {"state": "translated", "value": "Letzte 7 Tage · geschätzt"}}, "es": {"stringUnit": {"state": "translated", "value": "Últimos 7 días · estimado"}}, "fr": {"stringUnit": {"state": "translated", "value": "7 derniers jours · estimé"}}, "it": {"stringUnit": {"state": "translated", "value": "Ultimi 7 giorni · stimato"}}, "pl": {"stringUnit": {"state": "translated", "value": "Ostatnie 7 dni · szacunkowo"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Últimos 7 dias · estimado"}}, "ru": {"stringUnit": {"state": "translated", "value": "Последние 7 дней · оценка"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "最近 7 天 · 估算"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "最近 7 天 · 估算"}}
@@ -1637,8 +1644,9 @@
       "de": {"stringUnit": {"state": "translated", "value": "Schrägbankdrücken mit Kurzhanteln"}}, "es": {"stringUnit": {"state": "translated", "value": "Press inclinado con mancuernas"}}, "fr": {"stringUnit": {"state": "translated", "value": "Développé incliné haltères"}}, "it": {"stringUnit": {"state": "translated", "value": "Panca inclinata con manubri"}}, "pl": {"stringUnit": {"state": "translated", "value": "Wyciskanie hantli na skosie"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Supino inclinado com halteres"}}, "ru": {"stringUnit": {"state": "translated", "value": "Жим гантелей на наклонной"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "上斜哑铃卧推"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "上斜啞鈴臥推"}}
     } },
     "Lift Log": { "localizations": {
-      "de": {"stringUnit": {"state": "translated", "value": "Trainingsbuch"}}, "es": {"stringUnit": {"state": "translated", "value": "Registro de fuerza"}}, "fr": {"stringUnit": {"state": "translated", "value": "Carnet de force"}}, "it": {"stringUnit": {"state": "translated", "value": "Diario dei pesi"}}, "pl": {"stringUnit": {"state": "translated", "value": "Dziennik siłowni"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Registo de força"}}, "ru": {"stringUnit": {"state": "translated", "value": "Дневник тренировок"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "力量日志"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "力量日誌"}}
-    } },
+      "de": {"stringUnit": {"state": "translated", "value": "Trainingsbuch"}}, "es": {"stringUnit": {"state": "translated", "value": "Registro de fuerza"}}, "fr": {"stringUnit": {"state": "translated", "value": "Carnet de force"}}, "it": {"stringUnit": {"state": "translated", "value": "Diario dei pesi"}}, "pl": {"stringUnit": {"state": "translated", "value": "Dziennik siłowni"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Registo de força"}}, "ru": {"stringUnit": {"state": "translated", "value": "Дневник тренировок"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "力量日志"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "力量日誌"}},
+      "id": {"stringUnit": {"state": "translated", "value": "Catatan Angkat Beban"}}
+} },
     "No targets set": { "localizations": {
       "de": {"stringUnit": {"state": "translated", "value": "Keine Ziele gesetzt"}}, "es": {"stringUnit": {"state": "translated", "value": "Sin objetivos"}}, "fr": {"stringUnit": {"state": "translated", "value": "Aucun objectif défini"}}, "it": {"stringUnit": {"state": "translated", "value": "Nessun obiettivo impostato"}}, "pl": {"stringUnit": {"state": "translated", "value": "Brak celów"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Sem objetivos definidos"}}, "ru": {"stringUnit": {"state": "translated", "value": "Цели не заданы"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "未设定目标"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "未設定目標"}}
     } },
@@ -19611,7 +19619,8 @@
             "value": "Trend 14-dniowy"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Tren 14 hari"}}}
     },
     "14d": {
       "localizations": {
@@ -24918,8 +24927,9 @@
             "state": "translated",
             "value": "一套透明的心肺分期方法，比舊的 V1 分期能更好地還原深睡和 REM，現已成為預設。它只改變已偵測到的夜間如何劃分睡眠階段（偵測與評分不變）；關閉它即可回到 V1。對之後分期的夜晚生效。"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Metode cardiorespiratory yang transparan dan memulihkan tahap deep serta REM lebih baik daripada V1. Ini adalah default dan hanya mengubah pembagian tahap pada malam yang sudah terdeteksi; deteksi dan score tetap sama. Matikan untuk kembali ke V1."}}
+}
     },
     "A typical recent day": {
       "localizations": {
@@ -27095,7 +27105,8 @@
             "value": "Działalność"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Aktivitas"}}}
     },
     "Activity & Energy": {
       "localizations": {
@@ -27338,8 +27349,9 @@
             "state": "translated",
             "value": "Działa jak standardowy pasek do pomiaru tętna Bluetooth. Sparuj zegarek NOOP z bieżnią, rowerem lub aplikacją, aby sprawdzić tętno paska."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Bertindak sebagai strap Heart Rate Bluetooth standar. Pasangkan NOOP dari treadmill, sepeda, atau aplikasi untuk melihat Heart Rate strap di sana."}}
+}
     },
     "Acute (7-day) vs chronic (28-day) training load. 0.8–1.3 is the sweet spot.": {
       "localizations": {
@@ -29328,8 +29340,9 @@
             "state": "translated",
             "value": "Alarmy"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Alarm"}}
+}
     },
     "Alcohol": {
       "localizations": {
@@ -30141,7 +30154,8 @@
             "value": "Udostępnij także moje wzory i książkę laboratoryjną"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Bagikan juga pattern dan Lab Book saya"}}}
     },
     "Also share my patterns and Lab Book with the coach": {
       "localizations": {
@@ -31505,7 +31519,8 @@
             "value": "Apple Health"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Apple Health"}}}
     },
     "Apple Health (Live)": {
       "localizations": {
@@ -33502,8 +33517,9 @@
             "state": "translated",
             "value": "Automatyczne wykrywanie treningów"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Deteksi workout otomatis"}}
+}
     },
     "Auto-nudge": {
       "localizations": {
@@ -33619,7 +33635,8 @@
             "value": "Automatyczny"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Otomatis"}}}
     },
     "Automation": {
       "localizations": {
@@ -33740,8 +33757,9 @@
             "state": "translated",
             "value": "Automatyka"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Otomasi"}}
+}
     },
     "Autonomic balance (LF/HF)": {
       "localizations": {
@@ -35470,8 +35488,9 @@
             "state": "translated",
             "value": "Cofnij się teraz"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Backup sekarang"}}
+}
     },
     "Backed up": {
       "localizations": {
@@ -35644,8 +35663,9 @@
             "state": "translated",
             "value": "Tworzy kopię zapasową w Twoim folderze mniej więcej raz dziennie i przechowuje najnowszą wersję %lld. Na tej platformie działa przy następnym otwarciu NOOP."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Menyimpan backup ke folder sekitar sekali sehari dan mempertahankan %lld backup terbaru. Di platform ini, proses berjalan saat Anda membuka NOOP berikutnya."}}
+}
     },
     "Backup & Sync": {
       "localizations": {
@@ -35703,7 +35723,8 @@
             "value": "Kopia zapasowa i synchronizacja"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Cadangan & Sinkronisasi"}}}
     },
     "Backup & Sync to a folder…": {
       "localizations": {
@@ -36056,8 +36077,9 @@
             "state": "translated",
             "value": "Folder kopii zapasowej"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Folder backup"}}
+}
     },
     "Backup imported": {
       "localizations": {
@@ -36695,7 +36717,8 @@
             "value": "Bateria"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Battery"}}}
     },
     "Battery %lld percent": {
       "localizations": {
@@ -38249,7 +38272,8 @@
             "value": "Tlen we krwi"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Blood Oxygen"}}}
     },
     "Blood O₂": {
       "localizations": {
@@ -38602,8 +38626,9 @@
             "state": "translated",
             "value": "Ciśnienie krwi"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Tekanan darah"}}
+}
     },
     "Body": {
       "localizations": {
@@ -38660,8 +38685,9 @@
             "state": "translated",
             "value": "Ciało"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Tubuh"}}
+}
     },
     "Body Age": {
       "localizations": {
@@ -39762,8 +39788,9 @@
             "state": "translated",
             "value": "Oddychać"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Pernapasan"}}
+}
     },
     "Breathe at the pace your last “find my pace” sweep locked in, if you have one. Otherwise a calm 5.5 breaths/min.": {
       "localizations": {
@@ -43757,7 +43784,8 @@
             "value": "Kalibracja"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Kalibrasi"}}}
     },
     "Calibrating (%lld of %lld)": {
       "localizations": {
@@ -44942,7 +44970,8 @@
             "value": "Anuluj"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Batal"}}}
     },
     "Capturing": {
       "localizations": {
@@ -45182,8 +45211,9 @@
             "state": "translated",
             "value": "Przejrzystość karty"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Transparansi kartu"}}
+}
     },
     "Cardiac": {
       "localizations": {
@@ -45484,8 +45514,9 @@
             "state": "translated",
             "value": "Zmień folder"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Ganti folder"}}
+}
     },
     "Change marker": {
       "localizations": {
@@ -45827,7 +45858,8 @@
             "value": "Energia"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Charge"}}}
     },
     "Charge %@%%": {
       "localizations": {
@@ -48564,8 +48596,9 @@
             "state": "translated",
             "value": "Wybierz folder"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Pilih folder"}}
+}
     },
     "Choose how NOOP looks. The whole app updates as you tap. You can change this any time in Settings → Appearance.": {
       "localizations": {
@@ -49813,7 +49846,8 @@
             "value": "Trener"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Coach"}}}
     },
     "Coach instructions": {
       "localizations": {
@@ -49871,7 +49905,8 @@
             "value": "Instrukcje trenera"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Instruksi Coach"}}}
     },
     "Coach instructions editor": {
       "localizations": {
@@ -49929,7 +49964,8 @@
             "value": "Edytor instrukcji trenera"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Editor instruksi Coach"}}}
     },
     "Coach is thinking": {
       "localizations": {
@@ -50783,8 +50819,9 @@
             "state": "translated",
             "value": "Zwinięty"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Diciutkan"}}
+}
     },
     "Collect a few logged intervention days before reading the effect. Baseline and imported metrics stay in place.": {
       "localizations": {
@@ -51027,8 +51064,9 @@
             "state": "translated",
             "value": "Porównywać"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Bandingkan"}}
+}
     },
     "Compare needs at least two metrics with history. Import your WHOOP export in Data Sources first.": {
       "localizations": {
@@ -51806,7 +51844,8 @@
             "value": "Łączyć"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Hubungkan"}}}
     },
     "Connect Apple Health": {
       "localizations": {
@@ -53003,7 +53042,8 @@
             "value": "Połączono"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Terhubung"}}}
     },
     "Connected now": {
       "localizations": {
@@ -54268,8 +54308,9 @@
             "state": "translated",
             "value": "Ciągłe przechwytywanie HRV"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Perekaman HRV berkelanjutan"}}
+}
     },
     "Contributors": {
       "localizations": {
@@ -55922,8 +55963,9 @@
             "state": "translated",
             "value": "Licznik taktów na krok. Zostaw na 1,0, chyba że Twoje kroki będą wysokie. Na WHOOP 5/MG mogą biegać bardzo wysoko (10× lub więcej), więc liczba ta wzrasta do 30. Przejdź znane 1000 kroków i podziel liczbę NOOP przez liczbę rzeczywistą, aby otrzymać wartość."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Pengali untuk setiap langkah. Biarkan 1,0 kecuali jumlah langkah terlalu tinggi. Pada WHOOP 5/MG, jumlahnya bisa jauh lebih besar (10× atau lebih), sehingga nilainya dapat diatur hingga 30. Berjalanlah 1.000 langkah, lalu bagi hitungan NOOP dengan hitungan sebenarnya."}}
+}
     },
     "Coupled read": {
       "localizations": {
@@ -56503,7 +56545,8 @@
             "value": "Zwyczaj"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Custom"}}}
     },
     "Custom %lld ml": {
       "localizations": {
@@ -57982,8 +58025,9 @@
             "state": "translated",
             "value": "Codzienna automatyczna kopia zapasowa"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Backup otomatis harian"}}
+}
     },
     "Daily auto-export of the strap log": {
       "localizations": {
@@ -58285,7 +58329,8 @@
             "value": "Źródła danych"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Sumber Data"}}}
     },
     "Data sources": {
       "localizations": {
@@ -59000,8 +59045,9 @@
             "state": "translated",
             "value": "Tło cyklu dnia"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Latar siklus hari"}}
+}
     },
     "Days": {
       "localizations": {
@@ -59825,7 +59871,8 @@
             "value": "Usuń"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Hapus"}}}
     },
     "Delete %@": {
       "localizations": {
@@ -61043,7 +61090,8 @@
             "value": "Urządzenia"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Perangkat"}}}
     },
     "Diagnostics": {
       "localizations": {
@@ -61397,7 +61445,8 @@
             "value": "Odłączyć"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Putuskan"}}}
     },
     "Disconnect provider": {
       "localizations": {
@@ -61513,7 +61562,8 @@
             "value": "Rozłączono"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Terputus"}}}
     },
     "Dismiss": {
       "localizations": {
@@ -61803,7 +61853,8 @@
             "value": "Dystans"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Distance"}}}
     },
     "Distance must be 0–1,000 km.": {
       "localizations": {
@@ -62459,7 +62510,8 @@
             "value": "Done"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Selesai"}}}
     },
     "Done customising dashboard": {
       "localizations": {
@@ -62934,8 +62986,9 @@
             "state": "translated",
             "value": "Kliknij dwukrotnie, aby zwinąć"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Ketuk dua kali untuk menciutkan"}}
+}
     },
     "Double tap to expand": {
       "localizations": {
@@ -62992,8 +63045,9 @@
             "state": "translated",
             "value": "Kliknij dwukrotnie, aby rozwinąć"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Ketuk dua kali untuk memperluas"}}
+}
     },
     "Double-tap": {
       "localizations": {
@@ -64785,7 +64839,8 @@
             "value": "Redagować"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Edit"}}}
     },
     "Edit %@": {
       "localizations": {
@@ -65731,7 +65786,8 @@
             "value": "Wysiłek"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Effort"}}}
     },
     "Effort (0–100)": {
       "localizations": {
@@ -68745,8 +68801,9 @@
             "state": "translated",
             "value": "Wszystko inne w zasięgu jednego kliknięcia"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Semua fitur lain, satu ketukan"}}
+}
     },
     "Everything here is a pattern in your own logged days: an association with an effect size and confidence, never a cause or a diagnosis. Population patterns are shown as “typical” and are always overridden by your own data once you have enough of it. Approximations, not WHOOP’s scores; not a medical device.": {
       "localizations": {
@@ -68919,8 +68976,9 @@
             "state": "translated",
             "value": "Wszystko pozostaje na %@. Przynieś swoją historię raz, a potem będzie Twoja."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Semua data tetap di %@. Impor riwayat sekali, lalu data itu menjadi milik Anda."}}
+}
     },
     "Everything stays on this Mac. Bring your history in once, then it's yours.": {
       "extractionState": "stale",
@@ -69216,8 +69274,9 @@
             "state": "translated",
             "value": "Rozszerzony"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Diperluas"}}
+}
     },
     "Experiment behaviour": {
       "localizations": {
@@ -70203,8 +70262,9 @@
             "state": "translated",
             "value": "Badać"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Jelajahi"}}
+}
     },
     "Export": {
       "localizations": {
@@ -70262,7 +70322,8 @@
             "value": "Eksport"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Ekspor"}}}
     },
     "Export CSV…": {
       "localizations": {
@@ -71143,8 +71204,9 @@
             "state": "translated",
             "value": "Rozszerza niebo za cały ekran Dzisiaj, więc zmniejszenie przezroczystości karty umożliwia jej prześwitywanie przez każdą kartę. Wymaga włączonego tła cyklu dziennego."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Memperluas langit ke seluruh layar Today. Kurangi transparansi kartu agar langit terlihat melalui setiap kartu. Latar siklus hari harus aktif."}}
+}
     },
     "FULL BOND": {
       "localizations": {
@@ -73235,8 +73297,9 @@
             "state": "translated",
             "value": "W przypadku WHOOP 4.0, który nie wysyła liczby kroków: NOOP szacuje kroki na podstawie ruchu, skalibrowanego do Twojego telefonu. Kliknij, aby zobaczyć, jak blisko jest, i dostosuj go."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "WHOOP 4.0 tidak mengirim jumlah langkah. NOOP memperkirakannya dari gerakan dan mengkalibrasinya dengan iPhone. Ketuk untuk melihat selisihnya dan menyesuaikan kalibrasi."}}
+}
     },
     "Force-quit the official WHOOP app first, or pairing may fail.": {
       "localizations": {
@@ -75292,7 +75355,8 @@
             "value": "Dzień dobry"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Selamat siang"}}}
     },
     "Good evening": {
       "localizations": {
@@ -75350,7 +75414,8 @@
             "value": "Dobry wieczór"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Selamat malam"}}}
     },
     "Good morning": {
       "localizations": {
@@ -75408,7 +75473,8 @@
             "value": "Dzień dobry"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Selamat pagi"}}}
     },
     "Good morning. Your smart alarm just woke you.": {
       "localizations": {
@@ -77166,7 +77232,8 @@
             "value": "HRV"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "HRV"}}}
     },
     "HRV %@ · RHR %@": {
       "localizations": {
@@ -78586,8 +78653,9 @@
             "state": "translated",
             "value": "Zdrowie"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Kesehatan"}}
+}
     },
     "Health Monitor": {
       "localizations": {
@@ -78895,7 +78963,8 @@
             "value": "Tętno"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Heart Rate"}}}
     },
     "Heart Rate Recovery": {
       "localizations": {
@@ -79057,7 +79126,8 @@
             "value": "Tętno"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Heart Rate"}}}
     },
     "Heart rate %lld beats per minute": {
       "localizations": {
@@ -80901,7 +80971,8 @@
             "value": "Wysoki"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "High"}}}
     },
     "History": {
       "localizations": {
@@ -81422,8 +81493,9 @@
             "state": "translated",
             "value": "Utrzymuje ekran w stanie czuwania podczas nagrywania treningu, dzięki czemu Twoje tętno na żywo pozostaje widoczne bez przyciemniania urządzenia. Ma zastosowanie tylko podczas nagrywania. Przez resztę czasu ekran śpi normalnie. Pozostawienie go włączonego powoduje zużycie nieco większej ilości baterii i oznacza, że ​​odblokowany ekran pozostaje widoczny przez cały trening, więc wyłącz go, jeśli Cię to martwi."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Menjaga layar tetap menyala saat merekam workout agar Heart Rate live terlihat tanpa layar meredup. Hanya berlaku selama perekaman. Di luar itu, layar bekerja normal. Fitur ini sedikit menguras baterai; matikan jika tidak diperlukan."}}
+}
     },
     "Hours asleep": {
       "localizations": {
@@ -82741,8 +82813,9 @@
             "state": "translated",
             "value": "Jak przejrzyste są karty (tętno, kluczowe wskaźniki, parametry Regeneracja,…). Lewy = stały, prawy = czysty."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Mengatur tingkat tembus pandang kartu (Heart Rate, Key Metrics, Recovery Vitals, dan lainnya). Kiri = solid, kanan = transparan."}}
+}
     },
     "How strong the buzz is.": {
       "localizations": {
@@ -83739,8 +83812,9 @@
             "state": "translated",
             "value": "Śledzenie nawodnienia"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Pelacakan hidrasi"}}
+}
     },
     "Hypnogram": {
       "localizations": {
@@ -85139,7 +85213,8 @@
             "value": "Import"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Impor"}}}
     },
     "Import Apple Health data?": {
       "localizations": {
@@ -85480,8 +85555,9 @@
             "state": "translated",
             "value": "Zaimportuj pojedynczy wyeksportowany plik ćwiczeń dowolnej marki (Garmin, Coros, Suunto, Wahoo, Polar, Strava, Apple) bezpośrednio ze swojego urządzenia. Trasa GPS, dystans, tętno i kalorie pojawiają się tam, gdzie są zapisane w pliku. Całkowicie offline; nic nie pozostawia %@."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Impor satu file workout dari perangkat apa pun (Garmin, Coros, Suunto, Wahoo, Polar, Strava, atau Apple). Rute GPS, jarak, Heart Rate, dan kalori akan ikut jika tersedia di file. Sepenuhnya offline; tidak ada data yang keluar dari %@."}}
+}
     },
     "Import again": {
       "localizations": {
@@ -85590,8 +85666,9 @@
             "state": "translated",
             "value": "Zaimportuj eksport Apple Health (aplikacja Zdrowie → profil → Eksportuj wszystkie dane dotyczące zdrowia → eksport.zip). 7 lat HR, HRV, snu, SpO₂, kroków i nie tylko, transmitowane lokalnie. Duży eksport zajmuje minutę lub dwie."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Impor ekspor Apple Health (aplikasi Health → profil → Export All Health Data → export.zip). Riwayat hingga 7 tahun berisi HR, HRV, tidur, SpO₂, langkah, dan lainnya diproses secara lokal. Ekspor besar memerlukan satu atau dua menit."}}
+}
     },
     "Import daily nutrition totals from a Cronometer or MacroFactor CSV export: calories in, protein, carbs, fat (and weight if present). Other trackers work too if the file has a date column and daily totals.": {
       "localizations": {
@@ -85648,8 +85725,9 @@
             "state": "translated",
             "value": "Importuj dzienne wartości odżywcze z Cronometru lub Eksport MacroFactor CSV: kalorie, białka, węglowodany, tłuszcz (i waga, jeśli są obecne). Inne moduły śledzące również działają, jeśli plik zawiera kolumnę z datą i sumy dzienne."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Impor ringkasan nutrisi harian dari ekspor CSV Cronometer atau MacroFactor: kalori masuk, protein, karbohidrat, lemak, dan berat jika tersedia. Tracker lain juga bisa digunakan jika file memiliki kolom tanggal dan total harian."}}
+}
     },
     "Import failed. Your existing data was kept. %@": {
       "localizations": {
@@ -85938,8 +86016,9 @@
             "state": "translated",
             "value": "Zaimportuj historię Mi Band (kroki, tętno, tętno spoczynkowe, fazy snu, SpO₂, poziom stresu i wynik snu) bezpośrednio z aplikacji Mi Fitness. Na Twoim iPhonie: Pliki → Na moim iPhonie → Mi Fitness, naciśnij i przytrzymaj folder → Kompresuj, a następnie wybierz tutaj plik .zip. Całkowicie offline; nie jest potrzebne konto Xiaomi ani Bluetooth. Inteligentna opaska 8/9/10."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Impor riwayat Mi Band (langkah, Heart Rate, Resting HR, tahap tidur, SpO₂, stres, dan sleep score) dari aplikasi Mi Fitness. Di iPhone: Files → On My iPhone → Mi Fitness, tekan lama folder → Compress, lalu pilih .zip di sini. Sepenuhnya offline; tidak memerlukan akun Xiaomi atau Bluetooth. Smart Band 8/9/10."}}
+}
     },
     "Import your full WHOOP history (recovery, strain, sleep, workouts) from a data export (.zip). Works for WHOOP 4.0, 5.0 and MG. Get one at app.whoop.com → Data Management.": {
       "localizations": {
@@ -85996,8 +86075,9 @@
             "state": "translated",
             "value": "Zaimportuj pełną historię WHOOP (regeneracja, wysiłek, sen, treningi) z eksportu danych (.zip). Działa z WHOOP 4.0, 5.0 i MG. Zdobądź go na app.whoop.com → Zarządzanie danymi."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Impor seluruh riwayat WHOOP (Recovery, Strain, tidur, dan workout) dari ekspor data (.zip). Mendukung WHOOP 4.0, 5.0, dan MG. Unduh dari app.whoop.com → Data Management."}}
+}
     },
     "Import your history first. A WHOOP export in Data Sources fills every metric you can explore here in about a minute.": {
       "localizations": {
@@ -86118,8 +86198,9 @@
             "state": "translated",
             "value": "Zaimportuj własny eksport danych z Oura, Fitbit lub Garmin: sen, tętno spoczynkowe, HRV, kroki i inne, jeśli eksport je zawiera. Pobierz go z aplikacji marki (Oura: Konto → Eksportuj dane; Fitbit: Google Takeout; Garmin: Eksportuj swoje dane), a następnie wybierz plik tutaj. Całkowicie offline; nic nie pozostawia %@. Własne wyniki gotowości lub snu każdej marki są przechowywane wyłącznie w celach informacyjnych. Twoje wyniki pozostają Twoje."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Impor ekspor data Anda dari Oura, Fitbit, atau Garmin: tidur, Resting HR, HRV, langkah, dan data lain yang tersedia. Unduh dari aplikasi merek tersebut (Oura: Account → Export Data; Fitbit: Google Takeout; Garmin: Export Your Data), lalu pilih file di sini. Sepenuhnya offline; tidak ada data yang keluar dari %@. Readiness atau sleep score bawaan tiap merek hanya disimpan sebagai referensi. Score Anda tetap milik Anda."}}
+}
     },
     "Import your strength-training history from a Hevy CSV export or a Liftosaur JSON export. Each workout becomes a Strength session with a training-volume estimate (weight × reps). It's a volume figure, not a measured strain. It never changes your Effort.": {
       "localizations": {
@@ -86176,8 +86257,9 @@
             "state": "translated",
             "value": "Zaimportuj historię treningów siłowych z eksportu Hevy CSV lub Liftosaur JSON. Każdy trening staje się sesją siłową z szacunkową objętością treningu (waga × powtórzenia). To wielkość, a nie zmierzone odkształcenie. To nigdy nie zmienia Twojego Wysiłek."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Impor riwayat latihan kekuatan dari ekspor CSV Hevy atau JSON Liftosaur. Setiap workout menjadi sesi Strength dengan estimasi volume latihan (beban × repetisi). Ini hanya angka volume, bukan Strain terukur, dan tidak mengubah Effort."}}
+}
     },
     "Imported": {
       "localizations": {
@@ -87298,8 +87380,9 @@
             "state": "translated",
             "value": "Spostrzeżenia"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Insight"}}
+}
     },
     "Insights read your journal and outcomes. Import your WHOOP export, which includes your journal, in Data Sources to unlock them.": {
       "extractionState": "stale",
@@ -87543,8 +87626,9 @@
             "state": "translated",
             "value": "Inteligencja"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Intelligence"}}
+}
     },
     "Intensity Minutes": {
       "localizations": {
@@ -87851,8 +87935,9 @@
             "state": "translated",
             "value": "Interwały"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Interval"}}
+}
     },
     "Intervention": {
       "localizations": {
@@ -88651,8 +88736,9 @@
             "state": "translated",
             "value": "Przypomnienie dziennika"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Pengingat jurnal"}}
+}
     },
     "Jul": {
       "localizations": {
@@ -88884,7 +88970,8 @@
             "value": "KLUCZOWE METRYKI"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "METRIK UTAMA"}}}
     },
     "Keep it within about a metre of %@.": {
       "localizations": {
@@ -89045,8 +89132,9 @@
             "state": "translated",
             "value": "Zachowaj ostatnie migawki"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Simpan snapshot terbaru"}}
+}
     },
     "Keep screen on during a workout": {
       "localizations": {
@@ -89103,8 +89191,9 @@
             "state": "translated",
             "value": "Trzymaj ekran włączony podczas treningu"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Pertahankan layar menyala saat workout"}}
+}
     },
     "Keep the Oura app instead (import a file)": {
       "localizations": {
@@ -89451,8 +89540,9 @@
             "state": "translated",
             "value": "Utrzymuje szczegółowy strumień tętna od uderzenia do uderzenia przez cały dzień i noc, a nie tylko wtedy, gdy otwarty jest ekran na żywo, więc NOOP rejestruje znacznie więcej podczas nocnej HRV, regeneracji i snu. Zużywa więcej baterii: po podłączeniu pasek stale przesyła dane o tętnie."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Menjaga stream Heart Rate beat-to-beat tetap berjalan siang dan malam, bukan hanya saat layar Live terbuka. NOOP mendapat lebih banyak data untuk HRV malam, Recovery, dan tidur. Baterai lebih cepat berkurang karena strap mengirim Heart Rate terus-menerus saat terhubung."}}
+}
     },
     "Key Metrics": {
       "localizations": {
@@ -90141,8 +90231,9 @@
             "state": "translated",
             "value": "Książka Laboratorium"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Buku Lab"}}
+}
     },
     "Lab Book is a private notebook, not a medical service. NOOP stores and lines up the numbers you enter. It doesn't test, read, diagnose, or advise. Your records never leave %@; there's no account or cloud, so it isn't \"HIPAA-covered.\" Always rely on your doctor or pharmacist to interpret results.": {
       "localizations": {
@@ -93212,7 +93303,8 @@
             "value": "Niech trener wykorzysta moje dane"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Izinkan Coach menggunakan data saya"}}}
     },
     "Lifestyle": {
       "localizations": {
@@ -93727,8 +93819,9 @@
             "state": "translated",
             "value": "Liquid Today（原型）"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Liquid Today (prototipe)"}}
+}
     },
     "Listening for the strap's reply…": {
       "localizations": {
@@ -93850,7 +93943,8 @@
             "value": "Na żywo"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Live"}}}
     },
     "Live Body Console": {
       "localizations": {
@@ -94243,8 +94337,9 @@
             "state": "translated",
             "value": "Sesje na żywo (beta)"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Live Sessions (beta)"}}
+}
     },
     "Live heart rate": {
       "localizations": {
@@ -94301,8 +94396,9 @@
             "state": "translated",
             "value": "Tętno na żywo"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Heart Rate live"}}
+}
     },
     "Live heart rate already works on a WHOOP 5/MG strap. These probes go further and try to coax more out of it. They are guesses, off by default, and only ever touch a 5/MG strap, WHOOP 4.0 is never affected.": {
       "extractionState": "stale",
@@ -94598,8 +94694,9 @@
             "state": "translated",
             "value": "Tętno na żywo w Dynamic Island"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Heart Rate live di Dynamic Island"}}
+}
     },
     "Live heart rate is flowing; full strap controls need an encrypted bond.": {
       "localizations": {
@@ -97605,7 +97702,8 @@
             "value": "Niski"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Low"}}}
     },
     "Low battery": {
       "localizations": {
@@ -99165,7 +99263,8 @@
             "value": "Podręcznik"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Manual"}}}
     },
     "Manual (you set this by hand)": {
       "localizations": {
@@ -101215,8 +101314,9 @@
             "state": "translated",
             "value": "Mi Band"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Mi Band"}}
+}
     },
     "Mid-cycle shift": {
       "localizations": {
@@ -101756,7 +101856,8 @@
             "value": "Model"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Model"}}}
     },
     "Moderate": {
       "localizations": {
@@ -102162,7 +102263,8 @@
             "value": "Więcej"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Lainnya"}}}
     },
     "Morning": {
       "localizations": {
@@ -108581,8 +108683,9 @@
             "state": "translated",
             "value": "Nie ma jeszcze kopii zapasowej."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Belum ada backup."}}
+}
     },
     "No backups found": {
       "localizations": {
@@ -109116,7 +109219,8 @@
             "value": "Brak danych"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Belum ada data"}}}
     },
     "No data for these metrics in %@. Widen the range or pick metrics you've logged.": {
       "localizations": {
@@ -109527,8 +109631,9 @@
             "state": "translated",
             "value": "Nie wybrano jeszcze żadnego folderu. Wybierz ten, który Twoja aplikacja w chmurze już synchronizuje, lub dowolny folder lokalny."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Belum ada folder yang dipilih. Pilih folder yang sudah disinkronkan aplikasi cloud Anda atau folder lokal apa pun."}}
+}
     },
     "No heart rate for this day": {
       "localizations": {
@@ -109869,8 +109974,9 @@
             "state": "translated",
             "value": "Nie ma jeszcze tętna na żywo. Otwórz opcję Live, aby sparować pasek."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Belum ada Heart Rate live. Buka Live untuk memasangkan strap."}}
+}
     },
     "No live reading. Coaching is paused until the strap comes back.": {
       "localizations": {
@@ -112947,7 +113053,8 @@
             "value": "Nie podłączony"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Belum terhubung"}}}
     },
     "Not connected. Open Live to pair.": {
       "localizations": {
@@ -115854,8 +115961,9 @@
             "state": "translated",
             "value": "OK"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "OK"}}
+}
     },
     "ON": {
       "localizations": {
@@ -116087,7 +116195,8 @@
             "value": "Wyłączony"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Mati"}}}
     },
     "Off baseline": {
       "localizations": {
@@ -116609,8 +116718,9 @@
             "state": "translated",
             "value": "超出此數量的較舊備份會被清理，最舊的先刪（約等於同樣天數）。若資料出現損壞，請還原最新的備份。"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Backup yang lebih lama dari jumlah ini akan dihapus mulai dari yang paling lama (≈ sejumlah hari tersebut). Jika data rusak, pulihkan backup terbaru."}}
+}
     },
     "Older scheduled exports beyond this many are pruned automatically, oldest first.": {
       "localizations": {
@@ -119639,8 +119749,9 @@
             "state": "translated",
             "value": "Opcjonalnie: Twoje VO₂max powstaje z około 4 nocy danych tętna; obwód w talii zwiększa dokładność. Sam wiek fitness tego nie potrzebuje. Zmierz się wokół środka, w pępku."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Opsional: VO₂max dibentuk dari sekitar 4 malam data Heart Rate; lingkar pinggang membuatnya lebih akurat. Fitness Age tidak memerlukannya. Ukur bagian tengah tubuh sejajar pusar."}}
+}
     },
     "Optional: import now, or continue and return to Data Sources later.": {
       "localizations": {
@@ -120655,8 +120766,9 @@
             "state": "translated",
             "value": "Tylko na noc"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Hanya malam hari"}}
+}
     },
     "Overnight sleep staging, resting heart rate, skin-temperature trend, motion and battery, read straight off the ring.": {
       "localizations": {
@@ -121236,7 +121348,8 @@
             "value": "Tempo"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Pace"}}}
     },
     "Pair and manage the bands NOOP reads from.": {
       "localizations": {
@@ -121641,8 +121754,9 @@
             "state": "translated",
             "value": "Łączy się bezpośrednio z paskiem nad Bluetooth: bez aplikacji WHOOP, bez chmury."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Terhubung langsung ke strap melalui Bluetooth: tanpa aplikasi WHOOP dan tanpa cloud."}}
+}
     },
     "Parasympathetic (rest) band of your HRV.": {
       "localizations": {
@@ -122047,8 +122161,9 @@
             "state": "translated",
             "value": "Wstrzymaj przechwytywanie HRV"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Jeda perekaman HRV"}}
+}
     },
     "Paused": {
       "localizations": {
@@ -124361,8 +124476,9 @@
             "state": "translated",
             "value": "Tryb oszczędzania energii"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Mode hemat daya"}}
+}
     },
     "Power users only.": {
       "localizations": {
@@ -125354,7 +125470,8 @@
             "value": "Profil"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Profil"}}}
     },
     "Profile and settings": {
       "localizations": {
@@ -125830,7 +125947,8 @@
             "value": "Dostawca"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Provider"}}}
     },
     "Pulling your strap's stored history. This drains oldest-first; a deep backlog now continues automatically across passes instead of waiting between syncs.": {
       "localizations": {
@@ -128697,8 +128815,9 @@
             "state": "translated",
             "value": "Udostępnij ponownie swoje tętno na żywo za pomocą Bluetooth jako standardowego czujnika tętna, aby bieżnia na siłowni, rower, Zwift, Peloton lub dowolna pobliska aplikacja fitness mogła je odczytać. Tylko lokalny Bluetooth. Nic nie pozostawia %@. Domyślnie wyłączone."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Bagikan kembali Heart Rate live dari strap melalui Bluetooth sebagai sensor Heart Rate standar agar treadmill, sepeda, Zwift, Peloton, atau aplikasi fitness di sekitar dapat membacanya. Hanya Bluetooth lokal. Tidak ada data yang keluar dari %@. Default-nya mati."}}
+}
     },
     "React when the strap comes off or goes on. Note: macOS reserves true auto-UNLOCK for Apple Watch, so this can lock, not unlock.": {
       "localizations": {
@@ -132006,7 +132125,8 @@
             "value": "Regeneracja"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Recovery"}}}
     },
     "Recovery / Charge": {
       "localizations": {
@@ -132697,7 +132817,8 @@
             "value": "Odśwież modele"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Refresh model"}}}
     },
     "Refresh models from provider": {
       "localizations": {
@@ -134488,8 +134609,9 @@
             "state": "translated",
             "value": "Zastąp wszystkie dane"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Ganti semua data"}}
+}
     },
     "Replace this device's data with one of the backups in your folder. This overwrites current data, so back up first if you're unsure.": {
       "localizations": {
@@ -134546,8 +134668,9 @@
             "state": "translated",
             "value": "Zastąp dane tego urządzenia jedną z kopii zapasowych w swoim folderze. Spowoduje to zastąpienie bieżących danych, dlatego jeśli nie masz pewności, wykonaj najpierw kopię zapasową."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Ganti data di perangkat ini dengan salah satu backup di folder. Data saat ini akan ditimpa, jadi buat backup terlebih dahulu jika ragu."}}
+}
     },
     "Replaces the Today tab with the prototype redesign. Turn it off any time to return to the classic dashboard. Reads the same live data from your strap.": {
       "localizations": {
@@ -134598,8 +134721,9 @@
             "state": "translated",
             "value": "用原型改版取代「今天」標籤頁。隨時可關閉以回到經典儀表板。它讀取來自你手環的同一份即時資料。"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Mengganti tab Today dengan desain prototipe. Matikan kapan saja untuk kembali ke dashboard klasik. Data live yang digunakan tetap sama dari strap."}}
+}
     },
     "Report": {
       "localizations": {
@@ -135186,7 +135310,8 @@
             "value": "Zresetuj instrukcje trenera do ustawień domyślnych"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Reset instruksi Coach ke default"}}}
     },
     "Reset dashboard cards to default": {
       "localizations": {
@@ -135901,7 +136026,8 @@
             "value": "Częstość oddechów"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Respiratory rate"}}}
     },
     "Rest": {
       "localizations": {
@@ -135965,7 +136091,8 @@
             "value": "Odpoczynek"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Rest"}}}
     },
     "Rest HR": {
       "localizations": {
@@ -136707,7 +136834,8 @@
             "value": "Odpoczynkowe tętno"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Resting HR"}}}
     },
     "Resting HR is elevated and HRV is below your baseline, both classic signs of high activation. Prioritise rest, hydration and an easy day.": {
       "localizations": {
@@ -137298,8 +137426,9 @@
             "state": "translated",
             "value": "Przywrócić"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Pulihkan"}}
+}
     },
     "Restore backup %@": {
       "localizations": {
@@ -137472,8 +137601,9 @@
             "state": "translated",
             "value": "Przywróć z kopii zapasowej…"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Pulihkan dari backup…"}}
+}
     },
     "Restore problem": {
       "localizations": {
@@ -137588,8 +137718,9 @@
             "state": "translated",
             "value": "Przywrócić tę kopię zapasową?"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Pulihkan backup ini?"}}
+}
     },
     "Restore to Today": {
       "localizations": {
@@ -137763,7 +137894,8 @@
             "value": "Wznawiać"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Lanjutkan"}}}
     },
     "Return to workout": {
       "localizations": {
@@ -138168,8 +138300,9 @@
             "state": "translated",
             "value": "Rytm"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Ritme"}}
+}
     },
     "Rhythm only looks during quiet, still, resting windows, so it needs a calm night's worth of steady beats. Once there's a clean window, the scatter and its description show here.": {
       "localizations": {
@@ -140687,7 +140820,8 @@
             "value": "SYNTEZA"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "SINTESIS"}}}
     },
     "Same cardiovascular-load idea as WHOOP's Day Strain (0–21). We rescaled the top of the ladder from 21 to 100 so all three scores share one scale. The rungs didn't move, so a 100 is as rare as a 21.0 was.": {
       "localizations": {
@@ -140977,7 +141111,8 @@
             "value": "Zapisz"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Simpan"}}}
     },
     "Save & Continue": {
       "localizations": {
@@ -141092,8 +141227,9 @@
             "state": "translated",
             "value": "Zapisz pełną kopię zapasową w wybranym folderze – skieruj ją na Dysk Google, iCloud lub Dropbox, aby zsynchronizować poza urządzeniem."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Simpan backup lengkap ke folder pilihan Anda—arahkan ke Google Drive, iCloud, atau Dropbox untuk sinkronisasi di luar perangkat."}}
+}
     },
     "Save it": {
       "localizations": {
@@ -144577,7 +144713,8 @@
             "value": "Ustawienia"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Pengaturan"}}}
     },
     "Settling": {
       "localizations": {
@@ -145227,8 +145364,9 @@
             "state": "translated",
             "value": "Eksport skrótów"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Ekspor Shortcuts"}}
+}
     },
     "Shortcuts file export": {
       "localizations": {
@@ -145981,8 +146119,9 @@
             "state": "translated",
             "value": "Pokazuje łagodną scenę wschodu słońca, dnia, zmierzchu i nocy za ekranem Dzisiaj. Wyłącz tę opcję, aby uzyskać zwykłe ciemne płótno. Twoje karty pozostają dokładnie tak samo czytelne."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Menampilkan suasana lembut matahari terbit, siang, senja, dan malam di belakang layar Today. Matikan untuk memakai latar gelap polos. Kartu tetap mudah dibaca."}}
+}
     },
     "Shows the Apple Health permission sheet": {
       "localizations": {
@@ -146155,8 +146294,9 @@
             "state": "translated",
             "value": "Pokazuje Twoje tętno na żywo na ekranie blokady i na Dynamic Island, gdy pasek jest podłączony. Wyłącz tę opcję, aby Twoje tętno na żywo nie znajdowało się poza dynamiczną wyspą. (Każdy, kto już pokazał, znika w ciągu chwili.)"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Menampilkan Heart Rate live di Lock Screen dan Dynamic Island saat strap terhubung. Matikan jika tidak ingin HR live tampil di Dynamic Island. Aktivitas yang sudah tampil akan hilang sesaat kemudian."}}
+}
     },
     "Signal Trust": {
       "localizations": {
@@ -146381,8 +146521,9 @@
             "state": "translated",
             "value": "鍛鍊期間以靜音為先的手環指導。"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Coaching dari strap yang mengutamakan ketenangan selama workout."}}
+}
     },
     "Silent haptic HIIT, the strap buzzes the transitions": {
       "extractionState": "stale",
@@ -146916,8 +147057,9 @@
             "state": "translated",
             "value": "Siri i skróty"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Siri & Shortcuts"}}
+}
     },
     "Sit still and breathe normally. Tap below to take a 60-second reading.": {
       "localizations": {
@@ -147392,8 +147534,9 @@
             "state": "translated",
             "value": "Temperatura skóry"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Suhu kulit"}}
+}
     },
     "Skin temperature %@. %@. Reliable.": {
       "localizations": {
@@ -147811,8 +147954,9 @@
             "state": "translated",
             "value": "Niebo za kartami"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Langit di belakang kartu"}}
+}
     },
     "Sleep": {
       "localizations": {
@@ -147876,7 +148020,8 @@
             "value": "Sen"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Sleep"}}}
     },
     "Sleep & Rest": {
       "localizations": {
@@ -148996,8 +149141,9 @@
             "state": "translated",
             "value": "Inscenizacja snu"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Tahap tidur"}}
+}
     },
     "Sleep staging (V2)": {
       "localizations": {
@@ -149042,8 +149188,9 @@
             "state": "translated",
             "value": "Ocena snu (V2)"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Tahap tidur (V2)"}}
+}
     },
     "Sleep steadiness: Rest varied ±%@ pts night to night.": {
       "localizations": {
@@ -149552,8 +149699,9 @@
             "state": "translated",
             "value": "Spowalnia synchronizację paska w tle (co 45 minut zamiast 15), gdy bateria paska jest słaba. Brak utraty danych — pasek przechowuje wszystko, więc synchronizuj tylko partie w większe, rzadsze pociągnięcia."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Memperlambat sinkronisasi strap di latar belakang (setiap 45 menit, bukan 15 menit) saat baterai strap rendah. Tidak ada data yang hilang; strap menyimpan semuanya dan sinkronisasi dilakukan dalam batch yang lebih besar."}}
+}
     },
     "Smart alarm": {
       "localizations": {
@@ -152147,7 +152295,8 @@
             "value": "Rozpocznij sesję"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Mulai sesi"}}}
     },
     "Start workout": {
       "localizations": {
@@ -152205,7 +152354,8 @@
             "value": "Rozpocznij trening"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Mulai workout"}}}
     },
     "Started %@ · testing %@": {
       "localizations": {
@@ -152860,8 +153010,9 @@
             "state": "translated",
             "value": "Kroki"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Langkah"}}
+}
     },
     "Steps & workouts": {
       "localizations": {
@@ -153615,7 +153766,8 @@
             "value": "Zatrzymywać się"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Stop"}}}
     },
     "Stop ECG capture": {
       "localizations": {
@@ -156092,8 +156244,9 @@
             "state": "translated",
             "value": "Stres"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Stres"}}
+}
     },
     "Stress through the day": {
       "localizations": {
@@ -157901,7 +158054,8 @@
             "value": "Synchronizuj"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Sinkronkan"}}}
     },
     "Sync now": {
       "localizations": {
@@ -158133,7 +158287,8 @@
             "value": "Synchronizowanie"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Menyinkronkan"}}}
     },
     "Syncing strap history": {
       "localizations": {
@@ -159037,7 +159192,8 @@
             "value": "Synchronizowanie…"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Menyinkronkan…"}}}
     },
     "Syncs your strap's stored history right away, instead of waiting for the next automatic sync.": {
       "localizations": {
@@ -161176,8 +161332,9 @@
             "state": "translated",
             "value": "Centrum Testowe"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Test Centre"}}
+}
     },
     "Test action": {
       "localizations": {
@@ -163723,8 +163880,9 @@
             "state": "translated",
             "value": "Te kopie zapasowe również nie są szyfrowane. Jeśli ten folder zostanie zsynchronizowany z Dyskiem, Dropboxem lub iCloud, czytelny plik również tam trafi – wystarczy, że wskażesz mu zaufaną usługę."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Backup ini juga tidak terenkripsi. Jika folder tersinkron ke Drive, Dropbox, atau iCloud, file yang dapat dibaca juga akan tersimpan di sana—gunakan layanan yang Anda percaya."}}
+}
     },
     "These days are excluded from the estimate (your phone's real count is shown instead). They're here only so you can judge the estimate's accuracy.": {
       "localizations": {
@@ -165375,8 +165533,9 @@
             "state": "translated",
             "value": "Spowoduje to ponowne uruchomienie trwającego około 4 dni tworzenia Energia i linii bazowej HRV. Twoja historia zostaje. Użyj go, jeśli zły pierwszy tydzień, np. noszenie go podczas choroby, zaburzy Twoją linię bazową."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Ini mengulang pembentukan Charge dan baseline HRV selama sekitar 4 malam. Riwayat tetap tersimpan. Gunakan jika minggu pertama—misalnya saat sedang sakit—membuat baseline melenceng."}}
+}
     },
     "This session": {
       "localizations": {
@@ -166310,7 +166469,8 @@
             "value": "Czas"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Waktu"}}}
     },
     "Time asleep": {
       "localizations": {
@@ -166837,8 +166997,9 @@
             "state": "translated",
             "value": "Wskazówka: wybierz folder na iCloud Drive, a Twoje kopie zapasowe zostaną automatycznie zsynchronizowane ze wszystkimi urządzeniami Apple, bez konieczności zakładania konta."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Tips: pilih folder di iCloud Drive agar backup otomatis tersinkron ke semua perangkat Apple tanpa konfigurasi akun tambahan."}}
+}
     },
     "Tip: the share sheet can save the PDF to Files, AirDrop it, or send it on.": {
       "localizations": {
@@ -167018,7 +167179,8 @@
             "value": "Dzisiaj"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Hari Ini"}}}
     },
     "Today's Timeline": {
       "localizations": {
@@ -177588,8 +177750,9 @@
             "state": "translated",
             "value": "Co Cię porusza"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Aktivitas Anda"}}
+}
     },
     "What NOOP does": {
       "localizations": {
@@ -179771,8 +179934,9 @@
             "state": "translated",
             "value": "Gdy poziom naładowania baterii Twojego paska jest niski, zatrzymaj zawsze włączony strumień HRV w tle — największe ciągłe zużycie paska. Ekran na żywo nadal pokazuje tętno i ponownie się uzbraja po naładowaniu paska."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Saat baterai strap rendah, hentikan stream HRV latar belakang yang selalu aktif—penguras baterai terbesar. Layar Live tetap menampilkan Heart Rate, dan perekaman aktif kembali otomatis setelah strap diisi."}}
+}
     },
     "Whole night is NOOP's default measure; Deep sleep pools HRV over slow-wave sleep only, reading lower and matching WHOOP. Switching re-scores your recent nights over the new window and takes effect right away once you have a few nights of data.": {
       "localizations": {
@@ -179817,8 +179981,9 @@
             "state": "translated",
             "value": "Domyślną miarą NOOP jest cała noc; Głęboki sen łączy HRV tylko w czasie snu wolnofalowego, odczyt jest niższy i odpowiada WHOOP. Przełączenie ponownie rejestruje ostatnie noce w nowym oknie i zaczyna obowiązywać natychmiast, gdy będziesz mieć dane z kilku nocy."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Whole night adalah pengukuran default NOOP. Deep sleep hanya menghitung HRV selama tidur gelombang lambat, sehingga nilainya lebih rendah dan lebih sesuai dengan WHOOP. Perubahan ini menghitung ulang malam terbaru setelah tersedia beberapa malam data."}}
+}
     },
     "Whoop": {
       "localizations": {
@@ -180955,8 +181120,9 @@
             "state": "translated",
             "value": "Pracujący…"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Memproses…"}}
+}
     },
     "Workout": {
       "localizations": {
@@ -181252,7 +181418,8 @@
             "value": "Treningi"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Workout"}}}
     },
     "Worn": {
       "localizations": {
@@ -183486,8 +183653,9 @@
             "state": "translated",
             "value": "Twoje dane, połączone"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Data Anda, Terpadu"}}
+}
     },
     "Your GPS route for this session, recorded and stored on your device. Nothing leaves your phone.": {
       "localizations": {
@@ -184961,8 +185129,9 @@
             "state": "translated",
             "value": "Twoje liczby, Twój pasek i sposób działania NOOP. Wszystko na %@."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Data Anda, strap Anda, dan cara kerja NOOP. Semuanya tersimpan di %@."}}
+}
     },
     "Your numbers, your strap, and how NOOP works. All on this Mac.": {
       "extractionState": "stale",
@@ -192936,8 +193105,9 @@
             "state": "translated",
             "value": "NIE"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "tidak"}}
+}
     },
     "no calibration yet": {
       "localizations": {
@@ -195514,7 +195684,8 @@
             "value": "pokazywać"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "tampilkan"}}}
     },
     "side by side · %@ before each reading": {
       "localizations": {
@@ -200208,7 +200379,8 @@
             "value": "Język"
           }
         }
-      }
+      ,
+          "id": {"stringUnit": {"state": "translated", "value": "Bahasa"}}}
     },
     "Language changes take effect after you reopen NOOP.": {
       "localizations": {
@@ -200271,8 +200443,9 @@
             "state": "translated",
             "value": "Zmiany językowe zaczną obowiązywać po ponownym otwarciu NOOP."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Perubahan bahasa berlaku setelah NOOP dibuka kembali."}}
+}
     },
     "12-hour": {
       "localizations": {
@@ -201033,8 +201206,9 @@
             "state": "translated",
             "value": "Zmniejsz ruch w NOOP"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Kurangi gerakan di NOOP"}}
+}
     },
     "Holds the liquid gauges, the sky and the tilt response still, and turns off the motion sensor that drives them. Saves battery. Low Power Mode and the system Reduce Motion setting already do this.": {
       "localizations": {
@@ -201091,8 +201265,9 @@
             "state": "translated",
             "value": "Utrzymuje wskaźniki cieczy, niebo i reakcję pochylenia w bezruchu oraz wyłącza czujnik ruchu, który je napędza. Oszczędza baterię. Tryb niskiego zużycia energii i ustawienie Systemu Redukuj ruch już to robią."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Menghentikan gerakan gauge, langit, dan respons kemiringan, serta mematikan sensor gerak yang menggerakkannya. Menghemat baterai. Low Power Mode dan pengaturan Reduce Motion sistem juga melakukan hal ini."}}
+}
     },
     "No live heart rate or synced history yet this session.": {
       "localizations": {
@@ -202193,8 +202368,9 @@
             "state": "translated",
             "value": "Ograniczenia NOOP"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Batasan NOOP"}}
+}
     },
     "What each WHOOP can read": {
       "localizations": {
@@ -202251,8 +202427,9 @@
             "state": "translated",
             "value": "Co może odczytać każdy WHOOP"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Data yang dapat dibaca tiap WHOOP"}}
+}
     },
     "WHAT NOOP READS": {
       "localizations": {
@@ -202309,8 +202486,9 @@
             "state": "translated",
             "value": "CO CZYTA NOOP"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "DATA YANG DIBACA NOOP"}}
+}
     },
     "Feature": {
       "localizations": {
@@ -202367,8 +202545,9 @@
             "state": "translated",
             "value": "Funkcja"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Fitur"}}
+}
     },
     "5.0/MG": {
       "localizations": {
@@ -202483,8 +202662,9 @@
             "state": "translated",
             "value": "LEGENDA"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "KETERANGAN"}}
+}
     },
     "What each strap can read live, and what needs an import.": {
       "localizations": {
@@ -205279,8 +205459,9 @@
             "state": "translated",
             "value": "Przezroczyste karty"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Kartu transparan"}}
+}
     },
     "Let the background show through every card. Tune how much just below.": {
       "localizations": {
@@ -205337,8 +205518,9 @@
             "state": "translated",
             "value": "Niech tło będzie widoczne przez każdą kartę. Dostosuj kwotę tuż poniżej."
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Membuat latar terlihat melalui setiap kartu. Atur tingkat transparansinya di bawah."}}
+}
     },
     "Export route": {
       "localizations": {
@@ -205987,8 +206169,9 @@
             "state": "translated",
             "value": "設定每個區間開始時的心率。關閉可恢復按最大心率百分比劃分的預設區間。"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Atur BPM saat setiap zone dimulai. Matikan untuk kembali ke zone default berdasarkan persentase HR maksimum."}}
+}
     },
     "Zone %lld starts": {
       "localizations": {
@@ -213719,8 +213902,9 @@
             "state": "translated",
             "value": "低頻更新"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Refresh rendah"}}
+}
     },
     "Sync in the background every hour instead of every 15 minutes, whatever the strap's charge — fewer reconnections is the biggest saving on a WHOOP 4.0. Nothing is lost: the strap banks everything and hands it over in larger batches. Pull to sync still runs straight away, and live heart rate is untouched.": {
       "localizations": {
@@ -213771,8 +213955,9 @@
             "state": "translated",
             "value": "背景同步改為每小時一次，而非每 15 分鐘一次，無論手環電量如何——在 WHOOP 4.0 上，減少重新連線是最大的省電項。不會遺失任何資料：手環會自行儲存一切，並以更大的批次交付。下拉同步仍會立即執行，即時心率不受影響。"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Sinkronisasi di latar belakang setiap jam, bukan setiap 15 menit, berapa pun charge strap. Lebih sedikit koneksi ulang menghemat baterai WHOOP 4.0. Tidak ada data yang hilang; strap menyerahkannya dalam batch yang lebih besar. Sinkronisasi manual tetap berjalan langsung dan Heart Rate live tidak terpengaruh."}}
+}
     },
     "Power saving": {
       "localizations": {
@@ -213823,8 +214008,9 @@
             "state": "translated",
             "value": "省電"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Hemat daya"}}
+}
     },
     "Ease the load on your strap when its battery is running low.": {
       "localizations": {
@@ -213875,8 +214061,9 @@
             "state": "translated",
             "value": "當手環電量偏低時減輕其負擔。"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Kurangi beban strap saat baterainya mulai rendah."}}
+}
     },
     "The strap keeps banking data on its own, so nothing is lost — NOOP just talks to it less often to help it last until you can charge it.": {
       "localizations": {
@@ -213927,8 +214114,9 @@
             "state": "translated",
             "value": "手環會自行持續儲存資料，因此不會遺失任何內容——NOOP 只是減少與它通訊的頻率，幫助它撐到你能充電的時候。"
           }
-        }
-      }
+        },
+        "id": {"stringUnit": {"state": "translated", "value": "Strap tetap menyimpan data sendiri sehingga tidak ada yang hilang. NOOP hanya menghubunginya lebih jarang agar baterai bertahan sampai dapat diisi ulang."}}
+}
     },
     "Synced %@": {
       "localizations": {
@@ -214047,8 +214235,9 @@
       }
     },
     "Effort: exponential intensity scale": { "localizations": {
-      "de": { "stringUnit": { "state": "translated", "value": "Belastung: exponentielle Intensitätsskala" } }, "en": { "stringUnit": { "state": "translated", "value": "Effort: exponential intensity scale" } }, "es": { "stringUnit": { "state": "translated", "value": "Esfuerzo: escala de intensidad exponencial" } }, "fr": { "stringUnit": { "state": "translated", "value": "Effort : échelle d’intensité exponentielle" } }, "it": { "stringUnit": { "state": "translated", "value": "Sforzo: scala di intensità esponenziale" } }, "pl": { "stringUnit": { "state": "translated", "value": "Wysiłek: wykładnicza skala intensywności" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Esforço: escala de intensidade exponencial" } }, "ru": { "stringUnit": { "state": "translated", "value": "Усилие: экспоненциальная шкала интенсивности" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "消耗：指数强度曲线" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "消耗：指數強度曲線" } }
-    } },
+      "de": { "stringUnit": { "state": "translated", "value": "Belastung: exponentielle Intensitätsskala" } }, "en": { "stringUnit": { "state": "translated", "value": "Effort: exponential intensity scale" } }, "es": { "stringUnit": { "state": "translated", "value": "Esfuerzo: escala de intensidad exponencial" } }, "fr": { "stringUnit": { "state": "translated", "value": "Effort : échelle d’intensité exponentielle" } }, "it": { "stringUnit": { "state": "translated", "value": "Sforzo: scala di intensità esponenziale" } }, "pl": { "stringUnit": { "state": "translated", "value": "Wysiłek: wykładnicza skala intensywności" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Esforço: escala de intensidade exponencial" } }, "ru": { "stringUnit": { "state": "translated", "value": "Усилие: экспоненциальная шкала интенсивности" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "消耗：指数强度曲线" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "消耗：指數強度曲線" } },
+      "id": {"stringUnit": {"state": "translated", "value": "Effort: skala intensitas eksponensial"}}
+} },
     "Scores Effort on an exponential intensity curve (Banister TRIMP) instead of the default heart-rate zones (Edwards). The default earns nothing below half of your heart-rate reserve, so an hour of lifting — where hard sets average out against the rests — can score close to zero. The exponential curve has no floor and weights short, hard efforts far more heavily. Re-scores your history, and both scales reach the same maximum. Off by default.": { "localizations": {
       "de": { "stringUnit": { "state": "translated", "value": "Bewertet die Belastung mit einer exponentiellen Intensitätskurve (Banister-TRIMP) statt der voreingestellten Herzfrequenzzonen (Edwards). Die Voreinstellung zählt nichts unter der Hälfte deiner Herzfrequenzreserve, sodass eine Stunde Krafttraining – bei der sich harte Sätze mit den Pausen ausmitteln – nahezu null ergeben kann. Die exponentielle Kurve hat keine Untergrenze und gewichtet kurze, harte Belastungen deutlich stärker. Bewertet deine Historie neu; beide Skalen erreichen dasselbe Maximum. Standardmäßig aus." } }, "en": { "stringUnit": { "state": "translated", "value": "Scores Effort on an exponential intensity curve (Banister TRIMP) instead of the default heart-rate zones (Edwards). The default earns nothing below half of your heart-rate reserve, so an hour of lifting — where hard sets average out against the rests — can score close to zero. The exponential curve has no floor and weights short, hard efforts far more heavily. Re-scores your history, and both scales reach the same maximum. Off by default." } }, "es": { "stringUnit": { "state": "translated", "value": "Puntúa el Esfuerzo con una curva de intensidad exponencial (TRIMP de Banister) en lugar de las zonas de frecuencia cardíaca predeterminadas (Edwards). La opción predeterminada no cuenta nada por debajo de la mitad de tu reserva de frecuencia cardíaca, así que una hora de pesas —donde las series duras se compensan con los descansos— puede puntuar casi cero. La curva exponencial no tiene umbral y pondera mucho más los esfuerzos cortos e intensos. Vuelve a puntuar tu historial y ambas escalas alcanzan el mismo máximo. Desactivado por defecto." } }, "fr": { "stringUnit": { "state": "translated", "value": "Calcule l’Effort selon une courbe d’intensité exponentielle (TRIMP de Banister) au lieu des zones de fréquence cardiaque par défaut (Edwards). Le réglage par défaut ne compte rien en dessous de la moitié de votre réserve de fréquence cardiaque : une heure de musculation — où les séries dures se compensent avec les temps de repos — peut donc être notée presque zéro. La courbe exponentielle n’a pas de seuil et pondère bien davantage les efforts courts et intenses. Recalcule votre historique, et les deux échelles atteignent le même maximum. Désactivé par défaut." } }, "it": { "stringUnit": { "state": "translated", "value": "Calcola lo Sforzo su una curva di intensità esponenziale (TRIMP di Banister) invece delle zone di frequenza cardiaca predefinite (Edwards). L’impostazione predefinita non conta nulla sotto la metà della tua riserva di frequenza cardiaca, quindi un’ora di pesi — dove le serie intense si compensano con i recuperi — può valere quasi zero. La curva esponenziale non ha soglia e pesa molto di più gli sforzi brevi e intensi. Ricalcola la cronologia ed entrambe le scale raggiungono lo stesso massimo. Disattivato per impostazione predefinita." } }, "pl": { "stringUnit": { "state": "translated", "value": "Ocenia Wysiłek według wykładniczej krzywej intensywności (TRIMP Banistera) zamiast domyślnych stref tętna (Edwards). Ustawienie domyślne nie liczy niczego poniżej połowy rezerwy tętna, więc godzina treningu siłowego — gdzie ciężkie serie uśredniają się z przerwami — może dać wynik bliski zeru. Krzywa wykładnicza nie ma progu i znacznie mocniej waży krótkie, intensywne wysiłki. Przelicza historię, a obie skale osiągają to samo maksimum. Domyślnie wyłączone." } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Pontua o Esforço numa curva de intensidade exponencial (TRIMP de Banister) em vez das zonas de frequência cardíaca predefinidas (Edwards). A predefinição não conta nada abaixo de metade da tua reserva de frequência cardíaca, por isso uma hora de musculação — em que as séries duras se compensam com os descansos — pode pontuar quase zero. A curva exponencial não tem limiar e pondera muito mais os esforços curtos e intensos. Volta a pontuar o teu histórico e ambas as escalas atingem o mesmo máximo. Desativado por predefinição." } }, "ru": { "stringUnit": { "state": "translated", "value": "Оценивает Усилие по экспоненциальной кривой интенсивности (TRIMP Банистера) вместо стандартных пульсовых зон (Эдвардс). Стандартный вариант не засчитывает ничего ниже половины резерва пульса, поэтому час силовой тренировки — где тяжёлые подходы усредняются с отдыхом — может дать почти ноль. У экспоненциальной кривой нет порога, и она гораздо сильнее учитывает короткие интенсивные усилия. Пересчитывает историю, и обе шкалы достигают одного максимума. По умолчанию выключено." } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "以指数强度曲线（Banister TRIMP）计算消耗，而不是默认的心率区间（Edwards）。默认方式对低于心率储备一半的部分完全不计分，因此一小时力量训练——组间休息拉低了平均强度——可能几乎得零分。指数曲线没有下限，会大幅提高短时高强度努力的权重。会重新计算你的历史数据，两种标度的最高值相同。默认关闭。" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "以指數強度曲線（Banister TRIMP）計算消耗，而不是預設的心率區間（Edwards）。預設方式對低於心率儲備一半的部分完全不計分，因此一小時重量訓練——組間休息拉低了平均強度——可能幾乎得零分。指數曲線沒有下限，會大幅提高短時高強度努力的權重。會重新計算你的歷史資料，兩種尺度的最高值相同。預設關閉。" } }
     } },
@@ -214199,7 +214388,8 @@
         "ru": {"stringUnit": {"state": "translated", "value": "Утренняя сводка"}},
         "zh-Hans": {"stringUnit": {"state": "translated", "value": "晨间简报"}},
         "zh-Hant": {"stringUnit": {"state": "translated", "value": "晨間簡報"}}
-    } },
+    ,
+          "id": {"stringUnit": {"state": "translated", "value": "Brief pagi"}}} },
     "A local notification with today's readiness + training plan, generated on-device each morning.": {"localizations": {
         "en": {"stringUnit": {"state": "translated", "value": "A local notification with today's readiness + training plan, generated on-device each morning."}},
         "de": {"stringUnit": {"state": "translated", "value": "Eine lokale Benachrichtigung mit heutiger Bereitschaft + Trainingsplan, jeden Morgen auf dem Gerät generiert."}},
@@ -214259,7 +214449,8 @@
         "ru": {"stringUnit": {"state": "translated", "value": "Отправить изображение графика в Gemini"}},
         "zh-Hans": {"stringUnit": {"state": "translated", "value": "将图表图像发送给 Gemini"}},
         "zh-Hant": {"stringUnit": {"state": "translated", "value": "將圖表影像傳送給 Gemini"}}
-    } },
+    ,
+          "id": {"stringUnit": {"state": "translated", "value": "Kirim gambar chart ke Gemini"}}} },
     "On: a chart snapshot of your trends is sent with each question. Gemini can analyze the visual.": {"localizations": {
         "en": {"stringUnit": {"state": "translated", "value": "On: a chart snapshot of your trends is sent with each question. Gemini can analyze the visual."}},
         "de": {"stringUnit": {"state": "translated", "value": "An: Bei jeder Frage wird ein Diagramm-Snapshot deiner Trends gesendet. Gemini kann das Visuelle analysieren."}},
@@ -215967,6 +216158,122 @@
         "no time of its own": { "localizations": {
           "de": {"stringUnit": {"state": "translated", "value": "keine eigene Zeit"}}, "es": {"stringUnit": {"state": "translated", "value": "sin hora propia"}}, "fr": {"stringUnit": {"state": "translated", "value": "pas d'heure propre"}}, "it": {"stringUnit": {"state": "translated", "value": "nessun orario proprio"}}, "pl": {"stringUnit": {"state": "translated", "value": "brak własnej godziny"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "sem hora própria"}}, "ru": {"stringUnit": {"state": "translated", "value": "без своего времени"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "没有单独时间"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "沒有單獨時間"}}
         } }
-  },
+  ,
+    "Cadence": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Cadence"}}}},
+    "Pause": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pause"}}}},
+    "Memory": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Memory"}}}},
+    "Activity prompts": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Prompt aktivitas"}}}},
+    "Audio coaching": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Audio coaching"}}}},
+    "Short offline prompts while a workout is active.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Prompt suara singkat saat workout aktif."}}}},
+    "Announcements": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pengumuman"}}}},
+    "Workout start, pause and finish": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Mulai, pause, dan selesai workout"}}}},
+    "Heart-rate target": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Target Heart Rate"}}}},
+    "Distance milestones": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Milestone distance"}}}},
+    "Smart coaching (experimental)": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Smart coaching (eksperimental)"}}}},
+    "Smart coaching": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Smart coaching"}}}},
+    "Coach spacing": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Jeda Coach"}}}},
+    "AI wording (OpenAI-compatible)": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Wording AI (kompatibel OpenAI)"}}}},
+    "Heart-rate alerts": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Alert Heart Rate"}}}},
+    "Target zone": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Target zone"}}}},
+    "Alert spacing": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Jeda alert"}}}},
+    "Distance milestone details": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Detail milestone distance"}}}},
+    "Announce every": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Umumkan setiap"}}}},
+    "Voice": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Suara"}}}},
+    "Speech speed": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kecepatan suara"}}}},
+    "Test audio": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Test audio"}}}},
+    "Test current settings": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Test pengaturan saat ini"}}}},
+    "Zone %lld": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Zone %lld"}}}},
+    "Every %lld km": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Setiap %lld km"}}}},
+    "Last prompt: %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Prompt terakhir: %@"}}}},
+    "Workout started.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Workout dimulai."}}}},
+    "Workout paused.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Workout dijeda."}}}},
+    "Workout resumed.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Workout dilanjutkan."}}}},
+    "Workout complete.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Workout selesai."}}}},
+    "Heart rate unavailable.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Heart Rate tidak tersedia."}}}},
+    "Data": { "localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "Data"}},
+      "id": {"stringUnit": {"state": "translated", "value": "Data"}}
+    } },
+    "App": { "localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "App"}},
+      "id": {"stringUnit": {"state": "translated", "value": "Aplikasi"}}
+    } },
+    "Strava (Experimental)": { "localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "Strava (Experimental)"}},
+      "id": {"stringUnit": {"state": "translated", "value": "Strava (Eksperimental)"}}
+    } },
+    "Audio Coaching (Experimental)": { "localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "Audio Coaching (Experimental)"}},
+      "id": {"stringUnit": {"state": "translated", "value": "Audio Coaching (Eksperimental)"}}
+    } },
+    "Read live off the strap": { "localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "Read live off the strap"}},
+      "id": {"stringUnit": {"state": "translated", "value": "Dibaca langsung dari strap"}}
+    } },
+    "On-device estimate, or experimental / firmware-gated": { "localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "On-device estimate, or experimental / firmware-gated"}},
+      "id": {"stringUnit": {"state": "translated", "value": "Estimasi di perangkat, atau eksperimental/tergantung firmware"}}
+    } },
+    "Not from the strap. SpO₂ can be filled by importing a WHOOP or Health export.": { "localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "Not from the strap. SpO₂ can be filled by importing a WHOOP or Health export."}},
+      "id": {"stringUnit": {"state": "translated", "value": "Tidak berasal dari strap. SpO₂ dapat diisi dengan mengimpor ekspor WHOOP atau Health."}}
+    } },
+    "HRV (rMSSD)": { "localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "HRV (rMSSD)"}},
+      "id": {"stringUnit": {"state": "translated", "value": "HRV (rMSSD)"}}
+    } },
+    "Recovery & strain": { "localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "Recovery & strain"}},
+      "id": {"stringUnit": {"state": "translated", "value": "Recovery & Strain"}}
+    } },
+    "Stress (on-device)": { "localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "Stress (on-device)"}},
+      "id": {"stringUnit": {"state": "translated", "value": "Stres (di perangkat)"}}
+    } },
+    "Workout detection": { "localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "Workout detection"}},
+      "id": {"stringUnit": {"state": "translated", "value": "Deteksi workout"}}
+    } },
+    "Blood oxygen (SpO₂ %)": { "localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "Blood oxygen (SpO₂ %)"}},
+      "id": {"stringUnit": {"state": "translated", "value": "Oksigen darah (SpO₂ %)"}}
+    } },
+    "ECG": { "localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "ECG"}},
+      "id": {"stringUnit": {"state": "translated", "value": "ECG"}}
+    } },
+    "yes": { "localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "yes"}},
+      "id": {"stringUnit": {"state": "translated", "value": "ya"}}
+    } },
+    "partly": { "localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "partly"}},
+      "id": {"stringUnit": {"state": "translated", "value": "sebagian"}}
+    } },
+    "This changes NOOP's normal data and scoring preferences for the active WHOOP. Firmware experiments and persistent strap settings are left unchanged.": { "localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "This changes NOOP's normal data and scoring preferences for the active WHOOP. Firmware experiments and persistent strap settings are left unchanged."}},
+      "id": {"stringUnit": {"state": "translated", "value": "Ini mengubah preferensi data dan penilaian normal NOOP untuk WHOOP yang aktif. Eksperimen firmware dan pengaturan permanen di strap tidak berubah."}}
+    } },
+    "Recommended normal state: protocol probes, R22 deep data, Broadcast HR, ECG capture, raw-frame recording, and unverified SpO₂ are off. They are not changed by this preset because some write persistent settings to the strap or are not validated.": { "localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "Recommended normal state: protocol probes, R22 deep data, Broadcast HR, ECG capture, raw-frame recording, and unverified SpO₂ are off. They are not changed by this preset because some write persistent settings to the strap or are not validated."}},
+      "id": {"stringUnit": {"state": "translated", "value": "Rekomendasi penggunaan normal: protocol probes, R22 deep data, Broadcast HR, ECG capture, raw-frame recording, dan SpO₂ yang belum terverifikasi tetap mati. Preset ini tidak mengubahnya karena sebagian dapat menulis pengaturan permanen ke strap atau belum tervalidasi."}}
+    } },
+    "This profile does not enable firmware experiments or write persistent settings to the strap.": { "localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "This profile does not enable firmware experiments or write persistent settings to the strap."}},
+      "id": {"stringUnit": {"state": "translated", "value": "Profil ini tidak mengaktifkan eksperimen firmware atau menulis pengaturan permanen ke strap."}}
+    } },
+    "A one-time import of your own Oura history over the Oura API. Runs only when you tap it.": { "localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "A one-time import of your own Oura history over the Oura API. Runs only when you tap it."}},
+      "id": {"stringUnit": {"state": "translated", "value": "Impor satu kali riwayat Oura Anda melalui Oura API. Hanya berjalan saat Anda mengetuk tombolnya."}}
+    } },
+    "Use NOOP's own folder (browse in Files)": { "localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "Use NOOP's own folder (browse in Files)"}},
+      "id": {"stringUnit": {"state": "translated", "value": "Gunakan folder NOOP (buka di Files)"}}
+    } },
+    "Recovery, HRV tuning, Test Centre, experimental probes, and backup. Tucked away to keep the everyday screen tidy.": { "localizations": {
+      "en": {"stringUnit": {"state": "translated", "value": "Recovery, HRV tuning, Test Centre, experimental probes, and backup. Tucked away to keep the everyday screen tidy."}},
+      "id": {"stringUnit": {"state": "translated", "value": "Recovery, pengaturan HRV, Test Centre, eksperimen, dan backup. Dikumpulkan di sini agar layar utama tetap rapi."}}
+    } }
+},
   "version": "1.0"
 }

@@ -236,6 +236,10 @@ targets:
           - "Resources/Info.plist"
           - "Resources/NOOP.entitlements"
       - path: StrandiOSShared
+    # iOS-only locale resources. Keep these out of the macOS target: the iPhone app can opt into
+    # Indonesian without changing the reference macOS surface.
+    resources:
+      - path: StrandiOS/Resources/id.lproj
     # Same tracked wrapper as the macOS target (Strand/Oura/ is shared, not per-platform).
     configFiles:
       Debug: Strand/Oura/OuraConfig.xcconfig
@@ -380,6 +384,9 @@ targets:
           - "Info.plist"
           - "NOOPWidgets.entitlements"
       - path: StrandiOSShared
+    # Widget and Live Activity are a separate bundle, so they need their own compact locale table.
+    resources:
+      - path: StrandiOSWidgets/Resources/id.lproj
     info:
       path: StrandiOSWidgets/Info.plist
       properties:

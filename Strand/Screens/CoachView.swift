@@ -40,6 +40,8 @@ struct CoachView: View {
     /// #2243: the coach settings, presented as a sheet. See `CoachSettingsView` for why a sheet
     /// rather than a push.
     @State private var showSettings = false
+    /// Local thread picker. Each saved conversation stays on-device and can be reopened or deleted.
+    @State private var showHistory = false
 
     // K4: on-device voice input for the composer (iOS only). macOS gets a no-op stub via
     // `#if os(iOS)` guards — the shared file keeps compiling for both targets.
@@ -55,9 +57,35 @@ struct CoachView: View {
     /// on each body evaluation so a fresh sync immediately updates the chips.
     private var suggestions: [String] { coach.suggestions }
 
+    private struct PromptItem: Identifiable {
+        let prompt: String
+        var id: String { prompt }
+        var title: String
+    }
+
+    private var initialPromptItems: [PromptItem] {
+        let workoutPrompts = [
+            PromptItem(
+                prompt: "Recommend the best workout for today using my Charge, Effort, Rest, recent workouts, and goal. Give the workout type, duration, target Heart Rate Zone or strength intensity, and one thing to avoid.",
+                title: activeLanguageText("Recommend a workout")),
+            PromptItem(
+                prompt: "Create a practical workout plan for today. Include warm-up, main work, cooldown, duration, intensity or Heart Rate Zone, and progression. If strength training fits best, include exercises, sets, reps, and rest.",
+                title: activeLanguageText("Build today's plan"))
+        ]
+        return workoutPrompts + suggestions.map { PromptItem(prompt: $0, title: activeLanguageText($0)) }
+    }
+
+    private var followUpPromptItems: [PromptItem] {
+        let workout = PromptItem(
+            prompt: "Create a practical workout plan for today. Include warm-up, main work, cooldown, duration, intensity or Heart Rate Zone, and progression. If strength training fits best, include exercises, sets, reps, and rest.",
+            title: activeLanguageText("Build today's plan"))
+        return AICoachEngine.followUpSuggestions.map {
+            PromptItem(prompt: $0, title: activeLanguageText($0))
+        } + [workout]
+    }
+
     var body: some View {
         ScreenScaffold(title: "Coach",
-                       subtitle: "Ask about your charge, effort, rest and workouts, grounded in your own numbers.",
                        // Liquid finish: the same full-bleed day-of-sky backdrop Today + the other liquid
                        // tabs carry, so Coach sits in one atmosphere. Static + non-interactive; the frosted
                        // message/setup cards below sit on the opaque canvas and stay legible.
@@ -81,7 +109,6 @@ struct CoachView: View {
                 } else {
                     suggestionChips
                 }
-                privacyFootnote
             } else {
                 setupCard
             }
@@ -148,6 +175,10 @@ struct CoachView: View {
             CoachSettingsView()
                 .environmentObject(coach)
                 .environmentObject(repo)
+        }
+        .sheet(isPresented: $showHistory) {
+            CoachHistoryView()
+                .environmentObject(coach)
         }
         .confirmationDialog(
             "Clear conversation?",
@@ -336,8 +367,6 @@ struct CoachView: View {
                     errorBanner(error)
                 }
 
-                Divider().overlay(StrandPalette.hairline)
-                privacyFootnote
             }
         }
     }
@@ -431,6 +460,26 @@ struct CoachView: View {
             if coach.sending {
                 StatePill("Thinking", tone: .accent, pulsing: true)
             }
+            Button {
+                coach.startNewConversation()
+            } label: {
+                Image(systemName: "square.and.pencil")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(StrandPalette.textSecondary)
+            }
+            .buttonStyle(.plain)
+            .disabled(coach.messages.isEmpty || coach.sending)
+            .accessibilityLabel("New Coach conversation")
+            .accessibilityHint("Save this conversation and start a blank chat")
+            Button {
+                showHistory = true
+            } label: {
+                Image(systemName: "clock.arrow.circlepath")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(StrandPalette.textSecondary)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Coach history")
             // #2243: the way through to what used to be stacked under this header.
             Button {
                 showSettings = true
@@ -722,29 +771,12 @@ struct CoachView: View {
     }
 
     private var suggestionChips: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(suggestions, id: \.self) { prompt in
-                    Button {
-                        send(prompt)
-                    } label: {
-                        Text(prompt)
-                            .font(StrandFont.captionNumber)
-                            .foregroundStyle(StrandPalette.textSecondary)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 7)
-                            .background(StrandPalette.surfaceInset, in: Capsule(style: .continuous))
-                            .overlay(Capsule(style: .continuous).strokeBorder(StrandPalette.hairline, lineWidth: 1))
-                    }
-                    // Liquid tap response: the physical settle-inward every tappable liquid
-                    // affordance gets, replacing the flat `.plain` press.
-                    .buttonStyle(LiquidPressStyle())
-                    .disabled(coach.sending)
-                    .accessibilityLabel("Suggested prompt: \(prompt)")
-                }
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+            ForEach(initialPromptItems) { item in
+                promptButton(item)
             }
-            .padding(.vertical, 1)
         }
+        .padding(.vertical, 1)
     }
 
     /// K7: True when follow-up chips should show instead of the initial contextual chips —
@@ -758,26 +790,58 @@ struct CoachView: View {
     /// K7: Follow-up suggestion chips shown after each assistant reply, so the user can dig
     /// deeper without typing. Uses the static `AICoachEngine.followUpSuggestions` list.
     private var followUpChips: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(AICoachEngine.followUpSuggestions, id: \.self) { prompt in
-                    Button {
-                        send(prompt)
-                    } label: {
-                        Text(prompt)
-                            .font(StrandFont.captionNumber)
-                            .foregroundStyle(StrandPalette.textSecondary)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 7)
-                            .background(StrandPalette.surfaceInset, in: Capsule(style: .continuous))
-                            .overlay(Capsule(style: .continuous).strokeBorder(StrandPalette.hairline, lineWidth: 1))
-                    }
-                    .buttonStyle(LiquidPressStyle())
-                    .disabled(coach.sending)
-                    .accessibilityLabel("Follow-up prompt: \(prompt)")
-                }
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+            ForEach(followUpPromptItems) { item in
+                promptButton(item)
             }
-            .padding(.vertical, 1)
+        }
+        .padding(.vertical, 1)
+    }
+
+    private func promptButton(_ item: PromptItem) -> some View {
+        Button {
+            send(item.prompt)
+        } label: {
+            Text(item.title)
+                .font(StrandFont.footnote)
+                .foregroundStyle(StrandPalette.textSecondary)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+                .padding(.horizontal, 11)
+                .padding(.vertical, 8)
+                .background(StrandPalette.surfaceInset, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(StrandPalette.hairline, lineWidth: 1))
+        }
+        .buttonStyle(LiquidPressStyle())
+        .disabled(coach.sending)
+        .accessibilityLabel(item.title)
+    }
+
+    /// Display copy follows the active app language while the underlying English prompt remains stable,
+    /// preserving the analytics prompt contract and keeping the provider request clear.
+    private func activeLanguageText(_ text: String) -> String {
+        let language = AppLanguage.activeLocale.identifier.split(separator: "_", maxSplits: 1).first.map(String.init)
+            ?? "en"
+        guard language == "id" else { return String(localized: String.LocalizationValue(text)) }
+        switch text {
+        case "Recommend a workout": return "Rekomendasikan latihan"
+        case "Build today's plan": return "Buat rencana hari ini"
+        case "How's my charge trending?": return "Bagaimana tren Charge saya?"
+        case "What should today's training look like?": return "Latihan hari ini sebaiknya seperti apa?"
+        case "Analyse my sleep": return "Analisis tidur saya"
+        case "Why am I run down?": return "Mengapa saya merasa lelah?"
+        case "Active recovery only today — what should I do?": return "Hari ini hanya recovery aktif — apa yang sebaiknya saya lakukan?"
+        case "Quality over volume today — plan my session": return "Utamakan kualitas hari ini — buatkan sesi saya"
+        case "Green light — how hard can I push today?": return "Kondisi siap — seberapa keras saya boleh berlatih?"
+        case "Why is my HRV trending down?": return "Mengapa tren HRV saya menurun?"
+        case "I slept poorly — how do I recover today?": return "Tidur saya kurang baik — bagaimana recovery hari ini?"
+        case "Have I done enough today, or push more?": return "Apakah latihan hari ini sudah cukup?"
+        case "Tell me more about that": return "Jelaskan lebih lanjut"
+        case "What should I do next?": return "Apa langkah saya berikutnya?"
+        case "How does today compare to this week?": return "Bagaimana hari ini dibandingkan minggu ini?"
+        case "Give me a specific action plan": return "Buatkan rencana tindakan yang spesifik"
+        default: return text
         }
     }
 
@@ -927,28 +991,6 @@ struct CoachView: View {
         }
     }
     #endif
-
-    private var privacyFootnote: some View {
-        let message: String = {
-            if coach.provider == .appleIntelligence {
-                return "Apple Intelligence runs on-device. Nothing is sent to a cloud provider, and your metrics stay on \(Platform.deviceNounPhrase)."
-            }
-            if coach.provider == .custom {
-                return "Coach talks only to the server URL you set. Point it at a local model (Ollama, LM Studio, llama.cpp) to keep everything on your own machine. Nothing is sent until you ask."
-            }
-            return "This is the only feature that leaves \(Platform.deviceNounPhrase). It sends a summary of your metrics to \(coach.provider.displayName) using your own key. Nothing is sent until you ask."
-        }()
-        return Label {
-            Text(message)
-                .font(StrandFont.footnote)
-                .foregroundStyle(StrandPalette.textTertiary)
-                .fixedSize(horizontal: false, vertical: true)
-        } icon: {
-            Image(systemName: "lock.shield")
-                .foregroundStyle(StrandPalette.textTertiary)
-        }
-        .accessibilityElement(children: .combine)
-    }
 
     // MARK: - Actions
 

@@ -42,10 +42,13 @@ struct AudioAICoachingProvider {
         Rewrite the approved intent as exactly one short spoken workout instruction. Use only the
         provided values. No markdown, no diagnosis, no safety claim, no invented data, and no more
         than 18 words.
+        (AudioCoachingCopy.isIndonesian ? "Use natural, concise Indonesian. Keep Heart Rate, Zone, Pace, Cadence, Effort, and units unchanged." : "Use concise natural English.")
         """
 
         let client = CustomClient()
-        let system = "You are a concise offline-first workout audio coach. The rule engine already decided the intent."
+        let system = AudioCoachingCopy.isIndonesian
+            ? "You are a concise offline-first workout audio coach. The rule engine already decided the intent. Reply in natural, concise Indonesian and preserve health terms."
+            : "You are a concise offline-first workout audio coach. The rule engine already decided the intent."
         do {
             return try await withThrowingTaskGroup(of: String?.self) { group in
                 group.addTask {

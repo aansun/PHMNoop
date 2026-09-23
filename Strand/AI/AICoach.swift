@@ -167,10 +167,15 @@ final class AICoachEngine: ObservableObject {
 
     // Published state the UI binds to.
     @Published var messages: [ChatMessage] = []
+    /// Completed Coach threads, newest first. The active transcript remains in `messages`; a thread is
+    /// added here when the user starts a new chat or when an old-day transcript is retired.
+    @Published private(set) var conversationHistory: [CoachConversationHistoryItem] = []
 
     /// Local day the current transcript was last written on; nil while it is empty. Drives the day
     /// boundary in `send` — see `isStaleConversation`. Kotlin twin: `CoachViewModel.conversationDay`.
     private var conversationDay: Int?
+    /// The history item currently loaded into the active transcript, if any.
+    private var currentConversationID: UUID?
     @Published var sending = false
     @Published var errorText: String?
 
@@ -295,6 +300,11 @@ final class AICoachEngine: ObservableObject {
     answered in 1-4 sentences. Never pad with generic motivation, repeated conclusions, or long caveats.
     5. Use plain Markdown. Use one short heading only when it improves scanning. Do not use tables, \
     long introductions, or code blocks. Ask at most one follow-up question, and only when essential.
+    6. When the user asks for a workout recommendation or plan, make it practical and specific: name the \
+    workout type, target duration, intensity or Heart Rate Zone, warm-up, main work, and cooldown. For \
+    strength training include exercises, sets, reps, rest, and a simple progression note. Use the user's \
+    Charge, Effort, Rest, recent workouts, and stated goal when available. Never invent a measured value; \
+    label assumptions clearly. End with one clear action such as starting or saving the plan in Workouts.
     If data is unavailable, say so in one sentence and give general guidance. You are not a doctor: \
     never diagnose; briefly recommend a qualified professional for concerning symptoms.
     """
@@ -306,9 +316,36 @@ final class AICoachEngine: ObservableObject {
         let stored = UserDefaults.standard.string(forKey: Self.systemPromptKey)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
         let base = (stored?.isEmpty == false) ? stored! : Self.defaultSystemPrompt
+        // iOS follows the user's selected app/system language. Keep the health vocabulary stable,
+        // but make the coach's prose match the active language instead of relying on the provider to guess.
+        #if os(iOS)
+        let localizedLanguageOverlay: String = {
+            let language = AppLanguage.activeLocale.identifier
+                .split(separator: "_", maxSplits: 1)
+                .first
+                .map(String.init) ?? "en"
+            let languageName: String
+            switch language {
+            case "id": languageName = "Indonesian"
+            case "de": languageName = "German"
+            case "es": languageName = "Spanish"
+            case "fr": languageName = "French"
+            case "pt": languageName = "Portuguese"
+            case "pl": languageName = "Polish"
+            case "zh": languageName = "Chinese"
+            default: return ""
+            }
+            return """
+            LANGUAGE: Reply in natural, concise \(languageName). Keep established health and product terms in their original form: Charge, Effort, Rest, Heart Rate, HRV, RHR, SpO₂, Zone, Pace, Cadence, Baseline, Apple Health, Strava, GPS, and Live Activity. Do not translate metric names or units.
+            """
+        }()
+        let languagePrompt = localizedLanguageOverlay.isEmpty ? "" : "\n\n\(localizedLanguageOverlay)"
+        #else
+        let languagePrompt = ""
+        #endif
         // === PHM OVERLAY (PHMNOOP) === fold the user's ACTIVE Coach memories into every request so
         // saved goals/events/preferences steer replies. Empty when none exist (prompt unchanged).
-        return base + CoachMemoryStore.activePromptBlock()
+        return base + languagePrompt + CoachMemoryStore.activePromptBlock()
     }
 
     /// The user's stored prompt override, or the default when nothing custom is set. The UI binds its
@@ -695,6 +732,7 @@ final class AICoachEngine: ObservableObject {
     func loadPersistedMessagesIfNeeded() async {
         guard !didLoadPersistedMessages else { return }
         didLoadPersistedMessages = true
+        conversationHistory = CoachConversationHistoryStore.load()
         guard messages.isEmpty, let store = await repo.storeHandle() else { return }
         guard let rows = try? await store.coachMessages(), !rows.isEmpty else { return }
         // Recover the day this transcript was last written on FROM THE ROWS. `conversationDay` lives in
@@ -713,7 +751,73 @@ final class AICoachEngine: ObservableObject {
             .map { ChatMessage(id: UUID(uuidString: $0.id) ?? UUID(),
                                 role: ChatMessage.Role(rawValue: $0.role) ?? .user,
                                 text: $0.text) }
+        // The history snapshot and the legacy active transcript share message ids. Reattach the active
+        // thread after a relaunch so the next send updates the same history item instead of creating a
+        // duplicate entry.
+        let restoredIDs = messages.map(\.id)
+        currentConversationID = conversationHistory.first(where: {
+            $0.messages.map(\.id) == restoredIDs
+        })?.id
         conversationDay = lastDay
+    }
+
+    /// Move the active transcript into the local history list. Reopening or starting a new chat never
+    /// loses the previous thread, while the active transcript still uses the existing database cache.
+    private func archiveCurrentConversation() {
+        guard !messages.isEmpty else { return }
+        let now = Date()
+        if let currentConversationID,
+           let index = conversationHistory.firstIndex(where: { $0.id == currentConversationID }) {
+            conversationHistory[index].messages = messages.map(CoachConversationHistoryItem.Message.init)
+            conversationHistory[index].title = CoachConversationHistoryItem.title(for: messages)
+            conversationHistory[index].provider = provider.rawValue
+            conversationHistory[index].updatedAt = now
+        } else {
+            conversationHistory.insert(
+                CoachConversationHistoryItem(messages: messages, provider: provider.rawValue, now: now),
+                at: 0)
+        }
+        conversationHistory = Array(conversationHistory.sorted { $0.updatedAt > $1.updatedAt }
+            .prefix(CoachConversationHistoryStore.maximumItems))
+        CoachConversationHistoryStore.save(conversationHistory)
+    }
+
+    /// Start a blank thread while preserving the current one in local history.
+    func startNewConversation() {
+        archiveCurrentConversation()
+        messages = []
+        currentConversationID = nil
+        conversationDay = nil
+        droppedSummary = nil
+        droppedSummaryKey = []
+        Task { try? await repo.storeHandle()?.clearCoachMessages() }
+    }
+
+    /// Restore a saved thread into the active chat. The current thread is archived first so switching
+    /// between threads never silently discards what was on screen.
+    func openConversation(_ item: CoachConversationHistoryItem) {
+        guard !sending else { return }
+        if !messages.isEmpty, currentConversationID != item.id {
+            archiveCurrentConversation()
+        }
+        messages = item.chatMessages
+        currentConversationID = item.id
+        conversationDay = Self.localEpochDay()
+        droppedSummary = nil
+        droppedSummaryKey = []
+        persistMessages()
+    }
+
+    /// Delete one saved thread. If it is currently open, clear the active transcript as well.
+    func deleteConversation(_ item: CoachConversationHistoryItem) {
+        conversationHistory.removeAll { $0.id == item.id }
+        CoachConversationHistoryStore.save(conversationHistory)
+        if currentConversationID == item.id {
+            messages = []
+            currentConversationID = nil
+            conversationDay = nil
+            Task { try? await repo.storeHandle()?.clearCoachMessages() }
+        }
     }
 
     /// Replace the ENTIRE persisted conversation with the current in-memory `messages`. Called once
@@ -723,6 +827,23 @@ final class AICoachEngine: ObservableObject {
     private func persistMessages() {
         let snapshot = messages
         let providerId = provider.rawValue
+        if let currentConversationID,
+           let index = conversationHistory.firstIndex(where: { $0.id == currentConversationID }) {
+            conversationHistory[index].messages = snapshot.map(CoachConversationHistoryItem.Message.init)
+            conversationHistory[index].title = CoachConversationHistoryItem.title(for: snapshot)
+            conversationHistory[index].provider = providerId
+            conversationHistory[index].updatedAt = Date()
+            CoachConversationHistoryStore.save(conversationHistory)
+        } else if !snapshot.isEmpty {
+            // Keep the current thread visible in History immediately after its first completed turn.
+            // It remains the active item until New chat or Clear conversation is chosen.
+            let item = CoachConversationHistoryItem(messages: snapshot, provider: providerId)
+            currentConversationID = item.id
+            conversationHistory.insert(item, at: 0)
+            conversationHistory = Array(conversationHistory.sorted { $0.updatedAt > $1.updatedAt }
+                .prefix(CoachConversationHistoryStore.maximumItems))
+            CoachConversationHistoryStore.save(conversationHistory)
+        }
         Task {
             guard let store = await repo.storeHandle() else { return }
             let rows = snapshot.enumerated().map { index, m in
@@ -737,7 +858,13 @@ final class AICoachEngine: ObservableObject {
     /// The Coach toolbar's "Clear conversation" action: wipes both the in-memory transcript and the
     /// persisted table. Fire-and-forget on the store side; the in-memory clear is immediate.
     func clearConversation() {
+        if let currentConversationID {
+            conversationHistory.removeAll { $0.id == currentConversationID }
+            CoachConversationHistoryStore.save(conversationHistory)
+        }
         messages = []
+        currentConversationID = nil
+        conversationDay = nil
         droppedSummary = nil      // K13: reset the summary cache on clear
         droppedSummaryKey = []
         Task { try? await repo.storeHandle()?.clearCoachMessages() }
@@ -790,7 +917,9 @@ final class AICoachEngine: ObservableObject {
         // Placed AFTER the guards on purpose: a send that never happens must not wipe a transcript.
         let today = Self.localEpochDay()
         if Self.isStaleConversation(lastEpochDay: conversationDay, todayEpochDay: today) {
+            archiveCurrentConversation()
             messages = []
+            currentConversationID = nil
         }
         conversationDay = today
 
