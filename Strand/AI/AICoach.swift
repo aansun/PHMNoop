@@ -463,6 +463,9 @@ final class AICoachEngine: ObservableObject {
         // whenever the device can actually run it. When unavailable we stay on the setup card so the
         // reason (`appleIntelligenceUnavailableReason`) is shown instead of a dead chat.
         case .appleIntelligence: return AppleIntelligenceClient.isAvailable
+        #if os(iOS)
+        case .chatGPT: return ChatGPTAuthStore.isConnected
+        #endif
         default: return hasKey
         }
     }
@@ -476,6 +479,11 @@ final class AICoachEngine: ObservableObject {
         // === PHM OVERLAY (PHMNOOP) === on-device Apple Intelligence takes no key; "" = configured,
         // keyless (same sentinel the Custom local provider uses), so the ask flow never surfaces .noKey.
         if provider == .appleIntelligence { return "" }
+        #if os(iOS)
+        // ChatGPT uses a separate OAuth Keychain item. Never pass its access token through the API-key
+        // store or expose it to a provider selected by the user.
+        if provider == .chatGPT { return ChatGPTAuthStore.isConnected ? "" : nil }
+        #endif
         if let k = AIKeyStore.read() {
             // Only send the stored key to the provider it was SAVED for, never Bearer one provider's
             // key (e.g. a cloud OpenAI/Anthropic secret) to another provider's endpoint, above all the
@@ -509,6 +517,12 @@ final class AICoachEngine: ObservableObject {
     /// kept so reconnecting pre-fills it.
     func disconnect() {
         AIKeyStore.clear()
+        #if os(iOS)
+        if provider == .chatGPT {
+            ChatGPTAuthStore.clear()
+            ChatGPTAuthModel.shared.refreshConnection()
+        }
+        #endif
         customConnected = false
         // Retire the transcript with the connection. Kotlin has done this since the method existed
         // (CoachViewModel.disconnect) and this side never did, so returning to the setup screen on Apple
@@ -550,6 +564,12 @@ final class AICoachEngine: ObservableObject {
     /// Forget the stored key.
     func clearKey() {
         AIKeyStore.clear()
+        #if os(iOS)
+        if provider == .chatGPT {
+            ChatGPTAuthStore.clear()
+            ChatGPTAuthModel.shared.refreshConnection()
+        }
+        #endif
         // Same reasoning as `disconnect`: clearing the key returns the user to the setup screen, and
         // Kotlin empties the transcript when it does. Leaving it meant a "clear my key" on Apple removed
         // the credential and kept the conversation.
@@ -623,6 +643,9 @@ final class AICoachEngine: ObservableObject {
     /// Only the LIST moves. The selected model is never changed underneath the user. Kotlin twin:
     /// `CoachViewModel.refreshModelsIfStale`.
     func refreshModelsIfStale() async {
+        #if os(iOS)
+        guard provider != .chatGPT else { return }
+        #endif
         guard provider != .custom, hasKey else { return }
         let last = UserDefaults.standard.double(forKey: Self.modelsRefreshedKey(provider))
         guard Self.isCatalogueStale(last: last, now: Date().timeIntervalSince1970) else { return }
@@ -633,6 +656,15 @@ final class AICoachEngine: ObservableObject {
     /// neither wipe a message the user is still reading nor raise one they never asked for. Kotlin twin:
     /// the `silent` parameter on `CoachViewModel.refreshModels`.
     func refreshModels(silent: Bool = false) async {
+        #if os(iOS)
+        if provider == .chatGPT {
+            availableModels = provider.modelOptions
+            if model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                model = provider.defaultModel
+            }
+            return
+        }
+        #endif
         guard let key = resolvedKey else {
             if !silent { errorText = AICoachError.noKey.errorDescription }
             return

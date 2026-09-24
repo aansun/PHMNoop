@@ -85,38 +85,57 @@ struct CoachView: View {
     }
 
     var body: some View {
-        ScreenScaffold(title: "Coach",
-                       // Liquid finish: the same full-bleed day-of-sky backdrop Today + the other liquid
-                       // tabs carry, so Coach sits in one atmosphere. Static + non-interactive; the frosted
-                       // message/setup cards below sit on the opaque canvas and stay legible.
-                       topBackground: liquidScaffoldSky()) {
-            if coach.isConfigured {
-                connectedHeader
-                transcript
-                if let error = coach.errorText, !error.isEmpty {
-                    errorBanner(error)
-                    // A rejected key is the one failure the wearer can act on from here, and the
-                    // message already tells them to: "Check the key and the provider you selected".
-                    // Until this, the screen offered nowhere to check it. Rendered INSIDE the error
-                    // branch, never on its own flag, so it cannot outlive the message justifying it.
-                    if coach.keyRejected { keyRepairPanel }
-                }
-                // K7: show follow-up chips after each assistant reply (when the transcript is
-                // non-empty and the last message is from the assistant and not mid-send);
-                // otherwise show the initial contextual chips.
-                if showFollowUpChips {
-                    followUpChips
+        Group {
+            #if os(iOS)
+            iOSCoachPage
+            #else
+            ScreenScaffold(title: "Coach",
+                           // Liquid finish: the same full-bleed day-of-sky backdrop Today + the other liquid
+                           // tabs carry, so Coach sits in one atmosphere. Static + non-interactive; the frosted
+                           // message/setup cards below sit on the opaque canvas and stay legible.
+                           topBackground: liquidScaffoldSky()) {
+                if coach.isConfigured {
+                    connectedHeader
+                    transcript
+                    if let error = coach.errorText, !error.isEmpty {
+                        errorBanner(error)
+                        // A rejected key is the one failure the wearer can act on from here, and the
+                        // message already tells them to: "Check the key and the provider you selected".
+                        // Until this, the screen offered nowhere to check it. Rendered INSIDE the error
+                        // branch, never on its own flag, so it cannot outlive the message justifying it.
+                        if coach.keyRejected { keyRepairPanel }
+                    }
                 } else {
-                    suggestionChips
+                    setupCard
                 }
-            } else {
-                setupCard
             }
+            #endif
         }
         // Keep the composer reachable like a conventional AI chat: the conversation scrolls behind it
         // while the input remains docked above the keyboard/tab bar instead of becoming another message
         // in the page scroll.
         .safeAreaInset(edge: .bottom, spacing: 0) {
+            #if os(iOS)
+            VStack(spacing: NoopMetrics.space2) {
+                if coach.isConfigured,
+                   !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                   let tokens = coach.estimatedTokens(forDraft: draft) {
+                    tokenEstimateBar(tokens)
+                }
+                composer
+            }
+            .padding(.horizontal, NoopMetrics.screenHPadding)
+            .padding(.top, NoopMetrics.space2)
+            .padding(.bottom, NoopMetrics.space1)
+            .background {
+                StrandPalette.surfaceBase.opacity(0.97)
+                    .overlay(alignment: .top) {
+                        Rectangle()
+                            .fill(StrandPalette.hairline.opacity(0.7))
+                            .frame(height: 1)
+                    }
+            }
+            #else
             if coach.isConfigured {
                 VStack(spacing: NoopMetrics.space2) {
                     if !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
@@ -135,6 +154,7 @@ struct CoachView: View {
                                      surfaceOpacity: 0.98)
                 }
             }
+            #endif
         }
         // macOS only. On iOS these two live in `connectionMenu` instead, because this bar is hidden for
         // a primary tab root and VISIBLE in the pillar sheet, so leaving them here would render nothing
@@ -236,6 +256,88 @@ struct CoachView: View {
         }
     }
 
+    #if os(iOS)
+    /// Full-screen iPhone chat surface. Coach is a conversation, so the transcript owns the vertical
+    /// space and the composer is the only docked control; setup/error content remains scrollable.
+    private var iOSCoachPage: some View {
+        VStack(spacing: 0) {
+            iOSCoachHeader
+            Rectangle()
+                .fill(StrandPalette.hairline.opacity(0.7))
+                .frame(height: 1)
+
+            if coach.isConfigured {
+                transcript
+                if let error = coach.errorText, !error.isEmpty {
+                    errorBanner(error)
+                        .padding(.horizontal, NoopMetrics.screenHPadding)
+                        .padding(.vertical, NoopMetrics.space2)
+                    if coach.keyRejected { keyRepairPanel.padding(.horizontal, NoopMetrics.screenHPadding) }
+                }
+            } else {
+                ScrollView {
+                    setupCard
+                        .padding(.horizontal, NoopMetrics.screenHPadding)
+                        .padding(.vertical, NoopMetrics.space3)
+                }
+                .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
+            }
+        }
+        .background {
+            ZStack(alignment: .top) {
+                StrandPalette.surfaceBase
+                liquidScaffoldSky()
+            }
+            .ignoresSafeArea()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+    }
+
+    private var iOSCoachHeader: some View {
+        HStack(spacing: 14) {
+            Text("Coach")
+                .font(StrandFont.rounded(26))
+                .foregroundStyle(StrandPalette.textPrimary)
+            Spacer(minLength: 0)
+            if coach.sending {
+                StatePill("Thinking", tone: .accent, pulsing: true)
+            }
+            Button {
+                coach.startNewConversation()
+            } label: {
+                Image(systemName: "square.and.pencil")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(StrandPalette.textSecondary)
+            }
+            .buttonStyle(.plain)
+            .disabled(coach.messages.isEmpty || coach.sending)
+            .accessibilityLabel("New Coach conversation")
+            Button {
+                showHistory = true
+            } label: {
+                Image(systemName: "clock.arrow.circlepath")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(StrandPalette.textSecondary)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Coach history")
+            Button {
+                showSettings = true
+            } label: {
+                Image(systemName: "slider.horizontal.3")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(StrandPalette.textSecondary)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(String(localized: "Coach settings"))
+            connectionMenu
+        }
+        .padding(.horizontal, NoopMetrics.screenHPadding)
+        .padding(.top, NoopMetrics.space3)
+        .padding(.bottom, NoopMetrics.space2)
+    }
+    #endif
+
     // MARK: - Setup (no key yet)
 
     private var setupCard: some View {
@@ -250,10 +352,7 @@ struct CoachView: View {
                         .foregroundStyle(StrandPalette.textPrimary)
                 }
 
-                Text("Coach uses your own API key. Pick a provider, paste a key, and choose a model. Your key is stored securely in the Keychain and never leaves \(Platform.deviceNounPhrase) except as the request you make.")
-                    .font(StrandFont.subhead)
-                    .foregroundStyle(StrandPalette.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                providerSetupDescription
 
                 // Provider
                 VStack(alignment: .leading, spacing: 6) {
@@ -325,37 +424,10 @@ struct CoachView: View {
                         Text("On-device AI: no API key, no account, no network. Requires an Apple-Intelligence-capable device.")
                             .font(StrandFont.footnote)
                             .foregroundStyle(StrandPalette.textSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
+                        .fixedSize(horizontal: false, vertical: true)
                     }
                 } else {
-                    // Key
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(coach.provider == .custom ? "API key (optional)" : "API key").strandOverline()
-                        SecureField(coach.provider == .custom
-                                    ? "Only if your server requires one"
-                                    : "Paste your \(coach.provider.displayName) API key", text: $keyDraft)
-                            .textFieldStyle(.plain)
-                            .font(StrandFont.body)
-                            .foregroundStyle(StrandPalette.textPrimary)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 9)
-                            .background(StrandPalette.surfaceInset, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                .strokeBorder(StrandPalette.hairline, lineWidth: 1))
-                            .onSubmit { coach.provider == .custom ? connectCustom() : saveKey() }
-                            .accessibilityLabel("API key")
-                    }
-
-                    HStack {
-                        if coach.provider == .custom {
-                            NoopButton("Connect", systemImage: "link", kind: .primary, action: connectCustom)
-                                .disabled(coach.customBaseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                        } else {
-                            NoopButton("Save key", systemImage: "key.fill", kind: .primary, action: saveKey)
-                                .disabled(keyDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-                        }
-                        Spacer()
-                    }
+                    providerConnectionContent
                 }
 
                 // Whatever the last attempt from THIS card ran into. The setup card had no error line
@@ -367,6 +439,74 @@ struct CoachView: View {
                     errorBanner(error)
                 }
 
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var providerConnectionContent: some View {
+        #if os(iOS)
+        if coach.provider == .chatGPT {
+            ChatGPTAuthCard()
+        } else {
+            apiKeyConnectionContent
+        }
+        #else
+        apiKeyConnectionContent
+        #endif
+    }
+
+    @ViewBuilder
+    private var providerSetupDescription: some View {
+        #if os(iOS)
+        if coach.provider == .chatGPT {
+            Text("Sign in with your ChatGPT account using a one-time device code. Tokens stay in Apple Keychain and are refreshed automatically.")
+                .font(StrandFont.subhead)
+                .foregroundStyle(StrandPalette.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        } else {
+            apiKeySetupDescription
+        }
+        #else
+        apiKeySetupDescription
+        #endif
+    }
+
+    private var apiKeySetupDescription: some View {
+        Text("Coach uses your own API key. Pick a provider, paste a key, and choose a model. Your key is stored securely in the Keychain and never leaves \(Platform.deviceNounPhrase) except as the request you make.")
+            .font(StrandFont.subhead)
+            .foregroundStyle(StrandPalette.textSecondary)
+            .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private var apiKeyConnectionContent: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(coach.provider == .custom ? "API key (optional)" : "API key").strandOverline()
+                SecureField(coach.provider == .custom
+                            ? "Only if your server requires one"
+                            : "Paste your \(coach.provider.displayName) API key", text: $keyDraft)
+                    .textFieldStyle(.plain)
+                    .font(StrandFont.body)
+                    .foregroundStyle(StrandPalette.textPrimary)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 9)
+                    .background(StrandPalette.surfaceInset, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
+                        .strokeBorder(StrandPalette.hairline, lineWidth: 1))
+                    .onSubmit { coach.provider == .custom ? connectCustom() : saveKey() }
+                    .accessibilityLabel("API key")
+            }
+
+            HStack {
+                if coach.provider == .custom {
+                    NoopButton("Connect", systemImage: "link", kind: .primary, action: connectCustom)
+                        .disabled(coach.customBaseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                } else {
+                    NoopButton("Save key", systemImage: "key.fill", kind: .primary, action: saveKey)
+                        .disabled(keyDraft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                }
+                Spacer()
             }
         }
     }
@@ -578,8 +718,21 @@ struct CoachView: View {
     @ViewBuilder
     private var transcript: some View {
         if coach.messages.isEmpty {
-            emptyTranscript
-                .frame(maxWidth: .infinity, minHeight: 260, alignment: .center)
+            ScrollView {
+                VStack(spacing: NoopMetrics.space2) {
+                    emptyTranscript
+                    inlineSuggestions(title: activeLanguageText("Try asking"), items: initialPromptItems)
+                }
+                .padding(.horizontal, NoopMetrics.screenHPadding)
+                .padding(.vertical, NoopMetrics.space3)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            #if os(iOS)
+            .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
+            .frame(maxHeight: .infinity)
+            #else
+            .frame(minHeight: 300, maxHeight: 560)
+            #endif
         } else {
             ScrollViewReader { proxy in
                 ScrollView {
@@ -591,8 +744,18 @@ struct CoachView: View {
                         }
                         if coach.sending {
                             typingIndicator.id("typing")
+                        } else if showFollowUpChips {
+                            // Suggestions are part of the conversation timeline. They stay below the
+                            // latest answer, so each prompt is understood as a contextual next step
+                            // instead of a separate control panel outside the chat.
+                            inlineSuggestions(
+                                title: nil,
+                                items: followUpPromptItems
+                            )
+                            .id("contextual-suggestions")
                         }
                     }
+                    .padding(.horizontal, NoopMetrics.screenHPadding)
                     .padding(.vertical, 2)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -603,8 +766,10 @@ struct CoachView: View {
                 // the width, so nothing that is meant to scroll sideways is affected. (#1532 follow-up)
                 #if os(iOS)
                 .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
-                #endif
+                .frame(maxHeight: .infinity)
+                #else
                 .frame(minHeight: 300, maxHeight: 560)
+                #endif
                 .onChangeCompat(of: coach.messages.count) { _ in
                     scrollToEnd(proxy)
                 }
@@ -613,6 +778,49 @@ struct CoachView: View {
                 }
             }
         }
+    }
+
+    /// Contextual next questions rendered as lightweight rows inside the transcript, matching the
+    /// native AI-chat pattern: one idea per row, easy to scan, and no competing grid of cards.
+    private func inlineSuggestions(title: String?, items: [PromptItem]) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if let title, !title.isEmpty {
+                Text(title)
+                    .font(StrandFont.footnote.weight(.semibold))
+                    .foregroundStyle(StrandPalette.textTertiary)
+                    .padding(.bottom, NoopMetrics.space1)
+            }
+
+            ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                Button {
+                    send(item.prompt)
+                } label: {
+                    HStack(alignment: .firstTextBaseline, spacing: 10) {
+                        Image(systemName: "arrow.turn.down.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(StrandPalette.textTertiary)
+                            .accessibilityHidden(true)
+                        Text(item.title)
+                            .font(StrandFont.subhead.weight(.semibold))
+                            .foregroundStyle(StrandPalette.textPrimary)
+                            .multilineTextAlignment(.leading)
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.vertical, 12)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .disabled(coach.sending)
+                .accessibilityLabel(item.title)
+
+                if index < items.count - 1 {
+                    Divider()
+                        .overlay(StrandPalette.hairline)
+                }
+            }
+        }
+        .padding(.top, items.isEmpty ? 0 : NoopMetrics.space2)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var emptyTranscript: some View {
@@ -664,9 +872,14 @@ struct CoachView: View {
                     .markdownTheme(.strand)
                     .textSelection(.enabled)
                     .fixedSize(horizontal: false, vertical: true)
+                    #if os(iOS)
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 4)
+                    #else
                     .padding(.horizontal, 14)
                     .padding(.vertical, 11)
                     .frostedCardSurface(tint: StrandPalette.chargeColor, cornerRadius: 16)
+                    #endif
                     .frame(maxWidth: 560, alignment: .leading)
                     // K8: Copy / Share / Save context menu on assistant replies.
                     .contextMenu {
@@ -770,52 +983,12 @@ struct CoachView: View {
         keyFix = ""
     }
 
-    private var suggestionChips: some View {
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
-            ForEach(initialPromptItems) { item in
-                promptButton(item)
-            }
-        }
-        .padding(.vertical, 1)
-    }
-
     /// K7: True when follow-up chips should show instead of the initial contextual chips —
     /// i.e. the transcript is non-empty, the last message is from the assistant, and a reply
     /// is not currently in flight.
     private var showFollowUpChips: Bool {
         guard let last = coach.messages.last, !coach.sending else { return false }
         return last.role == .assistant
-    }
-
-    /// K7: Follow-up suggestion chips shown after each assistant reply, so the user can dig
-    /// deeper without typing. Uses the static `AICoachEngine.followUpSuggestions` list.
-    private var followUpChips: some View {
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
-            ForEach(followUpPromptItems) { item in
-                promptButton(item)
-            }
-        }
-        .padding(.vertical, 1)
-    }
-
-    private func promptButton(_ item: PromptItem) -> some View {
-        Button {
-            send(item.prompt)
-        } label: {
-            Text(item.title)
-                .font(StrandFont.footnote)
-                .foregroundStyle(StrandPalette.textSecondary)
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
-                .padding(.horizontal, 11)
-                .padding(.vertical, 8)
-                .background(StrandPalette.surfaceInset, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .strokeBorder(StrandPalette.hairline, lineWidth: 1))
-        }
-        .buttonStyle(LiquidPressStyle())
-        .disabled(coach.sending)
-        .accessibilityLabel(item.title)
     }
 
     /// Display copy follows the active app language while the underlying English prompt remains stable,
@@ -827,6 +1000,9 @@ struct CoachView: View {
         switch text {
         case "Recommend a workout": return "Rekomendasikan latihan"
         case "Build today's plan": return "Buat rencana hari ini"
+        case "Try asking": return "Coba tanyakan"
+        case "Ask Coach about your data…": return "Tanyakan data Anda kepada Coach…"
+        case "Configure Coach to start chatting…": return "Atur Coach untuk mulai chat…"
         case "How's my charge trending?": return "Bagaimana tren Charge saya?"
         case "What should today's training look like?": return "Latihan hari ini sebaiknya seperti apa?"
         case "Analyse my sleep": return "Analisis tidur saya"
@@ -864,9 +1040,96 @@ struct CoachView: View {
         .padding(.top, 2)
     }
 
-    /// The input bar, a frosted overlay surface holding the field + Send, so the composer reads as a
-    /// distinct docked surface above the canvas rather than two floating controls.
+    /// The input bar. iOS follows the compact AI-chat composer pattern; macOS keeps the existing
+    /// field-plus-send layout so the two platforms retain their established interaction affordances.
     private var composer: some View {
+        #if os(iOS)
+        iOSComposer
+        #else
+        macOSComposer
+        #endif
+    }
+
+    #if os(iOS)
+    /// A modern iPhone composer: one discrete context/focus control and one continuous input capsule.
+    /// The send affordance replaces the microphone once text exists, keeping the right edge stable.
+    private var iOSComposer: some View {
+        HStack(alignment: .center, spacing: 10) {
+            Button {
+                composerFocused = true
+            } label: {
+                Image(systemName: "plus")
+                    .font(.system(size: 21, weight: .medium))
+                    .foregroundStyle(StrandPalette.textPrimary)
+                    .frame(width: 48, height: 48)
+                    .background(StrandPalette.surfaceRaised, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .strokeBorder(StrandPalette.hairline, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
+            .disabled(!coach.isConfigured)
+            .accessibilityLabel("Focus Coach question field")
+
+            HStack(spacing: 6) {
+                TextField(composerPlaceholder, text: $draft, axis: .vertical)
+                    .textFieldStyle(.plain)
+                    .font(StrandFont.body)
+                    .foregroundStyle(StrandPalette.textPrimary)
+                    .lineLimit(1...4)
+                    .focused($composerFocused)
+                    .disabled(!coach.isConfigured)
+                    .opacity(coach.isConfigured ? 1 : 0.68)
+                    .padding(.leading, 15)
+                    .padding(.vertical, 11)
+                    .onSubmit { send(draft) }
+                    .accessibilityLabel("Question")
+
+                if coach.sending {
+                    ProgressView()
+                        .controlSize(.small)
+                        .tint(StrandPalette.textSecondary)
+                        .frame(width: 38, height: 38)
+                        .accessibilityLabel("Coach is thinking")
+                } else if draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    micButton
+                } else {
+                    Button {
+                        send(draft)
+                    } label: {
+                        Image(systemName: "arrow.up")
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(StrandPalette.goldDeepText)
+                            .frame(width: 36, height: 36)
+                            .background(StrandPalette.accent, in: Circle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel("Send")
+                }
+            }
+            .frame(minHeight: 48)
+            .background(StrandPalette.surfaceInset, in: Capsule())
+            .overlay {
+                Capsule()
+                    .strokeBorder(
+                        LinearGradient(
+                            colors: [StrandPalette.accent.opacity(0.9), StrandPalette.metricCyan.opacity(0.85)],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ),
+                        lineWidth: 1
+                    )
+            }
+        }
+    }
+
+    private var composerPlaceholder: String {
+        activeLanguageText(coach.isConfigured
+            ? "Ask Coach about your data…"
+            : "Configure Coach to start chatting…")
+    }
+    #endif
+
+    private var macOSComposer: some View {
         HStack(alignment: .bottom, spacing: 10) {
             TextField("Ask Coach about your data…", text: $draft, axis: .vertical)
                 .textFieldStyle(.plain)
@@ -937,11 +1200,11 @@ struct CoachView: View {
                         .foregroundStyle(canUseVoice ? StrandPalette.textSecondary : StrandPalette.textTertiary)
                 }
             }
-            .frame(width: 36, height: 38)
-            .background(StrandPalette.surfaceInset,
-                        in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .strokeBorder(StrandPalette.hairline, lineWidth: 1))
+            .frame(width: 38, height: 38)
+            .background(
+                voiceInput.isRecording ? StrandPalette.statusCritical.opacity(0.16) : .clear,
+                in: Circle()
+            )
         }
         .buttonStyle(.plain)
         .disabled(!micButtonEnabled)
@@ -960,7 +1223,7 @@ struct CoachView: View {
     /// already usable or permission hasn't been asked yet (first tap triggers the prompt).
     private var canUseVoice: Bool { voiceInput.canUseVoice }
     private var micButtonEnabled: Bool {
-        !coach.sending && (canUseVoice || voiceInput.authorization == .notDetermined)
+        coach.isConfigured && !coach.sending && (canUseVoice || voiceInput.authorization == .notDetermined)
     }
 
     private func toggleVoice() {

@@ -9,6 +9,9 @@ enum AIProvider: String, CaseIterable, Identifiable {
     case gemini
     case custom
     case appleIntelligence   // === PHM OVERLAY (PHMNOOP): on-device Apple Intelligence ===
+    #if os(iOS)
+    case chatGPT             // iOS-only ChatGPT/Codex device authentication
+    #endif
 
     var id: String { rawValue }
 
@@ -19,6 +22,9 @@ enum AIProvider: String, CaseIterable, Identifiable {
         case .gemini:    return "Google Gemini"
         case .custom:    return "Custom (OpenAI-compatible)"
         case .appleIntelligence: return "Apple Intelligence"
+        #if os(iOS)
+        case .chatGPT:    return "ChatGPT (Sign in)"
+        #endif
         }
     }
 
@@ -29,6 +35,9 @@ enum AIProvider: String, CaseIterable, Identifiable {
         case .gemini:    return "gemini-flash-latest"   // stable alias → current Flash, no version churn (#400)
         case .custom:    return ""   // the user picks the model their server serves
         case .appleIntelligence: return AppleIntelligenceClient.modelId
+        #if os(iOS)
+        case .chatGPT:    return "gpt-5"
+        #endif
         }
     }
 
@@ -82,6 +91,10 @@ enum AIProvider: String, CaseIterable, Identifiable {
             return []   // populated from the server's /models (refreshModels) or typed in
         case .appleIntelligence:
             return [AppleIntelligenceClient.modelId]   // one on-device system model
+        #if os(iOS)
+        case .chatGPT:
+            return ["gpt-5.5", "gpt-5.1", "gpt-5", "gpt-5-mini"]
+        #endif
         }
     }
 
@@ -92,6 +105,9 @@ enum AIProvider: String, CaseIterable, Identifiable {
         case .gemini:    return URL(string: "https://generativelanguage.googleapis.com/v1beta/models")!
         case .custom:    return AIProvider.customURL(path: "/chat/completions")
         case .appleIntelligence: return URL(string: "about:blank")!   // on-device: no network endpoint
+        #if os(iOS)
+        case .chatGPT:    return URL(string: "https://chatgpt.com/backend-api/codex/responses")!
+        #endif
         }
     }
 
@@ -102,6 +118,9 @@ enum AIProvider: String, CaseIterable, Identifiable {
         case .gemini:    return URL(string: "https://generativelanguage.googleapis.com/v1beta/models")!
         case .custom:    return AIProvider.customURL(path: "/models")
         case .appleIntelligence: return URL(string: "about:blank")!   // on-device: no network endpoint
+        #if os(iOS)
+        case .chatGPT:    return URL(string: "about:blank")!
+        #endif
         }
     }
 
@@ -116,6 +135,9 @@ enum AIProvider: String, CaseIterable, Identifiable {
         case .gemini:    return GeminiClient()
         case .custom:    return CustomClient()
         case .appleIntelligence: return AppleIntelligenceClient()
+        #if os(iOS)
+        case .chatGPT:    return ChatGPTClient()
+        #endif
         }
     }
 
