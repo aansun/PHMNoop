@@ -107,6 +107,12 @@ struct CoachSettingsView: View {
                 }
                 .accessibilityLabel("AI provider")
 
+                #if os(iOS)
+                if coach.provider == .chatGPT {
+                    ChatGPTAuthCard(compact: true)
+                }
+                #endif
+
                 HStack {
                     Spacer(minLength: 0)
                     Button {
@@ -206,6 +212,9 @@ struct CoachSettingsView: View {
     }
 
     private var canRefreshModels: Bool {
+        #if os(iOS)
+        if coach.provider == .chatGPT { return false }
+        #endif
         if coach.provider == .custom {
             return coach.customConnected
                 && !coach.customBaseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
