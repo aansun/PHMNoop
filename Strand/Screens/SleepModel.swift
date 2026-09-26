@@ -272,7 +272,18 @@ extension SleepModel {
             SleepView.decodedAsleepMinutes($0.stagesJSON, effectiveStartTs: $0.effectiveStartTs)
         }.max() ?? 0
         for frag in group {
-            if !isPreOnsetAwakeStub(frag, refAsleepMin: refAsleepMin) { return frag.effectiveStartTs }
+            if !isPreOnsetAwakeStub(frag, refAsleepMin: refAsleepMin) {
+                #if os(iOS)
+                // iOS-only readout correction: a computed block can begin when the wearer lies still
+                // and carry a leading `wake` span before the first sustained sleep. The analytics core
+                // keeps that detector window immutable; the iOS screen may show the staged onset.
+                return IOSSleepOnsetResolver.onset(from: frag.stagesJSON,
+                                                   detectedStart: frag.effectiveStartTs,
+                                                   detectedEnd: frag.endTs)
+                #else
+                return frag.effectiveStartTs
+                #endif
+            }
         }
         return first.effectiveStartTs
     }
@@ -300,10 +311,14 @@ extension SleepModel {
         var segs: [SleepInterval] = []
         var motion: [Double] = []
         for frag in group {
-            if let seg = SleepView.decodeSegments(frag.stagesJSON, sessionStart: frag.effectiveStartTs), seg.stages.total > 0 {
+            // On iOS, the displayed onset may move inside the first stored block when its persisted
+            // hypnogram has a leading wake span. Decode from that displayed boundary so the chart and
+            // stage totals do not draw/count the pre-sleep lead. On macOS this is exactly the old start.
+            let fragmentStart = max(frag.effectiveStartTs, onset)
+            if let seg = SleepView.decodeSegments(frag.stagesJSON, sessionStart: fragmentStart), seg.stages.total > 0 {
                 stages.awake += seg.stages.awake; stages.light += seg.stages.light
                 stages.deep  += seg.stages.deep;  stages.rem   += seg.stages.rem
-                let shift = TimeInterval(frag.effectiveStartTs - onset)
+                let shift = TimeInterval(fragmentStart - onset)
                 for iv in seg.intervals {
                     segs.append(SleepInterval(stage: iv.stage, start: iv.start + shift, end: iv.end + shift))
                 }
