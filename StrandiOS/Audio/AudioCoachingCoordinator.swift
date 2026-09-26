@@ -21,7 +21,7 @@ final class AudioCoachingCoordinator: ObservableObject {
     private let scheduler = AudioPromptScheduler()
     private let logger = Logger(subsystem: "com.phm.noop", category: "AudioCoaching")
     private var cancellables = Set<AnyCancellable>()
-    private var timer: Timer?
+    private var ingestionTask: Task<Void, Never>?
     private weak var model: AppModel?
     private var workout: AppModel.ActiveWorkout?
     private var latestHeartRate: Int?
@@ -34,7 +34,7 @@ final class AudioCoachingCoordinator: ObservableObject {
                                                  paceDeltaSecondsPerKm: nil,
                                                  cadenceDeltaSPM: nil)
 
-    deinit { timer?.invalidate() }
+    deinit { ingestionTask?.cancel() }
 
     func attach(to model: AppModel) {
         guard self.model == nil else { return }
@@ -152,7 +152,7 @@ final class AudioCoachingCoordinator: ObservableObject {
     }
 
     private func start(_ workout: AppModel.ActiveWorkout) {
-        timer?.invalidate()
+        ingestionTask?.cancel()
         _ = activityEngine.start(at: workout.start)
         trendEngine.reset()
         coachingRuleEngine.reset()
@@ -163,16 +163,20 @@ final class AudioCoachingCoordinator: ObservableObject {
         promptHistory.removeAll()
         scheduler.setSpeechRate(AudioCoachingPreferences.speechRate)
         if AudioCoachingPreferences.policy().enabled { scheduler.beginSession() }
-        timer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
-            Task { @MainActor in self?.ingestCurrentMetrics() }
+        ingestionTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+                guard !Task.isCancelled else { return }
+                self?.ingestCurrentMetrics()
+            }
         }
         emit([.activityStarted], for: workout)
         logger.debug("Audio coaching activity started")
     }
 
     private func finish(_ workout: AppModel.ActiveWorkout) {
-        timer?.invalidate()
-        timer = nil
+        ingestionTask?.cancel()
+        ingestionTask = nil
         let events = activityEngine.end()
         emit(events, for: workout)
         if AudioCoachingPreferences.policy().enabled {

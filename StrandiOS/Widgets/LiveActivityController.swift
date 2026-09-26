@@ -21,6 +21,9 @@ final class LiveActivityController {
     /// yet), so without this guard two close-together HR samples could both fire `Activity.request`
     /// and create duplicate Live Activities.
     private var isStarting = false
+    /// Retained so a workout heartbeat can refresh the activity even when no new HR/GPS sample arrives.
+    private var lastWorkoutState: NOOPActivityAttributes.ContentState?
+    private var workoutKeepAliveTask: Task<Void, Never>?
     /// How long after the last push iOS may keep showing the activity as fresh. The activity is
     /// refreshed every ~2 s while streaming, so this never bites a live session; it auto-greys a
     /// frozen activity if the app is suspended/killed without an explicit end (a missed-tick safety net
@@ -31,6 +34,8 @@ final class LiveActivityController {
     /// content state so the transition from workout → ordinary live HR can end cleanly when the
     /// workout finishes without relying on a final HR sample.
     private var workoutIsActive = false
+
+    deinit { workoutKeepAliveTask?.cancel() }
 
     /// Drive the activity from the latest live values. A workout starts immediately and is allowed to
     /// continue through a strap disconnect; the Lock Screen then shows the last known/empty HR while
@@ -95,11 +100,21 @@ final class LiveActivityController {
             distance: distance,
             pace: pace,
             speed: speed)
-        let staleDate = Date().addingTimeInterval(Self.staleAfter)
+        // A workout owns this activity until End/Discard. Do not let a temporary strap disconnect or
+        // quiet GPS stream make the Lock Screen activity stale while the workout clock is still live.
+        // Ordinary live-HR activity keeps the shorter freshness date as a safety net.
+        let staleDate: Date? = workoutActive ? nil : Date().addingTimeInterval(Self.staleAfter)
         // Track the lifecycle even when the content update is throttled. A workout can start within
         // two seconds of the previous live-HR tick, and its later end must still be able to close the
         // activity without waiting for another HR sample.
         workoutIsActive = workoutActive
+        lastWorkoutState = workoutActive ? state : nil
+        if workoutActive {
+            beginWorkoutKeepAliveIfNeeded()
+        } else {
+            workoutKeepAliveTask?.cancel()
+            workoutKeepAliveTask = nil
+        }
 
         if let activity {
             guard Date().timeIntervalSince(lastPush) > 2 else { return }
@@ -127,6 +142,8 @@ final class LiveActivityController {
     }
 
     func end() async {
+        workoutKeepAliveTask?.cancel()
+        workoutKeepAliveTask = nil
         // End every NOOP Live Activity, not just our cached handle — covers a straggler from a prior
         // session we never re-adopted (#341) and any rare duplicate. Iterating the live list is the
         // only way to reach activities this controller instance never started.
@@ -135,6 +152,25 @@ final class LiveActivityController {
         }
         self.activity = nil
         self.workoutIsActive = false
+        self.lastWorkoutState = nil
+        self.lastPush = .distantPast
+    }
+
+    private func beginWorkoutKeepAliveIfNeeded() {
+        guard workoutKeepAliveTask == nil else { return }
+        workoutKeepAliveTask = Task { [weak self] in
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 30_000_000_000)
+                guard !Task.isCancelled else { return }
+                await self?.refreshWorkoutActivity()
+            }
+        }
+    }
+
+    private func refreshWorkoutActivity() async {
+        guard workoutIsActive, let activity, let state = lastWorkoutState else { return }
+        await activity.update(ActivityContent(state: state, staleDate: nil))
+        lastPush = Date()
     }
 }
 #endif

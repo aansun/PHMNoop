@@ -32,7 +32,7 @@ final class StravaSettingsModel: ObservableObject {
             isConnected = true
             athleteName = tokens.athleteName
             statusText = StravaExperiment.isAutomaticUploadEnabled
-                ? String(localized: "Connected to Strava. New GPS workouts will upload automatically.")
+                ? String(localized: "Connected to Strava. New GPS and treadmill workouts will upload automatically.")
                 : String(localized: "Connected to Strava. Uploads remain manual.")
         } catch {
             statusText = message(for: error)
@@ -63,8 +63,9 @@ final class StravaSettingsModel: ObservableObject {
             statusText = StravaError.notConnected.localizedDescription
             return
         }
-        guard let route = RouteStore.load(startTs: row.startTs, sport: row.sport),
-              RouteMath.decode(route.polyline).count >= 2 else {
+        let storedRoute = RouteStore.load(startTs: row.startTs, sport: row.sport)
+        let route = storedRoute.map { RouteMath.decode($0.polyline) } ?? []
+        guard route.count >= 2 || StravaActivityType.isTreadmill(row.sport) else {
             statusText = StravaError.noRoute.localizedDescription
             return
         }
@@ -77,7 +78,10 @@ final class StravaSettingsModel: ObservableObject {
         defer { setBusy(false) }
         do {
             let client = StravaAPIClient(credentials: credentials)
-            let initialResponse = try await client.upload(row: row, route: RouteMath.decode(route.polyline))
+            let initialResponse = try await client.upload(
+                row: row,
+                route: route,
+                elevationGainM: storedRoute?.elevationGainM)
             let response = try await client.waitForUploadCompletion(initialResponse)
             let record = StravaUploadRecord(
                 workoutKey: workoutKey(for: row), startTs: row.startTs, sport: row.sport,

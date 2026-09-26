@@ -30,13 +30,13 @@ enum AIProvider: String, CaseIterable, Identifiable {
 
     var defaultModel: String {
         switch self {
-        case .openAI:    return "gpt-5-mini"
+        case .openAI:    return "gpt-6-sol"
         case .anthropic: return "claude-sonnet-4-6"
         case .gemini:    return "gemini-flash-latest"   // stable alias → current Flash, no version churn (#400)
         case .custom:    return ""   // the user picks the model their server serves
         case .appleIntelligence: return AppleIntelligenceClient.modelId
         #if os(iOS)
-        case .chatGPT:    return "gpt-5"
+        case .chatGPT:    return "gpt-6-sol"
         #endif
         }
     }
@@ -56,10 +56,19 @@ enum AIProvider: String, CaseIterable, Identifiable {
             // `max_completion_tokens` and no temperature (see AiCoach's modernParams leg). The cost
             // is one extra round trip on the first message, not a per-model table to maintain.
             return [
-                "gpt-5",
+                "gpt-6-sol",
+                "gpt-6-luna",
+                "gpt-6-astra",
+                "gpt-5.6-sol",
+                "gpt-5.6-terra",
+                "gpt-5.6-luna",
+                "gpt-5.5",
+                "gpt-5.4",
+                "gpt-5.4-mini",
+                "gpt-5.3-codex",
+                "gpt-5.2",
                 "gpt-5.1",
-                "gpt-5-mini",
-                "gpt-5-nano",
+                "gpt-5",
                 "gpt-4.1",
                 "gpt-4.1-mini",
                 "gpt-4.1-nano",
@@ -93,7 +102,14 @@ enum AIProvider: String, CaseIterable, Identifiable {
             return [AppleIntelligenceClient.modelId]   // one on-device system model
         #if os(iOS)
         case .chatGPT:
-            return ["gpt-5.5", "gpt-5.1", "gpt-5", "gpt-5-mini"]
+            // Fallback catalog for offline setup. A connected ChatGPT account refreshes this list
+            // from the Codex `/models` endpoint, so newly released models do not require an app build.
+            return [
+                "gpt-6-sol", "gpt-6-luna", "gpt-6-astra",
+                "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna",
+                "gpt-5.5", "gpt-5.4", "gpt-5.4-mini", "gpt-5.3-codex",
+                "gpt-5.2", "gpt-5.1"
+            ]
         #endif
         }
     }
@@ -379,10 +395,15 @@ func performRequest(_ req: URLRequest, session: URLSession) async throws -> [Str
 
 /// Best-effort extraction of a human-readable message from a provider error body.
 func providerErrorMessage(from data: Data) -> String {
-    guard let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return "" }
+    guard let obj = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+        let raw = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return String(raw.prefix(240))
+    }
 
     if let err = obj["error"] as? [String: Any], let msg = err["message"] as? String { return msg }
     if let msg = obj["message"] as? String { return msg }
+    if let detail = obj["detail"] as? String { return detail }
+    if let error = obj["error"] as? String { return error }
 
     return ""
 }

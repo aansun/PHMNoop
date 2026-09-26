@@ -26,7 +26,7 @@ struct NOOPLiveActivity: Widget {
                         HStack(alignment: .firstTextBaseline, spacing: 6) {
                             Image(systemName: "heart.fill")
                                 .font(.system(size: 18, weight: .bold))
-                                .foregroundStyle(StrandPalette.statusCritical)
+                                .foregroundStyle(StrandPalette.textSecondary)
                             Text(context.state.bpm.map { "\($0)" } ?? "–")
                                 .font(.system(size: 35, weight: .bold, design: .rounded))
                                 .monospacedDigit()
@@ -44,30 +44,16 @@ struct NOOPLiveActivity: Widget {
                     .fill(StrandPalette.hairline)
                     .frame(height: 1)
                 NOOPHeartRateZoneRail(zone: context.state.heartRateZone)
-                HStack(spacing: 0) {
-                    NOOPLiveMetric(label: "AVG", value: context.state.averageBPM.map(String.init) ?? "—")
-                    Rectangle()
-                        .fill(StrandPalette.hairline)
-                        .frame(width: 1, height: 34)
-                        .padding(.horizontal, 12)
-                    NOOPLiveMetric(label: "PEAK", value: context.state.peakBPM.map(String.init) ?? "—")
-                    Rectangle()
-                        .fill(StrandPalette.hairline)
-                        .frame(width: 1, height: 34)
-                        .padding(.horizontal, 12)
-                    NOOPLiveMetric(label: "EFFORT", value: context.state.effort.map(String.init) ?? "—")
-                }
                 if context.state.distance != nil || context.state.pace != nil {
                     Rectangle()
                         .fill(StrandPalette.hairline)
                         .frame(height: 1)
+                    NOOPWorkoutMetricsRow(distance: context.state.distance,
+                                          pace: context.state.pace,
+                                          effort: context.state.effort)
+                } else {
                     HStack(spacing: 0) {
-                        NOOPLiveMetric(label: "DISTANCE", value: context.state.distance ?? "—")
-                        Rectangle()
-                            .fill(StrandPalette.hairline)
-                            .frame(width: 1, height: 34)
-                            .padding(.horizontal, 12)
-                        NOOPLiveMetric(label: "PACE", value: context.state.pace ?? "—")
+                        NOOPLiveMetric(label: "EFFORT", value: context.state.effort.map(String.init) ?? "—")
                     }
                 }
             }
@@ -96,7 +82,7 @@ struct NOOPLiveActivity: Widget {
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
                         Image(systemName: "heart.fill")
                             .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(StrandPalette.statusCritical)
+                            .foregroundStyle(StrandPalette.textSecondary)
                         Text(context.state.bpm.map(String.init) ?? "–")
                             .font(.system(size: 24, weight: .bold, design: .rounded))
                             .monospacedDigit()
@@ -109,18 +95,14 @@ struct NOOPLiveActivity: Widget {
                 DynamicIslandExpandedRegion(.bottom) {
                     VStack(spacing: 6) {
                         NOOPHeartRateZoneRail(zone: context.state.heartRateZone)
-                        HStack(spacing: 0) {
-                            NOOPLiveMetric(label: "AVG", value: context.state.averageBPM.map(String.init) ?? "—")
-                            Rectangle()
-                                .fill(StrandPalette.hairline)
-                                .frame(width: 1, height: 24)
-                                .padding(.horizontal, 8)
-                            NOOPLiveMetric(label: "PEAK", value: context.state.peakBPM.map(String.init) ?? "—")
-                            Rectangle()
-                                .fill(StrandPalette.hairline)
-                                .frame(width: 1, height: 24)
-                                .padding(.horizontal, 8)
-                            NOOPLiveMetric(label: "EFFORT", value: context.state.effort.map(String.init) ?? "—")
+                        if context.state.distance != nil || context.state.pace != nil {
+                            NOOPWorkoutMetricsRow(distance: context.state.distance,
+                                                  pace: context.state.pace,
+                                                  effort: context.state.effort)
+                        } else {
+                            HStack(spacing: 0) {
+                                NOOPLiveMetric(label: "EFFORT", value: context.state.effort.map(String.init) ?? "—")
+                            }
                         }
                     }
                 }
@@ -135,7 +117,7 @@ struct NOOPLiveActivity: Widget {
             } compactTrailing: {
                 HStack(spacing: 3) {
                     Image(systemName: "heart.fill")
-                        .foregroundStyle(StrandPalette.statusCritical)
+                        .foregroundStyle(StrandPalette.textSecondary)
                     Text("\(context.state.bpm.map(String.init) ?? "–")")
                         .monospacedDigit()
                 }
@@ -146,10 +128,39 @@ struct NOOPLiveActivity: Widget {
     }
 }
 
+/// One compact row for GPS workouts. Effort stays beside Distance and Pace so the three workout
+/// metrics are visible together instead of making the Lock Screen card grow with a second row.
+private struct NOOPWorkoutMetricsRow: View {
+    let distance: String?
+    let pace: String?
+    let effort: Int?
+
+    var body: some View {
+        HStack(spacing: 0) {
+            NOOPLiveMetric(label: "DISTANCE", value: distance ?? "—")
+            metricDivider
+            NOOPLiveMetric(label: "PACE", value: pace ?? "—")
+            metricDivider
+            NOOPLiveMetric(label: "EFFORT", value: effort.map(String.init) ?? "—")
+        }
+    }
+
+    private var metricDivider: some View {
+        Rectangle()
+            .fill(StrandPalette.hairline)
+            .frame(width: 1, height: 34)
+            .padding(.horizontal, 8)
+    }
+}
+
 /// Compact strap-battery ring used in the open centre of the Lock Screen banner.
 private struct NOOPBatteryRing: View {
     let percent: Int?
     var size: CGFloat = 48
+
+    // Keep the battery indicator present but subordinate to the workout timer and heart rate.
+    // The shared charge token remains the source of truth; only this Live Activity presentation is muted.
+    private let mutedChargeOpacity = 0.55
 
     private var progress: CGFloat {
         guard let percent else { return 0 }
@@ -163,13 +174,13 @@ private struct NOOPBatteryRing: View {
             Circle()
                 .trim(from: 0, to: progress)
                 .stroke(
-                    StrandPalette.chargeColor,
+                    StrandPalette.chargeColor.opacity(mutedChargeOpacity),
                     style: StrokeStyle(lineWidth: 3, lineCap: .round))
                 .rotationEffect(.degrees(-90))
             Text(percent.map { "\($0)%" } ?? "—")
                 .font(.system(size: 11, weight: .bold, design: .rounded))
                 .monospacedDigit()
-                .foregroundStyle(StrandPalette.textPrimary)
+                .foregroundStyle(StrandPalette.chargeColor.opacity(mutedChargeOpacity))
         }
         .frame(width: size, height: size)
         .accessibilityLabel(percent.map { "Battery \($0) percent" } ?? "Battery unavailable")

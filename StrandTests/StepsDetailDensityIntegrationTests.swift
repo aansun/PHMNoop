@@ -15,7 +15,7 @@ final class StepsDetailDensityIntegrationTests: XCTestCase {
         ("2026-12-31", 0),
     ]
 
-    func testEveryStepsDetailSourceForcesBarsDespiteLinePreference() throws {
+    func testEveryStepsDetailSourceFollowsTheGlobalChartPreference() throws {
         let stepMetrics = [
             try XCTUnwrap(MetricCatalog.metric(key: "steps", source: "my-whoop")),
             try XCTUnwrap(MetricCatalog.metric(key: "steps", source: "apple-health")),
@@ -24,8 +24,11 @@ final class StepsDetailDensityIntegrationTests: XCTestCase {
         ]
 
         for metric in stepMetrics {
+            XCTAssertFalse(MetricDetailSteps.showsBars(metricKey: metric.key,
+                                                       preferredStyleRaw: TrendChartStyle.line.rawValue),
+                          metric.id)
             XCTAssertTrue(MetricDetailSteps.showsBars(metricKey: metric.key,
-                                                      preferredStyleRaw: TrendChartStyle.line.rawValue),
+                                                      preferredStyleRaw: TrendChartStyle.bar.rawValue),
                           metric.id)
         }
     }

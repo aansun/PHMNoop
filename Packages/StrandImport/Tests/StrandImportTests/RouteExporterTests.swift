@@ -33,7 +33,8 @@ final class RouteExporterTests: XCTestCase {
 
     func testFitRoundTripsThroughTheImporter() {
         let data = RouteExporter.render(.fit, route: route, startTs: startTs, endTs: endTs,
-                                        sport: "cycling", distanceM: 1234.5, energyKcal: 210, avgHr: 142, maxHr: 171)
+                                        sport: "running", distanceM: 1234.5, energyKcal: 210, avgHr: 142, maxHr: 171,
+                                        movingTimeS: 1_500, steps: 2_000, elevationGainM: 45)
         XCTAssertEqual(ActivityFileImporter.detectFormat(data: data), .fit)
         let a = ActivityFileImporter.parse(data: data, filename: "route.fit").activity
         XCTAssertNotNil(a)
@@ -42,11 +43,13 @@ final class RouteExporterTests: XCTestCase {
             XCTAssertEqual(a!.route[i].lat, route[i].lat, accuracy: 1e-5)
             XCTAssertEqual(a!.route[i].lon, route[i].lon, accuracy: 1e-5)
         }
-        XCTAssertEqual(a!.sport?.lowercased().contains("cycl"), true)
+        XCTAssertEqual(a!.sport?.lowercased().contains("run"), true)
         XCTAssertEqual(a!.distanceM ?? 0, 1234.5, accuracy: 0.5)
         XCTAssertEqual(a!.energyKcal ?? 0, 210, accuracy: 0.5)
         XCTAssertEqual(a!.avgHr, 142)
         XCTAssertEqual(a!.maxHr, 171)
+        XCTAssertEqual(a!.steps, 2_000)
+        XCTAssertEqual(a!.ascentM ?? 0, 45, accuracy: 0.5)
         XCTAssertEqual(Int(a!.start.timeIntervalSince1970), startTs)
         XCTAssertEqual(Int(a!.end.timeIntervalSince1970), endTs)
     }

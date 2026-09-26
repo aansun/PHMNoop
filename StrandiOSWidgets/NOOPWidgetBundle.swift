@@ -9,6 +9,8 @@ import SwiftUI
 struct NOOPWidgetBundle: WidgetBundle {
     var body: some Widget {
         NOOPWidget()
+        PHMNRingsWidget()
+        NOOPRing2Widget()
         NOOPLiveActivity()
         CoachBriefWidget()
         HeartRateWidget()

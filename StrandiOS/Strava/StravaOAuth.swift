@@ -64,7 +64,7 @@ enum StravaError: LocalizedError {
             if detail.isEmpty { return "Strava returned HTTP \(status)." }
             return "Strava returned HTTP \(status): \(detail)"
         case .noRoute:
-            return String(localized: "This workout has no GPS route. Strava upload requires a route file.")
+            return String(localized: "This workout has no GPS route and is not a supported route-free activity.")
         case .invalidUpload:
             return String(localized: "Strava did not return a valid upload identifier.")
         case .readAccessRequired:

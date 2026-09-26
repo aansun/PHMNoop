@@ -57,12 +57,19 @@ public struct WidgetSnapshot: Codable, Equatable {
     /// so the widget cannot show yesterday's afternoon under today's date while waiting for the first
     /// scorable hour after midnight.
     public var stressDay: Int?
+    /// Today's total steps, resolved from Apple Health first and the active strap fallback.
+    public var steps: Int?
+    /// Today's active calories in kcal, resolved from Apple Health first and the on-device estimate fallback.
+    public var caloriesKcal: Int?
+    /// Number of workouts recorded for the current day, used by the Rings glance badge.
+    public var workoutsToday: Int?
 
     public init(recovery: Int?, bpm: Int?, batteryPct: Int?, bonded: Bool, updated: Date,
                 effort: Int? = nil, rest: Int? = nil, hrv: Int? = nil, restingHr: Int? = nil,
                 effortDisplay: String? = nil, effortWhoop: Bool? = nil,
                 hrSeries: [HrPoint]? = nil, stressSeries: [StressPoint]? = nil,
-                stressDay: Int? = nil) {
+                stressDay: Int? = nil, steps: Int? = nil, caloriesKcal: Int? = nil,
+                workoutsToday: Int? = nil) {
         self.recovery = recovery
         self.bpm = bpm
         self.batteryPct = batteryPct
@@ -77,6 +84,9 @@ public struct WidgetSnapshot: Codable, Equatable {
         self.hrSeries = hrSeries
         self.stressSeries = stressSeries
         self.stressDay = stressDay
+        self.steps = steps
+        self.caloriesKcal = caloriesKcal
+        self.workoutsToday = workoutsToday
     }
 
     /// The curve to DRAW: what was published, unless it belongs to a day that is over.
@@ -198,7 +208,8 @@ public struct WidgetSnapshot: Codable, Equatable {
         // three-ring Home Screen layouts (and the large grid) preview with filled arcs, not dashes.
         WidgetSnapshot(recovery: 72, bpm: 58, batteryPct: 84, bonded: true, updated: Date(),
                        effort: 38, rest: 81, hrv: 64, restingHr: 52,
-                       effortDisplay: "38", effortWhoop: false)
+                       effortDisplay: "38", effortWhoop: false, steps: 7_412,
+                       caloriesKcal: 1_086, workoutsToday: 2)
     }
 
     /// Honest runtime state when the app has not published a readable snapshot yet. Unlike
@@ -275,6 +286,8 @@ public struct WidgetSnapshot: Codable, Equatable {
             || previous.restingHr != next.restingHr
             || previous.effortDisplay != next.effortDisplay
             || previous.effortWhoop != next.effortWhoop
+            || previous.steps != next.steps
+            || previous.workoutsToday != next.workoutsToday
             // The curve joins the comparison (#2040): a publish that scored a fresh hour and changed
             // nothing else would otherwise be deduped away, and the widget would sit an hour behind
             // until some unrelated field moved. The DAY joins it too, so the first publish after

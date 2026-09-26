@@ -5,6 +5,10 @@ import Foundation
 /// Strava uses this field when importing a file, so downstream services see the same
 /// activity family even when the FIT payload is sparse or the label is localized.
 enum StravaActivityType {
+    static func isTreadmill(_ sport: String) -> Bool {
+        value(for: sport) == "VirtualRun"
+    }
+
     static func value(for sport: String) -> String {
         let key = sport.lowercased()
             .replacingOccurrences(of: "-", with: " ")
@@ -15,7 +19,7 @@ enum StravaActivityType {
         switch key {
         case "run", "running": return "Run"
         case "trail run", "trailrun": return "TrailRun"
-        case "treadmill run": return "VirtualRun"
+        case "treadmill", "treadmill run": return "VirtualRun"
         case "walk", "walking": return "Walk"
         case "hike", "hiking", "rucking": return "Hike"
         case "cycle", "cycling", "bike", "biking", "ride": return "Ride"

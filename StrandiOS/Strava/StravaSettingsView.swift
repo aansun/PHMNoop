@@ -13,15 +13,16 @@ struct StravaSettingsView: View {
     @StateObject private var model = StravaSettingsModel()
     @State private var workouts: [WorkoutRow] = []
 
-    private var routeWorkouts: [WorkoutRow] {
+    private var uploadableWorkouts: [WorkoutRow] {
         workouts.filter { row in
+            if StravaActivityType.isTreadmill(row.sport) { return true }
             guard let route = RouteStore.load(startTs: row.startTs, sport: row.sport) else { return false }
             return RouteMath.decode(route.polyline).count >= 2
         }
     }
 
-    private var pendingRouteWorkouts: [WorkoutRow] {
-        routeWorkouts.filter { model.record(for: $0) == nil }
+    private var pendingUploadWorkouts: [WorkoutRow] {
+        uploadableWorkouts.filter { model.record(for: $0) == nil }
     }
 
     var body: some View {
@@ -118,24 +119,24 @@ struct StravaSettingsView: View {
                         .tint(StrandPalette.accent)
                         .padding(.bottom, 10)
                     Text(automaticUpload
-                         ? "New GPS workouts are uploaded after they finish. Connect Strava first; uploads are never sent while the experiment is disabled."
-                         : "Only workouts with a recorded GPS route can be uploaded as FIT activities. Tap Upload for each activity.")
+                         ? "New GPS and treadmill workouts are uploaded after they finish. Connect Strava first; uploads are never sent while the experiment is disabled."
+                         : "GPS workouts and treadmill sessions can be uploaded as FIT activities. Tap Upload for each activity.")
                         .font(StrandFont.footnote)
                         .foregroundStyle(StrandPalette.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                         .padding(.bottom, 14)
 
-                    if pendingRouteWorkouts.isEmpty {
-                        Text(routeWorkouts.isEmpty
-                             ? "No GPS workouts are available yet."
-                             : "All recent GPS workouts are already synced to Strava.")
+                    if pendingUploadWorkouts.isEmpty {
+                        Text(uploadableWorkouts.isEmpty
+                             ? "No GPS or treadmill workouts are available yet."
+                             : "All recent GPS and treadmill workouts are already synced to Strava.")
                             .font(StrandFont.body)
                             .foregroundStyle(StrandPalette.textTertiary)
                             .padding(.vertical, 8)
                     } else {
-                        ForEach(pendingRouteWorkouts, id: \.startTs) { row in
+                        ForEach(pendingUploadWorkouts, id: \.startTs) { row in
                             activityRow(row)
-                            if row.startTs != pendingRouteWorkouts.last?.startTs {
+                            if row.startTs != pendingUploadWorkouts.last?.startTs {
                                 Divider().overlay(StrandPalette.hairline)
                             }
                         }
@@ -173,7 +174,10 @@ struct StravaSettingsView: View {
     private func loadWorkouts() async {
         let rows = await repo.workoutRows(days: 4000)
         await MainActor.run {
-            workouts = Array(rows.filter { RouteStore.load(startTs: $0.startTs, sport: $0.sport) != nil }
+            workouts = Array(rows.filter {
+                StravaActivityType.isTreadmill($0.sport)
+                    || RouteStore.load(startTs: $0.startTs, sport: $0.sport) != nil
+            }
                 .sorted { $0.startTs > $1.startTs }.prefix(50))
         }
         await model.reconcileRecentUploads(rows: rows)
