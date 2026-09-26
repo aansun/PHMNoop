@@ -60,13 +60,16 @@ final class StravaAPIClient {
         }
     }
 
-    func upload(row: WorkoutRow, route: [RouteMath.LatLng]) async throws -> StravaUploadResponse {
-        guard route.count >= 2 else { throw StravaError.noRoute }
+    func upload(row: WorkoutRow, route: [RouteMath.LatLng], elevationGainM: Double? = nil) async throws -> StravaUploadResponse {
+        guard route.count >= 2 || StravaActivityType.isTreadmill(row.sport) else { throw StravaError.noRoute }
         let token = try await validAccessToken()
+        let steps = await Self.stepsForUpload(row: row)
         let points = route.map { RoutePoint(lat: $0.lat, lon: $0.lon) }
+        let distanceM = row.distanceM ?? (route.count >= 2 ? RouteMath.totalMeters(route) : nil)
         let file = RouteExporter.render(
             .fit, route: points, startTs: row.startTs, endTs: row.endTs, sport: row.sport,
-            distanceM: row.distanceM, energyKcal: row.energyKcal, avgHr: row.avgHr, maxHr: row.maxHr)
+            distanceM: distanceM, energyKcal: row.energyKcal, avgHr: row.avgHr, maxHr: row.maxHr,
+            movingTimeS: row.durationS, steps: steps, elevationGainM: elevationGainM)
         let boundary = "Boundary-\(UUID().uuidString)"
         var request = URLRequest(url: StravaOAuth.apiBase.appendingPathComponent("uploads"))
         request.httpMethod = "POST"
@@ -166,6 +169,19 @@ final class StravaAPIClient {
         let request = StravaOAuth.deauthorizeRequest(accessToken: token)
         let (data, response) = try await session.data(for: request)
         try StravaOAuthProvider.validate(response, data: data)
+    }
+
+    private static func stepsForUpload(row: WorkoutRow) async -> Int? {
+        if let steps = row.steps { return steps }
+        guard isFootSport(row.sport) else { return nil }
+        return await WorkoutPedometer.steps(fromSec: row.startTs, toSec: row.endTs)
+    }
+
+    private static func isFootSport(_ sport: String) -> Bool {
+        switch StravaActivityType.value(for: sport) {
+        case "Run", "TrailRun", "VirtualRun", "Walk", "Hike": return true
+        default: return false
+        }
     }
 
     private static func multipartBody(boundary: String, fields: [String: String], file: Data,

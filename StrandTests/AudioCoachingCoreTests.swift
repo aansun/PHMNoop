@@ -50,6 +50,16 @@ final class AudioCoachingCoreTests: XCTestCase {
                        [.distanceMilestone(meters: 3_000)])
     }
 
+    func testWorkoutCheckInsContinueWithoutGpsDistance() {
+        let engine = AudioActivityEngine()
+        let start = Date(timeIntervalSince1970: 3_500)
+        _ = engine.start(at: start)
+        XCTAssertTrue(engine.update(metrics(start.addingTimeInterval(59), hr: 140)).isEmpty)
+        XCTAssertEqual(engine.update(metrics(start.addingTimeInterval(60), hr: 140)), [.workoutCheckIn])
+        XCTAssertTrue(engine.update(metrics(start.addingTimeInterval(119), hr: 140)).isEmpty)
+        XCTAssertEqual(engine.update(metrics(start.addingTimeInterval(120), hr: 140)), [.workoutCheckIn])
+    }
+
     func testPromptPriorityAndSemanticCooldown() {
         let engine = AudioPromptEngine()
         let now = Date(timeIntervalSince1970: 4_000)

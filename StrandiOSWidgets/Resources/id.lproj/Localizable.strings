@@ -1,5 +1,10 @@
 /* The widget extension is a separate bundle, so it carries the glanceable labels it renders. */
 "Charge" = "Charge";
+"Recovery" = "Recovery";
+"HRV" = "HRV";
+"Strain" = "Strain";
+"Steps" = "Langkah";
+"Recovery %@, HRV %@, Strain %@, Steps %@, Battery %@" = "Recovery %@, HRV %@, Strain %@, Langkah %@, Baterai %@";
 "Effort" = "Effort";
 "Rest" = "Rest";
 "Heart rate" = "Heart Rate";

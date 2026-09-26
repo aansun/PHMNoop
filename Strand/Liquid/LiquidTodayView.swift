@@ -67,6 +67,7 @@ struct LiquidTodayView: View {
     @State private var stepsEst: Double?           // steps_est, day-keyed to the selected day (fallback)
     @State private var importedStepsDay: Int?      // Apple Health steps for the selected day (middle tier)
     @State private var importedActiveKcalDay: Double?  // #616: Apple Health active energy for the day (calorie fallback)
+    @State private var appleWeightKg: Double?     // Latest Apple Health body-mass reading for the Weight tile
     @State private var hrValues: [Double] = []     // hrBuckets since midnight → 5-min means
     /// Line identity for [hrValues], from the bucket timestamps this used to discard (#2082).
     ///
@@ -1386,7 +1387,11 @@ struct LiquidTodayView: View {
             ktile(String(localized: "Steps"), icon: keyMetricIcon(metric), stepsText, "", StrandPalette.chargeColor,
                   fracOver(stepCount, 10000), key: stepsDetailKey, detailMetric: stepsDetailMetric)
         case .weight:
-            ktile(String(localized: "Weight"), icon: keyMetricIcon(metric), "—", "", StrandPalette.metricAmber, nil, key: "weight")
+            let weightKg = appleWeightKg ?? profile.weightKg
+            let weightValue = weightKg > 0
+                ? UnitFormatter.massFromKilograms(weightKg, system: unitSystem)
+                : "—"
+            ktile(String(localized: "Weight"), icon: keyMetricIcon(metric), weightValue, "", StrandPalette.metricAmber, nil, key: "weight")
         case .calories:
             // #616: imported-first value (imported ?: activeKcalEst) + route the tap to the matching
             // detail source, so the number, its sparkline and the chart it opens all agree.
@@ -1711,6 +1716,11 @@ struct LiquidTodayView: View {
         // matching the imported-first VALUE. Union of imported days + strap-row days. Mirrors Android's
         // caloriesSpark (windowed caloriesByDay).
         let appleRowsForSpark = await appleA
+        // Resolve Weight from the same Apple Health cache used by the classic Today view. The Liquid
+        // tile previously hardcoded a dash, so a valid Health/profile value was never visible here.
+        appleWeightKg = appleRowsForSpark.sorted { $0.day > $1.day }
+            .compactMap(\.weightKg)
+            .first
         // Queue 11a: SpO₂ candidate fallback — day-keyed for the tile's value lookup, windowed for its
         // detailed-mode sparkline below (same shape as `restByDay`/`kSparks["spo2"]` above).
         let spo2CandSeries = await spo2CandA

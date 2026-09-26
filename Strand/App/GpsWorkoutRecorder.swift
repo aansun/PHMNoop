@@ -150,6 +150,15 @@ struct RawFix: Equatable {
     let lon: Double
     let accuracyM: Double   // horizontal accuracy radius; < 0 from CoreLocation means "invalid"
     let tMs: Int64          // fix time, ms since epoch
+    let altitudeM: Double?
+
+    init(lat: Double, lon: Double, accuracyM: Double, tMs: Int64, altitudeM: Double? = nil) {
+        self.lat = lat
+        self.lon = lon
+        self.accuracyM = accuracyM
+        self.tMs = tMs
+        self.altitudeM = altitudeM
+    }
 }
 
 /// Pure, stateful fix gate: drops low-accuracy fixes and physically-impossible jumps, returning the
@@ -190,13 +199,22 @@ final class TrackFilter {
 
 // MARK: - RouteStore (on-device side-store)
 
-/// The route persisted for one finished workout: the encoded polyline + the GPS distance it implies.
+/// The route persisted for one finished workout: the encoded polyline + the GPS distance it implies,
+/// with optional elevation gain captured by Core Location when vertical accuracy is valid.
 /// A tiny `Codable` value, the unit a `RouteStore` keys by a workout's natural key.
 struct WorkoutRoute: Equatable, Codable {
     /// Google precision-5 polyline of the captured route (`RouteMath.encode`).
     var polyline: String
     /// Total GPS distance in metres (`RouteMath.totalMeters` of the captured points).
     var distanceM: Double
+    /// Positive elevation gain in metres, with a 1 m hysteresis floor to suppress GPS jitter.
+    var elevationGainM: Double?
+
+    init(polyline: String, distanceM: Double, elevationGainM: Double? = nil) {
+        self.polyline = polyline
+        self.distanceM = distanceM
+        self.elevationGainM = elevationGainM
+    }
 }
 
 /// On-device persistence for finished GPS routes, keyed by a workout's natural key (startTs + sport) so a
@@ -326,6 +344,8 @@ final class GpsWorkoutRecorder: NSObject, ObservableObject {
     @Published private(set) var paceSecPerKm: Double?
     /// Number of accepted route points so far (lets the UI distinguish "recording, no fix yet" from "off").
     @Published private(set) var pointCount = 0
+    /// Positive elevation gain in metres captured from accepted fixes, or zero when vertical data is unavailable.
+    @Published private(set) var elevationGainM: Double = 0
 
     private let manager = CLLocationManager()
     private var filter = TrackFilter()
@@ -333,6 +353,7 @@ final class GpsWorkoutRecorder: NSObject, ObservableObject {
     private var startMs: Int64 = 0
     private var pausedAtMs: Int64?
     private var pausedDurationMs: Int64 = 0
+    private var lastAcceptedAltitudeM: Double?
 
     /// Workouts & GPS test mode (Test Centre): the tagged sink for the `.workouts` GPS-fix lines, wired by
     /// AppModel to `live.append(log:domain:)`. Default nil (inert). We ALWAYS check `TestCentre.active(.workouts)`
@@ -371,6 +392,8 @@ final class GpsWorkoutRecorder: NSObject, ObservableObject {
         distanceM = 0
         paceSecPerKm = nil
         pointCount = 0
+        elevationGainM = 0
+        lastAcceptedAltitudeM = nil
         rawFixCount = 0
         isRecording = true
 
@@ -439,7 +462,8 @@ final class GpsWorkoutRecorder: NSObject, ObservableObject {
     func capturedRoute() -> WorkoutRoute? {
         guard track.count >= 2 else { return nil }
         return WorkoutRoute(polyline: RouteMath.encode(track),
-                            distanceM: RouteMath.totalMeters(track))
+                            distanceM: RouteMath.totalMeters(track),
+                            elevationGainM: elevationGainM > 0 ? elevationGainM : nil)
     }
 
     // MARK: Updates
@@ -460,6 +484,13 @@ final class GpsWorkoutRecorder: NSObject, ObservableObject {
         for fix in fixes {
             if let pt = filter.accept(fix) {
                 track.append(pt)
+                if let altitude = fix.altitudeM, altitude.isFinite {
+                    if let previous = lastAcceptedAltitudeM {
+                        let gain = altitude - previous
+                        if gain > 1.0 { elevationGainM += gain }
+                    }
+                    lastAcceptedAltitudeM = altitude
+                }
                 changed = true
             }
         }
@@ -511,7 +542,8 @@ extension GpsWorkoutRecorder: @preconcurrency CLLocationManagerDelegate {
             RawFix(lat: $0.coordinate.latitude,
                    lon: $0.coordinate.longitude,
                    accuracyM: $0.horizontalAccuracy,
-                   tMs: Int64($0.timestamp.timeIntervalSince1970 * 1000))
+                   tMs: Int64($0.timestamp.timeIntervalSince1970 * 1000),
+                   altitudeM: $0.verticalAccuracy >= 0 ? $0.altitude : nil)
         }
         ingest(fixes)
     }

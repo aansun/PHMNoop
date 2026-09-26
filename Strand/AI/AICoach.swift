@@ -275,6 +275,7 @@ final class AICoachEngine: ObservableObject {
     private static let customConnectedKey = "ai.customConnected"
     private static let onDeviceSignalsKey = "ai.includeOnDeviceSignals"
     private static let multimodalChartKey = "ai.multimodalChartEnabled"
+    private static func modelsCatalogKey(_ provider: AIProvider) -> String { "ai.models.\(provider.rawValue)" }
     /// UserDefaults key holding the user's EDITED system prompt. Absent (or blank) means "use the
     /// built-in default". Small text key, never a secret, so plain UserDefaults is fine. Read FRESH
     /// per request (see `systemPrompt`) so an edit takes effect on the very next message.
@@ -426,16 +427,43 @@ final class AICoachEngine: ObservableObject {
         self.provider = storedProvider
 
         let storedModel = UserDefaults.standard.string(forKey: Self.modelKey)
-        // A persisted custom id is honoured even if it's not in the built-in list.
+        // Keep the last successful server catalog so a model released after this app build remains
+        // selectable after relaunch, even before the next live refresh completes.
+        var seeded = storedProvider.modelOptions
+        let cachedModels = UserDefaults.standard.stringArray(forKey: Self.modelsCatalogKey(storedProvider)) ?? []
+        for id in cachedModels where !id.isEmpty && !seeded.contains(id) {
+            seeded.append(id)
+        }
+
+        // ChatGPT/Codex model ids are server-selected rather than user-defined. Migrate an old
+        // persisted id (for example gpt-5 or gpt-5.1) to the current supported default instead of
+        // sending a known-stale model to the subscription endpoint and receiving HTTP 400. Apply the
+        // same migration to the public OpenAI provider when its old GPT-5-mini default is still stored:
+        // GPT-6 is now the default, while an explicitly selected supported legacy model remains valid.
+        let usePersistedModel: Bool
         if let storedModel, !storedModel.isEmpty {
+            #if os(iOS)
+            if storedProvider == .chatGPT {
+                usePersistedModel = seeded.contains(storedModel)
+            } else if storedProvider == .openAI {
+                usePersistedModel = storedProvider.modelOptions.contains(storedModel)
+            } else {
+                usePersistedModel = true
+            }
+            #else
+            usePersistedModel = storedProvider != .openAI || storedProvider.modelOptions.contains(storedModel)
+            #endif
+        } else {
+            usePersistedModel = false
+        }
+        if usePersistedModel, let storedModel, !storedModel.isEmpty {
             self.model = storedModel
         } else {
             self.model = storedProvider.defaultModel
         }
 
-        // Seed the picker with the provider's built-in options; include any persisted custom id.
-        var seeded = storedProvider.modelOptions
-        if let storedModel, !storedModel.isEmpty, !seeded.contains(storedModel) {
+        // Include any persisted custom id that is valid for this provider.
+        if usePersistedModel, let storedModel, !storedModel.isEmpty, !seeded.contains(storedModel) {
             seeded.insert(storedModel, at: 0)
         }
         self.availableModels = seeded
@@ -644,9 +672,14 @@ final class AICoachEngine: ObservableObject {
     /// `CoachViewModel.refreshModelsIfStale`.
     func refreshModelsIfStale() async {
         #if os(iOS)
-        guard provider != .chatGPT else { return }
-        #endif
+        if provider == .chatGPT {
+            guard ChatGPTAuthStore.isConnected else { return }
+        } else {
+            guard provider != .custom, hasKey else { return }
+        }
+        #else
         guard provider != .custom, hasKey else { return }
+        #endif
         let last = UserDefaults.standard.double(forKey: Self.modelsRefreshedKey(provider))
         guard Self.isCatalogueStale(last: last, now: Date().timeIntervalSince1970) else { return }
         await refreshModels(silent: true)
@@ -656,15 +689,6 @@ final class AICoachEngine: ObservableObject {
     /// neither wipe a message the user is still reading nor raise one they never asked for. Kotlin twin:
     /// the `silent` parameter on `CoachViewModel.refreshModels`.
     func refreshModels(silent: Bool = false) async {
-        #if os(iOS)
-        if provider == .chatGPT {
-            availableModels = provider.modelOptions
-            if model.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                model = provider.defaultModel
-            }
-            return
-        }
-        #endif
         guard let key = resolvedKey else {
             if !silent { errorText = AICoachError.noKey.errorDescription }
             return
@@ -702,9 +726,27 @@ final class AICoachEngine: ObservableObject {
             // ids (sorted), and preserve a current custom selection if it isn't otherwise present.
             let builtin = capturedProvider.modelOptions
             let discovered = Set(ids).subtracting(builtin).sorted()
+            #if os(iOS)
+            var merged = capturedProvider == .chatGPT ? ids : builtin + discovered
+            #else
             var merged = builtin + discovered
+            #endif
+            #if os(iOS)
+            if capturedProvider == .chatGPT {
+                // The live catalog is authoritative for ChatGPT. Do not preserve a retired model
+                // just because it was stored in UserDefaults; that selection is a common source of
+                // HTTP 400 responses after a backend model rollover.
+                if !ids.contains(model) {
+                    model = ids.first ?? capturedProvider.defaultModel
+                }
+            } else if !merged.contains(model) {
+                merged.insert(model, at: 0)
+            }
+            #else
             if !merged.contains(model) { merged.insert(model, at: 0) }
+            #endif
             availableModels = merged
+            UserDefaults.standard.set(merged, forKey: Self.modelsCatalogKey(capturedProvider))
             // A previously connected Custom provider may have an empty persisted model because its
             // `/models` catalogue was unavailable during setup. In that case the first discovered
             // model is a safe initial selection; an explicitly chosen model is never overwritten.

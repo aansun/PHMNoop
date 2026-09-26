@@ -45,6 +45,7 @@ enum AudioActivityEvent: Equatable, Sendable {
     case activityPaused
     case activityResumed
     case activityEnded
+    case workoutCheckIn
     case distanceMilestone(meters: Double)
     case heartRateAboveTarget(current: Int, targetMax: Int)
     case heartRateBelowTarget(current: Int, targetMin: Int)
@@ -55,6 +56,8 @@ enum AudioActivityEvent: Equatable, Sendable {
         switch self {
         case .activityStarted, .activityPaused, .activityResumed, .activityEnded:
             return .workoutTransition
+        case .workoutCheckIn:
+            return .information
         case .heartRateAboveTarget, .heartRateBelowTarget:
             return .targetAlert
         case .distanceMilestone:
@@ -73,6 +76,7 @@ enum AudioActivityEvent: Equatable, Sendable {
         case .activityPaused: return "activity_paused"
         case .activityResumed: return "activity_resumed"
         case .activityEnded: return "activity_ended"
+        case .workoutCheckIn: return "workout_check_in"
         case .distanceMilestone(let meters): return "distance_\(Int(meters.rounded()))"
         case .heartRateAboveTarget: return "hr_above_target"
         case .heartRateBelowTarget: return "hr_below_target"
@@ -285,6 +289,7 @@ final class AudioActivityEngine {
     private let configuration: Configuration
     private var violation: Violation?
     private var nextMilestoneMeters = 1_000.0
+    private var nextCheckInAt: Date?
 
     init(configuration: Configuration = Configuration()) {
         self.configuration = configuration
@@ -294,6 +299,7 @@ final class AudioActivityEngine {
         state = .active
         violation = nil
         nextMilestoneMeters = max(1, configuration.distanceMilestoneStepMeters)
+        nextCheckInAt = date.addingTimeInterval(60)
         return [.activityStarted]
     }
 
@@ -301,6 +307,7 @@ final class AudioActivityEngine {
         guard state == .active else { return [] }
         state = .paused
         violation = nil
+        nextCheckInAt = nil
         return [.activityPaused]
     }
 
@@ -308,6 +315,7 @@ final class AudioActivityEngine {
         guard state == .paused else { return [] }
         state = .active
         violation = nil
+        nextCheckInAt = Date().addingTimeInterval(60)
         return [.activityResumed]
     }
 
@@ -315,6 +323,7 @@ final class AudioActivityEngine {
         guard state == .active || state == .paused else { return [] }
         state = .completed
         violation = nil
+        nextCheckInAt = nil
         return [.activityEnded]
     }
 
@@ -328,6 +337,10 @@ final class AudioActivityEngine {
                 events.append(.distanceMilestone(meters: nextMilestoneMeters))
                 nextMilestoneMeters += step
             }
+        }
+        if let nextCheckInAt, metrics.timestamp >= nextCheckInAt {
+            events.append(.workoutCheckIn)
+            self.nextCheckInAt = metrics.timestamp.addingTimeInterval(60)
         }
         return events
     }
@@ -468,7 +481,7 @@ final class AudioPromptEngine {
 
     private func categoryEnabled(for event: AudioActivityEvent, policy: AudioPromptPolicy) -> Bool {
         switch event {
-        case .activityStarted, .activityPaused, .activityResumed, .activityEnded:
+        case .activityStarted, .activityPaused, .activityResumed, .activityEnded, .workoutCheckIn:
             return policy.lifecyclePrompts
         case .heartRateAboveTarget, .heartRateBelowTarget, .heartRateReturnedToTarget:
             return policy.heartRatePrompts
@@ -497,6 +510,8 @@ final class AudioPromptEngine {
             return 30
         case .distanceMilestone, .activityStarted, .activityPaused, .activityResumed, .activityEnded:
             return 86_400
+        case .workoutCheckIn:
+            return 55
         case .coachingIntent:
             return policy.coachingFrequency.minimumInterval
         }
@@ -516,6 +531,20 @@ final class AudioPromptEngine {
             template = "activity.resumed"; text = AudioCoachingCopy.isIndonesian ? "Workout dilanjutkan." : "Workout resumed."; expires = 8
         case .activityEnded:
             template = "activity.ended"; text = AudioCoachingCopy.isIndonesian ? "Workout selesai." : "Workout complete."; expires = 12
+        case .workoutCheckIn:
+            template = "activity.check_in"
+            let zoneText: String
+            if let zone = context.heartRateZone {
+                zoneText = AudioCoachingCopy.isIndonesian
+                    ? "Heart Rate zone \(zone)."
+                    : "Heart rate zone \(zone)."
+            } else {
+                zoneText = AudioCoachingCopy.isIndonesian
+                    ? "Heart Rate belum tersedia."
+                    : "Heart rate unavailable."
+            }
+            text = "\(durationText(context.duration)) \(zoneText)"
+            expires = 12
         case .distanceMilestone(let meters):
             template = "distance.milestone"
             text = distanceMilestoneText(meters: meters, context: context, policy: policy)

@@ -3032,6 +3032,14 @@ struct SettingsView: View {
     /// the hand-maintained changelog version only if the Info.plist key is somehow missing.
     private var bundleVersionString: String { UpdateWatch.installedVersion }
 
+    /// The embedded build number is useful when comparing a sideloaded IPA with the source build.
+    /// Read it from the bundle so the About page always describes the binary currently running.
+    private var bundleBuildString: String {
+        guard let value = (Bundle.main.infoDictionary?["CFBundleVersion"] as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty else { return "—" }
+        return value
+    }
+
     private var aboutCard: some View {
         SettingsSection(
             icon: "info.circle.fill",
@@ -3040,10 +3048,14 @@ struct SettingsView: View {
         ) {
             VStack(alignment: .leading, spacing: 16) {
                 HStack(spacing: 10) {
-                    Text("NOOP")
-                        .font(StrandFont.title2)
-                        .foregroundStyle(StrandPalette.textPrimary)
-                    StatePill("v\(bundleVersionString)", tone: .neutral, showsDot: false)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("NOOP")
+                            .font(StrandFont.title2)
+                            .foregroundStyle(StrandPalette.textPrimary)
+                        Text("v\(bundleVersionString) · build \(bundleBuildString)")
+                            .font(StrandFont.captionNumber)
+                            .foregroundStyle(StrandPalette.textTertiary)
+                    }
                     Spacer()
                     NoopButton("What's new", systemImage: "sparkles", kind: .secondary) {
                         showWhatsNew = true

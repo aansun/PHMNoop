@@ -5,11 +5,12 @@ import Foundation
 /// (no CoreLocation/UIKit), so it lives in this package, unit-tests without an app, and is covered by
 /// `swift-packages.yml`.
 ///
-/// FIDELITY NOTE: the stored route (`RouteMath` polyline) is lat/lon ONLY — no per-point timestamp,
-/// elevation, speed, or HR is persisted. So an export carries the lat/lon track plus per-point timestamps
-/// INTERPOLATED evenly across the workout window `[startTs, endTs]` (total duration is exact; instantaneous
-/// pace is not), and workout-level metadata (sport, distance, calories, avg/max HR). That's the honest
-/// maximum from what's stored, and what Strava / Garmin Connect need to read the track as a timed activity.
+/// FIDELITY NOTE: the stored route (`RouteMath` polyline) is lat/lon only — no per-point timestamp,
+/// speed, or HR is persisted. So an export carries the lat/lon track plus per-point timestamps
+/// INTERPOLATED evenly across the workout window `[startTs, endTs]` (total duration is exact; per-point
+/// speed is derived from the interpolated track, not a sensor measurement), and workout-level metadata
+/// when the source has it (sport, distance, moving time, steps, elevation gain, calories, avg/max HR).
+/// That's the honest maximum from what's stored.
 public enum RouteExporter {
 
     public enum Format: String, Sendable, Equatable {
@@ -35,14 +36,18 @@ public enum RouteExporter {
         distanceM: Double? = nil,
         energyKcal: Double? = nil,
         avgHr: Int? = nil,
-        maxHr: Int? = nil
+        maxHr: Int? = nil,
+        movingTimeS: Double? = nil,
+        steps: Int? = nil,
+        elevationGainM: Double? = nil
     ) -> Data {
         switch format {
         case .gpx:
             return Data(buildGpx(route: route, startTs: startTs, endTs: endTs, sport: sport).utf8)
         case .fit:
             return buildFit(route: route, startTs: startTs, endTs: endTs, sport: sport,
-                            distanceM: distanceM, energyKcal: energyKcal, avgHr: avgHr, maxHr: maxHr)
+                            distanceM: distanceM, energyKcal: energyKcal, avgHr: avgHr, maxHr: maxHr,
+                            movingTimeS: movingTimeS, steps: steps, elevationGainM: elevationGainM)
         }
     }
 
@@ -85,7 +90,10 @@ public enum RouteExporter {
         distanceM: Double? = nil,
         energyKcal: Double? = nil,
         avgHr: Int? = nil,
-        maxHr: Int? = nil
+        maxHr: Int? = nil,
+        movingTimeS: Double? = nil,
+        steps: Int? = nil,
+        elevationGainM: Double? = nil
     ) -> Data {
         let canon = canonicalSport(sport)
         let times = interpolatedTimes(route.count, startTs, endTs)
@@ -96,24 +104,47 @@ public enum RouteExporter {
         body.append(0)
         u8(&body, 4); u16(&body, 255); u32(&body, fitTime(startTs))
 
-        // record (global 20): timestamp + position.
-        defn(&body, local: 1, global: 20, fields: [(253, 4, 0x86), (0, 4, 0x85), (1, 4, 0x85)])
+        // record (global 20): timestamp + position + standard speed for distance sports.
+        // FIT speed is metres/second scaled by 1000. Strava uses this standard field when it
+        // calculates pace, while the interpolated timestamps keep the route duration intact.
+        let includeRecordSpeed = speedSport(canon) && route.count >= 2 && distanceM != nil
+        var rf: [(Int, Int, Int)] = [(253, 4, 0x86), (0, 4, 0x85), (1, 4, 0x85)]
+        if includeRecordSpeed { rf.append((6, 2, 0x86)) }
+        defn(&body, local: 1, global: 20, fields: rf)
         for i in route.indices {
             body.append(1)
             u32(&body, fitTime(times[i]))
             s32(&body, semicircles(route[i].lat))
             s32(&body, semicircles(route[i].lon))
+            if includeRecordSpeed {
+                let speed = i == 0 ? nil : segmentSpeedMps(route[i - 1], route[i], from: times[i - 1], to: times[i])
+                u16(&body, speed.map(fitSpeed) ?? 0xFFFF)
+            }
         }
 
-        let elapsedMs = UInt32(max(0, endTs - startTs)) &* 1000
+        let elapsedMs = fitMilliseconds(Double(max(0, endTs - startTs)))
+        let movingMs = fitMilliseconds(movingTimeS ?? Double(max(0, endTs - startTs)))
         let distCenti: UInt32? = distanceM.map { UInt32(max(0, ($0 * 100.0).rounded())) }
+        let averageSpeedMps = speedSport(canon) ? calculatedAverageSpeedMps(distanceM: distanceM, movingTimeS: movingTimeS ?? Double(max(0, endTs - startTs))) : nil
+        let totalCycles: UInt32? = steps.flatMap { footSport(canon) ? UInt32(max(0, $0) / 2) : nil }
+        let totalAscent: UInt16? = elevationGainM.flatMap {
+            guard $0.isFinite, $0 >= 0 else { return nil }
+            return UInt16(min(max(0, $0.rounded()), 65_534))
+        }
 
         // lap (global 19): external tools expect at least one; our decoder folds it under session.
         // Distance uses the FIT 0xFFFFFFFF "invalid" value when absent — the decoder special-cases it.
-        defn(&body, local: 2, global: 19, fields: [(253, 4, 0x86), (2, 4, 0x86), (7, 4, 0x86), (9, 4, 0x86)])
+        var lf: [(Int, Int, Int)] = [(253, 4, 0x86), (2, 4, 0x86), (7, 4, 0x86), (8, 4, 0x86), (9, 4, 0x86)]
+        if totalCycles != nil { lf.append((10, 4, 0x86)) }
+        if totalAscent != nil { lf.append((21, 2, 0x84)) }
+        if averageSpeedMps != nil { lf.append((13, 2, 0x86)) }
+        defn(&body, local: 2, global: 19, fields: lf)
         body.append(2)
-        u32(&body, fitTime(endTs)); u32(&body, fitTime(startTs)); u32(&body, elapsedMs)
+        u32(&body, fitTime(endTs)); u32(&body, fitTime(startTs)); u32(&body, elapsedMs); u32(&body, movingMs)
         u32(&body, distCenti ?? 0xFFFF_FFFF)
+        if let totalCycles { u32(&body, totalCycles) }
+        if let totalAscent { u16(&body, totalAscent) }
+        if let averageSpeedMps { u16(&body, fitSpeed(averageSpeedMps)) }
 
         // session (global 18): only the fields we actually have. An absent HR must be truly absent — the
         // importer's validHr accepts 1..300 and would misread a 0xFF sentinel as a real HR of 255.
@@ -122,9 +153,13 @@ public enum RouteExporter {
         sf.append((253, 4, 0x86)); u32(&sd, fitTime(endTs))
         sf.append((2, 4, 0x86)); u32(&sd, fitTime(startTs))
         sf.append((7, 4, 0x86)); u32(&sd, elapsedMs)
+        sf.append((8, 4, 0x86)); u32(&sd, movingMs)
         sf.append((5, 1, 0x00)); u8(&sd, fitSport(canon))
         if let distCenti { sf.append((9, 4, 0x86)); u32(&sd, distCenti) }
         if let energyKcal { sf.append((11, 2, 0x84)); u16(&sd, UInt16(min(max(0, energyKcal.rounded()), 65534))) }
+        if let totalCycles { sf.append((10, 4, 0x86)); u32(&sd, totalCycles) }
+        if let totalAscent { sf.append((22, 2, 0x84)); u16(&sd, totalAscent) }
+        if let averageSpeedMps { sf.append((13, 2, 0x86)); u16(&sd, fitSpeed(averageSpeedMps)) }
         if let avgHr { sf.append((16, 1, 0x02)); u8(&sd, min(max(avgHr, 0), 254)) }
         if let maxHr { sf.append((17, 1, 0x02)); u8(&sd, min(max(maxHr, 0), 254)) }
         defn(&body, local: 3, global: 18, fields: sf)
@@ -158,6 +193,31 @@ public enum RouteExporter {
 
     private static func fitTime(_ unix: Int) -> UInt32 {
         UInt32(min(max(0, unix - fitEpoch), 0xFFFF_FFFF))
+    }
+
+    private static func fitMilliseconds(_ seconds: Double) -> UInt32 {
+        guard seconds.isFinite, seconds >= 0 else { return 0 }
+        return UInt32(min(seconds * 1_000.0, Double(UInt32.max)).rounded())
+    }
+
+    /// Convert metres/second to FIT's standard speed field (m/s × 1000, UInt16).
+    private static func fitSpeed(_ metresPerSecond: Double) -> UInt16 {
+        guard metresPerSecond.isFinite, metresPerSecond >= 0 else { return 0xFFFF }
+        return UInt16(min((metresPerSecond * 1_000.0).rounded(), 65_534))
+    }
+
+    private static func calculatedAverageSpeedMps(distanceM: Double?, movingTimeS: Double) -> Double? {
+        guard let distanceM, distanceM.isFinite, distanceM > 0,
+              movingTimeS.isFinite, movingTimeS > 0 else { return nil }
+        return distanceM / movingTimeS
+    }
+
+    private static func segmentSpeedMps(_ a: RoutePoint, _ b: RoutePoint, from: Int, to: Int) -> Double? {
+        let seconds = Double(to - from)
+        guard seconds > 0 else { return nil }
+        let metres = ActivityFileImporter.haversineMeters(a, b)
+        guard metres.isFinite, metres >= 0 else { return nil }
+        return metres / seconds
     }
 
     private static func semicircles(_ deg: Double) -> Int32 {
@@ -221,6 +281,16 @@ public enum RouteExporter {
         case "hike": return 15
         default: return 0
         }
+    }
+
+    /// FIT's `total_cycles` is interpreted as strides for foot sports by the importer and by the
+    /// Strava/Garmin ecosystem. Store half the step count so the receiving app reconstructs steps.
+    private static func footSport(_ canon: String) -> Bool {
+        ["run", "walk", "hike"].contains(canon)
+    }
+
+    private static func speedSport(_ canon: String) -> Bool {
+        ["run", "cycle", "walk", "hike"].contains(canon)
     }
 
     // MARK: - XML / byte helpers

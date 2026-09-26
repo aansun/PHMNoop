@@ -231,7 +231,11 @@ enum MetricDetailSteps {
     }
 
     static func showsBars(metricKey: String, preferredStyleRaw: String) -> Bool {
-        isMetric(metricKey) || TrendChartStyle(rawValue: preferredStyleRaw) == .bar
+        // Steps use the same display preference as every other historical metric. The
+        // bucket resolution changes the data points, not the presentation mode; forcing
+        // bars here made the Steps detail disagree with the Trends page and the user's
+        // selected Line setting.
+        TrendChartStyle(rawValue: preferredStyleRaw) == .bar
     }
 
     static func requiresFullHistory(metricKey: String, range: ExploreRange) -> Bool {
@@ -1471,20 +1475,20 @@ struct MetricDetailView: View {
             title: isStepsDetail ? LocalizedStringKey("Historical trend") : LocalizedStringKey("\(metric.title)"),
             subtitle: subtitle,
             trailing: "\(heroValue) · \(asOf)",
-            height: NoopMetrics.chartHeight + (isStepsDetail ? 70 : 0),
+            height: NoopMetrics.chartHeight,
             tint: metricDomain(metric).color
         ) {
+            let showsBars = MetricDetailSteps.showsBars(
+                metricKey: metric.key,
+                preferredStyleRaw: trendChartStyleRaw)
             TrendChart(
                 points: trendPoints(windowed),
                 gradient: metricGradient(metric),
                 valueRange: valueRange(windowed.map(\.value)),
                 showsArea: true,
-                // The chart-style setting, the same one `TrendsView` reads. This view had never consulted
-                // it, so a chosen `bar` drew a line here while the trend chart for the SAME metric drew
-                // bars. Steps deliberately override that global setting because their calendar buckets
-                // are discrete daily/weekly/monthly observations; every other metric still follows it.
-                showsBars: MetricDetailSteps.showsBars(metricKey: metric.key,
-                                                       preferredStyleRaw: trendChartStyleRaw),
+                // Every historical metric, including Steps, follows the same Line/Bar
+                // preference that the Trends page reads.
+                showsBars: showsBars,
                 baselineValue: personalBaseline,
                 height: NoopMetrics.chartHeight,
                 valueFormat: { value in
@@ -1504,8 +1508,7 @@ struct MetricDetailView: View {
                 } : nil,
                 accessibilityLabel: stepsAccessibility,
                 yAxisStep: isStepsDetail ? 5000 : nil,
-                showsBarValues: isStepsDetail && (effectiveRange == .week || effectiveRange == .twoWeeks),
-                largeSelection: isStepsDetail
+                showsBarValues: isStepsDetail && showsBars
             )
         } footer: {
             // #1662: the VO₂max line is SPLIT on purpose wherever the estimator changes, so two

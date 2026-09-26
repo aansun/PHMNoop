@@ -4178,10 +4178,11 @@ struct TodayView: View {
                 }
             )
         case .weight:
+            let latestAppleWeightKg = Self.latestAppleWeightKg(appleDays)
             StatTile(
                 label: "Weight",
-                value: weightTile(aLatest?.weightKg).value,
-                caption: weightTile(aLatest?.weightKg).caption,
+                value: weightTile(latestAppleWeightKg).value,
+                caption: weightTile(latestAppleWeightKg).caption,
                 accent: StrandPalette.accent,
                 sparkline: sparks["weight"],
                 sparkColor: StrandPalette.accent
@@ -5239,6 +5240,10 @@ struct TodayView: View {
     /// sparse-but-recent value still renders); when neither carries a weight, falls back to the user's
     /// self-reported profile weight instead of ", " (#204). Always formatted through the shared
     /// `UnitFormatter` so the Imperial/Metric toggle reaches this tile. Mirrors Android's `weightTile`.
+    static func latestAppleWeightKg(_ rows: [AppleDaily]) -> Double? {
+        rows.reversed().compactMap(\.weightKg).first
+    }
+
     private func weightTile(_ appleWeightKg: Double?) -> (value: String, caption: String) {
         if let kg = appleWeightKg ?? sparks["weight"]?.last {
             return (UnitFormatter.massFromKilograms(kg, system: unitSystem), String(localized: "latest"))

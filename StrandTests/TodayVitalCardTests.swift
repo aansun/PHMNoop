@@ -44,6 +44,19 @@ final class TodayVitalCardTests: XCTestCase {
         XCTAssertEqual(TodayView.skinTempCardValue(nil, fahrenheit: false), "—")
     }
 
+    // A current Apple Health daily row can exist before its weight column is populated. The Weight tile
+    // should use the newest row that actually contains a reading instead of going blank for the day.
+    func testLatestWeightSkipsAnEmptyCurrentDayRow() {
+        let rows = [
+            AppleDaily(day: "2026-09-22", steps: nil, activeKcal: nil, basalKcal: nil,
+                       vo2max: nil, avgHr: nil, maxHr: nil, walkingHr: nil, weightKg: 72.4),
+            AppleDaily(day: "2026-09-23", steps: 4_318, activeKcal: nil, basalKcal: nil,
+                       vo2max: nil, avgHr: nil, maxHr: nil, walkingHr: nil, weightKg: nil)
+        ]
+
+        XCTAssertEqual(TodayView.latestAppleWeightKg(rows), 72.4)
+    }
+
     // MARK: Respiratory — the carry has to be bounded
 
     /// The reported regression, on the card this screen shows: a WHOOP CSV import ending 2026-07-30,

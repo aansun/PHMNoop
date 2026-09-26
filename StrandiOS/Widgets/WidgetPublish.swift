@@ -64,6 +64,17 @@ extension WidgetSnapshot {
             localKey: Repository.localDayKey(now)
         )
         let todayKey = todayRow?.day ?? Repository.logicalDayKey(now)
+        // Steps are a calendar-day HealthKit total, so resolve the current local day explicitly rather
+        // than borrowing an arbitrary historical `DailyMetric` row. The strap row remains the fallback
+        // for users who have not enabled Apple Health, while the Rings widget stays honest when neither
+        // source has published a value yet.
+        let appleRows = await model.repo.appleDailyRows(days: 2)
+        let steps = appleRows.last(where: { $0.day == Repository.localDayKey(now) })?.steps
+            ?? todayRow?.steps
+            ?? day?.steps
+        let caloriesKcal = appleRows.last(where: { $0.day == Repository.localDayKey(now) })?.activeKcal.map { Int($0.rounded()) }
+            ?? todayRow?.activeKcalEst.map { Int($0.rounded()) }
+            ?? day?.activeKcalEst.map { Int($0.rounded()) }
         var restScore: Double?
         let restSeries = await model.repo.exploreSeries(key: "sleep_performance", source: "my-whoop")
         let restByDay = Dictionary(restSeries.map { ($0.day, $0.value) }, uniquingKeysWith: { _, last in last })
@@ -103,23 +114,35 @@ extension WidgetSnapshot {
         // would decode the App Group blob twice on any publish that could not score, and this file
         // already went to the trouble of removing one such decode from the live path.
         let storedStress: WidgetSnapshot? = stress == nil ? load() : nil
+        let recoveryValue = day?.recovery.map { Int($0.rounded()) }
+        let bpmValue = model.bpm ?? model.live.heartRate
+        let batteryValue = activeBatteryPct(from: model)
+        let effortValue = strain.map { Int($0.rounded()) }
+        let restValue = restScore.map { Int($0.rounded()) }
+        let hrvValue = (todayRow?.avgHrv ?? day?.avgHrv).map { Int($0.rounded()) }
+        let restingHRValue = todayRow?.restingHr ?? day?.restingHr
+        let stressSeriesValue = stressPoints ?? storedStress?.stressSeries
+        let stressDayValue = stress?.day ?? storedStress?.stressDay
         let snap = WidgetSnapshot(
-            recovery: day?.recovery.map { Int($0.rounded()) },
-            bpm: model.bpm ?? model.live.heartRate,
-            batteryPct: activeBatteryPct(from: model),
+            recovery: recoveryValue,
+            bpm: bpmValue,
+            batteryPct: batteryValue,
             bonded: model.live.bonded,
             updated: Date(),
             // Stored 0–100 axis for ring fill; display string carries the #313 scale.
-            effort: strain.map { Int($0.rounded()) },
-            rest: restScore.map { Int($0.rounded()) },
-            hrv: (todayRow?.avgHrv ?? day?.avgHrv).map { Int($0.rounded()) },
-            restingHr: todayRow?.restingHr ?? day?.restingHr,
+            effort: effortValue,
+            rest: restValue,
+            hrv: hrvValue,
+            restingHr: restingHRValue,
             effortDisplay: effortDisplay,
             effortWhoop: effortScale == .whoop,
             // nil when the curve could not be scored at all, which must not blank a widget that already
             // has one: carry the stored values forward instead of publishing an absence.
-            stressSeries: stressPoints ?? storedStress?.stressSeries,
-            stressDay: stress?.day ?? storedStress?.stressDay
+            stressSeries: stressSeriesValue,
+            stressDay: stressDayValue,
+            steps: steps,
+            caloriesKcal: caloriesKcal,
+            workoutsToday: todayRow?.exerciseCount ?? day?.exerciseCount
         )
         saveAndReloadIfChanged(snap)
     }
