@@ -239,10 +239,9 @@ final class IntelligenceEngine: ObservableObject {
         /// Persisted to metricSeries as "hrv_rr_overcount" (1/0) in pass 2 so the HRV card can flag the
         /// reading "unverified" until the de-dup fix lands. Same verdict the always-on `hrv diag` logs.
         let hrvOverCounted: Bool?
-        /// #1169 SHADOW METRIC: the primary-session MEAN resting HR (PrimarySessionRestingHR, #1174) for this
-        /// day, computed off the main actor beside the shipped nightly HR FLOOR (`daily.restingHr`). nil when
-        /// no session clears the coverage gate. Written to metricSeries as "rhr_primary_session" in pass 2 —
-        /// instrumentation only, never shown and never fed to any score.
+        /// #1169: the primary-session MEAN resting HR (PrimarySessionRestingHR, #1174) for this
+        /// day, computed off the main actor. nil when no session clears the coverage gate. Written to
+        /// metricSeries as "rhr_primary_session" in pass 2; on iOS it also supplies the headline RHR.
         let primarySessionRHR: Double?
         /// #1169 coverage inputs for the shadow mean above (valid-sample count + primary-session duration),
         /// written as "rhr_primary_session_valid_samples" / "rhr_primary_session_duration_s" in pass 2. nil
@@ -1688,11 +1687,7 @@ final class IntelligenceEngine: ObservableObject {
                         }
                     }
                 }
-                // #1169 SHADOW METRIC (instrumentation only): the primary-session MEAN resting HR, recorded
-                // beside the shipped nightly HR FLOOR (daily.restingHr = min per session) so the mean-vs-floor
-                // comparison the issue asks for accrues on real devices. NEVER shown and NEVER fed to any
-                // score; #1174's definition is unchanged — this only records its per-night output. The
-                // windowing + delegation lives in the byte-identical, tested `AnalyticsEngine`.
+                // #1169: compute the primary-session MEAN resting HR alongside the session-level floor.
                 let (primarySessionRHR, primarySessionRHRCoverage) =
                     AnalyticsEngine.primarySessionRestingHRWithCoverage(sessions: res.sleepSessions, hr: hr)
                 let scan = DayScan(result: res, rhrLine: rhrLine, rhrBinLine: rhrBinLine,
@@ -1791,7 +1786,8 @@ final class IntelligenceEngine: ObservableObject {
         // #1118: per-day HRV over-count flag, carried from pass 1 for metricSeries persistence. nil (absent)
         // for a night with no in-sleep R-R; otherwise true/false, so a re-score always overwrites the row.
         var hrvOverCountByDay: [String: Bool] = [:]
-        // #1169: primary-session mean RHR shadow metric per day, carried from pass 1 for metricSeries persistence.
+        // #1169: primary-session mean RHR per day, carried from pass 1. On iOS this is the active
+        // headline RHR; the existing floor remains available in the session/diagnostic path.
         var primarySessionRHRByDay: [String: Double] = [:]
         // #1169: its coverage inputs (valid-sample count + primary-session duration), same lifetime as the mean.
         var primarySessionRHRCoverageByDay: [String: PrimarySessionRestingHR.Coverage] = [:]
@@ -1816,7 +1812,7 @@ final class IntelligenceEngine: ObservableObject {
             if let oc = scan.hrvOverCounted {
                 hrvOverCountByDay[res.daily.day] = oc
             }
-            // #1169: carry the primary-session mean RHR shadow metric into pass 2 for persistence.
+            // #1169: carry the primary-session mean RHR into pass 2 for the iOS headline and persistence.
             if let v = scan.primarySessionRHR {
                 primarySessionRHRByDay[res.daily.day] = v
             }
@@ -1842,6 +1838,16 @@ final class IntelligenceEngine: ObservableObject {
                                  hrvDiag: scan.hrvDiag,
                                  detectionFunnel: res.detectionFunnel))
         }
+
+        // iOS headline RHR uses the validated primary-session mean. Keep this override in the app
+        // layer so the shared analytics core and the Android implementation remain unchanged.
+        #if os(iOS)
+        for day in primarySessionRHRByDay.keys {
+            if let value = primarySessionRHRByDay[day] {
+                nightlyRhrByDay[day] = value
+            }
+        }
+        #endif
 
         markPostLoopPhase("dayReplay")
         // ── Seed the baseline from the UNION of imported nightly history + the values just computed.
@@ -2085,6 +2091,11 @@ final class IntelligenceEngine: ObservableObject {
             let editsByStart = Dictionary(dayEditedRows.map { ($0.startTs, $0) }, uniquingKeysWith: { a, _ in a })
             var daily = sleepEditedDaily(night.daily, detected: night.cachedSleep, editsByStart: editsByStart,
                                          habitualMidsleepSec: habitualMidsleepSec)
+            #if os(iOS)
+            if let primaryMean = primarySessionRHRByDay[daily.day] {
+                daily = daily.with(restingHr: Int(primaryMean.rounded()))
+            }
+            #endif
             daily = DayCycleIntelligenceIntegration.applying(physiologicalSteps, to: daily)
             daily = Self.recomputeRecoveryDaily(daily, nightlySkinTempC: night.nightlySkin,
                                                baselines: baselines2)
@@ -2198,9 +2209,8 @@ final class IntelligenceEngine: ObservableObject {
             if let oc = hrvOverCountByDay[daily.day] {
                 restPoints.append(MetricPoint(day: daily.day, key: "hrv_rr_overcount", value: oc ? 1.0 : 0.0))
             }
-            // #1169 shadow metric: the primary-session mean RHR, stored beside the shipped floor
-            // (daily.restingHr) under the "-noop" computed ID. Instrumentation only — never shown, never
-            // scored — so the mean-vs-floor comparison the issue needs can be evaluated from exports later.
+            // #1169: retain the primary-session mean and its coverage inputs for auditability. On iOS
+            // this is also the active headline RHR; other platforms keep their existing behavior.
             if let v = primarySessionRHRByDay[daily.day] {
                 restPoints.append(MetricPoint(day: daily.day, key: "rhr_primary_session", value: v))
             }
@@ -3388,6 +3398,17 @@ final class IntelligenceEngine: ObservableObject {
 // is most easily dropped at (they respell every field by name), so StrandTests asserts them directly
 // rather than through a copy that could drift. Nothing outside this module can see them either way.
 extension DailyMetric {
+    /// Rebuild with a substituted resting HR while keeping every other freshly-scored cell.
+    func with(restingHr rhr: Int?) -> DailyMetric {
+        DailyMetric(day: day, totalSleepMin: totalSleepMin, efficiency: efficiency, deepMin: deepMin,
+                    remMin: remMin, lightMin: lightMin, disturbances: disturbances, restingHr: rhr,
+                    avgHrv: avgHrv, recovery: recovery, strain: strain, exerciseCount: exerciseCount,
+                    spo2Pct: spo2Pct, skinTempDevC: skinTempDevC, respRateBpm: respRateBpm,
+                    steps: steps, activeKcalEst: activeKcalEst,
+                    spo2Red: spo2Red, spo2Ir: spo2Ir, avgSdnn: avgSdnn, skinTempC: skinTempC,
+                    sleepHrOnly: sleepHrOnly)
+    }
+
     /// Rebuild with the exact legacy R-R-derived snapshot while keeping every other freshly-scored cell.
     func with(avgHrv hrv: Double, recovery r: Double?, respRateBpm resp: Double?,
               avgSdnn sdnn: Double?) -> DailyMetric {

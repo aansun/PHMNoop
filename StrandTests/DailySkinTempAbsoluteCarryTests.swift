@@ -64,6 +64,22 @@ final class DailySkinTempAbsoluteCarryTests: XCTestCase {
                        "editing the sleep window must not discard the night's temperature")
     }
 
+    func testRhrOverrideKeepsEveryOtherDailyField() {
+        let scored = row(day: "2026-09-26", totalSleepMin: 401.4, deepMin: 90,
+                         remMin: 120, lightMin: 191, restingHr: 54, skinTempC: 33.8,
+                         skinTempDevC: 0.3, avgHrv: 87, sleepHrOnly: false)
+        let updated = scored.with(restingHr: 65)
+        XCTAssertEqual(updated.restingHr, 65)
+        XCTAssertEqual(updated.totalSleepMin, scored.totalSleepMin)
+        XCTAssertEqual(updated.deepMin, scored.deepMin)
+        XCTAssertEqual(updated.remMin, scored.remMin)
+        XCTAssertEqual(updated.lightMin, scored.lightMin)
+        XCTAssertEqual(updated.avgHrv, scored.avgHrv)
+        XCTAssertEqual(updated.skinTempC, scored.skinTempC)
+        XCTAssertEqual(updated.skinTempDevC, scored.skinTempDevC)
+        XCTAssertEqual(updated.sleepHrOnly, scored.sleepHrOnly)
+    }
+
     /// Cross-bucket: imports win the row, but the absolute is on-device only, so the computed value
     /// has to come through or a user with any WHOOP-export history would never see one.
     func testMergeFillsTheAbsoluteFromTheComputedRow() throws {
