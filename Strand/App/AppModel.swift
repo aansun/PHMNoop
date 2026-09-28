@@ -1041,6 +1041,9 @@ final class AppModel: ObservableObject {
             if let store = await self.repo.storeHandle() {
                 _ = try? await store.upsertWorkouts([row], deviceId: self.deviceId)
                 await self.repo.refresh()
+                #if os(iOS)
+                WorkoutReportNotifier.post(row: row)
+                #endif
             }
         }
     }

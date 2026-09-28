@@ -36,6 +36,9 @@ struct AutomationsView: View {
     /// posting read — has no UI to flip and is stuck at its default OFF. Bind the SAME raw key here so
     /// iPhone users can actually turn wrist alerts on. Default OFF, matching the store's default.
     @AppStorage("notif.masterEnabled") private var wristAlertsMaster = false
+    /// Optional post-workout phone summary. Default OFF, matching Android's daily reports and keeping
+    /// notification permission fully user-controlled.
+    @AppStorage(WorkoutReportNotifier.enabledKey) private var postWorkoutSummary = false
     #endif
 
     // #haptics (#1115): per-event toggles for NOOP's IN-SESSION strap buzzes. Default ON (opt-out) — these
@@ -69,6 +72,9 @@ struct AutomationsView: View {
             healthInsightsCard
             batteryCard
             strainTargetCard
+            #if os(iOS)
+            workoutReportCard
+            #endif
         }
     }
 
@@ -440,6 +446,23 @@ struct AutomationsView: View {
                 }
         }
     }
+
+    #if os(iOS)
+    // MARK: Daily reports (iOS counterpart of Android's post-workout report)
+
+    private var workoutReportCard: some View {
+        Section2(icon: "list.bullet.rectangle.portrait", title: String(localized: "Daily reports"),
+                 blurb: String(localized: "Optional phone notifications for workouts saved by NOOP. Nothing is sent off this iPhone."),
+                 active: postWorkoutSummary) {
+            ToggleRow(label: String(localized: "Post-workout summary"),
+                      help: String(localized: "After you save a live workout, show its Effort, duration and average heart rate. Existing workouts are not replayed."),
+                      isOn: $postWorkoutSummary)
+                .onChangeCompat(of: postWorkoutSummary) { on in
+                    if on { WorkoutReportNotifier.requestAuthorization() }
+                }
+        }
+    }
+    #endif
 
     // MARK: - Helpers
 

@@ -3278,30 +3278,23 @@ struct TodayView: View {
         let ring = Self.heroRingDiameter(rowWidth: measured)
         HStack(alignment: .top, spacing: 22) {
             // Component 4: Charge/Rest badge their real per-day merge winner; Effort has no badge.
-            // A1 (#514/#706): the Charge ring is TAPPABLE (a small chevron cue overlays the ring's bottom
-            // edge, INSIDE the ring frame so it adds no stacked height, keeping the #762 self-sizing row
-            // untouched). It opens the Charge breakdown sheet (the existing ChargeBreakdownSection), built
-            // lazily on tap. No new badge/dot/tier sits under the ring (that would re-load the #762 stack).
-            // A ring opens the RICHEST explanation this shell has for its score, which is the rule
-            // Android states outright: "Charge keeps its breakdown sheet, which is richer than a trend and
-            // has no twin on the iOS liquid Today". That clause is why the three surfaces differ, and it
-            // is not an oversight. The Liquid Today sends Charge to the trend because it has no breakdown
-            // to offer; THIS shell has one, so its Charge ring keeps it and matches Android.
-            //
-            // Effort and Rest have no breakdown on any platform, so the trend is the richest thing they
-            // have and both rings open it, exactly as Android's do. The keys are the ones
-            // `HeroRingDetailRouteTests` pins against `MetricCatalog`; `TabRoute.metric` falls back to the
-            // Health screen on an unknown key rather than failing, which is why they are pinned.
+            // The score itself is a direct tap target for the matching metric detail. Charge keeps its
+            // richer breakdown sheet on the chevron below, so the existing explanatory affordance remains
+            // available without making the number behave differently from Effort and Rest.
+            // The keys are the ones `HeroRingDetailRouteTests` pins against `MetricCatalog`; `TabRoute.metric`
+            // falls back to the Health screen on an unknown key rather than failing, which is why they are
+            // pinned.
             heroRingColumn(section: .charge, domain: .charge, provenanceKey: "recovery",
-                           onOpenBreakdown: { showChargeBreakdown = true }) {
+                           onOpenBreakdown: { showChargeBreakdown = true },
+                           detailMetricKey: HeroRingMetric.charge) {
                 chargeRing(score: score, d: d, diameter: ring)
             }
             heroRingColumn(section: .effort, domain: .effort,
-                           detailRoute: .metric(HeroRingMetric.effort)) { effortRing(d: d, diameter: ring) }
+                           detailMetricKey: HeroRingMetric.effort) { effortRing(d: d, diameter: ring) }
             // `provenanceKey` spells the same string the route does and stays a literal on purpose: it
             // asks which SOURCE won this day, not which catalog entry to open. See `HeroRingMetric`.
             heroRingColumn(section: .rest, domain: .rest, provenanceKey: "sleep_performance",
-                           detailRoute: .metric(HeroRingMetric.rest),
+                           detailMetricKey: HeroRingMetric.rest,
                            caption: restIsPendingSync ? "Pending sync" : nil,
                            captionWidth: ring) { restRing(diameter: ring) }
         }
@@ -3366,7 +3359,7 @@ struct TodayView: View {
     /// ring's edge. Mirrors Android's `HeroRingColumn(caption:)`.
     private func heroRingColumn<RingBody: View>(
         section: ScoreSection, domain: DomainTheme, provenanceKey: String? = nil,
-        onOpenBreakdown: (() -> Void)? = nil, detailRoute: TabRoute? = nil, caption: String? = nil,
+        onOpenBreakdown: (() -> Void)? = nil, detailMetricKey: String? = nil, caption: String? = nil,
         captionWidth: CGFloat = 98,
         @ViewBuilder ring: () -> RingBody
     ) -> some View {
@@ -3380,13 +3373,18 @@ struct TodayView: View {
             // A1: the body is the ring plus a contentShape so the whole disc is hittable, and the ring
             // carries NO in-ring cue. `.plain` is load-bearing: a bare NavigationLink applies the default
             // link chrome and would tint the ring, the same reason `metricRow` carries a button style.
-            // A column supplies EITHER a route (Effort, Rest) or a breakdown (Charge, whose richer
-            // explanation is a sheet rather than a destination), never both. `onOpenBreakdown` drives the
-            // ring AND the chevron, because for that score both lead to the same sheet and two arguments
-            // holding one closure would be two things to keep in step. A column with neither renders a
+            // A column can supply both a route and a breakdown: the ring opens the metric detail while the
+            // chevron can preserve a richer score-specific explanation. A column with neither renders a
             // plain ring, which is what a future domain with nothing richer to open should get.
-            if let detailRoute {
-                NavigationLink(value: detailRoute) {
+            if let detailMetricKey {
+                // Use an explicit destination for the hero score itself. These rings are the primary
+                // Charge/Effort/Rest cards, and their tap must remain independent from the scoring-guide
+                // chevron below. The key-metrics grid already proves this direct destination works on the
+                // iOS tab stack; keeping the ring link explicit also avoids a value-route being swallowed
+                // by the neighbouring guide button in the compact hero layout.
+                NavigationLink {
+                    metricDetailDestination(for: detailMetricKey)
+                } label: {
                     ring().contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -3475,6 +3473,17 @@ struct TodayView: View {
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: captionWidth)
             }
+        }
+    }
+
+    /// Resolves a hero score to the same catalog descriptor used by the Key Metrics grid. Hero scores are
+    /// all WHOOP-domain metrics, so the source is pinned instead of relying on catalog declaration order.
+    @ViewBuilder
+    private func metricDetailDestination(for key: String) -> some View {
+        if let metric = MetricCatalog.metric(key: key, source: "my-whoop") {
+            MetricDetailView(metric: metric)
+        } else {
+            HealthView()
         }
     }
 
@@ -3917,6 +3926,17 @@ struct TodayView: View {
                             .buttonStyle(.plain)
                             .contentShape(Rectangle())
                             .accessibilityHint("Opens blood oxygen history")
+                        } else if let route = keyMetricDetailRoute(for: metric) {
+                            // Keep the score tiles in the classic Today shell consistent with the hero
+                            // rings and the Liquid shell: Charge, Effort and Rest open their own metric
+                            // dossier when the value/card is tapped. The scoring-guide info button remains
+                            // an inline accessory inside the tile.
+                            NavigationLink(value: route) {
+                                keyMetricTile(metric).contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .contentShape(Rectangle())
+                            .accessibilityHint("Opens \(metric.title) detail")
                         } else {
                             keyMetricTile(metric)
                         }
@@ -3938,6 +3958,17 @@ struct TodayView: View {
         let all = enabledKeyMetrics
         if metricsExpanded || all.count <= Self.metricsCollapsedCap { return all }
         return Array(all.prefix(Self.metricsCollapsedCap))
+    }
+
+    /// The three score tiles share the hero's catalog destinations. Other Key-Metric tiles keep their
+    /// existing interaction model, including source-specific Blood Oxygen routing above.
+    private func keyMetricDetailRoute(for metric: KeyMetric) -> TabRoute? {
+        switch metric {
+        case .charge: return .metric(HeroRingMetric.charge)
+        case .effort: return .metric(HeroRingMetric.effort)
+        case .rest: return .metric(HeroRingMetric.rest)
+        default: return nil
+        }
     }
 
     /// True when there are more enabled tiles than the collapsed cap, so the expander is worth showing.

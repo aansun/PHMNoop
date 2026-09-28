@@ -11032,6 +11032,12 @@
     },
     "%lld days ago": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld hari yang lalu"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -27419,6 +27425,12 @@
     },
     "Add": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tambah"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -30855,6 +30867,12 @@
     },
     "Answers are about the night and day leading into this morning, the same attribution a WHOOP export uses, so logged and imported days line up.": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jawaban mencakup malam dan hari sebelum pagi ini, mengikuti atribusi ekspor WHOOP agar hari yang dicatat dan diimpor tetap selaras."
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -37568,6 +37586,12 @@
     },
     "Behaviour": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Perilaku"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -45636,6 +45660,12 @@
     },
     "Change to Number": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ubah menjadi angka"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -45688,6 +45718,12 @@
     },
     "Change to Yes/No": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ubah menjadi Ya/Tidak"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -75890,6 +75926,12 @@
     },
     "Group": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Grup"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -81098,6 +81140,12 @@
     },
     "History stays under the original question so WHOOP imports still line up.": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Riwayat tetap menggunakan pertanyaan asli agar impor WHOOP tetap selaras."
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -88637,6 +88685,12 @@
     },
     "Journal": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Jurnal"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -93308,6 +93362,12 @@
     },
     "Lifestyle": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Gaya hidup"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -95832,6 +95892,12 @@
     },
     "Log": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Catat"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -96534,6 +96600,12 @@
     },
     "Log today's journal": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Isi jurnal hari ini"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -96876,6 +96948,12 @@
     },
     "Logged today": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sudah dicatat hari ini"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -96992,6 +97070,12 @@
     },
     "Logging ahead for tomorrow: today's activities inform tomorrow's recovery, just as yesterday's are reflected in today's. Tomorrow's answers line up with tomorrow's morning.": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pencatatan untuk besok: aktivitas hari ini memengaruhi recovery besok, seperti aktivitas kemarin tercermin pada hari ini. Jawaban untuk besok akan mengikuti pagi besok."
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -107992,6 +108076,12 @@
     },
     "No": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tidak"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -115728,6 +115818,12 @@
     },
     "Nutrition": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Nutrisi"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -118605,6 +118701,12 @@
     },
     "Open journal": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Buka jurnal"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -119813,6 +119915,12 @@
     },
     "Other": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Lainnya"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -134346,8 +134454,24 @@
         }
       }
     },
+    "Rename, regroup, or remove an item to tidy your list. Renaming keeps the original question behind the scenes, so a WHOOP import still lines up. Custom items are deleted; built-in ones are hidden and can be restored below.": {
+      "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ganti nama, kelompokkan ulang, atau hapus item untuk merapikan daftar. Nama baru hanya mengubah tampilan, sehingga impor WHOOP tetap selaras. Item khusus dihapus; item bawaan disembunyikan dan dapat dipulihkan di bawah."
+          }
+        }
+      }
+    },
     "Rename item": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ganti nama item"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -134394,6 +134518,12 @@
     },
     "Rename…": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ganti nama…"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -157291,6 +157421,12 @@
     },
     "Supplements": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suplemen"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -160531,6 +160667,12 @@
     },
     "Tap a day to catch up": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ketuk hari untuk melengkapinya"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -167788,6 +167930,12 @@
     },
     "Tomorrow": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Besok"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -182068,6 +182216,12 @@
     },
     "Yes": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ya"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -182126,6 +182280,12 @@
     },
     "Yesterday": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Kemarin"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
