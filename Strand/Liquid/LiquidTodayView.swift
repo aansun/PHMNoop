@@ -686,7 +686,7 @@ struct LiquidTodayView: View {
             HeroScoreCell(label: String(localized: "Charge"), score: chargeDisplay.pct,
                           tint: chargeDisplay.pct.map { StrandPalette.recoveryColor($0) } ?? StrandPalette.chargeColor,
                           animated: dataLoaded, onGuide: { guideSection = .charge },
-                          detailRoute: .metric(HeroRingMetric.charge))
+                          detailMetricKey: HeroRingMetric.charge)
             // #45: the hero Effort must honour the user's Effort scale like every other Effort read-out.
             // Show the value on the chosen scale (0–100 or WHOOP 0–21) with the matching vessel max, and
             // one decimal on the compressed 0–21 axis to match the app-wide `effortDisplay` convention
@@ -697,10 +697,10 @@ struct LiquidTodayView: View {
                           onGuide: { guideSection = .effort },
                           maxValue: effortScale == .whoop ? 21 : 100,
                           decimals: effortScale == .whoop ? 1 : 0,
-                          detailRoute: .metric(HeroRingMetric.effort))
+                          detailMetricKey: HeroRingMetric.effort)
             HeroScoreCell(label: String(localized: "Rest"), score: restScore, tint: StrandPalette.restColor,
                           animated: dataLoaded, onGuide: { guideSection = .rest },
-                          detailRoute: .metric(HeroRingMetric.rest))
+                          detailMetricKey: HeroRingMetric.rest)
                 .overlay(alignment: .top) {
                     if let sourceLabel = heroSourceLabel {
                         SourceBadge("\(sourceLabel)", tint: StrandPalette.textSecondary)
@@ -2151,12 +2151,12 @@ private struct HeroScoreCell: View {
     // Decimal places for the displayed number. 0 keeps the whole-number scores; the WHOOP 0–21 Effort
     // scale passes 1 to match the app-wide one-decimal `effortDisplay` convention (#45).
     var decimals: Int = 0
-    /// Where the GAUGE taps through to, or nil to keep the ring inert (#1995).
+    /// Catalog key for the dossier the GAUGE opens, or nil to keep the ring inert (#1995).
     ///
-    /// Same `TabRoute.metric(key)` the Recovery Vitals rows use, so a ring and the Key-Metrics tile for
-    /// the same score land on the identical dossier rather than diverging. The LABEL keeps its own job:
-    /// it opens the scoring guide, which is this screen's only route to that explainer.
-    var detailRoute: TabRoute? = nil
+    /// The LABEL keeps its own job: it opens the scoring guide. Keeping the two destinations explicit is
+    /// important here because the compact hero has two adjacent controls, and the guide button must not
+    /// steal the number/ring tap.
+    var detailMetricKey: String? = nil
 
     /// The gauge, linked when there is somewhere to go.
     ///
@@ -2164,6 +2164,10 @@ private struct HeroScoreCell: View {
     /// as three stacked elements rather than a branch.
     @ViewBuilder
     private var gaugeView: some View {
+        // The enclosing NavigationLink owns the ring tap. A nested splash gesture on the Canvas can
+        // consume the same touch before NavigationLink gets it, which made the hero number look tappable
+        // but stay on Today. The key-metric tiles do not have that nested gesture, so this is specific to
+        // the compact liquid hero.
         let gauge = LiquidScoreGauge(
             score: score,
             tint: tint,
@@ -2171,10 +2175,22 @@ private struct HeroScoreCell: View {
             animated: animated,
             maxValue: maxValue,
             decimals: decimals,
-            tapPassesThrough: detailRoute != nil
+            tapPassesThrough: false
         )
-        if let detailRoute {
-            NavigationLink(value: detailRoute) { gauge }
+        if let detailMetricKey {
+            NavigationLink {
+                metricDetailDestination(for: detailMetricKey)
+            } label: {
+                // Keep the visual gauge out of hit-testing: LiquidVessel has its own splash gesture,
+                // which otherwise wins the touch even when the enclosing link is the intended action.
+                // The transparent circle is the link's sole hit surface, so tapping anywhere on the
+                // number/ring reliably pushes the metric dossier.
+                ZStack {
+                    gauge.allowsHitTesting(false)
+                    Color.clear.contentShape(Circle())
+                }
+                .frame(width: Self.vesselDiameter, height: Self.vesselDiameter)
+            }
                 .buttonStyle(LiquidPressStyle())
                 // The ring is what shows the NUMBER, so its spoken label carries the number too. Without
                 // this a VoiceOver user hears only the metric name on the element displaying the value,
@@ -2183,6 +2199,17 @@ private struct HeroScoreCell: View {
                 .accessibilityHint(Text("Opens the trend and readings"))
         } else {
             gauge
+        }
+    }
+
+    /// The three hero scores are WHOOP-domain catalog metrics. Resolve the source explicitly so the
+    /// destination cannot change if another provider later adds a same-key descriptor.
+    @ViewBuilder
+    private func metricDetailDestination(for key: String) -> some View {
+        if let metric = MetricCatalog.metric(key: key, source: "my-whoop") {
+            MetricDetailView(metric: metric)
+        } else {
+            HealthView()
         }
     }
 
