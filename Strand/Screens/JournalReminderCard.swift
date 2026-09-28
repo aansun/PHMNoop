@@ -23,16 +23,17 @@ struct JournalReminderCard: View {
     /// Default ON so the reminder works out of the box; the Settings toggle / this key opt out.
     @AppStorage(PuffinExperiment.journalReminderKey) private var reminderEnabled = true
 
-    /// Which of the last `stripDays` day-keys carry a native journal entry. nil = still loading / read
-    /// error → render nothing (never a misleading all-empty strip).
-    @State private var loggedDays: Set<String>?
+    /// Which of the last `stripDays` day-keys carry a native journal entry. Start with an empty set so
+    /// the card has a stable layout immediately inside Today’s lazy stack; the async read replaces it
+    /// with the real completion days as soon as the repository is ready.
+    @State private var loggedDays: Set<String> = []
 
     private static let stripDays = 7
 
     var body: some View {
         Group {
-            if reminderEnabled, let logged = loggedDays {
-                card(logged)
+            if reminderEnabled {
+                card(loggedDays)
             }
         }
         // Re-read whenever a sync bumps refreshSeq or the toggle flips (mirrors AutoWorkoutCard's task id),
@@ -126,7 +127,7 @@ struct JournalReminderCard: View {
     }
 
     private func reload() async {
-        guard reminderEnabled else { loggedDays = nil; return }
+        guard reminderEnabled else { loggedDays = []; return }
         let keys = Self.dayKeys()
         loggedDays = await repo.nativeJournalDays(from: keys.first ?? "", to: keys.last ?? "")
     }
