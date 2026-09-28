@@ -118,6 +118,19 @@ struct BodyVitalReading: Identifiable {
 /// Builds the body vital-sign readings from source-tagged daily rows. Pure + namespaced so the
 /// resolution (per-metric source precedence) and banding can be unit-tested without a Repository.
 enum BodyVitalSigns {
+    /// Metric-catalog key used by the Health tile drill-down. Raw SpO₂ is intentionally not routed to the
+    /// calibrated Blood Oxygen history because it is an uncalibrated sensor count, not the same metric.
+    static func detailMetricKey(for vitalKey: String) -> String? {
+        switch vitalKey {
+        case "resp":     return "resp_rate"
+        case "spo2":     return "spo2"
+        case "rhr":      return "rhr"
+        case "hrv":      return "hrv"
+        case "skin":     return "skin_temp"
+        default:          return nil
+        }
+    }
+
     /// Preview/test convenience: wrap plain rows (optionally a separate "today") as local-cache rows.
     static func readings(days: [DailyMetric],
                          today: DailyMetric?,

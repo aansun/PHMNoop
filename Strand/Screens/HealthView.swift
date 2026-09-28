@@ -1412,7 +1412,29 @@ private struct VitalsSection: View {
 private struct LiquidVitalTile: View {
     let reading: BodyVitalReading
 
+    private var detailMetric: MetricDescriptor? {
+        guard let key = BodyVitalSigns.detailMetricKey(for: reading.key) else { return nil }
+        return MetricCatalog.all.first { $0.key == key }
+    }
+
     var body: some View {
+        Group {
+            if let detailMetric {
+                NavigationLink {
+                    MetricDetailView(metric: detailMetric)
+                } label: {
+                    tile.contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .contentShape(Rectangle())
+                .accessibilityHint("Opens history")
+            } else {
+                tile
+            }
+        }
+    }
+
+    private var tile: some View {
         NoopCard(padding: 14, tint: reading.accent) {
             VStack(alignment: .leading, spacing: 0) {
                 Text("\(reading.label)").strandOverline()

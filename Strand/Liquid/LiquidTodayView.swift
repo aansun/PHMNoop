@@ -197,6 +197,14 @@ struct LiquidTodayView: View {
         if selectedDayOffset == 0, let todayKey = repo.today?.day { return todayKey }
         return Repository.localDayKey(selectedLogicalDay)
     }
+    /// Apple Health aggregates are keyed to the phone's civil calendar day, while the strap view can
+    /// still be on the previous logical day during the 00:00-04:00 rollover. Keep the imported steps
+    /// and active-energy fallbacks on the same day key as the classic Today screen.
+    private var selectedAppleHealthDayKey: String {
+        TodayView.appleHealthDayKey(selectedDayKey: selectedDayKey,
+                                    localDayKey: Repository.localDayKey(Date()),
+                                    isToday: selectedDayOffset == 0)
+    }
     /// The DailyMetric shown for the selected day — read from the cache resolved in load() (was an
     /// O(days) `.last(where:)` scan referenced ~23× per body pass; now O(1)).
     private var displayDay: DailyMetric? { cachedDisplayDay }
@@ -1013,7 +1021,7 @@ struct LiquidTodayView: View {
             // PuffinExperiment's own doc says the toggle surfaces it "in the Blood Oxygen tile/card,
             // labelled". An unlabelled number here would read as a measured SpO2 on the one surface that
             // is the DEFAULT Today screen on iOS 26. The subtitle is the slot this card has.
-            cardLink(.metric("spo2"),
+            cardLink(.metricSourced(key: "spo2", source: "my-whoop"),
                      title: card.title,
                      sub: spo2Candidate != nil ? String(localized: "strap estimate (unverified)") : card.subtitle,
                      // Em dash, not the en dash the stub used: the classic Blood Oxygen card and
@@ -1484,13 +1492,17 @@ struct LiquidTodayView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .frame(minHeight: keyMetricsDetailed ? 154 : 116, alignment: .topLeading)
         .background(NoopPanelSurface(tint: tint, cornerRadius: 18, surfaceOpacity: cardOpacity))
+        // Keep the whole visual tile tappable, including its padded/empty area. Without an explicit
+        // content shape SwiftUI can limit a NavigationLink hit-test to only the text and tube, which
+        // made the Blood Oxygen tile feel inert when tapped on its right or lower half.
+        .contentShape(Rectangle())
         // #430 parity: tap -> the metric's trend detail (the same Explore dossier its MetricRow pushes,
         // closure-based NavigationLink per #38). A metric with no catalog entry stays inert.
         return Group {
             if let metric = detailMetric ?? key.flatMap({ key in
                 MetricCatalog.all.first(where: { $0.key == key })
             }) {
-                NavigationLink { MetricDetailView(metric: metric) } label: { tile }
+                NavigationLink(value: TabRoute.metricSourced(key: metric.key, source: metric.source)) { tile }
                     .buttonStyle(.plain)
             } else {
                 tile
@@ -1768,10 +1780,10 @@ struct LiquidTodayView: View {
         // Imported Apple Health steps for the SELECTED day (max across rows), the middle tier between the
         // measured strap count and the motion estimate. Health Connect is Android-only, so apple-health is
         // the sole import source on iOS. Mirrors Android `stepsForDay` (#377).
-        importedStepsDay = (await appleA).filter { $0.day == selectedDayKey }.compactMap { $0.steps }.max()
+        importedStepsDay = (await appleA).filter { $0.day == selectedAppleHealthDayKey }.compactMap { $0.steps }.max()
         // #616: same-day imported active energy — the calorie fallback when the strap banked no on-device
         // HR estimate for the day, so the tile/card/detail agree (imported-first, mirrors steps).
-        importedActiveKcalDay = (await appleA).filter { $0.day == selectedDayKey }.compactMap { $0.activeKcal }.max()
+        importedActiveKcalDay = (await appleA).filter { $0.day == selectedAppleHealthDayKey }.compactMap { $0.activeKcal }.max()
         // Awaited ONCE: the timestamps and the means have to come from the same read, or the segments
         // would describe a different series than the one drawn.
         let hrBuckets = await hrA

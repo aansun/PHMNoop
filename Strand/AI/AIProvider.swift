@@ -313,9 +313,9 @@ protocol AIProviderClient {
         onDelta: (String) -> Void
     ) async throws
 
-    /// K11: Stream a chat turn with an optional inline image (base64 PNG). Only Gemini implements
-    /// this; the default implementation ignores the image and calls `stream`. This keeps the
-    /// multimodal path opt-in without changing every provider's `stream` signature.
+    /// K11: Stream a chat turn with an optional inline image (base64 PNG). Gemini, GPT-5 Responses,
+    /// and the iOS ChatGPT Responses client implement this; the default implementation ignores the
+    /// image and calls `stream` so text-only providers remain compatible.
     func streamWithImage(
         key: String,
         model: String,
@@ -329,7 +329,7 @@ protocol AIProviderClient {
 
 extension AIProviderClient {
     /// K11: Default — ignore the image, delegate to `stream`. Providers without multimodal support
-    /// (OpenAI, Anthropic, Custom) use this; only Gemini overrides it.
+    /// (older OpenAI Chat Completions, Anthropic, Custom) use this.
     func streamWithImage(
         key: String,
         model: String,

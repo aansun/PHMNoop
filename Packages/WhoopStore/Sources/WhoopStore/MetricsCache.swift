@@ -561,7 +561,9 @@ extension WhoopStore {
                     spo2Pct = excluded.spo2Pct,
                     skinTempDevC = excluded.skinTempDevC,
                     respRateBpm = excluded.respRateBpm,
-                    steps = excluded.steps,
+                    -- A later partial scoring pass can have no step estimate even though an earlier
+                    -- pass persisted the strap's measured counter total. Preserve the known value.
+                    steps = COALESCE(excluded.steps, dailyMetric.steps),
                     activeKcalEst = excluded.activeKcalEst,
                     spo2Red = excluded.spo2Red,
                     spo2Ir = excluded.spo2Ir,

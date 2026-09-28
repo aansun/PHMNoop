@@ -9,6 +9,17 @@ import WhoopStore
 /// used by Liquid Today, the Health tab and the Sleep tab — and by this screen alone, not at all.
 final class TodayVitalCardTests: XCTestCase {
 
+    func testAppleHealthUsesCivilDayForTodayButSelectedDayForHistory() {
+        XCTAssertEqual(
+            TodayView.appleHealthDayKey(selectedDayKey: "2026-09-27", localDayKey: "2026-09-28", isToday: true),
+            "2026-09-28"
+        )
+        XCTAssertEqual(
+            TodayView.appleHealthDayKey(selectedDayKey: "2026-09-27", localDayKey: "2026-09-28", isToday: false),
+            "2026-09-27"
+        )
+    }
+
     private func day(_ d: String, resp: Double? = nil) -> DailyMetric {
         DailyMetric(day: d, totalSleepMin: 420, efficiency: 90,
                     deepMin: 80, remMin: 90, lightMin: 200, disturbances: nil,

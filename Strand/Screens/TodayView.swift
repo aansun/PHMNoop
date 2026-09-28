@@ -564,6 +564,16 @@ struct TodayView: View {
         return Repository.localDayKey(selectedLogicalDay)
     }
 
+    /// Apple Health aggregates use the user's civil calendar day, while `selectedDayKey` can follow the
+    /// strap's 04:00 logical-day rollover. For the active day, use the civil key for the phone count so
+    /// a post-midnight / early-morning HealthKit total is not hidden behind the previous logical strap day.
+    /// Past-day browsing keeps the selected day unchanged.
+    private var selectedAppleHealthDayKey: String {
+        Self.appleHealthDayKey(selectedDayKey: selectedDayKey,
+                               localDayKey: Repository.localDayKey(Date()),
+                               isToday: selectedDayOffset == 0)
+    }
+
     /// The DailyMetric shown for the selected day. Offset 0 prefers the live `repo.today` (so the small
     /// hours after midnight still show the logical day's banked row), past offsets look the stored row up
     /// by key. nil when no row exists for that day, every read-out then renders its honest empty state.
@@ -703,6 +713,12 @@ struct TodayView: View {
     static func clampedDayOffset(current: Int, delta: Int, maxOffset: Int) -> Int {
         let upper = max(0, maxOffset)
         return min(upper, max(0, current + delta))
+    }
+
+    /// Resolve the Apple Health aggregate key independently from the strap's logical-day key.
+    /// Pure so the midnight/04:00 boundary cannot regress silently in the UI.
+    static func appleHealthDayKey(selectedDayKey: String, localDayKey: String, isToday: Bool) -> String {
+        isToday ? localDayKey : selectedDayKey
     }
 
     /// #16 - whole days-back offset for a date chosen in the day-nav picker, measured from the LOGICAL day
@@ -2817,7 +2833,7 @@ struct TodayView: View {
         case .steps:
             // #843/#813, same-day real count only (strap @57 or same-day phone import); never the latest
             // imported row or the sparkline tail (both went stale). Else fall through to the estimate.
-            let appleStepsForDay = appleDays.last(where: { $0.day == selectedDayKey })?.steps
+            let appleStepsForDay = appleDays.last(where: { $0.day == selectedAppleHealthDayKey })?.steps
             let real = (d?.steps).map { intString(Double($0)) }
                 ?? appleStepsForDay.map { intString(Double($0)) }
             let est = stepsEstByDay[selectedDayKey].map { intString(Double($0)) }
@@ -3885,7 +3901,26 @@ struct TodayView: View {
                     // shorter tile up to its row-mate: a tile carrying a sparkline (e.g. Rest) sat taller
                     // than a plain-value one and the row looked ragged. A single fixed height fixes that,
                     // and holds up as text scales because it clears the tallest tile layout.
-                    keyMetricTile(metric)
+                    Group {
+                        if metric == .bloodOxygen,
+                           let bloodOxygenMetric = MetricCatalog.metric(key: "spo2", source: "my-whoop") {
+                            // Use a direct destination here. The value route could render the tile but
+                            // lose its semantic button target when this grid is rebuilt after a refresh,
+                            // making Blood Oxygen look visible yet not tappable. The destination is the
+                            // same MetricDetailView used by Explore; only the navigation mechanism is
+                            // made explicit for this special carried-vital tile.
+                            NavigationLink {
+                                MetricDetailView(metric: bloodOxygenMetric)
+                            } label: {
+                                keyMetricTile(metric).contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .contentShape(Rectangle())
+                            .accessibilityHint("Opens blood oxygen history")
+                        } else {
+                            keyMetricTile(metric)
+                        }
+                    }
                         .frame(maxWidth: .infinity)
                         .frame(height: NoopMetrics.keyMetricTileHeight)
                 }
@@ -4136,7 +4171,7 @@ struct TodayView: View {
             // Never the latest imported Apple-Health row (it can be days stale) or the sparkline tail (that
             // is the most-recent value, not this day's): both froze the tile on an old import. Otherwise
             // fall through to the on-device estimate ("est."). Mirrors Android stepsForDay (#276/#150).
-            let appleStepsForDay = appleDays.last(where: { $0.day == selectedDayKey })?.steps
+            let appleStepsForDay = appleDays.last(where: { $0.day == selectedAppleHealthDayKey })?.steps
             let realSteps: String? = (d?.steps).map { intString(Double($0)) }
                 ?? appleStepsForDay.map { intString(Double($0)) }
             let estSteps = stepsEstByDay[selectedDayKey]

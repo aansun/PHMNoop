@@ -285,20 +285,32 @@ final class AICoachEngine: ObservableObject {
     /// coach. Exposed (read-only) so the UI's "Reset to default" can restore it and show it when nothing
     /// custom is stored. Editing the live prompt overrides this via `systemPromptKey`.
     static let defaultSystemPrompt = """
-    You are a precise, supportive recovery and performance coach. Use the user's wearable summary \
-    when provided: charge 0-100 is readiness, effort 0-100 is cardiovascular load, and rest 0-100 is \
-    sleep quality. Sleep duration/stages, sleep efficiency, HRV, resting heart rate, and recent workouts \
-    are supporting signals. A dash means NOT MEASURED — never treat it as zero.
+    You are a thoughtful, precise recovery and performance coach. Talk like a perceptive human coach: \
+    warm, direct, calm, and conversational. Use the user's wearable summary when provided: charge 0-100 \
+    is readiness, effort 0-100 is cardiovascular load, and rest 0-100 is sleep quality. Sleep \
+    duration/stages, sleep efficiency, HRV, resting heart rate, personal baselines, body-state notes, \
+    and recent workouts are supporting signals. A dash means NOT MEASURED — never treat it as zero.
+    First form a body-state read from the pattern, not from one number: compare today's signals with the \
+    user's own baseline, notice agreement or conflict between sleep and autonomic signals, and account for \
+    recent training load. The supplied BODY STATE READ is an evidence-based synthesis, not a diagnosis. \
+    Trust it as a useful guide only when enough signals are present; explicitly name what is missing when \
+    confidence is limited. Do not infer illness, injury, dehydration, mood, or motivation from wearable data.
     Use autoregulation: charge 67-100 supports building or pushing; 34-66 supports maintenance and \
     controlled quality; 0-33 means active recovery such as easy Zone 2, mobility, or extra sleep. \
     Respect progressive overload, polarized intensity, spacing of hard sessions, deloads, and sleep.
+    Make the conversation feel alive. Acknowledge the user's actual question or concern before advising. \
+    Connect one or two relevant signals in plain language instead of reciting every metric. Vary sentence \
+    openings and transitions; never use a stock greeting, generic praise, or the same closing repeatedly. \
+    If the data is mixed, say so and explain the trade-off. If the user asks how they feel, answer with the \
+    best-supported body-state interpretation first, then say what to watch over the next several hours.
     RESPONSE CONTRACT — follow this every time:
     1. Answer the user's question first; do not restate the full data context.
     2. Give only the 1-3 most relevant metrics, with their values and units when available.
     3. Give 2-3 concrete actions the user can take next. Prefer today; include a week plan only when \
     explicitly requested or clearly necessary.
     4. Keep a normal answer under 120 words and no more than 6 bullets. A simple question should be \
-    answered in 1-4 sentences. Never pad with generic motivation, repeated conclusions, or long caveats.
+    answered in 1-4 natural sentences. Never pad with generic motivation, repeated conclusions, or long \
+    caveats.
     5. Use plain Markdown. Use one short heading only when it improves scanning. Do not use tables, \
     long introductions, or code blocks. Ask at most one follow-up question, and only when essential.
     6. When the user asks for a workout recommendation or plan, make it practical and specific: name the \
@@ -1018,9 +1030,9 @@ final class AICoachEngine: ObservableObject {
         await summarizeDroppedMiddleIfNeeded(key: key)
         var wire = wireMessages(context: context)
 
-        // K11: If a chart image is pending and the provider is Gemini, attach it to the last
-        // user turn as inline_data. Non-Gemini providers can't accept images, so the image is
-        // silently dropped (the text question still goes through). Cleared after consumption.
+        // K11: If an image is pending, attach it to the last user turn when the selected provider
+        // supports multimodal Responses/inline-data input. Providers without image support still
+        // receive the text question. Cleared after consumption.
         let imageBase64 = pendingChartImage
         pendingChartImage = nil
 
@@ -1432,6 +1444,10 @@ final class AICoachEngine: ObservableObject {
 
         // Last ~14 days, newest first for readability.
         let recent = Array(days.suffix(14)).reversed()
+        if let current = latestBodyStateDay(in: days) {
+            lines.append("")
+            lines.append(Self.bodyStateSummary(current: current, history: days))
+        }
         lines.append("")
         lines.append("Recent days (newest first) — charge(0-100), effort(0-100), rest/sleep(h), "
                      + "deep/REM/light(h), eff(%), HRV(ms), RHR(bpm). A dash means NOT MEASURED, not zero:")
@@ -1456,6 +1472,108 @@ final class AICoachEngine: ObservableObject {
                      + ", active energy: \(avgInt(last30.compactMap { $0.activeKcalEst }))kcal/day")
 
         return lines.joined(separator: "\n")
+    }
+
+    /// The most recent day with at least one signal that can describe the body's current state. A row
+    /// with only a date or an unrelated imported field must not become "today" in the Coach's eyes.
+    private func latestBodyStateDay(in days: [DailyMetric]) -> DailyMetric? {
+        days.last(where: {
+            $0.recovery != nil || $0.totalSleepMin != nil || $0.avgHrv != nil ||
+            $0.restingHr != nil || $0.strain != nil
+        })
+    }
+
+    /// Builds a compact, evidence-linked interpretation before the raw daily rows are sent. The model
+    /// is still responsible for the conversation and recommendation; this layer makes the physiological
+    /// reasoning explicit and consistent instead of hoping every provider notices the same pattern.
+    /// Pure and nonisolated so it can be pinned without a database, strap, or network.
+    nonisolated static func bodyStateSummary(current: DailyMetric, history: [DailyMetric]) -> String {
+        let prior = history.filter { $0.day != current.day }.suffix(30)
+        let charge = current.recovery
+        let sleep = current.totalSleepMin
+        let hrv = current.avgHrv
+        let rhr = current.restingHr
+        let effort = current.strain
+
+        let sleepBaseline = average(prior.compactMap { $0.totalSleepMin })
+        let hrvBaseline = average(prior.compactMap { $0.avgHrv })
+        let rhrBaseline = average(prior.compactMap { $0.restingHr.map(Double.init) })
+        let effortBaseline = average(prior.compactMap { $0.strain })
+        let recentEffort = average(history.suffix(3).compactMap { $0.strain })
+
+        let shortSleep = sleep.map { $0 < 360 } ?? false
+        let sleepBelowBaseline = if let sleep, let baseline = sleepBaseline { sleep <= baseline - 45 } else { false }
+        let hrvDown = if let hrv, let baseline = hrvBaseline, baseline > 0 { hrv < baseline * 0.85 } else { false }
+        let rhrUp = if let rhr, let baseline = rhrBaseline { Double(rhr) >= baseline + 3 } else { false }
+        let recentLoadHigh = if let recentEffort, let baseline = effortBaseline, baseline > 0 {
+            recentEffort >= baseline * 1.25
+        } else {
+            effort.map { $0 >= 14 } ?? false
+        }
+
+        let state: String
+        let stance: String
+        if let charge, charge < 34 {
+            state = "recovery needed"
+            stance = "Prefer easy movement, mobility, or extra sleep; avoid stacking another hard session."
+        } else if (shortSleep || sleepBelowBaseline) && (hrvDown || rhrUp) {
+            state = "under-recovered despite the Charge score"
+            stance = "Keep intensity controlled and reassess energy and Heart Rate before doing hard work."
+        } else if hrvDown && rhrUp {
+            state = "autonomic load is elevated"
+            stance = "Choose maintenance or easy aerobic work and watch whether the pattern settles after recovery."
+        } else if recentLoadHigh {
+            state = "carrying recent training load"
+            stance = "Maintain quality without adding volume; an easier day may protect the next hard session."
+        } else if let charge, charge >= 67 {
+            state = "ready to build"
+            stance = "A quality session is reasonable if the user feels well; keep the hard work purposeful."
+        } else if charge != nil || sleep != nil || hrv != nil || rhr != nil || effort != nil {
+            state = "steady but not a clear green light"
+            stance = "Favor a controlled session and let perceived effort decide whether to progress."
+        } else {
+            state = "insufficient data"
+            stance = "Avoid a confident training prescription until the next sync provides a usable signal."
+        }
+
+        var evidence: [String] = []
+        if let charge { evidence.append("Charge \(Int(charge.rounded()))") }
+        if let sleep {
+            let comparison = sleepBaseline.map { " vs \(Self.formatHours($0))h baseline" } ?? ""
+            evidence.append("sleep \(Self.formatHours(sleep))h\(comparison)")
+        }
+        if let hrv {
+            let comparison = hrvBaseline.map { " vs \(Int($0.rounded()))ms baseline" } ?? ""
+            evidence.append("HRV \(Int(hrv.rounded()))ms\(comparison)")
+        }
+        if let rhr {
+            let comparison = rhrBaseline.map { " vs \(Int($0.rounded()))bpm baseline" } ?? ""
+            evidence.append("RHR \(rhr)bpm\(comparison)")
+        }
+        if let recentEffort {
+            let comparison = effortBaseline.map { " vs \(String(format: "%.1f", $0)) average daily effort" } ?? ""
+            evidence.append("recent effort \(String(format: "%.1f", recentEffort))\(comparison)")
+        } else if let effort {
+            evidence.append("Effort \(String(format: "%.1f", effort))")
+        }
+
+        // Effort describes load, not recovery. It can support the recommendation, but by itself it
+        // cannot justify a confident read of the body's physiological state.
+        let observedRecoverySignals = [charge != nil, sleep != nil, hrv != nil, rhr != nil]
+            .filter { $0 }
+            .count
+        let confidence = observedRecoverySignals >= 3 ? "high" : observedRecoverySignals >= 2 ? "moderate" : "limited"
+        let evidenceText = evidence.isEmpty ? "no interpretable signals" : evidence.joined(separator: "; ")
+        return "BODY STATE READ (today vs personal baseline; not a diagnosis): \(state). Confidence \(confidence). Evidence: \(evidenceText). Coach stance: \(stance)"
+    }
+
+    private nonisolated static func average(_ values: [Double]) -> Double? {
+        guard !values.isEmpty else { return nil }
+        return values.reduce(0, +) / Double(values.count)
+    }
+
+    private nonisolated static func formatHours(_ minutes: Double) -> String {
+        String(format: "%.1f", minutes / 60)
     }
 
     /// Append recent workouts to an existing context string. Async (workouts are read from the store),

@@ -69,6 +69,28 @@ struct OpenAIClient: AIProviderClient {
         }
     }
 
+    /// GPT-5 Responses models accept an image part alongside the latest user text. Older Chat
+    /// Completions models keep the existing text-only path so an attachment never changes their
+    /// request shape unexpectedly.
+    func streamWithImage(
+        key: String,
+        model: String,
+        systemPrompt: String,
+        messages: [(role: ChatMessage.Role, content: String)],
+        inlineImage: String?,
+        session: URLSession,
+        onDelta: (String) -> Void
+    ) async throws {
+        guard Self.usesResponsesAPI(model), let inlineImage, !inlineImage.isEmpty else {
+            try await stream(key: key, model: model, systemPrompt: systemPrompt,
+                             messages: messages, session: session, onDelta: onDelta)
+            return
+        }
+        try await streamResponses(key: key, model: model, systemPrompt: systemPrompt,
+                                  messages: messages, inlineImage: inlineImage,
+                                  session: session, onDelta: onDelta)
+    }
+
     func fetchModels(key: String, session: URLSession) async throws -> [String] {
         var req = URLRequest(url: AIProvider.openAI.modelsEndpoint)
         req.httpMethod = "GET"
@@ -157,13 +179,14 @@ struct OpenAIClient: AIProviderClient {
         model: String,
         systemPrompt: String,
         messages: [(role: ChatMessage.Role, content: String)],
+        inlineImage: String? = nil,
         session: URLSession,
         onDelta: (String) -> Void
     ) async throws {
         let body: [String: Any] = [
             "model": model,
             "instructions": systemPrompt,
-            "input": Self.responsesInput(messages),
+            "input": Self.responsesInput(messages, inlineImage: inlineImage),
             "max_output_tokens": 4096,
             "store": false,
             "stream": true
@@ -183,15 +206,32 @@ struct OpenAIClient: AIProviderClient {
         }
     }
 
-    private static func responsesInput(
-        _ messages: [(role: ChatMessage.Role, content: String)]
+    /// Responses input content types are role-specific: user turns are input text, while replayed
+    /// assistant turns are output text. Sending every turn as `input_text` works for the first prompt
+    /// but the Responses API rejects the second turn with HTTP 400 once an assistant reply is present.
+    static func responsesInput(
+        _ messages: [(role: ChatMessage.Role, content: String)],
+        inlineImage: String? = nil
     ) -> [[String: Any]] {
-        messages.map { message in
+        var input = messages.map { message in
             [
                 "role": message.role.rawValue,
-                "content": [["type": "input_text", "text": message.content]]
+                "content": [[
+                    "type": message.role == .assistant ? "output_text" : "input_text",
+                    "text": message.content
+                ]]
             ]
         }
+        if let inlineImage, !inlineImage.isEmpty,
+           let lastUserIndex = input.lastIndex(where: { ($0["role"] as? String) == ChatMessage.Role.user.rawValue }) {
+            var content = input[lastUserIndex]["content"] as? [[String: Any]] ?? []
+            content.append([
+                "type": "input_image",
+                "image_url": "data:image/png;base64,\(inlineImage)"
+            ])
+            input[lastUserIndex]["content"] = content
+        }
+        return input
     }
 
     /// `modernParams`: use `max_completion_tokens`, drop `temperature` — required by reasoning models.

@@ -294,7 +294,21 @@ interface WhoopDao : DeviceRegistryDao {
     // MARK: - Server-derived caches (latest value wins)
 
     @Upsert
-    suspend fun upsertDailyMetrics(rows: List<DailyMetric>)
+    suspend fun upsertDailyMetricsReplacing(rows: List<DailyMetric>)
+
+    /** Existing measured steps survive a partial row that has not computed steps yet. Swift twin:
+     * `COALESCE(excluded.steps, dailyMetric.steps)` in MetricsCache.upsertDailyMetrics. */
+    @Query("SELECT steps FROM dailyMetric WHERE deviceId = :deviceId AND day = :day")
+    suspend fun dailyMetricSteps(deviceId: String, day: String): Int?
+
+    @Transaction
+    suspend fun upsertDailyMetrics(rows: List<DailyMetric>) {
+        val protected = rows.map { row ->
+            if (row.steps != null) row
+            else dailyMetricSteps(row.deviceId, row.day)?.let { row.copy(steps = it) } ?: row
+        }
+        upsertDailyMetricsReplacing(protected)
+    }
 
     @Upsert
     suspend fun upsertSleepSessions(rows: List<SleepSession>)

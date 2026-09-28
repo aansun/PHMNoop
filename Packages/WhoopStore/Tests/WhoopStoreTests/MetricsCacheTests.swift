@@ -465,6 +465,24 @@ final class MetricsCacheTests: XCTestCase {
         XCTAssertEqual(rows[0], d2)
     }
 
+    func testDailyMetricUpsertDoesNotEraseMeasuredStepsWithPartialRow() async throws {
+        let store = try await WhoopStore.inMemory()
+        let measured = DailyMetric(day: "2026-05-23", totalSleepMin: nil, efficiency: nil,
+                                   deepMin: nil, remMin: nil, lightMin: nil, disturbances: nil,
+                                   restingHr: nil, avgHrv: nil, recovery: nil, strain: nil,
+                                   exerciseCount: nil, steps: 2_995)
+        try await store.upsertDailyMetrics([measured], deviceId: "devA")
+
+        let partial = DailyMetric(day: "2026-05-23", totalSleepMin: 420, efficiency: 0.9,
+                                  deepMin: 90, remMin: 110, lightMin: 220, disturbances: 3,
+                                  restingHr: 53, avgHrv: 60, recovery: 0.66, strain: 12.3,
+                                  exerciseCount: 1)
+        try await store.upsertDailyMetrics([partial], deviceId: "devA")
+
+        let rows = try await store.dailyMetrics(deviceId: "devA", from: "2026-05-23", to: "2026-05-23")
+        XCTAssertEqual(rows.first?.steps, 2_995)
+    }
+
     func testDailyMetricDayRangeFilter() async throws {
         let store = try await WhoopStore.inMemory()
         try await store.upsertDailyMetrics([

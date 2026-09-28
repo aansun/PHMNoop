@@ -41,13 +41,7 @@ struct ChatGPTClient: AIProviderClient {
         let body: [String: Any] = [
             "model": model,
             "instructions": systemPrompt,
-            "input": messages.map { message in
-                [
-                    "type": "message",
-                    "role": message.role.rawValue,
-                    "content": [["type": "input_text", "text": message.content]]
-                ] as [String: Any]
-            },
+            "input": Self.input(messages, inlineImage: nil),
             "store": false,
             "stream": true
         ]
@@ -84,6 +78,88 @@ struct ChatGPTClient: AIProviderClient {
                   !delta.isEmpty else { return }
             onDelta(delta)
         }
+    }
+
+    /// The subscription Responses endpoint accepts an image part on the latest user message.
+    /// Keep the same role-specific text types as the text-only path so replayed assistant turns
+    /// remain valid after the first attachment.
+    func streamWithImage(
+        key: String,
+        model: String,
+        systemPrompt: String,
+        messages: [(role: ChatMessage.Role, content: String)],
+        inlineImage: String?,
+        session: URLSession,
+        onDelta: (String) -> Void
+    ) async throws {
+        guard let inlineImage, !inlineImage.isEmpty else {
+            try await stream(key: key, model: model, systemPrompt: systemPrompt,
+                             messages: messages, session: session, onDelta: onDelta)
+            return
+        }
+
+        let auth = try await ChatGPTAuthService.shared.validAuthorization()
+        let body: [String: Any] = [
+            "model": model,
+            "instructions": systemPrompt,
+            "input": Self.input(messages, inlineImage: inlineImage),
+            "store": false,
+            "stream": true
+        ]
+
+        var request = URLRequest(url: AIProvider.chatGPT.endpoint)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(auth.accessToken)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+        request.setValue(Self.codexBetaHeader, forHTTPHeaderField: "OpenAI-Beta")
+        let sessionID = UUID().uuidString
+        let threadID = UUID().uuidString
+        request.setValue(sessionID, forHTTPHeaderField: "session_id")
+        request.setValue(sessionID, forHTTPHeaderField: "session-id")
+        request.setValue(threadID, forHTTPHeaderField: "thread-id")
+        request.setValue(UUID().uuidString, forHTTPHeaderField: "x-client-request-id")
+        request.setValue(Self.codexClientVersion, forHTTPHeaderField: "version")
+        request.setValue("codex_cli_rs", forHTTPHeaderField: "originator")
+        if let accountID = auth.accountID, !accountID.isEmpty {
+            request.setValue(accountID, forHTTPHeaderField: "ChatGPT-Account-Id")
+        }
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+
+        try await performStreamingRequest(request, session: session) { payload in
+            guard let data = payload.data(using: .utf8),
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+                  json["type"] as? String == "response.output_text.delta",
+                  let delta = json["delta"] as? String,
+                  !delta.isEmpty else { return }
+            onDelta(delta)
+        }
+    }
+
+    private static func input(
+        _ messages: [(role: ChatMessage.Role, content: String)],
+        inlineImage: String?
+    ) -> [[String: Any]] {
+        var input = messages.map { message in
+            [
+                "type": "message",
+                "role": message.role.rawValue,
+                "content": [[
+                    "type": message.role == .assistant ? "output_text" : "input_text",
+                    "text": message.content
+                ]]
+            ] as [String: Any]
+        }
+        if let inlineImage, !inlineImage.isEmpty,
+           let lastUserIndex = input.lastIndex(where: { ($0["role"] as? String) == ChatMessage.Role.user.rawValue }) {
+            var content = input[lastUserIndex]["content"] as? [[String: Any]] ?? []
+            content.append([
+                "type": "input_image",
+                "image_url": "data:image/png;base64,\(inlineImage)"
+            ])
+            input[lastUserIndex]["content"] = content
+        }
+        return input
     }
 
     func fetchModels(key: String, session: URLSession) async throws -> [String] {

@@ -454,6 +454,11 @@ final class AppModel: ObservableObject {
             // history once, so any deep-history rows an older build left on the 0–21 axis regenerate on
             // the 0–100 axis. Guarded by a persisted flag, so this is a no-op on every subsequent launch.
             await self.intelligence.runEffortRescoreIfNeeded()
+            // WHOOP 5 steps are a strap counter, not an Apple Health import. Repair today's computed
+            // total even when the long rescore was deferred or ran before the offload finished.
+            if await self.intelligence.hydrateCurrentDeviceSteps() {
+                await self.repo.refresh(days: 120)
+            }
             while !Task.isCancelled {
                 // #547 RE-POLLUTION: a sync since the last tick may have armed a re-heal (its ingest gate
                 // dropped bad-clock records). `runTimestampHealIfNeeded` honours the pending flag even after
@@ -649,6 +654,9 @@ final class AppModel: ObservableObject {
         live.append(log: "Read spine re-pointed to active device after registry change (#814).")
         await repo.refresh()
         await intelligence.analyzeRecent()
+        if await intelligence.hydrateCurrentDeviceSteps() {
+            await repo.refresh(days: 120)
+        }
     }
 
     #if os(iOS)
@@ -720,6 +728,11 @@ final class AppModel: ObservableObject {
         await RescoreBackgroundScheduler.run(passInProgress: intelligence.computing,
                                              log: { [live] line in live.append(log: line) }) {
             await intelligence.analyzeRecent(skipIfUnchanged: true)
+        }
+        // The step counter is independent from the HR score and can be present even when the score
+        // pass was skipped or produced a partial day. Persist it before publishing the refreshed UI.
+        if await intelligence.hydrateCurrentDeviceSteps() {
+            await repo.refresh(days: 120)
         }
         await refreshV5Signals()
         #if os(iOS)
