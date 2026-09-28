@@ -65,31 +65,29 @@ private struct PHMNRingsWidgetView: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(alignment: .firstTextBaseline, spacing: 0) {
-                Text("NOOP")
-                    .font(StrandFont.rounded(14, weight: .semibold))
-                    .tracking(1.6)
-                    .foregroundStyle(StrandPalette.onDarkPrimary)
+                heartRate
                 Spacer(minLength: 0)
                 battery
             }
 
-            Spacer(minLength: 3)
+            Spacer(minLength: 2)
 
-            HStack(alignment: .center, spacing: 10) {
+            HStack(alignment: .center, spacing: 18) {
                 metricColumn(
                     primaryLabel: String(localized: "Recovery"),
-                    primaryValue: snapshot.recovery.map { "\($0)%" } ?? "—",
+                    primaryValue: snapshot.recovery.map(String.init) ?? "—",
                     primaryColor: recoveryColor,
                     secondaryLabel: String(localized: "HRV"),
-                    secondaryValue: snapshot.hrv.map { "\($0) ms" } ?? "—",
+                    secondaryValue: snapshot.hrv.map(String.init) ?? "—",
+                    primarySuffix: snapshot.recovery == nil ? nil : "%",
                     primaryValueFirst: true,
                     alignment: .trailing,
                     frameAlignment: .trailing
                 )
-                .frame(width: 94, alignment: .trailing)
+                .frame(width: 88, alignment: .trailing)
 
                 scoreRings
-                    .frame(width: 100, height: 100)
+                    .frame(width: 96, height: 96)
 
                 metricColumn(
                     primaryLabel: String(localized: "Strain"),
@@ -97,84 +95,109 @@ private struct PHMNRingsWidgetView: View {
                     primaryColor: strainColor,
                     secondaryLabel: secondaryLabel,
                     secondaryValue: secondaryText,
+                    primarySuffix: nil,
                     primaryValueFirst: true,
                     alignment: .leading,
                     frameAlignment: .leading
                 )
-                .frame(width: 94, alignment: .leading)
+                .frame(width: 88, alignment: .leading)
             }
 
-            Spacer(minLength: 2)
+            Spacer(minLength: 1)
         }
-        .padding(.horizontal, 10)
+        .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .foregroundStyle(StrandPalette.onDarkPrimary)
-        .preferredColorScheme(.dark)
+        .foregroundStyle(StrandPalette.textPrimary)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityText)
+    }
+
+    private var heartRate: some View {
+        HStack(spacing: 3) {
+            Image(systemName: "heart.fill")
+                .font(StrandFont.rounded(9, weight: .semibold))
+            Text(snapshot.bpm.map(String.init) ?? "—")
+                .font(StrandFont.rounded(10, weight: .semibold))
+        }
+        .foregroundStyle(snapshot.bpm == nil ? StrandPalette.textTertiary : StrandPalette.liquidHeart)
+        .accessibilityLabel(snapshot.bpm.map { "Heart rate \($0)" } ?? "Heart rate unavailable")
     }
 
     private var battery: some View {
         HStack(spacing: 4) {
             Text(batteryText)
-                .font(StrandFont.rounded(12, weight: .semibold))
+                .font(StrandFont.rounded(9, weight: .semibold))
             Image(systemName: "battery.100")
-                .font(StrandFont.rounded(13, weight: .medium))
+                .font(StrandFont.rounded(10, weight: .medium))
         }
-        .foregroundStyle(StrandPalette.onDarkSecondary)
+        .foregroundStyle(StrandPalette.textSecondary)
         .accessibilityLabel("Battery \(batteryText)")
     }
 
     private func metricColumn(primaryLabel: String, primaryValue: String, primaryColor: Color,
                               secondaryLabel: String, secondaryValue: String,
+                              primarySuffix: String?,
                               primaryValueFirst: Bool,
                               alignment: HorizontalAlignment,
                               frameAlignment: Alignment) -> some View {
         VStack(alignment: alignment, spacing: 0) {
             metric(label: primaryLabel, value: primaryValue, color: primaryColor,
-                   valueFirst: primaryValueFirst, alignment: alignment, frameAlignment: frameAlignment)
+                   suffix: primarySuffix, valueFirst: primaryValueFirst,
+                   alignment: alignment, frameAlignment: frameAlignment)
             Rectangle()
                 .fill(StrandPalette.hairline.opacity(0.8))
                 .frame(height: 1)
-                .padding(.vertical, 7)
+                .padding(.vertical, 8)
             metric(label: secondaryLabel, value: secondaryValue,
-                   color: StrandPalette.onDarkSecondary, valueFirst: false, alignment: alignment,
+                   color: StrandPalette.textSecondary, valueFirst: false, alignment: alignment,
                    frameAlignment: frameAlignment)
         }
     }
 
     @ViewBuilder
     private func metric(label: String, value: String, color: Color,
+                        suffix: String? = nil,
                         valueFirst: Bool,
                         alignment: HorizontalAlignment,
                         frameAlignment: Alignment) -> some View {
-        VStack(spacing: 2) {
+        VStack(spacing: 3) {
             if valueFirst {
-                metricValue(value, color: color)
-                metricLabel(label, color: color)
+                metricValue(value, color: color, suffix: suffix, frameAlignment: frameAlignment)
+                metricLabel(label, color: color, frameAlignment: frameAlignment)
             } else {
-                metricLabel(label, color: color)
-                metricValue(value, color: color)
+                metricLabel(label, color: color, frameAlignment: frameAlignment)
+                metricValue(value, color: color, frameAlignment: frameAlignment)
             }
         }
         .frame(maxWidth: .infinity, alignment: frameAlignment)
     }
 
-    private func metricLabel(_ label: String, color: Color) -> some View {
+    private func metricLabel(_ label: String, color: Color, frameAlignment: Alignment) -> some View {
         Text(label.uppercased())
-            .font(StrandFont.rounded(13, weight: .semibold))
-            .tracking(1.1)
+            .font(StrandFont.rounded(9, weight: .semibold))
+            .tracking(0.7)
             .foregroundStyle(color)
             .lineLimit(1)
+            .frame(maxWidth: .infinity, alignment: frameAlignment)
     }
 
-    private func metricValue(_ value: String, color: Color) -> some View {
-        Text(value)
-            .font(StrandFont.rounded(23, weight: .semibold))
-            .foregroundStyle(color)
-            .lineLimit(1)
-            .minimumScaleFactor(0.60)
-            .allowsTightening(true)
+    private func metricValue(_ value: String, color: Color, suffix: String? = nil,
+                             frameAlignment: Alignment = .center) -> some View {
+        HStack(alignment: .lastTextBaseline, spacing: suffix == nil ? 0 : 1) {
+            Text(value)
+                .font(StrandFont.rounded(17, weight: .semibold))
+                .foregroundStyle(color)
+                .lineLimit(1)
+                .minimumScaleFactor(0.60)
+                .allowsTightening(true)
+            if let suffix {
+                Text(suffix)
+                    .font(StrandFont.rounded(9, weight: .semibold))
+                    .foregroundStyle(color)
+                    .baselineOffset(1)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: frameAlignment)
     }
 
     private var scoreRings: some View {
@@ -182,9 +205,9 @@ private struct PHMNRingsWidgetView: View {
             // The outer blue ring is Strain; the inner ring is Recovery, matching the app's
             // current metric tokens rather than a widget-only palette.
             PHMNRing(progress: snapshot.effort.map { Double($0) / 100 } ?? 0,
-                     color: strainColor, lineWidth: 10, diameter: 100)
+                     color: strainColor, lineWidth: 9, diameter: 96)
             PHMNRing(progress: snapshot.recovery.map { Double($0) / 100 } ?? 0,
-                     color: recoveryColor, lineWidth: 9, diameter: 76)
+                     color: recoveryColor, lineWidth: 8, diameter: 72)
         }
         .accessibilityHidden(true)
     }
@@ -195,7 +218,7 @@ private struct PHMNRingsWidgetView: View {
             : String(localized: "Recovery %@, HRV %@, Strain %@, Steps %@, Battery %@")
         return String(format: format,
                       snapshot.recovery.map { "\($0)%" } ?? "—",
-                      snapshot.hrv.map { "\($0) ms" } ?? "—",
+                      snapshot.hrv.map(String.init) ?? "—",
                       effortText, secondaryText, batteryText)
     }
 }
