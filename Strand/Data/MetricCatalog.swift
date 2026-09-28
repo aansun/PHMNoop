@@ -21,6 +21,7 @@ struct MetricDescriptor: Identifiable, Hashable {
     var sourceLabel: String {
         switch source {
         case "apple-health": return "Apple Health"
+        case MetricCatalog.combinedStepsSource: return String(localized: "Device + Apple Health")
         case "xiaomi-band":  return "Mi Band"
         case "nutrition-csv": return String(localized: "Nutrition")
         case "noop-mood":    return String(localized: "Mood")
@@ -222,13 +223,13 @@ enum MetricCatalog {
         return all.first { $0.key == key && $0.source == source }
     }
 
-    /// The source the Today steps tile taps through to, matching the value it displays. Precedence
-    /// mirrors Android's `TodayScreen` (#377): the measured WHOOP 5.0 / MG count, else the imported
-    /// Apple Health count, else the WHOOP 4.0 motion estimate. `hasImportedSteps` defaults false so
-    /// existing callers keep the measured-or-estimate behaviour unchanged.
+    /// The source the Today steps tile taps through to. The displayed headline still follows the
+    /// measured WHOOP count → Apple Health count → WHOOP 4.0 estimate precedence, but when Apple Health
+    /// is present and today's strap count is absent, the detail must use the combined resolver so older
+    /// device days do not disappear behind the phone-only source (#steps-history).
     static func todayStepsMetric(hasMeasuredSteps: Bool, hasImportedSteps: Bool = false) -> MetricDescriptor? {
         if hasMeasuredSteps { return metric(key: "steps", source: "my-whoop") }
-        if hasImportedSteps { return metric(key: "steps", source: "apple-health") }
+        if hasImportedSteps { return metric(key: "steps", source: combinedStepsSource) }
         return metric(key: "steps_est", source: "my-whoop")
     }
 

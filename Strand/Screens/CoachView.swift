@@ -1,6 +1,12 @@
 import SwiftUI
 import MarkdownUI
 import StrandDesign
+#if os(iOS)
+import PDFKit
+import PhotosUI
+import UIKit
+#endif
+import UniformTypeIdentifiers
 
 /// Coach, the one feature in NOOP that talks to the network.
 ///
@@ -47,6 +53,31 @@ struct CoachView: View {
     // `#if os(iOS)` guards — the shared file keeps compiling for both targets.
     #if os(iOS)
     @StateObject private var voiceInput = CoachVoiceInput()
+    @State private var showAttachmentMenu = false
+    @State private var showPhotoPicker = false
+    @State private var showDocumentImporter = false
+    @State private var photoPickerItem: PhotosPickerItem?
+    @State private var pendingAttachment: ComposerAttachment?
+    @State private var attachmentError = ""
+    @State private var showAttachmentError = false
+
+    private enum ComposerAttachment {
+        case image(name: String, base64: String)
+        case document(name: String, text: String)
+
+        var name: String {
+            switch self {
+            case .image(let name, _), .document(let name, _): return name
+            }
+        }
+
+        var systemImage: String {
+            switch self {
+            case .image: return "photo"
+            case .document: return "doc.text"
+            }
+        }
+    }
     #endif
 
     /// Sentinel tag for the "Custom…" entry in the model Picker.
@@ -1054,72 +1085,203 @@ struct CoachView: View {
     /// A modern iPhone composer: one discrete context/focus control and one continuous input capsule.
     /// The send affordance replaces the microphone once text exists, keeping the right edge stable.
     private var iOSComposer: some View {
-        HStack(alignment: .center, spacing: 10) {
-            Button {
-                composerFocused = true
-            } label: {
-                Image(systemName: "plus")
-                    .font(.system(size: 21, weight: .medium))
-                    .foregroundStyle(StrandPalette.textPrimary)
-                    .frame(width: 48, height: 48)
-                    .background(StrandPalette.surfaceRaised, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .strokeBorder(StrandPalette.hairline, lineWidth: 1))
-            }
-            .buttonStyle(.plain)
-            .disabled(!coach.isConfigured)
-            .accessibilityLabel("Focus Coach question field")
-
-            HStack(spacing: 6) {
-                TextField(composerPlaceholder, text: $draft, axis: .vertical)
-                    .textFieldStyle(.plain)
-                    .font(StrandFont.body)
-                    .foregroundStyle(StrandPalette.textPrimary)
-                    .lineLimit(1...4)
-                    .focused($composerFocused)
-                    .disabled(!coach.isConfigured)
-                    .opacity(coach.isConfigured ? 1 : 0.68)
-                    .padding(.leading, 15)
-                    .padding(.vertical, 11)
-                    .onSubmit { send(draft) }
-                    .accessibilityLabel("Question")
-
-                if coach.sending {
-                    ProgressView()
-                        .controlSize(.small)
-                        .tint(StrandPalette.textSecondary)
-                        .frame(width: 38, height: 38)
-                        .accessibilityLabel("Coach is thinking")
-                } else if draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    micButton
-                } else {
+        VStack(alignment: .leading, spacing: NoopMetrics.space2) {
+            if let attachment = pendingAttachment {
+                HStack(spacing: NoopMetrics.space2) {
+                    Image(systemName: attachment.systemImage)
+                        .foregroundStyle(StrandPalette.accent)
+                    Text(attachment.name)
+                        .font(StrandFont.footnote)
+                        .foregroundStyle(StrandPalette.textPrimary)
+                        .lineLimit(1)
+                    Spacer(minLength: 0)
                     Button {
-                        send(draft)
+                        pendingAttachment = nil
                     } label: {
-                        Image(systemName: "arrow.up")
-                            .font(.system(size: 15, weight: .bold))
-                            .foregroundStyle(StrandPalette.goldDeepText)
-                            .frame(width: 36, height: 36)
-                            .background(StrandPalette.accent, in: Circle())
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundStyle(StrandPalette.textTertiary)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Send")
+                    .accessibilityLabel("Remove attachment")
+                }
+                .padding(.horizontal, NoopMetrics.space3)
+                .padding(.vertical, NoopMetrics.space2)
+                .background(StrandPalette.surfaceInset, in: Capsule())
+                .overlay(Capsule().strokeBorder(StrandPalette.hairline, lineWidth: 1))
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Attachment \(attachment.name)")
+            }
+
+            HStack(alignment: .center, spacing: 10) {
+                Button {
+                    showAttachmentMenu = true
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 21, weight: .medium))
+                        .foregroundStyle(StrandPalette.textPrimary)
+                        .frame(width: 48, height: 48)
+                        .background(StrandPalette.surfaceRaised, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .strokeBorder(StrandPalette.hairline, lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+                .disabled(!coach.isConfigured)
+                .accessibilityLabel("Add attachment")
+                .accessibilityHint("Choose an image or document")
+
+                HStack(spacing: 6) {
+                    TextField(composerPlaceholder, text: $draft, axis: .vertical)
+                        .textFieldStyle(.plain)
+                        .font(StrandFont.body)
+                        .foregroundStyle(StrandPalette.textPrimary)
+                        .lineLimit(1...4)
+                        .focused($composerFocused)
+                        .disabled(!coach.isConfigured)
+                        .opacity(coach.isConfigured ? 1 : 0.68)
+                        .padding(.leading, 15)
+                        .padding(.vertical, 11)
+                        .onSubmit { send(draft) }
+                        .accessibilityLabel("Question")
+
+                    if coach.sending {
+                        ProgressView()
+                            .controlSize(.small)
+                            .tint(StrandPalette.textSecondary)
+                            .frame(width: 38, height: 38)
+                            .accessibilityLabel("Coach is thinking")
+                    } else if draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                              pendingAttachment == nil {
+                        micButton
+                    } else {
+                        Button {
+                            send(draft)
+                        } label: {
+                            Image(systemName: "arrow.up")
+                                .font(.system(size: 15, weight: .bold))
+                                .foregroundStyle(StrandPalette.goldDeepText)
+                                .frame(width: 36, height: 36)
+                                .background(StrandPalette.accent, in: Circle())
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(!hasComposerContent)
+                        .accessibilityLabel("Send")
+                    }
+                }
+                .frame(minHeight: 48)
+                .background(StrandPalette.surfaceInset, in: Capsule())
+                .overlay {
+                    Capsule()
+                        .strokeBorder(
+                            LinearGradient(
+                                colors: [StrandPalette.accent.opacity(0.9), StrandPalette.metricCyan.opacity(0.85)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            ),
+                            lineWidth: 1
+                        )
                 }
             }
-            .frame(minHeight: 48)
-            .background(StrandPalette.surfaceInset, in: Capsule())
-            .overlay {
-                Capsule()
-                    .strokeBorder(
-                        LinearGradient(
-                            colors: [StrandPalette.accent.opacity(0.9), StrandPalette.metricCyan.opacity(0.85)],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        ),
-                        lineWidth: 1
-                    )
+        }
+        .confirmationDialog("Add to Coach", isPresented: $showAttachmentMenu, titleVisibility: .visible) {
+            Button("Photo") { showPhotoPicker = true }
+            Button("Document") { showDocumentImporter = true }
+            Button("Cancel", role: .cancel) { }
+        }
+        .photosPicker(isPresented: $showPhotoPicker, selection: $photoPickerItem, matching: .images)
+        .fileImporter(
+            isPresented: $showDocumentImporter,
+            allowedContentTypes: [.pdf, .plainText, .commaSeparatedText, .json, .rtf, .html],
+            allowsMultipleSelection: false
+        ) { result in
+            handleDocumentImport(result)
+        }
+        .onChange(of: photoPickerItem) { _, newItem in
+            guard let newItem else { return }
+            loadPhoto(newItem)
+        }
+        .alert("Couldn’t attach file", isPresented: $showAttachmentError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(attachmentError)
+        }
+    }
+
+    private var hasComposerContent: Bool {
+        !draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || pendingAttachment != nil
+    }
+
+    private func loadPhoto(_ item: PhotosPickerItem) {
+        Task {
+            guard let data = try? await item.loadTransferable(type: Data.self),
+                  let image = UIImage(data: data),
+                  let resized = image.preparingThumbnail(of: CGSize(width: 1600, height: 1600)),
+                  let png = resized.pngData() else {
+                await MainActor.run {
+                    attachmentError = "The selected photo could not be read."
+                    showAttachmentError = true
+                    photoPickerItem = nil
+                }
+                return
+            }
+            await MainActor.run {
+                pendingAttachment = .image(name: "Photo", base64: png.base64EncodedString())
+                photoPickerItem = nil
             }
         }
+    }
+
+    private func handleDocumentImport(_ result: Result<[URL], Error>) {
+        guard case .success(let urls) = result, let url = urls.first else { return }
+        let secured = url.startAccessingSecurityScopedResource()
+        defer {
+            if secured { url.stopAccessingSecurityScopedResource() }
+        }
+
+        do {
+            let data = try Data(contentsOf: url)
+            let text: String
+            switch url.pathExtension.lowercased() {
+            case "pdf":
+                guard let document = PDFDocument(data: data), let extracted = document.string else {
+                    throw AttachmentError.unreadable
+                }
+                text = extracted
+            case "rtf":
+                let richText = try NSAttributedString(
+                    data: data,
+                    options: [.documentType: NSAttributedString.DocumentType.rtf],
+                    documentAttributes: nil
+                )
+                text = richText.string
+            case "html", "htm":
+                let richText = try NSAttributedString(
+                    data: data,
+                    options: [.documentType: NSAttributedString.DocumentType.html],
+                    documentAttributes: nil
+                )
+                text = richText.string
+            default:
+                guard let decoded = String(data: data, encoding: .utf8) else {
+                    throw AttachmentError.unreadable
+                }
+                text = decoded
+            }
+
+            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { throw AttachmentError.empty }
+            pendingAttachment = .document(
+                name: url.lastPathComponent,
+                text: String(trimmed.prefix(24_000))
+            )
+        } catch {
+            attachmentError = "This document could not be read. Choose a PDF or a text-based document."
+            showAttachmentError = true
+        }
+    }
+
+    private enum AttachmentError: Error {
+        case unreadable
+        case empty
     }
 
     private var composerPlaceholder: String {
@@ -1276,10 +1438,41 @@ struct CoachView: View {
 
     private func send(_ text: String) {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        #if os(iOS)
+        let attachment = pendingAttachment
+        guard (!trimmed.isEmpty || attachment != nil), !coach.sending else { return }
+
+        var prompt = trimmed
+        switch attachment {
+        case .image:
+            if prompt.isEmpty {
+                prompt = "Please review the attached image and tell me what is relevant to my recovery today."
+            }
+        case .document(let name, let documentText):
+            let question = prompt.isEmpty
+                ? "Please review the attached document and explain the points most relevant to my recovery today."
+                : prompt
+            prompt = "\(question)\n\n[Attached document: \(name)]\n\(documentText)\n[/Attached document]"
+        case nil:
+            break
+        }
+
+        if case .image(_, let base64) = attachment {
+            coach.pendingChartImage = base64
+        } else {
+            coach.pendingChartImage = nil
+        }
+        pendingAttachment = nil
+        photoPickerItem = nil
+        draft = ""
+        composerFocused = false
+        Task { await coach.send(prompt) }
+        #else
         guard !trimmed.isEmpty, !coach.sending else { return }
         draft = ""
         composerFocused = false
         Task { await coach.send(trimmed) }
+        #endif
     }
 
     /// K14: Trigger a subtle haptic when the Coach reply arrives. On iOS, a light impact feedback.

@@ -17,12 +17,13 @@ final class MetricCatalogStepsTests: XCTestCase {
     }
 
     /// #377 parity: with no measured strap count but an imported Apple Health count for the day, Today
-    /// shows and taps through to the imported value — NOT the motion estimate.
+    /// shows the imported value — while the detail uses the combined resolver so device history remains
+    /// visible instead of switching to a phone-only chart.
     func testTodayStepsPrefersImportedAppleHealthOverEstimate() {
         let metric = MetricCatalog.todayStepsMetric(hasMeasuredSteps: false, hasImportedSteps: true)
 
         XCTAssertEqual(metric?.key, "steps")
-        XCTAssertEqual(metric?.source, "apple-health")
+        XCTAssertEqual(metric?.source, MetricCatalog.combinedStepsSource)
     }
 
     /// A measured strap count always wins, even when an import also exists (real ?: imported ?: estimate).

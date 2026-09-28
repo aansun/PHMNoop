@@ -85,6 +85,30 @@ final class AIProviderModelListTests: XCTestCase {
         )
     }
 
+    func testOpenAIResponsesInputUsesOutputTextForAssistantHistory() {
+        let input = OpenAIClient.responsesInput([
+            (role: .user, content: "What should I do next?"),
+            (role: .assistant, content: "Choose active recovery today."),
+            (role: .user, content: "Why is my charge low?")
+        ])
+        let contentTypes = input.compactMap { item in
+            (item["content"] as? [[String: Any]])?.first?["type"] as? String
+        }
+        XCTAssertEqual(contentTypes, ["input_text", "output_text", "input_text"])
+    }
+
+    func testOpenAIResponsesInputAppendsImageToLatestUserTurn() {
+        let input = OpenAIClient.responsesInput([
+            (role: .user, content: "Please review this photo.")
+        ], inlineImage: "abc123")
+        let content = input.first?["content"] as? [[String: Any]]
+        XCTAssertEqual(content?.last?["type"] as? String, "input_image")
+        XCTAssertEqual(
+            content?.last?["image_url"] as? String,
+            "data:image/png;base64,abc123"
+        )
+    }
+
     func testOpenAIResponsesDeltaOnlyAcceptsTextDeltaEvents() {
         XCTAssertEqual(
             OpenAIClient.responsesDelta(

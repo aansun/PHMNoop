@@ -10,6 +10,15 @@ import XCTest
 /// unit. Blood Oxygen (SpO2) is the acceptance case.
 final class VitalReadingsTableTests: XCTestCase {
 
+    func testHealthVitalTilesRouteToTheirMetricHistory() {
+        XCTAssertEqual(BodyVitalSigns.detailMetricKey(for: "spo2"), "spo2")
+        XCTAssertEqual(BodyVitalSigns.detailMetricKey(for: "resp"), "resp_rate")
+        XCTAssertEqual(BodyVitalSigns.detailMetricKey(for: "rhr"), "rhr")
+        XCTAssertEqual(BodyVitalSigns.detailMetricKey(for: "hrv"), "hrv")
+        XCTAssertEqual(BodyVitalSigns.detailMetricKey(for: "skin"), "skin_temp")
+        XCTAssertNil(BodyVitalSigns.detailMetricKey(for: "spo2raw"))
+    }
+
     private let strap = Repository.whoopSource                  // "my-whoop"
     private let healthConnect = Repository.healthConnectSource  // "health-connect"
     private let appleHealth = Repository.appleHealthSource      // "apple-health"

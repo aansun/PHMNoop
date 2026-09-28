@@ -1,6 +1,7 @@
 import XCTest
 @testable import Strand
 import WhoopProtocol
+import WhoopStore
 import StrandAnalytics
 
 /// Covers the two small AI-Coach additions:
@@ -75,6 +76,41 @@ final class AICoachPromptAndStressTests: XCTestCase {
         XCTAssertTrue(prompt.contains("under 120 words"))
         XCTAssertTrue(prompt.contains("2-3 concrete actions"))
         XCTAssertTrue(prompt.contains("Do not use tables"))
+        XCTAssertTrue(prompt.contains("Talk like a perceptive human coach"))
+        XCTAssertTrue(prompt.contains("First form a body-state read from the pattern"))
+    }
+
+    // MARK: - Feature 3: body-state synthesis
+
+    func testBodyStateConnectsSleepAndAutonomicSignalsToAction() {
+        let days = [
+            metric(day: "2026-09-01", sleep: 450, hrv: 65, rhr: 52, charge: 72, effort: 10),
+            metric(day: "2026-09-02", sleep: 440, hrv: 64, rhr: 52, charge: 70, effort: 11),
+            metric(day: "2026-09-03", sleep: 330, hrv: 48, rhr: 57, charge: 68, effort: 12),
+        ]
+
+        let summary = AICoachEngine.bodyStateSummary(current: days[2], history: days)
+
+        XCTAssertTrue(summary.contains("under-recovered despite the Charge score"), summary)
+        XCTAssertTrue(summary.contains("sleep 5.5h"), summary)
+        XCTAssertTrue(summary.contains("HRV 48ms"), summary)
+        XCTAssertTrue(summary.contains("RHR 57bpm"), summary)
+        XCTAssertTrue(summary.contains("Keep intensity controlled"), summary)
+    }
+
+    func testBodyStateDoesNotInventAConclusionFromSparseData() {
+        let current = metric(day: "2026-09-03", sleep: nil, hrv: nil, rhr: nil, charge: nil, effort: 4)
+        let summary = AICoachEngine.bodyStateSummary(current: current, history: [current])
+
+        XCTAssertTrue(summary.contains("steady but not a clear green light"), summary)
+        XCTAssertTrue(summary.contains("Confidence limited"), summary)
+        XCTAssertTrue(summary.contains("recent effort 4.0"), summary)
+    }
+
+    private func metric(day: String, sleep: Double?, hrv: Double?, rhr: Int?, charge: Double?, effort: Double?) -> DailyMetric {
+        DailyMetric(day: day, totalSleepMin: sleep, efficiency: nil, deepMin: nil, remMin: nil,
+                    lightMin: nil, disturbances: nil, restingHr: rhr, avgHrv: hrv,
+                    recovery: charge, strain: effort, exerciseCount: nil)
     }
 
     // MARK: - Feature 2: derived stress line

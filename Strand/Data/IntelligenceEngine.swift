@@ -594,6 +594,50 @@ final class IntelligenceEngine: ObservableObject {
         if !computing { UserDefaults.standard.set(true, forKey: Self.effortRescoreFlagKey) }
     }
 
+    /// Rebuild today's measured WHOOP step total directly from the active strap's counter samples.
+    ///
+    /// WHOOP 5/MG exposes steps as a cumulative counter stream, not as an imported daily metric. A
+    /// post-sync analysis can finish before the counter window is complete (or can be skipped while a
+    /// longer rescore owns the lock), which used to leave today's computed row with `steps == nil` even
+    /// though the raw samples were already in SQLite. This small repair is independent of HR scoring:
+    /// it is cheap, idempotent, and runs at startup and after every completed sync. WHOOP 4.0 simply
+    /// returns no counter and remains unchanged.
+    @discardableResult
+    func hydrateCurrentDeviceSteps() async -> Bool {
+        guard let store = await repo.storeHandle() else { return false }
+
+        let now = Int(Date().timeIntervalSince1970)
+        let date = Date(timeIntervalSince1970: TimeInterval(now))
+        let offset = TimeZone.current.secondsFromGMT(for: date)
+        let dayStart = Self.midnightLocal(now, offsetSec: offset)
+        let dayKey = AnalyticsEngine.dayString(dayStart, offsetSec: offset)
+
+        var ticks: Int?
+        for id in repo.importedReadIds {
+            let samples = (try? await store.stepSamples(deviceId: id, from: dayStart, to: now,
+                                                         limit: 200_000)) ?? []
+            if let measured = StepsCounter.stepsInWindow(samples), measured > 0 {
+                ticks = measured
+                break
+            }
+        }
+        guard let ticks else { return false }
+
+        let scaled = Int((Double(ticks) / max(profile.stepTicksPerStep, 0.5)).rounded())
+        guard scaled > 0 else { return false }
+
+        let computedId = deviceId + "-noop"
+        let existing = (try? await store.dailyMetrics(deviceId: computedId, from: dayKey, to: dayKey))?.first
+        let row = existing?.with(steps: scaled) ?? DailyMetric(
+            day: dayKey, totalSleepMin: nil, efficiency: nil, deepMin: nil, remMin: nil,
+            lightMin: nil, disturbances: nil, restingHr: nil, avgHrv: nil, recovery: nil,
+            strain: nil, exerciseCount: nil, steps: scaled
+        )
+        guard (try? await store.upsertDailyMetrics([row], deviceId: computedId)) != nil else { return false }
+        diagnosticSink?("steps: repaired current WHOOP counter total day=\(dayKey) steps=\(scaled)", .steps)
+        return true
+    }
+
     /// UserDefaults flag guarding the one-shot #547 implausible-timestamp DB heal (below). Set once the
     /// heal completes so it never re-runs.
     static let timestampHealFlagKey = "intelligence.timestampHeal.v547.done"
@@ -3398,6 +3442,16 @@ final class IntelligenceEngine: ObservableObject {
 // is most easily dropped at (they respell every field by name), so StrandTests asserts them directly
 // rather than through a copy that could drift. Nothing outside this module can see them either way.
 extension DailyMetric {
+    /// Rebuild with a substituted measured step total while keeping every other cached metric.
+    func with(steps newSteps: Int?) -> DailyMetric {
+        DailyMetric(day: day, totalSleepMin: totalSleepMin, efficiency: efficiency, deepMin: deepMin,
+                    remMin: remMin, lightMin: lightMin, disturbances: disturbances, restingHr: restingHr,
+                    avgHrv: avgHrv, recovery: recovery, strain: strain, exerciseCount: exerciseCount,
+                    spo2Pct: spo2Pct, skinTempDevC: skinTempDevC, respRateBpm: respRateBpm,
+                    steps: newSteps, activeKcalEst: activeKcalEst, spo2Red: spo2Red, spo2Ir: spo2Ir,
+                    avgSdnn: avgSdnn, skinTempC: skinTempC, sleepHrOnly: sleepHrOnly)
+    }
+
     /// Rebuild with a substituted resting HR while keeping every other freshly-scored cell.
     func with(restingHr rhr: Int?) -> DailyMetric {
         DailyMetric(day: day, totalSleepMin: totalSleepMin, efficiency: efficiency, deepMin: deepMin,
