@@ -115,20 +115,20 @@ private struct PHMNRingsWidgetView: View {
     private var heartRate: some View {
         HStack(spacing: 3) {
             Image(systemName: "heart.fill")
-                .font(StrandFont.rounded(9, weight: .semibold))
+                .font(StrandFont.rounded(10, weight: .bold))
             Text(snapshot.bpm.map(String.init) ?? "—")
-                .font(StrandFont.rounded(10, weight: .semibold))
+                .font(StrandFont.rounded(11, weight: .bold))
         }
-        .foregroundStyle(snapshot.bpm == nil ? StrandPalette.textTertiary : StrandPalette.liquidHeart)
+        .foregroundStyle(StrandPalette.textSecondary)
         .accessibilityLabel(snapshot.bpm.map { "Heart rate \($0)" } ?? "Heart rate unavailable")
     }
 
     private var battery: some View {
         HStack(spacing: 4) {
             Text(batteryText)
-                .font(StrandFont.rounded(9, weight: .semibold))
+                .font(StrandFont.rounded(10, weight: .bold))
             Image(systemName: "battery.100")
-                .font(StrandFont.rounded(10, weight: .medium))
+                .font(StrandFont.rounded(11, weight: .bold))
         }
         .foregroundStyle(StrandPalette.textSecondary)
         .accessibilityLabel("Battery \(batteryText)")
@@ -174,7 +174,7 @@ private struct PHMNRingsWidgetView: View {
 
     private func metricLabel(_ label: String, color: Color, frameAlignment: Alignment) -> some View {
         Text(label.uppercased())
-            .font(StrandFont.rounded(9, weight: .semibold))
+            .font(StrandFont.rounded(9, weight: .bold))
             .tracking(0.7)
             .foregroundStyle(color)
             .lineLimit(1)
@@ -185,14 +185,14 @@ private struct PHMNRingsWidgetView: View {
                              frameAlignment: Alignment = .center) -> some View {
         HStack(alignment: .lastTextBaseline, spacing: suffix == nil ? 0 : 1) {
             Text(value)
-                .font(StrandFont.rounded(17, weight: .semibold))
+                .font(StrandFont.rounded(17, weight: .bold))
                 .foregroundStyle(color)
                 .lineLimit(1)
                 .minimumScaleFactor(0.60)
                 .allowsTightening(true)
             if let suffix {
                 Text(suffix)
-                    .font(StrandFont.rounded(9, weight: .semibold))
+                    .font(StrandFont.rounded(9, weight: .bold))
                     .foregroundStyle(color)
                     .baselineOffset(1)
             }
