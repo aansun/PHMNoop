@@ -69,8 +69,11 @@ extension WidgetSnapshot {
         // for users who have not enabled Apple Health, while the Rings widget stays honest when neither
         // source has published a value yet.
         let appleRows = await model.repo.appleDailyRows(days: 2)
-        let steps = appleRows.last(where: { $0.day == Repository.localDayKey(now) })?.steps
-            ?? todayRow?.steps
+        // Keep the widget aligned with Today: a real current-day strap counter wins over an older
+        // Apple Health aggregate. The previous Apple-first order made the widget appear stale when a
+        // WHOOP 5/MG offload had already updated Today's Steps tile.
+        let steps = todayRow?.steps
+            ?? appleRows.last(where: { $0.day == Repository.localDayKey(now) })?.steps
             ?? day?.steps
         let caloriesKcal = appleRows.last(where: { $0.day == Repository.localDayKey(now) })?.activeKcal.map { Int($0.rounded()) }
             ?? todayRow?.activeKcalEst.map { Int($0.rounded()) }
@@ -185,6 +188,20 @@ extension WidgetSnapshot {
         // rewrote it between here and the save); hand it to the dedup so the live path reads the App Group
         // ONCE per tick instead of loading it again inside saveAndReloadIfChanged.
         let previous = snap
+        // Steps are a current-day repository value, not a live HR field. Refresh them on this fast path
+        // as well so a battery/HR-triggered widget publish cannot carry an older App Group total forward.
+        let todayRow = Repository.resolveToday(
+            days: model.repo.days,
+            logicalKey: Repository.logicalDayKey(now),
+            localKey: Repository.localDayKey(now)
+        )
+        let anchor = Repository.widgetAnchor(days: model.repo.days, now: now)
+        let appleRows = await model.repo.appleDailyRows(days: 2)
+        if let steps = todayRow?.steps
+            ?? appleRows.last(where: { $0.day == Repository.localDayKey(now) })?.steps
+            ?? anchor?.steps {
+            snap.steps = steps
+        }
         snap.bpm = model.bpm ?? model.live.heartRate
         snap.batteryPct = Self.activeBatteryPct(from: model)
         snap.bonded = model.live.bonded
