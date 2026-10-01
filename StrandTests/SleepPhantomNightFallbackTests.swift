@@ -54,6 +54,43 @@ final class SleepPhantomNightFallbackTests: XCTestCase {
         XCTAssertNil(SleepView.stubDaySession([]))
     }
 
+    /// A cached sleep row can carry valid daily Deep/REM/Light totals even when its per-epoch
+    /// timeline is malformed or incomplete. The Sleep tab must keep the breakdown visible and mark
+    /// it as aggregate-based rather than falling through to the stage-less stub.
+    func testDailyStageTotalsRestoreBreakdownWhenTimelineCannotDecode() throws {
+        let start = 1_790_000_000
+        let session = CachedSleepSession(startTs: start, endTs: start + 8 * 3_600,
+                                         efficiency: nil, restingHr: 52, avgHrv: 61,
+                                         stagesJSON: "not-a-stage-timeline")
+        let day = DailyMetric(day: Repository.localDayKey(Date(timeIntervalSince1970: TimeInterval(session.endTs))),
+                              totalSleepMin: 430.916666666667, efficiency: 0.960973796692065,
+                              deepMin: 122.5, remMin: 128.5, lightMin: 179.916666666667,
+                              disturbances: nil, restingHr: 52, avgHrv: 61, recovery: nil,
+                              strain: nil, exerciseCount: nil)
+
+        let night = try XCTUnwrap(SleepModel.dailyStageFallback([session], daily: day))
+        XCTAssertTrue(night.stageTotalsFallback)
+        XCTAssertNil(night.realSegments, "The fallback must not invent a persisted timeline")
+        XCTAssertEqual(night.stages.deep, 122.5, accuracy: 0.0001)
+        XCTAssertEqual(night.stages.rem, 128.5, accuracy: 0.0001)
+        XCTAssertEqual(night.stages.light, 179.916666666667, accuracy: 0.0001)
+        XCTAssertEqual(night.stages.asleep, 430.916666666667, accuracy: 0.0001)
+        XCTAssertEqual(try XCTUnwrap(night.session.efficiency), 0.960973796692065, accuracy: 0.0001)
+    }
+
+    /// Aggregate totals without all three stage fields are not enough to claim a breakdown; the
+    /// caller should retain the existing honest no-stage-data state instead.
+    func testDailyStageFallbackRequiresAllStageTotals() {
+        let session = CachedSleepSession(startTs: 1_790_000_000, endTs: 1_790_028_800,
+                                         efficiency: nil, restingHr: nil, avgHrv: nil,
+                                         stagesJSON: "not-a-stage-timeline")
+        let day = DailyMetric(day: Repository.localDayKey(Date(timeIntervalSince1970: TimeInterval(session.endTs))),
+                              totalSleepMin: 420, efficiency: 0.9, deepMin: 90, remMin: nil,
+                              lightMin: 230, disturbances: nil, restingHr: nil, avgHrv: nil,
+                              recovery: nil, strain: nil, exerciseCount: nil)
+        XCTAssertNil(SleepModel.dailyStageFallback([session], daily: day))
+    }
+
     /// End-to-end pure pass of the #940 editor flow: the guard corrects the reporter's exact
     /// cross-midnight roll BEFORE it can create the phantom, so the merge chain never sees it.
     func testGuardPreventsThePhantomAtTheSource() {

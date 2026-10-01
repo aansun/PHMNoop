@@ -27,6 +27,10 @@ struct Stages {
 struct Night {
     let session: CachedSleepSession
     let stages: Stages
+    /// True when the stage totals came from the daily aggregate because the persisted per-epoch
+    /// timeline was unavailable or could not be decoded. The breakdown remains useful, but it must
+    /// not be presented as a recovered hypnogram. (#sleep-stage-fallback)
+    var stageTotalsFallback: Bool = false
     /// The REAL per-segment timeline for on-device computed nights (nil for imported nights,
     /// whose export carries totals only — those keep the synthetic reconstruction below). (#77)
     var realSegments: [SleepInterval]? = nil
@@ -248,6 +252,42 @@ struct SleepModelInputs {
 // main-night selectors (`SleepView.mainNightGroup`, `napSleepMinutes`, `stubDaySession`) stay on
 // `SleepView` because they are reused by other screens/tests; these statics call them.
 extension SleepModel {
+
+    /// Reconstruct a useful stage breakdown from the daily aggregate when a sleep session exists but
+    /// its per-epoch `stagesJSON` cannot be decoded. This is deliberately a proportional breakdown:
+    /// the stored Deep/REM/Light totals are trustworthy for the night, while the exact order of those
+    /// stages is not available. Keeping this fallback here also means the screen does not turn a valid
+    /// WHOOP sleep row into the misleading "no stage data" state just because one timeline payload is
+    /// malformed or incomplete.
+    static func dailyStageFallback(_ blocks: [CachedSleepSession], daily: DailyMetric?,
+                                   habitualMidsleepSec: Int? = nil) -> Night? {
+        guard let daily,
+              let asleep = daily.totalSleepMin, asleep > 0,
+              let light = daily.lightMin, light >= 0,
+              let deep = daily.deepMin, deep >= 0,
+              let rem = daily.remMin, rem >= 0,
+              light + deep + rem > 0,
+              let main = SleepView.mainNightSession(blocks, habitualMidsleepSec: habitualMidsleepSec)
+                    ?? blocks.first,
+              main.endTs > main.effectiveStartTs else { return nil }
+
+        let spanMin = Double(main.endTs - main.effectiveStartTs) / 60.0
+        let storedEfficiency = daily.efficiency.map { $0 > 1 ? $0 / 100 : $0 }
+        let inBedMin: Double
+        if let efficiency = storedEfficiency, efficiency > 0, efficiency <= 1 {
+            inBedMin = max(asleep, asleep / efficiency)
+        } else {
+            inBedMin = max(asleep, spanMin)
+        }
+        let awake = max(0, inBedMin - asleep)
+        let stages = Stages(awake: awake, light: light, deep: deep, rem: rem)
+        let session = CachedSleepSession(startTs: main.effectiveStartTs, endTs: main.endTs,
+                                         efficiency: storedEfficiency, restingHr: main.restingHr,
+                                         avgHrv: main.avgHrv, stagesJSON: nil,
+                                         stagingSparse: main.stagingSparse, deviceId: main.deviceId)
+        return Night(session: session, stages: stages, stageTotalsFallback: true,
+                     sourceBlocks: blocks, habitualMidsleepSec: habitualMidsleepSec)
+    }
 
     /// The browsable DAY list: every block grouped by the calendar day it ENDS on (matching the
     /// dashboard's per-night merge), newest day first, blocks within a day oldest→newest. Each day
@@ -571,7 +611,14 @@ extension SleepModel {
             isStub = false
         } else {
             let blocks0 = dayGroups.indices.contains(0) ? dayGroups[0] : []
-            if let stubSession = SleepView.stubDaySession(blocks0, habitualMidsleepSec: habitual) {
+            let wakeDay = blocks0.map(\.endTs).max().map {
+                Repository.localDayKey(Date(timeIntervalSince1970: TimeInterval($0)))
+            }
+            let daily = wakeDay.flatMap { key in inputs.days.last(where: { $0.day == key }) }
+            if let fallback = dailyStageFallback(blocks0, daily: daily, habitualMidsleepSec: habitual) {
+                night = fallback
+                isStub = false
+            } else if let stubSession = SleepView.stubDaySession(blocks0, habitualMidsleepSec: habitual) {
                 night = Night(session: stubSession, stages: Stages(awake: 0, light: 0, deep: 0, rem: 0),
                               sourceBlocks: blocks0, habitualMidsleepSec: habitual)
                 isStub = true

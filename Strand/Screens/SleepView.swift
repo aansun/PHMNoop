@@ -783,9 +783,15 @@ struct SleepView: View {
         let stageCaption = repo.activeDeviceIsOura
             ? String(localized: "raw on-device stages")
             : String(localized: "stages approximate (on-device)")
-        let subtitle = isPersisted
-            ? String(localized: "\(durationText(night.timeInBed)) in bed · \(efficiencyText(night)) efficiency · \(stageCaption)")
-            : String(localized: "\(durationText(night.timeInBed)) in bed · \(efficiencyText(night)) efficiency")
+        let subtitle: String = {
+            if night.stageTotalsFallback {
+                return String(localized: "\(durationText(night.timeInBed)) in bed · \(efficiencyText(night)) efficiency · daily stage totals")
+            } else if isPersisted {
+                return String(localized: "\(durationText(night.timeInBed)) in bed · \(efficiencyText(night)) efficiency · \(stageCaption)")
+            } else {
+                return String(localized: "\(durationText(night.timeInBed)) in bed · \(efficiencyText(night)) efficiency")
+            }
+        }()
         VStack(alignment: .leading, spacing: NoopMetrics.space2) {
             if intervals.count >= 2 {
                 // #sleep-chart-style (Settings → Appearance): Classic keeps the per-stage timeline ROWS
