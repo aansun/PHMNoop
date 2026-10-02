@@ -1,4 +1,5 @@
 import XCTest
+import WhoopStore
 @testable import Strand
 
 /// The #345 "May be incomplete" gate: sparse motion is necessary, a short total is what makes it worth
@@ -21,6 +22,23 @@ final class SleepSparseNoteGateTests: XCTestCase {
     func testAGenuinelyShortSparseNightStillWarns() {
         XCTAssertTrue(SleepView.stageSparseNoteApplies(stagingSparse: true, asleepMin: 60, needHours: need))
         XCTAssertTrue(SleepView.stageSparseNoteApplies(stagingSparse: true, asleepMin: 7.9 * 60, needHours: need))
+    }
+
+    func testACompleteMovementTraceSuppressesTheCaveatEvenWhenTheNightIsShort() {
+        let start = 1_790_000_000
+        let session = CachedSleepSession(startTs: start, endTs: start + 897 * 30,
+                                         efficiency: nil, restingHr: nil, avgHrv: nil,
+                                         stagesJSON: nil, stagingSparse: true)
+        let night = Night(session: session,
+                          stages: Stages(awake: 15, light: 240, deep: 90, rem: 75),
+                          sourceBlocks: [session],
+                          motionEpochs: Array(repeating: 0.4, count: 897))
+
+        XCTAssertTrue(SleepView.motionCoverageComplete(night))
+        XCTAssertFalse(SleepView.stageSparseNoteApplies(stagingSparse: true,
+                                                        asleepMin: 7 * 60,
+                                                        motionCoverageComplete: true,
+                                                        needHours: need))
     }
 
     func testANightThatStagedToNothingIsTheStrongestCaseNotAnExemption() {

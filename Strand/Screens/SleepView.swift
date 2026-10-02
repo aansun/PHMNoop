@@ -974,7 +974,26 @@ struct SleepView: View {
     private func stageShowsIncompleteNote(_ night: Night) -> Bool {
         SleepView.stageSparseNoteApplies(
             stagingSparse: night.sourceBlocks.contains { $0.stagingSparse == true },
-            asleepMin: night.stages.asleep)
+            asleepMin: night.stages.asleep,
+            motionCoverageComplete: SleepView.motionCoverageComplete(night))
+    }
+
+    /// True when the persisted movement series covers essentially the entire main-night window. The
+    /// strap writes one movement value per 30-second epoch; allowing one rounded boundary epoch avoids
+    /// warning on a complete trace when the stored session bounds sit just outside the sampled grid.
+    /// This keeps the caveat about missing movement data, rather than incorrectly treating a short but
+    /// fully synced night as incomplete.
+    static func motionCoverageComplete(_ night: Night) -> Bool {
+        let group = SleepView.mainNightGroup(night.sourceBlocks,
+                                             habitualMidsleepSec: night.habitualMidsleepSec)
+        let fragments = group.isEmpty ? night.sourceBlocks : group
+        guard !fragments.isEmpty, !night.motionEpochs.isEmpty else { return false }
+
+        let expectedEpochs = fragments.reduce(0) { total, fragment in
+            let span = max(0, fragment.endTs - fragment.effectiveStartTs)
+            return total + max(1, Int((Double(span) / 30.0).rounded()))
+        }
+        return night.motionEpochs.count >= max(1, expectedEpochs - 1)
     }
 
     /// Pure #345 gate (unit-testable without a live view) — whether the "May be incomplete" caveat applies.
@@ -1001,8 +1020,9 @@ struct SleepView: View {
     /// stands in.
     static func stageSparseNoteApplies(stagingSparse: Bool,
                                        asleepMin: Double,
+                                       motionCoverageComplete: Bool = false,
                                        needHours: Double = AnalyticsEngine.Rest.defaultNeedHours) -> Bool {
-        guard stagingSparse else { return false }
+        guard stagingSparse, !motionCoverageComplete else { return false }
         return asleepMin < needHours * 60.0
     }
 
@@ -1271,21 +1291,21 @@ struct SleepView: View {
             Spacer(minLength: 0)
             GeometryReader { geo in
                 HStack(spacing: 2) {
-                    segment(.deep, s.deep, total, geo.size.width)
-                    segment(.light, s.light, total, geo.size.width)
-                    segment(.rem, s.rem, total, geo.size.width)
                     segment(.awake, s.awake, total, geo.size.width)
+                    segment(.rem, s.rem, total, geo.size.width)
+                    segment(.light, s.light, total, geo.size.width)
+                    segment(.deep, s.deep, total, geo.size.width)
                 }
             }
             .frame(height: 34)
             .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel("Sleep stage breakdown: deep \(stageSharePercent(.deep, s)) percent, light \(stageSharePercent(.light, s)) percent, REM \(stageSharePercent(.rem, s)) percent, awake \(stageSharePercent(.awake, s)) percent")
+            .accessibilityLabel("Sleep stage breakdown: awake \(stageSharePercent(.awake, s)) percent, REM \(stageSharePercent(.rem, s)) percent, light \(stageSharePercent(.light, s)) percent, deep \(stageSharePercent(.deep, s)) percent")
             HStack(spacing: 16) {
-                legend(.deep, String(localized: "Deep"))
-                legend(.light, String(localized: "Light"))
-                legend(.rem, String(localized: "REM"))
                 legend(.awake, String(localized: "Awake"))
+                legend(.rem, String(localized: "REM"))
+                legend(.light, String(localized: "Light"))
+                legend(.deep, String(localized: "Deep"))
             }
             Spacer(minLength: 0)
         }
@@ -1318,10 +1338,10 @@ struct SleepView: View {
     @ViewBuilder
     private func stageBreakdownRows(_ s: Stages, palette: SleepStagePalette = .noop) -> some View {
         VStack(alignment: .leading, spacing: NoopMetrics.cardInnerSpacing) {
-            stageBreakdownRow(.rem,   minutes: s.rem,   total: s.total, percent: stageSharePercent(.rem, s), palette: palette)
-            stageBreakdownRow(.deep,  minutes: s.deep,  total: s.total, percent: stageSharePercent(.deep, s), palette: palette)
-            stageBreakdownRow(.light, minutes: s.light, total: s.total, percent: stageSharePercent(.light, s), palette: palette)
             stageBreakdownRow(.awake, minutes: s.awake, total: s.total, percent: stageSharePercent(.awake, s), palette: palette)
+            stageBreakdownRow(.rem,   minutes: s.rem,   total: s.total, percent: stageSharePercent(.rem, s), palette: palette)
+            stageBreakdownRow(.light, minutes: s.light, total: s.total, percent: stageSharePercent(.light, s), palette: palette)
+            stageBreakdownRow(.deep,  minutes: s.deep,  total: s.total, percent: stageSharePercent(.deep, s), palette: palette)
         }
     }
 
@@ -1397,8 +1417,8 @@ struct SleepView: View {
     /// let`, which would have frozen the reader's choice at first use until the app relaunched.
     private static var stageAxisFormatter: DateFormatter { AppClock.hourMinuteFormatter() }
 
-    /// The WHOOP sleep-stages chart: a stack of four per-stage timeline rows (AWAKE · LIGHT ·
-    /// DEEP · REM, WHOOP's order) over a shared onset→wake time axis. Each row is independently
+    /// The sleep-stages chart: a stack of four per-stage timeline rows (AWAKE · REM · LIGHT · DEEP)
+    /// over a shared onset→wake time axis. Each row is independently
     /// legible no matter how fragmented the on-device staging is — segments in one row can never
     /// tangle with another stage's, which is exactly why WHOOP renders sleep this way.
     @ViewBuilder
@@ -1419,9 +1439,9 @@ struct SleepView: View {
                 .padding(.horizontal, 10)
                 .padding(.bottom, 2)
             stageTimelineRow(.awake, minutes: s.awake, percent: stageSharePercent(.awake, s), intervals: smoothed, origin: origin, span: span)
+            stageTimelineRow(.rem,   minutes: s.rem,   percent: stageSharePercent(.rem, s), intervals: smoothed, origin: origin, span: span)
             stageTimelineRow(.light, minutes: s.light, percent: stageSharePercent(.light, s), intervals: smoothed, origin: origin, span: span)
             stageTimelineRow(.deep,  minutes: s.deep,  percent: stageSharePercent(.deep, s), intervals: smoothed, origin: origin, span: span)
-            stageTimelineRow(.rem,   minutes: s.rem,   percent: stageSharePercent(.rem, s), intervals: smoothed, origin: origin, span: span)
             // onset · midpoint · wake clock labels, aligned with the rows' inner strips.
             HStack {
                 Text(Self.stageAxisFormatter.string(from: night.onsetDate))

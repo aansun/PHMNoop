@@ -1,4 +1,5 @@
 #if os(iOS)
+import Combine
 import SwiftUI
 import StrandDesign
 import UserNotifications
@@ -47,6 +48,10 @@ struct StrandiOSApp: App {
     /// Effort's display scale is also embedded in the shared widget snapshot. Observe it here so a
     /// Settings change gets one accurate full rebuild instead of waiting for an unrelated repo refresh.
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    /// A steady HR does not necessarily publish a new `bpm`, but the accumulated Effort still changes.
+    /// Keep the Rings widget current during an active foreground session without reloading it more often
+    /// than the widget publisher's own one-minute HR budget.
+    private let widgetEffortRefreshTimer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
     /// kg vs lb for the Lift Log Live Activity's "8 x 30 kg" line — the app formats it, because the
     /// unit preference lives here and not in the widget extension.
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
@@ -308,6 +313,10 @@ struct StrandiOSApp: App {
                 .onReceive(model.$bpm.dropFirst()) { _ in
                     guard scenePhase == .active else { return }
                     guard WidgetSnapshot.HRPublishThrottle.admit() else { return }
+                    Task { await WidgetSnapshot.publishLive(from: model, includeEffort: true) }
+                }
+                .onReceive(widgetEffortRefreshTimer) { _ in
+                    guard scenePhase == .active else { return }
                     Task { await WidgetSnapshot.publishLive(from: model, includeEffort: true) }
                 }
                 .onChange(of: effortScaleRaw) { _, _ in

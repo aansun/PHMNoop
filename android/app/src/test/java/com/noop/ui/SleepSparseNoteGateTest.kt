@@ -27,6 +27,17 @@ class SleepSparseNoteGateTest {
         assertTrue(stageSparseNoteApplies(stagingSparse = true, asleepMin = 7.9 * 60, needHours = need))
     }
 
+    @Test fun `a complete motion trace suppresses the caveat even when the night is short`() {
+        assertFalse(
+            stageSparseNoteApplies(
+                stagingSparse = true,
+                asleepMin = 7.0 * 60,
+                motionCoverageComplete = true,
+                needHours = need,
+            ),
+        )
+    }
+
     @Test fun `a night that staged to nothing is the strongest case, not an exemption`() {
         assertTrue(stageSparseNoteApplies(stagingSparse = true, asleepMin = 0.0, needHours = need))
     }

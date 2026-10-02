@@ -1,5 +1,7 @@
 package com.noop.analytics
 
+import com.noop.data.GravitySample
+import com.noop.data.HrSample
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -104,5 +106,57 @@ class SleepStagerFragmentMergeTest {
         assertTrue(SleepStager.mergeFragments(emptyList()).isEmpty())
         val single = expand(listOf("light" to 3)) // sub-threshold but no neighbours
         assertRuns(SleepStager.mergeFragments(single), listOf("light" to 3), "single run kept")
+    }
+
+    @Test
+    fun sleepLikeInteriorWakeIsRecoveredButEdgesRemainWake() {
+        val start = 10_000L
+        val epoch = 30L
+        val stages = listOf(
+            StageSegment(start, start + epoch, "wake"),
+            StageSegment(start + epoch, start + 4 * epoch, "light"),
+            StageSegment(start + 4 * epoch, start + 10 * epoch, "wake"), // 3 min
+            StageSegment(start + 10 * epoch, start + 13 * epoch, "rem"),
+            StageSegment(start + 13 * epoch, start + 14 * epoch, "wake"),
+        )
+        val end = start + 14 * epoch
+        val out = SleepStager.mergeSleepLikeInteriorWake(
+            stages, start, end,
+            hr = (start until end).map { HrSample("test", it, 50) },
+            grav = (start until end).map { GravitySample("test", it, 0.0, 0.0, 1.0) },
+        )
+
+        assertEquals(
+            listOf(
+                StageSegment(start, start + epoch, "wake"),
+                StageSegment(start + epoch, start + 10 * epoch, "light"),
+                StageSegment(start + 10 * epoch, start + 13 * epoch, "rem"),
+                StageSegment(start + 13 * epoch, end, "wake"),
+            ),
+            out,
+        )
+    }
+
+    @Test
+    fun activeOrElevatedInteriorWakeIsPreserved() {
+        val start = 20_000L
+        val epoch = 30L
+        val candidateStart = start + 4 * epoch
+        val candidateEnd = start + 10 * epoch
+        val end = start + 14 * epoch
+        val stages = listOf(
+            StageSegment(start, candidateStart, "light"),
+            StageSegment(candidateStart, candidateEnd, "wake"),
+            StageSegment(candidateEnd, end, "light"),
+        )
+        val gravityBefore = (start until candidateStart).map { GravitySample("test", it, 0.0, 0.0, 1.0) }
+        val gravityWake = (candidateStart until candidateEnd).map { i ->
+            GravitySample("test", i, if ((i - candidateStart) % 2L == 0L) 0.0 else 0.5, 0.0, 1.0)
+        }
+        val gravityAfter = (candidateEnd until end).map { GravitySample("test", it, 0.0, 0.0, 1.0) }
+        val gravity = gravityBefore + gravityWake + gravityAfter
+        val hr = (start until end).map { ts -> HrSample("test", ts, if (ts in candidateStart until candidateEnd) 80 else 50) }
+
+        assertEquals(stages, SleepStager.mergeSleepLikeInteriorWake(stages, start, end, hr, gravity))
     }
 }

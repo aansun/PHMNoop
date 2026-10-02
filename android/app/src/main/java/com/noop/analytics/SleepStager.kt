@@ -423,6 +423,15 @@ object SleepStager {
     /** fragmentMergeMin expressed in 30 s epochs (6). A run with < this many epochs merges. */
     val fragmentMergeEpochs: Int = (fragmentMergeMin * 60.0 / epochS).roundToInt()
 
+    /**
+     * Maximum duration of an interior wake burst that may be recovered when both independent
+     * signals available to the stager still look like sleep. Mirrors Swift.
+     */
+    const val interiorWakeMergeMin: Double = 3.0
+    val interiorWakeMergeEpochs: Int = (interiorWakeMergeMin * 60.0 / epochS).roundToInt()
+    const val interiorWakeHRMultiplier: Double = 1.10
+    const val interiorWakeSleepLikeFraction: Double = 0.75
+
     /** te Lindert 30 s Cole–Kripke weights [A₋₄..A₊₂]. SI = 0.001·Σ wᵢ·Aᵢ; sleep iff SI<1. */
     val ckWeights: List<Double> = listOf(106.0, 54.0, 58.0, 76.0, 230.0, 74.0, 67.0)
     const val ckScale: Double = 0.001
@@ -1353,6 +1362,114 @@ object SleepStager {
     }
 
     /**
+     * Recover short, interior false-awake bursts when both independent signals available to
+     * the stager still look like sleep. The EEG-free classifier can split a quiet night into
+     * several short wake runs; counting every split as WASO is the main source of an over-long
+     * Awake readout on otherwise calm nights.
+     *
+     * Only interior runs no longer than three minutes are eligible. At least 75% of their
+     * epochs must have HR and gravity coverage, with low movement and HR no more than 10% above
+     * the session's non-wake median. Missing data is ineligible, and recovered epochs are
+     * labelled light because the evidence supports sleep but not a deeper stage. Mirrors Swift.
+     */
+    internal fun mergeSleepLikeInteriorWake(
+        stages: List<StageSegment>, start: Long, end: Long,
+        hr: List<HrSample>, grav: List<GravitySample>,
+    ): List<StageSegment> {
+        if (stages.isEmpty() || end <= start) return stages
+
+        val n = maxOf(1, ceil((end - start).toDouble() / epochS).toInt())
+        fun epochStart(i: Int): Long = start + (i.toDouble() * epochS).toLong()
+        fun epochIndex(ts: Long): Int? {
+            if (ts < start || ts > end) return null
+            return minOf(n - 1, maxOf(0, ((ts - start).toDouble() / epochS).toInt()))
+        }
+        fun isWakeLabel(stage: String): Boolean = stage == "wake" || stage == "awake"
+
+        val labels = MutableList(n) { "wake" }
+        for (i in 0 until n) {
+            val t = epochStart(i)
+            val segment = stages.firstOrNull { it.start <= t && t < it.end }
+                ?: stages.firstOrNull { it.start <= t && t <= it.end }
+            if (segment != null) labels[i] = segment.stage
+        }
+
+        val gravityRows = rowsBetween(grav.sortedBy { it.ts }, start, end) { it.ts }
+        if (gravityRows.isEmpty()) return stages
+        val deltas = gravityDeltas(gravityRows)
+        val moving = IntArray(n)
+        val gravityCount = IntArray(n)
+        for ((row, delta) in gravityRows.zip(deltas)) {
+            val index = epochIndex(row.ts) ?: continue
+            gravityCount[index] += 1
+            if (delta >= moveDeltaThresholdG) moving[index] += 1
+        }
+        val moveFrac = DoubleArray(n) { index ->
+            if (gravityCount[index] > 0) moving[index].toDouble() / gravityCount[index].toDouble() else 1.0
+        }
+
+        val hrValues = Array(n) { ArrayList<Double>() }
+        for (sample in rowsBetween(hr.sortedBy { it.ts }, start, end) { it.ts }) {
+            val index = epochIndex(sample.ts) ?: continue
+            hrValues[index].add(sample.bpm.toDouble())
+        }
+        val hrMeans = DoubleArray(n) { index ->
+            val values = hrValues[index]
+            if (values.isEmpty()) Double.NaN else values.sum() / values.size.toDouble()
+        }
+        val sleepHR = hrMeans.indices
+            .filter { !isWakeLabel(labels[it]) && hrMeans[it].isFinite() }
+            .map { hrMeans[it] }
+        if (sleepHR.isEmpty()) return stages
+        val baseline = HrvAnalyzer.median(sleepHR)
+        if (!baseline.isFinite()) return stages
+
+        var changed = false
+        var i = 0
+        while (i < n) {
+            if (!isWakeLabel(labels[i])) {
+                i += 1
+                continue
+            }
+            val runStart = i
+            while (i < n && isWakeLabel(labels[i])) i += 1
+            val runEnd = i
+            val runLength = runEnd - runStart
+            val interior = runStart > 0 && runEnd < n
+            val flankedBySleep = interior
+                && !isWakeLabel(labels[runStart - 1]) && !isWakeLabel(labels[runEnd])
+            if (!interior || !flankedBySleep || runLength > interiorWakeMergeEpochs) continue
+
+            val required = ceil(runLength.toDouble() * interiorWakeSleepLikeFraction).toInt()
+            var covered = 0
+            var sleepLike = 0
+            for (epoch in runStart until runEnd) {
+                if (!hrMeans[epoch].isFinite() || gravityCount[epoch] <= 0) continue
+                covered += 1
+                if (moveFrac[epoch] <= stageStillMoveFrac
+                    && hrMeans[epoch] <= baseline * interiorWakeHRMultiplier) {
+                    sleepLike += 1
+                }
+            }
+            if (covered < required || sleepLike < required) continue
+            for (epoch in runStart until runEnd) labels[epoch] = "light"
+            changed = true
+        }
+
+        if (!changed) return stages
+        val out = ArrayList<StageSegment>()
+        for (epoch in 0 until n) {
+            val segStart = epochStart(epoch)
+            val segEnd = if (epoch == n - 1) end else epochStart(epoch + 1)
+            val last = out.lastOrNull()
+            if (last != null && last.stage == labels[epoch]) last.end = segEnd
+            else out.add(StageSegment(start = segStart, end = segEnd, stage = labels[epoch]))
+        }
+        if (out.isNotEmpty()) out[out.size - 1].end = end
+        return out
+    }
+
+    /**
      * Off-wrist HR-gap spans (#500). The contiguous HR-coverage gaps of at least [offWristHRGapMin]
      * minutes WITHIN [p.start, p.end], as concrete [start, end) sub-intervals — a strong wrist-OFF
      * proxy. Worn, the strap streams ~1 Hz HR (or PPG-derived HR on a 5/MG), so a real night yields no
@@ -1761,11 +1878,15 @@ object SleepStager {
                 stageSession(start = p.start, end = p.end, grav = grav,
                     hr = hrS, rr = rrS, resp = respS)
             }
+            // EEG-free staging can over-call short interior wake bursts. Recover only the
+            // sleep-like ones; leading/trailing wake and active awakenings remain untouched.
+            val sleepLikeWakeSmoothed = mergeSleepLikeInteriorWake(rawStages, start = p.start, end = p.end,
+                hr = hrS, grav = grav)
             // Band sleep_state WAKE-veto: recover INTERIOR false-wake epochs the strap's OWN band
             // ([bandSleepState]) scored "asleep". No-op when the band is absent (WHOOP 4.0) or the flag is
             // off; stager-agnostic (corrects whichever hypnogram V1/V2 produced). Efficiency below is then
             // computed on the corrected stages, so a night NOOP over-called wake on reports true efficiency.
-            val stages = applyBandStateWakeVeto(rawStages, start = p.start, end = p.end,
+            val stages = applyBandStateWakeVeto(sleepLikeWakeSmoothed, start = p.start, end = p.end,
                 bandSleepState = bandSleepState)
             val eff = efficiency(start = p.start, end = p.end, stages = stages)
             val avgHrv = sessionAvgHRV(start = p.start, end = p.end, rr = rrS)

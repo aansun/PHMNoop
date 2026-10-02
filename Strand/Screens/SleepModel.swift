@@ -260,7 +260,8 @@ extension SleepModel {
     /// WHOOP sleep row into the misleading "no stage data" state just because one timeline payload is
     /// malformed or incomplete.
     static func dailyStageFallback(_ blocks: [CachedSleepSession], daily: DailyMetric?,
-                                   habitualMidsleepSec: Int? = nil) -> Night? {
+                                   habitualMidsleepSec: Int? = nil,
+                                   motionByStart: [Int: [Double]] = [:]) -> Night? {
         guard let daily,
               let asleep = daily.totalSleepMin, asleep > 0,
               let light = daily.lightMin, light >= 0,
@@ -281,12 +282,17 @@ extension SleepModel {
         }
         let awake = max(0, inBedMin - asleep)
         let stages = Stages(awake: awake, light: light, deep: deep, rem: rem)
+        let mainGroup = SleepView.mainNightGroup(blocks, habitualMidsleepSec: habitualMidsleepSec)
+        let motion = (mainGroup.isEmpty ? [main] : mainGroup).reduce(into: [Double]()) { result, fragment in
+            result.append(contentsOf: motionByStart[fragment.startTs] ?? [])
+        }
         let session = CachedSleepSession(startTs: main.effectiveStartTs, endTs: main.endTs,
                                          efficiency: storedEfficiency, restingHr: main.restingHr,
                                          avgHrv: main.avgHrv, stagesJSON: nil,
                                          stagingSparse: main.stagingSparse, deviceId: main.deviceId)
         return Night(session: session, stages: stages, stageTotalsFallback: true,
-                     sourceBlocks: blocks, habitualMidsleepSec: habitualMidsleepSec)
+                     sourceBlocks: blocks, motionEpochs: motion,
+                     habitualMidsleepSec: habitualMidsleepSec)
     }
 
     /// The browsable DAY list: every block grouped by the calendar day it ENDS on (matching the
@@ -615,7 +621,8 @@ extension SleepModel {
                 Repository.localDayKey(Date(timeIntervalSince1970: TimeInterval($0)))
             }
             let daily = wakeDay.flatMap { key in inputs.days.last(where: { $0.day == key }) }
-            if let fallback = dailyStageFallback(blocks0, daily: daily, habitualMidsleepSec: habitual) {
+            if let fallback = dailyStageFallback(blocks0, daily: daily, habitualMidsleepSec: habitual,
+                                                 motionByStart: inputs.motionByStart) {
                 night = fallback
                 isStub = false
             } else if let stubSession = SleepView.stubDaySession(blocks0, habitualMidsleepSec: habitual) {
