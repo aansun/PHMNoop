@@ -7,20 +7,53 @@ import UIKit
 @MainActor
 final class StravaSettingsModel: ObservableObject {
     @Published private(set) var isConnected = StravaTokenStore.isConnected
+    @Published private(set) var hasCredentials = StravaCredentialStore.isConfigured
     @Published private(set) var athleteName: String?
     @Published private(set) var records: [StravaUploadRecord] = StravaActivityStore.load()
     @Published private(set) var busy = false
     @Published var statusText: String?
 
-    var isConfigured: Bool { StravaCredentials.fromBundle != nil }
+    var isConfigured: Bool { hasCredentials }
+
+    var savedClientID: String { StravaCredentialStore.load()?.clientId ?? "" }
+    var savedClientSecret: String { StravaCredentialStore.load()?.clientSecret ?? "" }
 
     init() {
         athleteName = StravaTokenStore.load()?.athleteName
     }
 
+    @discardableResult
+    func saveCredentials(clientID: String, clientSecret: String) -> Bool {
+        guard !isConnected else {
+            statusText = String(localized: "Disconnect Strava before changing the API credentials.")
+            return false
+        }
+        guard StravaCredentialStore.save(clientId: clientID, clientSecret: clientSecret) else {
+            statusText = String(localized: "Enter both a Client ID and Client Secret.")
+            return false
+        }
+        // A token belongs to the previous Strava app when credentials are rotated.
+        StravaTokenStore.clear()
+        hasCredentials = true
+        statusText = String(localized: "Strava credentials saved securely in Keychain.")
+        return true
+    }
+
+    func clearCredentials() {
+        guard !isConnected else {
+            statusText = String(localized: "Disconnect Strava before clearing the API credentials.")
+            return
+        }
+        StravaCredentialStore.clear()
+        StravaTokenStore.clear()
+        hasCredentials = false
+        athleteName = nil
+        statusText = String(localized: "Strava credentials removed from Keychain.")
+    }
+
     func connect() async {
         guard StravaExperiment.isEnabled else { return }
-        guard let credentials = StravaCredentials.fromBundle else {
+        guard let credentials = StravaCredentials.current else {
             statusText = StravaError.notConfigured.localizedDescription
             return
         }
@@ -40,7 +73,7 @@ final class StravaSettingsModel: ObservableObject {
     }
 
     func disconnect() async {
-        guard let credentials = StravaCredentials.fromBundle else {
+        guard let credentials = StravaCredentials.current else {
             StravaTokenStore.clear()
             isConnected = false
             athleteName = nil
@@ -69,7 +102,7 @@ final class StravaSettingsModel: ObservableObject {
             statusText = StravaError.noRoute.localizedDescription
             return
         }
-        guard let credentials = StravaCredentials.fromBundle else {
+        guard let credentials = StravaCredentials.current else {
             statusText = StravaError.notConfigured.localizedDescription
             return
         }
@@ -105,7 +138,7 @@ final class StravaSettingsModel: ObservableObject {
     /// removed so the workout becomes uploadable again after the user deletes it on Strava.
     func reconcileRecentUploads(rows: [WorkoutRow]) async {
         guard StravaExperiment.isEnabled, isConnected,
-              let credentials = StravaCredentials.fromBundle else { return }
+              let credentials = StravaCredentials.current else { return }
 
         let now = Int(Date().timeIntervalSince1970)
         let cutoff = now - 7 * 86_400

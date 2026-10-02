@@ -1,27 +1,21 @@
 import Foundation
 
-/// The user's own Strava OAuth application credentials. Values are injected into the iOS Info.plist
-/// from the ignored `Config/BundleIdSecrets.xcconfig`; the client secret never belongs in source control.
+/// The user's own Strava OAuth application credentials. The client ID and secret are entered in the
+/// iOS settings screen and loaded from Keychain; neither value is embedded in the app bundle.
 struct StravaCredentials: Equatable {
     let clientId: String
     let clientSecret: String
     let redirectURI: String
 
-    static func from(_ info: [String: Any]) -> StravaCredentials? {
-        func nonBlank(_ key: String) -> String? {
-            guard let raw = info[key] as? String else { return nil }
-            let value = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !value.isEmpty, !value.hasPrefix("$("), !value.hasPrefix("your_") else { return nil }
-            return value
-        }
-        guard let id = nonBlank("STRAVA_CLIENT_ID"),
-              let secret = nonBlank("STRAVA_CLIENT_SECRET"),
-              let redirect = nonBlank("STRAVA_REDIRECT_URI") else { return nil }
-        return StravaCredentials(clientId: id, clientSecret: secret, redirectURI: redirect)
-    }
+    /// `localhost` is explicitly allowed by Strava for development/testing callback domains.
+    /// The custom `noop` scheme returns the authorization result to this app without a server.
+    static let redirectURI = "noop://localhost/strava/callback"
 
-    static var fromBundle: StravaCredentials? {
-        from(Bundle.main.infoDictionary ?? [:])
+    static var current: StravaCredentials? {
+        guard let saved = StravaCredentialStore.load() else { return nil }
+        return StravaCredentials(clientId: saved.clientId,
+                                 clientSecret: saved.clientSecret,
+                                 redirectURI: redirectURI)
     }
 }
 
@@ -53,7 +47,7 @@ enum StravaError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .notConfigured:
-            return String(localized: "Strava API credentials are not configured for this build.")
+            return String(localized: "Enter your Strava Client ID and Client Secret in Settings before connecting.")
         case .notConnected:
             return String(localized: "Connect Strava before uploading an activity.")
         case .cancelled:
