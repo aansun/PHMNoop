@@ -236,7 +236,17 @@ extension WidgetSnapshot {
         }
         guard end > start else { return nil }
 
-        let samples = await model.repo.hrSamples(from: start, to: end, limit: 200_000)
+        var samples = await model.repo.hrSamples(from: start, to: end, limit: 200_000)
+        // A manually started workout accumulates its smoothed HR window before the next repository
+        // refresh. Include that in the live widget score so Strain does not wait for an offload or a
+        // database refresh to reflect the work already visible in the workout screen. De-duplicate by
+        // timestamp because the collector may have persisted the same reading already.
+        if let activeWorkout = model.activeWorkout, !activeWorkout.samples.isEmpty {
+            var byTimestamp = Dictionary(samples.map { ($0.ts, $0) },
+                                         uniquingKeysWith: { _, latest in latest })
+            for sample in activeWorkout.samples { byTimestamp[sample.ts] = sample }
+            samples = byTimestamp.values.sorted { $0.ts < $1.ts }
+        }
         let maxHR = model.profile.age > 0
             ? StrainScorer.tanakaHRmax(age: Double(model.profile.age)) : nil
         let restingHR = model.repo.today?.restingHr.map(Double.init) ?? StrainScorer.defaultRestingHR

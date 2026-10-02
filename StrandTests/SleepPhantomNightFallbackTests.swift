@@ -78,6 +78,24 @@ final class SleepPhantomNightFallbackTests: XCTestCase {
         XCTAssertEqual(try XCTUnwrap(night.session.efficiency), 0.960973796692065, accuracy: 0.0001)
     }
 
+    /// The aggregate stage fallback must keep an independently persisted movement trace. A malformed
+    /// stage timeline must not make the Move graph disappear when motionJSON is available.
+    func testDailyStageFallbackPreservesMotionTrace() throws {
+        let start = 1_790_000_000
+        let session = CachedSleepSession(startTs: start, endTs: start + 8 * 3_600,
+                                         efficiency: nil, restingHr: nil, avgHrv: nil,
+                                         stagesJSON: "not-a-stage-timeline")
+        let day = DailyMetric(day: Repository.localDayKey(Date(timeIntervalSince1970: TimeInterval(session.endTs))),
+                              totalSleepMin: 420, efficiency: 0.9, deepMin: 90, remMin: 120,
+                              lightMin: 210, disturbances: nil, restingHr: nil, avgHrv: nil,
+                              recovery: nil, strain: nil, exerciseCount: nil)
+        let motion = [0.1, 0.8, 0.2, 1.4]
+
+        let night = try XCTUnwrap(SleepModel.dailyStageFallback(
+            [session], daily: day, motionByStart: [start: motion]))
+        XCTAssertEqual(night.motionEpochs, motion)
+    }
+
     /// Aggregate totals without all three stage fields are not enough to claim a breakdown; the
     /// caller should retain the existing honest no-stage-data state instead.
     func testDailyStageFallbackRequiresAllStageTotals() {

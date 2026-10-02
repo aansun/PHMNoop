@@ -5,10 +5,10 @@ import StrandAnalytics
 // MARK: - Auto-detected workout prompt (Today screen)
 //
 // A single, dismissible Today card that appears ONLY when the opt-in "Auto-detect workouts"
-// toggle is on and `Repository.autoDetectCandidate()` finds a recent sustained-elevated HR
+// toggle is on and `Repository.autoDetectSuggestion()` finds a recent sustained-elevated HR
 // window that isn't already saved and wasn't previously dismissed.
 //
-// It only ever SUGGESTS: tapping Save creates a manual-style "Workout" for the window (via the
+// It only ever SUGGESTS: tapping Save creates a manual-style sport row for the window (via the
 // same manual-save path the edit sheet uses); the X dismisses it durably so it never re-prompts.
 // Nothing is created automatically. Design-Reset compliant — a flat NoopCard using NoopMetrics /
 // StrandPalette / StrandFont, no gold, matching the other Today cards.
@@ -21,7 +21,7 @@ struct AutoWorkoutCard: View {
     @AppStorage(PuffinExperiment.autoDetectWorkoutsKey) private var autoDetectEnabled = false
 
     /// The current suggestion, loaded in `.task`. nil → nothing to show.
-    @State private var candidate: DetectedWorkout?
+    @State private var candidate: AutoWorkoutSuggestion?
     /// Hide immediately on Save/X without waiting for the next reload (avoids a flash of the old card).
     @State private var handledThisSession = false
     /// Guards the Save button while the write is in flight.
@@ -40,7 +40,7 @@ struct AutoWorkoutCard: View {
     }
 
     @ViewBuilder
-    private func card(for w: DetectedWorkout) -> some View {
+    private func card(for suggestion: AutoWorkoutSuggestion) -> some View {
         NoopCard(tint: StrandPalette.accent) {
             VStack(alignment: .leading, spacing: NoopMetrics.space3) {
                 HStack(spacing: NoopMetrics.space2) {
@@ -48,12 +48,12 @@ struct AutoWorkoutCard: View {
                         .font(.system(size: 18))
                         .foregroundStyle(StrandPalette.accent)
                         .accessibilityHidden(true)
-                    Text("Looks like a workout")
+                    Text("Workout suggestion")
                         .font(StrandFont.headline)
                         .foregroundStyle(StrandPalette.textPrimary)
                     Spacer()
                     Button {
-                        dismiss(w)
+                        dismiss(suggestion)
                     } label: {
                         Image(systemName: "xmark")
                             .font(.system(size: 13, weight: .semibold))
@@ -64,14 +64,14 @@ struct AutoWorkoutCard: View {
                     .accessibilityLabel("Dismiss this workout suggestion")
                 }
 
-                Text(promptText(w))
+                Text(promptText(suggestion))
                     .font(StrandFont.footnote)
                     .foregroundStyle(StrandPalette.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
 
                 HStack(spacing: NoopMetrics.space3) {
                     Button {
-                        save(w)
+                        save(suggestion)
                     } label: {
                         Label("Save it", systemImage: "checkmark")
                     }
@@ -79,7 +79,7 @@ struct AutoWorkoutCard: View {
                     .tint(StrandPalette.accent)
                     .disabled(saving)
 
-                    Button("Not a workout") { dismiss(w) }
+                    Button("Not a workout") { dismiss(suggestion) }
                         .buttonStyle(.bordered)
                         .disabled(saving)
                     Spacer()
@@ -92,40 +92,41 @@ struct AutoWorkoutCard: View {
     /// "Looks like a workout [yesterday ]around 14:05–14:32 (avg HR 148, 27 min). Save it?"
     /// Three whole-phrase variants (today / yesterday / dated, #719) so translators see complete
     /// sentences rather than a stitched day-label fragment.
-    private func promptText(_ w: DetectedWorkout) -> String {
+    private func promptText(_ suggestion: AutoWorkoutSuggestion) -> String {
+        let w = suggestion.workout
         let startDate = Date(timeIntervalSince1970: TimeInterval(w.startSec))
         let start = Self.timeFmt.string(from: startDate)
         let end = Self.timeFmt.string(from: Date(timeIntervalSince1970: TimeInterval(w.endSec)))
         let cal = Calendar.current
         if cal.isDateInToday(startDate) {
-            return String(localized: "Looks like a workout around \(start)-\(end) (avg HR \(w.avgBpm), \(w.durationMin) min). Save it?")
+            return String(localized: "Looks like a \(suggestion.sport.lowercased()) around \(start)-\(end) (avg HR \(w.avgBpm), \(w.durationMin) min). Save it?")
         }
         if cal.isDateInYesterday(startDate) {
-            return String(localized: "Looks like a workout yesterday around \(start)-\(end) (avg HR \(w.avgBpm), \(w.durationMin) min). Save it?")
+            return String(localized: "Looks like a \(suggestion.sport.lowercased()) yesterday around \(start)-\(end) (avg HR \(w.avgBpm), \(w.durationMin) min). Save it?")
         }
-        return String(localized: "Looks like a workout on \(Self.dateFmt.string(from: startDate)) around \(start)-\(end) (avg HR \(w.avgBpm), \(w.durationMin) min). Save it?")
+        return String(localized: "Looks like a \(suggestion.sport.lowercased()) on \(Self.dateFmt.string(from: startDate)) around \(start)-\(end) (avg HR \(w.avgBpm), \(w.durationMin) min). Save it?")
     }
 
     private func reload() async {
         guard autoDetectEnabled else { candidate = nil; return }
-        let next = await repo.autoDetectCandidate()
+        let next = await repo.autoDetectSuggestion()
         // A fresh scan resets the session guard so a NEW window can surface after one is handled.
         if next != candidate { handledThisSession = false }
         candidate = next
     }
 
-    private func save(_ w: DetectedWorkout) {
+    private func save(_ suggestion: AutoWorkoutSuggestion) {
         saving = true
         handledThisSession = true
         Task {
-            _ = await repo.saveDetectedWorkout(w)
+            _ = await repo.saveDetectedWorkout(suggestion)
             await repo.refresh()   // surfaces the new workout + drops it from re-suggestion
             saving = false
         }
     }
 
-    private func dismiss(_ w: DetectedWorkout) {
-        repo.dismissDetectedSuggestion(w)
+    private func dismiss(_ suggestion: AutoWorkoutSuggestion) {
+        repo.dismissDetectedSuggestion(suggestion.workout)
         handledThisSession = true
         candidate = nil
     }

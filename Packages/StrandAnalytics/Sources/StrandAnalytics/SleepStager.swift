@@ -328,6 +328,17 @@ public enum SleepStager {
     /// fragmentMergeMin expressed in 30 s epochs (6). A run with < this many epochs merges.
     public static let fragmentMergeEpochs: Int = Int((fragmentMergeMin * 60.0 / epochS).rounded())
 
+    /// Maximum duration of an interior wake burst that may be recovered when the raw
+    /// cardiorespiratory signals still look like sleep. This is deliberately the same
+    /// duration as the display fragment threshold, but unlike `mergeFragments` it is
+    /// gated by the actual HR and motion streams and can therefore recover an exact-
+    /// threshold wake run without touching a real awakening.
+    public static let interiorWakeMergeMin: Double = 3.0
+    public static let interiorWakeMergeEpochs: Int =
+        Int((interiorWakeMergeMin * 60.0 / epochS).rounded())
+    public static let interiorWakeHRMultiplier: Double = 1.10
+    public static let interiorWakeSleepLikeFraction: Double = 0.75
+
     /// te Lindert 30 s Cole–Kripke weights [A₋₄..A₊₂]. SI = 0.001·Σ wᵢ·Aᵢ; sleep iff SI<1.
     public static let ckWeights: [Double] = [106.0, 54.0, 58.0, 76.0, 230.0, 74.0, 67.0]
     public static let ckScale: Double = 0.001
@@ -1213,6 +1224,121 @@ public enum SleepStager {
         return out
     }
 
+    /// Recover short, interior false-awake bursts when both independent signals available
+    /// to the stager still look like sleep. The EEG-free classifier can split a quiet night
+    /// into several short wake runs; counting every split as WASO is the main source of the
+    /// over-long Awake readout seen on otherwise calm nights.
+    ///
+    /// This correction is intentionally narrower than `mergeFragments`:
+    /// - only interior wake is eligible; onset latency and final-morning wake are preserved;
+    /// - the run must be no longer than three minutes;
+    /// - at least 75% of its epochs must have both HR and gravity coverage;
+    /// - those covered epochs must have low movement and HR no more than 10% above the
+    ///   session's non-wake median.
+    ///
+    /// Eligible wake is labelled `light`, not a deeper stage: the available evidence supports
+    /// "asleep" but does not support inventing REM or deep sleep. Missing data is ineligible.
+    /// Pure and shared by V1 and V2 at the detectSleep seam.
+    static func mergeSleepLikeInteriorWake(_ stages: [StageSegment], start: Int, end: Int,
+                                           hr: [HRSample], grav: [GravitySample]) -> [StageSegment] {
+        guard !stages.isEmpty, end > start else { return stages }
+
+        let n = max(1, Int(ceil(Double(end - start) / epochS)))
+        func epochStart(_ i: Int) -> Int { start + Int(Double(i) * epochS) }
+        func epochIndex(_ ts: Int) -> Int? {
+            guard ts >= start, ts <= end else { return nil }
+            return min(n - 1, max(0, Int(Double(ts - start) / epochS)))
+        }
+
+        var labels = [String](repeating: "wake", count: n)
+        for i in 0..<n {
+            let t = epochStart(i)
+            if let segment = stages.first(where: { $0.start <= t && t < $0.end })
+                ?? stages.first(where: { $0.start <= t && t <= $0.end }) {
+                labels[i] = segment.stage
+            }
+        }
+
+        let sortedGravity = grav.sorted { $0.ts < $1.ts }
+        let gravityRows = rowsBetween(sortedGravity, start: start, end: end) { $0.ts }
+        guard !gravityRows.isEmpty else { return stages }
+        let gravityDeltas = gravityDeltas(gravityRows)
+        var moving = [Int](repeating: 0, count: n)
+        var gravityCount = [Int](repeating: 0, count: n)
+        for (row, delta) in zip(gravityRows, gravityDeltas) {
+            guard let i = epochIndex(row.ts) else { continue }
+            gravityCount[i] += 1
+            if delta >= moveDeltaThresholdG { moving[i] += 1 }
+        }
+        let moveFrac = (0..<n).map { gravityCount[$0] > 0
+            ? Double(moving[$0]) / Double(gravityCount[$0])
+            : 1.0
+        }
+
+        var hrValues = [[Double]](repeating: [], count: n)
+        for sample in rowsBetween(hr.sorted { $0.ts < $1.ts }, start: start, end: end, ts: { $0.ts }) {
+            guard let i = epochIndex(sample.ts) else { continue }
+            hrValues[i].append(Double(sample.bpm))
+        }
+        let hrMeans = hrValues.map { values -> Double in
+            guard !values.isEmpty else { return .nan }
+            return values.reduce(0, +) / Double(values.count)
+        }
+        let sleepHR = hrMeans.enumerated().compactMap { index, value in
+            labels[index] != "wake" && value.isFinite ? value : nil
+        }
+        guard !sleepHR.isEmpty else { return stages }
+        let baseline = HRVAnalyzer.median(sleepHR)
+        guard baseline.isFinite else { return stages }
+
+        // Find and evaluate original wake runs in one pass. We never re-evaluate a relabelled
+        // run, so adjacent candidate bursts cannot cascade into a larger recovered interval.
+        var changed = false
+        var i = 0
+        while i < n {
+            let isWake = labels[i] == "wake" || labels[i] == "awake"
+            guard isWake else { i += 1; continue }
+            let runStart = i
+            while i < n && (labels[i] == "wake" || labels[i] == "awake") { i += 1 }
+            let runEnd = i
+            let runLength = runEnd - runStart
+            let interior = runStart > 0 && runEnd < n
+            let flankedBySleep = interior
+                && labels[runStart - 1] != "wake" && labels[runStart - 1] != "awake"
+                && labels[runEnd] != "wake" && labels[runEnd] != "awake"
+            guard interior, flankedBySleep, runLength <= interiorWakeMergeEpochs else { continue }
+
+            let required = Int(ceil(Double(runLength) * interiorWakeSleepLikeFraction))
+            var covered = 0
+            var sleepLike = 0
+            for epoch in runStart..<runEnd {
+                guard hrMeans[epoch].isFinite, gravityCount[epoch] > 0 else { continue }
+                covered += 1
+                if moveFrac[epoch] <= stageStillMoveFrac
+                    && hrMeans[epoch] <= baseline * interiorWakeHRMultiplier {
+                    sleepLike += 1
+                }
+            }
+            guard covered >= required, sleepLike >= required else { continue }
+            for epoch in runStart..<runEnd { labels[epoch] = "light" }
+            changed = true
+        }
+
+        guard changed else { return stages }
+        var out: [StageSegment] = []
+        for epoch in 0..<n {
+            let segStart = epochStart(epoch)
+            let segEnd = epoch == n - 1 ? end : epochStart(epoch + 1)
+            if let last = out.last, last.stage == labels[epoch] {
+                out[out.count - 1].end = segEnd
+            } else {
+                out.append(StageSegment(start: segStart, end: segEnd, stage: labels[epoch]))
+            }
+        }
+        if !out.isEmpty { out[out.count - 1].end = end }
+        return out
+    }
+
     /// Off-wrist HR-gap spans (#500). The contiguous HR-coverage gaps of at least `offWristHRGapMin`
     /// minutes WITHIN [p.start, p.end], as concrete `[start, end)` sub-intervals — a strong wrist-OFF
     /// proxy. Worn, the strap streams ~1 Hz HR (or PPG-derived HR on a 5/MG), so a real night yields no
@@ -1580,11 +1706,15 @@ public enum SleepStager {
                                              hr: hrS, rr: rrS, resp: respS)
                 : stageSession(start: p.start, end: p.end, grav: grav,
                                hr: hrS, rr: rrS, resp: respS)
+            // EEG-free staging can over-call short interior wake bursts. Recover only the
+            // sleep-like ones; leading/trailing wake and active awakenings remain untouched.
+            let sleepLikeWakeSmoothed = mergeSleepLikeInteriorWake(rawStages, start: p.start, end: p.end,
+                                                                    hr: hrS, grav: grav)
             // Band sleep_state WAKE-veto: recover INTERIOR false-wake epochs the strap's OWN band
             // (`bandSleepState`) scored "asleep". No-op when the band is absent (WHOOP 4.0) or the flag is
             // off; stager-agnostic (corrects whichever hypnogram V1/V2 produced). Efficiency below is then
             // computed on the corrected stages, so a night NOOP over-called wake on reports true efficiency.
-            let stages = applyBandStateWakeVeto(rawStages, start: p.start, end: p.end,
+            let stages = applyBandStateWakeVeto(sleepLikeWakeSmoothed, start: p.start, end: p.end,
                                                 bandSleepState: bandSleepState)
             let eff = efficiency(start: p.start, end: p.end, stages: stages)
             let avgHrv = sessionAvgHRV(start: p.start, end: p.end, rr: rrS)

@@ -163,8 +163,8 @@ private fun SleepFreshnessNote(status: SleepFreshnessStatus, chunks: Int) {
  *   1. HERO — the stage breakdown for the navigated night. ◀/▶ chevrons flank the
  *      header and walk EVERY recorded night (0 = last night), replacing the fixed
  *      3-day selector (#160). A Hypnogram when stage minutes are present (deep / rem /
- *      light / awake reconstructed end-to-end), with a footer of REM / Deep / Light /
- *      Awake each "Xh Ym · NN%".
+ *      light / awake reconstructed end-to-end), with a footer of Awake / Light / REM /
+ *      Deep each "Xh Ym · NN%".
  *   2. A uniform grid of fixed StatTiles, each with a sparkline + "vs typical" caption:
  *      Rest, Efficiency, Consistency, Hours vs Needed, Restorative,
  *      Respiratory, Sleep Debt.
@@ -1485,7 +1485,11 @@ private fun Hero(
             // the stagingSparse flag alone fires on one long motion dropout at any night length. The rule
             // and its reasoning live in [stageSparseNoteApplies]. A nil flag (imported / pre-migration
             // block) is never itself a flag. Mirrors iOS SleepView.stageShowsIncompleteNote.
-            if (stageSparseNoteApplies(anyBlockStagingSparse(dayBlocks), s.asleep)) {
+            if (stageSparseNoteApplies(
+                    stagingSparse = anyBlockStagingSparse(dayBlocks),
+                    asleepMin = s.asleep,
+                    motionCoverageComplete = motionCoverageComplete(dayBlocks, motionEpochs),
+                )) {
                 SleepIncompleteNote()
             }
             // #1716 — a device-provided hypnogram assembled from records that never all arrived leaves a
@@ -1705,6 +1709,18 @@ internal fun sleepDayBlocks(
 internal fun anyBlockStagingSparse(blocks: List<SleepSession>): Boolean =
     blocks.any { it.stagingSparse == true }
 
+/** True when the persisted movement series covers the main-night window at the strap's 30-second epoch
+ * cadence. One rounded boundary epoch is tolerated because session bounds need not land on the sample grid.
+ * Mirrors Swift `SleepView.motionCoverageComplete` so a complete short night is not labelled incomplete. */
+internal fun motionCoverageComplete(blocks: List<SleepSession>, motionEpochs: List<Double>): Boolean {
+    if (blocks.isEmpty() || motionEpochs.isEmpty()) return false
+    val expectedEpochs = blocks.sumOf { block ->
+        val span = (block.endTs - block.effectiveStartTs).coerceAtLeast(0L)
+        maxOf(1L, kotlin.math.round(span / 30.0).toLong())
+    }
+    return motionEpochs.size.toLong() >= maxOf(1L, expectedEpochs - 1L)
+}
+
 /**
  * Pure #345 gate (unit-testable without a Composable) — whether the "May be incomplete" caveat applies.
  * Twin of Swift `SleepView.stageSparseNoteApplies`.
@@ -1731,9 +1747,10 @@ internal fun anyBlockStagingSparse(blocks: List<SleepSession>): Boolean =
 internal fun stageSparseNoteApplies(
     stagingSparse: Boolean,
     asleepMin: Double,
+    motionCoverageComplete: Boolean = false,
     needHours: Double = com.noop.analytics.RestScorer.defaultSleepNeedHours,
 ): Boolean {
-    if (!stagingSparse) return false
+    if (!stagingSparse || motionCoverageComplete) return false
     return asleepMin < needHours * 60.0
 }
 
@@ -2022,7 +2039,7 @@ private const val STAGE_ROW_SMOOTH_SEC = 90.0
 
 /**
  * iOS #988 port — the WHOOP-style per-stage timeline stack that replaces the flat hypnogram strip
- * for real-stage nights. Four tappable rows in WHOOP order (AWAKE · LIGHT · DEEP · REM), each a
+ * for real-stage nights. Four tappable rows in chart order (AWAKE · LIGHT · REM · DEEP), each a
  * hatched full-night track with solid segments on the shared onset→wake axis; MotionStrip and the
  * clock-label axis sit under the rows on the SAME timeline; a fixed-height insight slot closes the
  * stack. The rows ARE the legend — no dot row, no footer. Mirrors SleepView.stageTimeline.
@@ -2053,8 +2070,8 @@ internal fun StageTimeline(
         listOf(
             Triple("Awake", s.awake, Palette.sleepAwake),
             Triple("Light", s.light, Palette.sleepLight),
-            Triple("Deep", s.deep, Palette.sleepDeep),
             Triple("REM", s.rem, Palette.sleepREM),
+            Triple("Deep", s.deep, Palette.sleepDeep),
         ).forEach { (label, minutes, color) ->
             StageTimelineRow(
                 label = label,

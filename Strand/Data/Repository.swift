@@ -1279,6 +1279,21 @@ final class Repository: ObservableObject {
         return Self.latestActivityClass(perId)
     }
 
+    /// Step/activity-class samples across the imported union, deduped by timestamp with the active
+    /// strap winning. Auto-detection uses the class field as a locomotion hint; it does not sum the
+    /// cumulative step counter across device ids.
+    func stepSamplesUnion(from: Int, to: Int, limit: Int = 200_000) async -> [StepSample] {
+        guard let store = await ensureStore() else { return [] }
+        var byTs: [Int: StepSample] = [:]
+        for id in importedReadIds {   // active strap FIRST → it wins an exact timestamp tie
+            let samples = (try? await store.stepSamples(deviceId: id, from: from, to: to, limit: limit)) ?? []
+            for sample in samples where byTs[sample.ts] == nil {
+                byTs[sample.ts] = sample
+            }
+        }
+        return byTs.values.sorted { $0.ts < $1.ts }
+    }
+
     /// Raw strap step TICKS over `[from, to]` for a manual-workout summary (#398): the wrap-aware
     /// `step_motion_counter@57` delta-sum (shared `StepsCounter` kernel) from the FIRST id that has a
     /// countable window — the active strap wins, mirroring `stepActivityClassLatest`. Never MERGED across
@@ -3181,13 +3196,12 @@ final class Repository: ObservableObject {
     /// candidate to suggest , newest first , that is NOT already saved and NOT previously dismissed.
     /// Returns nil when the toggle is off, there's nothing to suggest, or detection finds nothing.
     /// PURE READ: never writes a workout. The window scans from `daysBack` days ago to now.
-    func autoDetectCandidate(daysBack: Int = 2) async -> DetectedWorkout? {
+    func autoDetectSuggestion(daysBack: Int = 2) async -> AutoWorkoutSuggestion? {
         guard PuffinExperiment.autoDetectWorkoutsEnabled else { return nil }
         let now = Int(Date().timeIntervalSince1970)
         let from = now - daysBack * 86_400
         let samples = await hrSamples(from: from, to: now, limit: 200_000)
         guard samples.count >= 2 else { return nil }
-        let hr = samples.map { (ts: $0.ts, bpm: $0.bpm) }
 
         // Resting HR: most recent nightly RHR in range, else the detector's own default (60).
         let restingBpm = days.last(where: { $0.restingHr != nil })?.restingHr
@@ -3195,6 +3209,23 @@ final class Repository: ObservableObject {
         // Exclude every already-saved workout window (any source , strap, manual, imported, detected).
         let saved = await workoutRows()
         let savedSpans = saved.map { SavedWorkoutSpan(startSec: $0.startTs, endSec: $0.endTs) }
+
+#if os(iOS)
+        // iOS has decoded WHOOP motion and @63 activity-class streams available locally. Read them
+        // alongside HR so brisk walking/running can use gait evidence while cycling can use a sustained
+        // cardiovascular window without inventing foot strikes.
+        async let gravityTask = gravitySamplesUnion(from: from, to: now)
+        async let stepsTask = stepSamplesUnion(from: from, to: now)
+        let (gravity, steps) = await (gravityTask, stepsTask)
+        let suggestions = IOSAutoWorkoutDetector.detect(
+            hr: samples, gravity: gravity, steps: steps,
+            restingBpm: restingBpm, savedSpans: savedSpans)
+        return Self.selectAutoDetectSuggestion(
+            suggestions,
+            autoDismissedTokens: autoDetectDismissedSpans,
+            detectedDismissedTokens: dismissedDetectedSpans)
+#else
+        let hr = samples.map { (ts: $0.ts, bpm: $0.bpm) }
 
         // Workouts & GPS test mode: the published 12-minute result remains byte-identical. Aggregate,
         // local-only comparisons include that 12-minute baseline plus the 10- and 15-minute alternatives.
@@ -3226,10 +3257,37 @@ final class Repository: ObservableObject {
                                                     motion: nil, savedSpans: savedSpans,
                                                     minimumSustainedMinutes: AutoWorkoutDetector.minSustainedMin)
         }
-        return Self.selectAutoDetectCandidate(
+        let selected = Self.selectAutoDetectCandidate(
             candidates,
             autoDismissedTokens: autoDetectDismissedSpans,
             detectedDismissedTokens: dismissedDetectedSpans)
+        return selected.map { AutoWorkoutSuggestion(workout: $0, sport: "Workout", confidence: 0) }
+#endif
+    }
+
+    /// Backward-compatible generic read for existing macOS/test callers. The iOS card uses the
+    /// sport-aware `autoDetectSuggestion` above so saving preserves Walking/Running/Cycling.
+    func autoDetectCandidate(daysBack: Int = 2) async -> DetectedWorkout? {
+        await autoDetectSuggestion(daysBack: daysBack)?.workout
+    }
+
+    /// Select the newest iOS sport-aware suggestion after applying both durable dismissal contracts.
+    nonisolated static func selectAutoDetectSuggestion(
+        _ candidates: [AutoWorkoutSuggestion],
+        autoDismissedTokens: [String],
+        detectedDismissedTokens: [String]
+    ) -> AutoWorkoutSuggestion? {
+        let exact = Set(autoDismissedTokens)
+        let legacy = WorkoutSource.parseDismissedSpans(detectedDismissedTokens)
+        return candidates
+            .filter { candidate in
+                let token = "\(candidate.startSec):\(candidate.endSec)"
+                return !exact.contains(token)
+                    && !legacy.contains { span in
+                        candidate.startSec < span.end && span.start < candidate.endSec
+                    }
+            }
+            .max(by: { $0.startSec < $1.startSec })
     }
 
     /// SAVE a suggested window as a manual-style "Workout" (generic sport , we don't claim a sport we
@@ -3237,11 +3295,12 @@ final class Repository: ObservableObject {
     /// it persists exactly like a hand-entered session under the strap source. After saving, the screen
     /// re-queries (the new saved span now excludes this window from re-suggestion).
     @discardableResult
-    func saveDetectedWorkout(_ w: DetectedWorkout) async -> Bool {
+    func saveDetectedWorkout(_ suggestion: AutoWorkoutSuggestion) async -> Bool {
+        let w = suggestion.workout
         let durationMin = max(1, w.durationMin)
         let start = Date(timeIntervalSince1970: TimeInterval(w.startSec))
         guard let row = WorkoutSource.buildManualRow(start: start, durationMin: durationMin,
-                                                     sport: "Workout", avgHr: w.avgBpm,
+                                                     sport: suggestion.sport, avgHr: w.avgBpm,
                                                      energyKcal: nil) else { return false }
         await saveManualWorkout(row)
         return true

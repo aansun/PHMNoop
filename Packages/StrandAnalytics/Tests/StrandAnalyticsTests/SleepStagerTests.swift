@@ -677,6 +677,54 @@ final class SleepStagerTests: XCTestCase {
         assertRuns(SleepStager.mergeFragments(single), [("light", 3)], "single run kept")
     }
 
+    // MARK: - Sleep-like interior wake recovery
+
+    func testSleepLikeInteriorWakeIsRecoveredButEdgesRemainWake() {
+        let start = 10_000
+        let epoch = 30
+        let stages = [
+            StageSegment(start: start, end: start + epoch, stage: "wake"),
+            StageSegment(start: start + epoch, end: start + 4 * epoch, stage: "light"),
+            StageSegment(start: start + 4 * epoch, end: start + 10 * epoch, stage: "wake"), // 3 min
+            StageSegment(start: start + 10 * epoch, end: start + 13 * epoch, stage: "rem"),
+            StageSegment(start: start + 13 * epoch, end: start + 14 * epoch, stage: "wake"),
+        ]
+        let end = start + 14 * epoch
+        let out = SleepStager.mergeSleepLikeInteriorWake(
+            stages, start: start, end: end,
+            hr: hrStream(start: start, durationS: end - start, bpm: 50),
+            grav: stillGravity(start: start, durationS: end - start))
+
+        XCTAssertEqual(out, [
+            StageSegment(start: start, end: start + epoch, stage: "wake"),
+            StageSegment(start: start + epoch, end: start + 10 * epoch, stage: "light"),
+            StageSegment(start: start + 10 * epoch, end: start + 13 * epoch, stage: "rem"),
+            StageSegment(start: start + 13 * epoch, end: end, stage: "wake"),
+        ])
+    }
+
+    func testActiveOrElevatedInteriorWakeIsPreserved() {
+        let start = 20_000
+        let epoch = 30
+        let candidateStart = start + 4 * epoch
+        let candidateEnd = start + 10 * epoch
+        let stages = [
+            StageSegment(start: start, end: candidateStart, stage: "light"),
+            StageSegment(start: candidateStart, end: candidateEnd, stage: "wake"),
+            StageSegment(start: candidateEnd, end: start + 14 * epoch, stage: "light"),
+        ]
+        let end = start + 14 * epoch
+        let gravity = stillGravity(start: start, durationS: candidateStart - start)
+            + activeGravity(start: candidateStart, durationS: candidateEnd - candidateStart)
+            + stillGravity(start: candidateEnd, durationS: end - candidateEnd)
+        let hr = hrStream(start: start, durationS: end - start, bpm: 50).map {
+            $0.ts >= candidateStart && $0.ts < candidateEnd ? HRSample(ts: $0.ts, bpm: 80) : $0
+        }
+        let out = SleepStager.mergeSleepLikeInteriorWake(stages, start: start, end: end, hr: hr, grav: gravity)
+
+        XCTAssertEqual(out, stages, "movement and elevated HR must preserve a real awakening")
+    }
+
     // MARK: - Sparse-gravity robustness (#308)
 
     /// Still gravity sampled sparsely — one sample every `everyS` seconds (constant orientation,
