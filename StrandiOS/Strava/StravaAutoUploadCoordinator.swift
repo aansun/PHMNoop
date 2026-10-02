@@ -11,7 +11,7 @@ enum StravaAutoUploadCoordinator {
         guard StravaExperiment.isEnabled,
               StravaExperiment.isAutomaticUploadEnabled,
               StravaTokenStore.isConnected,
-              StravaCredentials.fromBundle != nil else { return }
+              StravaCredentials.current != nil else { return }
 
         let key = StravaSettingsModel.workoutKey(for: row)
         guard StravaActivityStore.record(for: key) == nil,

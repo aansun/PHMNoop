@@ -2,6 +2,9 @@ import SwiftUI
 import StrandDesign
 import StrandImport
 import WhoopStore
+#if os(iOS)
+import UIKit
+#endif
 
 /// iOS-only Strava experiment surface. It intentionally lives outside the shared Settings screen so the
 /// macOS target remains unchanged. Network access is opt-in, OAuth is explicit, and automatic upload is
@@ -12,6 +15,9 @@ struct StravaSettingsView: View {
     @AppStorage(StravaExperiment.automaticUploadKey) private var automaticUpload = false
     @StateObject private var model = StravaSettingsModel()
     @State private var workouts: [WorkoutRow] = []
+    @State private var clientID = ""
+    @State private var clientSecret = ""
+    @State private var credentialsExpanded = false
 
     private var uploadableWorkouts: [WorkoutRow] {
         workouts.filter { row in
@@ -30,12 +36,17 @@ struct StravaSettingsView: View {
                        onRefresh: { await loadWorkouts() }, topBackground: liquidScaffoldSky()) {
             experimentCard
             if experimentEnabled {
+                credentialsCard
                 connectionCard
                 activityCard
             }
         }
         .task(id: "\(experimentEnabled)-\(automaticUpload)") {
             await loadWorkouts()
+        }
+        .onAppear {
+            clientID = model.savedClientID
+            clientSecret = model.savedClientSecret
         }
     }
 
@@ -78,7 +89,7 @@ struct StravaSettingsView: View {
                     }
 
                     if !model.isConfigured {
-                        Text("Add STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, and STRAVA_REDIRECT_URI to your local Config/BundleIdSecrets.xcconfig, then rebuild the iOS app.")
+                        Text("Save the Client ID and Client Secret above before connecting.")
                             .font(StrandFont.footnote)
                             .foregroundStyle(StrandPalette.statusWarning)
                             .fixedSize(horizontal: false, vertical: true)
@@ -106,6 +117,122 @@ struct StravaSettingsView: View {
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 }
+            }
+        }
+    }
+
+    private var credentialsCard: some View {
+        VStack(alignment: .leading, spacing: NoopMetrics.gap) {
+            SectionHeader("Strava API", overline: "Bring your own Strava app")
+            NoopCard(tint: StrandPalette.accent) {
+                DisclosureGroup(isExpanded: $credentialsExpanded) {
+                    VStack(alignment: .leading, spacing: 14) {
+                        Text("Create your own Strava API app, then enter its Client ID and Client Secret here. NOOP keeps both values in Apple Keychain and uses them only for the explicit Strava connection.")
+                            .font(StrandFont.footnote)
+                            .foregroundStyle(StrandPalette.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        TextField("Client ID", text: $clientID)
+                            .font(StrandFont.body)
+                            .foregroundStyle(StrandPalette.textPrimary)
+                            .tint(StrandPalette.accent)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .keyboardType(.numberPad)
+                            .textFieldStyle(.plain)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(StrandPalette.surfaceInset, in: RoundedRectangle(cornerRadius: 10))
+                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(StrandPalette.hairline, lineWidth: 1))
+                            .disabled(model.isConnected || model.busy)
+
+                        SecureField("Client Secret", text: $clientSecret)
+                            .font(StrandFont.body)
+                            .foregroundStyle(StrandPalette.textPrimary)
+                            .tint(StrandPalette.accent)
+                            .textInputAutocapitalization(.never)
+                            .autocorrectionDisabled()
+                            .textFieldStyle(.plain)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(StrandPalette.surfaceInset, in: RoundedRectangle(cornerRadius: 10))
+                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(StrandPalette.hairline, lineWidth: 1))
+                            .disabled(model.isConnected || model.busy)
+
+                        HStack(spacing: 10) {
+                            Button("Save credentials") {
+                                _ = model.saveCredentials(clientID: clientID, clientSecret: clientSecret)
+                            }
+                            .buttonStyle(NoopButtonStyle(.primary, fullWidth: true))
+                            .disabled(model.isConnected || model.busy || clientID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || clientSecret.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+
+                            if model.isConfigured {
+                                Button("Clear") {
+                                    model.clearCredentials()
+                                    clientID = ""
+                                    clientSecret = ""
+                                }
+                                .buttonStyle(NoopButtonStyle(.secondary, fullWidth: false))
+                                .disabled(model.isConnected || model.busy)
+                            }
+                        }
+
+                        Divider().overlay(StrandPalette.hairline)
+
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Strava app setup")
+                                .font(StrandFont.body)
+                                .foregroundStyle(StrandPalette.textPrimary)
+                            Text("1. Open Strava → Settings → My API Application.")
+                            Text("2. Copy Client ID and Client Secret into the fields above.")
+                            Text("3. Set Authorization Callback Domain to localhost.")
+                            Text("4. Save here, then tap Connect Strava.")
+                        }
+                        .font(StrandFont.footnote)
+                        .foregroundStyle(StrandPalette.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Callback URI")
+                                .font(StrandFont.footnote)
+                                .foregroundStyle(StrandPalette.textSecondary)
+                            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                Text(StravaCredentials.redirectURI)
+                                    .font(StrandFont.footnote.monospaced())
+                                    .foregroundStyle(StrandPalette.textPrimary)
+                                    .textSelection(.enabled)
+                                Spacer(minLength: 0)
+                                Button("Copy") {
+                                    #if os(iOS)
+                                    UIPasteboard.general.string = StravaCredentials.redirectURI
+                                    #endif
+                                    model.statusText = String(localized: "Callback URI copied.")
+                                }
+                                .buttonStyle(NoopButtonStyle(.secondary, fullWidth: false))
+                            }
+                            Text("Requested permissions: activity:write and activity:read_all")
+                                .font(StrandFont.footnote)
+                                .foregroundStyle(StrandPalette.textSecondary)
+                        }
+                    }
+                }
+                label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "key.fill")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundStyle(StrandPalette.accent)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("API credentials")
+                                .font(StrandFont.body)
+                                .foregroundStyle(StrandPalette.textPrimary)
+                            Text(model.isConfigured ? "Saved securely in Keychain" : "Not configured")
+                                .font(StrandFont.footnote)
+                                .foregroundStyle(StrandPalette.textSecondary)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                }
+                .tint(StrandPalette.accent)
             }
         }
     }

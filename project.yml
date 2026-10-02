@@ -331,14 +331,9 @@ targets:
         OURA_CLIENT_ID: $(OURA_CLIENT_ID)
         OURA_CLIENT_SECRET: $(OURA_CLIENT_SECRET)
         OURA_REDIRECT_URI: $(OURA_REDIRECT_URI)
-        # iOS-only, opt-in Strava experiment. Values come from the user's ignored
-        # Config/BundleIdSecrets.xcconfig; empty values keep the UI disabled until configured.
-        STRAVA_CLIENT_ID: $(STRAVA_CLIENT_ID)
-        STRAVA_CLIENT_SECRET: $(STRAVA_CLIENT_SECRET)
-        STRAVA_REDIRECT_URI: $(STRAVA_REDIRECT_URI)
         # Registers the noop:// URL scheme so ASWebAuthenticationSession's OAuth redirect reaches
-        # the active OAuth session instead of bouncing off the OS. The Strava redirect host must
-        # match the Authorization Callback Domain entered in the Strava developer portal.
+        # the active OAuth session instead of bouncing off the OS. Strava's localhost callback
+        # domain is used by the BYO-app settings flow; the URI is defined in StravaCredentials.
         CFBundleURLTypes:
           - CFBundleURLSchemes: [noop]
     entitlements:
