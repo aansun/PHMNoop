@@ -97,7 +97,14 @@ extension WidgetSnapshot {
         // previous day's Effort after the logical-day rollover). Keep Charge on the shared recovery
         // anchor, but resolve Effort from today's row/live HR exactly as Today does.
         let liveStrain = await currentLiveEffort(from: model, now: now)
-        let strain = liveStrain ?? todayRow?.strain ?? day?.strain
+        // Keep the widget aligned with Today while the live HR window is still sparse. A live
+        // recompute can temporarily under-read a workout that is already reflected in the stored
+        // daily score (for example 1 while Today correctly shows 30). Today resolves this through
+        // `effectiveEffort`; the widget must use the same floor or it visibly drops behind the app.
+        let strain = StrainScorer.effectiveEffort(
+            live: liveStrain,
+            stored: todayRow?.strain ?? day?.strain
+        )
         let effortDisplay: String? = strain.map { Self.effortDisplay($0, scale: effortScale) }
         // #2040: today's stress curve. Self-gating on a cheap heart-rate fingerprint, so a publish that
         // changed nothing costs one indexed COUNT and no rows. Only the FULL path scores it; the live
@@ -207,7 +214,14 @@ extension WidgetSnapshot {
         snap.bonded = model.live.bonded
         if includeEffort {
             let scale = currentEffortScale()
-            if let strain = await currentLiveEffort(from: model, now: now) {
+            if let liveStrain = await currentLiveEffort(from: model, now: now) {
+                // The fast path already has the last published value. Prefer the current-day
+                // repository score when available, then use the snapshot as a final carry-forward;
+                // never replace an earned score with a sparse live under-read.
+                let storedStrain = todayRow?.strain
+                    ?? anchor?.strain
+                    ?? snap.effort.map(Double.init)
+                let strain = StrainScorer.effectiveEffort(live: liveStrain, stored: storedStrain) ?? liveStrain
                 snap.effort = Int(strain.rounded())
                 snap.effortDisplay = effortDisplay(strain, scale: scale)
                 snap.effortWhoop = scale == .whoop

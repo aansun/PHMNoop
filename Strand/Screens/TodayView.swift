@@ -2834,9 +2834,9 @@ struct TodayView: View {
             // #843/#813, same-day real count only (strap @57 or same-day phone import); never the latest
             // imported row or the sparkline tail (both went stale). Else fall through to the estimate.
             let appleStepsForDay = appleDays.last(where: { $0.day == selectedAppleHealthDayKey })?.steps
-            let real = (d?.steps).map { intString(Double($0)) }
-                ?? appleStepsForDay.map { intString(Double($0)) }
-            let est = stepsEstByDay[selectedDayKey].map { intString(Double($0)) }
+            let real = (d?.steps).map { stepString(Double($0)) }
+                ?? appleStepsForDay.map { stepString(Double($0)) }
+            let est = stepsEstByDay[selectedDayKey].map { stepString(Double($0)) }
             return real ?? est ?? "—"
         case .calories:
             return withUnit(caloriesValue(appleDays.last))
@@ -4203,8 +4203,8 @@ struct TodayView: View {
             // is the most-recent value, not this day's): both froze the tile on an old import. Otherwise
             // fall through to the on-device estimate ("est."). Mirrors Android stepsForDay (#276/#150).
             let appleStepsForDay = appleDays.last(where: { $0.day == selectedAppleHealthDayKey })?.steps
-            let realSteps: String? = (d?.steps).map { intString(Double($0)) }
-                ?? appleStepsForDay.map { intString(Double($0)) }
+            let realSteps: String? = (d?.steps).map { stepString(Double($0)) }
+                ?? appleStepsForDay.map { stepString(Double($0)) }
             let estSteps = stepsEstByDay[selectedDayKey]
             // H6, only an ESTIMATED day (no real strap/phone count, so the on-device estimate filled in)
             // gets the calibration entry; a real measured count needs no calibration.
@@ -4218,7 +4218,7 @@ struct TodayView: View {
                 && stepsPipelineActive(hasDayData: d != nil)
             StatTile(
                 label: "Steps",
-                value: realSteps ?? estSteps.map { intString(Double($0)) } ?? "—",
+                value: realSteps ?? estSteps.map { stepString(Double($0)) } ?? "—",
                 // An estimated day reads "est." plus the calibration STATUS (k / days / confidence) so a
                 // frozen-looking estimate self-explains (#760/#792); a not-yet-calibrated day says how many
                 // more phone-counted days are needed (so a blank tile is never silently unexplained, #589).
@@ -5536,6 +5536,11 @@ struct TodayView: View {
         f.numberStyle = .decimal
         f.maximumFractionDigits = 0
         return f.string(from: NSNumber(value: v)) ?? "\(Int(v.rounded()))"
+    }
+
+    /// Full-precision steps readout for non-chart Today surfaces.
+    private func stepString(_ v: Double) -> String {
+        return intString(v)
     }
 
     // MARK: - Date parsing (yyyy-MM-dd, en_US_POSIX, LOCAL zone)

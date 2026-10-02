@@ -1985,7 +1985,9 @@ struct LiquidTodayView: View {
         guard let s = stepCount else { return "–" }
         let f = NumberFormatter()
         f.numberStyle = .decimal
-        return f.string(from: NSNumber(value: Int(s))) ?? "\(Int(s))"
+        f.locale = AppLanguage.activeLocale
+        f.maximumFractionDigits = 0
+        return f.string(from: NSNumber(value: Int(s.rounded()))) ?? "\(Int(s.rounded()))"
     }
 
     // °C / °F for the Skin Temp card, resolved exactly the way the other six screens that show a

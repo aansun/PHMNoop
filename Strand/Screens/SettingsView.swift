@@ -1349,8 +1349,8 @@ struct SettingsView: View {
                     }
                 }
                 rowDivider
-                // Trend chart style (line vs bar). Display-only: flips the Trends tab's charts between the
-                // gradient line + area and value-ramp bars. The plotted data is identical either way.
+                // Trend chart style. Display-only: switches the Trends tab between the classic area line,
+                // the value-labelled Line2 view, and value-ramp bars. The plotted data is identical.
                 FormRow(label: "Trend charts") {
                     Picker("Trend charts", selection: $trendChartStyleRaw) {
                         ForEach(TrendChartStyle.allCases) { style in

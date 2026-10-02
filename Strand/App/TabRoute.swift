@@ -28,6 +28,7 @@ enum TabRoute: Hashable {
     /// the exact source, so the catalog's ordering can never decide where a card taps through.
     case metricSourced(key: String, source: String)
     case metricExplorer
+    case compare
     case workouts
     case dataSources
     case stress
@@ -64,6 +65,7 @@ extension View {
                     HealthView()
                 }
             case .metricExplorer: MetricExplorerView()
+            case .compare: CompareView()
             case .workouts: WorkoutsView()
             case .dataSources: DataSourcesView()
             case .stress: StressView()

@@ -567,6 +567,23 @@ struct TrendsView: View {
                 .font(StrandFont.footnote)
                 .foregroundStyle(isWide ? StrandPalette.statusWarning : StrandPalette.textTertiary)
                 .accessibilityLabel(cap)
+            HStack(spacing: NoopMetrics.space2) {
+                Image(systemName: "arrow.triangle.merge")
+                    .foregroundStyle(StrandPalette.accent)
+                    .accessibilityHidden(true)
+                Text("Compare metrics")
+                    .font(StrandFont.footnote)
+                    .foregroundStyle(StrandPalette.textSecondary)
+                Spacer(minLength: NoopMetrics.space2)
+                NavigationLink(value: TabRoute.compare) {
+                    Label("Compare", systemImage: "chevron.right")
+                        .font(StrandFont.footnote.weight(.semibold))
+                        .foregroundStyle(StrandPalette.accent)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint(Text(String(localized: "Opens metric comparison.")))
+            }
+            .padding(.top, NoopMetrics.space1)
         }
     }
 
@@ -802,10 +819,15 @@ struct TrendsView: View {
         // The "now" end-cap is drawn INSIDE this chart (nowCapColor) so it's mapped by the chart's own
         // scales and lands on the line — the previous sibling overlay guessed the plot insets and
         // floated the dot left/below the curve (#458).
+        let style = TrendChartStyle(rawValue: trendChartStyleRaw) ?? .line
         TrendChart(points: pts, gradient: gradient, valueRange: valueRange,
-                   showsArea: true,
-                   showsBars: TrendChartStyle(rawValue: trendChartStyleRaw) == .bar,
+                   showsArea: style == .line,
+                   showsBars: style == .bar,
+                   showsPointValues: style == .line2,
                    height: NoopMetrics.chartHeight, valueFormat: valueFormat,
+                   xAxisDateFormat: { date in
+                       TrendChart.line2AxisDateString(date)
+                   },
                    accessibilityLabel: accessibilityLabel, nowCapColor: tip)
     }
 
