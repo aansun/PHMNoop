@@ -445,6 +445,7 @@ struct CompareView: View {
     @ViewBuilder
     private func overlaySection(_ series: [CompareSeries]) -> some View {
         let nonEmpty = series.filter { !$0.rows.isEmpty }
+        let overlayHeight = NoopMetrics.chartHeight + 40
         VStack(alignment: .leading, spacing: NoopMetrics.gap) {
             SectionHeader("Overlay", overline: "\(range.phrase)")
             ChartCard(
@@ -453,13 +454,14 @@ struct CompareView: View {
                     ? String(localized: "Min-max normalized · sparse series widened past \(range.phrase) · \(inspectHint)")
                     : String(localized: "Each line min-max normalized within \(range.phrase) · \(inspectHint)"),
                 trailing: String(localized: "\(nonEmpty.count) series"),
+                height: overlayHeight,
                 // Anchor the overlay card to the brand-green chrome world; each line keeps its own
                 // categorical series colour so the lines stay distinguishable against the wash.
                 tint: StrandPalette.accent
             ) {
                 // The overlay is min–max NORMALIZED 0–1, so the Effort scale never touches the line shape;
                 // only the per-series hover read-outs convert (passed through to the tooltip). (#268)
-                OverlayChart(series: nonEmpty, effortScale: effortScale, height: NoopMetrics.chartHeight)
+                OverlayChart(series: nonEmpty, effortScale: effortScale, height: overlayHeight)
             } footer: {
                 legend(nonEmpty)
             }
@@ -746,10 +748,13 @@ private struct OverlayChart: View {
     private struct Plot: Identifiable {
         // Stable identity (one value per metric per day) so Chart can diff across renders instead
         // of treating every point as new on each hover tick — was `UUID()`, which forced full rebuilds.
-        var id: String { title + "@" + String(date.timeIntervalSince1970) }
+        var id: String { seriesID + "@" + String(date.timeIntervalSince1970) }
+        let seriesID: String
         let title: String
         let date: Date
         let norm: Double
+        let realValue: Double
+        let labelLane: Int
     }
 
     /// Everything `body` derives from `series`, computed ONCE per data change instead
@@ -795,11 +800,11 @@ private struct OverlayChart: View {
             var dateCache: [String: Date] = [:]
             var densest = 0
 
-            for s in series {
+            for (seriesIndex, s) in series.enumerated() {
                 densest = max(densest, s.rows.count)
                 var pts: [Plot] = []
                 pts.reserveCapacity(s.rows.count)
-                for row in s.rows {
+                for (rowIndex, row) in s.rows.enumerated() {
                     byDay[row.day, default: [:]][s.id] = row.value
                     let d: Date
                     if let cached = dateCache[row.day] {
@@ -810,10 +815,14 @@ private struct OverlayChart: View {
                     } else {
                         continue // unparseable day: not plottable (as before)
                     }
-                    pts.append(Plot(title: s.metric.title, date: d, norm: s.normalized(row.value)))
+                    pts.append(Plot(seriesID: s.id, title: s.metric.title, date: d,
+                                    norm: s.normalized(row.value), realValue: row.value,
+                                    labelLane: (rowIndex + seriesIndex) % 2))
                 }
                 if let row = s.rows.last, let d = dateCache[row.day] ?? parseCompareDay(row.day) {
-                    caps.append(Plot(title: s.metric.title, date: d, norm: s.normalized(row.value)))
+                    caps.append(Plot(seriesID: s.id, title: s.metric.title, date: d,
+                                     norm: s.normalized(row.value), realValue: row.value,
+                                     labelLane: (max(0, s.rows.count - 1) + seriesIndex) % 2))
                 }
                 drawn.append(contentsOf: Model.minMaxBucketed(pts))
             }
@@ -908,6 +917,27 @@ private struct OverlayChart: View {
         series.first(where: { $0.metric.title == title })?.color
     }
 
+    /// Line2 labels show the actual metric value at each point, while the shared y-axis remains
+    /// normalized so unlike metrics can still share one overlay. Units and `/100` are intentionally
+    /// omitted from point labels; large values use the same K/M compaction as the historical charts.
+    private func pointValueString(_ point: Plot) -> String {
+        guard let s = series.first(where: { $0.id == point.seriesID }) else {
+            return TrendChart.line2ValueString(point.realValue,
+                                                formattedValue: point.realValue.formatted())
+        }
+        return TrendChart.line2ValueString(
+            point.realValue,
+            formattedValue: s.metric.format(point.realValue, effortScale: effortScale)
+        )
+    }
+
+    /// Keep adjacent labels readable when their normalized points share nearly the same x/y
+    /// position. Consecutive points alternate between two vertical lanes so adjacent readings in
+    /// one series (as well as two series on the same day) do not form a single text cluster.
+    private func pointAnnotationSpacing(_ point: Plot) -> CGFloat {
+        point.labelLane == 0 ? 3 : 16
+    }
+
     var body: some View {
         let model = currentModel
         // The axis is shared by every compared series, so use unique days rather than the flattened
@@ -931,8 +961,16 @@ private struct OverlayChart: View {
                     x: .value("Date", p.date),
                     y: .value("Normalized", p.norm)
                 )
-                .symbolSize(10)
+                // Line2 uses readable anchors and real-value annotations rather than tiny
+                // decorative dots. The normalized line remains the plotted comparison shape.
+                .symbolSize(96)
                 .foregroundStyle(by: .value("Metric", p.title))
+                .annotation(position: .top, spacing: pointAnnotationSpacing(p)) {
+                    Text(pointValueString(p))
+                        .font(StrandFont.captionNumber)
+                        .foregroundStyle(StrandPalette.textSecondary)
+                        .fixedSize()
+                }
             }
         }
         // Bevel "now" end-caps — a soft halo + bright core on each series' latest point, drawn on top.
@@ -956,7 +994,10 @@ private struct OverlayChart: View {
             .accessibilityHidden(true)
         }
         .chartForegroundStyleScale(range: series.map(\.color))
-        .chartYScale(domain: 0...1)
+        // The comparison values are normalized to 0…1, but the plot gets a small lower band so
+        // zero/low points cannot collide with the wrapped month/day axis labels. The axis itself
+        // remains explicitly labelled low/mid/high at the meaningful normalized values.
+        .chartYScale(domain: -0.18...1)
         .chartYAxis {
             // Normalized axis — label endpoints as low/high rather than raw numbers.
             AxisMarks(position: .leading, values: [0.0, 0.5, 1.0]) { value in
@@ -971,12 +1012,26 @@ private struct OverlayChart: View {
             }
         }
         .chartXAxis {
-            AxisMarks(values: .automatic(desiredCount: xAxisDesiredCount)) { _ in
+            AxisMarks(values: .automatic(desiredCount: xAxisDesiredCount)) { value in
                 AxisGridLine().foregroundStyle(StrandPalette.hairline.opacity(0.4))
-                AxisValueLabel(collisionResolution: .greedy)
-                    .foregroundStyle(StrandPalette.textTertiary)
-                    .font(StrandFont.footnote)
+                AxisValueLabel(collisionResolution: .greedy) {
+                    if let date = value.as(Date.self) {
+                        Text(TrendChart.line2AxisDateString(date))
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .offset(y: 10)
+                .foregroundStyle(StrandPalette.textTertiary)
+                .font(StrandFont.footnote)
             }
+        }
+        // Reserve only the Line2 annotation band above. The lower data-space domain already keeps
+        // low points clear of the wrapped date labels; adding bottom padding here would enlarge the
+        // whole Chart and create an unnecessary blank band before the legend.
+        .chartPlotStyle { plotArea in
+            plotArea.padding(.top, 34).clipped()
         }
         .chartLegend(.hidden) // legend rendered separately with real min/max
         .chartOverlay { proxy in

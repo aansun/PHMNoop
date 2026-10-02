@@ -157,7 +157,7 @@ enum MetricDetailSteps {
 
         var accessibilitySummary: String {
             guard let latest = buckets.last else { return String(localized: "Steps chart, no data") }
-            let noun = buckets.count == 1 ? String(localized: "bar") : String(localized: "bars")
+            let noun = buckets.count == 1 ? String(localized: "reading") : String(localized: "readings")
             let period = MetricDetailSteps.periodLabel(day: latest.displayDay, resolution: resolution)
             switch resolution {
             case .daily:
@@ -281,7 +281,7 @@ enum MetricDetailSteps {
     }
 
     static func countCaption(count: Int, resolution: Resolution, rangeName: String) -> String {
-        let noun = count == 1 ? String(localized: "bar") : String(localized: "bars")
+        let noun = count == 1 ? String(localized: "reading") : String(localized: "readings")
         switch resolution {
         case .daily:
             return String(localized: "\(count) daily \(noun) · \(rangeName)")
@@ -299,6 +299,19 @@ enum MetricDetailSteps {
             return String(localized: "\(formatted) steps")
         case .weekly, .monthly:
             return String(localized: "\(formatted) average steps per observed day")
+        }
+    }
+
+    /// Chart-only Steps label. Compact suffixes belong to plotted values and axes, not headline or
+    /// summary readouts where the exact total is more useful.
+    static func chartValueLabel(_ value: Double, resolution: Resolution) -> String {
+        let formatted = value.formatted(.number.locale(AppLanguage.activeLocale).precision(.fractionLength(0)))
+        let displayValue = TrendChart.line2ValueString(value, formattedValue: formatted)
+        switch resolution {
+        case .daily:
+            return String(localized: "\(displayValue) steps")
+        case .weekly, .monthly:
+            return String(localized: "\(displayValue) average steps per observed day")
         }
     }
 }
@@ -1481,19 +1494,21 @@ struct MetricDetailView: View {
             let showsBars = MetricDetailSteps.showsBars(
                 metricKey: metric.key,
                 preferredStyleRaw: trendChartStyleRaw)
+            let trendStyle = TrendChartStyle(rawValue: trendChartStyleRaw) ?? .line
             TrendChart(
                 points: trendPoints(windowed),
                 gradient: metricGradient(metric),
                 valueRange: valueRange(windowed.map(\.value)),
-                showsArea: true,
-                // Every historical metric, including Steps, follows the same Line/Bar
+                showsArea: trendStyle == .line,
+                // Every historical metric, including Steps, follows the same Line/Line2/Bar
                 // preference that the Trends page reads.
                 showsBars: showsBars,
+                showsPointValues: trendStyle == .line2,
                 baselineValue: personalBaseline,
                 height: NoopMetrics.chartHeight,
                 valueFormat: { value in
                     isStepsDetail
-                        ? MetricDetailSteps.valueLabel(value, resolution: stepsResolution)
+                        ? MetricDetailSteps.chartValueLabel(value, resolution: stepsResolution)
                         : fmt(value)
                 },
                 dateFormat: { date in
@@ -1502,13 +1517,15 @@ struct MetricDetailView: View {
                             day: strandDayParser.string(from: date), resolution: stepsResolution)
                         : TrendChart.defaultDateString(date)
                 },
-                xAxisDateFormat: isStepsDetail ? { date in
-                    MetricDetailSteps.axisLabel(
-                        day: strandDayParser.string(from: date), resolution: stepsResolution)
-                } : nil,
+                xAxisDateFormat: { date in
+                    TrendChart.line2AxisDateString(date)
+                },
                 accessibilityLabel: stepsAccessibility,
                 yAxisStep: isStepsDetail ? 5000 : nil,
-                showsBarValues: isStepsDetail && showsBars
+                usesCompactYAxis: isStepsDetail,
+                // Bar mode follows the shared chart treatment: the headline and y-axis carry the
+                // values, while the bars stay clean so annotations cannot collide with dates or gridlines.
+                showsBarValues: false
             )
         } footer: {
             // #1662: the VO₂max line is SPLIT on purpose wherever the estimator changes, so two

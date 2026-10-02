@@ -337,7 +337,15 @@ public struct ChartCard<ChartBody: View, Footer: View>: View {
                         if let subtitle { Text(subtitle).font(StrandFont.footnote).foregroundStyle(StrandPalette.textTertiary) }
                     }
                     Spacer()
-                    if let trailing { Text(trailing).font(StrandFont.bodyNumber).foregroundStyle(StrandPalette.textPrimary) }
+                    if let trailing {
+                        Text(trailing)
+                            .font(StrandFont.bodyNumber)
+                            .foregroundStyle(StrandPalette.textPrimary)
+                            .multilineTextAlignment(.trailing)
+                            .lineLimit(2)
+                            .minimumScaleFactor(0.72)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
                 chart().frame(height: height)
                 let f = footer()

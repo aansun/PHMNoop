@@ -85,7 +85,11 @@ public struct TrendChart: View {
     /// filled `BarMark` per (down-sampled) sample. Display-only — the plotted series is identical; only
     /// the mark geometry changes. Default false (the classic line). `showsArea` is ignored in bar mode.
     public var showsBars: Bool
+    /// Draw value annotations on the visible points for the comparison-friendly Line2 style.
+    public var showsPointValues: Bool
     public var yAxisStep: Double?
+    /// Use compact suffixes for large axis values, e.g. 5K and 1.2M.
+    public var usesCompactYAxis: Bool
     public var showsBarValues: Bool
     public var largeSelection: Bool
     @State private var selectedPoint: TrendPoint?
@@ -135,6 +139,7 @@ public struct TrendChart: View {
         valueRange: ClosedRange<Double> = 0...100,
         showsArea: Bool = true,
         showsBars: Bool = false,
+        showsPointValues: Bool = false,
         baselineValue: Double? = nil,
         height: CGFloat = 220,
         showsHover: Bool = true,
@@ -145,6 +150,7 @@ public struct TrendChart: View {
         nowCapColor: Color? = nil,
         yDomain: ClosedRange<Double>? = nil,
         yAxisStep: Double? = nil,
+        usesCompactYAxis: Bool = false,
         showsBarValues: Bool = false,
         largeSelection: Bool = false
     ) {
@@ -154,6 +160,7 @@ public struct TrendChart: View {
         self.valueRange = valueRange
         self.showsArea = showsArea
         self.showsBars = showsBars
+        self.showsPointValues = showsPointValues
         self.baselineValue = baselineValue
         self.height = height
         self.showsHover = showsHover
@@ -164,6 +171,7 @@ public struct TrendChart: View {
         self.nowCapColor = nowCapColor
         self.yDomain = yDomain
         self.yAxisStep = yAxisStep
+        self.usesCompactYAxis = usesCompactYAxis
         self.showsBarValues = showsBarValues
         self.largeSelection = largeSelection
         let avg = sorted.isEmpty
@@ -202,6 +210,38 @@ public struct TrendChart: View {
     private static let sharedDateFormatter: DateFormatter = {
         let f = DateFormatter(); f.dateFormat = "EEE d MMM"; return f
     }()
+
+    /// Compact two-line axis label for Line2: month above day, matching the sparse comparison layout.
+    public static func line2AxisDateString(_ date: Date) -> String {
+        let f = DateFormatter()
+        f.dateFormat = "MMM\nd"
+        return f.string(from: date)
+    }
+
+    /// Point-label format for Line2: keep the number, omit units such as "bpm", "ms", "steps" or
+    /// "/ 100", and compact large values so labels remain inside a narrow chart card.
+    public static func line2ValueString(_ value: Double, formattedValue: String) -> String {
+        let absolute = abs(value)
+        if absolute >= 1_000_000 {
+            return compactLine2Number(value / 1_000_000, suffix: "M")
+        }
+        if absolute >= 1_000 {
+            return compactLine2Number(value / 1_000, suffix: "K")
+        }
+        if value.rounded() == value {
+            return String(Int(value.rounded()))
+        }
+        return formattedValue
+            .split(whereSeparator: { $0 == " " || $0 == "/" })
+            .first
+            .map(String.init)
+            ?? value.formatted(.number.precision(.fractionLength(0...1)))
+    }
+
+    private static func compactLine2Number(_ value: Double, suffix: String) -> String {
+        let number = value.formatted(.number.precision(.fractionLength(0...1)))
+        return "\(number)\(suffix)"
+    }
 
     /// Default tooltip date format ("EEE d MMM"), exposed so it can seed the
     /// `dateFormat` default argument.
@@ -244,9 +284,26 @@ public struct TrendChart: View {
     /// reason.
     var plotYDomain: ClosedRange<Double> {
         if let step = yAxisStep, step > 0 {
-            return 0...max(step, ceil((points.map(\.value).max() ?? 0) / step) * step)
+            let upper = max(step, ceil((points.map(\.value).max() ?? 0) / step) * step)
+            guard !showsBars, xAxisDateFormat != nil else { return 0...upper }
+            // Keep the zero tick as the first visible y-axis label, while reserving a hidden
+            // negative band below it for the wrapped date labels. The metric itself has no
+            // negative readings; this is layout headroom, not a displayed data range.
+            return -max(step * 0.5, upper * 0.18)...upper
         }
-        return showsBars ? min(0, resolvedYDomain.lowerBound)...resolvedYDomain.upperBound : resolvedYDomain
+        if showsBars {
+            return min(0, resolvedYDomain.lowerBound)...resolvedYDomain.upperBound
+        }
+
+        // Historical charts render a two-line date axis directly under the plot. Keep an
+        // additional data-space band below the lowest line point so a trough cannot occupy
+        // the same pixels as the month/day label. This is deliberately shared across all
+        // line styles and metrics; bars keep their truthful zero baseline above.
+        guard xAxisDateFormat != nil else { return resolvedYDomain }
+        let span = resolvedYDomain.upperBound - resolvedYDomain.lowerBound
+        guard span > 0 else { return resolvedYDomain }
+        let lowerHeadroom = max(span * 0.18, 1)
+        return (resolvedYDomain.lowerBound - lowerHeadroom)...resolvedYDomain.upperBound
     }
 
     public var body: some View {
@@ -287,7 +344,10 @@ public struct TrendChart: View {
                     .opacity(holdingBar && currentSelection != nil && currentSelection?.date != p.date ? 0.3 : 1)
                     .annotation(position: .top, spacing: 3) {
                         if showsBarValues {
-                            Text(p.value.formatted(.number.precision(.fractionLength(0))))
+                            Text(Self.line2ValueString(
+                                p.value,
+                                formattedValue: p.value.formatted(.number.precision(.fractionLength(0)))
+                            ))
                                 .font(.system(size: 9, weight: .medium)).monospacedDigit()
                                 .foregroundStyle(StrandPalette.textSecondary)
                         }
@@ -337,8 +397,18 @@ public struct TrendChart: View {
                             x: .value("Date", p.date),
                             y: .value("Value", p.value)
                         )
-                        .symbolSize(18)
+                        // Line2 is intended for sparse, comparison-friendly data. Its points need to
+                        // read as actual data anchors rather than disappearing into the stroke.
+                        .symbolSize(showsPointValues ? 96 : 18)
                         .foregroundStyle(StrandPalette.sample(stops: gradient.toStops(), at: unit(p.value)))
+                        .annotation(position: .top, spacing: 3) {
+                            if showsPointValues {
+                                Text(Self.line2ValueString(p.value, formattedValue: valueFormat(p.value)))
+                                    .font(StrandFont.captionNumber)
+                                    .foregroundStyle(StrandPalette.textSecondary)
+                                    .fixedSize()
+                            }
+                        }
                     }
                 }
             }
@@ -359,7 +429,21 @@ public struct TrendChart: View {
         // rose fill bled down the page behind the cards below the chart. Clipping the plot area bounds
         // every mark (line, area, points, overshoot) to the chart rectangle.
         .chartPlotStyle { plotArea in
-            if showsBarValues { plotArea.padding(.top, 18) } else { plotArea.clipped() }
+            // Two-line date labels live directly below the plot. Reserve that vertical band in every
+            // chart so low points/bars cannot occupy the axis-label area. This is shared rather than
+            // Steps-specific because the same collision appears in every historical chart.
+            // Line charts get their lower separation from plotYDomain; only bars need an
+            // inset here because their truthful baseline remains at zero.
+            let axisBottomPadding: CGFloat = xAxisDateFormat == nil ? 8 : (showsBars ? 28 : 0)
+            if showsBarValues {
+                plotArea.padding(.top, 18).padding(.bottom, axisBottomPadding).clipped()
+            } else if showsPointValues {
+                // Reserve headroom for the value above the highest Line2 point; otherwise Swift Charts
+                // clips the annotation against the plot's top edge on compact cards.
+                plotArea.padding(.top, 24).padding(.bottom, axisBottomPadding).clipped()
+            } else {
+                plotArea.padding(.bottom, axisBottomPadding).clipped()
+            }
         }
         .chartXAxis {
             AxisMarks(values: .automatic(desiredCount: xAxisDesiredCount)) { value in
@@ -367,7 +451,11 @@ public struct TrendChart: View {
                 if let xAxisDateFormat, let date = value.as(Date.self) {
                     AxisValueLabel(collisionResolution: .greedy) {
                         Text(xAxisDateFormat(date))
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
+                    .offset(y: 10)
                     .foregroundStyle(StrandPalette.textTertiary)
                     .font(StrandFont.footnote)
                 } else {
@@ -386,7 +474,10 @@ public struct TrendChart: View {
                     }
                     AxisValueLabel {
                         if let number = value.as(Double.self) {
-                            Text(number.formatted(.number.precision(.fractionLength(0))))
+                            let formatted = number.formatted(.number.precision(.fractionLength(0)))
+                            Text(usesCompactYAxis
+                                ? Self.line2ValueString(number, formattedValue: formatted)
+                                : formatted)
                                 .font(StrandFont.footnote).foregroundStyle(StrandPalette.textTertiary)
                         }
                     }

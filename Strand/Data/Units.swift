@@ -48,11 +48,19 @@ enum EffortScale: String, CaseIterable, Identifiable {
 enum TrendChartStyle: String, CaseIterable, Identifiable {
     /// The classic gradient-stroked line with a soft area fill (the long-standing look).
     case line
+    /// A clean line with visible point values, useful for reading sparse daily comparisons.
+    case line2
     /// Vertical bars from the axis baseline, one per sample, value-ramp filled.
     case bar
     var id: String { rawValue }
     /// Segmented-control label.
-    var label: String { self == .bar ? "Bars" : "Line" }
+    var label: String {
+        switch self {
+        case .line: return String(localized: "Line")
+        case .line2: return String(localized: "Line2")
+        case .bar: return String(localized: "Bars")
+        }
+    }
 }
 
 /// Which sleep window the nightly HRV is measured over (#141). NOOP historically averages RMSSD across the
