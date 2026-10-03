@@ -41,7 +41,7 @@ struct NunaScoreCard: View {
 
     @ViewBuilder private func ring(_ kind: Kind) -> some View {
         let (fraction, color, textColor, value, label, state, route) = values(kind)
-        NavigationLink(value: route) {
+        ringLink(route) {
             VStack(spacing: 8) {
                 NunaRingGauge(fraction: fraction, color: color, size: 98, lineWidth: 9) {
                     Text(verbatim: value)
@@ -62,21 +62,32 @@ struct NunaScoreCard: View {
         .buttonStyle(.plain)
     }
 
-    private func values(_ kind: Kind) -> (Double, Color, Color, String, LocalizedStringKey, LocalizedStringKey, TabRoute) {
+    /// Charge and Effort open the Nuna metric screen; Rest opens Sleep until Phase 2 replaces it.
+    @ViewBuilder private func ringLink<C: View>(_ key: String, @ViewBuilder _ content: () -> C) -> some View {
+        if key == HeroRingMetric.rest {
+            NavigationLink(value: TabRoute.metric(key)) { content() }.buttonStyle(.plain)
+        } else if let m = MetricCatalog.metric(key: key, source: "my-whoop") {
+            NavigationLink(value: NunaTodayRoute.metric(m)) { content() }.buttonStyle(.plain)
+        } else {
+            content()
+        }
+    }
+
+    private func values(_ kind: Kind) -> (Double, Color, Color, String, LocalizedStringKey, LocalizedStringKey, String) {
         switch kind {
         case .charge:
             let pct = charge.pct
             let state: LocalizedStringKey = pct.map { $0 >= 67 ? "Ready" : ($0 >= 34 ? "Moderate" : "Low") } ?? "No data"
             return ((pct ?? 0) / 100, NunaPalette.charge, NunaPalette.charge, pct.map { "\(Int($0.rounded()))%" } ?? "–",
-                    "Charge", state, .metric(HeroRingMetric.charge))
+                    "Charge", state, HeroRingMetric.charge)
         case .effort:
             let text = effort.map { UnitFormatter.effortDisplay($0, scale: effortScale) } ?? "–"
             let state: LocalizedStringKey = effort.map { $0 < 33 ? "Light" : ($0 < 66 ? "Moderate" : "High") } ?? "No data"
-            return ((effort ?? 0) / 100, NunaPalette.effort, NunaPalette.effortText, text, "Effort", state, .metric(HeroRingMetric.effort))
+            return ((effort ?? 0) / 100, NunaPalette.effort, NunaPalette.effortText, text, "Effort", state, HeroRingMetric.effort)
         case .rest:
             let state: LocalizedStringKey = rest.map { $0 >= 80 ? "Good" : ($0 >= 65 ? "Fair" : "Low") } ?? "No data"
             return ((rest ?? 0) / 100, NunaPalette.rest, NunaPalette.restText, rest.map { "\(Int($0.rounded()))%" } ?? "–",
-                    "Rest", state, .metric(HeroRingMetric.rest))
+                    "Rest", state, HeroRingMetric.rest)
         }
     }
 }
@@ -117,7 +128,7 @@ struct NunaStressCard: View {
     let stress: Double?     // 0-3
 
     var body: some View {
-        NavigationLink(value: TabRoute.stress) {
+        NavigationLink(value: stressRoute) {
             NunaCard {
                 VStack(alignment: .leading, spacing: 14) {
                     HStack {
@@ -140,6 +151,10 @@ struct NunaStressCard: View {
             }
         }
         .buttonStyle(.plain)
+    }
+
+    private var stressRoute: NunaTodayRoute {
+        MetricCatalog.metric(key: "stress", source: "my-whoop").map { .metric($0) } ?? .allMetrics
     }
 
     private func level(_ v: Double) -> (LocalizedStringKey, Color) {
@@ -173,7 +188,7 @@ struct NunaMetricTile: Identifiable {
     let label: LocalizedStringKey
     let value: String
     let unit: String
-    let route: TabRoute?
+    let route: NunaTodayRoute?
 }
 
 struct NunaMetricsGrid: View {

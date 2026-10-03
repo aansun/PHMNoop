@@ -29,6 +29,8 @@ final class NunaTodayModel: ObservableObject {
     @Published private(set) var calories: Double?
     @Published private(set) var sleepMinutes: Double?
     @Published private(set) var workouts: [WorkoutRow] = []
+    /// Latest value of the slower-moving metrics the Your Cards section can show.
+    @Published private(set) var extras: [String: Double] = [:]
     @Published private(set) var loaded = false
 
     var isToday: Bool { dayOffset == 0 }
@@ -112,6 +114,13 @@ final class NunaTodayModel: ObservableObject {
         let appleKcal = apple.filter { $0.day == appleKey }.compactMap { $0.activeKcal }.max()
         steps = row?.steps.map(Double.init) ?? appleSteps.map(Double.init) ?? estSteps
         calories = appleKcal ?? row?.activeKcalEst
+
+        var ex: [String: Double] = [:]
+        for k in ["fitness_age", "vitality", "vo2max_est", "skin_temp"] {
+            if let v = await repo.exploreSeries(key: k, source: "my-whoop", days: 60).last?.value { ex[k] = v }
+        }
+        if let w = await repo.exploreSeries(key: "weight", source: "apple-health", days: 90).last?.value { ex["weight"] = w }
+        extras = ex
 
         workouts = (await workoutsA).filter { $0.startTs >= from && $0.startTs < to }
         loaded = true
