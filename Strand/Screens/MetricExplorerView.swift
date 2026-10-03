@@ -715,6 +715,11 @@ private struct MetricRow: View {
 struct MetricDetailView: View {
     let metric: MetricDescriptor
     @EnvironmentObject var repo: Repository
+#if os(iOS)
+    @EnvironmentObject private var router: NavRouter
+    @EnvironmentObject private var model: AppModel
+    @State private var showAnyaLauncher = false
+#endif
     /// #430 parity: the detail carries the SAME backdrop as the screen that pushed it — the day-cycle sky
     /// when the setting is on, the plain canvas when off — so a Key-Metrics tile tap doesn't jar from the
     /// liquid Today's sky to a flat page. Same keys TodayView/LiquidTodayView gate on; "Sky behind cards"
@@ -1070,6 +1075,21 @@ struct MetricDetailView: View {
         // Range changes the window, hence the correlation inputs — recompute the
         // cached scan rather than letting `correlationCard` run it inside body.
         .onChangeCompat(of: range) { _ in recomputeCorrelations() }
+#if os(iOS)
+        .overlay(alignment: .bottomTrailing) {
+            AnyaPresenceButton(context: metric.title) {
+                showAnyaLauncher = true
+            }
+            .padding(.trailing, NoopMetrics.screenHPadding)
+            .padding(.bottom, NoopMetrics.space3)
+        }
+        .sheet(isPresented: $showAnyaLauncher) {
+            CoachLauncherSheet(context: metric.title)
+                .environmentObject(model.coach)
+                .environmentObject(router)
+        }
+        .preference(key: AnyaDetailVisibilityKey.self, value: true)
+#endif
     }
 
     /// Two phases, because the screen used to wait for data it does not draw.

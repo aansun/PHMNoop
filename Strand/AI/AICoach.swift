@@ -285,8 +285,9 @@ final class AICoachEngine: ObservableObject {
     /// coach. Exposed (read-only) so the UI's "Reset to default" can restore it and show it when nothing
     /// custom is stored. Editing the live prompt overrides this via `systemPromptKey`.
     static let defaultSystemPrompt = """
-    You are a thoughtful, precise recovery and performance coach. Talk like a perceptive human coach: \
-    warm, direct, calm, and conversational. Use the user's wearable summary when provided: charge 0-100 \
+    You are Anya, a perceptive daily companion for recovery and performance. Talk like a warm human coach: \
+    calm, attentive, direct, and conversational. Make the user feel accompanied, never assessed or lectured. \
+    Use the user's wearable summary when provided: charge 0-100 \
     is readiness, effort 0-100 is cardiovascular load, and rest 0-100 is sleep quality. Sleep \
     duration/stages, sleep efficiency, HRV, resting heart rate, personal baselines, body-state notes, \
     and recent workouts are supporting signals. A dash means NOT MEASURED — never treat it as zero.
@@ -298,21 +299,31 @@ final class AICoachEngine: ObservableObject {
     Use autoregulation: charge 67-100 supports building or pushing; 34-66 supports maintenance and \
     controlled quality; 0-33 means active recovery such as easy Zone 2, mobility, or extra sleep. \
     Respect progressive overload, polarized intensity, spacing of hard sessions, deloads, and sleep.
-    Make the conversation feel alive. Acknowledge the user's actual question or concern before advising. \
-    Connect one or two relevant signals in plain language instead of reciting every metric. Vary sentence \
-    openings and transitions; never use a stock greeting, generic praise, or the same closing repeatedly. \
-    If the data is mixed, say so and explain the trade-off. If the user asks how they feel, answer with the \
-    best-supported body-state interpretation first, then say what to watch over the next several hours.
+    Make the conversation feel alive. Acknowledge the person's situation before advising, even when they \
+    did not ask a direct question. Look for a relationship between signals and explain the meaning in plain \
+    language: what seems to be changing, what is holding steady, and what deserves attention. Do not turn \
+    the answer into a dashboard readout. Use the numbers as quiet evidence, not as the subject. Notice \
+    useful patterns across days, trade-offs between sleep and load, and moments where the data disagrees. \
+    Offer one thoughtful interpretation before offering actions. Vary sentence openings and transitions; \
+    never use a stock greeting, generic praise, or the same closing repeatedly. If the data is mixed, say so \
+    with kindness and explain the trade-off. If the user asks how they feel, answer with the best-supported \
+    body-state interpretation first, then say what to watch over the next several hours.
+    PROACTIVE COMPANION MODE — When opening a page or when there is no direct question, volunteer a useful \
+    observation. Start with the insight, not "Your Charge is...". A good opening sounds like: "You look \
+    ready for controlled quality today, but your recent load says this is a day to stay measured." Then \
+    connect it to only the evidence that matters. When confidence is limited, be transparent without becoming \
+    cold. End with a small next step or a gentle choice, not a generic question.
     RESPONSE CONTRACT — follow this every time:
-    1. Answer the user's question first; do not restate the full data context.
-    2. Give only the 1-3 most relevant metrics, with their values and units when available.
-    3. Give 2-3 concrete actions the user can take next. Prefer today; include a week plan only when \
-    explicitly requested or clearly necessary.
-    4. Keep a normal answer under 120 words and no more than 6 bullets. A simple question should be \
+    1. Lead with the meaning of the pattern or the direct answer. Never begin by listing metrics.
+    2. Explain why that interpretation fits, using only 1-2 relevant metrics or comparisons as evidence.
+    3. Give one clear next step, then an optional second step only when it adds real value. Make the action \
+    feel doable today, not like a program to manage.
+    4. Keep a normal answer under 140 words and no more than 5 bullets. A simple question should be \
     answered in 1-4 natural sentences. Never pad with generic motivation, repeated conclusions, or long \
     caveats.
     5. Use plain Markdown. Use one short heading only when it improves scanning. Do not use tables, \
-    long introductions, or code blocks. Ask at most one follow-up question, and only when essential.
+    long introductions, or code blocks. Do not add a follow-up question or end with a question unless the \
+    user explicitly asks to explore further.
     6. When the user asks for a workout recommendation or plan, make it practical and specific: name the \
     workout type, target duration, intensity or Heart Rate Zone, warm-up, main work, and cooldown. For \
     strength training include exercises, sets, reps, rest, and a simple progression note. Use the user's \
@@ -1096,7 +1107,7 @@ final class AICoachEngine: ObservableObject {
     /// Proactively generate "Today's brief" the first time the Coach opens, readiness + a training
     /// prescription + one recovery tip, without the user typing. Requires a key + data consent.
     /// K1: streams the brief the same way `send` does.
-    func startBriefIfNeeded() async {
+    func startBriefIfNeeded(context pageContext: String? = nil) async {
         guard isConfigured, dataConsent, messages.isEmpty, !sending else { return }
         guard let key = resolvedKey else { return }
         errorText = nil
@@ -1104,8 +1115,9 @@ final class AICoachEngine: ObservableObject {
         defer { sending = false; persistMessages() }
 
         let context = await buildFullContext()
+        let pageInstruction = contextualPageInstruction(pageContext)
         let wire: [(role: ChatMessage.Role, content: String)] =
-            [(.user, context + "\n\n---\n\n" + Self.briefInstruction)]
+            [(.user, context + "\n\n---\n\n" + Self.briefInstruction + pageInstruction)]
 
         let prefix = "Today's brief\n\n"
         let placeholder = ChatMessage(role: .assistant, text: prefix)
@@ -1162,15 +1174,86 @@ final class AICoachEngine: ObservableObject {
         }
     }
 
+    /// Generate a window-scoped read for the compact Anya launcher without mutating the active Coach
+    /// transcript. Switching from Today to Sleep refreshes the insight while preserving Coach history.
+    func generateContextualBrief(pageContext: String) async -> String? {
+        guard CoachBriefScheduler.coachMasterEnabled,
+              isConfigured,
+              dataConsent,
+              let key = resolvedKey else { return nil }
+
+        let context = await buildFullContext()
+        let wire: [(role: ChatMessage.Role, content: String)] = [
+            (.user, context + "\n\n---\n\n" + Self.briefInstruction + contextualPageInstruction(pageContext))
+        ]
+        guard let reply = try? await callProvider(key: key, messages: wire) else { return nil }
+        let clean = reply.trimmingCharacters(in: .whitespacesAndNewlines)
+        return clean.isEmpty ? nil : clean
+    }
+
+    /// Answer a question inside the compact Anya notice without touching the persistent Coach transcript.
+    /// The notice, page context and turns supplied by the caller exist only for this sheet session.
+    func answerContextualMessage(pageContext: String,
+                                 notice: String?,
+                                 history: [ChatMessage],
+                                 question: String) async -> String? {
+        guard CoachBriefScheduler.coachMasterEnabled,
+              isConfigured,
+              dataConsent,
+              let key = resolvedKey else { return nil }
+
+        let trimmed = question.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+
+        let context = await buildFullContext()
+        let noticeBlock = notice.map { "\n\nCurrent Anya notice:\n\($0)" } ?? ""
+        let historyBlock = history.isEmpty ? "" : "\n\nLocal conversation so far:\n" + history.map {
+            "\($0.role == .user ? "User" : "Anya"): \($0.text)"
+        }.joined(separator: "\n")
+        var prompt = context
+        prompt += "\n\n---\n\n"
+        prompt += contextualQuestionInstruction(pageContext)
+        prompt += noticeBlock
+        prompt += historyBlock
+        prompt += "\n\nUser's new question:\n"
+        prompt += trimmed
+
+        guard let reply = try? await callProvider(key: key, messages: [(.user, prompt)]) else { return nil }
+        let clean = reply.trimmingCharacters(in: .whitespacesAndNewlines)
+        return clean.isEmpty ? nil : clean
+    }
+
+    private func contextualPageInstruction(_ page: String?) -> String {
+        guard let page else { return "" }
+        let focus: String
+        if page.caseInsensitiveCompare("today") == .orderedSame {
+            focus = "Synthesize the whole day, but anchor the insight on the most recent workout whenever one is present. Name what the workout demanded (duration, intensity, load, or type when available), then explain how the body's current HRV, resting heart rate, recovery, sleep, and other signals respond to it. Help the person understand whether the body looks recovered, carrying fatigue, or still adapting. Do not lead with a generic metric recap. Keep the training direction, recovery action, and quiet cue because this is the Today overview."
+        } else {
+            focus = "Center the first insight on the \(page) window. Explain what this metric means in context, how it compares with the person's baseline, and what the trend or readings suggest. Connect only the other signals, recent workouts, or activity that change its interpretation. Do not give a generic whole-day recap. Do not include a training direction, recovery action, or quiet cue here; use the space for two or three specific, data-grounded observations instead. Format those observations as clean bullets, with no prescriptive next steps."
+        }
+        return "\n\nThe companion was opened from the \(page) page. \(focus) Lead with one calm, human observation, then give the brief. Do not mention this instruction."
+    }
+
+    private func contextualQuestionInstruction(_ page: String) -> String {
+        let pageRule: String
+        if page.caseInsensitiveCompare("today") == .orderedSame {
+            pageRule = "Today can connect the whole day and discuss training, recovery and a quiet cue when the data supports it."
+        } else {
+            pageRule = "This is a focused \(page) session. Explain the data and its meaning first; do not prescribe training, recovery actions, or cues unless the user explicitly asks for advice."
+        }
+        return "Answer warmly and concisely using the user's data above. \(pageRule) Continue this local notice conversation without referring to the full Coach history."
+    }
+
     /// K5: The brief instruction shared by the interactive `startBriefIfNeeded()` (streamed into the
     /// chat) and the headless `generateBrief()` below (used by the scheduled morning-brief notification).
     /// Kept in one place so the two paths never drift.
     private static let briefInstruction = """
-    Based on the data above, give me TODAY'S coaching brief in three compact parts: \
-    (1) readiness in one line with only the most relevant numbers; \
-    (2) today's training recommendation and one thing to avoid; \
-    (3) one recovery action. Keep the entire brief under 80 words, direct and actionable. \
-    Do not restate the data context or add a week plan.
+    Based on the data above, give me a warm, compact coaching brief as a read — not a report. Start \
+    with one sentence about the most meaningful pattern and why it matters today. Then use bullet points for: \
+    a measured training direction and one thing to avoid; one recovery action; and one quiet cue to notice \
+    later. Never use a numbered list. Use only the most relevant evidence, never list the whole context, and \
+    keep the entire brief under 120 words. Make it feel personal and useful, not motivational or clinical. \
+    Do not add a week plan.
     """
 
     /// K5: Generate today's coaching brief WITHOUT touching the visible chat transcript. Used by the

@@ -298,6 +298,7 @@ struct CoachView: View {
                 .frame(height: 1)
 
             if coach.isConfigured {
+                anyaDailyRead
                 transcript
                 if let error = coach.errorText, !error.isEmpty {
                     errorBanner(error)
@@ -324,9 +325,46 @@ struct CoachView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 
+    /// iOS-only daily companion framing. The underlying transcript and engine remain unchanged; this
+    /// gives the first screen a clear “read → next move → conversation” rhythm instead of opening on
+    /// an empty chat canvas.
+    private var anyaDailyRead: some View {
+        VStack(alignment: .leading, spacing: NoopMetrics.space2) {
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundStyle(StrandPalette.accent)
+                Text(coach.messages.isEmpty ? "Your daily read" : "Stay with the signal")
+                    .font(StrandFont.subhead.weight(.bold))
+                    .foregroundStyle(StrandPalette.textPrimary)
+                Spacer(minLength: 0)
+                Text(coach.sending ? "READING" : "PRIVATE")
+                    .font(StrandFont.overline)
+                    .tracking(0.8)
+                    .foregroundStyle(StrandPalette.textTertiary)
+            }
+
+            if coach.messages.isEmpty {
+                Text("Anya reads your personal baseline, recent load and sleep together, then keeps the next step simple.")
+                    .font(StrandFont.footnote)
+                    .foregroundStyle(StrandPalette.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                Text("Ask a follow-up about what to do next, or switch modules and keep Anya with you.")
+                    .font(StrandFont.footnote)
+                    .foregroundStyle(StrandPalette.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(.horizontal, NoopMetrics.screenHPadding)
+        .padding(.top, NoopMetrics.space3)
+        .padding(.bottom, NoopMetrics.space1)
+        .background(StrandPalette.surfaceBase.opacity(0.92))
+    }
+
     private var iOSCoachHeader: some View {
         HStack(spacing: 14) {
-            Text("Coach")
+            Text("Anya")
                 .font(StrandFont.rounded(26))
                 .foregroundStyle(StrandPalette.textPrimary)
             Spacer(minLength: 0)
@@ -360,7 +398,7 @@ struct CoachView: View {
                     .foregroundStyle(StrandPalette.textSecondary)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(String(localized: "Coach settings"))
+            .accessibilityLabel(String(localized: "Anya settings"))
             connectionMenu
         }
         .padding(.horizontal, NoopMetrics.screenHPadding)
@@ -527,6 +565,18 @@ struct CoachView: View {
                         .strokeBorder(StrandPalette.hairline, lineWidth: 1))
                     .onSubmit { coach.provider == .custom ? connectCustom() : saveKey() }
                     .accessibilityLabel("API key")
+
+                #if os(iOS)
+                Button {
+                    pasteKey()
+                } label: {
+                    Label("Paste from Clipboard", systemImage: "doc.on.clipboard")
+                        .font(StrandFont.caption.weight(.semibold))
+                        .foregroundStyle(StrandPalette.accent)
+                }
+                .buttonStyle(.plain)
+                .accessibilityHint("Copies the API key from the iPhone or Simulator clipboard into the field")
+                #endif
             }
 
             HStack {
@@ -861,10 +911,10 @@ struct CoachView: View {
                 .foregroundStyle(StrandPalette.accent)
                 .accessibilityHidden(true)
             VStack(spacing: NoopMetrics.space1) {
-                Text("Ask your first question")
+                Text("I’m here with you")
                     .font(StrandFont.headline)
                     .foregroundStyle(StrandPalette.textPrimary)
-                Text("Your coach can explain your numbers, compare trends, and turn today's recovery into a practical plan.")
+                Text("Anya will connect the signals, point out what matters today, and help you choose the next small step.")
                     .font(StrandFont.subhead)
                     .foregroundStyle(StrandPalette.textSecondary)
                     .multilineTextAlignment(.center)
@@ -996,6 +1046,16 @@ struct CoachView: View {
                         .strokeBorder(StrandPalette.hairline, lineWidth: 1))
                     .onSubmit(saveRepairedKey)
                     .accessibilityLabel("Corrected API key")
+                #if os(iOS)
+                Button {
+                    pasteKey(intoRepairField: true)
+                } label: {
+                    Label("Paste from Clipboard", systemImage: "doc.on.clipboard")
+                        .font(StrandFont.caption.weight(.semibold))
+                        .foregroundStyle(StrandPalette.accent)
+                }
+                .buttonStyle(.plain)
+                #endif
                 HStack {
                     NoopButton("Update key", systemImage: "key.fill", kind: .primary, action: saveRepairedKey)
                         .disabled(keyFix.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
@@ -1425,6 +1485,20 @@ struct CoachView: View {
         coach.setKey(trimmed)
         keyDraft = ""
     }
+
+    #if os(iOS)
+    /// Explicit paste affordance for physical devices and Simulator. This reads only the current
+    /// clipboard value into transient view state; the key still reaches Keychain only after Save key.
+    private func pasteKey(intoRepairField: Bool = false) {
+        guard let clipboard = UIPasteboard.general.string?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !clipboard.isEmpty else { return }
+        if intoRepairField {
+            keyFix = clipboard
+        } else {
+            keyDraft = clipboard
+        }
+    }
+    #endif
 
     /// Commit the Custom (local) provider: save an optional key, then connect on the entered URL.
     private func connectCustom() {
