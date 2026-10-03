@@ -26,7 +26,7 @@ struct CoachHistoryView: View {
                 }
             }
             .background(StrandPalette.surfaceBase.ignoresSafeArea())
-            .navigationTitle("Coach history")
+            .navigationTitle("Anya history")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -48,7 +48,7 @@ struct CoachHistoryView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: { _ in
-            Text("This removes the saved Coach conversation from this device.")
+            Text("This removes the saved Anya conversation from this device.")
         }
     }
 
@@ -119,7 +119,7 @@ struct CoachHistoryView: View {
                 Label("Delete", systemImage: "trash")
             }
         }
-        .accessibilityLabel("Open Coach conversation: \(item.title)")
+        .accessibilityLabel("Open Anya conversation: \(item.title)")
         .accessibilityHint("Double tap to continue this conversation")
     }
 }

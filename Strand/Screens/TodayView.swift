@@ -516,10 +516,11 @@ struct TodayView: View {
     // with the ring. A calibrating night (empty drivers) taps through to the EXISTING calibration countdown.
     @State private var showChargeBreakdown = false
 
-    // S4: the Synthesis card collapses to a single one-liner that expands on tap. Default collapsed so the
-    // home screen stays tight; the live content (#506) is unchanged, only the chrome folds. @State (not
-    // persisted) so a relaunch starts collapsed again.
-    @State private var synthesisExpanded = false
+    // S4: the Synthesis card is hidden by default and expands on tap. The disclosure choice is persisted
+    // locally so a Today refresh does not close the read while data is arriving.
+    /// Keep the disclosure choice through Today refreshes. The key is absent for existing installs, so the
+    /// new default remains collapsed until the user explicitly opens the read.
+    @AppStorage("today.synthesisExpanded") private var synthesisExpanded = false
 
     // S5: the Key Metrics grid caps at the first `metricsCollapsedCap` tiles behind a "Show all metrics"
     // expander, collapsing OVERFLOW only (never dropping or reordering a user-selected tile, #251). @State
@@ -1581,6 +1582,7 @@ struct TodayView: View {
         }
         .onAppear {
             DashboardCardPrefs.migrateLegacyStepsAverage()
+            DashboardCardPrefs.migrateStressCard()
             if derivedKey != todayInputKey {
                 derived = buildDerived()
                 derivedKey = todayInputKey
@@ -2376,12 +2378,22 @@ struct TodayView: View {
         let score = d?.recovery
         VStack(alignment: .leading, spacing: NoopMetrics.gap) {
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text(greetingWord)
-                    .font(StrandFont.subhead)
-                    .foregroundStyle(StrandPalette.textSecondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                Spacer(minLength: 8)
+                Button {
+                    withAnimation(StrandMotion.interactive) { synthesisExpanded.toggle() }
+                } label: {
+                    HStack {
+                        Text(greetingWord)
+                            .font(StrandFont.subhead)
+                            .foregroundStyle(StrandPalette.textSecondary)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.8)
+                        Spacer(minLength: 0)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(synthesisExpanded ? "Hide Synthesis" : "Show Synthesis")
+                .accessibilityHint("Shows the daily recovery and training explanation")
                 // S4 (#205): the one-word readiness read kept on the hero now the full Readiness card folded
                 // into the Charge-ring tap. Push / Maintain / Rest, derived from the existing Readiness
                 // level; hidden when there isn't enough history (nil word). Sits beside the confidence pill.
@@ -2390,8 +2402,19 @@ struct TodayView: View {
                 }
                 recoveryStatePill(score: score)
                     .layoutPriority(1)
+                Button {
+                    withAnimation(StrandMotion.interactive) { synthesisExpanded.toggle() }
+                } label: {
+                    Image(systemName: synthesisExpanded ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(StrandPalette.textTertiary)
+                        .frame(width: 24, height: 24)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(synthesisExpanded ? "Hide Synthesis" : "Show Synthesis")
+                .accessibilityHint("Shows the daily recovery and training explanation")
             }
-            .accessibilityElement(children: .combine)
 
             // S4: the Synthesis card collapses to a single one-liner that EXPANDS on tap. Default collapsed
             // so the home screen stays tight; the live content (#506) is unchanged, only the chrome folds.
@@ -2458,32 +2481,9 @@ struct TodayView: View {
             .accessibilityLabel("Synthesis. \(status)")
             .accessibilityHint("Collapse")
         } else {
-            // Collapsed: a one-liner with the category overline, the status headline and a down-chevron.
-            Button {
-                withAnimation(StrandMotion.interactive) { synthesisExpanded = true }
-            } label: {
-                NoopCard(tint: StrandPalette.chargeColor) {
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Synthesis").strandOverline()
-                            Text(status)
-                                .font(StrandFont.headline)
-                                .foregroundStyle(StrandPalette.textPrimary)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.85)
-                        }
-                        Spacer(minLength: 8)
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundStyle(StrandPalette.textTertiary)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .contentShape(Rectangle())
-                }
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel("Synthesis. \(status)")
-            .accessibilityHint("Expand for the full read")
+            // Hidden by default: the greeting/status row above is the compact affordance. This keeps the
+            // Today feed calm while preserving the full synthesis for an intentional tap.
+            EmptyView()
         }
     }
 
@@ -2703,8 +2703,7 @@ struct TodayView: View {
         case .stepsAverage30:
             RollingStepsAverageCard(day: selectedDayKey)
         case .stress:
-            pinnedCardRow(icon: card.icon, tint: tint, title: card.title, subtitle: card.subtitle,
-                          value: dashboardValue(card), route: .stress)
+            StressTodayCardView()
         case .fitnessAge, .vo2max, .vitality, .steps, .calories:
             pinnedCardRow(icon: card.icon, tint: tint, title: card.title, subtitle: card.subtitle,
                           value: dashboardValue(card), route: .health)
@@ -3480,7 +3479,9 @@ struct TodayView: View {
     /// all WHOOP-domain metrics, so the source is pinned instead of relying on catalog declaration order.
     @ViewBuilder
     private func metricDetailDestination(for key: String) -> some View {
-        if let metric = MetricCatalog.metric(key: key, source: "my-whoop") {
+        if key == HeroRingMetric.rest {
+            SleepView()
+        } else if let metric = MetricCatalog.metric(key: key, source: "my-whoop") {
             MetricDetailView(metric: metric)
         } else {
             HealthView()

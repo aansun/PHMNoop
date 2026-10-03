@@ -60,11 +60,13 @@ private struct HealthSectionsStack: View {
         VStack(alignment: .leading, spacing: NoopMetrics.sectionGap) {
             // Manual "Sync now" + honest sync status (#364). Its own view so the ~1Hz HR stream
             // doesn't re-render it; depends on `live` (connection/backfill state) + `model`.
-            SyncStatusSection()
+            // Sync status remains available from the strap flow, but is not a primary Health Monitor card.
             // The live HR section is its own view: it owns `live`/`profile`,
             // so the ~1Hz HR stream re-renders only this subtree — the static
             // vitals grid below does not re-render on each HR tick.
             HeartRateSection()
+            // Vital signs follows live HR in the requested Health Monitor order.
+            VitalsSection()
             // Fitness Age (weekly, computed by IntelligenceEngine and read back from the
             // "fitness_age" metricSeries). Its own view depending only on `repo`/`profile`,
             // so the live HR stream never re-renders it.
@@ -75,17 +77,16 @@ private struct HealthSectionsStack: View {
             // Screen-5 recovery detail: the CONTRIBUTORS to today's recovery as
             // labelled progress bars (HRV / Resting HR / Sleep / Respiratory), each
             // scored against the on-device baseline. Depends only on `repo`.
-            RecoveryContributorsSection()
-            // The static vitals grid is its own view depending only on `repo`,
-            // so it is unaffected by live HR ticks.
-            VitalsSection()
+            // Recovery contributors are grouped under Advanced below.
             // v5 skin-temperature suite: the illness "heads-up", body clock, and (opt-in) cycle
             // awareness, each driven by a pure StrandAnalytics engine result the analytics pass
             // computed and AppModel publishes. Its own view depending on `model` + `repo`.
-            SkinTempSection()
-            // v5 deep-links: the records logbook + the multi-device fused record, reachable
-            // from their honest Health home as drill-in rows (not their own destinations).
-            HealthHubLinksSection()
+            // Skin temperature is grouped under Advanced below.
+            // v5 deep-links: the records logbook is the last primary card before Advanced.
+            HealthHubLinksSection(includeLabBook: true, includeFused: false)
+            // Recovery contributors, skin temperature, and fused data stay behind one disclosure so
+            // the Health Monitor opens with the high-value WHOOP cards first.
+            HealthAdvancedSection()
         }
     }
 }
@@ -903,43 +904,30 @@ private struct FitnessAgeSection: View {
         let years = Int(abs(delta).rounded())
         let younger = delta >= 0
         return VStack(alignment: .leading, spacing: NoopMetrics.space4) {
-            // Tap the hero body to open the full "fitness_age" trend.
+            // Tap the primary readout to open the full "fitness_age" trend.
             Button { fitnessSheet = .trend } label: {
                 HStack(alignment: .center, spacing: NoopMetrics.space5) {
-                    // The signature liquid gauge anchors the hero: a vessel tinted to the Charge world,
-                    // filled by how young the fitness age reads (younger = fuller), with the age counting
-                    // up over it. Same HeroScoreCell idiom as Today. tapPassesThrough is what actually makes
-                    // taps reach the trend Button: a plain splash gesture on the vessel swallows them.
+                    // The liquid gauge anchors the primary readout: younger = fuller, with the age counting
+                    // up over it. It remains one tap target with the trend detail.
                     ZStack {
                         LiquidVessel(value: fitnessAgeFraction(age), tint: StrandPalette.chargeColor,
                                      animated: true, tapPassesThrough: true)
-                            .frame(width: 96, height: 96)
+                            .frame(width: 88, height: 88)
                         CountUpNumber(value: Double(shown), font: StrandFont.rounded(30), prefix: bound)
                             .foregroundStyle(.white)
                             .shadow(color: .black.opacity(0.5), radius: 6, y: 1)
                             .allowsHitTesting(false)
                     }
-                    VStack(alignment: .leading, spacing: NoopMetrics.space1) {
+                    VStack(alignment: .leading, spacing: NoopMetrics.space2) {
                         Text("Fitness Age").strandOverline()
                         Text(ageDeltaLine(years: years, younger: younger, bound: bound))
                             .font(StrandFont.subhead)
                             .foregroundStyle(younger ? StrandPalette.statusPositive : StrandPalette.statusWarning)
+                        Text("Tap to view the weekly trend")
+                            .font(StrandFont.footnote)
+                            .foregroundStyle(StrandPalette.textTertiary)
                     }
                     Spacer(minLength: 0)
-                    if let vo2 = vo2max {
-                        VStack(alignment: .trailing, spacing: 2) {
-                            Text("VO₂max").strandOverline()
-                            Text(String(format: "%.0f", vo2))
-                                .font(StrandFont.number(30))
-                                .foregroundStyle(StrandPalette.metricCyan)
-                            Text("ml/kg/min")
-                                .font(StrandFont.footnote)
-                                .foregroundStyle(StrandPalette.textTertiary)
-                            Text("\(String(localized: "On-device")) · \(vo2MaxEstimatorDisplayName(vo2maxEstimator))")
-                                .font(StrandFont.footnote)
-                                .foregroundStyle(StrandPalette.textTertiary)
-                        }
-                    }
                     Image(systemName: "chevron.right")
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(StrandPalette.textTertiary)
@@ -951,6 +939,31 @@ private struct FitnessAgeSection: View {
             .accessibilityElement(children: .ignore)
             // The spoken label carries the bound too, so a screen reader is not told a floored reading is exact.
             .accessibilityLabel("Fitness Age \(bound)\(shown), \(ageDeltaLine(years: years, younger: younger, bound: bound)). Tap to see the trend.")
+
+            if let vo2 = vo2max {
+                Divider().overlay(StrandPalette.hairline)
+                HStack(alignment: .firstTextBaseline, spacing: NoopMetrics.space3) {
+                    VStack(alignment: .leading, spacing: NoopMetrics.space1) {
+                        Text("VO₂max").strandOverline()
+                        HStack(alignment: .firstTextBaseline, spacing: 5) {
+                            Text(String(format: "%.0f", vo2))
+                                .font(StrandFont.number(28))
+                                .foregroundStyle(StrandPalette.metricCyan)
+                            Text("ml/kg/min")
+                                .font(StrandFont.footnote)
+                                .foregroundStyle(StrandPalette.textSecondary)
+                        }
+                    }
+                    Spacer(minLength: 0)
+                    Text("\(String(localized: "On-device")) · \(vo2MaxEstimatorDisplayName(vo2maxEstimator))")
+                        .font(StrandFont.footnote)
+                        .foregroundStyle(StrandPalette.textTertiary)
+                        .multilineTextAlignment(.trailing)
+                        .lineLimit(2)
+                        .frame(maxWidth: 118, alignment: .trailing)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
 
             // At a bound the age has stopped carrying information: every model output past the end of
             // the scale banks as the same number, so someone still improving sees nothing move (#2184).
@@ -968,9 +981,13 @@ private struct FitnessAgeSection: View {
                     .foregroundStyle(StrandPalette.textTertiary)
             }
 
-            Text("± \(Int(FitnessAgeEngine.displayBandYears)) yr · a fitness comparison, not a biological age")
-                .font(StrandFont.footnote)
-                .foregroundStyle(StrandPalette.textTertiary)
+            HStack(alignment: .firstTextBaseline, spacing: NoopMetrics.space3) {
+                Text("± \(Int(FitnessAgeEngine.displayBandYears)) yr · a fitness comparison, not a biological age")
+                    .font(StrandFont.footnote)
+                    .foregroundStyle(StrandPalette.textTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+            }
 
             Divider().overlay(StrandPalette.hairline)
 
@@ -1252,46 +1269,79 @@ private struct VitalitySection: View {
         let worst = sorted.last
         return VStack(alignment: .leading, spacing: NoopMetrics.space4) {
             HStack(alignment: .center, spacing: NoopMetrics.space5) {
-                // The weekly Vitality score (0…100) as the signature liquid gauge: a vessel tinted to the
-                // Charge world, filled to the score, with the number counting up over it (Today's
-                // HeroScoreCell idiom). Taps splash the gauge; the number is hit-transparent.
-                VStack(alignment: .leading, spacing: NoopMetrics.space1) {
-                    Text("Vitality").strandOverline()
-                    ZStack {
-                        LiquidVessel(value: max(0, min(1, v / 100)), tint: StrandPalette.chargeColor, animated: true)
-                            .frame(width: 108, height: 108)
-                        VStack(spacing: 0) {
-                            CountUpNumber(value: v, font: StrandFont.rounded(38))
-                                .foregroundStyle(.white)
-                                .shadow(color: .black.opacity(0.5), radius: 6, y: 1)
-                            Text("of 100").font(StrandFont.caption).foregroundStyle(StrandPalette.textSecondary)
-                        }
-                        .allowsHitTesting(false)
+                // Keep the score visual, with its meaning in a dedicated column. Body Age gets its own
+                // full-width row below so neither metric is squeezed on a narrow iPhone.
+                ZStack {
+                    LiquidVessel(value: max(0, min(1, v / 100)), tint: StrandPalette.chargeColor, animated: true)
+                        .frame(width: 96, height: 96)
+                    VStack(spacing: 0) {
+                        CountUpNumber(value: v, font: StrandFont.rounded(34))
+                            .foregroundStyle(.white)
+                            .shadow(color: .black.opacity(0.5), radius: 6, y: 1)
+                        Text("/100")
+                            .font(StrandFont.caption)
+                            .foregroundStyle(StrandPalette.textSecondary)
                     }
-                    .accessibilityElement(children: .ignore)
-                    .accessibilityLabel("Vitality \(Int(v.rounded())) out of 100")
+                    .allowsHitTesting(false)
+                }
+                .accessibilityElement(children: .ignore)
+                .accessibilityLabel("Vitality \(Int(v.rounded())) out of 100")
+
+                VStack(alignment: .leading, spacing: NoopMetrics.space2) {
+                    Text("Vitality").strandOverline()
+                    Text("Weekly wellness score")
+                        .font(StrandFont.subhead)
+                        .foregroundStyle(StrandPalette.textSecondary)
+                    Text("Built from your recent habits")
+                        .font(StrandFont.footnote)
+                        .foregroundStyle(StrandPalette.textTertiary)
                 }
                 Spacer(minLength: 0)
-                VStack(alignment: .trailing, spacing: NoopMetrics.space1) {
+            }
+            Divider().overlay(StrandPalette.hairline)
+            HStack(alignment: .firstTextBaseline, spacing: NoopMetrics.space3) {
+                VStack(alignment: .leading, spacing: NoopMetrics.space1) {
                     Text("Body Age").strandOverline()
                     CountUpText(value: ba,
                                 format: { "\(Int($0.rounded()))" },
-                                font: StrandFont.number(34),
+                                font: StrandFont.number(30),
                                 color: StrandPalette.textPrimary)
-                    Text(bodyAgeDeltaLine(yrs: yrs, younger: younger))
-                        .font(StrandFont.footnote)
-                        .foregroundStyle(younger ? StrandPalette.statusPositive : StrandPalette.statusWarning)
                 }
+                Spacer(minLength: 0)
+                Text(bodyAgeDeltaLine(yrs: yrs, younger: younger))
+                    .font(StrandFont.footnote)
+                    .foregroundStyle(younger ? StrandPalette.statusPositive : StrandPalette.statusWarning)
+                    .multilineTextAlignment(.trailing)
             }
             if (best?.lnHazard ?? 0) < 0 || (worst?.lnHazard ?? 0) > 0 {
                 Divider().overlay(StrandPalette.hairline)
                 if let best, best.lnHazard < 0 {
-                    Text("Helping most: \(best.label)")
-                        .font(StrandFont.footnote).foregroundStyle(StrandPalette.statusPositive)
+                    HStack(spacing: NoopMetrics.space2) {
+                        Image(systemName: "arrow.up.right.circle.fill")
+                            .foregroundStyle(StrandPalette.statusPositive)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("Helping most")
+                                .font(StrandFont.overline)
+                                .foregroundStyle(StrandPalette.statusPositive)
+                            Text(best.label)
+                                .font(StrandFont.footnote)
+                                .foregroundStyle(StrandPalette.textSecondary)
+                        }
+                    }
                 }
                 if let worst, worst.lnHazard > 0 {
-                    Text("Holding you back: \(worst.label)")
-                        .font(StrandFont.footnote).foregroundStyle(StrandPalette.statusWarning)
+                    HStack(spacing: NoopMetrics.space2) {
+                        Image(systemName: "arrow.down.right.circle.fill")
+                            .foregroundStyle(StrandPalette.statusWarning)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text("Holding you back")
+                                .font(StrandFont.overline)
+                                .foregroundStyle(StrandPalette.statusWarning)
+                            Text(worst.label)
+                                .font(StrandFont.footnote)
+                                .foregroundStyle(StrandPalette.textSecondary)
+                        }
+                    }
                 }
             }
             Text("A wellness estimate from your habits, not a clinical biological age.")
@@ -1588,18 +1638,58 @@ private struct SkinTempSection: View {
 /// Two drill-in rows that give the records logbook (Lab Book) and the multi-device fused record their
 /// honest Health home without making either its own top-level destination — they route via `NavRouter`
 /// (the macOS sidebar selects the item; iOS presents the pillar sheet).
+private struct HealthAdvancedSection: View {
+    @State private var isExpanded = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: NoopMetrics.sectionSpacing) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { isExpanded.toggle() }
+            } label: {
+                HStack {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Advanced")
+                            .font(StrandFont.title2)
+                            .foregroundStyle(StrandPalette.textPrimary)
+                        Text("Recovery contributors, skin temperature, and fused data.")
+                            .font(StrandFont.subhead)
+                            .foregroundStyle(StrandPalette.textSecondary)
+                    }
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .rotationEffect(.degrees(isExpanded ? 0 : -90))
+                        .foregroundStyle(StrandPalette.textTertiary)
+                }
+            }
+            .buttonStyle(.plain)
+            if isExpanded {
+                RecoveryContributorsSection()
+                SkinTempSection()
+                HealthHubLinksSection(includeLabBook: false, includeFused: true)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
+    }
+}
+
 private struct HealthHubLinksSection: View {
     @EnvironmentObject var router: NavRouter
+    let includeLabBook: Bool
+    let includeFused: Bool
 
     var body: some View {
         VStack(alignment: .leading, spacing: NoopMetrics.gap) {
-            SectionHeader("Records & sources", overline: "On \(Platform.deviceNounPhrase)")
-            linkRow(title: String(localized: "Lab Book"),
-                    subtitle: String(localized: "Keep your bloods, BP and body numbers private, on \(Platform.deviceNounPhrase)."),
-                    symbol: "books.vertical.fill", tint: StrandPalette.metricCyan) { router.openLabBook() }
-            linkRow(title: String(localized: "Your Data, Fused"),
-                    subtitle: String(localized: "The best-sourced number per metric across every band you use."),
-                    symbol: "square.stack.3d.up.fill", tint: StrandPalette.accent) { router.openFusedRecord() }
+            SectionHeader(includeLabBook ? "Lab Book" : "Your Data, Fused", overline: "On \(Platform.deviceNounPhrase)")
+            if includeLabBook {
+                linkRow(title: String(localized: "Lab Book"),
+                        subtitle: String(localized: "Keep your bloods, BP and body numbers private, on \(Platform.deviceNounPhrase)."),
+                        symbol: "books.vertical.fill", tint: StrandPalette.metricCyan) { router.openLabBook() }
+            }
+            if includeFused {
+                linkRow(title: String(localized: "Your Data, Fused"),
+                        subtitle: String(localized: "The best-sourced number per metric across your WHOOP data."),
+                        symbol: "square.stack.3d.up.fill", tint: StrandPalette.accent) { router.openFusedRecord() }
+            }
         }
     }
 

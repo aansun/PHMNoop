@@ -44,15 +44,15 @@ struct CoachSettingsView: View {
         // ScrollView with no NavigationStack, so a toolbar item presented in a sheet would render
         // nowhere, and a macOS sheet has no swipe-to-dismiss: that combination would leave this screen
         // with no way out. (#2206 is the same mistake in the other direction.)
-        ScreenScaffold(title: "Coach settings",
-                       subtitle: "What the coach may read, how it is told to answer, and when it writes to you.",
+        ScreenScaffold(title: "Anya settings",
+                       subtitle: "What Anya may read, how it answers, and when it writes to you.",
                        topBackground: liquidScaffoldSky(),
                        trailing: {
                            Button("Done") { dismiss() }
                                .buttonStyle(.plain)
                                .font(StrandFont.subhead)
                                .foregroundStyle(StrandPalette.accent)
-                               .accessibilityLabel("Close coach settings")
+                               .accessibilityLabel("Close Anya settings")
                        }) {
             modelBar
             consentBar
@@ -264,7 +264,7 @@ struct CoachSettingsView: View {
                     .foregroundStyle(coach.dataConsent ? StrandPalette.accent : StrandPalette.textTertiary)
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("Let the coach use my data")
+                    Text("Let Anya use my data")
                         .font(StrandFont.subhead).foregroundStyle(StrandPalette.textPrimary)
                     // The ON line NAMES what a session carries rather than saying "workouts" and
                     // leaving the reader to guess how much that is: the sport, how long, how far and how
@@ -279,7 +279,7 @@ struct CoachSettingsView: View {
                 Spacer(minLength: 8)
                 Toggle("", isOn: $coach.dataConsent)
                     .labelsHidden().toggleStyle(.switch).tint(StrandPalette.accent)
-                    .accessibilityLabel("Let the coach use my data")
+                    .accessibilityLabel("Let Anya use my data")
             }
         }
     }
@@ -304,7 +304,7 @@ struct CoachSettingsView: View {
                 Spacer(minLength: 8)
                 Toggle("", isOn: $coach.includeOnDeviceSignals)
                     .labelsHidden().toggleStyle(.switch).tint(StrandPalette.accent)
-                    .accessibilityLabel("Also share my patterns and Lab Book with the coach")
+                    .accessibilityLabel("Also share my patterns and Lab Book with Anya")
             }
         }
     }
