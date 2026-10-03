@@ -36,7 +36,7 @@ struct NunaRootView: View {
     var body: some View {
         TabView(selection: $selection) {
             stack(.today) { NunaTodayView() }
-            stack(.health) { HealthView() }
+            stack(.health) { NunaHealthView() }
             stack(.trends) { TrendsView() }
             if coachEnabled { stack(.anya) { CoachView() } }
             stack(.me) { NunaMeView() }

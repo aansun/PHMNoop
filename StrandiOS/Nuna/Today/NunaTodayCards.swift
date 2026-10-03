@@ -62,10 +62,10 @@ struct NunaScoreCard: View {
         .buttonStyle(.plain)
     }
 
-    /// Charge and Effort open the Nuna metric screen; Rest opens Sleep until Phase 2 replaces it.
+    /// Charge and Effort open the Nuna metric screen; Rest opens the Nuna sleep screen.
     @ViewBuilder private func ringLink<C: View>(_ key: String, @ViewBuilder _ content: () -> C) -> some View {
         if key == HeroRingMetric.rest {
-            NavigationLink(value: TabRoute.metric(key)) { content() }.buttonStyle(.plain)
+            NavigationLink(value: NunaTodayRoute.sleep(0)) { content() }.buttonStyle(.plain)
         } else if let m = MetricCatalog.metric(key: key, source: "my-whoop") {
             NavigationLink(value: NunaTodayRoute.metric(m)) { content() }.buttonStyle(.plain)
         } else {

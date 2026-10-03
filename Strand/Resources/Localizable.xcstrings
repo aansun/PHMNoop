@@ -1,6 +1,189 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "Earlier night": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Malam sebelumnya"}}
+        } },
+        "Efficiency %lld%%": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Efisiensi %lld%%"}}
+        } },
+        "Nap %lldm": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidur siang %lldm"}}
+        } },
+        "Sleep stages": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Fase tidur"}}
+        } },
+        "Nap": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidur siang"}}
+        } },
+        "Detected automatically": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Terdeteksi otomatis"}}
+        } },
+        "Performance": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kinerja"}}
+        } },
+        "Compared to usual": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dibanding biasanya"}}
+        } },
+        "Usually %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Biasanya %@"}}
+        } },
+        "Overnight vitals": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Vital semalam"}}
+        } },
+        "Need and debt": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kebutuhan dan utang"}}
+        } },
+        "needed": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "butuh"}}
+        } },
+        "Debt %lld min": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Utang %lld mnt"}}
+        } },
+        "Woke up %lld times": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Terbangun %lld kali"}}
+        } },
+        "Brief awakenings during the night": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Terbangun sebentar di malam hari"}}
+        } },
+        "How can I sleep better tonight?": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bagaimana agar tidurku lebih baik malam ini?"}}
+        } },
+        "No sleep data yet": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Belum ada data tidur"}}
+        } },
+        "Wear your strap overnight and your first night will show up here.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pakai strap semalaman dan malam pertamamu akan muncul di sini."}}
+        } },
+        "asleep": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "tidur"}}
+        } },
+        "In bed %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Di tempat tidur %@"}}
+        } },
+        "The order of stages is not available for this night. The split below comes from the daily totals.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Urutan fase tidak tersedia untuk malam ini. Pembagian di bawah berasal dari total harian."}}
+        } },
+        "Stages are estimated from heart rate and movement. They are not a medical sleep study.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Fase tidur diperkirakan dari detak jantung dan gerak. Ini bukan studi tidur medis."}}
+        } },
+        "Compared with your average of the previous nights. Tap a vital to see its history.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dibandingkan dengan rata-rata malam sebelumnya. Ketuk vital untuk melihat riwayatnya."}}
+        } },
+        " vs average": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": " dibanding rata-rata"}}
+        } },
+        "Hours vs needed": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Jam tidur vs kebutuhan"}}
+        } },
+        "Hours vs needed, last 14 nights": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Jam tidur vs kebutuhan, 14 malam terakhir"}}
+        } },
+        "Consistency, last 14 nights": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Konsistensi, 14 malam terakhir"}}
+        } },
+        "Efficiency, last 14 nights": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Efisiensi, 14 malam terakhir"}}
+        } },
+        "Naps are detected automatically": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidur siang terdeteksi otomatis"}}
+        } },
+        "A nap is any sleep that is not your main night. Naps add to your daily sleep, they do not replace it.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidur siang adalah tidur di luar tidur malam utama. Tidur siang menambah total tidur harianmu, bukan menggantinya."}}
+        } },
+        "No naps in the last 14 days": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidak ada tidur siang dalam 14 hari terakhir"}}
+        } },
+        "Last 14 days": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "14 hari terakhir"}}
+        } },
+        "Vital": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Vital"}}
+        } },
+        "Your normal range": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rentang normalmu"}}
+        } },
+        "All within your range": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Semua dalam rentangmu"}}
+        } },
+        "Some signals are up": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Beberapa sinyal naik"}}
+        } },
+        "Still learning your range": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Masih mempelajari rentangmu"}}
+        } },
+        "Autonomic load, 0 to 3": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Beban otonom, 0 sampai 3"}}
+        } },
+        "Fitness age": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Usia kebugaran"}}
+        } },
+        "Estimate, plus or minus 5 years": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Perkiraan, plus minus 5 tahun"}}
+        } },
+        "Beat-to-beat view. Experimental": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Gambaran antar detak. Eksperimental"}}
+        } },
+        "Signals are up": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sinyal naik"}}
+        } },
+        "Nothing unusual": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidak ada yang janggal"}}
+        } },
+        "Mood check-in": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Cek suasana hati"}}
+        } },
+        "How are you feeling": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bagaimana perasaanmu"}}
+        } },
+        "Calories in, from an import": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kalori masuk, dari impor"}}
+        } },
+        "Your records": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Catatanmu"}}
+        } },
+        "Menstrual cycle": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Siklus menstruasi"}}
+        } },
+        "Apple Health permissions": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Izin Apple Health"}}
+        } },
+        "What PHMNOOP reads and writes": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Yang dibaca dan ditulis PHMNOOP"}}
+        } },
+        "Steps, weight and waist": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Langkah, berat, dan pinggang"}}
+        } },
+        "WHOOP strap": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Strap WHOOP"}}
+        } },
+        "Waist": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pinggang"}}
+        } },
+        "Are my vitals normal today?": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Apakah vitalku normal hari ini?"}}
+        } },
+        "years": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "tahun"}}
+        } },
+        "Estimate ±5 years": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Perkiraan ±5 tahun"}}
+        } },
+        "VO₂ max (estimated)": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "VO₂ max (perkiraan)"}}
+        } },
+        "Last weeks": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Beberapa minggu terakhir"}}
+        } },
+        "Not ready yet": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Belum siap"}}
+        } },
+        "Fitness age needs your age, your sex and resting heart rate from at least 4 nights. It updates once a week.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Usia kebugaran butuh usia, jenis kelamin, dan detak istirahat dari minimal 4 malam. Diperbarui seminggu sekali."}}
+        } },
+        "This is a fitness comparison, not your biological age. It has no medical meaning.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ini perbandingan kebugaran, bukan usia biologismu. Tidak punya makna medis."}}
+        } },
         "Edit cards": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Atur kartu"}}
         } },

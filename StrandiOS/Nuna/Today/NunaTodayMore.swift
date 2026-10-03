@@ -77,7 +77,7 @@ extension NunaTodayView {
             case .bloodOxygen: made = (num(model.spo2), desc("spo2"), "drop.fill", nil)
             case .skinTemp:    made = (num(ex["skin_temp"], 1), desc("skin_temp"), "thermometer", nil)
             case .sleep:
-                made = (model.sleepMinutes.map { "\(Int($0) / 60)h \(Int($0) % 60)m" }, NunaRowTarget(kind: .tab(.sleep)), "moon.zzz.fill", NunaPalette.restText)
+                made = (model.sleepMinutes.map { "\(Int($0) / 60)h \(Int($0) % 60)m" }, NunaRowTarget(kind: .nuna(.sleep(0))), "moon.zzz.fill", NunaPalette.restText)
             case .calories:    made = (num(model.calories), desc("energy_kcal"), "flame.fill", nil)
             case .hydration:
                 guard hydrationEnabled else { return nil }
@@ -99,7 +99,7 @@ extension NunaTodayView {
             return NunaLinkRow(id: card.rawValue, title: card.title, subtitle: sleep ? "From Sleep" : "From Trends", value: nil,
                                icon: sleep ? "moon.zzz.fill" : "chart.line.uptrend.xyaxis",
                                tint: sleep ? NunaPalette.restText : nil,
-                               target: NunaRowTarget(kind: .tab(sleep ? .sleep : .metricExplorer)))
+                               target: NunaRowTarget(kind: sleep ? .nuna(.sleep(0)) : .tab(.metricExplorer)))
         }
     }
 }
