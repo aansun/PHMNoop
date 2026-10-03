@@ -22,11 +22,19 @@ Status: implemented and built for the iOS simulator.
 - Indonesian strings for the new screens were added to `Localizable.xcstrings`.
 - Known gaps: the Nuna shell forces a dark colour scheme; the Appearance setting is honoured again in Phase 7. The Notifications row opens Automations because the Notifications screen is macOS-only.
 
-## Phase 1: Hari ini (M-L)
+## Phase 1: Hari ini (M-L): in progress
 
 Today with the three-ring card, Anya card, stress card, metrics card, activity card. Date pill and past-day view. Customise (in-place edit mode and the list sheet). Quick actions sheet and the floating "+". Detail screens: Charge, Effort, HRV, RHR, steps, heart rate, all metrics, stress, journal, early warning, notifications. Breathing (with rhythm), water, manual activity.
 
 Acceptance: every card can be hidden, reordered and restored to default; past days are read-only; the "+" sheet reaches every action in `TodayQuick`.
+
+Status (first slice, built and checked in the iOS simulator):
+- `StrandiOS/Nuna/Today/NunaTodayModel.swift`: per-day data (Charge, Effort, Rest, stress, vitals, steps, calories, workouts) with the same resolvers as the Default Today screens; display only.
+- `NunaTodayView.swift` and `NunaTodayCards.swift`: header (wearable status chip, updates bell), date pill, three-ring score card, Anya card, key-metrics grid, latest-activity row, stress card, heart-rate row, journal row, Start session. Sections follow the shared `today.sectionOrder` / `today.hiddenSections` / `today.keyMetrics` preferences, so the arrangement carries over from Default.
+- `NunaDateSheet.swift`: shortcuts and calendar. A past day is read only: no "+", no Start session, no Anya "today" card.
+- `NunaQuickSheet.swift`: the "+" sheet (start workout, add activity, journal, breathing, water when enabled, ask Anya).
+- Customise reuses the existing `TodayCustomizationSheet` on the same storage keys.
+- Known gaps: Your Cards, Menstrual Cycle and Added Cards have no Nuna card yet (they stay in the customise list and render in Default); the detail screens, customise sheet, journal, breathing and water still use the existing light-themed screens; in-place edit mode; manual activity sheet; the Anya launcher overlay.
 
 ## Phase 2: Tidur and Kesehatan (M-L)
 
