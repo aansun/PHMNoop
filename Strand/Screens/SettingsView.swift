@@ -216,6 +216,9 @@ struct SettingsView: View {
     // App-owned copy language. Apple binds a bundle localization at process launch, so this writes the
     // standard AppleLanguages override and takes effect after the user reopens NOOP.
     @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
+    #if os(iOS)
+    @AppStorage(ExperienceMode.storageKey) private var experienceRaw = ExperienceMode.standard.rawValue
+    #endif
     // Chart colour style: Titanium (brand) or Classic (throwback red→green). Re-colours gauges + charts.
     @AppStorage(ChartStyle.storageKey) private var chartStyleRaw = ChartStyle.titanium.rawValue
     // === PHM OVERLAY (PHMNOOP) === Typography preset: Default (SF Rounded) or WHOOP (SF Pro, heavier,
@@ -1208,6 +1211,26 @@ struct SettingsView: View {
             blurb: "Choose Light, Dark, or follow your system. Dark is the signature near-black; Light keeps the same clean look on a bright canvas."
         ) {
             VStack(spacing: 0) {
+                #if os(iOS)
+                // PHMNOOP: switch between the original look (Default) and the Nuna redesign (docs/nuna).
+                NavigationLink { ExperienceView() } label: {
+                    HStack {
+                        Text("Experience")
+                            .font(StrandFont.body)
+                            .foregroundStyle(StrandPalette.textPrimary)
+                        Spacer(minLength: 8)
+                        Text(verbatim: (ExperienceMode(rawValue: experienceRaw) ?? .standard).displayName)
+                            .font(StrandFont.body)
+                            .foregroundStyle(StrandPalette.textSecondary)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(StrandPalette.textTertiary)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                rowDivider
+                #endif
                 // App-owned copy language. Apple binds a bundle localization at process launch, so this
                 // takes effect after the user reopens NOOP (the note below says so). Sits above the theme
                 // controls because it re-words everything under it.

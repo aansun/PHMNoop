@@ -529,6 +529,8 @@ struct StrandiOSApp: App {
 /// `WhatsNewView`, `AppChangelog`, and `Terms` symbols all compile into the iOS target unchanged.
 private struct iOSRootView: View {
     @AppStorage("noop.onboarded") private var onboarded = false
+    /// Which look the app uses. Default keeps `RootTabView`; Nuna uses `NunaRootView` (docs/nuna).
+    @AppStorage(ExperienceMode.storageKey) private var experienceRaw = ExperienceMode.standard.rawValue
     @AppStorage("noop.lastSeenChangelogVersion") private var lastSeenChangelog = ""
     @AppStorage("noop.acceptedTermsVersion") private var acceptedTerms = ""
     @State private var showWhatsNew = false
@@ -558,9 +560,13 @@ private struct iOSRootView: View {
 
     private var shell: some View {
         ZStack {
-            RootTabView(homeScreenQuickActionsEnabled:
-                demoBypass || (onboarded && acceptedTerms == Terms.currentVersion
-                    && automaticLaunchSheetResolved))
+            let quickActionsEnabled = demoBypass || (onboarded && acceptedTerms == Terms.currentVersion
+                    && automaticLaunchSheetResolved)
+            if ExperienceMode(rawValue: experienceRaw) == .nuna {
+                NunaRootView(homeScreenQuickActionsEnabled: quickActionsEnabled)
+            } else {
+                RootTabView(homeScreenQuickActionsEnabled: quickActionsEnabled)
+            }
             if !onboarded && !demoBypass {
                 OnboardingWizard(onFinished: {
                     onboarded = true

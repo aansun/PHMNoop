@@ -114,16 +114,19 @@ public struct NunaCard<Content: View>: View {
 
 /// Small status pill. Colour carries meaning; pass one of the NunaPalette meaning colours.
 public struct NunaChip: View {
-    private let text: String
+    private let text: Text
     private let systemImage: String?
     private let color: Color?
-    public init(_ text: String, systemImage: String? = nil, color: Color? = nil) {
-        self.text = text; self.systemImage = systemImage; self.color = color
+    public init(_ key: LocalizedStringKey, systemImage: String? = nil, color: Color? = nil) {
+        self.text = Text(key); self.systemImage = systemImage; self.color = color
+    }
+    public init(verbatim: String, systemImage: String? = nil, color: Color? = nil) {
+        self.text = Text(verbatim: verbatim); self.systemImage = systemImage; self.color = color
     }
     public var body: some View {
         HStack(spacing: 6) {
             if let systemImage { Image(systemName: systemImage).font(.system(size: 12, weight: .bold)) }
-            Text(text).font(.system(size: 12.5, weight: .bold))
+            text.font(.system(size: 12.5, weight: .bold))
         }
         .foregroundStyle(color ?? NunaPalette.textPrimary)
         .padding(.horizontal, 12)

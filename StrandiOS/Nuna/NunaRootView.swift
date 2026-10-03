@@ -1,0 +1,125 @@
+#if os(iOS)
+import SwiftUI
+import StrandDesign
+
+/// The Nuna navigation shell: five tabs with a floating tab bar.
+///
+/// Phase 0 of docs/nuna/IMPLEMENTATION_PLAN.md. The tab roots still host the existing screens; later
+/// phases replace them one by one. The shell is only used when `ExperienceMode` is `.nuna`; the default
+/// experience keeps `RootTabView` untouched.
+struct NunaRootView: View {
+    /// Same gate `RootTabView` takes so `iOSRootView` can swap shells without changing its call shape.
+    /// Home Screen quick actions are not handled by this shell yet.
+    let homeScreenQuickActionsEnabled: Bool
+
+    @EnvironmentObject private var router: NavRouter
+    @AppStorage("noop.coachEnabled") private var coachEnabled = true
+    @AppStorage("noop.liquidTodayEnabled") private var liquidTodayEnabled = true
+
+    private enum Tab: Int, CaseIterable { case today = 0, health, trends, anya, me }
+
+    @State private var selection = Tab.today.rawValue
+    @State private var paths: [NavigationPath] = Array(repeating: NavigationPath(), count: Tab.allCases.count)
+    @State private var showDevices = false
+    @State private var routed: NavRouter.Destination?
+
+    private var items: [NunaTabItem] {
+        var out = [
+            NunaTabItem(id: Tab.today.rawValue, title: "Today", systemImage: "square.grid.2x2.fill"),
+            NunaTabItem(id: Tab.health.rawValue, title: "Health", systemImage: "heart.text.square.fill"),
+            NunaTabItem(id: Tab.trends.rawValue, title: "Trends", systemImage: "chart.line.uptrend.xyaxis"),
+        ]
+        if coachEnabled { out.append(NunaTabItem(id: Tab.anya.rawValue, title: "Anya", systemImage: "sparkles")) }
+        out.append(NunaTabItem(id: Tab.me.rawValue, title: "Me", systemImage: "person.fill"))
+        return out
+    }
+
+    var body: some View {
+        TabView(selection: $selection) {
+            stack(.today) { if liquidTodayEnabled { LiquidTodayView() } else { TodayView() } }
+            stack(.health) { HealthView() }
+            stack(.trends) { TrendsView() }
+            if coachEnabled { stack(.anya) { CoachView() } }
+            stack(.me) { NunaMeView() }
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            NunaTabBar(items: items, selection: $selection) { id in
+                // Re-tapping the active tab pops it to its root.
+                if id < paths.count { paths[id] = NavigationPath() }
+            }
+        }
+        .nunaScreenBackground()
+        // Nuna is dark-first. The Appearance setting is honoured again once Phase 7 lands the Nuna theme screen.
+        .preferredColorScheme(.dark)
+        .sheet(isPresented: $showDevices) { sheetStack { DevicesView() } }
+        .sheet(item: $routed) { dest in sheetStack { destinationView(dest) } }
+        .onChange(of: router.requestedDestination) { _, dest in handle(dest) }
+    }
+
+    // MARK: Tab roots
+
+    private func stack<Root: View>(_ tab: Tab, @ViewBuilder root: () -> Root) -> some View {
+        NavigationStack(path: $paths[tab.rawValue]) {
+            root()
+                .background(NunaPalette.canvas.ignoresSafeArea())
+                .toolbar(.hidden, for: .navigationBar)
+                .tabRouteDestinations()
+        }
+        .toolbar(.hidden, for: .tabBar)
+        .tag(tab.rawValue)
+    }
+
+    private func sheetStack<Content: View>(@ViewBuilder content: () -> Content) -> some View {
+        NavigationStack {
+            content()
+                .tabRouteDestinations()
+                .background(NunaPalette.canvas.ignoresSafeArea())
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbarBackground(.hidden, for: .navigationBar)
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Done") { showDevices = false; routed = nil }
+                    }
+                }
+        }
+    }
+
+    @ViewBuilder private func destinationView(_ dest: NavRouter.Destination) -> some View {
+        switch dest {
+        case .insightsHub: InsightsHubView()
+        case .labBook: LabBookView()
+        case .fusedRecord: FusedRecordHost()
+        case .rhythm: RhythmHost(onClose: { routed = nil })
+        case .devices: DevicesView()
+        case .trends: TrendsView()
+        case .workouts: WorkoutsView()
+        case .activeWorkout: LiveView()
+        case .liveSession: LiquidTodayView()
+        case .journal: InsightsView()
+        case .coach: CoachView()
+        }
+    }
+
+    // MARK: Router
+
+    private func handle(_ dest: NavRouter.Destination?) {
+        guard let dest else { return }
+        switch dest {
+        case .devices:
+            showDevices = true
+        case .coach:
+            if coachEnabled {
+                selection = Tab.anya.rawValue
+                paths[Tab.anya.rawValue] = NavigationPath()
+            }
+        case .trends:
+            selection = Tab.trends.rawValue
+        case .liveSession:
+            selection = Tab.today.rawValue
+        default:
+            routed = dest
+        }
+        router.requestedDestination = nil
+    }
+}
+#endif
