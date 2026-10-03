@@ -39,6 +39,8 @@ final class NunaTodayModel: ObservableObject {
     /// Change against the previous day that has a value: HRV in ms, resting HR in bpm.
     @Published private(set) var hrvDelta: Double?
     @Published private(set) var restingHrDelta: Double?
+    @Published private(set) var respiratoryDelta: Double?
+    @Published private(set) var spo2Delta: Double?
 
     var isToday: Bool { dayOffset == 0 }
 
@@ -79,10 +81,21 @@ final class NunaTodayModel: ObservableObject {
         spo2 = row?.spo2Pct ?? (today ? Repository.lastVitalsDay(days: repo.days, todayKey: key)?.spo2Pct : nil)
         sleepMinutes = row?.totalSleepMin
         readiness = ReadinessEngine.evaluate(days: repo.days, today: key)
-        let priorHrv = repo.days.last(where: { $0.day < key && $0.avgHrv != nil })
-        let priorRhr = repo.days.last(where: { $0.day < key && $0.restingHr != nil })
-        hrvDelta = (hrv != nil && priorHrv?.avgHrv != nil) ? hrv! - priorHrv!.avgHrv! : nil
-        restingHrDelta = (restingHr != nil && priorRhr?.restingHr != nil) ? restingHr! - Double(priorRhr!.restingHr!) : nil
+        // Change against the night BEFORE the one the value came from. A value carried from the last
+        // scored night is compared with the night before that, not with itself.
+        func change(_ value: Double?, source: DailyMetric?, _ field: (DailyMetric) -> Double?) -> Double? {
+            guard let value, let src = source ?? row else { return nil }
+            guard let prev = repo.days.last(where: { $0.day < src.day && field($0) != nil }), let p = field(prev) else { return nil }
+            return value - p
+        }
+        let hrvSrc = row?.avgHrv != nil ? row : (today ? Repository.lastHrvDay(days: repo.days, todayKey: key) : nil)
+        let rhrSrc = row?.restingHr != nil ? row : (today ? Repository.lastRestingHrDay(days: repo.days, todayKey: key) : nil)
+        let respSrc = row?.respRateBpm != nil ? row : (today ? Repository.lastRespDay(days: repo.days, todayKey: key) : nil)
+        let spo2Src = row?.spo2Pct != nil ? row : (today ? Repository.lastVitalsDay(days: repo.days, todayKey: key) : nil)
+        hrvDelta = change(hrv, source: hrvSrc) { $0.avgHrv }
+        restingHrDelta = change(restingHr, source: rhrSrc) { $0.restingHr.map(Double.init) }
+        respiratoryDelta = change(respiratory, source: respSrc) { $0.respRateBpm }
+        spo2Delta = change(spo2, source: spo2Src) { $0.spo2Pct }
 
         // Live Effort for today over midnight..now, stored Effort otherwise.
         var live: Double?

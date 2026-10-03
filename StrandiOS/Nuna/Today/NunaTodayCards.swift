@@ -345,11 +345,59 @@ struct NunaMetricTile: Identifiable {
     /// "▲ 4" style change against the previous day, and whether the change is good (nil = neutral).
     var delta: String?
     var deltaGood: Bool?
+    var icon = "circle"
+    var tint: Color?
 }
+
+/// How the key metrics are laid out: two-column cards, or one long list.
+enum NunaMetricsLayout: String { case cards, list }
 
 struct NunaMetricsGrid: View {
     let tiles: [NunaMetricTile]
+    var layout: NunaMetricsLayout = .cards
     var body: some View {
+        if layout == .list { list } else { grid }
+    }
+
+    private var list: some View {
+        NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
+            VStack(spacing: 0) {
+                ForEach(Array(tiles.enumerated()), id: \.element.id) { idx, tile in
+                    if idx > 0 { NunaDivider() }
+                    if let route = tile.route { NavigationLink(value: route) { row(tile) }.buttonStyle(.plain) } else { row(tile) }
+                }
+            }
+        }
+    }
+
+    private func row(_ tile: NunaMetricTile) -> some View {
+        HStack(spacing: 12) {
+            NunaIconTile(tile.icon, tint: tile.tint)
+            Text(tile.label).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            Spacer(minLength: 8)
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text(verbatim: tile.value).font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                if !tile.unit.isEmpty && tile.value != "–" {
+                    Text(verbatim: tile.unit).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                }
+            }
+            if let delta = tile.delta { deltaChip(delta, good: tile.deltaGood) }
+            Image(systemName: "chevron.right").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+        }
+        .frame(minHeight: 58)
+        .contentShape(Rectangle())
+    }
+
+    private func deltaChip(_ text: String, good: Bool?) -> some View {
+        let tint: Color = good == nil ? NunaPalette.textSecondary : (good! ? NunaPalette.charge : NunaPalette.warning)
+        return Text(verbatim: text)
+            .font(.system(size: 11.5, weight: .bold)).foregroundStyle(tint)
+            .padding(.horizontal, 8).frame(height: 24)
+            .background(NunaPalette.tint(tint), in: Capsule())
+            .overlay(Capsule().strokeBorder(tint.opacity(0.35), lineWidth: 1))
+    }
+
+    private var grid: some View {
         LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
             ForEach(tiles) { tile in
                 if let route = tile.route {
@@ -364,7 +412,7 @@ struct NunaMetricsGrid: View {
     private func content(_ tile: NunaMetricTile) -> some View {
         NunaCard(small: true, padding: EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16)) {
             VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .top) {
+                HStack(alignment: .center) {
                     Text(tile.label)
                         .font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textSecondary)
@@ -380,6 +428,7 @@ struct NunaMetricsGrid: View {
                             .overlay(Capsule().strokeBorder(tint.opacity(0.35), lineWidth: 1))
                     }
                 }
+                .frame(minHeight: 24, alignment: .top)
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(verbatim: tile.value)
                         .font(.system(size: NunaTypeSize.numberM, weight: .bold, design: .rounded))
