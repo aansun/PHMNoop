@@ -1,6 +1,57 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "Viewing a past day. Read only.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Melihat hari lalu. Hanya baca."}}
+        } },
+        "Customise cards": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Atur kartu"}}
+        } },
+        "What should I focus on today?": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Apa yang perlu kufokuskan hari ini?"}}
+        } },
+        "How did yesterday go?": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bagaimana kemarin?"}}
+        } },
+        "Choose a day": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pilih hari"}}
+        } },
+        "7 days ago": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "7 hari lalu"}}
+        } },
+        "Show this day": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tampilkan hari ini"}}
+        } },
+        "Pick a sport and begin": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pilih olahraga lalu mulai"}}
+        } },
+        "Add activity": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tambah aktivitas"}}
+        } },
+        "Log a session you already did": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Catat sesi yang sudah kamu lakukan"}}
+        } },
+        "Log how you feel": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Catat perasaanmu"}}
+        } },
+        "Breathing": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pernapasan"}}
+        } },
+        "Guided breathing with haptics": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Napas terpandu dengan getar"}}
+        } },
+        "Water": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Air"}}
+        } },
+        "Log a drink": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Catat minum"}}
+        } },
+        "Ask Anya": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tanya Anya"}}
+        } },
+        "Ask about your day": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tanya tentang harimu"}}
+        } },
         "Experience": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Experience"}}
         } },

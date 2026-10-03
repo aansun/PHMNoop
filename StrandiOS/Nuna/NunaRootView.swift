@@ -14,7 +14,6 @@ struct NunaRootView: View {
 
     @EnvironmentObject private var router: NavRouter
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
-    @AppStorage("noop.liquidTodayEnabled") private var liquidTodayEnabled = true
 
     private enum Tab: Int, CaseIterable { case today = 0, health, trends, anya, me }
 
@@ -36,7 +35,7 @@ struct NunaRootView: View {
 
     var body: some View {
         TabView(selection: $selection) {
-            stack(.today) { if liquidTodayEnabled { LiquidTodayView() } else { TodayView() } }
+            stack(.today) { NunaTodayView() }
             stack(.health) { HealthView() }
             stack(.trends) { TrendsView() }
             if coachEnabled { stack(.anya) { CoachView() } }
