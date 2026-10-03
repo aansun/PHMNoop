@@ -38,20 +38,40 @@ struct NunaTodayView: View {
     @State private var showCoach = false
     @State private var editing = false
     @State private var showManual = false
+    @State private var showMood = false
+    @State private var showAddCard = false
+    @State private var addAfter: TodaySection?
+    @State private var customizeDestination: TodayCustomizationDestination = .today
 
     private var effortScale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
-    private var sections: [TodaySection] {
-        TodayLayoutPrefs.visibleOrder(orderRaw: sectionOrderRaw, hiddenRaw: hiddenSectionsRaw)
+
+    /// The order and visibility the Nuna mockup shows until the person arranges the cards themselves.
+    /// Stored values (shared with Default) win as soon as they exist.
+    private static let nunaDefaultOrder: [TodaySection] = [
+        .hero, .synthesis, .recoveryVitals, .keyMetrics, .workouts, .journal,
+        .yourCards, .menstrualCycle, .addedCards, .heartRate, .liveSession,
+    ]
+    private static let nunaDefaultHidden: [TodaySection] = [.heartRate, .liveSession, .yourCards]
+    private static let nunaDefaultMetrics: [KeyMetric] = [.hrv, .restingHr, .steps, .rest]
+
+    private var effectiveOrder: [TodaySection] {
+        sectionOrderRaw.trimmingCharacters(in: .whitespaces).isEmpty
+            ? Self.nunaDefaultOrder : TodayLayoutPrefs.decodeOrder(sectionOrderRaw)
     }
+    private var effectiveHidden: [TodaySection] {
+        hiddenSectionsRaw.trimmingCharacters(in: .whitespaces).isEmpty
+            ? Self.nunaDefaultHidden : TodayLayoutPrefs.decodeHidden(hiddenSectionsRaw)
+    }
+    private var sections: [TodaySection] { effectiveOrder.filter { !effectiveHidden.contains($0) } }
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             ScrollView {
                 VStack(spacing: NunaSpacing.section) {
-                    header
                     if editing {
                         editList
                     } else {
+                        header
                         datePill
                         if !model.isToday { pastDayBanner }
                         ForEach(sections) { section in sectionView(section) }
@@ -75,7 +95,7 @@ struct NunaTodayView: View {
         .task(id: "\(repo.refreshSeq)-\(model.dayOffset)") { await model.load(repo: repo, profile: profile) }
         .sheet(isPresented: $showCustomize) {
             TodayCustomizationSheet(
-                initialDestination: .today,
+                initialDestination: customizeDestination,
                 sectionOrderRaw: $sectionOrderRaw, hiddenSectionsRaw: $hiddenSectionsRaw,
                 keyMetricsRaw: $keyMetricsRaw, keyMetricsDetailed: $keyMetricsDetailed,
                 keyMetricsWindowDays: $keyMetricsWindowDays,
@@ -99,6 +119,33 @@ struct NunaTodayView: View {
             }
             .preferredColorScheme(.dark)
         }
+        .sheet(isPresented: $showAddCard) {
+            VStack(alignment: .leading, spacing: 14) {
+                Text("Add a card").font(.system(size: NunaTypeSize.h2, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary).padding(.top, 22)
+                NunaCard(small: true) {
+                    VStack(spacing: 0) {
+                        ForEach(Array(hiddenSections.enumerated()), id: \.element.id) { idx, sec in
+                            if idx > 0 { NunaDivider() }
+                            Button { add(sec, after: addAfter); showAddCard = false } label: {
+                                NunaListRow(nunaTitle(sec), systemImage: "plus") { Text("Add").font(.system(size: 14, weight: .heavy)).foregroundStyle(NunaPalette.charge) }
+                            }.buttonStyle(.plain)
+                        }
+                    }
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, NunaSpacing.screenH)
+            .background(NunaPalette.card.ignoresSafeArea())
+            .preferredColorScheme(.dark)
+            .nunaSheetChrome(detents: [.medium, .large])
+        }
+        .sheet(isPresented: $showMood) {
+            NavigationStack {
+                ScrollView { MindSection().padding() }
+                    .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { showMood = false } } }
+            }
+            .environmentObject(repo)
+        }
         .sheet(isPresented: $showInbox) { UpdatesInboxView(onClose: { showInbox = false }) }
         .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: "today") }
     }
@@ -106,27 +153,34 @@ struct NunaTodayView: View {
     // MARK: Header
 
     private var header: some View {
-        HStack(spacing: 10) {
+        HStack(alignment: .top, spacing: 8) {
             Text("Today")
-                .font(.system(size: NunaTypeSize.h1, weight: .bold, design: .rounded))
+                .font(.system(size: NunaTypeSize.h1, weight: .heavy, design: .rounded))
                 .foregroundStyle(NunaPalette.textPrimary)
             Spacer(minLength: 8)
             Button { router.openDevices() } label: {
-                NunaChip(live.connected ? "Connected" : "Not connected",
-                         systemImage: "dot.radiowaves.left.and.right",
-                         color: live.connected ? NunaPalette.charge : NunaPalette.warning)
-                    .lineLimit(1).fixedSize()
+                NunaStrapChip(connected: live.connected, battery: live.batteryPct)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(Text("WHOOP strap"))
             Button { showInbox = true } label: {
-                Image(systemName: updateStore.unreadCount > 0 ? "bell.badge.fill" : "bell.fill")
-                    .font(.system(size: 16, weight: .bold))
+                Image(systemName: "bell")
+                    .font(.system(size: 17, weight: .bold))
                     .foregroundStyle(NunaPalette.textPrimary)
                     .frame(width: 44, height: 44)
-                    .background(Color.white.opacity(0.08), in: Circle())
+                    .background(NunaPalette.glassStrong, in: Circle())
+                    .overlay(Circle().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                    .overlay(alignment: .topTrailing) {
+                        if updateStore.unreadCount > 0 {
+                            Circle().fill(NunaPalette.alert).frame(width: 10, height: 10)
+                                .overlay(Circle().strokeBorder(NunaPalette.card, lineWidth: 2))
+                                .offset(x: -10, y: 10)
+                        }
+                    }
             }
             .accessibilityLabel(Text("Updates"))
         }
+        .padding(.top, 2)
     }
 
     private var datePill: some View {
@@ -134,22 +188,34 @@ struct NunaTodayView: View {
             Button { showDate = true } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "calendar").font(.system(size: 14, weight: .bold))
-                    Text(verbatim: dateTitle).font(.system(size: 14, weight: .bold))
-                    Image(systemName: "chevron.down").font(.system(size: 11, weight: .bold))
+                    Text(verbatim: dateTitle).font(.system(size: 14, weight: .heavy))
+                    Image(systemName: "chevron.down").font(.system(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 .foregroundStyle(NunaPalette.textPrimary)
-                .padding(.horizontal, 14).frame(height: 40)
-                .background(Color.white.opacity(0.08), in: Capsule())
+                .padding(.horizontal, 14).frame(height: 38)
+                .background(NunaPalette.glassStrong, in: Capsule())
+                .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
             }
             .buttonStyle(.plain)
             Spacer()
+            Button { withAnimation(.easeInOut(duration: 0.2)) { editing = true } } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "slider.horizontal.3").font(.system(size: 13, weight: .bold))
+                    Text("Customise").font(.system(size: 14, weight: .heavy))
+                }
+                .foregroundStyle(NunaPalette.textPrimary)
+                .padding(.horizontal, 14).frame(height: 38)
+                .background(NunaPalette.glassStrong, in: Capsule())
+                .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+            }
+            .buttonStyle(.plain)
         }
     }
 
     private var dateTitle: String {
         let f = DateFormatter()
         f.locale = AppLanguage.activeLocale
-        f.setLocalizedDateFormatFromTemplate("EEEE d MMM")
+        f.setLocalizedDateFormatFromTemplate("EEE d MMM")
         return f.string(from: model.displayDate)
     }
 
@@ -166,91 +232,211 @@ struct NunaTodayView: View {
     }
 
     private var customizeButton: some View {
-        Button { withAnimation(.easeInOut(duration: 0.2)) { editing = true } } label: {
-            Label("Customise cards", systemImage: "slider.horizontal.3")
-        }
-        .buttonStyle(.nuna(.ghost, height: 48, fullWidth: true))
-        .padding(.top, 4)
+        NunaAddCard("Add or arrange cards") { withAnimation(.easeInOut(duration: 0.2)) { editing = true } }
     }
 
     // MARK: Edit mode
 
+    private func nunaTitle(_ s: TodaySection) -> LocalizedStringKey {
+        switch s {
+        case .hero: return "Daily scores"
+        case .synthesis: return "Anya"
+        case .recoveryVitals: return "Stress monitor"
+        case .keyMetrics: return "Key metrics"
+        case .workouts: return "Activity"
+        case .journal: return "Quick log"
+        case .yourCards: return "Your cards"
+        case .menstrualCycle: return "Menstrual cycle"
+        case .heartRate: return "Heart rate"
+        case .liveSession: return "Start session"
+        case .addedCards: return "Added cards"
+        }
+    }
+
     private var editList: some View {
-        VStack(spacing: NunaSpacing.section) {
-            NunaCard(small: true) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Edit cards").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("Hide a card, or move it up or down. Hidden cards can come back any time.")
-                        .font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            let order = TodayLayoutPrefs.decodeOrder(sectionOrderRaw)
-            let hidden = Set(TodayLayoutPrefs.decodeHidden(hiddenSectionsRaw))
-            NunaCard(small: true) {
-                VStack(spacing: 0) {
-                    ForEach(Array(order.enumerated()), id: \.element.id) { idx, section in
-                        if idx > 0 { NunaDivider() }
-                        editRow(section, index: idx, count: order.count, isHidden: hidden.contains(section))
+        VStack(spacing: 14) {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Edit mode").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
+                            .foregroundStyle(NunaPalette.textSecondary)
+                        Text("Arrange cards").font(.system(size: NunaTypeSize.h1, weight: .heavy, design: .rounded))
+                            .foregroundStyle(NunaPalette.textPrimary)
                     }
+                    Spacer()
+                    Button { withAnimation(.easeInOut(duration: 0.2)) { editing = false } } label: { Text("Done") }
+                        .buttonStyle(.nuna(.primary, height: 44)).fixedSize()
+                }
+                Text("Hold the grip, then drag to reorder. Tap X to hide a card.")
+                    .font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            }
+            let visible = effectiveOrder.filter { !effectiveHidden.contains($0) }
+            ForEach(Array(visible.enumerated()), id: \.element.id) { idx, section in
+                editFrame(section)
+                if !hiddenSections.isEmpty && (idx % 3 == 0 || idx == visible.count - 1) {
+                    NunaAddCard("Add a card here") { addAfter = section; showAddCard = true }
                 }
             }
-            Button { showCustomize = true } label: { Label("More options", systemImage: "slider.horizontal.3") }
-                .buttonStyle(.nuna(.ghost, height: 48, fullWidth: true))
-            Button { sectionOrderRaw = ""; hiddenSectionsRaw = "" } label: { Text("Reset to default") }
-                .buttonStyle(.nuna(.ghost, height: 48, fullWidth: true))
-            Button { withAnimation(.easeInOut(duration: 0.2)) { editing = false } } label: { Text("Done") }
-                .buttonStyle(.nuna(.primary, height: 52, fullWidth: true))
-        }
-    }
-
-    private func editRow(_ section: TodaySection, index: Int, count: Int, isHidden: Bool) -> some View {
-        HStack(spacing: 10) {
-            Button { toggleHidden(section) } label: {
-                Image(systemName: isHidden ? "eye.slash.fill" : "eye.fill")
-                    .font(.system(size: 16, weight: .bold))
-                    .foregroundStyle(isHidden ? NunaPalette.textMuted : NunaPalette.charge)
-                    .frame(width: 40, height: 40)
-                    .background(Color.white.opacity(0.08), in: Circle())
+            if visible.isEmpty && !hiddenSections.isEmpty {
+                NunaAddCard("Add a card here") { addAfter = nil; showAddCard = true }
             }
-            .accessibilityLabel(Text(isHidden ? "Show" : "Hide"))
-            Text(verbatim: section.title)
-                .font(.system(size: 16, weight: .bold))
-                .foregroundStyle(isHidden ? NunaPalette.textMuted : NunaPalette.textPrimary)
-            Spacer(minLength: 8)
-            moveButton("chevron.up", enabled: index > 0) { move(section, by: -1) }
-            moveButton("chevron.down", enabled: index < count - 1) { move(section, by: 1) }
+            HStack(spacing: 12) {
+                Button { showCustomize = true } label: { Label("Card settings", systemImage: "slider.horizontal.3").lineLimit(1).minimumScaleFactor(0.8) }
+                    .buttonStyle(.nuna(.ghost, height: 52, fullWidth: true))
+                Button { sectionOrderRaw = ""; hiddenSectionsRaw = ""; keyMetricsRaw = "" } label: { Text("Restore defaults").lineLimit(1).minimumScaleFactor(0.8) }
+                    .buttonStyle(.nuna(.ghost, height: 52, fullWidth: true))
+            }
+            .padding(.top, 4)
         }
-        .frame(minHeight: 58)
     }
 
-    private func moveButton(_ symbol: String, enabled: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: symbol).font(.system(size: 14, weight: .bold))
-                .foregroundStyle(enabled ? NunaPalette.textPrimary : NunaPalette.textMuted.opacity(0.4))
-                .frame(width: 40, height: 40)
-                .background(Color.white.opacity(0.08), in: Circle())
+    private var hiddenSections: [TodaySection] { effectiveOrder.filter { effectiveHidden.contains($0) } }
+
+    private func editFrame(_ section: TodaySection) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                Image(systemName: "line.3.horizontal").font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    .frame(width: 22)
+                Text(nunaTitle(section)).font(.system(size: 15.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+                Spacer()
+                Button { withAnimation { toggleHidden(section) } } label: {
+                    Image(systemName: "xmark").font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        .frame(width: 34, height: 34).background(NunaPalette.glassStrong, in: Circle())
+                }
+                .accessibilityLabel(Text("Hide"))
+            }
+            .contentShape(Rectangle())
+            .draggable(section.rawValue)
+            editPreview(section)
         }
-        .disabled(!enabled)
+        .padding(12)
+        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous)
+            .strokeBorder(Color.white.opacity(0.22), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5])))
+        .dropDestination(for: String.self) { items, _ in
+            guard let raw = items.first, let dragged = TodaySection(rawValue: raw) else { return false }
+            reorder(dragged, before: section); return true
+        }
+        .accessibilityAction(named: Text("Move up")) { move(section, by: -1) }
+        .accessibilityAction(named: Text("Move down")) { move(section, by: 1) }
+    }
+
+    /// A compact stand-in for the card, inside the dashed frame.
+    @ViewBuilder private func editPreview(_ section: TodaySection) -> some View {
+        let inner = RoundedRectangle(cornerRadius: 18, style: .continuous).fill(NunaPalette.cardHighlight)
+        switch section {
+        case .hero:
+            HStack {
+                miniRing(model.charge.pct, "Charge", NunaPalette.charge, "%")
+                miniRing(model.effort.map { Double(UnitFormatter.effortDisplay($0, scale: effortScale).replacingOccurrences(of: ",", with: ".")) ?? 0 }, "Effort", NunaPalette.effort, "", fraction: (model.effort ?? 0) / 100)
+                miniRing(model.rest, "Rest", NunaPalette.rest, "%")
+            }
+            .padding(.vertical, 12).frame(maxWidth: .infinity).background(inner)
+        case .synthesis:
+            previewRow("sparkles", nil, synthLine, "Anya suggestion").background(inner)
+        case .recoveryVitals:
+            previewRow("wind", NunaPalette.charge, model.stress.map { String(localized: "Stress \(String(format: "%.1f", locale: AppLanguage.activeLocale, $0)) / 3") } ?? String(localized: "Stress"), "Intraday curve").background(inner)
+        case .keyMetrics:
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+                ForEach(metricTiles.prefix(4)) { t in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(t.label).font(.system(size: 10.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: t.value).font(.system(size: 22, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    }
+                    .padding(12).frame(maxWidth: .infinity, alignment: .leading).background(inner)
+                }
+            }
+        case .workouts:
+            previewRow("flame", NunaPalette.effortText,
+                       model.workouts.last.map { WorkoutSource.displaySport($0.sport) } ?? String(localized: "No activity yet"),
+                       "Latest activity").background(inner)
+        case .journal:
+            HStack(spacing: 8) {
+                if hydrationEnabled { miniChip("Water +250") }
+                miniChip("Journal"); miniChip("Mood"); Spacer(minLength: 0)
+            }
+        case .yourCards: previewRow("rectangle.stack", nil, String(localized: "Your cards"), "Cards you chose").background(inner)
+        case .menstrualCycle: previewRow("drop", NunaPalette.alertText, String(localized: "Menstrual cycle"), "Cycle awareness").background(inner)
+        case .heartRate: previewRow("heart", NunaPalette.alertText, String(localized: "Heart rate"), "Live").background(inner)
+        case .liveSession: previewRow("play", NunaPalette.charge, String(localized: "Start session"), "Live session").background(inner)
+        case .addedCards: previewRow("square.stack", nil, String(localized: "Added cards"), "From Sleep and Trends").background(inner)
+        }
+    }
+
+    private func previewRow(_ icon: String, _ tint: Color?, _ title: String, _ sub: LocalizedStringKey) -> some View {
+        HStack(spacing: 12) {
+            NunaIconTile(icon, tint: tint)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: title).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2)
+                Text(sub).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func miniChip(_ title: LocalizedStringKey) -> some View {
+        Text(title).font(.system(size: 12.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            .padding(.horizontal, 12).frame(height: 32).background(NunaPalette.glassStrong, in: Capsule())
+    }
+
+    private func miniRing(_ value: Double?, _ label: LocalizedStringKey, _ color: Color, _ unit: String, fraction: Double? = nil) -> some View {
+        VStack(spacing: 6) {
+            NunaRingGauge(fraction: fraction ?? ((value ?? 0) / 100), color: color, size: 56, lineWidth: 6) {
+                Text(verbatim: value.map { String(format: "%.0f", $0) + unit } ?? "–").font(.system(size: 13, weight: .bold, design: .rounded))
+                    .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6)
+            }
+            Text(label).font(.system(size: 10.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+
+    private func reorder(_ dragged: TodaySection, before target: TodaySection) {
+        guard dragged != target else { return }
+        var order = effectiveOrder
+        order.removeAll { $0 == dragged }
+        let idx = order.firstIndex(of: target) ?? order.endIndex
+        order.insert(dragged, at: idx)
+        persist(order: order)
     }
 
     private func move(_ section: TodaySection, by delta: Int) {
-        var order = TodayLayoutPrefs.decodeOrder(sectionOrderRaw)
+        var order = effectiveOrder
         guard let i = order.firstIndex(of: section), order.indices.contains(i + delta) else { return }
         order.swapAt(i, i + delta)
+        persist(order: order)
+    }
+
+    private func persist(order: [TodaySection]) {
         sectionOrderRaw = TodayLayoutPrefs.encode(order)
+        if hiddenSectionsRaw.trimmingCharacters(in: .whitespaces).isEmpty {
+            hiddenSectionsRaw = TodayLayoutPrefs.encodeHidden(Self.nunaDefaultHidden)
+        }
     }
 
     private func toggleHidden(_ section: TodaySection) {
-        var hidden = TodayLayoutPrefs.decodeHidden(hiddenSectionsRaw)
+        var hidden = effectiveHidden
         if let i = hidden.firstIndex(of: section) {
             hidden.remove(at: i)
         } else {
             // Keep at least one card on Today.
-            guard TodayLayoutPrefs.decodeOrder(sectionOrderRaw).filter({ !hidden.contains($0) }).count > 1 else { return }
+            guard effectiveOrder.filter({ !hidden.contains($0) }).count > 1 else { return }
             hidden.append(section)
         }
-        hiddenSectionsRaw = TodayLayoutPrefs.encodeHidden(hidden)
+        if sectionOrderRaw.trimmingCharacters(in: .whitespaces).isEmpty { sectionOrderRaw = TodayLayoutPrefs.encode(effectiveOrder) }
+        // Always write an explicit value, so the Nuna defaults stop applying once the person has chosen.
+        hiddenSectionsRaw = hidden.isEmpty ? "none" : TodayLayoutPrefs.encodeHidden(hidden)
+    }
+
+    /// Unhide `section` and place it right after `anchor` (or at the end).
+    private func add(_ section: TodaySection, after anchor: TodaySection?) {
+        var order = effectiveOrder
+        order.removeAll { $0 == section }
+        let at = anchor.flatMap { order.firstIndex(of: $0) }.map { $0 + 1 } ?? order.endIndex
+        order.insert(section, at: at)
+        var hidden = effectiveHidden
+        hidden.removeAll { $0 == section }
+        sectionOrderRaw = TodayLayoutPrefs.encode(order)
+        hiddenSectionsRaw = hidden.isEmpty ? "none" : TodayLayoutPrefs.encodeHidden(hidden)
     }
 
     // MARK: Sections
@@ -260,28 +446,42 @@ struct NunaTodayView: View {
         case .hero:
             VStack(spacing: NunaSpacing.section) {
                 NunaScoreCard(charge: model.charge, effort: model.effort, rest: model.rest,
-                              effortScale: effortScale, readyLine: nil, heartRate: model.isToday ? live.heartRate : nil)
+                              effortScale: effortScale, readyLine: readyLine, heartRate: model.isToday ? live.heartRate : nil)
                 if model.isToday, let warn = appModel.illnessSignal, warn.level != .quiet {
                     NunaEarlyWarningCard(result: warn)
                 }
             }
         case .synthesis:
-            if coachEnabled && model.isToday { NunaAnyaCard(title: "What should I focus on today?") { showCoach = true } }
+            if coachEnabled && model.isToday {
+                NunaAnyaCard(verbatim: synthLine, buttonTitle: "Start",
+                             onButton: { router.requestedDestination = .activeWorkout }) { showCoach = true }
+            }
+        case .recoveryVitals:
+            if model.stress != nil || model.stressCurve != nil {
+                NunaStressCard(score: model.stress, curve: model.stressCurve, isToday: model.isToday)
+            }
         case .keyMetrics:
             let tiles = metricTiles
             if !tiles.isEmpty {
                 VStack(spacing: 12) {
-                    NunaMetricsGrid(tiles: tiles)
-                    NavigationLink(value: NunaTodayRoute.allMetrics) {
-                        NunaCard(small: true) { NunaListRow("All metrics", systemImage: "list.bullet", showsChevron: true) }
+                    NunaTitleRow(title: "Key metrics") {
+                        Button { customizeDestination = .keyMetrics; showCustomize = true } label: {
+                            NunaLinkLabel(text: "Edit", systemImage: "slider.horizontal.3")
+                        }
+                        NavigationLink(value: NunaTodayRoute.allMetrics) { NunaLinkLabel(text: "All", chevron: true) }
                     }
-                    .buttonStyle(.plain)
+                    NunaMetricsGrid(tiles: tiles)
                 }
             }
         case .workouts:
-            if let w = model.workouts.last { NunaActivityRow(workout: w, effortScale: effortScale) }
-        case .recoveryVitals:
-            if model.stress != nil { NunaStressCard(stress: model.stress) }
+            if let w = model.workouts.last {
+                VStack(spacing: 12) {
+                    NunaTitleRow(title: "Activity") {
+                        NavigationLink(value: TabRoute.workouts) { NunaLinkLabel(text: "All workouts", chevron: true) }
+                    }
+                    NunaActivityRow(workout: w, effortScale: effortScale)
+                }
+            }
         case .heartRate:
             if model.isToday, let hr = live.heartRate {
                 NavigationLink(value: TabRoute.fullDayChart) {
@@ -294,12 +494,19 @@ struct NunaTodayView: View {
                 .buttonStyle(.plain)
             }
         case .journal:
-            NavigationLink(value: TabRoute.health) {
-                NunaCard(small: true) {
-                    NunaListRow("Journal", subtitle: "How did yesterday go?", systemImage: "book.closed.fill", showsChevron: true)
+            if model.isToday {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        if hydrationEnabled {
+                            NunaQuickChip(title: "Water +250", systemImage: "drop", tint: NunaPalette.effortText) {
+                                Task { _ = await repo.logHydration(amountMl: 250); repo.noteHydrationChanged() }
+                            }
+                        }
+                        NunaQuickChip(title: "Journal", systemImage: "bookmark") { router.requestedDestination = .journal }
+                        NunaQuickChip(title: "Mood", systemImage: "heart") { showMood = true }
+                    }
                 }
             }
-            .buttonStyle(.plain)
         case .liveSession where model.isToday:
             Button { router.requestedDestination = .liveSession } label: {
                 Label("Start session", systemImage: "play.fill")
@@ -326,27 +533,61 @@ struct NunaTodayView: View {
         }
     }
 
+    private var readyLine: LocalizedStringKey? {
+        guard model.isToday, let level = model.readiness?.level else { return nil }
+        switch level {
+        case .primed: return "Ready for a hard session"
+        case .balanced: return "Ready for a moderate load"
+        case .strained, .rundown: return "Take it easy today"
+        case .insufficient: return nil
+        }
+    }
+
+    /// The same one-line read the Default Today synthesis shows.
+    private var synthLine: String {
+        guard let level = model.readiness?.level else { return String(localized: "Still learning your baseline.") }
+        switch level {
+        case .primed: return String(localized: "You're primed. A hard session should land well today.")
+        case .balanced: return String(localized: "You're in a good spot for training.")
+        case .strained: return String(localized: "Signals are down a touch. Keep it easy today.")
+        case .rundown: return String(localized: "Your body is asking for rest. Prioritise recovery today.")
+        case .insufficient: return String(localized: "Still learning your baseline.")
+        }
+    }
+
     private var metricTiles: [NunaMetricTile] {
-        let enabled = KeyMetricPrefs.decodeEnabled(keyMetricsRaw)
-            .filter { ![.charge, .effort, .rest].contains($0) }
+        let chosen: [KeyMetric] = keyMetricsRaw.trimmingCharacters(in: .whitespaces).isEmpty
+            ? Self.nunaDefaultMetrics : KeyMetricPrefs.decodeEnabled(keyMetricsRaw)
+        let enabled = chosen.filter { ![.charge, .effort].contains($0) }
         func fmt(_ v: Double?, _ digits: Int = 0) -> String {
             v.map { String(format: "%.\(digits)f", locale: AppLanguage.activeLocale, $0) } ?? "–"
         }
         func route(_ key: String, _ source: String = "my-whoop") -> NunaTodayRoute? {
             MetricCatalog.metric(key: key, source: source).map { .metric($0) }
         }
+        /// "▲ 4" against the previous day; `downIsGood` for resting heart rate.
+        func delta(_ d: Double?, downIsGood: Bool = false) -> (String, Bool)? {
+            guard let d, abs(d.rounded()) >= 1 else { return nil }
+            return ((d > 0 ? "▲ " : "▼ ") + "\(Int(abs(d).rounded()))", downIsGood ? d < 0 : d > 0)
+        }
         let stepsRoute = MetricCatalog.todayStepsMetric(hasMeasuredSteps: model.steps != nil).map { NunaTodayRoute.metric($0) }
         return enabled.map { m in
             switch m {
-            case .hrv:         return NunaMetricTile(id: m.rawValue, label: "HRV", value: fmt(model.hrv), unit: "ms", route: route("hrv"))
-            case .restingHr:   return NunaMetricTile(id: m.rawValue, label: "Resting HR", value: fmt(model.restingHr), unit: "bpm", route: route("rhr"))
+            case .hrv:
+                let d = delta(model.hrvDelta)
+                return NunaMetricTile(id: m.rawValue, label: "HRV", value: fmt(model.hrv), unit: "ms", route: route("hrv"), delta: d?.0, deltaGood: d?.1)
+            case .restingHr:
+                let d = delta(model.restingHrDelta, downIsGood: true)
+                return NunaMetricTile(id: m.rawValue, label: "Resting HR", value: fmt(model.restingHr), unit: "bpm", route: route("rhr"), delta: d?.0, deltaGood: d?.1)
             case .bloodOxygen: return NunaMetricTile(id: m.rawValue, label: "Blood Oxygen", value: fmt(model.spo2), unit: "%", route: route("spo2"))
             case .respiratory: return NunaMetricTile(id: m.rawValue, label: "Respiratory", value: fmt(model.respiratory, 1), unit: "/min", route: route("resp_rate"))
             case .steps:       return NunaMetricTile(id: m.rawValue, label: "Steps", value: fmt(model.steps), unit: "", route: stepsRoute)
             case .calories:    return NunaMetricTile(id: m.rawValue, label: "Calories", value: fmt(model.calories), unit: "kcal", route: route("energy_kcal"))
             case .weight:      return NunaMetricTile(id: m.rawValue, label: "Weight", value: fmt(model.extras["weight"], 1), unit: "kg", route: route("weight", "apple-health"))
             case .skinTemp:    return NunaMetricTile(id: m.rawValue, label: "Skin Temp", value: fmt(model.extras["skin_temp"], 1), unit: "°C", route: route("skin_temp"))
-            case .charge, .effort, .rest: return NunaMetricTile(id: m.rawValue, label: "", value: "", unit: "", route: nil)
+            case .rest:
+                return NunaMetricTile(id: m.rawValue, label: "Sleep", value: model.sleepMinutes.map { NunaSleepFormat.duration($0) } ?? "–", unit: "", route: .sleep(0))
+            case .charge, .effort: return NunaMetricTile(id: m.rawValue, label: "", value: "", unit: "", route: nil)
             }
         }
     }

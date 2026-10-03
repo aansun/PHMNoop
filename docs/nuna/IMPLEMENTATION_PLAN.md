@@ -42,6 +42,14 @@ Phase 1 checklist:
 - [x] Journal, breathing, water and notifications reachable from Today (the screens themselves are re-themed in later phases)
 - [x] Indonesian strings, build, simulator check, commit
 
+Design pass (against docs/nuna/mockups, compared one screen at a time in the browser pane):
+- Today now follows Main: strap chip with battery, bell with unread dot, date pill plus "Customise" chip, score card with `%` units and the ready chip, Anya card with a white "Start" button, stress card, "Key metrics" with "Edit" and "All", "Activity" with "All workouts", quick-log chips (water, journal, mood), dashed "Add or arrange cards". Default order and metrics follow the mockup until the person arranges their own (shared keys; Your Cards hidden by default).
+- Stress uses NOOP's own intraday curve (`StressDayCurve` and `DaytimeLoadLine`, the same drawing as Default Today and the widget), in a Nuna card.
+- Edit mode matches TodayEdit: dashed frames with a grip, X to hide, drag to reorder (accessibility actions move up and down), "Add a card here" for hidden cards, Card settings, Restore defaults.
+- Date sheet matches TodayDate: month grid with Charge-coloured dots, recorded-days count, quick jumps, a Charge / Effort / Rest summary of the selected day.
+- Quick actions matches TodayQuick: six shortcuts, Ask Anya, water row (when water tracking is on).
+- Detail screens match TodayCharge, TodayEffort, TodayHRV / RHR / Steps (shared metric screen with band line or capsule columns), TodayStress and TodayAllMetrics.
+
 Status (first slice, built and checked in the iOS simulator):
 - `StrandiOS/Nuna/Today/NunaTodayModel.swift`: per-day data (Charge, Effort, Rest, stress, vitals, steps, calories, workouts) with the same resolvers as the Default Today screens; display only.
 - `NunaTodayView.swift` and `NunaTodayCards.swift`: header (wearable status chip, updates bell), date pill, three-ring score card, Anya card, key-metrics grid, latest-activity row, stress card, heart-rate row, journal row, Start session. Sections follow the shared `today.sectionOrder` / `today.hiddenSections` / `today.keyMetrics` preferences, so the arrangement carries over from Default.

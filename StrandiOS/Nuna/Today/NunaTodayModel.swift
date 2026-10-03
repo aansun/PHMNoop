@@ -32,6 +32,13 @@ final class NunaTodayModel: ObservableObject {
     /// Latest value of the slower-moving metrics the Your Cards section can show.
     @Published private(set) var extras: [String: Double] = [:]
     @Published private(set) var loaded = false
+    /// The one-line readiness read the Default Today synthesis uses, so both experiences say the same thing.
+    @Published private(set) var readiness: ReadinessEngine.Readiness?
+    /// Today's hourly stress curve (nil on past days or when it could not be scored).
+    @Published private(set) var stressCurve: DaytimeStress.Result?
+    /// Change against the previous day that has a value: HRV in ms, resting HR in bpm.
+    @Published private(set) var hrvDelta: Double?
+    @Published private(set) var restingHrDelta: Double?
 
     var isToday: Bool { dayOffset == 0 }
 
@@ -71,6 +78,11 @@ final class NunaTodayModel: ObservableObject {
         respiratory = row?.respRateBpm ?? (today ? Repository.lastRespDay(days: repo.days, todayKey: key)?.respRateBpm : nil)
         spo2 = row?.spo2Pct ?? (today ? Repository.lastVitalsDay(days: repo.days, todayKey: key)?.spo2Pct : nil)
         sleepMinutes = row?.totalSleepMin
+        readiness = ReadinessEngine.evaluate(days: repo.days, today: key)
+        let priorHrv = repo.days.last(where: { $0.day < key && $0.avgHrv != nil })
+        let priorRhr = repo.days.last(where: { $0.day < key && $0.restingHr != nil })
+        hrvDelta = (hrv != nil && priorHrv?.avgHrv != nil) ? hrv! - priorHrv!.avgHrv! : nil
+        restingHrDelta = (restingHr != nil && priorRhr?.restingHr != nil) ? restingHr! - Double(priorRhr!.restingHr!) : nil
 
         // Live Effort for today over midnight..now, stored Effort otherwise.
         var live: Double?
@@ -121,6 +133,9 @@ final class NunaTodayModel: ObservableObject {
         }
         if let w = await repo.exploreSeries(key: "weight", source: "apple-health", days: 90).last?.value { ex["weight"] = w }
         extras = ex
+        // The curve is scored as of "now" for today and as of the end of the day for a past day.
+        let curveNow = today ? Date() : (cal.date(byAdding: .second, value: -1, to: cal.date(byAdding: .day, value: 1, to: dayStart) ?? dayStart) ?? dayStart)
+        stressCurve = await StressDayCurve.today(repo: repo, now: curveNow)?.result
 
         workouts = (await workoutsA).filter { $0.startTs >= from && $0.startTs < to }
         loaded = true

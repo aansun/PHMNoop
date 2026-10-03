@@ -97,13 +97,19 @@ public enum ExperienceMode: String, CaseIterable, Identifiable {
 public struct NunaCard<Content: View>: View {
     private let small: Bool
     private let highlight: Bool
+    private let padding: EdgeInsets?
     private let content: Content
-    public init(small: Bool = false, highlight: Bool = false, @ViewBuilder content: () -> Content) {
-        self.small = small; self.highlight = highlight; self.content = content()
+    /// `padding` overrides the default inner padding for the few cards the mockups inset differently.
+    public init(small: Bool = false, highlight: Bool = false, padding: EdgeInsets? = nil,
+                @ViewBuilder content: () -> Content) {
+        self.small = small; self.highlight = highlight; self.padding = padding; self.content = content()
     }
     public var body: some View {
         content
-            .padding(small ? NunaSpacing.cardInnerSmall : NunaSpacing.cardInner)
+            .padding(padding ?? EdgeInsets(top: small ? NunaSpacing.cardInnerSmall : NunaSpacing.cardInner,
+                                           leading: small ? NunaSpacing.cardInnerSmall : NunaSpacing.cardInner,
+                                           bottom: small ? NunaSpacing.cardInnerSmall : NunaSpacing.cardInner,
+                                           trailing: small ? NunaSpacing.cardInnerSmall : NunaSpacing.cardInner))
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(highlight ? NunaPalette.cardHighlight : NunaPalette.card,
                         in: RoundedRectangle(cornerRadius: small ? NunaRadius.cardSmall : NunaRadius.card, style: .continuous))
