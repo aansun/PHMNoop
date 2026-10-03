@@ -4,7 +4,7 @@ Scope: iOS only (`NOOPiOS`). Android keeps its UI; any new stored data or analyt
 
 Sizes are rough (S ≈ days, M ≈ 1-2 weeks, L ≈ several weeks).
 
-## Phase 0: foundation (S-M)
+## Phase 0: foundation (S-M): done
 
 1. Merge `NunaTheme.swift` (tokens, `ExperienceMode`, first components).
 2. Add the remaining primitives from `COMPONENTS.md` (button style, icon button, list row, segmented, sheet, tab bar, header, FAB).
@@ -12,6 +12,15 @@ Sizes are rough (S ≈ days, M ≈ 1-2 weeks, L ≈ several weeks).
 4. Experience picker (Saya, Tampilan, Experience) with the confirm sheet.
 
 Acceptance: switching Experience reloads the shell without touching data; Default behaves exactly as before; no raw hex values outside the token file.
+
+Status: implemented and built for the iOS simulator.
+- `Packages/StrandDesign/.../Nuna/NunaPrimitives.swift`: button style, icon button, FAB, header, section header, list row, toggle row, segmented control, add card, tab bar, sheet chrome.
+- `StrandiOS/Nuna/NunaRootView.swift`: five-tab shell with the floating tab bar. Tab roots still host the existing Today / Health / Trends / Anya views until Phases 1-5 replace them. It handles `NavRouter` requests like `RootTabView`. Not yet ported: Home Screen quick actions, the Lift session bar, and the Anya launcher overlay.
+- `StrandiOS/Nuna/NunaMeView.swift`: the "Me" hub; rows open the closest existing screen until Phase 7.
+- `StrandiOS/Nuna/NunaAppearanceView.swift` and `ExperienceView.swift`: Experience picker with preview cards and the confirm sheet. Also reachable from the Default shell (Settings, Appearance, Experience).
+- `StrandiOSApp.swift` selects the shell from `ExperienceMode`; Default stays the default.
+- Indonesian strings for the new screens were added to `Localizable.xcstrings`.
+- Known gaps: the Nuna shell forces a dark colour scheme; the Appearance setting is honoured again in Phase 7. The Notifications row opens Automations because the Notifications screen is macOS-only.
 
 ## Phase 1: Hari ini (M-L)
 

@@ -1,6 +1,180 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "Experience": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Experience"}}
+        } },
+        "Pick the look of the whole app. Your data, scores and settings stay the same.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pilih tampilan seluruh aplikasi. Data, skor, dan pengaturanmu tidak berubah."}}
+        } },
+        "Original NOOP look": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tampilan NOOP asli"}}
+        } },
+        "Back to the original NOOP look.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kembali ke tampilan NOOP asli."}}
+        } },
+        "Today with sky and liquid": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Today dengan langit dan cairan"}}
+        } },
+        "Today, Insights, Health and More tabs": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tab Today, Insights, Health, dan More"}}
+        } },
+        "Every NOOP feature as before": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Semua fitur NOOP seperti biasa"}}
+        } },
+        "New design": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Desain baru"}}
+        } },
+        "The new PHMNOOP design: simple, clear and customisable.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Desain baru PHMNOOP: sederhana, jelas, dan bisa diatur."}}
+        } },
+        "Three-ring score card and customisable Today cards": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kartu skor tiga cincin dan kartu Hari ini yang bisa diatur"}}
+        } },
+        "Anya in every module and a quick actions button": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Anya di setiap modul dan tombol aksi cepat"}}
+        } },
+        "Today, Health, Trends, Anya and Me tabs": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tab Hari ini, Kesehatan, Tren, Anya, dan Saya"}}
+        } },
+        "Switching reloads the app shell briefly. Widgets, Live Activities and Anya keep working with the same data.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Mengganti Experience memuat ulang aplikasi sebentar. Widget, Live Activity, dan Anya tetap berjalan dengan data yang sama."}}
+        } },
+        "Switch to the Default look?": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ganti ke tampilan Default?"}}
+        } },
+        "Switch to Nuna?": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ganti ke Nuna?"}}
+        } },
+        "The original NOOP look": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tampilan NOOP asli"}}
+        } },
+        "The new PHMNOOP design": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Desain baru PHMNOOP"}}
+        } },
+        "Your data, scores and settings stay the same": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Data, skor, dan pengaturanmu tetap sama"}}
+        } },
+        "Widgets and Live Activities are unchanged": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Widget dan Live Activity tidak berubah"}}
+        } },
+        "You can switch back to Nuna any time": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bisa kembali ke Nuna kapan saja"}}
+        } },
+        "You can switch back to Default any time": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bisa kembali ke Default kapan saja"}}
+        } },
+        "Features that exist only in Nuna, like customisable Today cards and Anya in every module, do not appear in Default.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Fitur khusus Nuna, seperti kartu Hari ini yang bisa diatur dan Anya di tiap modul, tidak tampil di Default."}}
+        } },
+        "Switch and reload": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ganti dan muat ulang"}}
+        } },
+        "Stay on Nuna": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tetap di Nuna"}}
+        } },
+        "Stay on Default": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tetap di Default"}}
+        } },
+        "Me": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Saya"}}
+        } },
+        "Account and device": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Akun dan perangkat"}}
+        } },
+        "Persona": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Persona"}}
+        } },
+        "Profile, heart-rate zones, goals": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Profil, zona detak, target"}}
+        } },
+        "AI coach, memory, providers": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pelatih AI, memory, penyedia"}}
+        } },
+        "Anya": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Anya"}}
+        } },
+        "Experience, theme, language, units": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Experience, tema, bahasa, satuan"}}
+        } },
+        "Widgets and Lock Screen": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Widget dan layar kunci"}}
+        } },
+        "Home and lock screen widgets": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Widget layar utama dan layar kunci"}}
+        } },
+        "Notifications and automation": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Notifikasi dan otomasi"}}
+        } },
+        "Reminders and alerts": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pengingat dan peringatan"}}
+        } },
+        "Strap automations": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Otomasi strap"}}
+        } },
+        "Double-tap, haptics, reminders": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ketuk dua kali, getar, pengingat"}}
+        } },
+        "Optional features": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Fitur opsional"}}
+        } },
+        "Water, journal, workout detection": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Air, jurnal, deteksi latihan"}}
+        } },
+        "Data and integrations": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Data dan integrasi"}}
+        } },
+        "Apple Health, Strava, import, export": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Apple Health, Strava, impor, ekspor"}}
+        } },
+        "Backup": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Cadangan"}}
+        } },
+        "Back up and restore": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Cadangkan dan pulihkan"}}
+        } },
+        "Privacy": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Privasi"}}
+        } },
+        "Everything stays on this iPhone": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Semua tetap di iPhone ini"}}
+        } },
+        "Advanced and experiments": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lanjutan dan eksperimen"}}
+        } },
+        "Baseline, HRV, Test Centre": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Baseline, HRV, Test Centre"}}
+        } },
+        "About and help": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tentang dan bantuan"}}
+        } },
+        "Version, how it works, credits": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Versi, cara kerja, atribusi"}}
+        } },
+        "PHMNOOP · a fork of NOOP. Not a medical device.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "PHMNOOP · fork dari NOOP. Bukan alat medis."}}
+        } },
+        "Connected · %lld%%": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Terhubung · %lld%%"}}
+        } },
+        "Choose how the whole app looks. Your data and settings do not change.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pilih tampilan seluruh aplikasi. Data dan pengaturanmu tidak berubah."}}
+        } },
+        "Switch to Default to return to the original NOOP look": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ganti ke Default untuk kembali ke tampilan NOOP asli"}}
+        } },
+        "Theme, accent and typography": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tema, aksen, dan tipografi"}}
+        } },
+        "Dark, light, accent colour, type preset": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Gelap, terang, warna aksen, preset huruf"}}
+        } },
+        "Indonesian, English and more": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Indonesia, English, dan lainnya"}}
+        } },
+        "Metric or imperial, Effort scale": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Metrik atau imperial, skala Effort"}}
+        } },
         "Over-reports R-R, so no value is shown": { "localizations": {
           "de": {"stringUnit": {"state": "translated", "value": "Meldet zu viele RR-Intervalle, daher kein Wert"}}, "es": {"stringUnit": {"state": "translated", "value": "Cuenta de más los intervalos R-R, por eso no se muestra"}}, "fr": {"stringUnit": {"state": "translated", "value": "Surestime les intervalles R-R, donc aucune valeur"}}, "it": {"stringUnit": {"state": "translated", "value": "Conta troppi intervalli R-R, quindi nessun valore"}}, "pl": {"stringUnit": {"state": "translated", "value": "Zawyża liczbę interwałów R-R, więc nie pokazujemy wartości"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Conta intervalos R-R a mais, por isso não há valor"}}, "ru": {"stringUnit": {"state": "translated", "value": "Завышает число интервалов R-R, поэтому значение не показано"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "R-R 间期计数偏多，因此不显示数值"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "R-R 間期計數偏多，因此不顯示數值"}}
         } },

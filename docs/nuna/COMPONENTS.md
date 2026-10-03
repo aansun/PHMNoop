@@ -8,11 +8,11 @@ Mockup class names come from `mockups/ui.css`. "Status" says whether the SwiftUI
 |---|---|---|---|
 | `.gc` / `.gc.s` / `.gc.hl` | Card, small card, highlighted card | `NunaCard(small:highlight:)` | ✅ |
 | `.chip` (`.a` `.w` `.v` `.d`) | Status pill: ok, effort, rest, alert | `NunaChip(_:systemImage:color:)` | ✅ |
-| `.btn` / `.btn.g` / `.btn.r` | Primary (white), ghost, destructive | `NunaButtonStyle` (extend `NoopButton`) | 🆕 |
-| `.ib` | 44 pt icon button | `NunaIconButton` | 🆕 |
+| `.btn` / `.btn.g` / `.btn.r` | Primary (white), ghost, destructive | `NunaButtonStyle` via `.buttonStyle(.nuna(...))` | ✅ |
+| `.ib` | 44 pt icon button | `NunaIconButton` | ✅ |
 | `.tg` | Toggle (green when on) | `Toggle` with `.tint(NunaPalette.charge)` | ♻️ |
-| `.sg` | Segmented control | `Picker(.segmented)` styled, or `NunaSegmented` | 🆕 |
-| `.li` / `.ic` | List row with icon tile | `NunaListRow` | 🆕 |
+| `.sg` | Segmented control | `NunaSegmented` | ✅ |
+| `.li` / `.ic` | List row with icon tile | `NunaListRow`, `NunaIconTile`, `NunaToggleRow`, `NunaDivider` | ✅ |
 | `.pb` | Progress bar | `NunaProgressBar` | 🆕 |
 | `.cap`, `.h1`..`.h3`, `.n*` | Type roles | `StrandFont` roles | ♻️ |
 
@@ -35,12 +35,12 @@ Mockup class names come from `mockups/ui.css`. "Status" says whether the SwiftUI
 
 | Mockup | Purpose | SwiftUI | Status |
 |---|---|---|---|
-| `.tabbar` | Floating tab bar, 5 tabs | `NunaTabBar` | 🆕 |
-| Bottom sheet | Quick actions, Anya, attach, confirmations | `NunaSheet` (detents, 34 pt radius, scrim) | 🆕 |
-| Floating "+" | Opens Quick actions on Today | `NunaFAB` | 🆕 |
+| `.tabbar` | Floating tab bar, 5 tabs | `NunaTabBar` | ✅ |
+| Bottom sheet | Quick actions, Anya, attach, confirmations | `.nunaSheetChrome(detents:)` | ✅ |
+| Floating "+" | Opens Quick actions on Today | `NunaFAB` | ✅ |
 | Date pill | Opens the date picker | `NunaDatePill` | 🆕 |
-| Back header | Title with back and optional trailing control | `NunaHeader` | 🆕 |
-| Dashed add card | "Add card", "Add WHOOP" | `NunaAddCard` | 🆕 |
+| Back header | Title with back and optional trailing control | `NunaHeader`, `NunaSectionHeader` | ✅ |
+| Dashed add card | "Add card", "Add WHOOP" | `NunaAddCard` | ✅ |
 
 ## Anya
 
