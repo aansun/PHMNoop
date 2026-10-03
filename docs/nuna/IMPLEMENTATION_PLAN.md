@@ -22,11 +22,25 @@ Status: implemented and built for the iOS simulator.
 - Indonesian strings for the new screens were added to `Localizable.xcstrings`.
 - Known gaps: the Nuna shell forces a dark colour scheme; the Appearance setting is honoured again in Phase 7. The Notifications row opens Automations because the Notifications screen is macOS-only.
 
-## Phase 1: Hari ini (M-L): in progress
+## Phase 1: Hari ini (M-L): done
 
 Today with the three-ring card, Anya card, stress card, metrics card, activity card. Date pill and past-day view. Customise (in-place edit mode and the list sheet). Quick actions sheet and the floating "+". Detail screens: Charge, Effort, HRV, RHR, steps, heart rate, all metrics, stress, journal, early warning, notifications. Breathing (with rhythm), water, manual activity.
 
 Acceptance: every card can be hidden, reordered and restored to default; past days are read-only; the "+" sheet reaches every action in `TodayQuick`.
+
+Phase 1 checklist:
+- [x] Today screen: header, date pill, three-ring card, Anya card, metrics grid, activity row, stress card, journal row, Start session
+- [x] Date sheet and read-only past days
+- [x] Quick actions sheet and floating "+"
+- [x] Customise via the existing sheet
+- [x] In-place edit mode (hide, reorder, restore hidden cards)
+- [x] Your Cards, Added Cards and Menstrual Cycle cards
+- [x] Early warning card and detail screen
+- [x] Nuna metric detail screen (Charge, Effort, HRV, RHR, steps, heart rate, SpO2, respiratory, calories, stress)
+- [x] All metrics screen
+- [x] Manual activity sheet from the "+" sheet
+- [x] Journal, breathing, water and notifications reachable from Today (the screens themselves are re-themed in later phases)
+- [x] Indonesian strings, build, simulator check, commit
 
 Status (first slice, built and checked in the iOS simulator):
 - `StrandiOS/Nuna/Today/NunaTodayModel.swift`: per-day data (Charge, Effort, Rest, stress, vitals, steps, calories, workouts) with the same resolvers as the Default Today screens; display only.
@@ -34,7 +48,8 @@ Status (first slice, built and checked in the iOS simulator):
 - `NunaDateSheet.swift`: shortcuts and calendar. A past day is read only: no "+", no Start session, no Anya "today" card.
 - `NunaQuickSheet.swift`: the "+" sheet (start workout, add activity, journal, breathing, water when enabled, ask Anya).
 - Customise reuses the existing `TodayCustomizationSheet` on the same storage keys.
-- Known gaps: Your Cards, Menstrual Cycle and Added Cards have no Nuna card yet (they stay in the customise list and render in Default); the detail screens, customise sheet, journal, breathing and water still use the existing light-themed screens; in-place edit mode; manual activity sheet; the Anya launcher overlay.
+- Second slice: in-place edit mode (hide, move, reset; "More options" opens the existing sheet for key metrics and cards), Your Cards / Added Cards / Menstrual Cycle as link rows, early warning card and screen, Nuna metric detail (`NunaMetricViews.swift`: 7/30/90 day bars, average / low / high, Anya) used by the rings, tiles, stress card and Your Cards, All metrics list, and the manual activity sheet from "+".
+- Known gaps (carried to later phases): Rest still opens the existing Sleep screen (Phase 2); heart rate opens the existing full-day chart; Journal, Breathing, Water and the Customise key-metrics sheet are still the light-themed Default screens; the Anya launcher overlay is not ported.
 
 ## Phase 2: Tidur and Kesehatan (M-L)
 

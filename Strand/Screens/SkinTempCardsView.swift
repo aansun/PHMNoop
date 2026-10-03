@@ -979,7 +979,7 @@ private func localizedPlanNote(_ plan: CircadianEngine.JetLagPlan) -> String {
     }
 }
 
-private func localizedIllnessCopy(_ result: IllnessSignalEngine.Result) -> String {
+func localizedIllnessCopy(_ result: IllnessSignalEngine.Result) -> String {
     let signals = localizedList(result.firedSignals)
     let reasons = localizedList(result.suppressedBy.map(localizedConfounder))
     let message = result.message ?? fallbackIllnessMessage(result.level)

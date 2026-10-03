@@ -1,6 +1,66 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "Edit cards": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Atur kartu"}}
+        } },
+        "Hide a card, or move it up or down. Hidden cards can come back any time.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sembunyikan kartu, atau geser naik dan turun. Kartu tersembunyi bisa dimunculkan lagi kapan saja."}}
+        } },
+        "More options": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Opsi lainnya"}}
+        } },
+        "Show": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tampilkan"}}
+        } },
+        "Hide": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sembunyikan"}}
+        } },
+        "All metrics": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Semua metrik"}}
+        } },
+        "Early warning": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Peringatan dini"}}
+        } },
+        "Signals that are up": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sinyal yang naik"}}
+        } },
+        "On-device estimate. Not a diagnosis.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Perkiraan di perangkat. Bukan diagnosis."}}
+        } },
+        "Raised": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Meningkat"}}
+        } },
+        "Mild": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ringan"}}
+        } },
+        "Explained": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ada penjelasan"}}
+        } },
+        "Unwell": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kurang sehat"}}
+        } },
+        "Normal": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Normal"}}
+        } },
+        "Ask Anya about this": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tanya Anya soal ini"}}
+        } },
+        "90 days": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "90 hari"}}
+        } },
+        "No data in this period": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Belum ada data di periode ini"}}
+        } },
+        "From Sleep": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dari Tidur"}}
+        } },
+        "From Trends": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dari Tren"}}
+        } },
+        "Heart": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Jantung"}}
+        } },
         "Viewing a past day. Read only.": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Melihat hari lalu. Hanya baca."}}
         } },

@@ -6,6 +6,7 @@ import StrandDesign
 struct NunaQuickSheet: View {
     let hydrationEnabled: Bool
     let coachEnabled: Bool
+    let onAddActivity: () -> Void
 
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var router: NavRouter
@@ -23,7 +24,7 @@ struct NunaQuickSheet: View {
                 VStack(spacing: 0) {
                     row("Start workout", "Pick a sport and begin", "play.fill", NunaPalette.charge) { go(.activeWorkout) }
                     NunaDivider()
-                    row("Add activity", "Log a session you already did", "plus.circle.fill", NunaPalette.effortText) { go(.workouts) }
+                    row("Add activity", "Log a session you already did", "plus.circle.fill", NunaPalette.effortText) { dismiss(); onAddActivity() }
                     NunaDivider()
                     row("Journal", "Log how you feel", "book.closed.fill", nil) { go(.journal) }
                     NunaDivider()
