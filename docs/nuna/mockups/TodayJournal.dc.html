@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Jurnal hari ini</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:1160px">
+  <div class="pad col" style="gap:16px">
+    <div class="rw sp" style="align-items:flex-start">
+      <div class="col" style="gap:4px"><span class="cap">Senin, 5 Oktober</span><h1 class="h1">Hari ini</h1></div>
+      <div class="rw" style="gap:8px;padding-top:2px"><a class="chip" href="Devices.dc.html" style="height:44px;padding:0 14px;border-radius:22px;gap:8px" aria-label="Strap WHOOP terhubung, baterai 82 persen"><i class="i s i-watch" style="color:#16EC06"></i><span style="width:24px;height:12px;border-radius:3px;border:1.5px solid #9AA4AC;position:relative;display:inline-block;box-sizing:border-box"><i style="position:absolute;left:1.5px;top:1.5px;bottom:1.5px;width:15px;background:#16EC06;border-radius:1px"></i></span><b style="font-weight:800">82%</b></a><a class="ib" href="TodayNotifs.dc.html" aria-label="Notifikasi, 2 baru"><i class="i i-bell"></i><b></b></a></div>
+    </div>
+    <div class="wk" role="tablist" aria-label="Pilih hari">
+      <div class="wd on"><span>Sen</span><b>5</b><i></i></div><div class="wd"><span>Sel</span><b>6</b><i style="background:transparent"></i></div><div class="wd"><span>Rab</span><b>7</b><i style="background:transparent"></i></div><div class="wd"><span>Kam</span><b>8</b><i style="background:transparent"></i></div><div class="wd"><span>Jum</span><b>9</b><i style="background:transparent"></i></div><div class="wd"><span>Sab</span><b>10</b><i style="background:transparent"></i></div><div class="wd"><span>Min</span><b>11</b><i style="background:transparent"></i></div>
+    </div>
+    <div class="gc" style="padding:22px 12px 16px">
+      <div class="rw sp" style="align-items:flex-start">
+        <a class="col" href="TodayCharge.dc.html" style="align-items:center;gap:8px;flex:1" aria-label="Charge 78%"><div style="position:relative;width:98px;height:98px"><svg width="98" height="98" viewBox="0 0 98 98" aria-hidden="true"><g fill="none" stroke-width="9" stroke-linecap="round" transform="rotate(-90 49 49)"><circle cx="49" cy="49" r="40" stroke="rgba(255,255,255,.09)"/><circle cx="49" cy="49" r="40" stroke="#16EC06" stroke-dasharray="196 251.3"/></g></svg><div class="n" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:25px">78<span class="u" style="font-size:.5em">%</span></div></div><span class="cap">Charge</span><span style="font-size:13px;font-weight:800;color:#16EC06">Siap</span></a>
+        <a class="col" href="TodayEffort.dc.html" style="align-items:center;gap:8px;flex:1" aria-label="Effort 12,4"><div style="position:relative;width:98px;height:98px"><svg width="98" height="98" viewBox="0 0 98 98" aria-hidden="true"><g fill="none" stroke-width="9" stroke-linecap="round" transform="rotate(-90 49 49)"><circle cx="49" cy="49" r="40" stroke="rgba(255,255,255,.09)"/><circle cx="49" cy="49" r="40" stroke="#0093E7" stroke-dasharray="148 251.3"/></g></svg><div class="n" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:25px">12,4<span class="u" style="font-size:.5em"></span></div></div><span class="cap">Effort</span><span style="font-size:13px;font-weight:800;color:#38AEF5">Sedang</span></a>
+        <a class="col" href="Sleep.dc.html" style="align-items:center;gap:8px;flex:1" aria-label="Rest 86%"><div style="position:relative;width:98px;height:98px"><svg width="98" height="98" viewBox="0 0 98 98" aria-hidden="true"><g fill="none" stroke-width="9" stroke-linecap="round" transform="rotate(-90 49 49)"><circle cx="49" cy="49" r="40" stroke="rgba(255,255,255,.09)"/><circle cx="49" cy="49" r="40" stroke="#7BA1BB" stroke-dasharray="216 251.3"/></g></svg><div class="n" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:25px">86<span class="u" style="font-size:.5em">%</span></div></div><span class="cap">Rest</span><span style="font-size:13px;font-weight:800;color:#9DBBD0">Baik</span></a>
+      </div>
+      <div class="rw sp" style="margin-top:18px;padding:0 8px"><span class="chip a"><i class="i s i-bolt"></i>Siap beban sedang</span><a class="chip" href="TodayHeartRate.dc.html" aria-label="Detak sekarang 61"><i class="i s i-heart" style="color:#FF0026"></i>61 bpm</a></div>
+    </div>
+    <a class="gc hl s rw" href="Anya.dc.html" style="gap:12px;padding:14px 16px"><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-sp"></i></div><div class="grow"><div class="cap" style="font-size:10.5px">Anya</div><div class="h3" style="font-size:16px;line-height:1.3">Lari ringan 30 menit pas hari ini</div></div><span class="btn" style="height:40px;padding:0 18px;font-size:14px">Mulai</span></a>
+    <div class="rw sp"><h2 class="h2">Metrik utama</h2><a class="sub rw" href="TodayAllMetrics.dc.html" style="gap:2px;font-weight:700;color:#FFFFFF">Semua<i class="i s i-chev"></i></a></div>
+    <div class="bento" style="margin-top:-4px">
+      <a class="gc s" href="TodayHRV.dc.html" style="padding:16px"><div class="rw sp"><span class="cap">HRV</span><span class="chip a" style="height:24px;font-size:11.5px;padding:0 8px">▲ 4</span></div><div class="n nm" style="margin-top:10px">62<span class="u">ms</span></div></a>
+      <a class="gc s" href="TodayRHR.dc.html" style="padding:16px"><div class="rw sp"><span class="cap">Detak istirahat</span><span class="chip a" style="height:24px;font-size:11.5px;padding:0 8px">▼ 2</span></div><div class="n nm" style="margin-top:10px">54<span class="u">bpm</span></div></a>
+      <a class="gc s" href="TodaySteps.dc.html" style="padding:16px"><div class="rw sp"><span class="cap">Langkah</span></div><div class="n nm" style="margin-top:10px">8.214<span class="u"></span></div></a>
+      <a class="gc s" href="Sleep.dc.html" style="padding:16px"><div class="rw sp"><span class="cap">Tidur</span></div><div class="n nm" style="margin-top:10px">7j 42m<span class="u"></span></div></a>
+    </div>
+    <div class="rw sp"><h2 class="h2">Aktivitas</h2></div>
+    <a class="gc s rw" href="WorkoutSummary.dc.html" style="gap:12px;padding:14px 16px;margin-top:-4px"><div class="ic" style="width:40px;height:40px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-flame"></i></div><div class="grow"><div class="h3" style="font-size:16px">Lari pagi</div><div class="sub" style="font-size:12.5px">5,2 km · 38 mnt</div></div><span class="chip w">+6,8</span><i class="i s i-chev" style="color:#6B7177"></i></a>
+    <div class="rw" style="gap:10px"><a class="chip" href="TodayJournal.dc.html" style="height:40px;padding:0 16px"><i class="i s i-drop" style="color:#38AEF5"></i>Air +250</a><a class="chip" href="TodayJournal.dc.html" style="height:40px;padding:0 16px"><i class="i s i-bm"></i>Jurnal</a><a class="chip" href="TodayJournal.dc.html" style="height:40px;padding:0 16px"><i class="i s i-heart"></i>Suasana</a></div>
+  </div>
+  
+<div style="position:absolute;inset:0;background:rgba(0,0,0,.66)"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;height:760px;border-radius:34px 34px 0 0;background:#14181D;border:1px solid rgba(255,255,255,.12);border-bottom:0;padding:12px 24px 0"><div style="width:40px;height:5px;border-radius:3px;background:rgba(255,255,255,.25);margin:0 auto 18px"></div>
+    <div class="rw sp"><h2 class="h2" style="font-size:26px">Jurnal hari ini</h2><a class="sub" href="Main.dc.html" style="font-weight:800;color:#FFFFFF">Tutup</a></div>
+    <span class="cap" style="display:block;margin-top:18px">Suasana hati</span>
+    <div class="rw sp" style="margin-top:10px"><span class="n" style="width:52px;height:52px;border-radius:26px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(255,255,255,.08);color:#9AA4AC">1</span><span class="n" style="width:52px;height:52px;border-radius:26px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(255,255,255,.08);color:#9AA4AC">2</span><span class="n" style="width:52px;height:52px;border-radius:26px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(255,255,255,.08);color:#9AA4AC">3</span><span class="n" style="width:52px;height:52px;border-radius:26px;display:flex;align-items:center;justify-content:center;font-size:18px;background:#FFFFFF;color:#000">4</span><span class="n" style="width:52px;height:52px;border-radius:26px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(255,255,255,.08);color:#9AA4AC">5</span></div>
+    <span class="cap" style="display:block;margin-top:22px">Kemarin kamu</span>
+    <div><div class="li" style="min-height:54px"><div class="grow h3" style="font-size:16px">Minum kafein</div><button class="tg on" aria-pressed="true" aria-label="Pilihan"></button></div><div class="li" style="min-height:54px"><div class="grow h3" style="font-size:16px">Minum alkohol</div><button class="tg" aria-pressed="false" aria-label="Pilihan"></button></div><div class="li" style="min-height:54px"><div class="grow h3" style="font-size:16px">Makan malam larut</div><button class="tg" aria-pressed="false" aria-label="Pilihan"></button></div><div class="li" style="min-height:54px"><div class="grow h3" style="font-size:16px">Meditasi</div><button class="tg on" aria-pressed="true" aria-label="Pilihan"></button></div><div class="li" style="min-height:54px"><div class="grow h3" style="font-size:16px">Olahraga sore</div><button class="tg" aria-pressed="false" aria-label="Pilihan"></button></div></div>
+    <a class="btn" href="Main.dc.html" style="margin-top:22px;width:100%;height:58px;border-radius:29px;font-size:16px">Simpan</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1160}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Aksi cepat</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:900px">
+  <div class="pad col" style="gap:0"><div class="rw sp" style="margin-bottom:16px"><h1 class="h1">Hari ini</h1></div><div class="gc" style="height:210px;margin-bottom:14px;opacity:.55"></div><div class="gc" style="height:70px;margin-bottom:14px;opacity:.55"></div><div class="gc" style="height:170px;margin-bottom:14px;opacity:.55"></div><div class="gc" style="height:120px;margin-bottom:14px;opacity:.55"></div></div>
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.62)"></div>
+  <a href="Main.dc.html" aria-label="Tutup sheet" style="position:absolute;inset:0 0 470px 0"></a>
+  <div style="position:absolute;left:0;right:0;bottom:0;border-radius:34px 34px 0 0;background:#14181D;border-top:1px solid rgba(255,255,255,.14);padding:12px 20px 34px">
+    <div style="width:44px;height:5px;border-radius:3px;background:rgba(255,255,255,.28);margin:0 auto 16px"></div>
+    <div class="rw sp"><h2 class="h2">Aksi cepat</h2><a class="chip" href="TodayCustomize.dc.html" style="height:34px;padding:0 12px"><i class="i s i-sl"></i>Atur</a></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px 8px;margin-top:20px">
+      <a class="col" href="TodayAddActivity.dc.html" style="align-items:center;gap:8px;text-align:center"><div class="ic" style="width:60px;height:60px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-plus"></i></div><span style="font-size:13px;font-weight:800;line-height:1.2">Tambah aktivitas</span></a>
+      <a class="col" href="WorkoutStart.dc.html" style="align-items:center;gap:8px;text-align:center"><div class="ic" style="width:60px;height:60px;background:rgba(22,236,6,.12);color:#16EC06"><i class="i i-play"></i></div><span style="font-size:13px;font-weight:800;line-height:1.2">Mulai sesi</span></a>
+      <a class="col" href="TodayJournal.dc.html" style="align-items:center;gap:8px;text-align:center"><div class="ic" style="width:60px;height:60px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-bm"></i></div><span style="font-size:13px;font-weight:800;line-height:1.2">Jurnal</span></a>
+      <a class="col" href="TodayBreathe.dc.html" style="align-items:center;gap:8px;text-align:center"><div class="ic" style="width:60px;height:60px;background:rgba(22,236,6,.12);color:#16EC06"><i class="i i-wind"></i></div><span style="font-size:13px;font-weight:800;line-height:1.2">Latihan napas</span></a>
+      <a class="col" href="SleepNap.dc.html" style="align-items:center;gap:8px;text-align:center"><div class="ic" style="width:60px;height:60px;background:rgba(123,161,187,.16);color:#9DBBD0"><i class="i i-moon"></i></div><span style="font-size:13px;font-weight:800;line-height:1.2">Tidur siang</span></a>
+      <a class="col" href="HealthBody.dc.html" style="align-items:center;gap:8px;text-align:center"><div class="ic" style="width:60px;height:60px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-scale"></i></div><span style="font-size:13px;font-weight:800;line-height:1.2">Berat badan</span></a>
+    </div>
+    <a class="gc s rw" href="AnyaSheetToday.dc.html" style="gap:12px;padding:12px 14px;margin-top:22px"><div class="ic" style="width:40px;height:40px;background:#FFFFFF;color:#000"><i class="i i-sp"></i></div><div class="grow"><div class="h3" style="font-size:16px">Tanya Anya</div><div class="sub" style="font-size:12.5px">Tentang hari ini, dengan suara atau teks</div></div><i class="i s i-chev" style="color:#6B7177"></i></a><div class="gc s rw" style="gap:12px;padding:12px 14px;margin-top:12px"><a class="rw grow" href="TodayWater.dc.html" style="gap:12px"><div class="ic" style="width:40px;height:40px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-drop"></i></div><div class="grow"><div class="h3" style="font-size:16px">Air hari ini</div><div class="sub" style="font-size:12.5px">1,5 dari 2,5 L</div></div></a><button class="ib" style="width:40px;height:40px;border-radius:20px" aria-label="Kurangi 250 ml"><span style="font-size:22px;font-weight:800">−</span></button><button class="btn" style="height:40px;padding:0 16px;font-size:14px">+250</button></div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

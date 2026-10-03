@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Detail Detak istirahat</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:1040px">
+  <div class="pad col" style="gap:16px">
+    <div class="rw sp"><div class="rw" style="gap:10px"><a class="ib" href="Main.dc.html" aria-label="Kembali"><i class="i i-chevl"></i></a><h1 class="h2" style="font-size:24px">Detak istirahat</h1></div></div>
+    <div class="gc" style="padding:22px"><div class="rw sp"><span class="cap">Semalam</span><span class="chip a">Dalam rentang</span></div><div class="n" style="font-size:72px;margin-top:10px">54<span class="u">bpm</span></div><p class="sub" style="margin-top:6px">Turun 2 dari kemarin</p></div>
+    <div class="sg"><button class="on">7H</button><button>30H</button><button>90H</button></div>
+    <div class="gc"><svg viewBox="0 0 314 130" width="100%" height="130" role="img" aria-label="Detak istirahat 14 hari terakhir turun ke 54"><rect x="0" y="50" width="314" height="44" rx="8" fill="rgba(22,236,6,.1)"/><path d="M0 40 C30 46 44 70 72 66 S130 44 160 60 S226 86 260 78 S300 74 314 76" fill="none" stroke="#FF0026" stroke-width="3.5" stroke-linecap="round"/><circle cx="314" cy="76" r="6" fill="#0A0D10" stroke="#FF0026" stroke-width="3"/></svg><div class="rw sp sub" style="font-size:11.5px;margin-top:6px"><span>14 hari lalu</span><span>Pita: rentang normalmu</span><span>Hari ini</span></div></div>
+    <div class="rw" style="gap:10px"><div class="gc s grow" style="padding:12px"><span class="cap" style="font-size:10.5px">Rata-rata</span><div class="n ns" style="margin-top:6px">56</div></div><div class="gc s grow" style="padding:12px"><span class="cap" style="font-size:10.5px">Terendah</span><div class="n ns" style="margin-top:6px">51</div></div><div class="gc s grow" style="padding:12px"><span class="cap" style="font-size:10.5px">Tertinggi</span><div class="n ns" style="margin-top:6px">62</div></div></div>
+    
+    <div class="gc s rw" style="gap:12px;padding:14px 16px"><div class="ic" style="width:40px;height:40px;background:rgba(123,161,187,.16);color:#9DBBD0"><i class="i i-trend"></i></div><div class="grow"><div class="h3" style="font-size:16px">Apa yang memengaruhi</div><div class="sub" style="font-size:12.5px">Faktor 30 hari terakhir</div></div><i class="i s i-chev" style="color:#6B7177;transform:rotate(90deg)"></i></div>
+    <div class="gc s rw" style="gap:12px;padding:14px 16px"><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-sp"></i></div><div class="grow"><div class="h3" style="font-size:16px">Cara menghitung</div><div class="sub" style="font-size:12.5px">Sumber dan metode</div></div><i class="i s i-chev" style="color:#6B7177;transform:rotate(90deg)"></i></div>
+  </div>
+  <nav class="tabbar" aria-label="Navigasi utama">
+    <a class="tab on" href="Main.dc.html"><i class="i i-grid"></i>Hari ini</a>
+    <a class="tab" href="Health.dc.html"><i class="i i-hp"></i>Kesehatan</a>
+    <a class="tab" href="Trends.dc.html"><i class="i i-trend"></i>Tren</a>
+    <a class="tab" href="Anya.dc.html"><i class="i i-sp"></i>Anya</a>
+    <a class="tab" href="Personalize.dc.html"><i class="i i-user"></i>Saya</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1040}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

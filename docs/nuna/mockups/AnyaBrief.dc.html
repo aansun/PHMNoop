@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Ringkasan pagi</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:1560px">
+  <div class="pad col" style="gap:16px">
+    <div class="rw sp"><div class="rw" style="gap:10px"><a class="ib" href="AnyaSettings.dc.html" aria-label="Kembali"><i class="i i-chevl"></i></a><h1 class="h2" style="font-size:24px">Ringkasan pagi</h1></div></div>
+    <div class="gc" style="padding:14px"><div class="cap" style="font-size:10.5px;margin-bottom:10px">Notifikasi 07:00</div><div class="rw" style="gap:12px;padding:14px;border-radius:22px;background:rgba(255,255,255,.08);align-items:flex-start"><div class="ic" style="width:40px;height:40px;background:#FFFFFF;color:#000;border-radius:20px"><i class="i i-sp"></i></div><div class="col" style="gap:2px"><div class="rw sp"><b style="font-size:14px">Anya</b><span class="sub" style="font-size:11.5px">sekarang</span></div><div style="font-size:14px;font-weight:700">Charge 78%, siap beban sedang</div><div class="sub" style="font-size:13px;line-height:1.35">Lari ringan 30 menit di zona 2 pas hari ini. Tidur sebelum 22.30.</div></div></div></div>
+    <div class="gc" style="padding:20px"><div class="rw sp"><span class="cap">Senin, 5 Oktober</span><span class="chip a">Siap</span></div><div class="h2" style="margin-top:10px;font-size:22px;line-height:1.3">Pagi ini kondisimu bagus.</div><p class="sub" style="font-size:14px;line-height:1.5;margin-top:8px">Rest 86% setelah tidur 7j 42m. HRV naik 4 ms dan detak istirahat turun 2 bpm.</p></div>
+    <div class="bento"><div class="gc s" style="padding:14px"><span class="cap" style="font-size:10.5px">Charge</span><div class="n nm" style="margin-top:6px;color:#16EC06">78%</div></div><div class="gc s" style="padding:14px"><span class="cap" style="font-size:10.5px">Rest</span><div class="n nm" style="margin-top:6px;color:#9DBBD0">86%</div></div></div>
+    <div class="gc hl rw" href="AnyaPlan.dc.html" style="gap:12px;padding:14px 16px"><div class="ic" style="width:40px;height:40px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-flame"></i></div><div class="grow"><div class="cap" style="font-size:10.5px">Rencana hari ini</div><div class="h3" style="font-size:16px">Lari zona 2, 30 menit</div></div><a class="btn" href="AnyaPlan.dc.html" style="height:40px;padding:0 16px;font-size:14px">Lihat</a></div>
+    <div class="gc s rw" style="gap:12px;padding:14px 16px"><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-bell"></i></div><div class="grow"><div class="h3" style="font-size:15.5px">Yang perlu diperhatikan</div><div class="sub" style="font-size:12.5px">Kafein setelah 15.00 menurunkan Rest dua malam terakhir</div></div></div>
+    <h2 class="h2">Pengaturan</h2>
+    <div class="gc" style="padding:4px 18px;margin-top:-4px"><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-sun"></i></div><div class="grow"><div class="h3" style="font-size:16px">Ringkasan pagi</div><div class="sub" style="font-size:12.5px">Dibuat di iPhone tiap pagi</div></div><button class="tg on" aria-pressed="true" aria-label="Ringkasan pagi"></button></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-timer"></i></div><div class="grow"><div class="h3" style="font-size:16px">Waktu</div><div class="sub" style="font-size:12.5px">07:00</div></div><i class="i s i-chev" style="color:#6B7177"></i></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(22,236,6,.12);color:#16EC06"><i class="i i-play"></i></div><div class="grow"><div class="h3" style="font-size:16px">Buat sekarang</div><div class="sub" style="font-size:12.5px">Pakai penyedia yang terhubung</div></div><i class="i s i-chev" style="color:#6B7177"></i></div></div>
+    <p class="sub" style="font-size:12px;text-align:center;line-height:1.4">Dibuat sebaik mungkin; iOS bisa menunda beberapa menit.</p>
+  </div>
+  
+  <nav class="tabbar" aria-label="Navigasi utama">
+    <a class="tab" href="Main.dc.html"><i class="i i-grid"></i>Hari ini</a>
+    <a class="tab" href="Health.dc.html"><i class="i i-hp"></i>Kesehatan</a>
+    <a class="tab" href="Trends.dc.html"><i class="i i-trend"></i>Tren</a>
+    <a class="tab on" href="Anya.dc.html"><i class="i i-sp"></i>Anya</a>
+    <a class="tab" href="Personalize.dc.html"><i class="i i-user"></i>Saya</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1560}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

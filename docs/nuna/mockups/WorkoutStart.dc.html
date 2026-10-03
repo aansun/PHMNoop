@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Mulai latihan</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:980px">
+  <div class="gl" style="width:360px;height:360px;left:15px;top:-90px;background:#FFDE00;opacity:.3"></div>
+  <div class="gl" style="width:280px;height:280px;right:-120px;top:480px;background:#FF0026;opacity:.2"></div>
+
+  <div class="pad col" style="gap:16px">
+    <div class="rw sp"><a class="ib" href="Workouts.dc.html" aria-label="Tutup"><i class="i i-x"></i></a><span class="h3">Mulai latihan</span><span style="width:44px"></span></div>
+
+    <div class="col" style="align-items:center;gap:8px;margin-top:2px">
+      <div style="position:relative;width:96px;height:96px;display:flex;align-items:center;justify-content:center">
+        <div style="position:relative;width:96px;height:96px;border-radius:50%;background:#0093E7;display:flex;align-items:center;justify-content:center;color:#000000"><i class="i l i-flame" style="width:44px;height:44px"></i></div>
+      </div>
+      <h1 class="h1" style="font-size:32px;margin-top:10px">Lari</h1>
+      <span class="chip a"><i class="i s i-bolt"></i>Charge 78%. Pas untuk zona 2</span>
+    </div>
+
+    <div class="sg" role="tablist" aria-label="Target"><button>Bebas</button><button class="on">Waktu</button><button>Jarak</button><button>Zona</button></div>
+
+    <div class="gc" style="padding:20px">
+      <div class="rw sp"><span class="cap">Durasi target</span><span class="chip">Disarankan Anya</span></div>
+      <div class="rw sp" style="margin-top:14px">
+        <button class="ib" style="width:52px;height:52px;border-radius:26px" aria-label="Kurangi 5 menit"><span style="font-size:24px;font-weight:800">−</span></button>
+        <div class="col" style="align-items:center"><div class="n" style="font-size:58px">30:00</div><span class="sub" style="font-size:12.5px">menit : detik</span></div>
+        <button class="ib" style="width:52px;height:52px;border-radius:26px" aria-label="Tambah 5 menit"><i class="i i-plus"></i></button>
+      </div>
+      <div class="rw" style="gap:3px;height:10px;margin-top:18px"><i style="flex:1;border-radius:5px;background:#3B4258"></i><i style="flex:3;border-radius:5px;background:var(--c1)"></i><i style="flex:2;border-radius:5px;background:#FFDE00;opacity:.35"></i><i style="flex:1;border-radius:5px;background:#FF0026;opacity:.35"></i></div>
+      <div class="rw sp sub" style="font-size:12px;margin-top:6px"><span>Zona 1</span><span style="color:var(--c1);font-weight:800">Zona 2 · 118–136 bpm</span><span>Zona 5</span></div>
+    </div>
+
+    <div class="gc" style="padding:6px 18px">
+      <div class="li" style="border-top:0"><div class="ic b"><i class="i s i-steps"></i></div><div class="grow"><div class="h3">GPS dan rute</div><div class="sub" style="font-size:12.5px">Sinyal kuat</div></div><button class="tg on" aria-pressed="true" aria-label="GPS dan rute"></button></div>
+      <div class="li"><div class="ic v"><i class="i s i-sp"></i></div><div class="grow"><div class="h3">Pelatih suara Anya</div><div class="sub" style="font-size:12.5px">Aba-aba tiap kilometer</div></div><button class="tg on" aria-pressed="true" aria-label="Pelatih suara Anya"></button></div>
+      <div class="li"><div class="ic a"><i class="i s i-watch"></i></div><div class="grow"><div class="h3">Getar senyap di strap</div><div class="sub" style="font-size:12.5px">Saat keluar dari zona</div></div><button class="tg on" aria-pressed="true" aria-label="Getar senyap di strap"></button></div>
+      <div class="li"><div class="ic w"><i class="i s i-trend"></i></div><div class="grow"><div class="h3">Kirim ke Strava</div><div class="sub" style="font-size:12.5px">Setelah selesai</div></div><button class="tg" aria-pressed="false" aria-label="Kirim ke Strava"></button></div>
+    </div>
+
+    <a class="btn" href="Live.dc.html" style="height:60px;border-radius:30px;font-size:17px"><i class="i s i-play"></i>Mulai dalam 3 detik</a>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

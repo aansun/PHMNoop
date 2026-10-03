@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Lift Log</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:1400px">
+  <div class="gl" style="width:340px;height:340px;right:-120px;top:-80px;background:#FF0026;opacity:.24"></div>
+  <div class="gl" style="width:300px;height:300px;left:-130px;top:760px;background:#7BA1BB;opacity:.2"></div>
+
+  <div class="pad col" style="gap:16px">
+    <div class="rw sp">
+      <div class="rw" style="gap:10px"><a class="ib" href="Workouts.dc.html" aria-label="Kembali"><i class="i i-chevl"></i></a><div class="col" style="gap:2px"><span class="cap">Sesi gym · Dada dan bahu</span><h1 class="h2" style="font-size:26px">Lift Log</h1></div></div>
+      <span class="chip d"><i style="width:8px;height:8px;border-radius:50%;background:#FF0026;display:inline-block"></i>42:10</span>
+    </div>
+
+    <div class="bento">
+      <div class="gc s"><span class="cap">Volume</span><div class="n nm" style="margin-top:6px">6.840<span class="u">kg</span></div></div>
+      <div class="gc s"><span class="cap">Detak</span><div class="n nm" style="margin-top:6px">112<span class="u">bpm</span></div></div>
+    </div>
+
+    <div class="gc" style="display:flex;align-items:center;gap:16px;border-color:rgba(123,161,187,.45);background:rgba(123,161,187,.18)">
+      <div style="position:relative;width:96px;height:96px;flex:none">
+        <svg width="96" height="96" viewBox="0 0 96 96" role="img" aria-label="Istirahat tersisa 1 menit 12 detik">
+          <defs><linearGradient id="rs" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7BA1BB"/><stop offset="1" stop-color="#7BA1BB"/></linearGradient></defs>
+          <g fill="none" stroke-width="9" stroke-linecap="round" transform="rotate(-90 48 48)"><circle cx="48" cy="48" r="40" stroke="rgba(255,255,255,.1)"/><circle cx="48" cy="48" r="40" stroke="url(#rs)" stroke-dasharray="150 251"/></g>
+        </svg>
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div class="n ns" style="font-size:22px">1:12</div></div>
+      </div>
+      <div class="col grow" style="gap:6px"><span class="cap" style="color:var(--c3)">Istirahat</span><div class="h3" style="font-size:18px">Set 3 siap sebentar lagi</div><div class="rw" style="gap:8px"><button class="chip">−15 dtk</button><button class="chip">+15 dtk</button></div></div>
+    </div>
+
+    <div class="gc">
+      <div class="rw sp"><div><div class="h3" style="font-size:19px">Bench press</div><div class="sub" style="font-size:12.5px">Dada · barbel</div></div><span class="chip a"><i class="i s i-trend"></i>PR 82,5 kg</span></div>
+      <div class="rw sub" style="margin-top:14px;font-size:11.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase"><span style="width:36px">Set</span><span class="grow">Beban</span><span style="width:70px">Ulangan</span><span style="width:40px"></span></div>
+      <div class="rw" style="height:48px;border-top:1px solid var(--bd)"><span class="n ns" style="width:36px;font-size:17px">1</span><span class="grow n ns" style="font-size:19px">70<span class="u">kg</span></span><span class="n ns" style="width:70px;font-size:19px">10</span><span class="ic a" style="width:32px;height:32px;border-radius:50%"><i class="i s i-chk"></i></span></div>
+      <div class="rw" style="height:48px;border-top:1px solid var(--bd)"><span class="n ns" style="width:36px;font-size:17px">2</span><span class="grow n ns" style="font-size:19px">75<span class="u">kg</span></span><span class="n ns" style="width:70px;font-size:19px">8</span><span class="ic a" style="width:32px;height:32px;border-radius:50%"><i class="i s i-chk"></i></span></div>
+      <div class="rw" style="height:64px;border-top:1px solid var(--bd);background:rgba(123,161,187,.12);margin:0 -18px;padding:0 18px;border-radius:16px"><span class="n ns" style="width:36px;font-size:17px;color:var(--c3)">3</span>
+        <div class="grow rw" style="gap:8px"><button class="ib" style="width:32px;height:32px" aria-label="Kurangi beban"><span style="font-weight:800">−</span></button><span class="n ns" style="font-size:21px">80<span class="u">kg</span></span><button class="ib" style="width:32px;height:32px" aria-label="Tambah beban"><i class="i s i-plus"></i></button></div>
+        <span class="n ns" style="width:70px;font-size:21px">6</span><span class="ic" style="width:32px;height:32px;border-radius:50%;background:#7BA1BB;color:#000000"><i class="i s i-chk"></i></span></div>
+      <button class="btn g" style="width:100%;height:44px;margin-top:12px"><i class="i s i-plus"></i>Tambah set</button>
+    </div>
+
+    <div class="gc s">
+      <div class="rw sp"><div><div class="h3">Overhead press</div><div class="sub" style="font-size:12.5px">Bahu · 3 set belum dimulai</div></div><i class="i s i-chev" style="color:var(--mu)"></i></div>
+    </div>
+    <div class="gc s">
+      <div class="rw sp"><div><div class="h3">Lateral raise</div><div class="sub" style="font-size:12.5px">Bahu · 3 set belum dimulai</div></div><i class="i s i-chev" style="color:var(--mu)"></i></div>
+    </div>
+    <div class="dash rw" style="justify-content:center;gap:10px;height:60px;font-weight:800;color:var(--c1)"><i class="i i-plus"></i>Tambah latihan</div>
+
+    <div class="gc" style="padding:6px 18px">
+      <div class="rw sp" style="padding-top:12px"><span class="cap">Otot yang dilatih</span></div>
+      <div class="li" style="border-top:0"><div class="grow"><div class="rw sp"><span class="h3" style="font-size:15px">Dada</span><span class="n ns" style="font-size:17px">3.980 kg</span></div><div class="pb" style="margin-top:8px"><i style="width:100%;background:#0093E7"></i></div></div></div>
+      <div class="li"><div class="grow"><div class="rw sp"><span class="h3" style="font-size:15px">Bahu</span><span class="n ns" style="font-size:17px">2.100 kg</span></div><div class="pb" style="margin-top:8px"><i style="width:53%;background:#0093E7"></i></div></div></div>
+      <div class="li"><div class="grow"><div class="rw sp"><span class="h3" style="font-size:15px">Trisep</span><span class="n ns" style="font-size:17px">760 kg</span></div><div class="pb" style="margin-top:8px"><i style="width:19%;background:#0093E7"></i></div></div></div>
+    </div>
+
+    <div class="rw" style="gap:12px;margin-top:4px">
+      <button class="btn g grow" style="height:56px;border-radius:28px"><i class="i s i-pause"></i>Jeda</button>
+      <a class="btn r grow" href="WorkoutSummaryGym.dc.html" style="height:56px;border-radius:28px"><i class="i s i-stop"></i>Selesai</a>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1400}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

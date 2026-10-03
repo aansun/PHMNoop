@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Pilih metrik utama</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:1700px">
+  <div class="pad col" style="gap:16px">
+    <div class="rw sp"><div class="rw" style="gap:10px"><a class="ib" href="TodayCustomize.dc.html" aria-label="Kembali"><i class="i i-chevl"></i></a><h1 class="h2" style="font-size:24px">Metrik utama</h1></div><a class="btn" href="Main.dc.html" style="height:44px;padding:0 22px">Selesai</a></div>
+    <div class="col" style="gap:8px"><span class="cap">Pratinjau</span><div class="bento"><a class="gc s" href="#" style="padding:16px"><div class="rw sp"><span class="cap">HRV</span><span class="chip a" style="height:24px;font-size:11.5px;padding:0 8px">▲ 4</span></div><div class="n nm" style="margin-top:10px">62<span class="u">ms</span></div></a><a class="gc s" href="#" style="padding:16px"><div class="rw sp"><span class="cap">Detak istirahat</span><span class="chip a" style="height:24px;font-size:11.5px;padding:0 8px">▼ 2</span></div><div class="n nm" style="margin-top:10px">54<span class="u">bpm</span></div></a><a class="gc s" href="#" style="padding:16px"><div class="rw sp"><span class="cap">Langkah</span></div><div class="n nm" style="margin-top:10px">8.214<span class="u"></span></div></a><a class="gc s" href="#" style="padding:16px"><div class="rw sp"><span class="cap">Tidur</span></div><div class="n nm" style="margin-top:10px">7j 42m<span class="u"></span></div></a></div></div>
+    <div class="sg"><button>2 metrik</button><button class="on">4 metrik</button><button>6 metrik</button></div>
+    <h2 class="h2">Urutan</h2>
+    <div class="col" style="gap:10px;margin-top:-4px"><div class="gc s rw" style="gap:12px;padding:12px 14px"><i class="i i-grip" style="color:#6B7177"></i><span class="n ns" style="width:20px;color:#6B7177">1</span><div class="grow"><div class="h3" style="font-size:16px">HRV</div><div class="sub" style="font-size:12.5px">62 ms</div></div><button class="ib" style="width:36px;height:36px" aria-label="Hapus HRV"><i class="i s i-x"></i></button></div><div class="gc s rw" style="gap:12px;padding:12px 14px"><i class="i i-grip" style="color:#6B7177"></i><span class="n ns" style="width:20px;color:#6B7177">2</span><div class="grow"><div class="h3" style="font-size:16px">Detak istirahat</div><div class="sub" style="font-size:12.5px">54 bpm</div></div><button class="ib" style="width:36px;height:36px" aria-label="Hapus Detak istirahat"><i class="i s i-x"></i></button></div><div class="gc s rw" style="gap:12px;padding:12px 14px"><i class="i i-grip" style="color:#6B7177"></i><span class="n ns" style="width:20px;color:#6B7177">3</span><div class="grow"><div class="h3" style="font-size:16px">Langkah</div><div class="sub" style="font-size:12.5px">8.214 </div></div><button class="ib" style="width:36px;height:36px" aria-label="Hapus Langkah"><i class="i s i-x"></i></button></div><div class="gc s rw" style="gap:12px;padding:12px 14px"><i class="i i-grip" style="color:#6B7177"></i><span class="n ns" style="width:20px;color:#6B7177">4</span><div class="grow"><div class="h3" style="font-size:16px">Tidur</div><div class="sub" style="font-size:12.5px">7j 42m </div></div><button class="ib" style="width:36px;height:36px" aria-label="Hapus Tidur"><i class="i s i-x"></i></button></div></div>
+    <h2 class="h2">Metrik lain</h2>
+    <div class="gc" style="padding:4px 18px;margin-top:-4px">
+      <div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-drop"></i></div><div class="grow"><div class="h3" style="font-size:16px">SpO₂</div><div class="sub" style="font-size:12.5px">Saturasi oksigen semalam</div></div><span class="chip" style="height:32px"><i class="i s i-plus"></i>Tambah</span></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-wind"></i></div><div class="grow"><div class="h3" style="font-size:16px">Laju napas</div><div class="sub" style="font-size:12.5px">Napas per menit</div></div><span class="chip" style="height:32px"><i class="i s i-plus"></i>Tambah</span></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(255,0,38,.14);color:#FF5468"><i class="i i-flame"></i></div><div class="grow"><div class="h3" style="font-size:16px">Suhu kulit</div><div class="sub" style="font-size:12.5px">Deviasi dari baseline</div></div><span class="chip" style="height:32px"><i class="i s i-plus"></i>Tambah</span></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(22,236,6,.12);color:#16EC06"><i class="i i-bolt"></i></div><div class="grow"><div class="h3" style="font-size:16px">Kalori</div><div class="sub" style="font-size:12.5px">Aktif dan total</div></div><span class="chip" style="height:32px"><i class="i s i-plus"></i>Tambah</span></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-scale"></i></div><div class="grow"><div class="h3" style="font-size:16px">Berat</div><div class="sub" style="font-size:12.5px">Dari Apple Health</div></div><span class="chip" style="height:32px"><i class="i s i-plus"></i>Tambah</span></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(22,236,6,.12);color:#16EC06"><i class="i i-wind"></i></div><div class="grow"><div class="h3" style="font-size:16px">Stres</div><div class="sub" style="font-size:12.5px">Rata-rata hari ini</div></div><span class="chip" style="height:32px"><i class="i s i-plus"></i>Tambah</span></div>
+    </div>
+    <div class="gc" style="padding:6px 18px">
+      <div class="li" style="border-top:0"><div class="grow"><div class="h3">Tampilkan perubahan</div><div class="sub" style="font-size:12.5px">Panah naik atau turun dari baseline</div></div><button class="tg on" aria-pressed="true" aria-label="Tampilkan perubahan"></button></div>
+      <div class="li"><div class="grow"><div class="h3">Grafik mini</div><div class="sub" style="font-size:12.5px">Tren 7 hari di tiap tile</div></div><button class="tg" aria-pressed="false" aria-label="Grafik mini"></button></div>
+    </div>
+  </div>
+  <nav class="tabbar" aria-label="Navigasi utama">
+    <a class="tab on" href="Main.dc.html"><i class="i i-grid"></i>Hari ini</a>
+    <a class="tab" href="Health.dc.html"><i class="i i-hp"></i>Kesehatan</a>
+    <a class="tab" href="Trends.dc.html"><i class="i i-trend"></i>Tren</a>
+    <a class="tab" href="Anya.dc.html"><i class="i i-sp"></i>Anya</a>
+    <a class="tab" href="Personalize.dc.html"><i class="i i-user"></i>Saya</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1700}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

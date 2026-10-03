@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Duduk terlalu lama</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:1600px">
+  <div class="pad col" style="gap:16px">
+    <div class="rw sp"><div class="rw" style="gap:10px"><a class="ib" href="Automations.dc.html" aria-label="Kembali"><i class="i i-chevl"></i></a><h1 class="h2" style="font-size:24px">Duduk terlalu lama</h1></div></div>
+    <div class="gc" style="padding:18px"><div class="rw" style="gap:12px"><div class="ic" style="width:44px;height:44px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-timer"></i></div><div class="grow"><div class="h3" style="font-size:16.5px">Pengingat duduk lama</div><div class="sub" style="font-size:12.5px;line-height:1.4">Strap bergetar bila kamu duduk diam terlalu lama.</div></div><button class="tg on" aria-pressed="true" aria-label="Pengingat duduk lama"></button></div></div>
+    <div class="gc" style="padding:4px 18px"><div class="li" style="min-height:72px"><div class="grow"><div class="h3" style="font-size:16px">Duduk selama</div><div class="sub" style="font-size:12.5px;line-height:1.35">Menit duduk sebelum getar pertama</div></div><button class="ib" style="width:34px;height:34px;border-radius:17px" aria-label="Kurangi"><span style="font-size:18px;font-weight:800">−</span></button><span class="n ns" style="min-width:74px;text-align:center;font-size:16px">50 mnt</span><button class="ib" style="width:34px;height:34px;border-radius:17px" aria-label="Tambah"><i class="i i-plus"></i></button></div><div class="li" style="min-height:72px"><div class="grow"><div class="h3" style="font-size:16px">Ulangi tiap</div><div class="sub" style="font-size:12.5px;line-height:1.35">Bila masih duduk, getar lagi</div></div><button class="ib" style="width:34px;height:34px;border-radius:17px" aria-label="Kurangi"><span style="font-size:18px;font-weight:800">−</span></button><span class="n ns" style="min-width:74px;text-align:center;font-size:16px">10 mnt</span><button class="ib" style="width:34px;height:34px;border-radius:17px" aria-label="Tambah"><i class="i i-plus"></i></button></div><div class="li" style="min-height:72px"><div class="grow"><div class="h3" style="font-size:16px">Kekuatan getar</div><div class="sub" style="font-size:12.5px;line-height:1.35">Seberapa kuat getarnya</div></div><button class="ib" style="width:34px;height:34px;border-radius:17px" aria-label="Kurangi"><span style="font-size:18px;font-weight:800">−</span></button><span class="n ns" style="min-width:74px;text-align:center;font-size:16px">Sedang</span><button class="ib" style="width:34px;height:34px;border-radius:17px" aria-label="Tambah"><i class="i i-plus"></i></button></div></div>
+    <h2 class="h2">Jam aktif</h2>
+    <div class="gc" style="padding:6px 18px;margin-top:-4px"><div class="li" style="border-top:0"><div class="grow"><div class="h3">Hanya di jam aktif</div><div class="sub" style="font-size:12.5px">Tidak bergetar di luar rentang ini</div></div><button class="tg on" aria-pressed="true" aria-label="Hanya di jam aktif"></button></div><div class="li"><div class="grow"><div class="h3">Dari</div></div><span class="n ns" style="font-size:17px">08:00</span></div><div class="li"><div class="grow"><div class="h3">Sampai</div></div><span class="n ns" style="font-size:17px">20:00</span></div></div>
+    <div class="gc s rw" style="gap:12px;padding:14px 16px;align-items:flex-start"><div class="ic" style="width:40px;height:40px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-bell"></i></div><div class="grow"><div class="h3" style="font-size:15.5px">Butuh saklar utama</div><div class="sub" style="font-size:12.5px;line-height:1.4">Pengingat ini tidak bisa bergetar bila Peringatan di pergelangan mati. Nyalakan di halaman Otomasi strap.</div></div></div>
+    <div class="gc"><span class="cap">Hari ini</span><div class="rw" style="gap:0;margin-top:12px"><div class="grow"><div class="cap" style="font-size:10.5px">Total duduk</div><div class="n ns" style="margin-top:4px">5j 40m</div></div><div class="grow"><div class="cap" style="font-size:10.5px">Pengingat</div><div class="n ns" style="margin-top:4px">3×</div></div><div class="grow"><div class="cap" style="font-size:10.5px">Berdiri setelah</div><div class="n ns" style="margin-top:4px">2×</div></div></div></div>
+  </div>
+  <nav class="tabbar" aria-label="Navigasi utama">
+    <a class="tab" href="Main.dc.html"><i class="i i-grid"></i>Hari ini</a>
+    <a class="tab" href="Health.dc.html"><i class="i i-hp"></i>Kesehatan</a>
+    <a class="tab" href="Trends.dc.html"><i class="i i-trend"></i>Tren</a>
+    <a class="tab" href="Anya.dc.html"><i class="i i-sp"></i>Anya</a>
+    <a class="tab on" href="Personalize.dc.html"><i class="i i-user"></i>Saya</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1600}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

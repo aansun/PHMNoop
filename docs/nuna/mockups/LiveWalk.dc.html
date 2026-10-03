@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Sesi langsung · Jalan</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:940px;background:#0A0D10">
+  <div class="gl" style="width:420px;height:420px;left:-15px;top:60px;background:#16EC06;opacity:.24"></div>
+  <div class="gl" style="width:260px;height:260px;right:-100px;top:-60px;background:#0093E7;opacity:.2"></div>
+  <div class="pad col" style="gap:14px">
+    <div class="rw sp">
+      <a class="ib" href="Main.dc.html" aria-label="Perkecil sesi"><i class="i i-chevl" style="transform:rotate(-90deg)"></i></a>
+      <div class="col" style="align-items:center"><span class="cap" style="color:#16EC06">Jalan · Zona 2</span><span class="sub" style="font-size:12.5px">GPS aktif · sesi senyap</span></div>
+      <span class="chip d"><i style="width:8px;height:8px;border-radius:50%;background:#FF0026;display:inline-block"></i>Merekam</span>
+    </div>
+    <div style="position:relative;width:220px;height:220px;align-self:center" role="img" aria-label="Cincin sesi Jalan: 31:40 dari target 45:00, di dalam Zona 2">
+      <svg width="220" height="220" viewBox="0 0 220 220">
+        <defs><linearGradient id="lr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#16EC06"/><stop offset="1" stop-color="#16EC06"/></linearGradient>
+        <radialGradient id="lg" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="rgba(22,236,6,.3)"/><stop offset="1" stop-color="rgba(0,147,231,.04)"/></radialGradient></defs>
+        <circle cx="110" cy="110" r="84" fill="url(#lg)" stroke="rgba(255,255,255,.14)"/>
+        <g fill="none" stroke-linecap="round" transform="rotate(-90 110 110)"><circle cx="110" cy="110" r="98" stroke="rgba(255,255,255,.09)" stroke-width="12"/><circle cx="110" cy="110" r="98" stroke="url(#lr)" stroke-width="12" stroke-dasharray="431 616"/></g>
+      </svg>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><span class="chip a" style="height:26px;font-size:11.5px">Di dalam zona</span><div class="n" style="font-size:46px;margin-top:2px">31:40</div><span class="sub" style="font-size:12.5px">dari target 45:00</span></div>
+    </div>
+    <div class="gc" style="padding:0;overflow:hidden">
+      <div style="position:relative;height:150px;background:#0f1622">
+        <svg viewBox="0 0 350 150" width="100%" height="150" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Peta rute langsung dengan posisi saat ini">
+          <defs><linearGradient id="rt" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#0093E7"/><stop offset=".6" stop-color="#0093E7"/><stop offset="1" stop-color="#0093E7"/></linearGradient></defs>
+          <g stroke="rgba(255,255,255,.06)"><path d="M0 38H350M0 76H350M0 114H350M70 0V150M140 0V150M210 0V150M280 0V150"/></g>
+          <path d="M266 76 S310 44 322 34" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="4" stroke-dasharray="3 7" stroke-linecap="round"/>
+<path d="M40 112 C80 102 100 64 150 70 S230 106 266 76" fill="none" stroke="url(#rt)" stroke-width="6" stroke-linecap="round"/>
+<circle cx="40" cy="112" r="7" fill="#16EC06" stroke="#0A0D10" stroke-width="3"/><circle cx="266" cy="76" r="14" fill="rgba(22,236,6,.25)"/><circle cx="266" cy="76" r="7" fill="#16EC06" stroke="#0A0D10" stroke-width="3"/>
+        </svg>
+        <span class="chip a" style="position:absolute;left:12px;top:12px;background:rgba(10,14,22,.82)"><i class="sig"><i style="height:6px"></i><i style="height:9px"></i><i style="height:12px"></i><i style="height:16px"></i></i>GPS kuat</span>
+        <span class="chip" style="position:absolute;right:12px;top:12px;background:rgba(10,14,22,.82)">Jeda otomatis</span>
+      </div>
+    </div>
+    <div class="gc" style="padding:14px 18px 16px">
+      <div class="rw sp"><span class="cap">Detak jantung</span><button class="chip" style="height:26px;font-size:11.5px">Sembunyikan bpm</button></div>
+      <div class="rw sp" style="margin-top:6px"><div class="rw" style="gap:10px"><i class="i l i-heart" style="color:#FF0026"></i><div class="n" style="font-size:44px">121<span class="u">bpm</span></div></div><span class="chip a">Zona 2</span></div>
+      <div style="margin-top:14px"><div style="position:relative"><div style="height:12px;border-radius:6px;display:flex;overflow:hidden;gap:2px"><i style="flex:18;background:#3B4258"></i><i style="flex:18;background:#16EC06"></i><i style="flex:18;background:#FFDE00"></i><i style="flex:26;background:#FF0026"></i></div><i style="position:absolute;left:26%;top:16px;width:0;height:0;border-left:8px solid transparent;border-right:8px solid transparent;border-bottom:11px solid #fff"></i></div></div>
+      <div class="rw sp sub" style="font-size:11.5px;margin-top:22px"><span>100</span><span style="color:#16EC06;font-weight:800">Zona 2 · 118 – 136</span><span>180</span></div>
+    </div>
+    <div class="rw" style="gap:8px"><div class="gc s grow" style="padding:10px 8px"><span class="cap" style="font-size:10.5px;letter-spacing:.06em">Jarak</span><div class="n" style="font-size:20px;margin-top:6px">3,10</div><span class="sub" style="font-size:11px">km</span></div><div class="gc s grow" style="padding:10px 8px"><span class="cap" style="font-size:10.5px;letter-spacing:.06em">Pace</span><div class="n" style="font-size:20px;margin-top:6px">11:24</div><span class="sub" style="font-size:11px">/km</span></div><div class="gc s grow" style="padding:10px 8px"><span class="cap" style="font-size:10.5px;letter-spacing:.06em">Langkah</span><div class="n" style="font-size:20px;margin-top:6px">4.180</div><span class="sub" style="font-size:11px">langkah</span></div><div class="gc s grow" style="padding:10px 8px"><span class="cap" style="font-size:10.5px;letter-spacing:.06em">Kalori</span><div class="n" style="font-size:20px;margin-top:6px">118</div><span class="sub" style="font-size:11px">kkal</span></div></div>
+    <p class="sub rw" style="gap:8px;justify-content:center;font-size:12.5px"><i class="i s i-watch" style="color:#16EC06"></i>Jeda otomatis aktif · Effort sesi +1,6</p>
+    <div class="rw" style="gap:12px;align-items:center">
+      <button class="ib" style="width:60px;height:60px;border-radius:30px" aria-label="Tandai lap"><i class="i i-plus"></i></button>
+      <button class="btn g grow" style="height:60px;border-radius:30px;font-size:16px"><i class="i s i-pause"></i>Jeda</button>
+      <a class="btn r" href="WorkoutSummary.dc.html" style="height:60px;border-radius:30px;padding:0 24px" aria-label="Tahan untuk mengakhiri"><i class="i s i-stop"></i>Akhiri</a>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":940}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

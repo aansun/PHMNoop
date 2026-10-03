@@ -1,0 +1,3122 @@
+[
+  {
+    "id": "MapOverview",
+    "title": "Peta fitur · Ringkasan",
+    "group": "Peta fitur PHMNOOP",
+    "w": 1180,
+    "h": 1230,
+    "interactive": false,
+    "links": [],
+    "existing": "—",
+    "file": "mockups/MapOverview.dc.html"
+  },
+  {
+    "id": "MapA",
+    "title": "Peta fitur · Bagian 1",
+    "group": "Peta fitur: rincian 1 dan 2",
+    "w": 1230,
+    "h": 1540,
+    "interactive": false,
+    "links": [],
+    "existing": "—",
+    "file": "mockups/MapA.dc.html"
+  },
+  {
+    "id": "MapB",
+    "title": "Peta fitur · Bagian 2",
+    "group": "Peta fitur: rincian 1 dan 2",
+    "w": 1230,
+    "h": 1290,
+    "interactive": false,
+    "links": [],
+    "existing": "—",
+    "file": "mockups/MapB.dc.html"
+  },
+  {
+    "id": "MapC",
+    "title": "Peta fitur · Bagian 3",
+    "group": "Peta fitur: rincian 3 dan 4",
+    "w": 1230,
+    "h": 1640,
+    "interactive": false,
+    "links": [],
+    "existing": "—",
+    "file": "mockups/MapC.dc.html"
+  },
+  {
+    "id": "MapD",
+    "title": "Peta fitur · Bagian 4",
+    "group": "Peta fitur: rincian 3 dan 4",
+    "w": 1230,
+    "h": 1140,
+    "interactive": false,
+    "links": [],
+    "existing": "—",
+    "file": "mockups/MapD.dc.html"
+  },
+  {
+    "id": "ObWelcome",
+    "title": "Selamat datang",
+    "group": "1. Onboarding: mulai dan nilai",
+    "w": 390,
+    "h": 844,
+    "interactive": true,
+    "links": [
+      "ObPrivacy",
+      "ObTerms"
+    ],
+    "existing": "—",
+    "file": "mockups/ObWelcome.dc.html"
+  },
+  {
+    "id": "ObPrivacy",
+    "title": "Privasi",
+    "group": "1. Onboarding: mulai dan nilai",
+    "w": 390,
+    "h": 900,
+    "interactive": true,
+    "links": [
+      "ObWelcome"
+    ],
+    "existing": "—",
+    "file": "mockups/ObPrivacy.dc.html"
+  },
+  {
+    "id": "ObTerms",
+    "title": "Syarat dan penafian",
+    "group": "1. Onboarding: mulai dan nilai",
+    "w": 390,
+    "h": 900,
+    "interactive": true,
+    "links": [
+      "ObTermsSheet",
+      "ObValue1",
+      "ObWelcome"
+    ],
+    "existing": "—",
+    "file": "mockups/ObTerms.dc.html"
+  },
+  {
+    "id": "ObTermsSheet",
+    "title": "Penafian lengkap",
+    "group": "1. Onboarding: mulai dan nilai",
+    "w": 390,
+    "h": 900,
+    "interactive": true,
+    "links": [
+      "ObTerms",
+      "ObWelcome"
+    ],
+    "existing": "—",
+    "file": "mockups/ObTermsSheet.dc.html"
+  },
+  {
+    "id": "ObValue1",
+    "title": "Nilai 1 · Energi",
+    "group": "1. Onboarding: mulai dan nilai",
+    "w": 390,
+    "h": 900,
+    "interactive": true,
+    "links": [
+      "ObDevice",
+      "ObTerms",
+      "ObValue2"
+    ],
+    "existing": "—",
+    "file": "mockups/ObValue1.dc.html"
+  },
+  {
+    "id": "ObValue2",
+    "title": "Nilai 2 · Detak langsung",
+    "group": "1. Onboarding: mulai dan nilai",
+    "w": 390,
+    "h": 900,
+    "interactive": true,
+    "links": [
+      "ObDevice",
+      "ObValue1",
+      "ObValue3"
+    ],
+    "existing": "—",
+    "file": "mockups/ObValue2.dc.html"
+  },
+  {
+    "id": "ObValue3",
+    "title": "Nilai 3 · Milikmu",
+    "group": "1. Onboarding: mulai dan nilai",
+    "w": 390,
+    "h": 900,
+    "interactive": true,
+    "links": [
+      "ObDevice",
+      "ObValue2"
+    ],
+    "existing": "—",
+    "file": "mockups/ObValue3.dc.html"
+  },
+  {
+    "id": "ObDevice",
+    "title": "Pilih perangkat",
+    "group": "1. Onboarding: mulai dan nilai",
+    "w": 390,
+    "h": 960,
+    "interactive": true,
+    "links": [
+      "ObBluetooth",
+      "ObValue3"
+    ],
+    "existing": "—",
+    "file": "mockups/ObDevice.dc.html"
+  },
+  {
+    "id": "ObBluetooth",
+    "title": "Izin Bluetooth",
+    "group": "1. Onboarding: koneksi dan profil",
+    "w": 390,
+    "h": 900,
+    "interactive": true,
+    "links": [
+      "ObDevice",
+      "ObWear"
+    ],
+    "existing": "—",
+    "file": "mockups/ObBluetooth.dc.html"
+  },
+  {
+    "id": "ObWear",
+    "title": "Pasang strap",
+    "group": "1. Onboarding: koneksi dan profil",
+    "w": 390,
+    "h": 900,
+    "interactive": true,
+    "links": [
+      "ObBluetooth",
+      "Scan"
+    ],
+    "existing": "—",
+    "file": "mockups/ObWear.dc.html"
+  },
+  {
+    "id": "ObScanHelp",
+    "title": "Strap belum ketemu",
+    "group": "1. Onboarding: koneksi dan profil",
+    "w": 390,
+    "h": 900,
+    "interactive": true,
+    "links": [
+      "ObProfile",
+      "Scan"
+    ],
+    "existing": "—",
+    "file": "mockups/ObScanHelp.dc.html"
+  },
+  {
+    "id": "ObProfile",
+    "title": "Profil",
+    "group": "1. Onboarding: koneksi dan profil",
+    "w": 390,
+    "h": 960,
+    "interactive": true,
+    "links": [
+      "ObHealth",
+      "ObProfilePicker",
+      "ObScanHelp"
+    ],
+    "existing": "—",
+    "file": "mockups/ObProfile.dc.html"
+  },
+  {
+    "id": "ObProfilePicker",
+    "title": "Pilih berat badan",
+    "group": "1. Onboarding: koneksi dan profil",
+    "w": 390,
+    "h": 960,
+    "interactive": true,
+    "links": [
+      "ObHealth",
+      "ObProfile",
+      "ObScanHelp"
+    ],
+    "existing": "—",
+    "file": "mockups/ObProfilePicker.dc.html"
+  },
+  {
+    "id": "ObHealth",
+    "title": "Apple Health",
+    "group": "1. Onboarding: koneksi dan profil",
+    "w": 390,
+    "h": 1000,
+    "interactive": true,
+    "links": [
+      "ObImport",
+      "ObProfile"
+    ],
+    "existing": "—",
+    "file": "mockups/ObHealth.dc.html"
+  },
+  {
+    "id": "ObImport",
+    "title": "Impor data",
+    "group": "1. Onboarding: akhir",
+    "w": 390,
+    "h": 900,
+    "interactive": true,
+    "links": [
+      "ObAnya",
+      "ObHealth"
+    ],
+    "existing": "—",
+    "file": "mockups/ObImport.dc.html"
+  },
+  {
+    "id": "ObAnya",
+    "title": "Siapkan Anya",
+    "group": "1. Onboarding: akhir",
+    "w": 390,
+    "h": 1000,
+    "interactive": true,
+    "links": [
+      "ObImport",
+      "ObPrefs"
+    ],
+    "existing": "—",
+    "file": "mockups/ObAnya.dc.html"
+  },
+  {
+    "id": "ObPrefs",
+    "title": "Preferensi",
+    "group": "1. Onboarding: akhir",
+    "w": 390,
+    "h": 960,
+    "interactive": true,
+    "links": [
+      "ObAnya",
+      "ObDone"
+    ],
+    "existing": "—",
+    "file": "mockups/ObPrefs.dc.html"
+  },
+  {
+    "id": "ObDone",
+    "title": "Selesai",
+    "group": "1. Onboarding: akhir",
+    "w": 390,
+    "h": 960,
+    "interactive": true,
+    "links": [
+      "Main",
+      "ObPrefs"
+    ],
+    "existing": "—",
+    "file": "mockups/ObDone.dc.html"
+  },
+  {
+    "id": "ObWhatsNew",
+    "title": "Apa yang baru",
+    "group": "1. Onboarding: akhir",
+    "w": 390,
+    "h": 960,
+    "interactive": true,
+    "links": [
+      "Main",
+      "ObPrefs"
+    ],
+    "existing": "—",
+    "file": "mockups/ObWhatsNew.dc.html"
+  },
+  {
+    "id": "Main",
+    "title": "Hari ini",
+    "group": "2. Hari ini: layar utama dan skor",
+    "w": 390,
+    "h": 1480,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Devices",
+      "Health",
+      "Personalize",
+      "Sleep",
+      "TodayAllMetrics",
+      "TodayCharge",
+      "TodayDate",
+      "TodayEdit",
+      "TodayEffort",
+      "TodayHRV",
+      "TodayHeartRate",
+      "TodayJournal",
+      "TodayMetrics",
+      "TodayNotifs",
+      "TodayQuick",
+      "TodayRHR",
+      "TodaySteps",
+      "TodayStress",
+      "Trends",
+      "WorkoutSummary",
+      "Workouts"
+    ],
+    "existing": "TodayView, LiquidTodayView, TodayCustomizationSheet",
+    "file": "mockups/Main.dc.html"
+  },
+  {
+    "id": "TodayCharge",
+    "title": "Detail Charge",
+    "group": "2. Hari ini: layar utama dan skor",
+    "w": 390,
+    "h": 1100,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaSheetToday",
+      "Health",
+      "Main",
+      "Personalize",
+      "Sleep",
+      "TodayHRV",
+      "TodayRHR",
+      "Trends"
+    ],
+    "existing": "MetricExplorerView (recovery), ChargeBreakdownFormat",
+    "file": "mockups/TodayCharge.dc.html"
+  },
+  {
+    "id": "TodayEffort",
+    "title": "Detail Effort",
+    "group": "2. Hari ini: layar utama dan skor",
+    "w": 390,
+    "h": 1060,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends",
+      "WorkoutSummary"
+    ],
+    "existing": "MetricExplorerView (strain)",
+    "file": "mockups/TodayEffort.dc.html"
+  },
+  {
+    "id": "TodayHeartRate",
+    "title": "Detak hari ini",
+    "group": "2. Hari ini: layar utama dan skor",
+    "w": 390,
+    "h": 980,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "FullDayChartView",
+    "file": "mockups/TodayHeartRate.dc.html"
+  },
+  {
+    "id": "TodayHRV",
+    "title": "Detail HRV",
+    "group": "2. Hari ini: metrik harian",
+    "w": 390,
+    "h": 1040,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "HRVSnapshotView",
+    "file": "mockups/TodayHRV.dc.html"
+  },
+  {
+    "id": "TodayRHR",
+    "title": "Detail detak istirahat",
+    "group": "2. Hari ini: metrik harian",
+    "w": 390,
+    "h": 1040,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "MetricExplorerView",
+    "file": "mockups/TodayRHR.dc.html"
+  },
+  {
+    "id": "TodaySteps",
+    "title": "Detail langkah",
+    "group": "2. Hari ini: metrik harian",
+    "w": 390,
+    "h": 1060,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "MetricExplorerView",
+    "file": "mockups/TodaySteps.dc.html"
+  },
+  {
+    "id": "TodayAllMetrics",
+    "title": "Semua metrik",
+    "group": "2. Hari ini: metrik harian",
+    "w": 390,
+    "h": 1000,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "HealthBody",
+      "HealthVital",
+      "Main",
+      "Personalize",
+      "Sleep",
+      "TodayCharge",
+      "TodayEffort",
+      "TodayHRV",
+      "TodayRHR",
+      "TodaySteps",
+      "Trends"
+    ],
+    "existing": "MetricExplorerView",
+    "file": "mockups/TodayAllMetrics.dc.html"
+  },
+  {
+    "id": "TodayMetrics",
+    "title": "Pilih metrik utama",
+    "group": "2. Hari ini: metrik harian",
+    "w": 390,
+    "h": 1700,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "TodayCustomize",
+      "Trends"
+    ],
+    "existing": "NEW",
+    "file": "mockups/TodayMetrics.dc.html"
+  },
+  {
+    "id": "TodayStress",
+    "title": "Pemantauan stres",
+    "group": "2. Hari ini: stres, jurnal, dan peringatan",
+    "w": 390,
+    "h": 1640,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "StressView, StressTodayCard",
+    "file": "mockups/TodayStress.dc.html"
+  },
+  {
+    "id": "TodayJournal",
+    "title": "Jurnal hari ini",
+    "group": "2. Hari ini: stres, jurnal, dan peringatan",
+    "w": 390,
+    "h": 1160,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Devices",
+      "Main",
+      "Sleep",
+      "TodayAllMetrics",
+      "TodayCharge",
+      "TodayEffort",
+      "TodayHRV",
+      "TodayHeartRate",
+      "TodayNotifs",
+      "TodayRHR",
+      "TodaySteps",
+      "WorkoutSummary"
+    ],
+    "existing": "JournalLogCard",
+    "file": "mockups/TodayJournal.dc.html"
+  },
+  {
+    "id": "TodayWarning",
+    "title": "Peringatan dini",
+    "group": "2. Hari ini: stres, jurnal, dan peringatan",
+    "w": 390,
+    "h": 860,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "HealthAlertBanner",
+    "file": "mockups/TodayWarning.dc.html"
+  },
+  {
+    "id": "TodayNotifs",
+    "title": "Notifikasi",
+    "group": "2. Hari ini: stres, jurnal, dan peringatan",
+    "w": 390,
+    "h": 820,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "UpdatesInboxView, NotificationSettingsView",
+    "file": "mockups/TodayNotifs.dc.html"
+  },
+  {
+    "id": "TodayDate",
+    "title": "Pilih tanggal",
+    "group": "2. Hari ini: pilih tanggal dan hari lampau",
+    "w": 390,
+    "h": 1180,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "TodayPast",
+      "Trends"
+    ],
+    "existing": "DayNavBar",
+    "file": "mockups/TodayDate.dc.html"
+  },
+  {
+    "id": "TodayPast",
+    "title": "Hari lampau (hanya lihat)",
+    "group": "2. Hari ini: pilih tanggal dan hari lampau",
+    "w": 390,
+    "h": 1440,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Sleep",
+      "TodayAddActivity",
+      "TodayAllMetrics",
+      "TodayCharge",
+      "TodayDate",
+      "TodayEffort",
+      "TodayHRV",
+      "TodayJournal",
+      "TodayMetrics",
+      "TodayNotifs",
+      "TodayRHR",
+      "TodaySteps",
+      "TodayStress",
+      "Trends",
+      "WorkoutSummary",
+      "Workouts"
+    ],
+    "existing": "TodayView (day parameter)",
+    "file": "mockups/TodayPast.dc.html"
+  },
+  {
+    "id": "TodayEdit",
+    "title": "Atur kartu (mode atur)",
+    "group": "2. Hari ini: atur kartu",
+    "w": 390,
+    "h": 1860,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "TodayCustomize",
+      "Trends"
+    ],
+    "existing": "TodayCustomizationSheet, EditableLayoutList",
+    "file": "mockups/TodayEdit.dc.html"
+  },
+  {
+    "id": "TodayCustomize",
+    "title": "Atur kartu Hari ini",
+    "group": "2. Hari ini: atur kartu",
+    "w": 390,
+    "h": 2100,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "TodayMetrics",
+      "TodayQuick",
+      "Trends"
+    ],
+    "existing": "TodayCustomizationSheet",
+    "file": "mockups/TodayCustomize.dc.html"
+  },
+  {
+    "id": "TodayQuick",
+    "title": "Aksi cepat (tombol +)",
+    "group": "2. Hari ini: aksi cepat (tombol +)",
+    "w": 390,
+    "h": 900,
+    "interactive": true,
+    "links": [
+      "AnyaSheetToday",
+      "HealthBody",
+      "Main",
+      "SleepNap",
+      "TodayAddActivity",
+      "TodayBreathe",
+      "TodayCustomize",
+      "TodayJournal",
+      "TodayWater",
+      "WorkoutStart"
+    ],
+    "existing": "NEW (replaces the QuickAction FAB)",
+    "file": "mockups/TodayQuick.dc.html"
+  },
+  {
+    "id": "TodayAddActivity",
+    "title": "Tambah aktivitas",
+    "group": "2. Hari ini: aksi cepat (tombol +)",
+    "w": 390,
+    "h": 1700,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "TodayQuick",
+      "Trends",
+      "WorkoutStart"
+    ],
+    "existing": "ManualWorkoutSheet",
+    "file": "mockups/TodayAddActivity.dc.html"
+  },
+  {
+    "id": "TodayBreathe",
+    "title": "Latihan napas",
+    "group": "2. Hari ini: aksi cepat (tombol +)",
+    "w": 390,
+    "h": 1000,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "TodayBreatheRhythm",
+      "TodayQuick",
+      "TodayStress",
+      "Trends"
+    ],
+    "existing": "BreathingView",
+    "file": "mockups/TodayBreathe.dc.html"
+  },
+  {
+    "id": "TodayWater",
+    "title": "Catat air",
+    "group": "2. Hari ini: aksi cepat (tombol +)",
+    "w": 390,
+    "h": 1180,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "TodayQuick",
+      "Trends"
+    ],
+    "existing": "HydrationView",
+    "file": "mockups/TodayWater.dc.html"
+  },
+  {
+    "id": "TodayBreatheRhythm",
+    "title": "Ritme napas",
+    "group": "2. Hari ini: aksi cepat (tombol +)",
+    "w": 390,
+    "h": 1380,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "TodayBreathe",
+      "Trends"
+    ],
+    "existing": "BreathingView",
+    "file": "mockups/TodayBreatheRhythm.dc.html"
+  },
+  {
+    "id": "Health",
+    "title": "Kesehatan",
+    "group": "3. Kesehatan: tab Semua, Vital, Tubuh, Tidur",
+    "w": 390,
+    "h": 1980,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaSheetHealth",
+      "HealthBody",
+      "HealthOxygen",
+      "HealthPermissions",
+      "HealthSleep",
+      "HealthVital",
+      "HealthWeight",
+      "Main",
+      "Personalize",
+      "TodayHRV",
+      "TodayRHR",
+      "Trends"
+    ],
+    "existing": "HealthView",
+    "file": "mockups/Health.dc.html"
+  },
+  {
+    "id": "HealthVital",
+    "title": "Kesehatan · Vital",
+    "group": "3. Kesehatan: tab Semua, Vital, Tubuh, Tidur",
+    "w": 390,
+    "h": 2500,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "HealthBody",
+      "HealthLive",
+      "HealthMind",
+      "HealthOxygen",
+      "HealthRhythmConsent",
+      "HealthSkin",
+      "HealthSleep",
+      "HealthVO2",
+      "Main",
+      "Personalize",
+      "TodayBreathe",
+      "TodayHRV",
+      "TodayHeartRate",
+      "TodayRHR",
+      "TodayStress",
+      "TodayWarning",
+      "Trends"
+    ],
+    "existing": "VitalSignsSummary",
+    "file": "mockups/HealthVital.dc.html"
+  },
+  {
+    "id": "HealthBody",
+    "title": "Kesehatan · Tubuh",
+    "group": "3. Kesehatan: tab Semua, Vital, Tubuh, Tidur",
+    "w": 390,
+    "h": 2090,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "HealthCycle",
+      "HealthLab",
+      "HealthNutrition",
+      "HealthSleep",
+      "HealthVital",
+      "HealthWaist",
+      "HealthWeight",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "HealthView (Body tab)",
+    "file": "mockups/HealthBody.dc.html"
+  },
+  {
+    "id": "HealthSleep",
+    "title": "Kesehatan · Tidur",
+    "group": "3. Kesehatan: tab Semua, Vital, Tubuh, Tidur",
+    "w": 390,
+    "h": 2060,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "HealthBody",
+      "HealthVital",
+      "Main",
+      "Personalize",
+      "Sleep",
+      "Trends"
+    ],
+    "existing": "HealthView (Sleep tab)",
+    "file": "mockups/HealthSleep.dc.html"
+  },
+  {
+    "id": "HealthLive",
+    "title": "Detak langsung",
+    "group": "3. Kesehatan: detail vital",
+    "w": 390,
+    "h": 1400,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends",
+      "WorkoutStart"
+    ],
+    "existing": "LiveView, OverviewHRChart",
+    "file": "mockups/HealthLive.dc.html"
+  },
+  {
+    "id": "HealthOxygen",
+    "title": "Oksigen dan napas",
+    "group": "3. Kesehatan: detail vital",
+    "w": 390,
+    "h": 1560,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "TodayWarning",
+      "Trends"
+    ],
+    "existing": "VitalSignsSummary",
+    "file": "mockups/HealthOxygen.dc.html"
+  },
+  {
+    "id": "HealthSkin",
+    "title": "Suhu kulit",
+    "group": "3. Kesehatan: detail vital",
+    "w": 390,
+    "h": 1300,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "TodayWarning",
+      "Trends"
+    ],
+    "existing": "SkinTempCardsView",
+    "file": "mockups/HealthSkin.dc.html"
+  },
+  {
+    "id": "HealthVO2",
+    "title": "Kebugaran (VO₂max)",
+    "group": "3. Kesehatan: detail vital",
+    "w": 390,
+    "h": 2300,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "HealthWaist",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "FITNESS_AGE (engine exists), new UI",
+    "file": "mockups/HealthVO2.dc.html"
+  },
+  {
+    "id": "HealthMind",
+    "title": "Cek suasana hati",
+    "group": "3. Kesehatan: detail vital",
+    "w": 390,
+    "h": 1400,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "MindSection",
+    "file": "mockups/HealthMind.dc.html"
+  },
+  {
+    "id": "HealthWeight",
+    "title": "Berat badan",
+    "group": "3. Kesehatan: detail tubuh dan data",
+    "w": 390,
+    "h": 1620,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaSheetHealth",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "HealthView (Tubuh)",
+    "file": "mockups/HealthWeight.dc.html"
+  },
+  {
+    "id": "HealthWaist",
+    "title": "Lingkar pinggang",
+    "group": "3. Kesehatan: detail tubuh dan data",
+    "w": 390,
+    "h": 1360,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "HealthVO2",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "HealthView (Tubuh)",
+    "file": "mockups/HealthWaist.dc.html"
+  },
+  {
+    "id": "HealthNutrition",
+    "title": "Nutrisi",
+    "group": "3. Kesehatan: detail tubuh dan data",
+    "w": 390,
+    "h": 1960,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaSheetNutrition",
+      "Health",
+      "Main",
+      "Personalize",
+      "TodayWater",
+      "Trends"
+    ],
+    "existing": "DataSourcesView (nutrition import), new UI",
+    "file": "mockups/HealthNutrition.dc.html"
+  },
+  {
+    "id": "HealthLab",
+    "title": "Lab Book",
+    "group": "3. Kesehatan: detail tubuh dan data",
+    "w": 390,
+    "h": 1900,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "LabBookView",
+    "file": "mockups/HealthLab.dc.html"
+  },
+  {
+    "id": "HealthCycle",
+    "title": "Siklus menstruasi",
+    "group": "3. Kesehatan: detail tubuh dan data",
+    "w": 390,
+    "h": 1620,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "AutomationsView (cycle awareness), new UI",
+    "file": "mockups/HealthCycle.dc.html"
+  },
+  {
+    "id": "HealthPermissions",
+    "title": "Izin Apple Health",
+    "group": "3. Kesehatan: detail tubuh dan data",
+    "w": 390,
+    "h": 1600,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "AppleHealthView",
+    "file": "mockups/HealthPermissions.dc.html"
+  },
+  {
+    "id": "HealthRhythmConsent",
+    "title": "Ritme · persetujuan",
+    "group": "3. Kesehatan: Ritme (fitur eksperimental)",
+    "w": 390,
+    "h": 1500,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "HealthRhythm",
+      "HealthVital",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "RhythmView (consent gate)",
+    "file": "mockups/HealthRhythmConsent.dc.html"
+  },
+  {
+    "id": "HealthRhythm",
+    "title": "Ritme · hasil",
+    "group": "3. Kesehatan: Ritme (fitur eksperimental)",
+    "w": 390,
+    "h": 2050,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "HealthRhythmConsent",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "RhythmView",
+    "file": "mockups/HealthRhythm.dc.html"
+  },
+  {
+    "id": "HealthRhythmEmpty",
+    "title": "Ritme · belum ada bacaan",
+    "group": "3. Kesehatan: Ritme (fitur eksperimental)",
+    "w": 390,
+    "h": 1000,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "RhythmView",
+    "file": "mockups/HealthRhythmEmpty.dc.html"
+  },
+  {
+    "id": "HealthRhythmUnsupported",
+    "title": "Ritme · perangkat tak didukung",
+    "group": "3. Kesehatan: Ritme (fitur eksperimental)",
+    "w": 390,
+    "h": 1000,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "RhythmView",
+    "file": "mockups/HealthRhythmUnsupported.dc.html"
+  },
+  {
+    "id": "Trends",
+    "title": "Tren",
+    "group": "4. Tren: ringkasan dan perbandingan",
+    "w": 390,
+    "h": 3560,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaSheetTrends",
+      "Health",
+      "Main",
+      "Personalize",
+      "TodayHRV",
+      "TodayRHR",
+      "TodaySteps",
+      "TodayStress",
+      "TrendsCharge",
+      "TrendsChargeEffort",
+      "TrendsChargeRest",
+      "TrendsCompare",
+      "TrendsEffort",
+      "TrendsExplore",
+      "TrendsHeatmap",
+      "TrendsInsights",
+      "TrendsRest"
+    ],
+    "existing": "TrendsView",
+    "file": "mockups/Trends.dc.html"
+  },
+  {
+    "id": "TrendsCharge",
+    "title": "Tren Charge",
+    "group": "4. Tren: detail Charge, Effort, dan Rest",
+    "w": 390,
+    "h": 2420,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "TodayCharge",
+      "TodayHRV",
+      "TodayRHR",
+      "Trends",
+      "TrendsChargeEffort",
+      "TrendsRest"
+    ],
+    "existing": "TrendsView (Charge hero)",
+    "file": "mockups/TrendsCharge.dc.html"
+  },
+  {
+    "id": "TrendsEffort",
+    "title": "Tren Effort",
+    "group": "4. Tren: detail Charge, Effort, dan Rest",
+    "w": 390,
+    "h": 2380,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "TodayEffort",
+      "Trends",
+      "TrendsChargeEffort"
+    ],
+    "existing": "TrendsView",
+    "file": "mockups/TrendsEffort.dc.html"
+  },
+  {
+    "id": "TrendsRest",
+    "title": "Tren Rest",
+    "group": "4. Tren: detail Charge, Effort, dan Rest",
+    "w": 390,
+    "h": 2400,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Sleep",
+      "Trends",
+      "TrendsChargeRest"
+    ],
+    "existing": "TrendsView",
+    "file": "mockups/TrendsRest.dc.html"
+  },
+  {
+    "id": "TrendsChargeEffort",
+    "title": "Charge dan Effort",
+    "group": "4. Tren: detail perbandingan, insight, dan jelajah",
+    "w": 390,
+    "h": 2140,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "CompareView",
+    "file": "mockups/TrendsChargeEffort.dc.html"
+  },
+  {
+    "id": "TrendsChargeRest",
+    "title": "Charge dan Rest",
+    "group": "4. Tren: detail perbandingan, insight, dan jelajah",
+    "w": 390,
+    "h": 2060,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "SleepPerformance",
+      "Trends"
+    ],
+    "existing": "CompareView",
+    "file": "mockups/TrendsChargeRest.dc.html"
+  },
+  {
+    "id": "TrendsHeatmap",
+    "title": "Peta panas Charge",
+    "group": "4. Tren: detail perbandingan, insight, dan jelajah",
+    "w": 390,
+    "h": 1740,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "YearHeatStrip",
+    "file": "mockups/TrendsHeatmap.dc.html"
+  },
+  {
+    "id": "TrendsInsights",
+    "title": "Insights",
+    "group": "4. Tren: detail perbandingan, insight, dan jelajah",
+    "w": 390,
+    "h": 2200,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "InsightsView, InsightsHubView",
+    "file": "mockups/TrendsInsights.dc.html"
+  },
+  {
+    "id": "TrendsCompare",
+    "title": "Bandingkan",
+    "group": "4. Tren: detail perbandingan, insight, dan jelajah",
+    "w": 390,
+    "h": 1740,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "CompareView",
+    "file": "mockups/TrendsCompare.dc.html"
+  },
+  {
+    "id": "TrendsExplore",
+    "title": "Explore",
+    "group": "4. Tren: detail perbandingan, insight, dan jelajah",
+    "w": 390,
+    "h": 2100,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends",
+      "TrendsCompare"
+    ],
+    "existing": "MetricExplorerView",
+    "file": "mockups/TrendsExplore.dc.html"
+  },
+  {
+    "id": "Sleep",
+    "title": "Tidur · Ringkasan",
+    "group": "5. Tidur: ringkasan dan detail",
+    "w": 390,
+    "h": 2260,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaSheetSleep",
+      "Health",
+      "HealthSleep",
+      "Main",
+      "Personalize",
+      "SleepNap",
+      "SleepPerformance",
+      "SleepStages",
+      "SleepVitals",
+      "TodayJournal",
+      "Trends"
+    ],
+    "existing": "SleepView",
+    "file": "mockups/Sleep.dc.html"
+  },
+  {
+    "id": "SleepStages",
+    "title": "Fase tidur",
+    "group": "5. Tidur: ringkasan dan detail",
+    "w": 390,
+    "h": 1740,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaSheetSleep",
+      "Health",
+      "Main",
+      "Personalize",
+      "Sleep",
+      "SleepNap",
+      "Trends"
+    ],
+    "existing": "StagesCard, StagesVsTypicalCard, Hypnogram",
+    "file": "mockups/SleepStages.dc.html"
+  },
+  {
+    "id": "SleepVitals",
+    "title": "Vital semalam",
+    "group": "5. Tidur: ringkasan dan detail",
+    "w": 390,
+    "h": 1460,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Sleep",
+      "Trends"
+    ],
+    "existing": "NightDetailCard",
+    "file": "mockups/SleepVitals.dc.html"
+  },
+  {
+    "id": "SleepPerformance",
+    "title": "Kinerja tidur",
+    "group": "5. Tidur: ringkasan dan detail",
+    "w": 390,
+    "h": 1520,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Sleep",
+      "Trends"
+    ],
+    "existing": "HoursVsNeededCard, SleepDebtLedgerCard",
+    "file": "mockups/SleepPerformance.dc.html"
+  },
+  {
+    "id": "SleepNap",
+    "title": "Tidur siang",
+    "group": "5. Tidur: ringkasan dan detail",
+    "w": 390,
+    "h": 1700,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Sleep",
+      "Trends"
+    ],
+    "existing": "NEW",
+    "file": "mockups/SleepNap.dc.html"
+  },
+  {
+    "id": "Anya",
+    "title": "Anya",
+    "group": "6. Anya: percakapan",
+    "w": 390,
+    "h": 1700,
+    "interactive": true,
+    "links": [
+      "AnyaAttach",
+      "AnyaHistory",
+      "AnyaMemory",
+      "AnyaPlan",
+      "AnyaSettings",
+      "AnyaVoice",
+      "Health",
+      "Main",
+      "Personalize",
+      "Sleep",
+      "Trends"
+    ],
+    "existing": "CoachView",
+    "file": "mockups/Anya.dc.html"
+  },
+  {
+    "id": "AnyaStart",
+    "title": "Anya · mulai",
+    "group": "6. Anya: percakapan",
+    "w": 390,
+    "h": 1560,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaAttach",
+      "AnyaHistory",
+      "AnyaMemory",
+      "AnyaPlan",
+      "AnyaSettings",
+      "AnyaVoice",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "CoachView (empty state)",
+    "file": "mockups/AnyaStart.dc.html"
+  },
+  {
+    "id": "AnyaAttach",
+    "title": "Tambah lampiran",
+    "group": "6. Anya: percakapan",
+    "w": 390,
+    "h": 900,
+    "interactive": true,
+    "links": [
+      "Anya"
+    ],
+    "existing": "CoachView (attachments)",
+    "file": "mockups/AnyaAttach.dc.html"
+  },
+  {
+    "id": "AnyaVoice",
+    "title": "Masukan suara",
+    "group": "6. Anya: percakapan",
+    "w": 390,
+    "h": 900,
+    "interactive": true,
+    "links": [
+      "Anya"
+    ],
+    "existing": "CoachVoiceInput",
+    "file": "mockups/AnyaVoice.dc.html"
+  },
+  {
+    "id": "AnyaPlan",
+    "title": "Rencana hari ini",
+    "group": "6. Anya: percakapan",
+    "w": 390,
+    "h": 1860,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends",
+      "WorkoutStart"
+    ],
+    "existing": "NEW",
+    "file": "mockups/AnyaPlan.dc.html"
+  },
+  {
+    "id": "AnyaBrief",
+    "title": "Ringkasan pagi",
+    "group": "6. Anya: percakapan",
+    "w": 390,
+    "h": 1560,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaPlan",
+      "AnyaSettings",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "CoachSettingsView (morning brief)",
+    "file": "mockups/AnyaBrief.dc.html"
+  },
+  {
+    "id": "AnyaConnect",
+    "title": "Hubungkan Anya",
+    "group": "6. Anya: penyedia dan pengaturan",
+    "w": 390,
+    "h": 1560,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaChatGPT",
+      "AnyaCustom",
+      "AnyaKey",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "CoachView (connect), CoachSettingsView",
+    "file": "mockups/AnyaConnect.dc.html"
+  },
+  {
+    "id": "AnyaKey",
+    "title": "Kunci API",
+    "group": "6. Anya: penyedia dan pengaturan",
+    "w": 390,
+    "h": 1360,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaConnect"
+    ],
+    "existing": "CoachView (API key)",
+    "file": "mockups/AnyaKey.dc.html"
+  },
+  {
+    "id": "AnyaChatGPT",
+    "title": "Masuk ChatGPT",
+    "group": "6. Anya: penyedia dan pengaturan",
+    "w": 390,
+    "h": 1180,
+    "interactive": true,
+    "links": [
+      "AnyaConnect"
+    ],
+    "existing": "ChatGPTAuthCard",
+    "file": "mockups/AnyaChatGPT.dc.html"
+  },
+  {
+    "id": "AnyaCustom",
+    "title": "Server sendiri",
+    "group": "6. Anya: penyedia dan pengaturan",
+    "w": 390,
+    "h": 1400,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaConnect"
+    ],
+    "existing": "CoachView (custom)",
+    "file": "mockups/AnyaCustom.dc.html"
+  },
+  {
+    "id": "AnyaSettings",
+    "title": "Pengaturan Anya",
+    "group": "6. Anya: penyedia dan pengaturan",
+    "w": 390,
+    "h": 2160,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaBrief",
+      "AnyaConnect",
+      "AnyaHistory",
+      "AnyaInstructions",
+      "AnyaKey",
+      "AnyaMemory",
+      "AnyaVoiceCoach",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "CoachSettingsView",
+    "file": "mockups/AnyaSettings.dc.html"
+  },
+  {
+    "id": "AnyaInstructions",
+    "title": "Instruksi Anya",
+    "group": "6. Anya: penyedia dan pengaturan",
+    "w": 390,
+    "h": 1260,
+    "interactive": true,
+    "links": [
+      "AnyaSettings"
+    ],
+    "existing": "CoachSettingsView",
+    "file": "mockups/AnyaInstructions.dc.html"
+  },
+  {
+    "id": "AnyaMemory",
+    "title": "Memory",
+    "group": "6. Anya: memori, riwayat, dan pelatih suara",
+    "w": 390,
+    "h": 1560,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "CoachMemoryView",
+    "file": "mockups/AnyaMemory.dc.html"
+  },
+  {
+    "id": "AnyaHistory",
+    "title": "Riwayat",
+    "group": "6. Anya: memori, riwayat, dan pelatih suara",
+    "w": 390,
+    "h": 1420,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "CoachHistoryView",
+    "file": "mockups/AnyaHistory.dc.html"
+  },
+  {
+    "id": "AnyaVoiceCoach",
+    "title": "Pelatih suara",
+    "group": "6. Anya: memori, riwayat, dan pelatih suara",
+    "w": 390,
+    "h": 1760,
+    "interactive": true,
+    "links": [
+      "AnyaSettings"
+    ],
+    "existing": "AutomationsView/LiveSessionView",
+    "file": "mockups/AnyaVoiceCoach.dc.html"
+  },
+  {
+    "id": "AnyaMap",
+    "title": "Peta Anya di setiap modul",
+    "group": "6. Anya di setiap modul",
+    "w": 1330,
+    "h": 1340,
+    "interactive": false,
+    "links": [
+      "Anya",
+      "AnyaSettings",
+      "AnyaSheetDevice",
+      "AnyaSheetHealth",
+      "AnyaSheetNutrition",
+      "AnyaSheetSleep",
+      "AnyaSheetToday",
+      "AnyaSheetTrends",
+      "AnyaSheetWorkout",
+      "AnyaVoiceCoach"
+    ],
+    "existing": "DOC BOARD",
+    "file": "mockups/AnyaMap.dc.html"
+  },
+  {
+    "id": "AnyaSheetSleep",
+    "title": "Anya di Tidur",
+    "group": "6. Anya di setiap modul",
+    "w": 390,
+    "h": 1100,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaVoice",
+      "Main",
+      "Sleep"
+    ],
+    "existing": "CoachLauncherSheet",
+    "file": "mockups/AnyaSheetSleep.dc.html"
+  },
+  {
+    "id": "AnyaSheetTrends",
+    "title": "Anya di Tren",
+    "group": "6. Anya di setiap modul",
+    "w": 390,
+    "h": 1100,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaVoice",
+      "Main",
+      "Trends"
+    ],
+    "existing": "CoachLauncherSheet",
+    "file": "mockups/AnyaSheetTrends.dc.html"
+  },
+  {
+    "id": "AnyaSheetWorkout",
+    "title": "Anya di Latihan",
+    "group": "6. Anya di setiap modul",
+    "w": 390,
+    "h": 1100,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaVoice",
+      "Main",
+      "Workouts"
+    ],
+    "existing": "CoachLauncherSheet",
+    "file": "mockups/AnyaSheetWorkout.dc.html"
+  },
+  {
+    "id": "AnyaPattern",
+    "title": "Pola Anya di setiap modul",
+    "group": "6. Anya di setiap modul: pola kemunculan dan sheet lanjutan",
+    "w": 1410,
+    "h": 1380,
+    "interactive": false,
+    "links": [],
+    "existing": "DOC BOARD",
+    "file": "mockups/AnyaPattern.dc.html"
+  },
+  {
+    "id": "AnyaSheetToday",
+    "title": "Anya di Hari ini",
+    "group": "6. Anya di setiap modul: pola kemunculan dan sheet lanjutan",
+    "w": 390,
+    "h": 1100,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaVoice",
+      "Main"
+    ],
+    "existing": "CoachLauncherSheet",
+    "file": "mockups/AnyaSheetToday.dc.html"
+  },
+  {
+    "id": "AnyaSheetHealth",
+    "title": "Anya di Kesehatan",
+    "group": "6. Anya di setiap modul: pola kemunculan dan sheet lanjutan",
+    "w": 390,
+    "h": 1100,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaVoice",
+      "Health"
+    ],
+    "existing": "CoachLauncherSheet",
+    "file": "mockups/AnyaSheetHealth.dc.html"
+  },
+  {
+    "id": "AnyaSheetNutrition",
+    "title": "Anya di Nutrisi",
+    "group": "6. Anya di setiap modul: pola kemunculan dan sheet lanjutan",
+    "w": 390,
+    "h": 1100,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaVoice",
+      "HealthNutrition"
+    ],
+    "existing": "CoachLauncherSheet",
+    "file": "mockups/AnyaSheetNutrition.dc.html"
+  },
+  {
+    "id": "AnyaSheetDevice",
+    "title": "Anya di Perangkat",
+    "group": "6. Anya di setiap modul: pola kemunculan dan sheet lanjutan",
+    "w": 390,
+    "h": 1100,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaVoice",
+      "Devices"
+    ],
+    "existing": "CoachLauncherSheet",
+    "file": "mockups/AnyaSheetDevice.dc.html"
+  },
+  {
+    "id": "Workouts",
+    "title": "Workout",
+    "group": "7.1 Latihan: hub, mulai latihan, ringkasan, dan Lift Log",
+    "w": 390,
+    "h": 2580,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaSheetWorkout",
+      "Health",
+      "LiveCycle",
+      "LiveWalk",
+      "Main",
+      "Personalize",
+      "TrainingLoad",
+      "Trends",
+      "WorkoutAutoDetect",
+      "WorkoutCalendar",
+      "WorkoutGym",
+      "WorkoutHistory",
+      "WorkoutStart",
+      "WorkoutSummary"
+    ],
+    "existing": "WorkoutsView",
+    "file": "mockups/Workouts.dc.html"
+  },
+  {
+    "id": "WorkoutStart",
+    "title": "Mulai latihan",
+    "group": "7.1 Latihan: hub, mulai latihan, ringkasan, dan Lift Log",
+    "w": 390,
+    "h": 980,
+    "interactive": true,
+    "links": [
+      "Live",
+      "Workouts"
+    ],
+    "existing": "WorkoutSelectionScreen, WorkoutStartControl",
+    "file": "mockups/WorkoutStart.dc.html"
+  },
+  {
+    "id": "WorkoutSummary",
+    "title": "Ringkasan latihan",
+    "group": "7.1 Latihan: hub, mulai latihan, ringkasan, dan Lift Log",
+    "w": 390,
+    "h": 1900,
+    "interactive": true,
+    "links": [
+      "Strava",
+      "Workouts"
+    ],
+    "existing": "WorkoutDetailView",
+    "file": "mockups/WorkoutSummary.dc.html"
+  },
+  {
+    "id": "WorkoutLift",
+    "title": "Lift Log",
+    "group": "7.1 Latihan: hub, mulai latihan, ringkasan, dan Lift Log",
+    "w": 390,
+    "h": 1400,
+    "interactive": true,
+    "links": [
+      "WorkoutSummaryGym",
+      "Workouts"
+    ],
+    "existing": "LiftSessionView",
+    "file": "mockups/WorkoutLift.dc.html"
+  },
+  {
+    "id": "WorkoutGym",
+    "title": "Gym dan program",
+    "group": "7.2 Gym: program (template), impor, dan ringkasan sesi",
+    "w": 390,
+    "h": 2220,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "TrainingLoadMuscle",
+      "Trends",
+      "WorkoutHistory",
+      "WorkoutLift",
+      "WorkoutProgram",
+      "WorkoutProgramImport",
+      "WorkoutSummaryGym",
+      "Workouts"
+    ],
+    "existing": "LiftLogView",
+    "file": "mockups/WorkoutGym.dc.html"
+  },
+  {
+    "id": "WorkoutProgram",
+    "title": "Ubah program",
+    "group": "7.2 Gym: program (template), impor, dan ringkasan sesi",
+    "w": 390,
+    "h": 2100,
+    "interactive": true,
+    "links": [
+      "WorkoutGym",
+      "WorkoutProgramItem"
+    ],
+    "existing": "LiftProgramEditorSheet",
+    "file": "mockups/WorkoutProgram.dc.html"
+  },
+  {
+    "id": "WorkoutProgramItem",
+    "title": "Latihan program",
+    "group": "7.2 Gym: program (template), impor, dan ringkasan sesi",
+    "w": 390,
+    "h": 1880,
+    "interactive": true,
+    "links": [
+      "WorkoutProgram"
+    ],
+    "existing": "LiftProgramItemSheet",
+    "file": "mockups/WorkoutProgramItem.dc.html"
+  },
+  {
+    "id": "WorkoutProgramImport",
+    "title": "Impor program",
+    "group": "7.2 Gym: program (template), impor, dan ringkasan sesi",
+    "w": 390,
+    "h": 1700,
+    "interactive": true,
+    "links": [
+      "WorkoutGym"
+    ],
+    "existing": "LiftProgramImportSheet",
+    "file": "mockups/WorkoutProgramImport.dc.html"
+  },
+  {
+    "id": "WorkoutSummaryGym",
+    "title": "Ringkasan sesi gym",
+    "group": "7.2 Gym: program (template), impor, dan ringkasan sesi",
+    "w": 390,
+    "h": 2380,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends",
+      "WorkoutGym",
+      "WorkoutSaveProgram",
+      "Workouts"
+    ],
+    "existing": "LiftSessionDetailSheet",
+    "file": "mockups/WorkoutSummaryGym.dc.html"
+  },
+  {
+    "id": "WorkoutSaveProgram",
+    "title": "Simpan sebagai program",
+    "group": "7.2 Gym: program (template), impor, dan ringkasan sesi",
+    "w": 390,
+    "h": 1240,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends",
+      "WorkoutGym",
+      "WorkoutSummaryGym"
+    ],
+    "existing": "NEW",
+    "file": "mockups/WorkoutSaveProgram.dc.html"
+  },
+  {
+    "id": "TrainingLoad",
+    "title": "Beban latihan",
+    "group": "7.3 Beban latihan: kardio dan otot",
+    "w": 390,
+    "h": 2200,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "TrainingLoadCardio",
+      "TrainingLoadMuscle",
+      "Trends",
+      "WorkoutCalendar",
+      "Workouts"
+    ],
+    "existing": "TrainingLoadCard",
+    "file": "mockups/TrainingLoad.dc.html"
+  },
+  {
+    "id": "TrainingLoadCardio",
+    "title": "Beban kardio",
+    "group": "7.3 Beban latihan: kardio dan otot",
+    "w": 390,
+    "h": 2420,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaSheetWorkout",
+      "Health",
+      "Main",
+      "Personalize",
+      "TrainingLoad",
+      "TrainingLoadMuscle",
+      "Trends",
+      "Workouts"
+    ],
+    "existing": "TrainingLoadCard, TrainingLoadChart",
+    "file": "mockups/TrainingLoadCardio.dc.html"
+  },
+  {
+    "id": "TrainingLoadMuscle",
+    "title": "Beban otot",
+    "group": "7.3 Beban latihan: kardio dan otot",
+    "w": 390,
+    "h": 2300,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "TrainingLoad",
+      "TrainingLoadCardio",
+      "Trends",
+      "WorkoutLift",
+      "Workouts"
+    ],
+    "existing": "LiftLogView (muscle volume), new UI",
+    "file": "mockups/TrainingLoadMuscle.dc.html"
+  },
+  {
+    "id": "WorkoutCalendar",
+    "title": "Kalender latihan",
+    "group": "7.4 Kalender latihan dan semua sesi",
+    "w": 390,
+    "h": 2060,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends",
+      "WorkoutSummary",
+      "Workouts"
+    ],
+    "existing": "NEW",
+    "file": "mockups/WorkoutCalendar.dc.html"
+  },
+  {
+    "id": "WorkoutHistory",
+    "title": "Semua sesi",
+    "group": "7.4 Kalender latihan dan semua sesi",
+    "w": 390,
+    "h": 2300,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends",
+      "WorkoutSummary",
+      "Workouts"
+    ],
+    "existing": "WorkoutsView (all sessions)",
+    "file": "mockups/WorkoutHistory.dc.html"
+  },
+  {
+    "id": "WorkoutAutoDetect",
+    "title": "Deteksi otomatis · aktif",
+    "group": "7.5 Deteksi latihan otomatis: aktif dan mati",
+    "w": 390,
+    "h": 1760,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "TestCentre",
+      "Trends",
+      "Workouts"
+    ],
+    "existing": "AutoWorkoutCard, SettingsView",
+    "file": "mockups/WorkoutAutoDetect.dc.html"
+  },
+  {
+    "id": "WorkoutAutoDetectOff",
+    "title": "Deteksi otomatis · mati",
+    "group": "7.5 Deteksi latihan otomatis: aktif dan mati",
+    "w": 390,
+    "h": 1500,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends",
+      "Workouts"
+    ],
+    "existing": "AutoWorkoutCard",
+    "file": "mockups/WorkoutAutoDetectOff.dc.html"
+  },
+  {
+    "id": "Live",
+    "title": "Sesi langsung · Lari",
+    "group": "7.6 Sesi langsung: olahraga GPS (lari, jalan, sepeda)",
+    "w": 390,
+    "h": 940,
+    "interactive": true,
+    "links": [
+      "Main",
+      "WorkoutSummary"
+    ],
+    "existing": "LiveWorkoutView",
+    "file": "mockups/Live.dc.html"
+  },
+  {
+    "id": "LiveWalk",
+    "title": "Sesi langsung · Jalan",
+    "group": "7.6 Sesi langsung: olahraga GPS (lari, jalan, sepeda)",
+    "w": 390,
+    "h": 940,
+    "interactive": true,
+    "links": [
+      "Main",
+      "WorkoutSummary"
+    ],
+    "existing": "LiveWorkoutView",
+    "file": "mockups/LiveWalk.dc.html"
+  },
+  {
+    "id": "LiveCycle",
+    "title": "Sesi langsung · Sepeda",
+    "group": "7.6 Sesi langsung: olahraga GPS (lari, jalan, sepeda)",
+    "w": 390,
+    "h": 940,
+    "interactive": true,
+    "links": [
+      "Main",
+      "WorkoutSummary"
+    ],
+    "existing": "LiveWorkoutView",
+    "file": "mockups/LiveCycle.dc.html"
+  },
+  {
+    "id": "LiveActivities",
+    "title": "Layar kunci · GPS",
+    "group": "7.6 Sesi langsung: olahraga GPS (lari, jalan, sepeda)",
+    "w": 1410,
+    "h": 1180,
+    "interactive": false,
+    "links": [],
+    "existing": "StrandiOSWidgets/NOOPLiveActivity",
+    "file": "mockups/LiveActivities.dc.html"
+  },
+  {
+    "id": "WorkoutStartHiit",
+    "title": "Mulai HIIT",
+    "group": "7.7 Sesi langsung: olahraga tanpa GPS (HIIT, yoga)",
+    "w": 390,
+    "h": 1160,
+    "interactive": true,
+    "links": [
+      "LiveHIIT",
+      "Workouts"
+    ],
+    "existing": "IntervalTimerView",
+    "file": "mockups/WorkoutStartHiit.dc.html"
+  },
+  {
+    "id": "LiveHIIT",
+    "title": "Sesi langsung · HIIT",
+    "group": "7.7 Sesi langsung: olahraga tanpa GPS (HIIT, yoga)",
+    "w": 390,
+    "h": 980,
+    "interactive": true,
+    "links": [
+      "WorkoutSummary",
+      "Workouts"
+    ],
+    "existing": "IntervalTimerView, LiveWorkoutView",
+    "file": "mockups/LiveHIIT.dc.html"
+  },
+  {
+    "id": "LiveIndoor",
+    "title": "Sesi langsung · Yoga",
+    "group": "7.7 Sesi langsung: olahraga tanpa GPS (HIIT, yoga)",
+    "w": 390,
+    "h": 940,
+    "interactive": true,
+    "links": [
+      "WorkoutSummary",
+      "Workouts"
+    ],
+    "existing": "LiveWorkoutView",
+    "file": "mockups/LiveIndoor.dc.html"
+  },
+  {
+    "id": "LiveActivitiesNoGps",
+    "title": "Layar kunci · tanpa GPS",
+    "group": "7.7 Sesi langsung: olahraga tanpa GPS (HIIT, yoga)",
+    "w": 1410,
+    "h": 1180,
+    "interactive": false,
+    "links": [],
+    "existing": "StrandiOSWidgets/NOOPLiveActivity",
+    "file": "mockups/LiveActivitiesNoGps.dc.html"
+  },
+  {
+    "id": "LiveIsland",
+    "title": "Dynamic Island saat workout",
+    "group": "7.8 Dynamic Island saat workout",
+    "w": 1410,
+    "h": 3900,
+    "interactive": false,
+    "links": [],
+    "existing": "StrandiOSWidgets/NOOPLiveActivity",
+    "file": "mockups/LiveIsland.dc.html"
+  },
+  {
+    "id": "LiveZone",
+    "title": "Zona kuning dan merah",
+    "group": "7.9 Zona detak kuning dan merah",
+    "w": 1410,
+    "h": 2480,
+    "interactive": false,
+    "links": [],
+    "existing": "LiveSessionView, NOOPLiveActivity",
+    "file": "mockups/LiveZone.dc.html"
+  },
+  {
+    "id": "Devices",
+    "title": "Perangkat",
+    "group": "8.1 Perangkat: strap, baterai, dan sinkron",
+    "w": 390,
+    "h": 2240,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaSheetDevice",
+      "DeviceDetail",
+      "DeviceHelp",
+      "DeviceLog",
+      "DeviceModel",
+      "DeviceModels",
+      "DeviceSync",
+      "DeviceSyncIsland",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "DevicesView",
+    "file": "mockups/Devices.dc.html"
+  },
+  {
+    "id": "DeviceDetail",
+    "title": "Detail strap",
+    "group": "8.1 Perangkat: strap, baterai, dan sinkron",
+    "w": 390,
+    "h": 2000,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "DeviceBattery",
+      "DeviceLog",
+      "DeviceRestart",
+      "DeviceSync",
+      "Devices",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "DevicesView",
+    "file": "mockups/DeviceDetail.dc.html"
+  },
+  {
+    "id": "DeviceBattery",
+    "title": "Baterai strap",
+    "group": "8.1 Perangkat: strap, baterai, dan sinkron",
+    "w": 390,
+    "h": 1560,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "DeviceDetail",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "DevicesView, PowerSavingView",
+    "file": "mockups/DeviceBattery.dc.html"
+  },
+  {
+    "id": "DeviceSync",
+    "title": "Sinkron riwayat",
+    "group": "8.1 Perangkat: strap, baterai, dan sinkron",
+    "w": 390,
+    "h": 2000,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "DeviceSyncIsland",
+      "Devices",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "BackupSyncView?, DevicesView",
+    "file": "mockups/DeviceSync.dc.html"
+  },
+  {
+    "id": "DeviceModel",
+    "title": "Tambah WHOOP",
+    "group": "8.2 Tambah WHOOP: model, cari, sambung",
+    "w": 390,
+    "h": 1260,
+    "interactive": true,
+    "links": [
+      "DeviceModels",
+      "Devices",
+      "Scan"
+    ],
+    "existing": "AddDeviceWizard",
+    "file": "mockups/DeviceModel.dc.html"
+  },
+  {
+    "id": "Scan",
+    "title": "Cari strap",
+    "group": "8.2 Tambah WHOOP: model, cari, sambung",
+    "w": 390,
+    "h": 1250,
+    "interactive": true,
+    "links": [
+      "DeviceHelp",
+      "DeviceModel",
+      "Pairing"
+    ],
+    "existing": "AddDeviceWizard",
+    "file": "mockups/Scan.dc.html"
+  },
+  {
+    "id": "Pairing",
+    "title": "Menyambungkan",
+    "group": "8.2 Tambah WHOOP: model, cari, sambung",
+    "w": 390,
+    "h": 1200,
+    "interactive": true,
+    "links": [
+      "DeviceRepair",
+      "Scan"
+    ],
+    "existing": "AddDeviceWizard",
+    "file": "mockups/Pairing.dc.html"
+  },
+  {
+    "id": "Connected",
+    "title": "Terhubung",
+    "group": "8.2 Tambah WHOOP: model, cari, sambung",
+    "w": 390,
+    "h": 1250,
+    "interactive": true,
+    "links": [
+      "Devices",
+      "Main"
+    ],
+    "existing": "AddDeviceWizard",
+    "file": "mockups/Connected.dc.html"
+  },
+  {
+    "id": "DeviceHelp",
+    "title": "Bantuan koneksi",
+    "group": "8.3 Bantuan koneksi, model, dan log",
+    "w": 390,
+    "h": 1900,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "DeviceLog",
+      "DeviceRepair",
+      "DeviceRestart",
+      "Devices",
+      "Health",
+      "Main",
+      "Personalize",
+      "Scan",
+      "Trends"
+    ],
+    "existing": "DevicesView",
+    "file": "mockups/DeviceHelp.dc.html"
+  },
+  {
+    "id": "DeviceRepair",
+    "title": "Pasang ulang",
+    "group": "8.3 Bantuan koneksi, model, dan log",
+    "w": 390,
+    "h": 1500,
+    "interactive": true,
+    "links": [
+      "DeviceHelp",
+      "DeviceModel",
+      "Devices"
+    ],
+    "existing": "DevicesView",
+    "file": "mockups/DeviceRepair.dc.html"
+  },
+  {
+    "id": "DeviceModels",
+    "title": "Model dan dukungan",
+    "group": "8.3 Bantuan koneksi, model, dan log",
+    "w": 390,
+    "h": 1760,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Devices",
+      "Experiments",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "NoopLimitationsView",
+    "file": "mockups/DeviceModels.dc.html"
+  },
+  {
+    "id": "DeviceLog",
+    "title": "Log strap",
+    "group": "8.3 Bantuan koneksi, model, dan log",
+    "w": 390,
+    "h": 1480,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Devices",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "RawDataCollectorView, LiveView log",
+    "file": "mockups/DeviceLog.dc.html"
+  },
+  {
+    "id": "DeviceRestart",
+    "title": "Mulai ulang strap",
+    "group": "8.3 Bantuan koneksi, model, dan log",
+    "w": 390,
+    "h": 900,
+    "interactive": true,
+    "links": [
+      "DeviceDetail",
+      "Devices"
+    ],
+    "existing": "DevicesView",
+    "file": "mockups/DeviceRestart.dc.html"
+  },
+  {
+    "id": "DeviceSyncIsland",
+    "title": "Sinkron di Dynamic Island",
+    "group": "8.4 Sinkron di Dynamic Island",
+    "w": 1410,
+    "h": 1160,
+    "interactive": false,
+    "links": [],
+    "existing": "StrandiOSWidgets/SyncLiveActivity",
+    "file": "mockups/DeviceSyncIsland.dc.html"
+  },
+  {
+    "id": "Widgets",
+    "title": "Widget layar utama",
+    "group": "11.1 Widget layar utama: skor, detak, stres, Anya, langkah",
+    "w": 1410,
+    "h": 1760,
+    "interactive": false,
+    "links": [],
+    "existing": "StrandiOSWidgets (NOOPWidget, PHMNRings, HeartRate, Stress, CoachBrief)",
+    "file": "mockups/Widgets.dc.html"
+  },
+  {
+    "id": "WidgetVital",
+    "title": "Widget Vital sign",
+    "group": "11.2 Widget Vital sign (baru)",
+    "w": 1410,
+    "h": 1180,
+    "interactive": false,
+    "links": [],
+    "existing": "NEW (VitalWidget)",
+    "file": "mockups/WidgetVital.dc.html"
+  },
+  {
+    "id": "WidgetsLock",
+    "title": "Widget layar kunci",
+    "group": "11.3 Widget layar kunci",
+    "w": 1410,
+    "h": 1080,
+    "interactive": false,
+    "links": [],
+    "existing": "StrandiOSWidgets accessory families",
+    "file": "mockups/WidgetsLock.dc.html"
+  },
+  {
+    "id": "Personalize",
+    "title": "Saya",
+    "group": "12.1 Saya: hub dan persona",
+    "w": 390,
+    "h": 1960,
+    "interactive": true,
+    "links": [
+      "About",
+      "Advanced",
+      "Anya",
+      "AnyaSettings",
+      "Appearance",
+      "Automations",
+      "Backup",
+      "DataHub",
+      "Devices",
+      "Features",
+      "Health",
+      "Main",
+      "Notifications",
+      "Persona",
+      "Privacy",
+      "Trends",
+      "WidgetSettings"
+    ],
+    "existing": "SettingsView (new hub)",
+    "file": "mockups/Personalize.dc.html"
+  },
+  {
+    "id": "Persona",
+    "title": "Persona",
+    "group": "12.1 Saya: hub dan persona",
+    "w": 390,
+    "h": 2160,
+    "interactive": true,
+    "links": [
+      "Advanced",
+      "Anya",
+      "Health",
+      "Main",
+      "PersonaGoals",
+      "PersonaZones",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "SettingsView (Profile)",
+    "file": "mockups/Persona.dc.html"
+  },
+  {
+    "id": "PersonaZones",
+    "title": "Zona detak",
+    "group": "12.1 Saya: hub dan persona",
+    "w": 390,
+    "h": 1560,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Persona",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "SettingsView (custom zones)",
+    "file": "mockups/PersonaZones.dc.html"
+  },
+  {
+    "id": "PersonaGoals",
+    "title": "Target",
+    "group": "12.1 Saya: hub dan persona",
+    "w": 390,
+    "h": 1500,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Persona",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "NEW",
+    "file": "mockups/PersonaGoals.dc.html"
+  },
+  {
+    "id": "Appearance",
+    "title": "Tampilan",
+    "group": "12.2 Tampilan: Experience, bahasa, dan satuan",
+    "w": 390,
+    "h": 2480,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Experience",
+      "Health",
+      "Language",
+      "Main",
+      "Personalize",
+      "Trends",
+      "Units"
+    ],
+    "existing": "SettingsView (Appearance), Typography preset",
+    "file": "mockups/Appearance.dc.html"
+  },
+  {
+    "id": "Experience",
+    "title": "Experience",
+    "group": "12.2 Tampilan: Experience, bahasa, dan satuan",
+    "w": 390,
+    "h": 1760,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Appearance",
+      "ExperienceConfirm",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "NEW (ExperienceMode)",
+    "file": "mockups/Experience.dc.html"
+  },
+  {
+    "id": "ExperienceConfirm",
+    "title": "Ganti Experience",
+    "group": "12.2 Tampilan: Experience, bahasa, dan satuan",
+    "w": 390,
+    "h": 1000,
+    "interactive": true,
+    "links": [
+      "Experience"
+    ],
+    "existing": "NEW",
+    "file": "mockups/ExperienceConfirm.dc.html"
+  },
+  {
+    "id": "Language",
+    "title": "Bahasa",
+    "group": "12.2 Tampilan: Experience, bahasa, dan satuan",
+    "w": 390,
+    "h": 1700,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Appearance",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends",
+      "Units"
+    ],
+    "existing": "NEW (IOS_INDONESIAN_LOCALIZATION)",
+    "file": "mockups/Language.dc.html"
+  },
+  {
+    "id": "Units",
+    "title": "Satuan",
+    "group": "12.2 Tampilan: Experience, bahasa, dan satuan",
+    "w": 390,
+    "h": 1440,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Appearance",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "SettingsView (Units)",
+    "file": "mockups/Units.dc.html"
+  },
+  {
+    "id": "Notifications",
+    "title": "Notifikasi",
+    "group": "12.3 Notifikasi, fitur opsional, dan widget",
+    "w": 390,
+    "h": 1900,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaBrief",
+      "DeviceBattery",
+      "Health",
+      "Main",
+      "Personalize",
+      "Sleep",
+      "TodayWarning",
+      "Trends",
+      "WorkoutAutoDetect"
+    ],
+    "existing": "NotificationSettingsView",
+    "file": "mockups/Notifications.dc.html"
+  },
+  {
+    "id": "Features",
+    "title": "Fitur opsional",
+    "group": "12.3 Notifikasi, fitur opsional, dan widget",
+    "w": 390,
+    "h": 1380,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "HealthCycle",
+      "Main",
+      "Personalize",
+      "TodayEdit",
+      "Trends",
+      "WorkoutAutoDetect"
+    ],
+    "existing": "SettingsView (Features)",
+    "file": "mockups/Features.dc.html"
+  },
+  {
+    "id": "WidgetSettings",
+    "title": "Pengaturan widget",
+    "group": "12.3 Notifikasi, fitur opsional, dan widget",
+    "w": 390,
+    "h": 2200,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends",
+      "WidgetVitalConfig"
+    ],
+    "existing": "NEW",
+    "file": "mockups/WidgetSettings.dc.html"
+  },
+  {
+    "id": "WidgetVitalConfig",
+    "title": "Atur widget Vital",
+    "group": "12.3 Notifikasi, fitur opsional, dan widget",
+    "w": 390,
+    "h": 1560,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends",
+      "WidgetSettings"
+    ],
+    "existing": "NEW",
+    "file": "mockups/WidgetVitalConfig.dc.html"
+  },
+  {
+    "id": "Automations",
+    "title": "Otomasi strap",
+    "group": "12.4 Otomasi strap",
+    "w": 390,
+    "h": 2140,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AutoAlerts",
+      "AutoCoaching",
+      "AutoDoubleTap",
+      "AutoPresence",
+      "AutoSedentary",
+      "AutoShortcuts",
+      "Health",
+      "Main",
+      "Personalize",
+      "TodayWarning",
+      "Trends"
+    ],
+    "existing": "AutomationsView",
+    "file": "mockups/Automations.dc.html"
+  },
+  {
+    "id": "AutoDoubleTap",
+    "title": "Ketuk dua kali",
+    "group": "12.4 Otomasi strap",
+    "w": 390,
+    "h": 1880,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Automations",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "AutomationsView",
+    "file": "mockups/AutoDoubleTap.dc.html"
+  },
+  {
+    "id": "AutoPresence",
+    "title": "Pakai dan lepas strap",
+    "group": "12.4 Otomasi strap",
+    "w": 390,
+    "h": 1700,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Automations",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "AutomationsView",
+    "file": "mockups/AutoPresence.dc.html"
+  },
+  {
+    "id": "AutoCoaching",
+    "title": "Getar saat beraktivitas",
+    "group": "12.4 Otomasi strap",
+    "w": 390,
+    "h": 2200,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Automations",
+      "DeviceLog",
+      "Health",
+      "Main",
+      "PersonaZones",
+      "Personalize",
+      "TodayBreatheRhythm",
+      "Trends"
+    ],
+    "existing": "AutomationsView",
+    "file": "mockups/AutoCoaching.dc.html"
+  },
+  {
+    "id": "AutoSedentary",
+    "title": "Duduk terlalu lama",
+    "group": "12.4 Otomasi strap",
+    "w": 390,
+    "h": 1600,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Automations",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "AutomationsView",
+    "file": "mockups/AutoSedentary.dc.html"
+  },
+  {
+    "id": "AutoAlerts",
+    "title": "Peringatan dan laporan",
+    "group": "12.4 Otomasi strap",
+    "w": 390,
+    "h": 1900,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Automations",
+      "Health",
+      "Main",
+      "Notifications",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "AutomationsView",
+    "file": "mockups/AutoAlerts.dc.html"
+  },
+  {
+    "id": "AutoShortcuts",
+    "title": "Siri dan Pintasan",
+    "group": "12.4 Otomasi strap",
+    "w": 390,
+    "h": 1700,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AutoDoubleTap",
+      "AutoPresence",
+      "Automations",
+      "DeviceSync",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "SiriShortcutsSettingsView, ShortcutExportSettingsView",
+    "file": "mockups/AutoShortcuts.dc.html"
+  },
+  {
+    "id": "DataHub",
+    "title": "Data dan integrasi",
+    "group": "12.5 Data, cadangan, dan Strava",
+    "w": 390,
+    "h": 2110,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Backup",
+      "Health",
+      "HealthNutrition",
+      "HealthPermissions",
+      "Main",
+      "Personalize",
+      "Strava",
+      "Trends",
+      "WorkoutProgramImport"
+    ],
+    "existing": "DataSourcesView",
+    "file": "mockups/DataHub.dc.html"
+  },
+  {
+    "id": "Backup",
+    "title": "Cadangan",
+    "group": "12.5 Data, cadangan, dan Strava",
+    "w": 390,
+    "h": 1860,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "DataHub",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "BackupSyncView",
+    "file": "mockups/Backup.dc.html"
+  },
+  {
+    "id": "Strava",
+    "title": "Strava · mati",
+    "group": "12.5 Data, cadangan, dan Strava",
+    "w": 390,
+    "h": 1280,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "DataHub",
+      "Health",
+      "Main",
+      "Personalize",
+      "StravaSetup",
+      "Trends"
+    ],
+    "existing": "StravaSettingsView",
+    "file": "mockups/Strava.dc.html"
+  },
+  {
+    "id": "StravaSetup",
+    "title": "Strava · penyiapan",
+    "group": "12.5 Data, cadangan, dan Strava",
+    "w": 390,
+    "h": 1900,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "DataHub",
+      "Health",
+      "Main",
+      "Personalize",
+      "StravaConnected",
+      "Trends"
+    ],
+    "existing": "StravaSettingsView",
+    "file": "mockups/StravaSetup.dc.html"
+  },
+  {
+    "id": "StravaConnected",
+    "title": "Strava · tersambung",
+    "group": "12.5 Data, cadangan, dan Strava",
+    "w": 390,
+    "h": 1900,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "DataHub",
+      "Health",
+      "Main",
+      "Personalize",
+      "StravaSetup",
+      "Trends",
+      "WorkoutSummary"
+    ],
+    "existing": "StravaSettingsView",
+    "file": "mockups/StravaConnected.dc.html"
+  },
+  {
+    "id": "Privacy",
+    "title": "Privasi",
+    "group": "12.6 Privasi, lanjutan, dan tentang",
+    "w": 390,
+    "h": 1900,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "NEW",
+    "file": "mockups/Privacy.dc.html"
+  },
+  {
+    "id": "Advanced",
+    "title": "Lanjutan",
+    "group": "12.6 Privasi, lanjutan, dan tentang",
+    "w": 390,
+    "h": 1700,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "DeviceLog",
+      "Experiments",
+      "Health",
+      "Main",
+      "Personalize",
+      "Privacy",
+      "TestCentre",
+      "Trends"
+    ],
+    "existing": "SettingsView (Advanced)",
+    "file": "mockups/Advanced.dc.html"
+  },
+  {
+    "id": "About",
+    "title": "Tentang",
+    "group": "12.6 Privasi, lanjutan, dan tentang",
+    "w": 390,
+    "h": 1900,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "DeviceHelp",
+      "DeviceLog",
+      "DeviceModels",
+      "Health",
+      "Main",
+      "Personalize",
+      "TodayCharge",
+      "Trends"
+    ],
+    "existing": "AboutView, HowNoopWorksView, WhatsNewView",
+    "file": "mockups/About.dc.html"
+  },
+  {
+    "id": "Experiments",
+    "title": "Eksperimen",
+    "group": "12.7 Eksperimen dan Test Centre",
+    "w": 390,
+    "h": 1960,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Health",
+      "HealthRhythmConsent",
+      "Main",
+      "Personalize",
+      "Strava",
+      "TestCentre",
+      "Trends"
+    ],
+    "existing": "SettingsView (experimental)",
+    "file": "mockups/Experiments.dc.html"
+  },
+  {
+    "id": "TestCentre",
+    "title": "Test Centre",
+    "group": "12.7 Eksperimen dan Test Centre",
+    "w": 390,
+    "h": 1700,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "Experiments",
+      "Health",
+      "Main",
+      "Personalize",
+      "Trends"
+    ],
+    "existing": "TestCentreView",
+    "file": "mockups/TestCentre.dc.html"
+  }
+]

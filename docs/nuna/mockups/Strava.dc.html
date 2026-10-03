@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Strava</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:1280px">
+  <div class="pad col" style="gap:16px">
+    <div class="rw sp"><div class="rw" style="gap:10px"><a class="ib" href="DataHub.dc.html" aria-label="Kembali"><i class="i i-chevl"></i></a><h1 class="h2" style="font-size:24px">Strava</h1></div><span class="chip" style="background:rgba(255,255,255,.07);color:#9AA4AC">Eksperimental</span></div>
+    <div class="gc" style="padding:20px"><div class="rw" style="gap:12px"><div class="ic" style="width:48px;height:48px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-up"></i></div><div class="grow"><div class="h3" style="font-size:17px">Unggah aktivitas ke Strava</div><div class="sub" style="font-size:12.5px;line-height:1.4">Latihan GPS dan treadmill dikirim sebagai berkas FIT</div></div></div>
+      <div class="rw sp" style="margin-top:18px;padding-top:16px;border-top:1px solid var(--bd)"><div class="grow"><div class="h3" style="font-size:16px">Aktifkan integrasi Strava</div><div class="sub" style="font-size:12.5px;line-height:1.4;margin-top:2px">Mati secara bawaan. Selama mati, tidak ada permintaan ke Strava.</div></div><button class="tg" aria-pressed="false" aria-label="Aktifkan integrasi Strava"></button></div></div>
+    <h2 class="h2">Yang kamu butuhkan</h2>
+    <div class="gc" style="padding:4px 18px;margin-top:-4px"><div class="li" style="border-top:0"><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-user"></i></div><div class="grow"><div class="h3" style="font-size:16px">Akun Strava</div><div class="sub" style="font-size:12.5px;line-height:1.35">Dengan akses ke My API Application</div></div><i class="i s i-chev" style="color:#6B7177"></i></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-bm"></i></div><div class="grow"><div class="h3" style="font-size:16px">Aplikasi API sendiri</div><div class="sub" style="font-size:12.5px;line-height:1.35">Client ID dan Client Secret dari Strava</div></div><i class="i s i-chev" style="color:#6B7177"></i></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(22,236,6,.12);color:#16EC06"><i class="i i-watch"></i></div><div class="grow"><div class="h3" style="font-size:16px">Latihan GPS atau treadmill</div><div class="sub" style="font-size:12.5px;line-height:1.35">Hanya jenis ini yang bisa diunggah</div></div><i class="i s i-chev" style="color:#6B7177"></i></div></div>
+    <div class="gc s rw" style="gap:12px;padding:14px 16px;align-items:flex-start"><i class="i s i-sp" style="color:#6B7177;margin-top:2px"></i><div class="sub" style="font-size:12.5px;line-height:1.45">NOOP memakai aplikasi API milikmu sendiri. Client ID dan Secret disimpan di Keychain iPhone dan hanya dipakai saat kamu menyambungkan atau mengunggah.</div></div>
+    <a class="btn g" href="StravaSetup.dc.html" style="height:50px">Lihat tampilan setelah diaktifkan</a>
+  </div>
+  <nav class="tabbar" aria-label="Navigasi utama">
+    <a class="tab" href="Main.dc.html"><i class="i i-grid"></i>Hari ini</a>
+    <a class="tab" href="Health.dc.html"><i class="i i-hp"></i>Kesehatan</a>
+    <a class="tab" href="Trends.dc.html"><i class="i i-trend"></i>Tren</a>
+    <a class="tab" href="Anya.dc.html"><i class="i i-sp"></i>Anya</a>
+    <a class="tab on" href="Personalize.dc.html"><i class="i i-user"></i>Saya</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1280}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

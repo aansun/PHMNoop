@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Deteksi otomatis</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:1760px">
+  <div class="pad col" style="gap:16px">
+    <div class="rw sp"><div class="rw" style="gap:10px"><a class="ib" href="Workouts.dc.html" aria-label="Kembali"><i class="i i-chevl"></i></a><h1 class="h2" style="font-size:24px">Deteksi otomatis</h1></div><span class="chip a"><i class="i s i-chk"></i>Aktif</span></div>
+    <div class="gc" style="padding:18px"><div class="rw" style="gap:12px"><div class="ic" style="width:48px;height:48px;background:rgba(22,236,6,.12);color:#16EC06"><i class="i i-sp"></i></div><div class="grow"><div class="h3" style="font-size:17px">Deteksi latihan otomatis</div><div class="sub" style="font-size:12.5px;line-height:1.35">Aktif. Anya mencari latihan yang belum kamu catat.</div></div><button class="tg on" aria-pressed="true" aria-label="Deteksi latihan otomatis"></button></div></div>
+    <div class="gc s rw" style="gap:12px;padding:14px 16px;align-items:flex-start"><div class="ic" style="width:40px;height:40px;background:rgba(22,236,6,.12);color:#16EC06"><i class="i i-chk"></i></div><div class="grow"><div class="h3" style="font-size:16px">Tidak pernah menyimpan sendiri</div><div class="sub" style="font-size:12.5px;line-height:1.4">Deteksi hanya menyarankan lewat satu kartu di Latihan. Kamu yang memutuskan Simpan atau Bukan latihan.</div></div></div>
+    <h2 class="h2">Cara kerjanya</h2><div class="gc" style="padding:4px 18px;margin-top:-4px"><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-timer"></i></div><div class="grow"><div class="h3" style="font-size:15.5px">Durasi minimal</div><div class="sub" style="font-size:12.5px;line-height:1.35">Detak harus tetap naik terus</div></div><span class="n ns" style="font-size:16px">12 mnt</span></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(255,0,38,.14);color:#FF5468"><i class="i i-heart"></i></div><div class="grow"><div class="h3" style="font-size:15.5px">Ambang detak</div><div class="sub" style="font-size:12.5px;line-height:1.35">Di atas detak istirahat</div></div><span class="n ns" style="font-size:16px">+30 bpm</span></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-bolt"></i></div><div class="grow"><div class="h3" style="font-size:15.5px">Jeda ditoleransi</div><div class="sub" style="font-size:12.5px;line-height:1.35">Turun sebentar tidak memutus sesi</div></div><span class="n ns" style="font-size:16px">90 dtk</span></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(22,236,6,.12);color:#16EC06"><i class="i i-steps"></i></div><div class="grow"><div class="h3" style="font-size:15.5px">Gerak</div><div class="sub" style="font-size:12.5px;line-height:1.35">Dipakai sebagai konfirmasi bila ada</div></div><span class="n ns" style="font-size:16px">Otomatis</span></div></div><p class="sub" style="font-size:12px;line-height:1.45;margin-top:-6px">Aturan sengaja konservatif agar stres, kafein, atau naik tangga tidak dianggap latihan. Sesi singkat atau ringan bisa terlewat.</p>
+    <h2 class="h2">Saran terakhir</h2><div class="gc" style="padding:4px 18px;margin-top:-4px"><div class="li" style="min-height:64px"><div class="ic" style="width:40px;height:40px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-flame"></i></div><div class="grow"><div class="h3" style="font-size:15.5px">Lari · 38 menit</div><div class="sub" style="font-size:12.5px">Hari ini 06:12 · rata-rata 134 bpm</div></div><span class="chip" style="height:26px">Menunggu</span></div><div class="li" style="min-height:64px"><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-steps"></i></div><div class="grow"><div class="h3" style="font-size:15.5px">Jalan cepat · 22 menit</div><div class="sub" style="font-size:12.5px">30 Sep 17:40 · rata-rata 112 bpm</div></div><span class="chip a" style="height:26px">Disimpan</span></div><div class="li" style="min-height:64px"><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-bolt"></i></div><div class="grow"><div class="h3" style="font-size:15.5px">Aktivitas · 14 menit</div><div class="sub" style="font-size:12.5px">28 Sep 11:05 · rata-rata 126 bpm</div></div><span class="chip" style="height:26px">Bukan latihan</span></div></div><h2 class="h2">Pilihan</h2><div class="gc" style="padding:6px 18px;margin-top:-4px"><div class="li" style="border-top:0"><div class="grow"><div class="h3">Cek tiap sinkron</div><div class="sub" style="font-size:12.5px">Memindai 1 sampai 2 hari terakhir</div></div><button class="tg on" aria-pressed="true" aria-label="Cek tiap sinkron"></button></div><div class="li"><div class="grow"><div class="h3">Tulis ke Apple Health</div><div class="sub" style="font-size:12.5px">Setelah kamu menyimpan saran</div></div><button class="tg on" aria-pressed="true" aria-label="Tulis ke Apple Health"></button></div><a class="li" href="TestCentre.dc.html"><div class="grow"><div class="h3">Uji ambang lain</div><div class="sub" style="font-size:12.5px">10 dan 15 menit, hanya bandingan di Test Centre</div></div><i class="i s i-chev" style="color:#6B7177"></i></a></div>
+  </div>
+  <nav class="tabbar" aria-label="Navigasi utama">
+    <a class="tab on" href="Main.dc.html"><i class="i i-grid"></i>Hari ini</a>
+    <a class="tab" href="Health.dc.html"><i class="i i-hp"></i>Kesehatan</a>
+    <a class="tab" href="Trends.dc.html"><i class="i i-trend"></i>Tren</a>
+    <a class="tab" href="Anya.dc.html"><i class="i i-sp"></i>Anya</a>
+    <a class="tab" href="Personalize.dc.html"><i class="i i-user"></i>Saya</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1760}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

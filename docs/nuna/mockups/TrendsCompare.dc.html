@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Bandingkan</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:1740px">
+  <div class="pad col" style="gap:16px">
+    <div class="rw sp"><div class="rw" style="gap:10px"><a class="ib" href="Trends.dc.html" aria-label="Kembali"><i class="i i-chevl"></i></a><h1 class="h2" style="font-size:24px">Bandingkan</h1></div></div>
+    <div class="gc"><div class="rw sp"><span class="cap">Pilih 2 sampai 4 metrik</span><span class="sub" style="font-size:12px">2 dipilih</span></div><div class="rw" style="gap:8px;flex-wrap:wrap;margin-top:12px"><span class="chip" style="height:38px;padding:0 14px;gap:8px;background:#fff;color:#000"><i style="width:10px;height:10px;border-radius:50%;background:#16EC06"></i>Charge</span><span class="chip" style="height:38px;padding:0 14px;gap:8px;background:#fff;color:#000"><i style="width:10px;height:10px;border-radius:50%;background:#0093E7"></i>Effort</span><span class="chip" style="height:38px;padding:0 14px;gap:8px;"><i style="width:10px;height:10px;border-radius:50%;background:#7BA1BB"></i>Rest</span><span class="chip" style="height:38px;padding:0 14px;gap:8px;"><i style="width:10px;height:10px;border-radius:50%;background:#FFFFFF"></i>HRV</span><span class="chip" style="height:38px;padding:0 14px;gap:8px;"><i style="width:10px;height:10px;border-radius:50%;background:#FF0026"></i>Detak istirahat</span><span class="chip" style="height:38px;padding:0 14px;gap:8px;"><i style="width:10px;height:10px;border-radius:50%;background:#FFDE00"></i>Stres</span><span class="chip" style="height:38px;padding:0 14px;gap:8px;"><i style="width:10px;height:10px;border-radius:50%;background:#9AA4AC"></i>Langkah</span><span class="chip" style="height:38px;padding:0 14px;gap:8px;"><i style="width:10px;height:10px;border-radius:50%;background:#B8CCE0"></i>Tidur</span></div></div>
+    <div class="sg"><button>7H</button><button class="on">30H</button><button>90H</button><button>1T</button></div>
+    <div class="gc"><div class="rw sp"><span class="cap">Dibandingkan</span><span class="sub" style="font-size:12px">Skala dinormalkan</span></div><div style="margin-top:12px"><svg viewBox="0 0 314 200" width="100%" height="200" aria-hidden="true"><g stroke="rgba(255,255,255,.07)"><path d="M0 50H314M0 100H314M0 150H314"/></g><path d="M5.2 66.8 L15.7 105.2 L26.2 76.4 L36.6 76.4 L47.1 105.2 L57.6 60.4 L68.0 95.6 L78.5 79.6 L89.0 86.0 L99.4 44.4 L109.9 60.4 L120.4 63.6 L130.8 98.8 L141.3 63.6 L151.8 60.4 L162.2 44.4 L172.7 118.0 L183.2 102.0 L193.6 82.8 L204.1 73.2 L214.6 82.8 L225.0 31.6 L235.5 86.0 L246.0 121.2 L256.4 63.6 L266.9 79.6 L277.4 38.0 L287.8 105.2 L298.3 111.6 L308.8 66.8" fill="none" stroke="#7BA1BB" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.2 76.0 L15.7 108.0 L26.2 76.0 L36.6 126.0 L47.1 88.0 L57.6 76.0 L68.0 100.0 L78.5 86.0 L89.0 76.0 L99.4 66.0 L109.9 86.0 L120.4 70.0 L130.8 90.0 L141.3 74.0 L151.8 84.0 L162.2 78.0 L172.7 122.0 L183.2 88.0 L193.6 98.0 L204.1 82.0 L214.6 66.0 L225.0 54.0 L235.5 80.0 L246.0 84.0 L256.4 74.0 L266.9 102.0 L277.4 48.0 L287.8 92.0 L298.3 118.0 L308.8 66.0" fill="none" stroke="#16EC06" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="rw sp sub" style="font-size:11.5px;margin-top:6px"><span>4 Sep</span><span>19 Sep</span><span>3 Okt</span></div><div class="rw" style="gap:14px;margin-top:10px;font-size:12px;flex-wrap:wrap"><span class="rw sub" style="gap:6px"><i style="width:14px;height:10px;border-radius:3px;background:#16EC06"></i>Charge</span><span class="rw sub" style="gap:6px"><i style="width:14px;height:10px;border-radius:3px;background:#7BA1BB"></i>Rest</span></div></div>
+    <div class="gc"><span class="cap">Korelasi</span>
+      <div style="display:grid;grid-template-columns:70px 1fr 1fr;gap:8px;margin-top:14px;align-items:center"><span></span><span class="cap" style="font-size:10.5px;text-align:center">Charge</span><span class="cap" style="font-size:10.5px;text-align:center">Rest</span>
+        <span class="h3" style="font-size:14px">Charge</span><i style="height:40px;border-radius:10px;background:rgba(255,255,255,.07)"></i><i style="height:40px;border-radius:10px;background:rgba(22,236,6,0.68);display:flex"></i>
+        <span class="h3" style="font-size:14px">Rest</span><i style="height:40px;border-radius:10px;background:rgba(22,236,6,0.68)"></i><i style="height:40px;border-radius:10px;background:rgba(255,255,255,.07)"></i></div>
+      <div class="rw sp" style="margin-top:14px"><span class="h3" style="font-size:15px">Charge dan Rest</span><span class="chip" style="background:rgba(255,255,255,.07)">Kuat · 0,68</span></div></div>
+    <div class="gc" style="padding:6px 18px"><div class="li" style="border-top:0"><div class="grow"><div class="h3">Geser periode</div><div class="sub" style="font-size:12.5px">Bandingkan dengan 30 hari sebelumnya</div></div><button class="tg" aria-pressed="false" aria-label="Geser periode"></button></div></div>
+    <a class="btn" href="#" style="height:52px"><i class="i s i-chk"></i>Simpan perbandingan</a>
+    <h2 class="h2">Tersimpan</h2>
+    <div class="gc" style="padding:4px 18px;margin-top:-4px"><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(22,236,6,.12);color:#16EC06"><i class="i i-trend"></i></div><div class="grow"><div class="h3" style="font-size:16px">Charge, Effort, dan Rest</div><div class="sub" style="font-size:12.5px">30 hari</div></div><i class="i s i-chev" style="color:#6B7177"></i></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-act"></i></div><div class="grow"><div class="h3" style="font-size:16px">HRV dan detak istirahat</div><div class="sub" style="font-size:12.5px">90 hari</div></div><i class="i s i-chev" style="color:#6B7177"></i></div></div>
+  </div>
+  <nav class="tabbar" aria-label="Navigasi utama">
+    <a class="tab" href="Main.dc.html"><i class="i i-grid"></i>Hari ini</a>
+    <a class="tab" href="Health.dc.html"><i class="i i-hp"></i>Kesehatan</a>
+    <a class="tab on" href="Trends.dc.html"><i class="i i-trend"></i>Tren</a>
+    <a class="tab" href="Anya.dc.html"><i class="i i-sp"></i>Anya</a>
+    <a class="tab" href="Personalize.dc.html"><i class="i i-user"></i>Saya</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1740}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

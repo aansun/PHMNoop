@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Latihan napas</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:1000px">
+  <div class="pad col" style="gap:16px">
+    <div class="rw sp"><a class="ib" href="TodayQuick.dc.html" aria-label="Kembali ke aksi cepat"><i class="i i-x"></i></a><span class="h3">Latihan napas</span><span style="width:44px"></span></div>
+    <div class="col" style="align-items:center;gap:6px;margin-top:6px"><span class="chip a"><i class="i s i-wind"></i>Stres sekarang 1,2 · rendah</span></div>
+    <div style="position:relative;width:260px;height:260px;align-self:center;margin-top:6px" role="img" aria-label="Lingkaran napas, tarik napas 4 detik">
+      <div style="position:absolute;inset:0;border-radius:50%;background:rgba(22,236,6,.08);border:1px solid rgba(22,236,6,.25)"></div>
+      <div style="position:absolute;inset:34px;border-radius:50%;background:rgba(22,236,6,.14);border:1px solid rgba(22,236,6,.4)"></div>
+      <div style="position:absolute;inset:70px;border-radius:50%;background:#16EC06;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#000"><b style="font-size:20px;font-weight:800">Tarik</b><span style="font-size:13px;font-weight:700">4 detik</span></div>
+    </div>
+    <div class="col" style="align-items:center;gap:2px"><div class="n nl" style="font-size:44px">02:00</div><span class="sub" style="font-size:13px">Sisa waktu</span></div>
+    <div class="sg"><button class="on">2 mnt</button><button>5 mnt</button><button>10 mnt</button></div>
+    <div class="gc" style="padding:6px 18px"><div class="li" style="border-top:0"><div class="grow"><div class="h3">Getar di strap</div><div class="sub" style="font-size:12.5px">Panduan tarik dan embus lewat getaran</div></div><button class="tg on" aria-pressed="true" aria-label="Getar di strap"></button></div><a class="li" href="TodayBreatheRhythm.dc.html"><div class="grow"><div class="h3">Ritme napas</div><div class="sub" style="font-size:12.5px">Tenang · tarik 4, tahan 2, embus 6</div></div><i class="i s i-chev" style="color:#6B7177"></i></a><div class="li"><div class="grow"><div class="h3">Pantau detak selama latihan</div><div class="sub" style="font-size:12.5px">Lihat perubahan detak dan HRV</div></div><button class="tg on" aria-pressed="true" aria-label="Pantau detak"></button></div></div>
+    <a class="btn" href="TodayStress.dc.html" style="height:56px;border-radius:28px;font-size:16px"><i class="i s i-play"></i>Mulai</a>
+  </div>
+  <nav class="tabbar" aria-label="Navigasi utama">
+    <a class="tab on" href="Main.dc.html"><i class="i i-grid"></i>Hari ini</a>
+    <a class="tab" href="Health.dc.html"><i class="i i-hp"></i>Kesehatan</a>
+    <a class="tab" href="Trends.dc.html"><i class="i i-trend"></i>Tren</a>
+    <a class="tab" href="Anya.dc.html"><i class="i i-sp"></i>Anya</a>
+    <a class="tab" href="Personalize.dc.html"><i class="i i-user"></i>Saya</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1000}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

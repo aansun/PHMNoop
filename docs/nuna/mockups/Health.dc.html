@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Kesehatan</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:1980px">
+  <div class="gl" style="width:320px;height:320px;right:-120px;top:-80px;background:#FF0026;opacity:.22"></div>
+  <div class="gl" style="width:320px;height:320px;left:-140px;top:700px;background:#0093E7;opacity:.22"></div>
+
+  <div class="pad col" style="gap:18px">
+    <div class="col" style="gap:6px">
+      <span class="cap">WHOOP · Apple Health</span>
+      <h1 class="h1">Kesehatan</h1>
+    </div>
+    <div class="sg" role="tablist" aria-label="Filter kesehatan"><a href="Health.dc.html" class="on">Semua</a><a href="HealthVital.dc.html">Vital</a><a href="HealthBody.dc.html">Tubuh</a><a href="HealthSleep.dc.html">Tidur</a></div>
+
+    <div class="gc">
+      <div class="rw sp"><span class="cap">Rentang normalmu</span><span class="chip a">Semua dalam rentang</span></div>
+      <div style="margin-top:18px">
+        <div class="rw sp"><span class="h3">HRV</span><span class="n ns">62<span class="u">ms</span></span></div>
+        <div style="position:relative;height:12px;border-radius:6px;background:rgba(255,255,255,.08);margin-top:10px">
+          <i style="position:absolute;left:22%;width:50%;top:0;bottom:0;border-radius:6px;background:rgba(22,236,6,.35)"></i>
+          <i style="position:absolute;left:58%;top:-4px;width:6px;height:20px;border-radius:3px;background:#fff;box-shadow:0 0 0 3px rgba(22,236,6,.35)"></i>
+        </div>
+        <div class="rw sp sub" style="font-size:12px;margin-top:6px"><span>48</span><span>Rata-rata 30 hari: 58</span><span>84</span></div>
+      </div>
+      <div style="margin-top:18px">
+        <div class="rw sp"><span class="h3">Detak istirahat</span><span class="n ns">54<span class="u">bpm</span></span></div>
+        <div style="position:relative;height:12px;border-radius:6px;background:rgba(255,255,255,.08);margin-top:10px">
+          <i style="position:absolute;left:30%;width:36%;top:0;bottom:0;border-radius:6px;background:rgba(0,147,231,.35)"></i>
+          <i style="position:absolute;left:38%;top:-4px;width:6px;height:20px;border-radius:3px;background:#fff;box-shadow:0 0 0 3px rgba(0,147,231,.35)"></i>
+        </div>
+        <div class="rw sp sub" style="font-size:12px;margin-top:6px"><span>50</span><span>Rata-rata 30 hari: 56</span><span>66</span></div>
+      </div>
+    </div>
+    <a class="gc hl s rw" href="AnyaSheetHealth.dc.html" style="gap:12px;padding:14px 16px"><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-sp"></i></div><div class="grow"><div class="cap" style="font-size:10.5px">Anya · KESEHATAN</div><div class="h3" style="font-size:15.5px;line-height:1.3">Semua vital dalam rentang normalmu hari ini.</div></div><i class="i s i-chev" style="color:#6B7177"></i></a>
+
+    <div class="gc" style="padding:6px 18px">
+      <a class="li" href="TodayHRV.dc.html"><div class="ic a"><i class="i i-act"></i></div><div class="grow"><div class="h3">HRV</div><div class="sub" style="font-size:12.5px">Rata-rata semalam</div></div>
+        <svg width="64" height="28" viewBox="0 0 64 28" aria-hidden="true"><path d="M0 20 C8 18 10 8 18 10 S30 22 38 14 S52 4 64 6" fill="none" stroke="#16EC06" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div class="n ns" style="min-width:64px;text-align:right">62<span class="u">ms</span></div></a>
+      <a class="li" href="TodayRHR.dc.html"><div class="ic d"><i class="i i-heart"></i></div><div class="grow"><div class="h3">Detak istirahat</div><div class="sub" style="font-size:12.5px">Turun 2 dari kemarin</div></div>
+        <svg width="64" height="28" viewBox="0 0 64 28" aria-hidden="true"><path d="M0 8 C10 10 14 18 24 16 S40 6 48 12 S58 20 64 18" fill="none" stroke="#FF0026" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div class="n ns" style="min-width:64px;text-align:right">54<span class="u">bpm</span></div></a>
+      <a class="li" href="HealthOxygen.dc.html"><div class="ic b"><i class="i i-drop"></i></div><div class="grow"><div class="h3">Oksigen darah</div><div class="sub" style="font-size:12.5px">Normal</div></div>
+        <svg width="64" height="28" viewBox="0 0 64 28" aria-hidden="true"><path d="M0 12 L12 10 L24 13 L36 9 L48 11 L64 10" fill="none" stroke="#0093E7" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="n ns" style="min-width:64px;text-align:right">97<span class="u">%</span></div></a>
+      <a class="li" href="HealthOxygen.dc.html"><div class="ic w"><i class="i i-wind"></i></div><div class="grow"><div class="h3">Laju napas</div><div class="sub" style="font-size:12.5px">Stabil</div></div>
+        <svg width="64" height="28" viewBox="0 0 64 28" aria-hidden="true"><path d="M0 14 C10 12 16 16 26 14 S44 12 52 15 S60 14 64 13" fill="none" stroke="#FFDE00" stroke-width="2.5" stroke-linecap="round"/></svg>
+        <div class="n ns" style="min-width:64px;text-align:right">14,8<span class="u">/m</span></div></a>
+    </div>
+
+    <h2 class="h2">Tubuh</h2>
+    <a class="gc" href="HealthWeight.dc.html" style="display:block;margin-top:-6px">
+      <div class="rw sp"><div><span class="cap">Berat badan</span><div class="n nl" style="margin-top:6px">72,4<span class="u">kg</span></div></div><span class="chip a">−0,6 kg / 30 hari</span></div>
+      <svg viewBox="0 0 314 110" width="100%" height="110" style="margin-top:14px" role="img" aria-label="Grafik berat badan 30 hari turun dari 73 ke 72,4 kilogram">
+        <defs><linearGradient id="wa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0093E7" stop-opacity=".4"/><stop offset="1" stop-color="#0093E7" stop-opacity="0"/></linearGradient></defs>
+        <path d="M0 30 C30 28 44 44 70 40 S112 24 140 46 S196 62 226 58 S284 70 314 72 V110 H0Z" fill="url(#wa)"/>
+        <path d="M0 30 C30 28 44 44 70 40 S112 24 140 46 S196 62 226 58 S284 70 314 72" fill="none" stroke="#0093E7" stroke-width="3" stroke-linecap="round"/>
+        <circle cx="314" cy="72" r="6" fill="#0A0D10" stroke="#0093E7" stroke-width="3"/>
+      </svg>
+      <div class="rw" style="gap:12px;margin-top:14px">
+        <div class="gc s grow" style="box-shadow:none"><div class="rw" style="gap:8px"><i class="i s i-ruler" style="color:var(--c3)"></i><span class="cap">Pinggang</span></div><div class="n nm" style="margin-top:8px">82<span class="u">cm</span></div></div>
+        <div class="gc s grow" style="box-shadow:none"><div class="rw" style="gap:8px"><i class="i s i-scale" style="color:var(--c2)"></i><span class="cap">BMI</span></div><div class="n nm" style="margin-top:8px">22,8</div></div>
+      </div>
+    </a>
+
+    <div class="gc">
+      <div class="rw sp">
+        <div class="rw" style="gap:12px"><div class="ic d" style="background:#FF0026;color:#fff"><i class="i i-heart"></i></div><div><div class="h3">Apple Health</div><div class="sub" style="font-size:12.5px">Sinkron terakhir 06:58</div></div></div>
+        <span class="chip a"><i class="i s i-chk"></i>Terhubung</span>
+      </div>
+      <div style="margin-top:12px">
+        <div class="li"><div class="grow"><div class="h3">Langkah</div><div class="sub" style="font-size:12.5px">Baca dari iPhone, tulis estimasi strap</div></div><span class="chip v">Baca + tulis</span></div>
+        <div class="li"><div class="grow"><div class="h3">Berat badan</div><div class="sub" style="font-size:12.5px">Hanya baca</div></div><span class="chip">Baca</span></div>
+        <div class="li"><div class="grow"><div class="h3">Lingkar pinggang</div><div class="sub" style="font-size:12.5px">Mengisi profil untuk estimasi VO₂max</div></div><span class="chip">Baca</span></div>
+        <div class="li"><div class="grow"><div class="h3">Tulis langkah ke Health</div><div class="sub" style="font-size:12.5px">Tanpa hitung ganda</div></div><button class="tg on" aria-pressed="true" aria-label="Tulis langkah ke Apple Health"></button></div>
+      </div>
+      <a class="btn g" href="Personalize.dc.html" style="width:100%;margin-top:14px"><a href="HealthPermissions.dc.html" style="color:inherit;text-decoration:underline;text-underline-offset:3px">Kelola izin</a></a>
+    </div>
+
+    <div class="gc">
+      <div class="rw sp"><div class="rw" style="gap:12px"><div class="ic a"><i class="i i-watch"></i></div><div><div class="h3">WHOOP 5.0</div><div class="sub" style="font-size:12.5px">Firmware 52.4 · terhubung</div></div></div><span class="n ns">82<span class="u">%</span></span></div>
+      <div class="pb" style="margin-top:14px;height:10px"><i style="width:82%;background:#16EC06"></i></div>
+      <div class="rw sp sub" style="font-size:12.5px;margin-top:8px"><span>Estimasi 3 hari 4 jam</span><span>Sinkron 06:58</span></div>
+      <button class="btn" style="width:100%;margin-top:14px">Sinkron sekarang</button>
+    </div>
+  </div>
+
+  <nav class="tabbar" aria-label="Navigasi utama">
+    <a class="tab" href="Main.dc.html"><i class="i i-grid"></i>Hari ini</a>
+    <a class="tab on" href="Health.dc.html"><i class="i i-hp"></i>Kesehatan</a>
+    <a class="tab" href="Trends.dc.html"><i class="i i-trend"></i>Tren</a>
+    <a class="tab" href="Anya.dc.html"><i class="i i-sp"></i>Anya</a>
+    <a class="tab" href="Personalize.dc.html"><i class="i i-user"></i>Saya</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1980}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

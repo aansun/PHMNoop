@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Tampilan</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:2480px">
+  <div class="gl" style="width:320px;height:320px;right:-130px;top:-60px;background:#7BA1BB;opacity:.24"></div>
+  <div class="gl" style="width:320px;height:320px;left:-140px;top:900px;background:#16EC06;opacity:.16"></div>
+
+  <div class="pad col" style="gap:18px">
+    <div class="rw" style="gap:10px"><a class="ib" href="Personalize.dc.html" aria-label="Kembali"><i class="i i-chevl"></i></a><div class="col" style="gap:2px"><span class="cap">Saya</span><h1 class="h2" style="font-size:26px">Tampilan</h1></div></div>
+    <p class="sub" style="margin-top:-6px">Atur tampilan agar pas untukmu. Perubahan langsung terlihat di pratinjau.</p>
+
+    <a class="gc rw" href="Experience.dc.html" style="gap:14px;padding:16px 18px"><div class="ic" style="width:44px;height:44px;background:#FFFFFF;color:#000"><i class="i i-sp"></i></div><div class="grow"><div class="cap" style="font-size:10.5px">Experience</div><div class="h2" style="font-size:20px">Nuna</div><div class="sub" style="font-size:12.5px;margin-top:2px">Ganti ke Default untuk kembali ke tampilan NOOP</div></div><i class="i s i-chev" style="color:#6B7177"></i></a>
+
+    <div class="gc" style="padding:4px 18px"><a class="li" href="Language.dc.html" style="border-top:0"><div class="ic n"><i class="i i-sp"></i></div><div class="grow"><div class="h3" style="font-size:16px">Bahasa</div><div class="sub" style="font-size:12.5px">Bahasa Indonesia</div></div><i class="i s i-chev" style="color:#6B7177"></i></a><a class="li" href="Units.dc.html"><div class="ic n"><i class="i i-ruler"></i></div><div class="grow"><div class="h3" style="font-size:16px">Satuan</div><div class="sub" style="font-size:12.5px">Metrik · km · Effort 0 sampai 21</div></div><i class="i s i-chev" style="color:#6B7177"></i></a></div>
+
+    <div class="gc hl">
+      <div class="rw sp"><span class="cap">Pratinjau</span><span class="chip">Aksen putih</span></div>
+      <div class="rw" style="gap:16px;margin-top:14px">
+        <svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true"><defs><linearGradient id="pg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#16EC06"/><stop offset="1" stop-color="#16EC06"/></linearGradient></defs><g fill="none" stroke-width="9" stroke-linecap="round" transform="rotate(-90 42 42)"><circle cx="42" cy="42" r="34" stroke="rgba(255,255,255,.1)"/><circle cx="42" cy="42" r="34" stroke="url(#pg)" stroke-dasharray="166 214"/></g></svg>
+        <div class="col" style="gap:4px"><div class="n nl">78<span class="u">%</span></div><div class="h3">Siap beban sedang</div></div>
+      </div>
+    </div>
+
+    <div class="gc">
+      <span class="cap">Tema</span>
+      <div class="rw" style="gap:12px;margin-top:14px">
+        <div class="grow col" style="gap:8px;align-items:center">
+          <div style="width:100%;height:96px;border-radius:18px;border:1px solid var(--bd);background:linear-gradient(90deg,#F2F4F8 50%,#0B0E15 50%);position:relative"><i style="position:absolute;left:14%;top:22px;width:28%;height:10px;border-radius:5px;background:#16EC06"></i><i style="position:absolute;right:14%;top:22px;width:28%;height:10px;border-radius:5px;background:#16EC06"></i></div>
+          <span class="sub" style="font-size:13px">Otomatis</span>
+        </div>
+        <div class="grow col" style="gap:8px;align-items:center">
+          <div style="width:100%;height:96px;border-radius:18px;border:1px solid var(--bd);background:#F2F4F8;position:relative"><i style="position:absolute;left:14%;top:22px;width:46%;height:10px;border-radius:5px;background:#16C98F"></i><i style="position:absolute;left:14%;top:44px;width:70%;height:34px;border-radius:10px;background:#fff"></i></div>
+          <span class="sub" style="font-size:13px">Terang</span>
+        </div>
+        <div class="grow col" style="gap:8px;align-items:center">
+          <div style="width:100%;height:96px;border-radius:18px;border:2px solid var(--c1);background:#0B0E15;position:relative"><i style="position:absolute;left:14%;top:22px;width:46%;height:10px;border-radius:5px;background:#16EC06"></i><i style="position:absolute;left:14%;top:44px;width:70%;height:34px;border-radius:10px;background:rgba(255,255,255,.1)"></i></div>
+          <span style="font-size:13px;font-weight:800">Gelap</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="gc">
+      <div class="rw sp"><span class="cap">Warna aksen</span><span class="sub" style="font-size:13px">Putih</span></div>
+      <div class="rw sp" style="margin-top:16px">
+        <button class="sw on" style="background:#FFFFFF" aria-label="Putih"></button>
+        <button class="sw" style="background:#16EC06" aria-label="Hijau"></button>
+        <button class="sw" style="background:#0093E7" aria-label="Biru"></button>
+        <button class="sw" style="background:#7BA1BB" aria-label="Baja"></button>
+        <button class="sw" style="background:#FFDE00" aria-label="Kuning"></button>
+      </div>
+      <p class="sub" style="font-size:12.5px;margin-top:12px">Aksen hanya mewarnai tombol dan penanda. Warna data tetap standar: hijau Charge, biru Effort, baja Rest.</p>
+    </div>
+
+    <div class="gc" style="padding:6px 18px">
+      <div class="rw sp" style="padding-top:12px"><span class="cap">Tipografi</span></div>
+      <div class="li" style="border-top:0"><div class="ic" style="background:rgba(22,236,6,.14);color:var(--c1);font-family:'Plus Jakarta Sans';font-weight:800;font-size:20px">Aa</div><div class="grow"><div class="h3">Tegas</div><div class="sub" style="font-size:12.5px">Plus Jakarta Sans. Jelas dan padat.</div></div><span class="chip a"><i class="i s i-chk"></i></span></div>
+      <div class="li"><div class="ic" style="background:var(--gl2);font-family:Sora;font-weight:700;font-size:20px">Aa</div><div class="grow"><div class="h3" style="font-family:Sora">Geometris</div><div class="sub" style="font-size:12.5px">Sora. Angka lebih lebar.</div></div></div>
+      <div class="li"><div class="ic" style="background:var(--gl2);font-family:system-ui;font-weight:700;font-size:20px">Aa</div><div class="grow"><div class="h3" style="font-family:system-ui">Sistem</div><div class="sub" style="font-size:12.5px">SF Pro. Paling netral.</div></div></div>
+    </div>
+
+    <div class="gc">
+      <div class="rw sp"><span class="cap">Ukuran teks</span><span class="chip">Besar</span></div>
+      <div class="rw" style="gap:14px;margin-top:16px"><span style="font-size:14px;font-weight:800">A</span>
+        <div style="position:relative;height:36px;flex:1"><div style="position:absolute;left:0;right:0;top:14px;height:8px;border-radius:4px;background:rgba(255,255,255,.1)"></div><div style="position:absolute;left:0;width:62%;top:14px;height:8px;border-radius:4px;background:#16EC06"></div><div style="position:absolute;left:calc(62% - 14px);top:4px;width:28px;height:28px;border-radius:50%;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,.5)"></div></div>
+        <span style="font-size:24px;font-weight:800">A</span></div>
+      <p style="margin-top:10px;font-size:17px;font-weight:700">Contoh teks dengan ukuran yang kamu pilih.</p>
+    </div>
+
+    <div class="gc s">
+      <span class="cap">Kepadatan</span>
+      <div class="sg" style="margin-top:12px"><button>Lega</button><button class="on">Standar</button><button>Padat</button></div>
+    </div>
+
+    <div class="gc" style="padding:6px 18px">
+      <div class="rw sp" style="padding-top:12px"><span class="cap">Susunan Hari ini</span><span class="sub" style="font-size:13px;color:var(--tx)">Seret untuk urut</span></div>
+      <div class="li" style="border-top:0"><i class="i i-grip" style="color:var(--mu)"></i><div class="grow h3">Ring kondisi</div><button class="tg on" aria-pressed="true" aria-label="Ring kondisi"></button></div>
+      <div class="li"><i class="i i-grip" style="color:var(--mu)"></i><div class="grow h3">Saran Anya</div><button class="tg on" aria-pressed="true" aria-label="Saran Anya"></button></div>
+      <div class="li"><i class="i i-grip" style="color:var(--mu)"></i><div class="grow h3">Metrik utama</div><button class="tg on" aria-pressed="true" aria-label="Metrik utama"></button></div>
+      <div class="li"><i class="i i-grip" style="color:var(--mu)"></i><div class="grow h3">Aktivitas</div><button class="tg on" aria-pressed="true" aria-label="Aktivitas"></button></div>
+      <div class="li"><i class="i i-grip" style="color:var(--mu)"></i><div class="grow h3">Hidrasi</div><button class="tg" aria-pressed="false" aria-label="Hidrasi"></button></div>
+    </div>
+
+    <div class="gc">
+      <span class="cap">Ikon aplikasi</span>
+      <div class="rw sp" style="margin-top:14px;gap:10px">
+        <div class="col grow" style="align-items:center;gap:8px"><div style="width:76px;height:76px;border-radius:19px;background:#10151D;display:flex;align-items:center;justify-content:center;border:1px solid var(--bd)"><svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true"><path d="M23 6a17 17 0 1 1-17 17" fill="none" stroke="#16EC06" stroke-width="5" stroke-linecap="round"/><circle cx="23" cy="23" r="4.5" fill="#fff"/></svg></div><span class="sub" style="font-size:12.5px">Bawaan</span></div>
+        <div class="col grow" style="align-items:center;gap:8px"><div style="width:76px;height:76px;border-radius:19px;background:#0B1B3D;display:flex;align-items:center;justify-content:center;border:1px solid var(--bd)"><svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true"><path d="M23 6a17 17 0 1 1-17 17" fill="none" stroke="#0093E7" stroke-width="5" stroke-linecap="round"/><circle cx="23" cy="23" r="4.5" fill="#fff"/></svg></div><span class="sub" style="font-size:12.5px">Navy</span></div>
+        <div class="col grow" style="align-items:center;gap:8px"><div style="width:76px;height:76px;border-radius:19px;background:#0A0D10;display:flex;align-items:center;justify-content:center;border:2px solid var(--c1);position:relative"><svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true" style="position:absolute"><path d="M23 6a17 17 0 1 1-17 17" fill="none" stroke="#16EC06" stroke-width="5" stroke-linecap="round"/></svg><span style="font-size:22px;font-weight:800;color:#fff;position:relative">⌥</span></div><span style="font-size:12.5px;font-weight:800">PHMNOOP</span></div>
+      </div>
+    </div>
+
+    <div class="gc" style="padding:6px 18px">
+      <div class="li" style="border-top:0"><div class="ic a"><i class="i i-bolt"></i></div><div class="grow"><div class="h3">Haptik</div><div class="sub" style="font-size:12.5px">Getar halus saat berinteraksi</div></div><button class="tg on" aria-pressed="true" aria-label="Haptik"></button></div>
+      <div class="li"><div class="ic v"><i class="i i-timer"></i></div><div class="grow"><div class="h3">Live Activity</div><div class="sub" style="font-size:12.5px">Sesi di layar kunci</div></div><button class="tg on" aria-pressed="true" aria-label="Live Activity"></button></div>
+      <div class="li"><div class="ic b"><i class="i i-bell"></i></div><div class="grow"><div class="h3">Ringkasan pagi</div><div class="sub" style="font-size:12.5px">Setiap hari 07:00</div></div><button class="tg" aria-pressed="false" aria-label="Ringkasan pagi"></button></div>
+    </div>
+  </div>
+
+  <nav class="tabbar" aria-label="Navigasi utama">
+    <a class="tab" href="Main.dc.html"><i class="i i-grid"></i>Hari ini</a>
+    <a class="tab" href="Health.dc.html"><i class="i i-hp"></i>Kesehatan</a>
+    <a class="tab" href="Trends.dc.html"><i class="i i-trend"></i>Tren</a>
+    <a class="tab" href="Anya.dc.html"><i class="i i-sp"></i>Anya</a>
+    <a class="tab on" href="Personalize.dc.html"><i class="i i-user"></i>Saya</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":2480}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

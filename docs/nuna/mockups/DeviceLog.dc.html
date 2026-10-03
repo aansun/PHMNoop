@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Log strap</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:1480px">
+  <div class="pad col" style="gap:16px">
+    <div class="rw sp"><div class="rw" style="gap:10px"><a class="ib" href="Devices.dc.html" aria-label="Kembali"><i class="i i-chevl"></i></a><h1 class="h2" style="font-size:24px">Log strap</h1></div></div>
+    <p class="sub" style="font-size:13.5px;line-height:1.5;margin-top:-6px">Ambil ini saat melapor masalah. Isinya apa yang dilihat aplikasi dari strap.</p>
+    <div class="gc" style="padding:16px"><div class="col" style="gap:8px;font-family:ui-monospace,Menlo,monospace;font-size:12px;line-height:1.5"><div class="rw" style="gap:10px"><span style="color:#6B7177;flex:none">06:58:12</span><span>Terhubung ke WHOOP 4C0A21</span></div><div class="rw" style="gap:10px"><span style="color:#6B7177;flex:none">06:58:13</span><span>Ikatan aman terverifikasi</span></div><div class="rw" style="gap:10px"><span style="color:#6B7177;flex:none">06:58:14</span><span>Minta riwayat sejak 22:40</span></div><div class="rw" style="gap:10px"><span style="color:#6B7177;flex:none">06:58:21</span><span>Paket 12/24 diterima</span></div><div class="rw" style="gap:10px"><span style="color:#6B7177;flex:none">06:58:42</span><span>Paket 24/24 diterima</span></div><div class="rw" style="gap:10px"><span style="color:#6B7177;flex:none">06:58:44</span><span>Sinkron selesai, 0 mnt tersisa</span></div><div class="rw" style="gap:10px"><span style="color:#6B7177;flex:none">07:30:05</span><span>Baterai 81%, tidak mengisi</span></div></div></div>
+    <div class="rw" style="gap:10px"><a class="btn grow" href="#" style="height:50px"><i class="i s i-bm"></i>Salin</a><a class="btn g grow" href="#" style="height:50px"><i class="i s i-up"></i>Simpan</a></div>
+    <h2 class="h2">Uji</h2>
+    <div class="gc" style="padding:4px 18px;margin-top:-4px"><div class="li" style="border-top:0"><div class="ic" style="width:40px;height:40px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-play"></i></div><div class="grow"><div class="h3" style="font-size:16px">Uji getar</div><div class="sub" style="font-size:12.5px;line-height:1.35">Strap bergetar sekali</div></div><span class="chip" style="height:32px">Coba</span></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-timer"></i></div><div class="grow"><div class="h3" style="font-size:16px">Ping strap</div><div class="sub" style="font-size:12.5px;line-height:1.35">Ukur waktu balasan</div></div><span class="chip" style="height:32px">Coba</span></div></div>
+    <div class="gc s rw" style="gap:12px;padding:14px 16px;align-items:flex-start"><i class="i s i-sp" style="color:#6B7177;margin-top:2px"></i><div class="sub" style="font-size:12.5px;line-height:1.45">Log hanya berisi kejadian koneksi dan sinkron. Tidak ada data kesehatan di dalamnya.</div></div>
+  </div>
+  <nav class="tabbar" aria-label="Navigasi utama">
+    <a class="tab" href="Main.dc.html"><i class="i i-grid"></i>Hari ini</a>
+    <a class="tab" href="Health.dc.html"><i class="i i-hp"></i>Kesehatan</a>
+    <a class="tab" href="Trends.dc.html"><i class="i i-trend"></i>Tren</a>
+    <a class="tab" href="Anya.dc.html"><i class="i i-sp"></i>Anya</a>
+    <a class="tab on" href="Personalize.dc.html"><i class="i i-user"></i>Saya</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1480}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

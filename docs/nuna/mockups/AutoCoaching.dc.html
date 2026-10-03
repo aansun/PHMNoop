@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Getar saat beraktivitas</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:2200px">
+  <div class="pad col" style="gap:16px">
+    <div class="rw sp"><div class="rw" style="gap:10px"><a class="ib" href="Automations.dc.html" aria-label="Kembali"><i class="i i-chevl"></i></a><h1 class="h2" style="font-size:24px">Getar saat beraktivitas</h1></div></div>
+    <p class="sub" style="font-size:13.5px;line-height:1.5;margin-top:-6px">Pilih kapan strap bergetar saat sesi. Semua mati bawaan dan bergantung pada saklar utama Peringatan di pergelangan.</p>
+    <h2 class="h2">Isyarat sesi</h2>
+    <div class="gc" style="padding:4px 18px;margin-top:-4px"><div class="li" style="border-top:0"><div class="ic" style="width:40px;height:40px;background:rgba(22,236,6,.12);color:#16EC06"><i class="i i-wind"></i></div><div class="grow"><div class="h3" style="font-size:16px">Pacer napas</div><div class="sub" style="font-size:12.5px;line-height:1.35">Getar tiap tarik dan embus saat sesi napas</div></div><button class="tg on" aria-pressed="true" aria-label="Pacer napas"></button></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-timer"></i></div><div class="grow"><div class="h3" style="font-size:16px">Timer interval</div><div class="sub" style="font-size:12.5px;line-height:1.35">Getar tiap pergantian interval</div></div><button class="tg on" aria-pressed="true" aria-label="Timer interval"></button></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(22,236,6,.12);color:#16EC06"><i class="i i-play"></i></div><div class="grow"><div class="h3" style="font-size:16px">Isyarat sesi langsung</div><div class="sub" style="font-size:12.5px;line-height:1.35">Getar koreksi saat latihan</div></div><button class="tg" aria-pressed="false" aria-label="Isyarat sesi langsung"></button></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-flame"></i></div><div class="grow"><div class="h3" style="font-size:16px">Mulai dan selesai latihan</div><div class="sub" style="font-size:12.5px;line-height:1.35">Getar konfirmasi saat latihan mulai dan tersimpan</div></div><button class="tg" aria-pressed="false" aria-label="Mulai dan selesai latihan"></button></div></div>
+    <h2 class="h2">Pelatihan zona detak</h2>
+    <div class="gc" style="padding:4px 18px;margin-top:-4px"><div class="li" style="border-top:0"><div class="ic" style="width:40px;height:40px;background:rgba(255,0,38,.14);color:#FF5468"><i class="i i-heart"></i></div><div class="grow"><div class="h3" style="font-size:16px">Pelatihan zona detak</div><div class="sub" style="font-size:12.5px;line-height:1.35">Getar saat mencapai zona tertinggi (pelan-pelan) dan saat pulih. Memakai detak maksimum dari Persona.</div></div><button class="tg on" aria-pressed="true" aria-label="Pelatihan zona detak"></button></div></div>
+    <a class="gc s rw" href="PersonaZones.dc.html" style="gap:12px;padding:14px 16px"><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-sl"></i></div><div class="grow"><div class="h3" style="font-size:16px">Atur zona detak</div><div class="sub" style="font-size:12.5px">186 bpm · 5 zona</div></div><i class="i s i-chev" style="color:#6B7177"></i></a>
+    <h2 class="h2">Cek stres dengan getar</h2>
+    <div class="gc" style="padding:4px 18px;margin-top:-4px">
+      <div class="li" style="border-top:0"><div class="ic" style="width:40px;height:40px;background:rgba(123,161,187,.16);color:#9DBBD0"><i class="i i-sp"></i></div><div class="grow"><div class="h3" style="font-size:16px">Cek stres dengan getar</div><div class="sub" style="font-size:12.5px;line-height:1.35">Bila HRV turun tanpa olahraga saat kamu diam, strap menawarkan satu menit napas terpandu. Satu getar konfirmasi dan satu kartu yang bisa ditutup. Bukan alarm.</div></div><button class="tg" aria-pressed="false" aria-label="Cek stres dengan getar"></button></div>
+      <div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-bolt"></i></div><div class="grow"><div class="h3" style="font-size:16px">Nudge otomatis</div><div class="sub" style="font-size:12.5px;line-height:1.35">Biarkan cek berjalan sendiri. Mati berarti kamu memulai sendiri dari Napas.</div></div><button class="tg" aria-pressed="false" aria-label="Nudge otomatis"></button></div>
+      <div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(123,161,187,.16);color:#9DBBD0"><i class="i i-moon"></i></div><div class="grow"><div class="h3" style="font-size:16px">Hormati jam tenang</div><div class="sub" style="font-size:12.5px;line-height:1.35">Tahan nudge otomatis malam hari, 22.00 sampai 07.00</div></div><button class="tg on" aria-pressed="true" aria-label="Hormati jam tenang"></button></div>
+      <div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(22,236,6,.12);color:#16EC06"><i class="i i-wind"></i></div><div class="grow"><div class="h3" style="font-size:16px">Pakai laju resonansiku</div><div class="sub" style="font-size:12.5px;line-height:1.35">Napas pada laju hasil pencarian terakhir. Bila belum ada, 5,5 napas per menit.</div></div><button class="tg on" aria-pressed="true" aria-label="Pakai laju resonansiku"></button></div></div>
+    <a class="gc s rw" href="TodayBreatheRhythm.dc.html" style="gap:12px;padding:14px 16px"><div class="ic" style="width:40px;height:40px;background:rgba(22,236,6,.12);color:#16EC06"><i class="i i-wind"></i></div><div class="grow"><div class="h3" style="font-size:16px">Ritme napas</div><div class="sub" style="font-size:12.5px">Tenang · tarik 4, tahan 2, embus 6</div></div><i class="i s i-chev" style="color:#6B7177"></i></a>
+    <a class="btn g" href="DeviceLog.dc.html" style="height:50px"><i class="i s i-play"></i>Uji getar</a>
+  </div>
+  <nav class="tabbar" aria-label="Navigasi utama">
+    <a class="tab" href="Main.dc.html"><i class="i i-grid"></i>Hari ini</a>
+    <a class="tab" href="Health.dc.html"><i class="i i-hp"></i>Kesehatan</a>
+    <a class="tab" href="Trends.dc.html"><i class="i i-trend"></i>Tren</a>
+    <a class="tab" href="Anya.dc.html"><i class="i i-sp"></i>Anya</a>
+    <a class="tab on" href="Personalize.dc.html"><i class="i i-user"></i>Saya</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":2200}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

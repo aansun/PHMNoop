@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Izin Apple Health</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:1600px">
+  <div class="pad col" style="gap:16px">
+    <div class="rw sp"><div class="rw" style="gap:10px"><a class="ib" href="Health.dc.html" aria-label="Kembali"><i class="i i-chevl"></i></a><h1 class="h2" style="font-size:24px">Izin Apple Health</h1></div></div>
+    <div class="gc" style="padding:18px"><div class="rw" style="gap:12px"><div class="ic" style="width:48px;height:48px;background:rgba(255,0,38,.14);color:#FF5468"><i class="i i-heart"></i></div><div class="grow"><div class="h3" style="font-size:17px">Apple Health</div><div class="sub" style="font-size:12.5px">Sinkron terakhir 06:58</div></div><span class="chip a">Terhubung</span></div></div>
+    <h2 class="h2">Dibaca dari Health</h2>
+    <div class="gc" style="padding:4px 18px;margin-top:-4px"><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(22,236,6,.12);color:#16EC06"><i class="i i-steps"></i></div><div class="grow"><div class="h3" style="font-size:16px">Langkah</div><div class="sub" style="font-size:12.5px">Dibaca dari iPhone</div></div><button class="tg on" aria-pressed="true" aria-label="Langkah"></button></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-scale"></i></div><div class="grow"><div class="h3" style="font-size:16px">Berat badan</div><div class="sub" style="font-size:12.5px">Hanya baca</div></div><button class="tg on" aria-pressed="true" aria-label="Berat badan"></button></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(123,161,187,.16);color:#9DBBD0"><i class="i i-ruler"></i></div><div class="grow"><div class="h3" style="font-size:16px">Lingkar pinggang</div><div class="sub" style="font-size:12.5px">Mengisi profil dan VO₂max</div></div><button class="tg on" aria-pressed="true" aria-label="Lingkar pinggang"></button></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(255,0,38,.14);color:#FF5468"><i class="i i-heart"></i></div><div class="grow"><div class="h3" style="font-size:16px">Detak jantung</div><div class="sub" style="font-size:12.5px">Pelengkap strap</div></div><button class="tg" aria-pressed="false" aria-label="Detak jantung"></button></div></div>
+    <h2 class="h2">Ditulis ke Health</h2>
+    <div class="gc" style="padding:4px 18px;margin-top:-4px"><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(22,236,6,.12);color:#16EC06"><i class="i i-steps"></i></div><div class="grow"><div class="h3" style="font-size:16px">Langkah estimasi strap</div><div class="sub" style="font-size:12.5px">Tanpa hitung ganda dengan iPhone</div></div><button class="tg on" aria-pressed="true" aria-label="Langkah estimasi strap"></button></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-flame"></i></div><div class="grow"><div class="h3" style="font-size:16px">Latihan</div><div class="sub" style="font-size:12.5px">Lari, jalan, sepeda</div></div><button class="tg" aria-pressed="false" aria-label="Latihan"></button></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(123,161,187,.16);color:#9DBBD0"><i class="i i-moon"></i></div><div class="grow"><div class="h3" style="font-size:16px">Tidur</div><div class="sub" style="font-size:12.5px">Fase dari strap</div></div><button class="tg" aria-pressed="false" aria-label="Tidur"></button></div></div>
+    <div class="gc s rw" style="gap:12px;padding:14px 16px"><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-sp"></i></div><div class="grow"><div class="h3" style="font-size:15.5px">Tulis langkah tanpa hitung ganda</div><div class="sub" style="font-size:12.5px">Strap hanya menulis selisih yang belum tercatat iPhone</div></div></div>
+    <a class="btn g" href="#" style="height:52px">Buka pengaturan Kesehatan iOS</a>
+    <p class="sub" style="font-size:12.5px;text-align:center">Izin dikelola oleh iOS. Mematikan di sini tidak menghapus data.</p>
+  </div>
+  <nav class="tabbar" aria-label="Navigasi utama">
+    <a class="tab" href="Main.dc.html"><i class="i i-grid"></i>Hari ini</a>
+    <a class="tab on" href="Health.dc.html"><i class="i i-hp"></i>Kesehatan</a>
+    <a class="tab" href="Trends.dc.html"><i class="i i-trend"></i>Tren</a>
+    <a class="tab" href="Anya.dc.html"><i class="i i-sp"></i>Anya</a>
+    <a class="tab" href="Personalize.dc.html"><i class="i i-user"></i>Saya</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1600}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

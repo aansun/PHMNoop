@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Atur Hari ini</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:2100px">
+  <div class="pad col" style="gap:16px">
+    <div class="rw sp"><div class="col" style="gap:2px"><span class="cap">Hari ini</span><h1 class="h2" style="font-size:26px">Atur kartu</h1></div><a class="btn" href="Main.dc.html" style="height:44px;padding:0 22px">Selesai</a></div>
+    <div class="gc" style="padding:16px"><div class="rw" style="gap:16px"><div style="width:84px;flex:none;border-radius:18px;background:rgba(0,0,0,.35);border:1px solid var(--bd);padding:8px;display:flex;flex-direction:column;gap:5px"><i style="display:block;height:44px;border-radius:8px;background:rgba(255,255,255,.2);opacity:1"></i><i style="display:block;height:24px;border-radius:8px;background:rgba(255,255,255,.1);opacity:1"></i><i style="display:block;height:34px;border-radius:8px;background:rgba(22,236,6,.45);opacity:1"></i><i style="display:block;height:30px;border-radius:8px;background:rgba(255,255,255,.14);opacity:1"></i><i style="display:block;height:18px;border-radius:8px;background:rgba(255,255,255,.1);opacity:1"></i></div><div class="col" style="gap:6px"><span class="h3" style="font-size:16px">Susunanmu</span><span class="sub" style="font-size:12.5px;line-height:1.4">Tahan ikon garis untuk menggeser. Matikan sakelar untuk menyembunyikan kartu.</span></div></div></div>
+    <h2 class="h2">Kartu aktif</h2>
+    <div class="col" style="gap:10px;margin-top:-4px">
+      <div class="gc s" style="padding:12px 14px"><div class="rw" style="gap:12px"><i class="i i-grip" style="color:#6B7177;flex:none"></i><div class="ic" style="width:40px;height:40px;background:rgba(22,236,6,.12);color:#16EC06"><i class="i i-act"></i></div><div class="grow"><div class="h3" style="font-size:16px">Skor harian</div><div class="sub" style="font-size:12.5px">Charge, Effort, dan Rest</div></div><button class="tg on" aria-pressed="true" aria-label="Skor harian"></button></div><div class="sg" style="margin-top:12px"><button class="on">Tiga cincin</button><button>Satu cincin</button><button>Batang</button></div></div>
+      <div class="gc s" style="padding:12px 14px"><div class="rw" style="gap:12px"><i class="i i-grip" style="color:#6B7177;flex:none"></i><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-sp"></i></div><div class="grow"><div class="h3" style="font-size:16px">Anya</div><div class="sub" style="font-size:12.5px">Satu saran untuk hari ini</div></div><button class="tg on" aria-pressed="true" aria-label="Anya"></button></div></div>
+      <div class="gc s" style="padding:12px 14px"><div class="rw" style="gap:12px"><i class="i i-grip" style="color:#6B7177;flex:none"></i><div class="ic" style="width:40px;height:40px;background:rgba(22,236,6,.12);color:#16EC06"><i class="i i-wind"></i></div><div class="grow"><div class="h3" style="font-size:16px">Pemantauan stres</div><div class="sub" style="font-size:12.5px">Rata-rata dan garis waktu</div></div><button class="tg on" aria-pressed="true" aria-label="Pemantauan stres"></button></div><div class="sg" style="margin-top:12px"><button>Ringkas</button><button class="on">Standar</button><button>Penuh</button></div></div>
+      <div class="gc s" style="padding:12px 14px"><div class="rw" style="gap:12px"><i class="i i-grip" style="color:#6B7177;flex:none"></i><div class="ic" style="width:40px;height:40px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-grid"></i></div><div class="grow"><div class="h3" style="font-size:16px">Metrik utama</div><div class="sub" style="font-size:12.5px">4 metrik pilihanmu</div></div><button class="tg on" aria-pressed="true" aria-label="Metrik utama"></button></div><a class="rw sp" href="TodayMetrics.dc.html" style="margin-top:12px;height:44px;border-radius:14px;background:rgba(255,255,255,.06);padding:0 14px;font-weight:800;font-size:14px"><span>Pilih metrik</span><i class="i s i-chev" style="color:#6B7177"></i></a></div>
+      <div class="gc s" style="padding:12px 14px"><div class="rw" style="gap:12px"><i class="i i-grip" style="color:#6B7177;flex:none"></i><div class="ic" style="width:40px;height:40px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-flame"></i></div><div class="grow"><div class="h3" style="font-size:16px">Aktivitas</div><div class="sub" style="font-size:12.5px">Latihan terakhir</div></div><button class="tg on" aria-pressed="true" aria-label="Aktivitas"></button></div></div>
+      <div class="gc s" style="padding:12px 14px"><div class="rw" style="gap:12px"><i class="i i-grip" style="color:#6B7177;flex:none"></i><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-bm"></i></div><div class="grow"><div class="h3" style="font-size:16px">Catat cepat</div><div class="sub" style="font-size:12.5px">Air, jurnal, suasana</div></div><button class="tg on" aria-pressed="true" aria-label="Catat cepat"></button></div></div>
+    </div>
+    <h2 class="h2">Disembunyikan</h2>
+    <div class="col" style="gap:10px;margin-top:-4px">
+      <div class="gc s" style="padding:12px 14px;opacity:.62"><div class="rw" style="gap:12px"><i class="i i-grip" style="color:#6B7177;flex:none"></i><div class="ic" style="width:40px;height:40px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-drop"></i></div><div class="grow"><div class="h3" style="font-size:16px">Hidrasi</div><div class="sub" style="font-size:12.5px">Target 2,5 L</div></div><button class="tg" aria-pressed="false" aria-label="Hidrasi"></button></div></div>
+      <div class="gc s" style="padding:12px 14px;opacity:.62"><div class="rw" style="gap:12px"><i class="i i-grip" style="color:#6B7177;flex:none"></i><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-scale"></i></div><div class="grow"><div class="h3" style="font-size:16px">Berat dan pinggang</div><div class="sub" style="font-size:12.5px">Dari Apple Health</div></div><button class="tg" aria-pressed="false" aria-label="Berat dan pinggang"></button></div></div>
+    </div>
+    <h2 class="h2">Tambah kartu</h2>
+    <div class="bento" style="margin-top:-4px">
+      <div class="gc s" style="padding:14px"><div class="rw sp"><div class="ic" style="width:36px;height:36px;background:rgba(123,161,187,.16);color:#9DBBD0"><i class="i i-moon"></i></div><i class="i s i-plus" style="color:#FFFFFF"></i></div><div class="h3" style="margin-top:10px;font-size:15px">Tidur semalam</div><div class="sub" style="font-size:12px">Fase dan utang</div></div>
+      <div class="gc s" style="padding:14px"><div class="rw sp"><div class="ic" style="width:36px;height:36px;background:rgba(22,236,6,.12);color:#16EC06"><i class="i i-steps"></i></div><i class="i s i-plus" style="color:#FFFFFF"></i></div><div class="h3" style="margin-top:10px;font-size:15px">Langkah</div><div class="sub" style="font-size:12px">Dengan target</div></div>
+      <div class="gc s" style="padding:14px"><div class="rw sp"><div class="ic" style="width:36px;height:36px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-trend"></i></div><i class="i s i-plus" style="color:#FFFFFF"></i></div><div class="h3" style="margin-top:10px;font-size:15px">Tren 7 hari</div><div class="sub" style="font-size:12px">Charge dan HRV</div></div>
+      <div class="gc s" style="padding:14px"><div class="rw sp"><div class="ic" style="width:36px;height:36px;background:rgba(255,0,38,.14);color:#FF5468"><i class="i i-heart"></i></div><i class="i s i-plus" style="color:#FFFFFF"></i></div><div class="h3" style="margin-top:10px;font-size:15px">Detak langsung</div><div class="sub" style="font-size:12px">Real time</div></div>
+    </div>
+    <h2 class="h2">Tombol aksi cepat</h2>
+    <div class="gc s rw" style="gap:12px;padding:12px 14px;margin-top:-4px"><div style="width:40px;height:40px;border-radius:20px;background:#FFFFFF;color:#000;display:flex;align-items:center;justify-content:center"><i class="i i-plus"></i></div><div class="grow"><div class="h3" style="font-size:16px">Tombol + mengambang</div><div class="sub" style="font-size:12.5px">Pojok kanan bawah di Hari ini</div></div><button class="tg on" aria-pressed="true" aria-label="Tombol aksi cepat"></button></div>
+    <a class="gc s rw" href="TodayQuick.dc.html" style="gap:12px;padding:14px 16px;margin-top:-4px"><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-sl"></i></div><div class="grow"><div class="h3" style="font-size:16px">Pilih dan urutkan aksi</div><div class="sub" style="font-size:12.5px">8 aksi, 6 tampil di sheet</div></div><i class="i s i-chev" style="color:#6B7177"></i></a>
+    <a class="btn g" href="#" style="width:100%">Kembalikan susunan bawaan</a>
+  </div>
+  <nav class="tabbar" aria-label="Navigasi utama">
+    <a class="tab on" href="Main.dc.html"><i class="i i-grid"></i>Hari ini</a>
+    <a class="tab" href="Health.dc.html"><i class="i i-hp"></i>Kesehatan</a>
+    <a class="tab" href="Trends.dc.html"><i class="i i-trend"></i>Tren</a>
+    <a class="tab" href="Anya.dc.html"><i class="i i-sp"></i>Anya</a>
+    <a class="tab" href="Personalize.dc.html"><i class="i i-user"></i>Saya</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":2100}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

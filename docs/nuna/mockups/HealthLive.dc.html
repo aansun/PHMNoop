@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Detak langsung</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:1400px">
+  <div class="pad col" style="gap:16px">
+    <div class="rw sp"><div class="rw" style="gap:10px"><a class="ib" href="Health.dc.html" aria-label="Kembali"><i class="i i-chevl"></i></a><h1 class="h2" style="font-size:24px">Detak langsung</h1></div></div>
+    <div class="gc" style="padding:22px"><div class="rw sp"><span class="chip a"><span style="width:8px;height:8px;border-radius:50%;background:#16EC06;display:inline-block"></span>Langsung</span><span class="chip"><i class="i s i-watch"></i>Strap 82%</span></div>
+      <div class="rw" style="gap:12px;margin-top:14px;align-items:center"><i class="i l i-heart" style="color:#FF0026;width:36px;height:36px"></i><div class="n" style="font-size:76px">61<span class="u" style="font-size:.32em">bpm</span></div></div>
+      <div class="rw sp" style="margin-top:6px"><span class="chip">Istirahat</span><span class="sub" style="font-size:12.5px">Diperbarui tiap detik</span></div>
+      <div style="margin-top:16px"><svg viewBox="0 0 314 100" width="100%" height="100" aria-hidden="true"><path d="M0 52 H40 L48 52 L56 20 L64 82 L72 52 H120 L128 52 L136 26 L144 78 L152 52 H200 L208 52 L216 22 L224 84 L232 52 H280 L288 52 L296 30 L304 74 L314 52" fill="none" stroke="#FF0026" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+      <div class="rw sp sub" style="font-size:11.5px;margin-top:6px"><span>−10 dtk</span><span>Sekarang</span></div></div>
+    <div class="sg"><button class="on">5 mnt</button><button>1 jam</button><button>Hari ini</button></div>
+    <div class="rw" style="gap:10px"><div class="gc s grow" style="padding:12px"><span class="cap" style="font-size:10.5px">Terendah</span><div class="n ns" style="margin-top:6px">46</div></div><div class="gc s grow" style="padding:12px"><span class="cap" style="font-size:10.5px">Rata-rata</span><div class="n ns" style="margin-top:6px">63</div></div><div class="gc s grow" style="padding:12px"><span class="cap" style="font-size:10.5px">Tertinggi</span><div class="n ns" style="margin-top:6px">158</div></div></div>
+    <div class="gc"><div class="rw sp"><span class="cap">Zona hari ini</span><span class="sub" style="font-size:12px">Total 16j 40m</span></div>
+      <div style="display:flex;gap:3px;height:14px;margin-top:14px"><i style="flex:64;background:#3B4258;opacity:1;border-radius:6px"></i><i style="flex:22;background:#7BA1BB;opacity:1;border-radius:6px"></i><i style="flex:8;background:#16EC06;opacity:1;border-radius:6px"></i><i style="flex:4;background:#FFDE00;opacity:1;border-radius:6px"></i><i style="flex:2;background:#FF0026;opacity:1;border-radius:6px"></i></div>
+      <div class="col" style="gap:10px;margin-top:14px"><div class="rw sp"><span class="h3" style="font-size:15px">Zona 1 · istirahat</span><span class="n ns" style="font-size:17px">10j 40m</span></div><div class="rw sp"><span class="h3" style="font-size:15px">Zona 2 · ringan</span><span class="n ns" style="font-size:17px">3j 30m</span></div><div class="rw sp"><span class="h3" style="font-size:15px">Zona 3 · aerobik</span><span class="n ns" style="font-size:17px">1j 20m</span></div><div class="rw sp"><span class="h3" style="font-size:15px">Zona 4 · ambang</span><span class="n ns" style="font-size:17px">40m</span></div><div class="rw sp"><span class="h3" style="font-size:15px">Zona 5 · maksimal</span><span class="n ns" style="font-size:17px">10m</span></div></div></div>
+    <div class="gc" style="padding:6px 18px"><div class="li" style="border-top:0"><div class="grow"><div class="h3">Tampilkan di Dynamic Island</div><div class="sub" style="font-size:12.5px">Detak langsung saat strap terhubung</div></div><button class="tg on" aria-pressed="true" aria-label="Tampilkan di Dynamic Island"></button></div><div class="li"><div class="grow"><div class="h3">Siarkan ke aplikasi lain</div><div class="sub" style="font-size:12.5px">Strap tampil sebagai sensor detak Bluetooth</div></div><button class="tg" aria-pressed="false" aria-label="Siarkan ke aplikasi lain"></button></div><div class="li"><div class="grow"><div class="h3">Peringatan detak tinggi saat diam</div><div class="sub" style="font-size:12.5px">Di atas 120 bpm selama 10 menit</div></div><button class="tg on" aria-pressed="true" aria-label="Peringatan detak tinggi saat diam"></button></div></div>
+    <a class="btn" href="WorkoutStart.dc.html" style="height:56px;border-radius:28px"><i class="i s i-play"></i>Mulai sesi dengan detak</a>
+  </div>
+  <nav class="tabbar" aria-label="Navigasi utama">
+    <a class="tab" href="Main.dc.html"><i class="i i-grid"></i>Hari ini</a>
+    <a class="tab on" href="Health.dc.html"><i class="i i-hp"></i>Kesehatan</a>
+    <a class="tab" href="Trends.dc.html"><i class="i i-trend"></i>Tren</a>
+    <a class="tab" href="Anya.dc.html"><i class="i i-sp"></i>Anya</a>
+    <a class="tab" href="Personalize.dc.html"><i class="i i-user"></i>Saya</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1400}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

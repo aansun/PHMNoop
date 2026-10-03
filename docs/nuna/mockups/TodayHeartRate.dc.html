@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Detak hari ini</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:980px">
+  <div class="pad col" style="gap:16px">
+    <div class="rw sp"><div class="rw" style="gap:10px"><a class="ib" href="Main.dc.html" aria-label="Kembali"><i class="i i-chevl"></i></a><h1 class="h2" style="font-size:24px">Detak hari ini</h1></div></div>
+    <div class="gc" style="padding:22px"><div class="rw sp"><span class="cap">Sekarang</span><span class="chip a"><i class="i s i-watch"></i>Strap terhubung</span></div><div class="rw" style="gap:12px;margin-top:10px"><i class="i l i-heart" style="color:#FF0026;width:34px;height:34px"></i><div class="n" style="font-size:72px">61<span class="u">bpm</span></div></div></div>
+    <div class="gc"><svg viewBox="0 0 314 150" width="100%" height="150" role="img" aria-label="Detak 24 jam, puncak 158 saat lari pagi"><rect x="0" y="62" width="314" height="30" fill="rgba(22,236,6,.1)"/><g stroke="rgba(255,255,255,.08)"><path d="M0 30H314M0 62H314M0 92H314M0 122H314"/></g><path d="M0 128 C20 126 40 124 60 126 S90 120 104 80 S116 36 132 30 S150 70 166 96 S200 120 230 110 S270 92 290 112 S306 118 314 116" fill="none" stroke="#FF0026" stroke-width="3" stroke-linecap="round"/></svg><div class="rw sp sub" style="font-size:11.5px;margin-top:6px"><span>00:00</span><span>06:00</span><span>12:00</span><span>Sekarang</span></div></div>
+    <div class="rw" style="gap:10px"><div class="gc s grow" style="padding:12px"><span class="cap" style="font-size:10.5px">Terendah</span><div class="n ns" style="margin-top:6px">46</div></div><div class="gc s grow" style="padding:12px"><span class="cap" style="font-size:10.5px">Rata-rata</span><div class="n ns" style="margin-top:6px">72</div></div><div class="gc s grow" style="padding:12px"><span class="cap" style="font-size:10.5px">Tertinggi</span><div class="n ns" style="margin-top:6px">158</div></div></div>
+    <div class="gc"><span class="cap">Waktu di zona</span><div style="display:flex;gap:3px;height:12px;margin-top:14px"><i style="flex:70;border-radius:6px;background:#3B4258"></i><i style="flex:22;border-radius:6px;background:#16EC06"></i><i style="flex:9;border-radius:6px;background:#FFDE00"></i><i style="flex:3;border-radius:6px;background:#FF0026"></i></div><div class="rw sp sub" style="font-size:11.5px;margin-top:8px"><span>Zona 1 · 14j</span><span>Zona 2 · 22 mnt</span><span>Zona 4 · 3 mnt</span></div></div>
+    <div class="gc s rw" style="gap:12px;padding:14px 16px"><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-sp"></i></div><div class="grow"><div class="h3" style="font-size:16px">Cara menghitung zona</div><div class="sub" style="font-size:12.5px">Dari detak maksimum 185</div></div><i class="i s i-chev" style="color:#6B7177;transform:rotate(90deg)"></i></div>
+  </div>
+  <nav class="tabbar" aria-label="Navigasi utama">
+    <a class="tab on" href="Main.dc.html"><i class="i i-grid"></i>Hari ini</a>
+    <a class="tab" href="Health.dc.html"><i class="i i-hp"></i>Kesehatan</a>
+    <a class="tab" href="Trends.dc.html"><i class="i i-trend"></i>Tren</a>
+    <a class="tab" href="Anya.dc.html"><i class="i i-sp"></i>Anya</a>
+    <a class="tab" href="Personalize.dc.html"><i class="i i-user"></i>Saya</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":980}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

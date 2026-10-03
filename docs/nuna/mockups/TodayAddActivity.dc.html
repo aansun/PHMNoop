@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Tambah aktivitas</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:1700px">
+  <div class="pad col" style="gap:16px">
+    <div class="rw sp"><a class="ib" href="TodayQuick.dc.html" aria-label="Kembali ke aksi cepat"><i class="i i-x"></i></a><span class="h3">Tambah aktivitas</span><span style="width:44px"></span></div>
+    <div class="sg"><button class="on">Catat manual</button><a href="WorkoutStart.dc.html">Mulai sekarang</a></div>
+    <div class="gc hl" style="padding:16px"><div class="rw" style="gap:12px"><div class="ic" style="width:40px;height:40px;background:rgba(22,236,6,.12);color:#16EC06"><i class="i i-watch"></i></div><div class="grow"><div class="cap" style="font-size:10.5px">Terdeteksi strap</div><div class="h3" style="font-size:16px">Jalan · 22 menit</div><div class="sub" style="font-size:12.5px">Kemarin 16:10 · rata-rata 104 bpm</div></div></div><div class="rw" style="gap:10px;margin-top:14px"><button class="btn g grow" style="height:44px">Abaikan</button><button class="btn grow" style="height:44px">Simpan</button></div></div>
+    <h2 class="h2">Jenis aktivitas</h2>
+    <div class="rw" style="height:50px;border-radius:25px;background:rgba(0,0,0,.28);border:1px solid var(--bd);padding:0 18px;gap:10px;margin-top:-4px;color:var(--mu)"><i class="i s i-sp"></i><span style="font-weight:700">Cari aktivitas</span></div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px"><div class="gc s col" style="align-items:center;gap:8px;padding:14px 4px;background:#FFFFFF;color:#000000"><i class="i l i-flame"></i><span style="font-size:12.5px;font-weight:800">Lari</span></div><div class="gc s col" style="align-items:center;gap:8px;padding:14px 4px;"><i class="i l i-steps"></i><span style="font-size:12.5px;font-weight:800">Jalan</span></div><div class="gc s col" style="align-items:center;gap:8px;padding:14px 4px;"><i class="i l i-act"></i><span style="font-size:12.5px;font-weight:800">Sepeda</span></div><div class="gc s col" style="align-items:center;gap:8px;padding:14px 4px;"><i class="i l i-bolt"></i><span style="font-size:12.5px;font-weight:800">Beban</span></div><div class="gc s col" style="align-items:center;gap:8px;padding:14px 4px;"><i class="i l i-wind"></i><span style="font-size:12.5px;font-weight:800">Yoga</span></div><div class="gc s col" style="align-items:center;gap:8px;padding:14px 4px;"><i class="i l i-drop"></i><span style="font-size:12.5px;font-weight:800">Renang</span></div><div class="gc s col" style="align-items:center;gap:8px;padding:14px 4px;"><i class="i l i-heart"></i><span style="font-size:12.5px;font-weight:800">HIIT</span></div><div class="gc s col" style="align-items:center;gap:8px;padding:14px 4px;"><i class="i l i-plus"></i><span style="font-size:12.5px;font-weight:800">Lainnya</span></div></div>
+    <h2 class="h2">Detail</h2>
+    <div class="gc" style="padding:4px 18px;margin-top:-4px"><div class="li"><div class="grow"><div class="cap" style="font-size:10.5px">Tanggal</div><div class="h3" style="font-size:16px;margin-top:2px">Hari ini, 5 Oktober</div></div><i class="i s i-chev" style="color:#6B7177"></i></div><div class="li"><div class="grow"><div class="cap" style="font-size:10.5px">Mulai</div><div class="h3" style="font-size:16px;margin-top:2px">06:10</div></div><i class="i s i-chev" style="color:#6B7177"></i></div>
+      <div class="li"><div class="grow"><div class="cap" style="font-size:10.5px">Durasi</div><div class="n ns" style="margin-top:4px">38 menit</div></div><button class="ib" style="width:40px;height:40px;border-radius:20px" aria-label="Kurangi"><span style="font-size:22px;font-weight:800">−</span></button><button class="ib" style="width:40px;height:40px;border-radius:20px" aria-label="Tambah"><i class="i i-plus"></i></button></div>
+      <div class="li" style="flex-direction:column;align-items:stretch;gap:10px"><div class="cap" style="font-size:10.5px">Intensitas</div><div class="sg"><button>Ringan</button><button class="on">Sedang</button><button>Berat</button></div></div>
+      <div class="li"><div class="grow"><div class="cap" style="font-size:10.5px">Jarak (opsional)</div><div class="h3" style="font-size:16px;margin-top:2px">5,2 km</div></div><i class="i s i-chev" style="color:#6B7177"></i></div></div>
+    <div class="gc" style="padding:6px 18px"><div class="li" style="border-top:0"><div class="grow"><div class="h3">Hitung dari detak strap</div><div class="sub" style="font-size:12.5px">Memakai data jam 06:10 – 06:48</div></div><button class="tg on" aria-pressed="true" aria-label="Hitung dari detak strap"></button></div><div class="li"><div class="grow"><div class="h3">Kirim ke Strava</div><div class="sub" style="font-size:12.5px">Setelah disimpan</div></div><button class="tg" aria-pressed="false" aria-label="Kirim ke Strava"></button></div></div>
+    <div class="gc s rw" style="gap:12px;padding:14px 16px"><div class="ic" style="width:40px;height:40px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-bolt"></i></div><div class="grow"><div class="cap" style="font-size:10.5px">Perkiraan</div><div class="h3" style="font-size:16px">Effort +6,8 · 320 kkal</div></div></div>
+    <a class="btn" href="Main.dc.html" style="height:56px;border-radius:28px;font-size:16px">Simpan aktivitas</a>
+  </div>
+  <nav class="tabbar" aria-label="Navigasi utama">
+    <a class="tab on" href="Main.dc.html"><i class="i i-grid"></i>Hari ini</a>
+    <a class="tab" href="Health.dc.html"><i class="i i-hp"></i>Kesehatan</a>
+    <a class="tab" href="Trends.dc.html"><i class="i i-trend"></i>Tren</a>
+    <a class="tab" href="Anya.dc.html"><i class="i i-sp"></i>Anya</a>
+    <a class="tab" href="Personalize.dc.html"><i class="i i-user"></i>Saya</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1700}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

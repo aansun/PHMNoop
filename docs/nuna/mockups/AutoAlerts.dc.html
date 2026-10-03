@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Peringatan dan laporan</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:1900px">
+  <div class="pad col" style="gap:16px">
+    <div class="rw sp"><div class="rw" style="gap:10px"><a class="ib" href="Automations.dc.html" aria-label="Kembali"><i class="i i-chevl"></i></a><h1 class="h2" style="font-size:24px">Peringatan dan laporan</h1></div></div>
+    <h2 class="h2">Baterai strap</h2>
+    <div class="gc" style="padding:4px 18px;margin-top:-4px"><div class="li" style="border-top:0"><div class="ic" style="width:40px;height:40px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-watch"></i></div><div class="grow"><div class="h3" style="font-size:16px">Baterai rendah dan penuh</div><div class="sub" style="font-size:12.5px;line-height:1.35">Notifikasi saat baterai hampir habis dan saat selesai mengisi</div></div><button class="tg on" aria-pressed="true" aria-label="Baterai rendah dan penuh"></button></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-timer"></i></div><div class="grow"><div class="h3" style="font-size:16px">Perkiraan sisa waktu</div><div class="sub" style="font-size:12.5px;line-height:1.35">Peringatan bila diperkirakan habis sebelum waktu tidur</div></div><button class="tg on" aria-pressed="true" aria-label="Perkiraan sisa waktu"></button></div></div>
+    <h2 class="h2">Target Effort</h2>
+    <div class="gc" style="padding:4px 18px;margin-top:-4px"><div class="li" style="border-top:0"><div class="ic" style="width:40px;height:40px;background:rgba(22,236,6,.12);color:#16EC06"><i class="i i-bolt"></i></div><div class="grow"><div class="h3" style="font-size:16px">Effort optimal tercapai</div><div class="sub" style="font-size:12.5px;line-height:1.35">Notifikasi sehabis strap tersinkron dan hari dinilai, bukan detik kamu melewatinya. Sekali per hari.</div></div><button class="tg" aria-pressed="false" aria-label="Effort optimal tercapai"></button></div></div>
+    <h2 class="h2">Laporan</h2>
+    <div class="gc" style="padding:4px 18px;margin-top:-4px"><div class="li" style="border-top:0"><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-bm"></i></div><div class="grow"><div class="h3" style="font-size:16px">Ringkasan setelah latihan</div><div class="sub" style="font-size:12.5px;line-height:1.35">Setelah latihan langsung disimpan: Effort, durasi, dan detak rata-rata. Latihan lama tidak diulang.</div></div><button class="tg" aria-pressed="false" aria-label="Ringkasan setelah latihan"></button></div></div>
+    <h2 class="h2">Kesehatan</h2>
+    <div class="gc" style="padding:4px 18px;margin-top:-4px"><div class="li" style="border-top:0"><div class="ic" style="width:40px;height:40px;background:rgba(255,0,38,.14);color:#FF5468"><i class="i i-heart"></i></div><div class="grow"><div class="h3" style="font-size:16px">Peringatan dini sakit</div><div class="sub" style="font-size:12.5px;line-height:1.35">Cari tanda tubuh tegang. Butuh dua sinyal menyimpang.</div></div><button class="tg on" aria-pressed="true" aria-label="Peringatan dini sakit"></button></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(123,161,187,.16);color:#9DBBD0"><i class="i i-heart"></i></div><div class="grow"><div class="h3" style="font-size:16px">Kesadaran siklus</div><div class="sub" style="font-size:12.5px;line-height:1.35">Opsional, hanya di perangkat</div></div><button class="tg" aria-pressed="false" aria-label="Kesadaran siklus"></button></div><div class="li"><div class="ic" style="width:40px;height:40px;background:rgba(255,255,255,.08);color:#FFFFFF"><i class="i i-act"></i></div><div class="grow"><div class="h3" style="font-size:16px">Visualisasi Ritme (eksperimental)</div><div class="sub" style="font-size:12.5px;line-height:1.35">Gambaran waktu antar detak</div></div><button class="tg" aria-pressed="false" aria-label="Visualisasi Ritme (eksperimental)"></button></div></div>
+    <a class="gc s rw" href="Notifications.dc.html" style="gap:12px;padding:14px 16px"><div class="ic" style="width:40px;height:40px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-bell"></i></div><div class="grow"><div class="h3" style="font-size:16px">Semua notifikasi</div><div class="sub" style="font-size:12.5px">Ringkasan, pengingat, dan jam tenang</div></div><i class="i s i-chev" style="color:#6B7177"></i></a>
+    <div class="gc s rw" style="gap:12px;padding:14px 16px;align-items:flex-start"><i class="i s i-sp" style="color:#6B7177;margin-top:2px"></i><div class="sub" style="font-size:12.5px;line-height:1.45">Semua notifikasi dibuat di iPhone dan tidak ada yang dikirim keluar.</div></div>
+  </div>
+  <nav class="tabbar" aria-label="Navigasi utama">
+    <a class="tab" href="Main.dc.html"><i class="i i-grid"></i>Hari ini</a>
+    <a class="tab" href="Health.dc.html"><i class="i i-hp"></i>Kesehatan</a>
+    <a class="tab" href="Trends.dc.html"><i class="i i-trend"></i>Tren</a>
+    <a class="tab" href="Anya.dc.html"><i class="i i-sp"></i>Anya</a>
+    <a class="tab on" href="Personalize.dc.html"><i class="i i-user"></i>Saya</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

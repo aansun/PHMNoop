@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<title>Strava · penyiapan</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ui.css">
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@600;700;800&display=swap">
+<style>body{margin:0}</style>
+</helmet>
+<div class="app" style="width:390px;height:1900px">
+  <div class="pad col" style="gap:16px">
+    <div class="rw sp"><div class="rw" style="gap:10px"><a class="ib" href="DataHub.dc.html" aria-label="Kembali"><i class="i i-chevl"></i></a><h1 class="h2" style="font-size:24px">Strava</h1></div><span class="chip" style="background:rgba(255,255,255,.07);color:#9AA4AC">Eksperimental</span></div>
+    <div class="gc" style="padding:16px 18px"><div class="rw sp"><div class="grow"><div class="h3" style="font-size:16.5px">Integrasi Strava</div><div class="sub" style="font-size:12.5px">Menyambung dan mengunggah manual atau otomatis</div></div><button class="tg on" aria-pressed="true" aria-label="Integrasi Strava"></button></div></div>
+    <h2 class="h2">Kredensial API</h2>
+    <p class="sub" style="font-size:13px;line-height:1.5;margin-top:-6px">Buat aplikasi API Strava milikmu, lalu isi Client ID dan Client Secret. Keduanya disimpan di Keychain.</p>
+    <div><div class="cap" style="font-size:10.5px;margin-bottom:8px">Client ID</div><div class="rw sp" style="height:54px;border-radius:18px;background:rgba(0,0,0,.28);border:1px solid var(--bd);padding:0 16px;font-weight:700;color:#FFFFFF">123456</div></div>
+    <div><div class="cap" style="font-size:10.5px;margin-bottom:8px">Client Secret</div><div class="rw sp" style="height:54px;border-radius:18px;background:rgba(0,0,0,.28);border:1px solid var(--bd);padding:0 16px;font-weight:700;color:#FFFFFF">••••••••••••••••••••</div><div class="sub" style="font-size:12px;margin-top:6px;line-height:1.4">Tidak pernah ditampilkan lagi setelah disimpan</div></div>
+    <div class="rw" style="gap:10px"><a class="btn grow" href="StravaConnected.dc.html" style="height:50px">Simpan kredensial</a><a class="btn g" href="#" style="height:50px;padding:0 20px">Hapus</a></div>
+    <div class="gc"><span class="cap">Cara menyiapkan aplikasi Strava</span><div style="margin-top:8px"><div class="rw" style="gap:12px;align-items:flex-start;padding:8px 0"><div class="n ns" style="width:26px;height:26px;border-radius:13px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:12.5px;flex:none">1</div><div style="font-size:14px;line-height:1.45;font-weight:600">Buka Strava, Pengaturan, My API Application.</div></div><div class="rw" style="gap:12px;align-items:flex-start;padding:8px 0"><div class="n ns" style="width:26px;height:26px;border-radius:13px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:12.5px;flex:none">2</div><div style="font-size:14px;line-height:1.45;font-weight:600">Salin Client ID dan Client Secret ke kolom di atas.</div></div><div class="rw" style="gap:12px;align-items:flex-start;padding:8px 0"><div class="n ns" style="width:26px;height:26px;border-radius:13px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:12.5px;flex:none">3</div><div style="font-size:14px;line-height:1.45;font-weight:600">Isi Authorization Callback Domain dengan <b>localhost</b>.</div></div><div class="rw" style="gap:12px;align-items:flex-start;padding:8px 0"><div class="n ns" style="width:26px;height:26px;border-radius:13px;background:rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;font-size:12.5px;flex:none">4</div><div style="font-size:14px;line-height:1.45;font-weight:600">Simpan di sini, lalu ketuk Hubungkan Strava.</div></div></div></div>
+    <div class="gc"><div class="cap" style="font-size:10.5px">Callback URI</div><div class="rw sp" style="margin-top:10px;height:50px;border-radius:16px;background:rgba(0,0,0,.28);border:1px solid var(--bd);padding:0 16px;font-family:ui-monospace,Menlo,monospace;font-size:13px"><span>noop://localhost/strava/callback</span><a class="chip" href="#" style="height:30px">Salin</a></div><p class="sub" style="font-size:12px;margin-top:10px;line-height:1.4">Izin yang diminta: activity:write dan activity:read_all.</p></div>
+    <h2 class="h2">Sambungan</h2>
+    <div class="gc" style="margin-top:-4px"><div class="rw" style="gap:12px"><div class="ic" style="width:44px;height:44px;background:rgba(0,147,231,.16);color:#38AEF5"><i class="i i-up"></i></div><div class="grow"><div class="h3" style="font-size:16px">Belum tersambung</div><div class="sub" style="font-size:12.5px">Simpan kredensial dulu sebelum menyambung</div></div></div><a class="btn" href="StravaConnected.dc.html" style="margin-top:14px;width:100%;height:50px;opacity:.5">Hubungkan Strava</a></div>
+  </div>
+  <nav class="tabbar" aria-label="Navigasi utama">
+    <a class="tab" href="Main.dc.html"><i class="i i-grid"></i>Hari ini</a>
+    <a class="tab" href="Health.dc.html"><i class="i i-hp"></i>Kesehatan</a>
+    <a class="tab" href="Trends.dc.html"><i class="i i-trend"></i>Tren</a>
+    <a class="tab" href="Anya.dc.html"><i class="i i-sp"></i>Anya</a>
+    <a class="tab on" href="Personalize.dc.html"><i class="i i-user"></i>Saya</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
