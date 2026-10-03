@@ -1,0 +1,204 @@
+#if os(iOS)
+import SwiftUI
+import StrandDesign
+import StrandAnalytics
+
+// MARK: - Stage colours (tokens only)
+
+extension SleepStage {
+    var nunaColor: Color {
+        switch self {
+        case .awake: return NunaPalette.zoneBase
+        case .rem:   return NunaPalette.restLight
+        case .light: return NunaPalette.rest
+        case .deep:  return NunaPalette.restDeep
+        }
+    }
+    var nunaName: LocalizedStringKey {
+        switch self {
+        case .awake: return "Awake"
+        case .rem:   return "REM"
+        case .light: return "Light"
+        case .deep:  return "Deep"
+        }
+    }
+}
+
+// MARK: - Hypnogram strip
+
+/// Four lanes (awake, REM, light, deep from top) with one block per interval. Plain Canvas: no hover,
+/// no animation, so it stays cheap inside a scroll view.
+struct NunaHypnogramStrip: View {
+    let intervals: [SleepInterval]
+    var height: CGFloat = 96
+
+    private static let lanes: [SleepStage] = [.awake, .rem, .light, .deep]
+
+    var body: some View {
+        let total = max(intervals.map(\.end).max() ?? 1, 1)
+        Canvas { ctx, size in
+            let laneH = size.height / CGFloat(Self.lanes.count)
+            for (i, lane) in Self.lanes.enumerated() {
+                let band = CGRect(x: 0, y: CGFloat(i) * laneH + 2, width: size.width, height: laneH - 4)
+                ctx.fill(Path(roundedRect: band, cornerRadius: 4), with: .color(Color.white.opacity(0.04)))
+                for iv in intervals where iv.stage == lane {
+                    let x = size.width * CGFloat(iv.start / total)
+                    let w = max(2, size.width * CGFloat((iv.end - iv.start) / total))
+                    let r = CGRect(x: x, y: band.minY, width: w, height: band.height)
+                    ctx.fill(Path(roundedRect: r, cornerRadius: 3), with: .color(lane.nunaColor))
+                }
+            }
+        }
+        .frame(height: height)
+        .accessibilityHidden(true)
+    }
+}
+
+/// One stacked bar of the stage split (the fallback when there is no timeline).
+struct NunaStageSplitBar: View {
+    let stages: Stages
+    var body: some View {
+        GeometryReader { geo in
+            let parts: [(SleepStage, Double)] = [(.deep, stages.deep), (.rem, stages.rem),
+                                                              (.light, stages.light), (.awake, stages.awake)]
+            let total = max(parts.map(\.1).reduce(0, +), 1)
+            HStack(spacing: 2) {
+                ForEach(parts.indices, id: \.self) { i in
+                    if parts[i].1 > 0 {
+                        Capsule().fill(parts[i].0.nunaColor)
+                            .frame(width: max(4, geo.size.width * CGFloat(parts[i].1 / total) - 2))
+                    }
+                }
+            }
+        }
+        .frame(height: 12)
+        .accessibilityHidden(true)
+    }
+}
+
+struct NunaStageLegend: View {
+    var body: some View {
+        HStack(spacing: 14) {
+            ForEach([SleepStage.awake, .rem, .light, .deep], id: \.self) { s in
+                HStack(spacing: 6) {
+                    Circle().fill(s.nunaColor).frame(width: 9, height: 9)
+                    Text(s.nunaName).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                }
+            }
+            Spacer(minLength: 0)
+        }
+    }
+}
+
+/// Start / middle / end clock labels under a timeline.
+struct NunaTimeAxis: View {
+    let start: Date
+    let end: Date
+    var body: some View {
+        HStack {
+            Text(verbatim: NunaSleepFormat.clock(start))
+            Spacer()
+            Text(verbatim: NunaSleepFormat.clock(Date(timeIntervalSince1970: (start.timeIntervalSince1970 + end.timeIntervalSince1970) / 2)))
+            Spacer()
+            Text(verbatim: NunaSleepFormat.clock(end))
+        }
+        .font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+    }
+}
+
+// MARK: - Small shared pieces
+
+struct NunaProgressBar: View {
+    let fraction: Double
+    var color: Color = NunaPalette.rest
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.white.opacity(0.09))
+                Capsule().fill(color).frame(width: max(6, geo.size.width * CGFloat(min(max(fraction, 0), 1))))
+            }
+        }
+        .frame(height: 8)
+        .accessibilityHidden(true)
+    }
+}
+
+struct NunaStatTile: View {
+    let label: LocalizedStringKey
+    let value: String
+    var unit: String = ""
+    var fraction: Double?
+    var color: Color = NunaPalette.rest
+    var body: some View {
+        NunaCard(small: true) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(label).font(.system(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.textSecondary)
+                HStack(alignment: .firstTextBaseline, spacing: 3) {
+                    Text(verbatim: value).font(.system(size: NunaTypeSize.numberM, weight: .bold, design: .rounded))
+                        .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
+                    if !unit.isEmpty {
+                        Text(verbatim: unit).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    }
+                }
+                if let fraction { NunaProgressBar(fraction: fraction, color: color) }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+/// "Last night" style picker: older / newer chevrons around a title.
+struct NunaNightPicker: View {
+    @ObservedObject var model: NunaSleepModel
+    var body: some View {
+        HStack {
+            step("chevron.left", enabled: model.hasOlder) { model.index += 1 }
+            Spacer()
+            VStack(spacing: 2) {
+                Text(model.index == 0 ? "Last night" : "Earlier night")
+                    .font(.system(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: model.night.map { NunaSleepFormat.nightTitle($0.wakeDate) } ?? "–")
+                    .font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            }
+            Spacer()
+            step("chevron.right", enabled: model.hasNewer) { model.index -= 1 }
+        }
+    }
+
+    private func step(_ symbol: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol).font(.system(size: 15, weight: .bold))
+                .foregroundStyle(enabled ? NunaPalette.textPrimary : NunaPalette.textMuted.opacity(0.4))
+                .frame(width: 44, height: 44).background(Color.white.opacity(0.08), in: Circle())
+        }
+        .disabled(!enabled)
+    }
+}
+
+/// Header + scroll + background shared by the sleep screens.
+struct NunaScreen<Content: View>: View {
+    let title: LocalizedStringKey
+    let content: Content
+    @Environment(\.dismiss) private var dismiss
+
+    init(_ title: LocalizedStringKey, @ViewBuilder content: () -> Content) {
+        self.title = title; self.content = content()
+    }
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: NunaSpacing.section) {
+                NunaHeader(title, onBack: { dismiss() })
+                content
+            }
+            .padding(.horizontal, NunaSpacing.screenH)
+            .padding(.bottom, 120)
+        }
+        .scrollIndicators(.hidden)
+        .background(NunaPalette.canvas.ignoresSafeArea())
+        .toolbar(.hidden, for: .navigationBar)
+    }
+}
+#endif

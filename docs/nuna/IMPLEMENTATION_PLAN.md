@@ -51,11 +51,30 @@ Status (first slice, built and checked in the iOS simulator):
 - Second slice: in-place edit mode (hide, move, reset; "More options" opens the existing sheet for key metrics and cards), Your Cards / Added Cards / Menstrual Cycle as link rows, early warning card and screen, Nuna metric detail (`NunaMetricViews.swift`: 7/30/90 day bars, average / low / high, Anya) used by the rings, tiles, stress card and Your Cards, All metrics list, and the manual activity sheet from "+".
 - Known gaps (carried to later phases): Rest still opens the existing Sleep screen (Phase 2); heart rate opens the existing full-day chart; Journal, Breathing, Water and the Customise key-metrics sheet are still the light-themed Default screens; the Anya launcher overlay is not ported.
 
-## Phase 2: Tidur and Kesehatan (M-L)
+## Phase 2: Tidur and Kesehatan (M-L): done
+
+Phase 2 checklist:
+- [x] Sleep model: night picker, stages, naps, need and debt, vitals (from the cached rows; no new schema)
+- [x] Sleep summary (Rest ring, hypnogram, stage comparison, naps, vitals, need and debt, Anya)
+- [x] Sleep stages, vitals, performance and nap screens
+- [x] Rest ring and Your Cards "Sleep" open the Nuna sleep screen
+- [x] Health hub with All / Vital / Body / Sleep tabs
+- [x] Health detail: live heart rate, oxygen and breathing, skin temperature, weight, waist (Nuna metric screen)
+- [x] Fitness age screen (weekly, plus or minus 5 years, "comparison, not biological age")
+- [x] Mood, nutrition, lab book, cycle, permissions, Rhythm (consent gate): reachable from Health
+- [x] Nuna Health tab replaces the existing Health tab root
+- [x] Indonesian strings, build, simulator check, commit
 
 Sleep summary with movement strip and naps; stage, vitals, performance and nap screens. Health tabs and the detail screens (live HR, oxygen and breathing, skin temperature, fitness age, mood, weight, waist, nutrition, lab book, cycle, permissions, Rhythm with its consent gate).
 
 Needs: nightly movement summary and nap detection (see `DATA_REQUIREMENTS.md`). Fitness age follows `docs/FITNESS_AGE.md`: weekly, ±5-year band, "comparison, not biological age".
+
+Status (built and checked in the iOS simulator with a restored backup):
+- `StrandiOS/Nuna/Sleep/`: `NunaSleepModel` (night picker over the same session grouping, main-night and nap rules as `SleepView`; stage timeline and split; need, hours-vs-needed, restorative, consistency and debt use the same rules as `SleepModel`), `NunaSleepParts` (hypnogram strip, stage split bar, legend, stat tile, night picker), `NunaSleepScreens` (summary, stages, overnight vitals, performance with need and debt, naps).
+- `StrandiOS/Nuna/Health/NunaHealthView.swift`: Health hub with All / Vital / Body / Sleep tabs and the fitness age screen (weekly value, plus or minus 5 year band against the real age, "comparison, not biological age"). It replaces the Health tab root in `NunaRootView`.
+- The Rest ring on Today and the Sleep rows in Your Cards / Added Cards open the Nuna sleep screen. Vitals, oxygen, skin temperature, weight and stress open the shared Nuna metric screen from Phase 1.
+- Opened as before (existing screens): live heart rate, Lab Book, Rhythm with its consent gate, Apple Health permissions, cycle tracker, mood check-in, nutrition import. Their look is re-themed in later phases.
+- Known gaps: the nightly movement strip (needs the movement summary in `DATA_REQUIREMENTS.md`), the "smart alarm" row, journal notes on the night, adding a nap by hand, Rhythm empty / unsupported states in Nuna style, and the waist tile reads the profile only.
 
 ## Phase 3: Tren (M)
 

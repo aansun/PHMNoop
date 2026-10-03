@@ -9,6 +9,12 @@ enum NunaTodayRoute: Hashable {
     case metric(MetricDescriptor)
     case allMetrics
     case earlyWarning
+    case sleep(Int)
+    case sleepStages(Int)
+    case sleepVitals(Int)
+    case sleepPerformance(Int)
+    case sleepNaps(Int)
+    case fitnessAge
 }
 
 extension View {
@@ -18,6 +24,12 @@ extension View {
             case .metric(let m): NunaMetricDetailView(metric: m)
             case .allMetrics: NunaAllMetricsView()
             case .earlyWarning: NunaEarlyWarningView()
+            case .sleep(let i): NunaSleepView(startIndex: i)
+            case .sleepStages(let i): NunaSleepStagesView(startIndex: i)
+            case .sleepVitals(let i): NunaSleepVitalsView(startIndex: i)
+            case .sleepPerformance(let i): NunaSleepPerformanceView(startIndex: i)
+            case .sleepNaps(let i): NunaNapView(startIndex: i)
+            case .fitnessAge: NunaFitnessAgeView()
             }
         }
     }
@@ -166,8 +178,8 @@ struct NunaBars: View {
         let span = max(hi - lo, 0.0001)
         GeometryReader { geo in
             let gap: CGFloat = values.count > 40 ? 1 : 3
-            let w = max(1, (geo.size.width - gap * CGFloat(values.count - 1)) / CGFloat(max(values.count, 1)))
-            ZStack(alignment: .bottomLeading) {
+            let w = min(26, max(1, (geo.size.width - gap * CGFloat(values.count - 1)) / CGFloat(max(values.count, 1))))
+            ZStack(alignment: .bottom) {
                 HStack(alignment: .bottom, spacing: gap) {
                     ForEach(values.indices, id: \.self) { i in
                         if let v = values[i] {
@@ -231,7 +243,7 @@ struct NunaAllMetricsView: View {
     @ViewBuilder private func row(_ m: MetricDescriptor) -> some View {
         let label = NunaListRow(LocalizedStringKey(m.title), systemImage: m.icon, showsChevron: true)
         if m.key == HeroRingMetric.rest {
-            NavigationLink(value: TabRoute.metric(HeroRingMetric.rest)) { label }.buttonStyle(.plain)
+            NavigationLink(value: NunaTodayRoute.sleep(0)) { label }.buttonStyle(.plain)
         } else {
             NavigationLink(value: NunaTodayRoute.metric(m)) { label }.buttonStyle(.plain)
         }
