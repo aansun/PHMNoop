@@ -469,7 +469,7 @@ struct LiquidTodayView: View {
             )
         }
         .sheet(isPresented: $showCoachLauncher) {
-            CoachLauncherSheet()
+            CoachLauncherSheet(context: "today")
         }
         .sheet(isPresented: $showSettings) {
             NavigationStack {

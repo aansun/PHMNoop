@@ -1608,7 +1608,7 @@ struct TodayView: View {
         }
         // The Updates inbox (the header bell). Both platforms.
         .sheet(isPresented: $showCoachLauncher) {
-            CoachLauncherSheet()
+            CoachLauncherSheet(context: "today")
         }
         .sheet(isPresented: $showUpdatesInbox) {
             UpdatesInboxView(onClose: { showUpdatesInbox = false })

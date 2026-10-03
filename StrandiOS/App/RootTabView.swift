@@ -47,9 +47,13 @@ struct RootTabView: View {
     /// A routed v5 pillar screen (Insights hub / Lab Book / fused record / Rhythm) presented as a sheet
     /// when a hub row deep-links to it via NavRouter. nil = closed.
     @State private var routedPillar: NavRouter.Destination?
+    /// Global Anya entry point. It remains above the active module so the user never has to leave
+    /// Today, Sleep, Trends or More just to ask a contextual question.
+    @State private var showAnyaLauncher = false
     /// Selected tab — bound so tab switches can crossfade (README §Motion: ~240ms opacity swap
     /// between tab roots, calm easing). Defaults to Today.
     @State private var selectedTab: Int = 0
+    @State private var isAnyaDetailVisible = false
     /// One `NavigationPath` per tab, indexed by tab tag. Re-tapping the already-active tab pops
     /// that tab's stack to its root (#135) by clearing its path — an animated pop that leaves the
     /// root view alive, so an at-root re-tap keeps scroll position and never re-runs `.task`
@@ -153,6 +157,9 @@ struct RootTabView: View {
             moreTab(path: $tabPaths[4], scrollSignal: scrollTop[4]).tag(4)
         }
         .tint(StrandPalette.accent)
+        .onPreferenceChange(AnyaDetailVisibilityKey.self) { visible in
+            isAnyaDetailVisible = visible
+        }
         // Switching Coach off while STANDING on it leaves `selectedTab` pointing at a tag no tab claims
         // any more, which renders as an empty tab rather than as an error. Send that wearer to Today, and
         // only in that case, so a flip made from anywhere else does not move them.
@@ -306,6 +313,27 @@ struct RootTabView: View {
             }
         }
         .animation(.easeInOut(duration: 0.25), value: liftSession.isActive)
+        .overlay(alignment: .bottomTrailing) {
+        if coachEnabled &&
+            selectedTab != 3 &&
+            tabPaths.indices.contains(selectedTab) &&
+            tabPaths[selectedTab].isEmpty &&
+            !isAnyaDetailVisible {
+                AnyaPresenceButton(context: anyaContext) {
+                    showAnyaLauncher = true
+                }
+                .padding(.trailing, NoopMetrics.screenHPadding)
+                .padding(.bottom, liftSession.isActive
+                         ? NoopMetrics.tabBarClearance + 58
+                         : NoopMetrics.tabBarClearance + 12)
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+            }
+        }
+        .sheet(isPresented: $showAnyaLauncher) {
+            CoachLauncherSheet(context: anyaContext)
+                .environmentObject(model.coach)
+                .environmentObject(router)
+        }
         .sheet(isPresented: $liftSession.isPresented) {
             LiftSessionView { }
         }
@@ -319,6 +347,19 @@ struct RootTabView: View {
         .task {
             guard !liftSession.isActive, let snapshot = LiftSessionPersistence.load() else { return }
             liftSession.resume(from: snapshot)
+        }
+    }
+
+    /// A small amount of module context makes the global entry point feel intentional without
+    /// inventing a new prompt or sending anything. The canonical engine still decides what data is
+    /// available when the user asks.
+    private var anyaContext: String {
+        switch selectedTab {
+        case 0: return "today"
+        case 1: return "your trends"
+        case 2: return "your sleep"
+        case 3: return "your day"
+        default: return "your health"
         }
     }
 
