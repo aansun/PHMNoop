@@ -94,7 +94,9 @@ struct LiquidTodayView: View {
     /// #1862: the optional Coach launcher sheet. Presentation state only — opening it requests nothing.
     @State private var showCoachLauncher = false
     @State private var showSettings = false
-    @State private var synthesisExpanded = false
+    /// Keep the disclosure choice through Today refreshes. The key is absent for existing installs, so the
+    /// new default remains collapsed until the user explicitly opens the read.
+    @AppStorage("today.synthesisExpanded") private var synthesisExpanded = false
     @State private var showLiveSession = false
 
     /// Live Sessions (silent guardian) beta gate — the SAME key the Settings toggle writes. Default ON
@@ -451,6 +453,7 @@ struct LiquidTodayView: View {
         // classic TodayView's reloadHydration() uses.
         .task(id: "\(repo.refreshSeq)-\(selectedDayOffset)-\(repo.hydrationSeq)-\(hydrationEnabled)-\(dayCycleModeRaw)") {
             DashboardCardPrefs.migrateLegacyStepsAverage()
+            DashboardCardPrefs.migrateStressCard()
             await load()
         }
         .sheet(item: $guideSection) { section in
@@ -961,8 +964,7 @@ struct LiquidTodayView: View {
         case .stepsAverage30:
             RollingStepsAverageCard(day: selectedDayKey)
         case .stress:
-            cardLink(.stress, title: card.title, sub: card.subtitle,
-                     value: stressText, tint: StrandPalette.accent, frac: fracOver(stress, 3))
+            StressTodayCardView()
         case .fitnessAge:
             cardLink(.metric("fitness_age"), title: card.title, sub: card.subtitle,
                      // Bound symbol as on the Health hero (#2173), so a floored reading does not read
@@ -1130,45 +1132,55 @@ struct LiquidTodayView: View {
 
     private var synthesisSection: some View {
         VStack(spacing: 8) {
-            HStack {
-                Text(greeting).font(StrandFont.rounded(19)).foregroundStyle(StrandPalette.textPrimary)
-                    .lineLimit(1).minimumScaleFactor(0.6)   // yield to the pills rather than push them to wrap
-                Spacer(minLength: 8)
-                HStack(spacing: 8) {
-                    if let word = readinessWord {
-                        Text(word)
-                            .font(StrandFont.caption.weight(.bold))
-                            .foregroundStyle(StrandPalette.chargeColor)
-                            .padding(.horizontal, 13)
-                            .padding(.vertical, 6)
-                            .background(Capsule().fill(StrandPalette.chargeColor.opacity(0.14))
-                                .overlay(Capsule().strokeBorder(StrandPalette.chargeColor.opacity(0.3), lineWidth: 1)))
+            Button {
+                withAnimation(.easeInOut(duration: 0.2)) { synthesisExpanded.toggle() }
+            } label: {
+                HStack {
+                    Text(greeting).font(StrandFont.rounded(19)).foregroundStyle(StrandPalette.textPrimary)
+                        .lineLimit(1).minimumScaleFactor(0.6)   // yield to the pills rather than push them to wrap
+                    Spacer(minLength: 8)
+                    HStack(spacing: 8) {
+                        if let word = readinessWord {
+                            Text(word)
+                                .font(StrandFont.caption.weight(.bold))
+                                .foregroundStyle(StrandPalette.chargeColor)
+                                .padding(.horizontal, 13)
+                                .padding(.vertical, 6)
+                                .background(Capsule().fill(StrandPalette.chargeColor.opacity(0.14))
+                                    .overlay(Capsule().strokeBorder(StrandPalette.chargeColor.opacity(0.3), lineWidth: 1)))
+                        }
+                        HStack(spacing: 5) {
+                            Circle().fill(StrandPalette.chargeColor).frame(width: 6, height: 6)
+                            Text(chargeDisplay.stateLabel)
+                                .font(StrandFont.caption.weight(.bold))
+                                .foregroundStyle(StrandPalette.chargeColor)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Capsule().strokeBorder(StrandPalette.chargeColor.opacity(0.3), lineWidth: 1))
                     }
-                    HStack(spacing: 5) {
-                        Circle().fill(StrandPalette.chargeColor).frame(width: 6, height: 6)
-                        Text(chargeDisplay.stateLabel)
-                            .font(StrandFont.caption.weight(.bold))
-                            .foregroundStyle(StrandPalette.chargeColor)
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Capsule().strokeBorder(StrandPalette.chargeColor.opacity(0.3), lineWidth: 1))
+                    .fixedSize(horizontal: true, vertical: false)   // pills keep their natural width — no "Calibrating" wrap
+                    Image(systemName: synthesisExpanded ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundStyle(StrandPalette.textTertiary)
+                        .accessibilityHidden(true)
                 }
-                .fixedSize(horizontal: true, vertical: false)   // pills keep their natural width — no "Calibrating" wrap
+                .padding(.horizontal, 2)
+                .padding(.top, 4)
+                .contentShape(Rectangle())
             }
-            .padding(.horizontal, 2)
-            .padding(.top, 4)
+            .buttonStyle(.plain)
+            .accessibilityLabel(synthesisExpanded ? "Hide Synthesis" : "Show Synthesis")
+            .accessibilityHint("Shows the daily recovery and training explanation")
 
-            Button { withAnimation(.easeInOut(duration: 0.2)) { synthesisExpanded.toggle() } } label: {
+            if synthesisExpanded {
                 card {
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 10) {
                         HStack {
                             Text("SYNTHESIS").font(StrandFont.overline).tracking(1.6)
                                 .foregroundStyle(StrandPalette.textSecondary)
                             Spacer()
-                            Text(synthesisExpanded
-                                 ? String(localized: "hide")
-                                 : String(localized: "show"))
+                            Text("hide")
                                 .font(StrandFont.caption)
                                 .foregroundStyle(StrandPalette.textTertiary)
                         }
@@ -1179,6 +1191,10 @@ struct LiquidTodayView: View {
                         Text(chargeDisplay.calibrationDetail ?? synthLine)
                             .font(StrandFont.body).foregroundStyle(StrandPalette.textPrimary)
                             .fixedSize(horizontal: false, vertical: true)
+                        Text(LocalizedStringKey(readiness.summary))
+                            .font(StrandFont.caption)
+                            .foregroundStyle(StrandPalette.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
                         // The reason the count is not moving, when nights are arriving empty. Sits under
                         // the progress rather than replacing it: the wearer needs both the number and why.
                         if let why = chargeDisplay.calibrationReason(
@@ -1187,6 +1203,27 @@ struct LiquidTodayView: View {
                             Text(why).font(StrandFont.caption)
                                 .foregroundStyle(StrandPalette.textSecondary)
                                 .fixedSize(horizontal: false, vertical: true)
+                        }
+                        if !readiness.signals.isEmpty {
+                            Divider().overlay(StrandPalette.hairline)
+                            Text("Key signals")
+                                .font(StrandFont.caption.weight(.semibold))
+                                .foregroundStyle(StrandPalette.textSecondary)
+                            ForEach(readiness.signals.prefix(3), id: \.key) { signal in
+                                HStack(alignment: .top, spacing: 8) {
+                                    Circle().fill(StrandPalette.textTertiary).frame(width: 6, height: 6)
+                                        .padding(.top, 5)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(signal.label)
+                                            .font(StrandFont.caption.weight(.semibold))
+                                            .foregroundStyle(StrandPalette.textPrimary)
+                                        Text(signal.detail)
+                                            .font(StrandFont.caption)
+                                            .foregroundStyle(StrandPalette.textTertiary)
+                                            .fixedSize(horizontal: false, vertical: true)
+                                    }
+                                }
+                            }
                         }
                         // #530 follow-up: the classic hero's "no cardio load yet" note (effortZeroNote),
                         // shown on a calm day so today's ~0 Effort explains itself instead of a bare 0.
@@ -1202,15 +1239,10 @@ struct LiquidTodayView: View {
                                     .fixedSize(horizontal: false, vertical: true)
                             }
                         }
-                        if synthesisExpanded {
-                            Text(LocalizedStringKey(readiness.summary)).font(StrandFont.caption)
-                                .foregroundStyle(StrandPalette.textSecondary)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
                     }
                 }
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
-            .buttonStyle(LiquidPressStyle())
         }
     }
 
@@ -2208,7 +2240,9 @@ private struct HeroScoreCell: View {
     /// destination cannot change if another provider later adds a same-key descriptor.
     @ViewBuilder
     private func metricDetailDestination(for key: String) -> some View {
-        if let metric = MetricCatalog.metric(key: key, source: "my-whoop") {
+        if key == HeroRingMetric.rest {
+            SleepView()
+        } else if let metric = MetricCatalog.metric(key: key, source: "my-whoop") {
             MetricDetailView(metric: metric)
         } else {
             HealthView()

@@ -47,6 +47,11 @@ extension View {
             switch route {
             case .fullDayChart: FullDayChartView()
             case .metric(let key):
+                // Rest is the sleep-performance composite, so every Rest card opens the Sleep
+                // module rather than a generic metric page with a duplicated readout.
+                if key == HeroRingMetric.rest {
+                    SleepView()
+                } else {
                 // Every caller passes a catalog key, so the fallback is theoretical; Health is the
                 // catch-all vitals surface. (Pre-#198 Trends fell back to the Explorer instead —
                 // unified here rather than carrying two never-taken branches.)
@@ -55,7 +60,11 @@ extension View {
                 } else {
                     HealthView()
                 }
+                }
             case .metricSourced(let key, let source):
+                if key == HeroRingMetric.rest {
+                    SleepView()
+                } else {
                 // Exact (key, source) resolution, order-independent. Fall back to the bare-key entry,
                 // then Health, so a stale route can never dead-end.
                 if let m = MetricCatalog.metric(key: key, source: source)
@@ -63,6 +72,7 @@ extension View {
                     MetricDetailView(metric: m)
                 } else {
                     HealthView()
+                }
                 }
             case .metricExplorer: MetricExplorerView()
             case .compare: CompareView()

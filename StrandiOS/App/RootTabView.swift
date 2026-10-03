@@ -22,6 +22,9 @@ struct RootTabView: View {
     /// attached and would otherwise keep posting AI notifications for a feature the wearer switched off.
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @AppStorage("noop.bottomBarAutoHide") private var bottomBarAutoHide = false
+    /// Body, Data and App keep their open/closed choice between visits; Insights is intentionally always open.
+    @AppStorage(MoreSectionPrefs.storageKey) private var expandedMoreSectionsCSV = MoreSectionPrefs.defaultCSV
+    private var expandedMoreSections: Set<String> { MoreSectionPrefs.decode(expandedMoreSectionsCSV) }
 
     /// The live gym session, owned at the app root — see `LiftSessionController`.
     @EnvironmentObject private var liftSession: LiftSessionController
@@ -50,6 +53,9 @@ struct RootTabView: View {
     /// Global Anya entry point. It remains above the active module so the user never has to leave
     /// Today, Sleep, Trends or More just to ask a contextual question.
     @State private var showAnyaLauncher = false
+    /// The compact Anya affordance yields while the active module is being scrolled, then returns
+    /// when the gesture settles so it never obscures chart labels or card content.
+    @State private var isAnyaHiddenByScroll = false
     /// Selected tab — bound so tab switches can crossfade (README §Motion: ~240ms opacity swap
     /// between tab roots, calm easing). Defaults to Today.
     @State private var selectedTab: Int = 0
@@ -59,20 +65,13 @@ struct RootTabView: View {
     /// root view alive, so an at-root re-tap keeps scroll position and never re-runs `.task`
     /// (#198; the #197 resetID/`.id()` rebuild reset both). Requires the tab roots' first-hop
     /// links to push `TabRoute`/`MoreDestination` VALUES — closure-destination links bypass the path.
+    // Primary modules: Today → Health → Trends → Anya → More. Sleep is a detail module, not a tab.
     @State private var tabPaths: [NavigationPath] = Array(repeating: NavigationPath(), count: 5)
     /// One scroll-to-top token per tab. Bumped when the user re-taps the active tab while it's ALREADY
     /// at its root — the other half of the iOS convention #197/#198 left unserved (an at-root re-tap was
     /// a no-op). Threaded into each tab's root via `\.scrollToTopSignal`; ScreenScaffold / LiquidTodayView
     /// scroll to their top anchor when their tab's token changes.
     @State private var scrollTop: [Int] = Array(repeating: 0, count: 5)
-    /// Which More-tab groups are expanded (S2). Insights + Body stay open at rest; Data + App collapse to
-    /// just their header until tapped. Persisted (#860 item 2): the user's open/closed choice must SURVIVE
-    /// leaving and re-entering the More tab (and relaunch), not reset to the seed every visit. Backed by an
-    /// `@AppStorage` CSV string (keyed identically to the Android `MoreSectionPrefs`), bridged to a
-    /// `Set<String>` through `MoreSectionPrefs` so the section logic below is unchanged.
-    @AppStorage(MoreSectionPrefs.storageKey) private var expandedMoreSectionsCSV = MoreSectionPrefs.defaultCSV
-    private var expandedMoreSections: Set<String> { MoreSectionPrefs.decode(expandedMoreSectionsCSV) }
-
     /// V8 liquid redesign is the default Today; the Settings toggle lets a user fall back to the classic
     /// Today if they prefer it (keyed identically to the SettingsView toggle). Default ON.
     @AppStorage("noop.liquidTodayEnabled") private var liquidTodayEnabled = true
@@ -137,22 +136,29 @@ struct RootTabView: View {
             }
     }
 
+    private var anyaScrollGesture: some Gesture {
+        DragGesture(minimumDistance: 8)
+            .onChanged { value in
+                guard abs(value.translation.height) > abs(value.translation.width) else { return }
+                if !isAnyaHiddenByScroll {
+                    withAnimation(.easeOut(duration: 0.12)) { isAnyaHiddenByScroll = true }
+                }
+            }
+            .onEnded { _ in
+                withAnimation(.easeInOut(duration: 0.2)) { isAnyaHiddenByScroll = false }
+            }
+    }
+
     var body: some View {
         // The platform tab bar is intentionally left fully native. iOS 26 supplies Liquid Glass and
         // its dynamic interaction with scrolling content automatically; older supported releases use
         // the corresponding system material and safe-area behaviour from the same TabView.
         TabView(selection: nativeTabSelection) {
             tab(todayTabRoot, "Today", "square.grid.2x2", path: $tabPaths[0], scrollSignal: scrollTop[0]).tag(0)
-            tab(TrendsView(), "Trends", "chart.line.uptrend.xyaxis", path: $tabPaths[1], scrollSignal: scrollTop[1]).tag(1)
-            tab(SleepView(), "Sleep", "bed.double", path: $tabPaths[2], scrollSignal: scrollTop[2]).tag(2)
-            // K3: Coach promoted to a top-level tab (was behind the More list). The sparkles icon
-            // matches the More-tab row and the macOS sidebar entry.
-            // Conditional on the master switch. The tags stay LITERAL rather than being renumbered when
-            // Coach is absent: `tabPaths` and `scrollTop` are indexed by tag, and More stays tag 4 in both
-            // shapes, so a wearer's More tab keeps its identity, its navigation path and its scroll
-            // position across a flip instead of inheriting Coach's.
+            tab(HealthView(), "Health", "heart.text.square.fill", path: $tabPaths[1], scrollSignal: scrollTop[1]).tag(1)
+            tab(TrendsView(), "Trends", "chart.line.uptrend.xyaxis", path: $tabPaths[2], scrollSignal: scrollTop[2]).tag(2)
             if coachEnabled {
-                tab(CoachView(), "Coach", "sparkles", path: $tabPaths[3], scrollSignal: scrollTop[3]).tag(3)
+                tab(CoachView(), "Anya", "sparkles", path: $tabPaths[3], scrollSignal: scrollTop[3]).tag(3)
             }
             moreTab(path: $tabPaths[4], scrollSignal: scrollTop[4]).tag(4)
         }
@@ -163,13 +169,16 @@ struct RootTabView: View {
         // Switching Coach off while STANDING on it leaves `selectedTab` pointing at a tag no tab claims
         // any more, which renders as an empty tab rather than as an error. Send that wearer to Today, and
         // only in that case, so a flip made from anywhere else does not move them.
-        .onChangeCompat(of: coachEnabled) { enabled in
-            if !enabled && selectedTab == 3 { selectedTab = 0 }
+        // If Anya is disabled while its tab is active, move back to Today before SwiftUI removes that tab.
+        .onChange(of: coachEnabled) { _, enabled in
+            guard !enabled, selectedTab == 3 else { return }
+            selectedTab = 0
         }
         // #1841: the same "Hide bar when scrolling" preference Android drives its own bar with. Here the
         // system owns the behaviour — iOS 26's tab bar MINIMISES to a pill on scroll down rather than
         // sliding away entirely, so this is the platform's read of the same intent, not a copy of ours.
         .noopTabBarAutoHide(bottomBarAutoHide)
+            .simultaneousGesture(anyaScrollGesture)
             // Tab crossfade — README §Motion: ~240ms opacity swap between tab roots, global calm
             // easing cubic-bezier(0.22,1,0.36,1).
             .animation(.timingCurve(0.22, 1, 0.36, 1, duration: 0.24), value: selectedTab)
@@ -230,23 +239,18 @@ struct RootTabView: View {
                 routedPillar = dest
                 router.requestedDestination = nil
             case .coach:
-                // K3: Coach is now a top-level tab (tag 3) — switch to it directly instead of
-                // presenting it as a pillar sheet.
-                //
-                // Guarded on the master switch, because this route is reachable with Coach OFF. A brief
-                // notification already sitting in Notification Centre still calls `openCoach()` when it is
-                // tapped (StrandApp wires `onCoachBriefTapped` to it), and with no tab claiming tag 3 the
-                // wearer would land on a BLANK tab. Dropping the request leaves them where they were, which
-                // is the honest answer for a feature that is switched off.
                 guard coachEnabled else {
                     router.requestedDestination = nil
                     break
                 }
-                withAnimation(.timingCurve(0.22, 1, 0.36, 1, duration: 0.24)) { selectedTab = 3 }
+                withAnimation(.timingCurve(0.22, 1, 0.36, 1, duration: 0.24)) {
+                    selectedTab = 3
+                    tabPaths[3] = NavigationPath()
+                }
                 router.requestedDestination = nil
             case .trends:
                 // Trends is a primary tab on iPhone (not a pillar sheet) — switch to it.
-                withAnimation(.timingCurve(0.22, 1, 0.36, 1, duration: 0.24)) { selectedTab = 1 }
+                withAnimation(.timingCurve(0.22, 1, 0.36, 1, duration: 0.24)) { selectedTab = 2 }
                 router.requestedDestination = nil
             case .workouts:
                 // Workouts lives behind More on iPhone. Reset that tab's stack first so finishing a
@@ -316,9 +320,11 @@ struct RootTabView: View {
         .overlay(alignment: .bottomTrailing) {
         if coachEnabled &&
             selectedTab != 3 &&
+            selectedTab != 4 &&
             tabPaths.indices.contains(selectedTab) &&
             tabPaths[selectedTab].isEmpty &&
-            !isAnyaDetailVisible {
+            !isAnyaDetailVisible &&
+            !isAnyaHiddenByScroll {
                 AnyaPresenceButton(context: anyaContext) {
                     showAnyaLauncher = true
                 }
@@ -356,10 +362,10 @@ struct RootTabView: View {
     private var anyaContext: String {
         switch selectedTab {
         case 0: return "today"
-        case 1: return "your trends"
-        case 2: return "your sleep"
-        case 3: return "your day"
-        default: return "your health"
+        case 1: return "your health"
+        case 2: return "your trends"
+        case 3: return "Anya"
+        default: return "your day"
         }
     }
 
@@ -472,6 +478,8 @@ struct RootTabView: View {
             quickScreen(InsightsView())
         case .breathe:
             quickScreen(BreathingView())
+        case .rhythm:
+            quickScreen(RhythmHost())
         }
     }
 
@@ -538,55 +546,36 @@ struct RootTabView: View {
         .tabItem { Label(title, systemImage: icon) }
     }
 
-    // The "More" tab is the app's catch-all index. It was a plain SwiftUI `List` with system large-title
-    // + system title-case section headers, so it didn't match any other page (which all use ScreenScaffold
-    // + SectionHeader's UPPERCASE overline + the 28pt section rhythm). Rebuilt on the shared page chrome:
-    // ScreenScaffold for the title1 "More" + subtitle, a `SectionHeader` overline per group, and the group's
-    // rows in a single grouped NoopCard with hairline dividers — the same row idiom Settings/Health use.
+    // The "More" tab is the app's catch-all index. Keep every destination visible in one calm, scrollable
+    // surface: category labels provide orientation without introducing a second disclosure interaction.
     private func moreTab(path: Binding<NavigationPath>, scrollSignal: Int) -> some View {
         NavigationStack(path: path) {
             ScreenScaffold(title: "More", subtitle: "Everything else, one tap away",
                            onRefresh: { await repo.refresh() },
                            topBackground: liquidScaffoldSky()) {
-                moreSection("Insights") {
+                moreSection("Insights", subtitle: "", collapsible: false) {
                     MoreRow("What Moves You", "wand.and.sparkles", .insightsHub)
                     MoreRow("Intelligence", "brain.head.profile", .intelligence)
-                    // K3: Coach promoted to a top-level tab — no longer listed under More.
                     MoreRow("Insights", "lightbulb.fill", .insights)
-                    MoreRow("Explore", "square.grid.2x2.fill", .explore)
-                    MoreRow("Compare", "rectangle.split.2x1.fill", .compare)
                 }
-                moreSection("Body") {
-                    MoreRow("Live", "waveform.path.ecg", .live)
+                moreSection("Body", subtitle: "Training, movement, and labs", collapsible: true) {
                     MoreRow("Workouts", "figure.run", .workouts)
                     MoreRow("Lift Log", "dumbbell.fill", .liftLog)
-                    MoreRow("Health", "heart.text.square.fill", .health)
                     MoreRow("Lab Book", "books.vertical.fill", .labBook)
-                    MoreRow("Stress", "bolt.heart.fill", .stress)
-                    MoreRow("Breathe", "wind", .breathe)
                     MoreRow("Intervals", "timer", .intervals)
-                    // Experimental beat-to-beat regularity visualization — self-gates on its own consent.
-                    MoreRow("Rhythm", "waveform.path", .rhythm)
                 }
-                moreSection("Data") {
+                moreSection("Data", subtitle: "Sources, backups, and exports", collapsible: true) {
                     MoreRow("Your Data, Fused", "square.stack.3d.up.fill", .fusedRecord)
                     MoreRow("Apple Health", "heart.fill", .appleHealth)
-                    MoreRow("Mi Band", "figure.walk.motion", .miBand)
                     MoreRow("Data Sources", "externaldrive.fill", .dataSources)
                     MoreRow("Backup & Sync", "externaldrive.fill.badge.icloud", .backupSync)
                     // #155: HealthKit-free Apple Health path for sideloaded installs (Siri Shortcut
                     // reads the opt-in Documents/noop_sync.txt drop file).
                     MoreRow("Shortcuts Export", "square.and.arrow.up.fill", .shortcutsExport)
-                    // iOS-only, default-off Strava upload experiment. The feature owns its OAuth and
-                    // upload UI so no Strava surface is added to the shared macOS Settings/Data screens.
-                    MoreRow("Strava (Experimental)", "figure.run.circle.fill", .strava)
-                    // iOS-only, default-off native audio coaching. The engine and TTS stay outside the
-                    // shared macOS settings so the original scaffold remains unchanged on desktop.
-                    MoreRow("Audio Coaching (Experimental)", "speaker.wave.2.circle.fill", .audioCoaching)
                     // The plain 4.0 vs 5.0/MG capability grid — what NOOP reads live off each strap.
-                    MoreRow("NOOP Limitations", "list.bullet.rectangle", .noopLimitations)
+                    MoreRow("Baseline notes", "list.bullet.rectangle", .noopLimitations)
                 }
-                moreSection("App") {
+                moreSection("App", subtitle: "Connections, controls, and support", collapsible: true) {
                     // #805/#811: the v7.3.1 #766 alarm consolidation moved Smart Alarm under a single
                     // "Alarms" sidebar entry (RootView .smartAlarm) but the regression dropped the row
                     // from the iPhone More list, leaving Alarms unreachable on iPhone. Restore it here
@@ -606,7 +595,9 @@ struct RootTabView: View {
                     // #477 lives here rather than inside Settings: the strap-battery levers are the
                     // ones people reach for when a strap is running down, so they get their own row.
                     MoreRow("Power saving", "battery.25", .powerSaving)
-                    MoreRow("Settings", "gearshape.fill", .settings)
+                    MoreRow("Strava", "figure.run.circle.fill", .strava)
+                    MoreRow("Audio Coaching", "speaker.wave.2.circle.fill", .audioCoaching)
+                    MoreRow("About", "info.circle", .about)
                 }
             }
             // The rows push MoreDestination VALUES so a re-tap of the More tab can pop them off the
@@ -628,58 +619,51 @@ struct RootTabView: View {
         .tabItem { Label("More", systemImage: "ellipsis") }
     }
 
-    /// One titled, COLLAPSIBLE group in the More index (S2): the app's overline (UPPERCASE) becomes a
-    /// tappable header with a disclosure chevron; tapping it expands/collapses the grouped rows card.
-    /// Insights + Body default open, Data + App default collapsed (the `expandedMoreSections` seed) so the
-    /// list is shorter at rest without dropping a single row. The grouped card is unchanged: a single
-    /// `NoopCard` holding a `VStack(spacing: 0)` whose `MoreRow`s draw their own hairlines, clipped to the
-    /// card's rounded shape so the last divider is trimmed inside the corners. Same idiom Settings/Health use.
     @ViewBuilder
-    private func moreSection<Rows: View>(_ title: String,
+    private func moreSection<Rows: View>(_ title: String, subtitle: String, collapsible: Bool,
                                          @ViewBuilder rows: @escaping () -> Rows) -> some View {
-        let isOpen = expandedMoreSections.contains(title)
-        VStack(alignment: .leading, spacing: 10) {
-            // Tappable overline header: the same ALL-CAPS tracked label as before, now with a trailing
-            // chevron that rotates open. A plain Button (not a SwiftUI DisclosureGroup) so the header keeps
-            // the exact strandOverline styling and the card layout below stays identical to before.
-            Button {
-                withAnimation(.timingCurve(0.22, 1, 0.36, 1, duration: 0.24)) {
-                    // Persist the toggle via the CSV-backed @AppStorage so the choice survives leaving and
-                    // re-entering the More tab and relaunch (#860 item 2). MoreSectionPrefs owns encode/decode.
-                    var open = expandedMoreSections
-                    if isOpen { open.remove(title) } else { open.insert(title) }
-                    expandedMoreSectionsCSV = MoreSectionPrefs.encode(open)
+        let isOpen = !collapsible || expandedMoreSections.contains(title)
+
+        VStack(alignment: .leading, spacing: 8) {
+            if collapsible {
+                Button {
+                    withAnimation(.timingCurve(0.22, 1, 0.36, 1, duration: 0.24)) {
+                        var open = expandedMoreSections
+                        if isOpen { open.remove(title) } else { open.insert(title) }
+                        expandedMoreSectionsCSV = MoreSectionPrefs.encode(open)
+                    }
+                } label: {
+                    HStack(spacing: 12) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(title)
+                                .font(StrandFont.title2.weight(.semibold))
+                                .foregroundStyle(StrandPalette.textPrimary)
+                            Text(subtitle)
+                                .font(StrandFont.subhead)
+                                .foregroundStyle(StrandPalette.textSecondary)
+                                .lineLimit(1)
+                        }
+                        Spacer(minLength: 12)
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(StrandPalette.textTertiary)
+                            .rotationEffect(.degrees(isOpen ? 0 : -90))
+                    }
+                    .padding(.horizontal, 4)
+                    .contentShape(Rectangle())
                 }
-            } label: {
-                HStack(spacing: 6) {
-                    Text(title).strandOverline()
-                    Spacer(minLength: 8)
-                    Image(systemName: "chevron.down")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(StrandPalette.textTertiary)
-                        .rotationEffect(.degrees(isOpen ? 0 : -90))
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .contentShape(Rectangle())
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text(title))
+                .accessibilityValue(Text(isOpen ? String(localized: "Expanded") : String(localized: "Collapsed")))
+                .accessibilityHint(Text(isOpen ? String(localized: "Double tap to collapse") : String(localized: "Double tap to expand")))
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel(Text(title))
-            .accessibilityValue(Text(isOpen ? String(localized: "Expanded") : String(localized: "Collapsed")))
-            .accessibilityHint(Text(isOpen ? String(localized: "Double tap to collapse") : String(localized: "Double tap to expand")))
 
             if isOpen {
-                // Zero internal padding so each MoreRow owns its own comfortable insets + height; the rows
-                // supply their own hairline separators (drawn at the bottom of every row but the last via the
-                // divider overlay) so the group reads as one continuous grouped list, matching Settings/Health.
-                NoopCard(padding: 0) {
-                    VStack(spacing: 0) { rows() }
-                        // Clip the rows column to the card's rounded shape so the last row's bottom hairline is
-                        // trimmed inside the corners (the card draws its surface in the BACKGROUND and doesn't
-                        // clip content itself, so without this the final divider would run past the rounded edge).
-                        .clipShape(RoundedRectangle(cornerRadius: NoopMetrics.cardRadius, style: .continuous))
-                }
+                VStack(spacing: 0) { rows() }
+                    .background(StrandPalette.surfaceInset, in: RoundedRectangle(cornerRadius: NoopMetrics.cardRadius, style: .continuous))
             }
         }
+        .padding(.top, NoopMetrics.space2)
     }
 }
 
@@ -688,10 +672,10 @@ struct RootTabView: View {
 /// per-screen chrome the old inline links applied lives at the single `navigationDestination(for:)`
 /// registration in `moreTab`.
 private enum MoreDestination: Hashable {
-    case insightsHub, intelligence, coach, insights, explore, compare
+    case insightsHub, intelligence, coach, insights, compare
     case live, workouts, liftLog, health, labBook, stress, breathe, intervals, rhythm
     case fusedRecord, appleHealth, miBand, dataSources, backupSync, shortcutsExport, strava, audioCoaching, noopLimitations
-    case alarms, automations, testCentre, siriShortcuts, powerSaving, settings
+    case alarms, automations, testCentre, siriShortcuts, powerSaving, settings, about
 
     @ViewBuilder var destination: some View {
         switch self {
@@ -699,7 +683,6 @@ private enum MoreDestination: Hashable {
         case .intelligence:    IntelligenceView()
         case .coach:           CoachView()
         case .insights:        InsightsView()
-        case .explore:         MetricExplorerView()
         case .compare:         CompareView()
         case .live:            LiveView()
         case .workouts:        WorkoutsView()
@@ -725,6 +708,7 @@ private enum MoreDestination: Hashable {
         case .siriShortcuts:   SiriShortcutsSettingsView()
         case .powerSaving:     PowerSavingView()
         case .settings:        SettingsView()
+        case .about:           AboutView()
         }
     }
 }
@@ -783,7 +767,7 @@ private struct MoreRow: View {
 /// The destinations the centre FAB can present. `.menu` is the action sheet itself; the rest
 /// route to existing screens. `Identifiable` so it drives `.sheet(item:)`.
 private enum QuickAction: Int, Identifiable {
-    case menu, live, workout, journal, breathe
+    case menu, live, workout, journal, breathe, rhythm
     var id: Int { rawValue }
 }
 
@@ -815,6 +799,7 @@ private struct QuickActionSheet: View {
                 row("Start workout", icon: "figure.run", tint: StrandPalette.effortColor) { onPick(.workout) }
                 row("Log journal", icon: "square.and.pencil", tint: StrandPalette.accent) { onPick(.journal) }
                 row("Breathe", icon: "wind", tint: StrandPalette.restColor) { onPick(.breathe) }
+                row("Rhythm", icon: "waveform.path", tint: StrandPalette.metricPurple) { onPick(.rhythm) }
             }
             .padding(.horizontal, 16)
 

@@ -18,30 +18,37 @@ struct AnyaDetailVisibilityKey: PreferenceKey {
 struct AnyaPresenceButton: View {
     let context: String
     let action: () -> Void
+    @State private var isExpanded = false
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
                 Image(systemName: "sparkles")
-                    .font(.system(size: 13, weight: .bold))
-                Text("Ask Anya")
-                    .font(StrandFont.caption.weight(.bold))
-                Text("·")
-                    .foregroundStyle(StrandPalette.textTertiary)
-                Text(context)
-                    .font(StrandFont.caption)
-                    .lineLimit(1)
+                    .font(.system(size: 15, weight: .bold))
+                if isExpanded {
+                    Text("Ask Anya")
+                        .font(StrandFont.caption.weight(.bold))
+                    Text("·")
+                        .foregroundStyle(StrandPalette.textTertiary)
+                    Text(context)
+                        .font(StrandFont.caption)
+                        .lineLimit(1)
+                }
             }
             .foregroundStyle(StrandPalette.textPrimary)
-            .padding(.horizontal, 14)
-            .frame(height: 42)
+            .padding(.horizontal, isExpanded ? 14 : 12)
+            .frame(width: isExpanded ? nil : 42, height: 42)
             .background(StrandPalette.surfaceRaised.opacity(0.96), in: Capsule())
             .overlay(Capsule().strokeBorder(StrandPalette.hairline, lineWidth: 1))
             .shadow(color: .black.opacity(0.12), radius: 14, y: 5)
         }
         .buttonStyle(.plain)
+        .contentShape(Capsule())
+        .simultaneousGesture(TapGesture(count: 2).onEnded {
+            withAnimation(.easeInOut(duration: 0.2)) { isExpanded.toggle() }
+        })
         .accessibilityLabel("Ask Anya about \(context)")
-        .accessibilityHint("Open the daily coaching assistant")
+        .accessibilityHint(isExpanded ? "Double tap to collapse. Tap to open Anya." : "Double tap to expand. Tap to open Anya.")
     }
 }
 #endif

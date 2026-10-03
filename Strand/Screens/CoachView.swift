@@ -120,7 +120,7 @@ struct CoachView: View {
             #if os(iOS)
             iOSCoachPage
             #else
-            ScreenScaffold(title: "Coach",
+            ScreenScaffold(title: "Anya",
                            // Liquid finish: the same full-bleed day-of-sky backdrop Today + the other liquid
                            // tabs carry, so Coach sits in one atmosphere. Static + non-interactive; the frosted
                            // message/setup cards below sit on the opaque canvas and stay legible.
@@ -239,7 +239,7 @@ struct CoachView: View {
             Button("Clear", role: .destructive) { coach.clearConversation() }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This deletes the saved conversation from this device. Coach history is your own notes, not medical advice.")
+            Text("This deletes the saved conversation from this device. Anya history is your own notes, not medical advice.")
         }
         // K2 + K5 ordering matters and every step gates on an EMPTY transcript, so this is ONE `.task`
         // running sequentially (separate `.task`s can interleave at their await points on the same
@@ -380,7 +380,7 @@ struct CoachView: View {
             }
             .buttonStyle(.plain)
             .disabled(coach.messages.isEmpty || coach.sending)
-            .accessibilityLabel("New Coach conversation")
+            .accessibilityLabel("New Anya conversation")
             Button {
                 showHistory = true
             } label: {
@@ -389,7 +389,7 @@ struct CoachView: View {
                     .foregroundStyle(StrandPalette.textSecondary)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Coach history")
+            .accessibilityLabel("Anya history")
             Button {
                 showSettings = true
             } label: {
@@ -690,7 +690,7 @@ struct CoachView: View {
             }
             .buttonStyle(.plain)
             .disabled(coach.messages.isEmpty || coach.sending)
-            .accessibilityLabel("New Coach conversation")
+            .accessibilityLabel("New Anya conversation")
             .accessibilityHint("Save this conversation and start a blank chat")
             Button {
                 showHistory = true
@@ -700,7 +700,7 @@ struct CoachView: View {
                     .foregroundStyle(StrandPalette.textSecondary)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel("Coach history")
+            .accessibilityLabel("Anya history")
             // #2243: the way through to what used to be stacked under this header.
             Button {
                 showSettings = true
@@ -710,7 +710,7 @@ struct CoachView: View {
                     .foregroundStyle(StrandPalette.textSecondary)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(String(localized: "Coach settings"))
+            .accessibilityLabel(String(localized: "Anya settings"))
             #if os(iOS)
             connectionMenu
             #endif
@@ -986,14 +986,14 @@ struct CoachView: View {
                 Spacer(minLength: 48)
             }
             .accessibilityElement(children: .combine)
-            .accessibilityLabel("Coach said: \(message.text)")
+            .accessibilityLabel("Anya said: \(message.text)")
         }
     }
 
     private var typingIndicator: some View {
         HStack(spacing: 8) {
             ProgressView().controlSize(.small).tint(StrandPalette.accent)
-            Text("Coach is thinking…")
+            Text("Anya is thinking…")
                 .font(StrandFont.subhead)
                 .foregroundStyle(StrandPalette.textSecondary)
             Spacer(minLength: 0)
@@ -1002,7 +1002,7 @@ struct CoachView: View {
         .padding(.vertical, 11)
         .frostedCardSurface(tint: StrandPalette.chargeColor, cornerRadius: 16)
         .frame(maxWidth: 320, alignment: .leading)
-        .accessibilityLabel("Coach is thinking")
+        .accessibilityLabel("Anya is thinking")
     }
 
     private func errorBanner(_ message: String) -> some View {
@@ -1208,7 +1208,7 @@ struct CoachView: View {
                             .controlSize(.small)
                             .tint(StrandPalette.textSecondary)
                             .frame(width: 38, height: 38)
-                            .accessibilityLabel("Coach is thinking")
+                            .accessibilityLabel("Anya is thinking")
                     } else if draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
                               pendingAttachment == nil {
                         micButton
@@ -1242,7 +1242,7 @@ struct CoachView: View {
                 }
             }
         }
-        .confirmationDialog("Add to Coach", isPresented: $showAttachmentMenu, titleVisibility: .visible) {
+        .confirmationDialog("Add to Anya", isPresented: $showAttachmentMenu, titleVisibility: .visible) {
             Button("Photo") { showPhotoPicker = true }
             Button("Document") { showDocumentImporter = true }
             Button("Cancel", role: .cancel) { }

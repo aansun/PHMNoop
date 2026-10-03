@@ -1033,10 +1033,7 @@ struct MetricDetailView: View {
                         }
                     }
                     statRow(effectiveRange: effRange, windowed: win)
-                    // Steps chart summaries are bucketed, but the provenance table deliberately remains
-                    // one row per underlying observed day.
-                    readingsTable(windowed: isStepsDetail ? rawWin : win)
-                    correlationCard
+                    moreDetailsMenu(readings: isStepsDetail ? rawWin : win)
                 }
             }
             .padding(NoopMetrics.screenPadding)
@@ -1090,6 +1087,73 @@ struct MetricDetailView: View {
         }
         .preference(key: AnyaDetailVisibilityKey.self, value: true)
 #endif
+    }
+
+    /// The detail page keeps its chart and headline compact. Historical readings and correlations are
+    /// separate submenus so every metric follows the same "More details" interaction and the long table
+    /// cannot push the primary chart out of reach.
+    private func moreDetailsMenu(readings: [(day: String, value: Double)]) -> some View {
+        NoopCard(tint: StrandPalette.accent) {
+            VStack(alignment: .leading, spacing: NoopMetrics.space2) {
+                Text("More details")
+                    .font(StrandFont.headline)
+                    .foregroundStyle(StrandPalette.textPrimary)
+                Text("Open the historical readings or what correlates with this metric.")
+                    .font(StrandFont.footnote)
+                    .foregroundStyle(StrandPalette.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Divider().overlay(StrandPalette.hairline)
+                NavigationLink {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: NoopMetrics.sectionSpacing) {
+                            SectionHeader("Historical readings", overline: LocalizedStringKey(metric.title))
+                            readingsTable(windowed: readings)
+                        }
+                        .padding(NoopMetrics.screenPadding)
+                    }
+                    .background(StrandPalette.surfaceBase.ignoresSafeArea())
+                    .navigationTitle("Historical readings")
+#if os(iOS)
+                    .navigationBarTitleDisplayMode(.inline)
+#endif
+                } label: {
+                    detailMenuRow("Historical readings", "Every stored reading for this metric.", "list.number")
+                }
+                NavigationLink {
+                    ScrollView {
+                        VStack(alignment: .leading, spacing: NoopMetrics.sectionSpacing) {
+                            SectionHeader("What correlates", overline: LocalizedStringKey(metric.title))
+                            correlationCard
+                        }
+                        .padding(NoopMetrics.screenPadding)
+                    }
+                    .background(StrandPalette.surfaceBase.ignoresSafeArea())
+                    .navigationTitle("What correlates")
+#if os(iOS)
+                    .navigationBarTitleDisplayMode(.inline)
+#endif
+                } label: {
+                    detailMenuRow("What correlates", "See which stored signals move with this metric.", "arrow.triangle.branch")
+                }
+            }
+        }
+    }
+
+    private func detailMenuRow(_ title: LocalizedStringKey, _ subtitle: LocalizedStringKey, _ icon: String) -> some View {
+        HStack(spacing: NoopMetrics.space3) {
+            Image(systemName: icon)
+                .foregroundStyle(StrandPalette.accent)
+                .frame(width: 22)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(StrandFont.body.weight(.semibold)).foregroundStyle(StrandPalette.textPrimary)
+                Text(subtitle).font(StrandFont.footnote).foregroundStyle(StrandPalette.textTertiary)
+            }
+            Spacer()
+            Image(systemName: "chevron.right")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(StrandPalette.textTertiary)
+        }
+        .contentShape(Rectangle())
     }
 
     /// Two phases, because the screen used to wait for data it does not draw.

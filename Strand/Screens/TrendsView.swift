@@ -282,17 +282,19 @@ struct TrendsView: View {
                             .staggeredAppear(index: 2)
                         heroRecovery(recovery: recovery)
                             .staggeredAppear(index: 3)
-                        smallMultiples(hrv: hrv, rhr: rhr, strain: strain)
+                        restChart(rest: rest)
                             .staggeredAppear(index: 4)
+                        smallMultiples(hrv: hrv, rhr: rhr, strain: strain)
+                            .staggeredAppear(index: 5)
                         // Long-horizon training load (CTL/ATL/TSB). Uses the FULL history, not the
                         // range window — chronic load is inherently a 42-day horizon. Self-hides its
                         // chart behind an honest "needs N more days" state until enough history exists.
                         TrainingLoadCard(days: repo.days)
-                            .staggeredAppear(index: 5)
-                        yearStrip
                             .staggeredAppear(index: 6)
-                        exportReportRow
+                        yearStrip
                             .staggeredAppear(index: 7)
+                        exportReportRow
+                            .staggeredAppear(index: 8)
                     }
                 }
             }
@@ -637,6 +639,51 @@ struct TrendsView: View {
         NavigationLink(value: TabRoute.metric("recovery")) { card }
             .buttonStyle(LiquidPressStyle())
             .accessibilityHint(Text(String(localized: "Opens the full Charge metric.")))
+    }
+
+    // MARK: Rest — sleep-performance trend
+
+    /// Rest is the sleep-performance composite used by Today. It sits immediately below Charge so
+    /// the two recovery-oriented trends stay together, while tapping it goes to Sleep rather than a
+    /// second generic metric detail screen.
+    private func restChart(rest: ResolvedMetric) -> some View {
+        let pts = rest.points
+        let avg = mean(pts)
+        let card = ChartCard(
+            title: "Rest",
+            icon: "bed.double.fill",
+            subtitle: rangeSubtitle,
+            trailing: avg.map { "\(Int($0.rounded()))%" },
+            height: NoopMetrics.chartHeight,
+            chart: {
+                if pts.count >= 2 {
+                    glowChart(points: pts,
+                              gradient: gradient(StrandPalette.restLine),
+                              valueRange: 0...106,
+                              tip: StrandPalette.restLine,
+                              valueFormat: { "\(Int($0.rounded()))" },
+                              accessibilityLabel: String(localized: "Rest trend"))
+                } else {
+                    sparsePlaceholder
+                }
+            },
+            footer: {
+                VStack(alignment: .leading, spacing: NoopMetrics.space2) {
+                    HStack {
+                        ChartFooter([
+                            ("Avg", avg.map { "\(Int($0.rounded()))%" } ?? "—"),
+                            ("Peak", pts.map(\.value).max().map { "\(Int($0.rounded()))%" } ?? "—"),
+                            ("Low", pts.map(\.value).min().map { "\(Int($0.rounded()))%" } ?? "—"),
+                            ("Days", "\(pts.count)"),
+                        ])
+                        changeChip(pts, higherIsBetter: true, fmt: { "\(Int($0.rounded()))%" })
+                    }
+                }
+            }
+        )
+        return NavigationLink(value: TabRoute.sleep) { card }
+            .buttonStyle(LiquidPressStyle())
+            .accessibilityHint(Text(String(localized: "Opens Sleep details.")))
     }
 
     // MARK: Small multiples — HRV / Resting HR / Day Strain

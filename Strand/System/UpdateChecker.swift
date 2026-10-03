@@ -28,7 +28,7 @@ final class UpdateChecker: ObservableObject {
 
     @Published var state: State = .idle
 
-    private static let endpoint = URL(string: "https://api.github.com/repos/ryanbr/noop/releases/latest")!
+    private static let endpoint = URL(string: "https://api.github.com/repos/aansun/PHMNoop/releases/latest")!
 
     /// One release read. Shared by the button and the automatic check (#1659) so there is exactly one
     /// copy of the endpoint, the headers and the parsing — a second copy is how the two would drift into

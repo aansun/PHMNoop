@@ -313,6 +313,7 @@ public struct TrendChip: View {
 
 public struct ChartCard<ChartBody: View, Footer: View>: View {
     let title: LocalizedStringKey
+    var icon: String? = nil
     var subtitle: String? = nil
     var trailing: String? = nil
     var height: CGFloat = NoopMetrics.chartHeight
@@ -320,11 +321,11 @@ public struct ChartCard<ChartBody: View, Footer: View>: View {
     @ViewBuilder let chart: () -> ChartBody
     @ViewBuilder let footer: () -> Footer
 
-    public init(title: LocalizedStringKey, subtitle: String? = nil, trailing: String? = nil,
+    public init(title: LocalizedStringKey, icon: String? = nil, subtitle: String? = nil, trailing: String? = nil,
                 height: CGFloat = NoopMetrics.chartHeight, tint: Color? = nil,
                 @ViewBuilder chart: @escaping () -> ChartBody,
                 @ViewBuilder footer: @escaping () -> Footer = { EmptyView() }) {
-        self.title = title; self.subtitle = subtitle; self.trailing = trailing
+        self.title = title; self.icon = icon; self.subtitle = subtitle; self.trailing = trailing
         self.height = height; self.tint = tint; self.chart = chart; self.footer = footer
     }
 
@@ -333,7 +334,15 @@ public struct ChartCard<ChartBody: View, Footer: View>: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .firstTextBaseline) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(title).strandOverline()
+                        HStack(spacing: 6) {
+                            if let icon {
+                                Image(systemName: icon)
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundStyle(tint ?? StrandPalette.textSecondary)
+                                    .accessibilityHidden(true)
+                            }
+                            Text(title).strandOverline()
+                        }
                         if let subtitle { Text(subtitle).font(StrandFont.footnote).foregroundStyle(StrandPalette.textTertiary) }
                     }
                     Spacer()

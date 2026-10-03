@@ -92,16 +92,13 @@ struct DataSourcesView: View {
             VStack(alignment: .leading, spacing: NoopMetrics.sectionSpacing) {
                 whoopCard.staggeredAppear(index: 0)
                 appleHealthCard.staggeredAppear(index: 1)
-                xiaomiCard.staggeredAppear(index: 2)
-                nutritionCard.staggeredAppear(index: 3)
-                liftingCard.staggeredAppear(index: 4)
-                activityFileCard.staggeredAppear(index: 5)
-                wearableCard.staggeredAppear(index: 6)
-                #if OURA_CLOUD_IMPORT
-                ouraCloudCard.staggeredAppear(index: 7)
-                #endif
-                broadcastHrCard.staggeredAppear(index: 8)
-                liveCard.staggeredAppear(index: 9)
+                // iOS is intentionally WHOOP-focused. Alternate wearable import surfaces remain in
+                // the source tree for compatibility, but are not advertised here.
+                nutritionCard.staggeredAppear(index: 2)
+                liftingCard.staggeredAppear(index: 3)
+                activityFileCard.staggeredAppear(index: 4)
+                broadcastHrCard.staggeredAppear(index: 5)
+                liveCard.staggeredAppear(index: 6)
             }
         }
         .onAppear {

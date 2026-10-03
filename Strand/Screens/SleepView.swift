@@ -176,6 +176,9 @@ struct SleepView: View {
                         ForEach(Array(sleepVisibleSections.enumerated()), id: \.element) { idx, section in
                             sleepSectionView(section, resolved).staggeredAppear(index: idx + 1)
                         }
+                        // Rest trend is pinned at the bottom of Sleep so every Rest card resolves to
+                        // one coherent sleep module and the historical view is easy to find.
+                        restTrendCard.staggeredAppear(index: sleepVisibleSections.count + 1)
                     }
                 } else {
                     emptyState
@@ -1799,6 +1802,63 @@ struct SleepView: View {
         // builds AsleepDurationData itself from the same source, so the two render identical numbers.
         AsleepDurationCard(data: AsleepDurationData(points: model.trendPoints,
                                                     typicalTotalMin: model.typicalTotalMin))
+    }
+
+    private static let restTrendDayParser: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX")
+        f.timeZone = TimeZone(identifier: "UTC")
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+
+    private var restTrendPoints: [TrendPoint] {
+        repo.days.compactMap { day in
+            guard let date = Self.restTrendDayParser.date(from: day.day) else { return nil }
+            guard let value = repo.importedSleep[day.day]?.performancePct
+                    ?? AnalyticsEngine.Rest.composite(daily: day),
+                  value.isFinite else { return nil }
+            return TrendPoint(date: date, value: value)
+        }
+    }
+
+    private var restTrendCard: some View {
+        let points = restTrendPoints
+        let average = points.isEmpty ? nil : points.map(\.value).reduce(0, +) / Double(points.count)
+        return VStack(alignment: .leading, spacing: NoopMetrics.gap) {
+            SectionHeader("Rest", overline: "Trend")
+            ChartCard(
+                title: "Rest trend",
+                subtitle: "Sleep performance over time",
+                trailing: average.map { "\(Int($0.rounded()))% avg" },
+                height: NoopMetrics.chartHeight,
+                tint: StrandPalette.restColor,
+                chart: {
+                    if points.count >= 2 {
+                        TrendChart(points: points,
+                                   gradient: StrandPalette.restGradient,
+                                   valueRange: 0...100,
+                                   showsBars: false,
+                                   height: NoopMetrics.chartHeight,
+                                   valueFormat: { "\(Int($0.rounded()))" },
+                                   accessibilityLabel: String(localized: "Rest trend"))
+                    } else {
+                        Text("Not enough nights yet.")
+                            .font(StrandFont.subhead)
+                            .foregroundStyle(StrandPalette.textTertiary)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    }
+                },
+                footer: {
+                    ChartFooter([
+                        ("Avg", average.map { "\(Int($0.rounded()))%" } ?? "—"),
+                        ("Peak", points.map(\.value).max().map { "\(Int($0.rounded()))%" } ?? "—"),
+                        ("Low", points.map(\.value).min().map { "\(Int($0.rounded()))%" } ?? "—"),
+                        ("Nights", "\(points.count)"),
+                    ])
+                }
+            )
+        }
     }
 
     // MARK: - Memoization plumbing

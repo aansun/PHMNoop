@@ -39,7 +39,7 @@ struct CoachLauncherSheet: View {
         #if os(iOS)
         return "Anya uses your own provider connection. Nothing is sent until you enable it and ask a question; your key stays securely in the Keychain."
         #else
-        return "Coach uses your own API key. Pick a provider, paste a key, and choose a model. Your key is stored securely in the Keychain and never leaves \(Platform.deviceNounPhrase) except as the request you make."
+        return "Anya uses your own API key. Pick a provider, paste a key, and choose a model. Your key is stored securely in the Keychain and never leaves \(Platform.deviceNounPhrase) except as the request you make."
         #endif
     }
 
@@ -60,7 +60,7 @@ struct CoachLauncherSheet: View {
             #if os(iOS)
             .navigationTitle(Text("Anya"))
             #else
-            .navigationTitle(Text("Coach"))
+            .navigationTitle(Text("Anya"))
             #endif
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
@@ -241,11 +241,11 @@ struct CoachLauncherSheet: View {
         guard let attributed = try? AttributedString(markdown: text) else {
             return Text(text)
                 .font(StrandFont.footnote)
-                .foregroundStyle(StrandPalette.textSecondary)
+                .foregroundColor(StrandPalette.textSecondary)
         }
         return Text(attributed)
             .font(StrandFont.footnote)
-            .foregroundStyle(StrandPalette.textSecondary)
+            .foregroundColor(StrandPalette.textSecondary)
     }
 
 }

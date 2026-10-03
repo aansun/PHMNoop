@@ -250,7 +250,7 @@ struct PHMNRingsWidget: Widget {
             PHMNRingsWidgetView(entry: entry, secondaryMetric: .steps)
                 .containerBackground(StrandPalette.surfaceBase, for: .widget)
         }
-        .configurationDisplayName("NOOP Rings")
+        .configurationDisplayName("PHMN Rings")
         .description("Recovery, HRV, Strain, Steps and battery at a glance.")
         .supportedFamilies([.systemMedium])
     }
@@ -266,7 +266,7 @@ struct NOOPRing2Widget: Widget {
             PHMNRingsWidgetView(entry: entry, secondaryMetric: .calories)
                 .containerBackground(StrandPalette.surfaceBase, for: .widget)
         }
-        .configurationDisplayName("NOOP Ring 2")
+        .configurationDisplayName("PHMN Ring 2")
         .description("Full Recovery and Strain rings with HRV, Calories and battery.")
         .supportedFamilies([.systemMedium])
     }

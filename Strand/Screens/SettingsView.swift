@@ -210,6 +210,9 @@ struct SettingsView: View {
     @AppStorage("appIcon.name") private var appIconName = ""
     // Light/Dark/System theme. Read by both app roots' .preferredColorScheme; default follows the OS.
     @AppStorage(AppearanceMode.storageKey) private var appearanceRaw = AppearanceMode.system.rawValue
+    // App-wide interaction and navigation experience. Kept separate from Theme and ThemePreset so the
+    // upcoming Nuna redesign can switch the shell without changing visual preferences.
+    @AppStorage(AppExperience.storageKey) private var appExperienceRaw = AppExperience.default.rawValue
     // App-owned copy language. Apple binds a bundle localization at process launch, so this writes the
     // standard AppleLanguages override and takes effect after the user reopens NOOP.
     @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
@@ -348,6 +351,9 @@ struct SettingsView: View {
     /// (S3). Nothing is removed; every section below stays one tap away by expanding this group.
     /// Persisted so it remembers the user's choice; mirrors the Android `noop.settingsAdvancedOpen` key.
     @AppStorage(SettingsDisclosureDefaults.advancedOpenKey) private var advancedOpen = SettingsDisclosureDefaults.advancedOpenDefault
+    /// Everyday preference cards are grouped behind a second collapsed disclosure; Profile remains the
+    /// only always-open card so the settings landing page is calm and scannable.
+    @AppStorage(SettingsDisclosureDefaults.preferencesOpenKey) private var preferencesOpen = SettingsDisclosureDefaults.preferencesOpenDefault
 
     var body: some View {
         ScreenScaffold(title: "Settings",
@@ -357,17 +363,24 @@ struct SettingsView: View {
                        // Settings' own frosted cards sit on the dark canvas below the sky band, unchanged.
                        topBackground: liquidScaffoldSky()) {
             VStack(alignment: .leading, spacing: NoopMetrics.sectionSpacing) {
-                // Everyday sections stay expanded (S3): the ones a first-run user actually needs.
+                // Profile is the single always-open card.
                 profileCard.staggeredAppear(index: 0)
-                unitsCard.staggeredAppear(index: 1)
-                appearanceCard.staggeredAppear(index: 2)
-                strapCard.staggeredAppear(index: 3)
-                deviceConfigurationCard.staggeredAppear(index: 4)
-                streakCard.staggeredAppear(index: 5)
-                featuresCard.staggeredAppear(index: 6)
-                #if os(iOS)
-                syncCard.staggeredAppear(index: 7)
-                #endif
+                SettingsDisclosureGroup(
+                    title: "Preferences",
+                    subtitle: "Units, appearance, strap, features, and sync.",
+                    isExpanded: $preferencesOpen
+                ) {
+                    unitsCard
+                    appearanceCard
+                    strapCard
+                    deviceConfigurationCard
+                    streakCard
+                    featuresCard
+                    #if os(iOS)
+                    syncCard
+                    #endif
+                }
+                .staggeredAppear(index: 1)
 
                 // Lower-frequency sections collapse behind a single default-closed disclosure so the
                 // screen opens at ~6 sections instead of 11. Nothing is removed; every section here
@@ -384,10 +397,9 @@ struct SettingsView: View {
                     experimentalCard
                     backupCard
                 }
-                .staggeredAppear(index: 8)
+                .staggeredAppear(index: 2)
 
-                // About stays expanded at the foot (version, links and the help sheets people return to).
-                aboutCard.staggeredAppear(index: 9)
+                // About is a standalone More → App destination so Settings stays focused on controls.
             }
         }
         .alert(backupAlertTitle, isPresented: $showBackupAlert) {
@@ -1243,11 +1255,11 @@ struct SettingsView: View {
                 // the daily brief is cancelled -- the brief being the surface that would otherwise keep
                 // calling a provider from the background with no UI to reveal it. The saved provider key is
                 // kept, so this is a flip rather than a re-setup.
-                FormRow(label: "AI Coach") {
+                FormRow(label: "Anya") {
                     Toggle("", isOn: $coachEnabled)
                         .labelsHidden()
                         .tint(StrandPalette.accent)
-                        .accessibilityLabel("AI Coach")
+                        .accessibilityLabel("Anya")
                 }
                 .onChangeCompat(of: coachEnabled) { on in
                     // Switching the AI off has to TAKE DOWN what the brief already published, not just stop the
@@ -1271,6 +1283,27 @@ struct SettingsView: View {
                     }
                 }
                 #endif
+                rowDivider
+                // Experience changes the app-wide shell and interaction model; it is deliberately not a
+                // theme preset. Nuna is persisted now so the new design can be activated without moving
+                // the user's colour, typography, or card preferences later.
+                FormRow(label: "Experience") {
+                    Picker("Experience", selection: $appExperienceRaw) {
+                        ForEach(AppExperience.allCases) { experience in
+                            Text(experience.label).tag(experience.rawValue)
+                        }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+                    .tint(StrandPalette.accent)
+                    .accessibilityLabel("App experience")
+                }
+                Text("Nuna is the upcoming app-wide redesign. Your selection is saved separately from Theme and Preset.")
+                    .font(StrandFont.footnote)
+                    .foregroundStyle(StrandPalette.textTertiary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, NoopMetrics.space1)
                 rowDivider
                 // Theme presets — one-tap bundles coordinating accent + chart world + backdrop + card
                 // opacity. Derived (no stored value): tweaking any control below flips this to Custom.
@@ -1379,11 +1412,11 @@ struct SettingsView: View {
                 #if os(iOS)
                 rowDivider   // #79: separator before App icon (inside #if so macOS keeps a single divider)
                 FormRow(label: "App icon") {
-                    // === PHM OVERLAY (PHMNOOP) === 3-way: Default / Navy / PHMNOOP (⌥).
+                    // === PHMN === 3-way: Default / Navy / PHMN alternate icon.
                     Picker("App icon", selection: $appIconName) {
                         Text("Default").tag("")
                         Text("Navy").tag("AppIcon-Navy")
-                        Text("PHMNOOP").tag("AppIcon-PHM")
+                        Text("PHMN").tag("AppIcon-PHM")
                     }
                     .labelsHidden()
                     .pickerStyle(.menu)
@@ -3188,7 +3221,6 @@ struct SettingsView: View {
                 // one-tap environment dump (device, iOS+build, Data Protection, background refresh,
                 // low-power, sideload expiry) for bug reports. iOS-only; macOS doesn't have these gotchas.
                 iosDiagnosticsRow
-                iphoneExpectations
                 #endif
 
                 // Check for updates — a single, user-initiated read of GitHub's public releases API.
@@ -3284,7 +3316,7 @@ struct SettingsView: View {
                 }
 
                 // Project home — NOOP's code, releases, issues and wiki live on GitHub.
-                Link(destination: URL(string: "https://github.com/ryanbr/noop")!) {
+                Link(destination: URL(string: "https://github.com/aansun/PHMNoop")!) {
                     HStack(spacing: 10) {
                         Image(systemName: "chevron.left.forwardslash.chevron.right")
                             .foregroundStyle(StrandPalette.accent)
@@ -3397,77 +3429,6 @@ struct SettingsView: View {
         .accessibilityLabel("Diagnostics")
     }
 
-    /// Calm, honest "what to expect running NOOP on iPhone" callout — sideloading reality, re-sign
-    /// cadence, the unlock-after-reboot (#222) note, background-BLE limits, and beta-iOS caveat. Surfaces
-    /// the live sideload-cert expiry when we can read it, with a gentle warning under ~3 days.
-    private var iphoneExpectations: some View {
-        let diag = IOSDiagnostics.capture()
-        let expiry = diag.expiryDaysRemaining()
-        return VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 8) {
-                Image(systemName: "iphone.gen3")
-                    .foregroundStyle(StrandPalette.accent)
-                    .accessibilityHidden(true)
-                Text("Using NOOP on iPhone")
-                    .font(StrandFont.subhead.weight(.semibold))
-                    .foregroundStyle(StrandPalette.textPrimary)
-            }
-
-            iphoneExpectationLine(String(localized: "This is a sideloaded build, installed outside the App Store. It needs re-signing periodically: roughly every 7 days on a free Apple ID, about a year on a paid developer account."))
-            iphoneExpectationLine(String(localized: "After your iPhone reboots, unlock it once. Until you do, iOS keeps NOOP's files locked (Data Protection), so new history can't be written or synced."))
-            iphoneExpectationLine(String(localized: "Background Bluetooth has OS limits: iOS may pause NOOP when it's not in the foreground, so keep it open while syncing a fresh strap."))
-            iphoneExpectationLine(String(localized: "On a beta version of iOS, things can break that work on the release build."))
-
-            if let days = expiry {
-                let warning = days <= 3
-                HStack(alignment: .top, spacing: 8) {
-                    Image(systemName: warning ? "exclamationmark.triangle.fill" : "clock.badge.checkmark")
-                        .font(.system(size: 13))
-                        .foregroundStyle(warning ? StrandPalette.statusWarning : StrandPalette.textTertiary)
-                        .accessibilityHidden(true)
-                    Text(expiryMessage(days))
-                        .font(StrandFont.footnote)
-                        .foregroundStyle(warning ? StrandPalette.statusWarning : StrandPalette.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .padding(.top, 2)
-            }
-        }
-        .padding(12)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(StrandPalette.surfaceInset,
-                    in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(StrandPalette.hairline, lineWidth: 1)
-        )
-    }
-
-    private func expiryMessage(_ days: Int) -> String {
-        if days < 0 {
-            let expired = -days
-            return expired == 1
-                ? String(localized: "This sideloaded build expired 1 day ago. Re-sign it to keep it running.")
-                : String(localized: "This sideloaded build expired \(expired) days ago. Re-sign it to keep it running.")
-        }
-        return days == 1
-            ? String(localized: "This sideloaded build expires in 1 day. Re-sign to keep it running.")
-            : String(localized: "This sideloaded build expires in \(days) days. Re-sign to keep it running.")
-    }
-
-    private func iphoneExpectationLine(_ text: String) -> some View {
-        HStack(alignment: .top, spacing: 8) {
-            Image(systemName: "circle.fill")
-                .font(.system(size: 4))
-                .foregroundStyle(StrandPalette.textTertiary)
-                .padding(.top, 6)
-                .accessibilityHidden(true)
-            Text(text)
-                .font(StrandFont.footnote)
-                .foregroundStyle(StrandPalette.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-    }
     #endif
 
     // MARK: - Shared bits
@@ -3488,6 +3449,8 @@ struct SettingsView: View {
 enum SettingsDisclosureDefaults {
     static let advancedOpenKey = "settingsAdvancedOpen"
     static let advancedOpenDefault = false
+    static let preferencesOpenKey = "settingsPreferencesOpen"
+    static let preferencesOpenDefault = false
 }
 
 /// A collapsible group that tucks the lower-frequency settings sections behind one tap. It is NOT a

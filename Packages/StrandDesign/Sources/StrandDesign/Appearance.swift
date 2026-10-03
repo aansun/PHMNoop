@@ -225,6 +225,28 @@ public enum ThemePreset: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
+/// The app-wide interaction and navigation experience. This is intentionally separate from `Theme`
+/// (light/dark rendering) and `ThemePreset` (coordinated visual settings), so a future product-wide
+/// redesign can change the shell without rewriting a user's colour or typography preferences.
+public enum AppExperience: String, CaseIterable, Identifiable, Sendable {
+    case `default`
+    case nuna
+
+    public var id: String { rawValue }
+    public static let storageKey = "app.experience"
+
+    public var label: String {
+        switch self {
+        case .default: return String(localized: "Default", bundle: .module)
+        case .nuna:    return String(localized: "Nuna", bundle: .module)
+        }
+    }
+
+    public static func resolve(_ raw: String) -> AppExperience {
+        AppExperience(rawValue: raw) ?? .default
+    }
+}
+
 /// The user's appearance preference for the whole app. Persisted via
 /// `@AppStorage(AppearanceMode.storageKey)`. `.system` follows the OS (the default);
 /// `.light` / `.dark` force a scheme regardless of the system setting.

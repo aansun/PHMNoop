@@ -156,6 +156,23 @@ enum DashboardCardPrefs {
     /// UserDefaults key, a JSON array of `DashboardCard` ids in display order.
     static let selectionKey = "today.dashboardCards"
 
+    /// One-time migration for installs that predate Stress being part of the Today dashboard. A user can
+    /// still hide Stress afterward; the marker prevents this compatibility repair from undoing that choice.
+    static func migrateStressCard(defaults: UserDefaults = .standard) {
+        let marker = "today.dashboardCards.stressMigration.v1"
+        guard !defaults.bool(forKey: marker) else { return }
+
+        let raw = defaults.string(forKey: selectionKey) ?? ""
+        if !raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            var enabled = decodeEnabled(raw)
+            if !enabled.contains(.stress) {
+                enabled.insert(.stress, at: 0)
+                defaults.set(encode(enabled), forKey: selectionKey)
+            }
+        }
+        defaults.set(true, forKey: marker)
+    }
+
     /// Preserve a prior explicit opt-in once, then let Your Cards own the preference.
     static func migrateLegacyStepsAverage(defaults: UserDefaults = .standard) {
         let legacy = (defaults.string(forKey: "today.keyMetrics") ?? "")

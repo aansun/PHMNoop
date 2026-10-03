@@ -132,6 +132,7 @@ struct TodayCustomizationSheet: View {
                 draft: $sectionDraft,
                 keyMetricCount: keyMetricDraft.visible.count,
                 dashboardCardCount: dashboardDraft.visible.count,
+                stressCardShown: dashboardDraft.visible.contains(.stress),
                 hostedCardCount: hostedDraft.visible.count,
                 onConfigure: openConfiguration,
                 onReset: resetCurrentLayout
@@ -254,6 +255,7 @@ private struct TodaySectionsCustomizationPage: View {
     @Binding var draft: EditableLayoutDraft<TodaySection>
     let keyMetricCount: Int
     let dashboardCardCount: Int
+    let stressCardShown: Bool
     let hostedCardCount: Int
     let onConfigure: (TodaySection) -> Void
     let onReset: () -> Void
@@ -284,7 +286,10 @@ private struct TodaySectionsCustomizationPage: View {
         case .keyMetrics:
             return String(localized: "\(keyMetricCount) metrics shown")
         case .yourCards:
-            return String(localized: "\(dashboardCardCount) cards shown")
+            if stressCardShown {
+                return String(localized: "\(dashboardCardCount) cards shown · Stress included")
+            }
+            return String(localized: "\(dashboardCardCount) cards shown · Stress available in Edit")
         case .addedCards:
             return hostedCardCount == 0
                 ? String(localized: "None added yet")
