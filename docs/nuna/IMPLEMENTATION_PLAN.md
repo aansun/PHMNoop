@@ -42,6 +42,8 @@ Phase 1 checklist:
 - [x] Journal, breathing, water and notifications reachable from Today (the screens themselves are re-themed in later phases)
 - [x] Indonesian strings, build, simulator check, commit
 
+Follow-up: the Customise chip next to the date pill was removed (the dashed "Add or arrange cards" card at the bottom does the same). Key metrics show the change against the previous night for HRV, resting HR, blood oxygen and respiratory; a value carried from the last scored night is compared with the night before it. Key metrics can be shown as two-column cards or one long list (toggle in the section title, stored in `nuna.keyMetricsLayout`).
+
 Design pass (against docs/nuna/mockups, compared one screen at a time in the browser pane):
 - Today now follows Main: strap chip with battery, bell with unread dot, date pill plus "Customise" chip, score card with `%` units and the ready chip, Anya card with a white "Start" button, stress card, "Key metrics" with "Edit" and "All", "Activity" with "All workouts", quick-log chips (water, journal, mood), dashed "Add or arrange cards". Default order and metrics follow the mockup until the person arranges their own (shared keys; Your Cards hidden by default).
 - Stress uses NOOP's own intraday curve (`StressDayCurve` and `DaytimeLoadLine`, the same drawing as Default Today and the widget), in a Nuna card.

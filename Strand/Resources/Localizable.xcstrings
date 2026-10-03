@@ -1,6 +1,12 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "Show as list": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tampilkan sebagai daftar"}}
+        } },
+        "Show as cards": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tampilkan sebagai kartu"}}
+        } },
         "Customise": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Atur kartu"}}
         } },

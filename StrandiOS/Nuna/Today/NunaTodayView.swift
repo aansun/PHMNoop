@@ -39,6 +39,7 @@ struct NunaTodayView: View {
     @State private var editing = false
     @State private var showManual = false
     @State private var showMood = false
+    @AppStorage("nuna.keyMetricsLayout") private var metricsLayoutRaw = NunaMetricsLayout.cards.rawValue
     @State private var showAddCard = false
     @State private var addAfter: TodaySection?
     @State private var customizeDestination: TodayCustomizationDestination = .today
@@ -198,17 +199,6 @@ struct NunaTodayView: View {
             }
             .buttonStyle(.plain)
             Spacer()
-            Button { withAnimation(.easeInOut(duration: 0.2)) { editing = true } } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "slider.horizontal.3").font(.system(size: 13, weight: .bold))
-                    Text("Customise").font(.system(size: 14, weight: .heavy))
-                }
-                .foregroundStyle(NunaPalette.textPrimary)
-                .padding(.horizontal, 14).frame(height: 38)
-                .background(NunaPalette.glassStrong, in: Capsule())
-                .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
-            }
-            .buttonStyle(.plain)
         }
     }
 
@@ -465,12 +455,21 @@ struct NunaTodayView: View {
             if !tiles.isEmpty {
                 VStack(spacing: 12) {
                     NunaTitleRow(title: "Key metrics") {
+                        Button {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                metricsLayoutRaw = (metricsLayout == .cards ? NunaMetricsLayout.list : .cards).rawValue
+                            }
+                        } label: {
+                            Image(systemName: metricsLayout == .cards ? "list.bullet" : "square.grid.2x2")
+                                .font(.system(size: 14, weight: .bold))
+                        }
+                        .accessibilityLabel(Text(metricsLayout == .cards ? "Show as list" : "Show as cards"))
                         Button { customizeDestination = .keyMetrics; showCustomize = true } label: {
                             NunaLinkLabel(text: "Edit", systemImage: "slider.horizontal.3")
                         }
                         NavigationLink(value: NunaTodayRoute.allMetrics) { NunaLinkLabel(text: "All", chevron: true) }
                     }
-                    NunaMetricsGrid(tiles: tiles)
+                    NunaMetricsGrid(tiles: tiles, layout: metricsLayout)
                 }
             }
         case .workouts:
@@ -533,6 +532,8 @@ struct NunaTodayView: View {
         }
     }
 
+    private var metricsLayout: NunaMetricsLayout { NunaMetricsLayout(rawValue: metricsLayoutRaw) ?? .cards }
+
     private var readyLine: LocalizedStringKey? {
         guard model.isToday, let level = model.readiness?.level else { return nil }
         switch level {
@@ -566,27 +567,35 @@ struct NunaTodayView: View {
             MetricCatalog.metric(key: key, source: source).map { .metric($0) }
         }
         /// "▲ 4" against the previous day; `downIsGood` for resting heart rate.
-        func delta(_ d: Double?, downIsGood: Bool = false) -> (String, Bool)? {
-            guard let d, abs(d.rounded()) >= 1 else { return nil }
-            return ((d > 0 ? "▲ " : "▼ ") + "\(Int(abs(d).rounded()))", downIsGood ? d < 0 : d > 0)
+        func delta(_ d: Double?, downIsGood: Bool = false, decimals: Int = 0) -> (String, Bool)? {
+            guard let d else { return nil }
+            let step = decimals == 0 ? 1.0 : 0.1
+            guard abs(d) >= step - 0.0001 else { return nil }
+            let shown = String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, abs(d))
+            return ((d > 0 ? "▲ " : "▼ ") + shown, downIsGood ? d < 0 : d > 0)
         }
         let stepsRoute = MetricCatalog.todayStepsMetric(hasMeasuredSteps: model.steps != nil).map { NunaTodayRoute.metric($0) }
+        func tile(_ m: KeyMetric, _ label: LocalizedStringKey, _ value: String, _ unit: String, _ route: NunaTodayRoute?,
+                  _ icon: String, _ tint: Color?, delta d: (String, Bool)? = nil) -> NunaMetricTile {
+            NunaMetricTile(id: m.rawValue, label: label, value: value, unit: unit, route: route,
+                           delta: d?.0, deltaGood: d?.1, icon: icon, tint: tint)
+        }
         return enabled.map { m in
             switch m {
             case .hrv:
-                let d = delta(model.hrvDelta)
-                return NunaMetricTile(id: m.rawValue, label: "HRV", value: fmt(model.hrv), unit: "ms", route: route("hrv"), delta: d?.0, deltaGood: d?.1)
+                return tile(m, "HRV", fmt(model.hrv), "ms", route("hrv"), "waveform.path.ecg", NunaPalette.charge, delta: delta(model.hrvDelta))
             case .restingHr:
-                let d = delta(model.restingHrDelta, downIsGood: true)
-                return NunaMetricTile(id: m.rawValue, label: "Resting HR", value: fmt(model.restingHr), unit: "bpm", route: route("rhr"), delta: d?.0, deltaGood: d?.1)
-            case .bloodOxygen: return NunaMetricTile(id: m.rawValue, label: "Blood Oxygen", value: fmt(model.spo2), unit: "%", route: route("spo2"))
-            case .respiratory: return NunaMetricTile(id: m.rawValue, label: "Respiratory", value: fmt(model.respiratory, 1), unit: "/min", route: route("resp_rate"))
-            case .steps:       return NunaMetricTile(id: m.rawValue, label: "Steps", value: fmt(model.steps), unit: "", route: stepsRoute)
-            case .calories:    return NunaMetricTile(id: m.rawValue, label: "Calories", value: fmt(model.calories), unit: "kcal", route: route("energy_kcal"))
-            case .weight:      return NunaMetricTile(id: m.rawValue, label: "Weight", value: fmt(model.extras["weight"], 1), unit: "kg", route: route("weight", "apple-health"))
-            case .skinTemp:    return NunaMetricTile(id: m.rawValue, label: "Skin Temp", value: fmt(model.extras["skin_temp"], 1), unit: "°C", route: route("skin_temp"))
+                return tile(m, "Resting HR", fmt(model.restingHr), "bpm", route("rhr"), "heart", NunaPalette.alertText, delta: delta(model.restingHrDelta, downIsGood: true))
+            case .bloodOxygen:
+                return tile(m, "Blood Oxygen", fmt(model.spo2), "%", route("spo2"), "drop", NunaPalette.effortText, delta: delta(model.spo2Delta))
+            case .respiratory:
+                return tile(m, "Respiratory", fmt(model.respiratory, 1), "/min", route("resp_rate"), "wind", NunaPalette.effortText, delta: delta(model.respiratoryDelta, decimals: 1))
+            case .steps:       return tile(m, "Steps", fmt(model.steps), "", stepsRoute, "figure.walk", NunaPalette.charge)
+            case .calories:    return tile(m, "Calories", fmt(model.calories), "kcal", route("energy_kcal"), "flame", NunaPalette.effortText)
+            case .weight:      return tile(m, "Weight", fmt(model.extras["weight"], 1), "kg", route("weight", "apple-health"), "scalemass", NunaPalette.effortText)
+            case .skinTemp:    return tile(m, "Skin Temp", fmt(model.extras["skin_temp"], 1), "°C", route("skin_temp"), "thermometer", NunaPalette.alertText)
             case .rest:
-                return NunaMetricTile(id: m.rawValue, label: "Sleep", value: model.sleepMinutes.map { NunaSleepFormat.duration($0) } ?? "–", unit: "", route: .sleep(0))
+                return tile(m, "Sleep", model.sleepMinutes.map { NunaSleepFormat.duration($0) } ?? "–", "", .sleep(0), "moon", NunaPalette.restText)
             case .charge, .effort: return NunaMetricTile(id: m.rawValue, label: "", value: "", unit: "", route: nil)
             }
         }
