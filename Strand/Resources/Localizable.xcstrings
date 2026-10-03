@@ -1,6 +1,240 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "Customise": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Atur kartu"}}
+        } },
+        "Add or arrange cards": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tambah atau atur kartu"}}
+        } },
+        "Key metrics": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Metrik utama"}}
+        } },
+        "All workouts": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Semua latihan"}}
+        } },
+        "Ready for a hard session": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Siap sesi berat"}}
+        } },
+        "Ready for a moderate load": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Siap beban sedang"}}
+        } },
+        "Take it easy today": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Santai dulu hari ini"}}
+        } },
+        "Still learning your baseline.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Masih mempelajari baselinemu."}}
+        } },
+        "Your body is asking for rest. Prioritise recovery today.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tubuhmu butuh istirahat. Utamakan pemulihan hari ini."}}
+        } },
+        "Now %@ · %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sekarang %@ · %@"}}
+        } },
+        "Peak %@ · %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Puncak %@ · %@"}}
+        } },
+        "calm": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "tenang"}}
+        } },
+        "Water +250": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Air +250"}}
+        } },
+        "Edit mode": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Mode atur"}}
+        } },
+        "Arrange cards": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Atur kartu"}}
+        } },
+        "Hold the grip, then drag to reorder. Tap X to hide a card.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tahan ikon garis lalu geser untuk mengurutkan. Ketuk X untuk menyembunyikan."}}
+        } },
+        "Add a card here": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tambah kartu di sini"}}
+        } },
+        "Add a card": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tambah kartu"}}
+        } },
+        "Card settings": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pengaturan kartu"}}
+        } },
+        "Restore defaults": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kembalikan bawaan"}}
+        } },
+        "Daily scores": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Skor harian"}}
+        } },
+        "Quick log": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Catat cepat"}}
+        } },
+        "Added cards": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kartu tambahan"}}
+        } },
+        "Anya suggestion": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Saran Anya"}}
+        } },
+        "Intraday curve": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Garis waktu hari ini"}}
+        } },
+        "Latest activity": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Aktivitas terakhir"}}
+        } },
+        "No activity yet": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Belum ada aktivitas"}}
+        } },
+        "Cards you chose": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kartu yang kamu pilih"}}
+        } },
+        "Live session": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sesi langsung"}}
+        } },
+        "From Sleep and Trends": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dari Tidur dan Tren"}}
+        } },
+        "Choose date": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pilih tanggal"}}
+        } },
+        "%lld days recorded": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld hari tercatat"}}
+        } },
+        "Charge 67+": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Charge 67+"}}
+        } },
+        "Start of month": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Awal bulan"}}
+        } },
+        "Last month": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bulan lalu"}}
+        } },
+        "Selected": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dipilih"}}
+        } },
+        "Open %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Buka %@"}}
+        } },
+        "Past days are view-only. The journal can still be edited.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hari lampau hanya bisa dilihat. Jurnal tetap bisa diedit."}}
+        } },
+        "About today, by voice or text": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tentang hari ini, dengan suara atau teks"}}
+        } },
+        "Water today": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Air hari ini"}}
+        } },
+        "%@ of %@ L": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%@ dari %@ L"}}
+        } },
+        "Remove last drink": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hapus minum terakhir"}}
+        } },
+        "In line with your 30-day average": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sesuai rata-rata 30 harimu"}}
+        } },
+        "%lld points above your 30-day average": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld poin di atas rata-rata 30 hari"}}
+        } },
+        "%lld points below your 30-day average": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld poin di bawah rata-rata 30 hari"}}
+        } },
+        "Drivers": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pendorong"}}
+        } },
+        "How it's calculated": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Cara menghitung"}}
+        } },
+        "Three signals, against your own baseline": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tiga sinyal, dibanding baselinemu sendiri"}}
+        } },
+        "Charge compares last night's heart rate variability, resting heart rate and sleep with your own baseline from the last 30 days. It is an estimate computed on this phone from your strap's data.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Charge membandingkan HRV, detak istirahat, dan tidur semalam dengan baselinemu sendiri dari 30 hari terakhir. Ini perkiraan yang dihitung di ponsel ini dari data strap."}}
+        } },
+        "Today's sources": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sumber hari ini"}}
+        } },
+        "Daily activity": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Aktivitas harian"}}
+        } },
+        "Cardio load across the day": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Beban kardio seharian"}}
+        } },
+        "Effort adds up how hard your heart worked during the day, weighted by heart rate zone. Workouts and everyday movement both count. It is shown on the scale you chose in Settings.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Effort menjumlahkan seberapa keras jantungmu bekerja seharian, dengan bobot zona detak. Latihan dan gerak sehari-hari sama-sama dihitung. Ditampilkan pada skala yang kamu pilih di Pengaturan."}}
+        } },
+        "Same as yesterday": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sama dengan kemarin"}}
+        } },
+        "Up %@ from yesterday": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Naik %@ dari kemarin"}}
+        } },
+        "Down %@ from yesterday": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Turun %@ dari kemarin"}}
+        } },
+        "Band: your normal range": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pita: rentang normalmu"}}
+        } },
+        "Target": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Target"}}
+        } },
+        "Best": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Terbaik"}}
+        } },
+        "Lowest": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Terendah"}}
+        } },
+        "Highest": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tertinggi"}}
+        } },
+        "What affects it": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Apa yang memengaruhi"}}
+        } },
+        "Common factors": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Faktor umum"}}
+        } },
+        "Sleep, alcohol, hydration, stress, illness and training load all move your daily numbers. Look at the trend over weeks rather than a single day.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidur, alkohol, hidrasi, stres, sakit, dan beban latihan memengaruhi angka harianmu. Lihat tren beberapa minggu, bukan satu hari."}}
+        } },
+        "Source and method": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sumber dan metode"}}
+        } },
+        "In range": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dalam rentang"}}
+        } },
+        "Above range": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Di atas rentang"}}
+        } },
+        "Below range": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Di bawah rentang"}}
+        } },
+        "Day average": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rata-rata hari ini"}}
+        } },
+        "All day": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sepanjang hari"}}
+        } },
+        "Stress zones": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Zona stres"}}
+        } },
+        "Today's peak": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Puncak hari ini"}}
+        } },
+        "2-minute breathing": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Latihan napas 2 menit"}}
+        } },
+        "Gentle, guided breathing": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Napas terpandu yang lembut"}}
+        } },
+        "Why is my stress changing today?": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kenapa stresku berubah hari ini?"}}
+        } },
+        "Scale 0 to 3, against your own baseline": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Skala 0 sampai 3, dibanding baselinemu"}}
+        } },
+        "Stress compares your heart rate and heart rate variability, hour by hour, with your own calm reference. Hours when you were moving are left out so exercise is not read as stress.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Stres membandingkan detak jantung dan HRV tiap jam dengan acuan tenangmu sendiri. Jam saat kamu bergerak tidak dihitung agar olahraga tidak terbaca sebagai stres."}}
+        } },
+        "Tap a metric for its detail. Change the order with Edit.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ketuk metrik untuk melihat detail. Ubah urutan lewat Atur."}}
+        } },
         "Earlier night": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Malam sebelumnya"}}
         } },

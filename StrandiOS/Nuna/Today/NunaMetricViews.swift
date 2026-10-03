@@ -21,7 +21,14 @@ extension View {
     func nunaTodayDestinations() -> some View {
         navigationDestination(for: NunaTodayRoute.self) { route in
             switch route {
-            case .metric(let m): NunaMetricDetailView(metric: m)
+            case .metric(let m):
+                switch (m.key, m.source) {
+                case ("recovery", _): NunaChargeDetailView()
+                case ("strain", _): NunaEffortDetailView()
+                case ("stress", "my-whoop"): NunaStressDetailView()
+                case ("sleep_performance", _): NunaSleepView()
+                default: NunaMetricDetailView(metric: m)
+                }
             case .allMetrics: NunaAllMetricsView()
             case .earlyWarning: NunaEarlyWarningView()
             case .sleep(let i): NunaSleepView(startIndex: i)
@@ -32,135 +39,6 @@ extension View {
             case .fitnessAge: NunaFitnessAgeView()
             }
         }
-    }
-}
-
-// MARK: - Metric detail
-
-/// One metric over time: latest value, a 7/30/90 day bar chart, average / low / high, and Anya.
-/// Display only; the data comes from `Repository.exploreSeries`, like the Default metric screen.
-struct NunaMetricDetailView: View {
-    let metric: MetricDescriptor
-
-    @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var repo: Repository
-    @AppStorage("noop.coachEnabled") private var coachEnabled = true
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
-    @State private var range = 30
-    @State private var series: [(day: String, value: Double)] = []
-    @State private var loaded = false
-    @State private var showCoach = false
-
-    private var color: Color {
-        switch metric.category {
-        case "Effort": return NunaPalette.effortText
-        case "Rest": return NunaPalette.restText
-        default: return NunaPalette.charge
-        }
-    }
-
-    private var isEffort: Bool { metric.key == "strain" }
-
-    private func format(_ v: Double) -> String {
-        if isEffort { return UnitFormatter.effortDisplay(v, scale: UnitPrefs.resolveEffortScale(effortScaleRaw)) }
-        return String(format: "%.\(metric.decimals)f", locale: AppLanguage.activeLocale, v)
-    }
-
-    private var unit: String { isEffort ? "" : metric.unit }
-
-    /// One slot per calendar day in the window, nil where the metric has no value.
-    private var window: [Double?] {
-        let byDay = Dictionary(series.map { ($0.day, $0.value) }, uniquingKeysWith: { _, last in last })
-        let cal = Calendar.current
-        let today = Date()
-        return (0..<range).reversed().map { i in
-            let d = cal.date(byAdding: .day, value: -i, to: today) ?? today
-            return byDay[Repository.localDayKey(d)]
-        }
-    }
-
-    var body: some View {
-        let values = window
-        let present = values.compactMap { $0 }
-        let latest = series.last
-        let avg = present.isEmpty ? nil : present.reduce(0, +) / Double(present.count)
-        ScrollView {
-            VStack(spacing: NunaSpacing.section) {
-                NunaHeader(LocalizedStringKey(metric.title), onBack: { dismiss() })
-                NunaCard {
-                    VStack(alignment: .leading, spacing: 14) {
-                        HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            Text(verbatim: latest.map { format($0.value) } ?? "–")
-                                .font(.system(size: 56, weight: .bold, design: .rounded))
-                                .foregroundStyle(NunaPalette.textPrimary)
-                                .minimumScaleFactor(0.6).lineLimit(1)
-                            if !unit.isEmpty {
-                                Text(verbatim: unit).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                            }
-                            Spacer(minLength: 0)
-                        }
-                        HStack(spacing: 8) {
-                            if let latest { NunaChip(verbatim: latest.day) }
-                            if let latest, let avg { deltaChip(latest.value - avg) }
-                        }
-                        NunaSegmented([(value: 7, title: "7 days"), (value: 30, title: "30 days"), (value: 90, title: "90 days")],
-                                      selection: $range)
-                        if present.isEmpty {
-                            Text(loaded ? "No data in this period" : " ")
-                                .font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                                .frame(maxWidth: .infinity, minHeight: 140)
-                        } else {
-                            NunaBars(values: values, color: color, average: avg).frame(height: 150)
-                        }
-                    }
-                }
-                if !present.isEmpty, let avg {
-                    HStack(spacing: 12) {
-                        stat("Average", format(avg))
-                        stat("Low", format(present.min() ?? avg))
-                        stat("High", format(present.max() ?? avg))
-                    }
-                }
-                if let blurb = metric.description {
-                    NunaCard(small: true) {
-                        Text(verbatim: blurb).font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(NunaPalette.textSecondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                }
-                if coachEnabled { NunaAnyaCard(title: "Ask Anya about this") { showCoach = true } }
-            }
-            .padding(.horizontal, NunaSpacing.screenH)
-            .padding(.bottom, 120)
-        }
-        .scrollIndicators(.hidden)
-        .background(NunaPalette.canvas.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
-        .task(id: "\(metric.id)-\(repo.refreshSeq)") {
-            series = await repo.exploreSeries(key: metric.key, source: metric.source, days: 120)
-            loaded = true
-        }
-        .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: metric.title) }
-    }
-
-    private func stat(_ label: LocalizedStringKey, _ value: String) -> some View {
-        NunaCard(small: true) {
-            VStack(alignment: .leading, spacing: 6) {
-                Text(label).font(.system(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase)
-                    .foregroundStyle(NunaPalette.textSecondary)
-                Text(verbatim: value).font(.system(size: 22, weight: .bold, design: .rounded))
-                    .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-
-    private func deltaChip(_ delta: Double) -> some View {
-        let up = delta >= 0
-        let good: Bool? = metric.higherIsBetter.map { $0 == up }
-        let tint: Color = good == nil ? NunaPalette.textSecondary : (good! ? NunaPalette.charge : NunaPalette.warning)
-        let magnitude = String(format: "%.\(metric.decimals)f", locale: AppLanguage.activeLocale, abs(delta))
-        return NunaChip(verbatim: (up ? "+" : "−") + magnitude + " vs avg", color: tint)
     }
 }
 
@@ -198,55 +76,6 @@ struct NunaBars: View {
             }
         }
         .accessibilityHidden(true)
-    }
-}
-
-// MARK: - All metrics
-
-struct NunaAllMetricsView: View {
-    @Environment(\.dismiss) private var dismiss
-
-    private static let groups = ["Charge", "Rest", "Effort", "Heart", "Health"]
-
-    private var items: [(group: String, metrics: [MetricDescriptor])] {
-        var seen = Set<String>()
-        let usable = MetricCatalog.all.filter { ["my-whoop", "apple-health"].contains($0.source) }
-        return Self.groups.map { g in
-            (g, usable.filter { $0.category == g && seen.insert($0.key).inserted })
-        }
-    }
-
-    var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: NunaSpacing.section) {
-                NunaHeader("All metrics", onBack: { dismiss() })
-                ForEach(items, id: \.group) { group in
-                    NunaSectionHeader(LocalizedStringKey(group.group))
-                    NunaCard(small: true) {
-                        VStack(spacing: 0) {
-                            ForEach(Array(group.metrics.enumerated()), id: \.element.id) { idx, m in
-                                if idx > 0 { NunaDivider() }
-                                row(m)
-                            }
-                        }
-                    }
-                }
-            }
-            .padding(.horizontal, NunaSpacing.screenH)
-            .padding(.bottom, 120)
-        }
-        .scrollIndicators(.hidden)
-        .background(NunaPalette.canvas.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
-    }
-
-    @ViewBuilder private func row(_ m: MetricDescriptor) -> some View {
-        let label = NunaListRow(LocalizedStringKey(m.title), systemImage: m.icon, showsChevron: true)
-        if m.key == HeroRingMetric.rest {
-            NavigationLink(value: NunaTodayRoute.sleep(0)) { label }.buttonStyle(.plain)
-        } else {
-            NavigationLink(value: NunaTodayRoute.metric(m)) { label }.buttonStyle(.plain)
-        }
     }
 }
 
