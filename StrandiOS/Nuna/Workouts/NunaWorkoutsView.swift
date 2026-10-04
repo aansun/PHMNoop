@@ -178,9 +178,12 @@ struct NunaWorkoutsView: View {
                         Spacer()
                         if let band { NunaChip(bandName(band), color: band == .optimal ? NunaPalette.charge : NunaPalette.warning) }
                     }
-                    HStack(alignment: .top, spacing: 16) {
-                        loadColumn("Cardio", UnitFormatter.effortDisplay(cardio.last ?? 0, scale: scale), "Effort", cardio)
-                        loadColumn("Strength", volume.last.map { $0 >= 1000 ? String(format: "%.1f k", locale: AppLanguage.activeLocale, $0 / 1000) : NunaTrendsFormat.num($0) } ?? "–", "kg", volume)
+                    HStack(alignment: .top, spacing: 0) {
+                        loadRing("Cardio", UnitFormatter.effortDisplay(cardio.last ?? 0, scale: scale), "", (cardio.last ?? 0) / max(cardio.max() ?? 1, 1),
+                                 NunaPalette.effort, TrendInsights.loadRatio(blocks: cardio).map(TrendInsights.loadBand), NunaPalette.effortText)
+                        loadRing("Strength", volume.last.map { $0 >= 1000 ? String(format: "%.1f", locale: AppLanguage.activeLocale, $0 / 1000) : NunaTrendsFormat.num($0) } ?? "–",
+                                 (volume.last ?? 0) >= 1000 ? "k" : "", (volume.last ?? 0) / max(volume.max() ?? 1, 1),
+                                 NunaPalette.textPrimary, TrendInsights.loadRatio(blocks: volume).map(TrendInsights.loadBand), NunaPalette.textPrimary)
                     }
                     if let ratio, let band {
                         HStack(spacing: 12) {
@@ -198,15 +201,17 @@ struct NunaWorkoutsView: View {
         }.buttonStyle(.plain)
     }
 
-    private func loadColumn(_ title: LocalizedStringKey, _ v: String, _ unit: String, _ weekly: [Double]) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(verbatim: v).font(.system(size: 26, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
-                Text(verbatim: unit).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+    private func loadRing(_ title: LocalizedStringKey, _ v: String, _ unit: String, _ f: Double, _ color: Color, _ band: TrendInsights.LoadBand?, _ bandColor: Color) -> some View {
+        VStack(spacing: 8) {
+            NunaRingGauge(fraction: max(f, 0.02), color: color, size: 104, lineWidth: 9) {
+                HStack(alignment: .firstTextBaseline, spacing: 1) {
+                    Text(verbatim: v).font(.system(size: 28, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
+                    if !unit.isEmpty { Text(verbatim: unit).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+                }
             }
-            NunaSpark(values: weekly).frame(height: 34)
-        }.frame(maxWidth: .infinity, alignment: .leading)
+            Text(title).font(.system(size: 11.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            if let band { Text(bandName(band)).font(.system(size: 13, weight: .heavy)).foregroundStyle(bandColor) }
+        }.frame(maxWidth: .infinity)
     }
 
     private func bandName(_ b: TrendInsights.LoadBand) -> LocalizedStringKey {
@@ -227,9 +232,9 @@ struct NunaWorkoutsView: View {
         NavigationLink(value: NunaWorkoutRoute.calendar) {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
-                    HStack { nunaTrendsCap("Workout calendar"); Spacer(); Text("5 weeks").font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
-                    NunaWorkoutMonthGrid(model: m, weeks: 5, selected: .constant(nil), interactive: false)
-                    let stats = NunaWorkoutStats(model: m, days: 35)
+                    HStack { nunaTrendsCap("Workout calendar"); Spacer(); Text("This week").font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                    NunaWorkoutMonthGrid(model: m, weeks: 1, selected: .constant(nil), interactive: false)
+                    let stats = NunaWorkoutStats(model: m, days: 7)
                     HStack {
                         stat("Active days", "\(stats.active)"); stat("Rest", "\(stats.rest)")
                         stat("In a row", String(localized: "\(stats.streak) days"))
@@ -368,7 +373,9 @@ struct NunaWorkoutMonthGrid: View {
         let cal = Calendar(identifier: .gregorian)
         let today = cal.startOfDay(for: Date())
         let monday = cal.date(byAdding: .day, value: -((cal.component(.weekday, from: today) + 5) % 7), to: today) ?? today
-        // The window ends one week after the current week; older pages step back a whole window at a time.
+        // A one-row window is the current week itself; longer ones end one week after it and older pages step back
+        // a whole window at a time.
+        if weeks == 1 { return cal.date(byAdding: .day, value: -7 * offset, to: monday) ?? monday }
         return cal.date(byAdding: .day, value: -7 * (weeks - 2) - 7 * weeks * offset, to: monday) ?? monday
     }
 
@@ -399,7 +406,7 @@ struct NunaWorkoutMonthGrid: View {
                         let isToday = cal.isDate(date, inSameDayAs: today)
                         Button { if interactive, !future { selected = key } } label: {
                             VStack(spacing: 3) {
-                                Text(verbatim: dayLabel(date, cal, first: w == 0 && d == 0))
+                                Text(verbatim: dayLabel(date, cal, first: weeks > 1 && w == 0 && d == 0))
                                     .font(.system(size: 14, weight: .heavy, design: .rounded)).monospacedDigit()
                                     .foregroundStyle(isSel ? NunaPalette.onAccent : (future ? NunaPalette.textMuted.opacity(0.7) : NunaPalette.textPrimary))
                                     .minimumScaleFactor(0.7).lineLimit(1)
