@@ -145,9 +145,13 @@ struct NunaSleepView: View {
                         NunaStageSplitBar(stages: night.stages)
                     } else {
                         NunaHypnogramStrip(intervals: night.intervals)
+                        if night.motion.count >= 10 {
+                            NunaMotionStrip(epochs: night.motion, total: night.wake.timeIntervalSince(night.onset))
+                        }
                         NunaTimeAxis(start: night.onset, end: night.wake)
                     }
-                    NunaStageLegend()
+                    NunaStageLegend(showsMovement: night.motion.count >= 10 && !night.intervals.isEmpty)
+                    if !night.intervals.isEmpty { NunaMovementStats(night: night) }
                 }
             }
         }
@@ -298,9 +302,13 @@ struct NunaSleepStagesView: View {
                                 .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         } else {
                             NunaHypnogramStrip(intervals: night.intervals, height: 140)
+                            if night.motion.count >= 10 {
+                                NunaMotionStrip(epochs: night.motion, total: night.wake.timeIntervalSince(night.onset), height: 40)
+                            }
                             NunaTimeAxis(start: night.onset, end: night.wake)
                         }
-                        NunaStageLegend()
+                        NunaStageLegend(showsMovement: night.motion.count >= 10 && !night.intervals.isEmpty)
+                        if !night.intervals.isEmpty { NunaMovementStats(night: night) }
                     }
                 }
                 let typ = model.typical()
@@ -315,7 +323,7 @@ struct NunaSleepStagesView: View {
                         row(.awake, night.stages.awake, typ?.awake, night.stages.total)
                     }
                 }
-                Text("Stages are estimated from heart rate and movement. They are not a medical sleep study.")
+                Text("Stages are estimated from heart rate and movement. Movement counts are relative to this strap and are not a medical sleep study.")
                     .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
             }
         }

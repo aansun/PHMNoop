@@ -54,6 +54,66 @@ struct NunaHypnogramStrip: View {
     }
 }
 
+/// Movement ticks under the hypnogram, on the same time axis. Tick height follows magnitude (square-root
+/// scaled so small movements still show); strong bursts are drawn brighter.
+struct NunaMotionStrip: View {
+    let epochs: [NunaMotionEpoch]
+    let total: TimeInterval
+    var height: CGFloat = 34
+
+    var body: some View {
+        let peak = max(epochs.map(\.v).max() ?? 1, 1)
+        Canvas { ctx, size in
+            var base = Path()
+            base.move(to: CGPoint(x: 0, y: size.height - 0.5)); base.addLine(to: CGPoint(x: size.width, y: size.height - 0.5))
+            ctx.stroke(base, with: .color(.white.opacity(0.12)), lineWidth: 1)
+            for e in epochs where e.v > NunaMovementSummary.moveThreshold {
+                let x = size.width * CGFloat(min(max(e.t / max(total, 1), 0), 1))
+                let h = max(3, (size.height - 2) * CGFloat((e.v / peak).squareRoot()))
+                let strong = e.v > NunaMovementSummary.positionPeak
+                var p = Path(); p.move(to: CGPoint(x: x, y: size.height - 1)); p.addLine(to: CGPoint(x: x, y: size.height - 1 - h))
+                ctx.stroke(p, with: .color(NunaPalette.textSecondary.opacity(strong ? 1 : 0.6)), style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+            }
+        }
+        .frame(height: height)
+        .accessibilityHidden(true)
+    }
+}
+
+/// Movement, position changes and restlessness for the night.
+struct NunaMovementStats: View {
+    let night: NunaNight
+    var body: some View {
+        if let m = NunaMovementSummary(night.motion, hours: max(night.inBedMin / 60, 0.1)) {
+            HStack(alignment: .top, spacing: 8) {
+                cell("Movement", "\(m.movements)", "×")
+                cell("Position changes", "\(m.positionChanges)", "×")
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Restlessness").font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase)
+                        .foregroundStyle(NunaPalette.textSecondary).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                    Text(m.level == .low ? "Low" : (m.level == .medium ? "Medium" : "High"))
+                        .font(.system(size: 21, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            .padding(.top, 12)
+            .overlay(alignment: .top) { Rectangle().fill(NunaPalette.hairline).frame(height: 1) }
+        }
+    }
+
+    private func cell(_ label: LocalizedStringKey, _ value: String, _ unit: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase)
+                .foregroundStyle(NunaPalette.textSecondary).lineLimit(2).fixedSize(horizontal: false, vertical: true)
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Text(verbatim: value).font(.system(size: 21, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: unit).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
 /// One stacked bar of the stage split (the fallback when there is no timeline).
 struct NunaStageSplitBar: View {
     let stages: Stages
@@ -77,12 +137,19 @@ struct NunaStageSplitBar: View {
 }
 
 struct NunaStageLegend: View {
+    var showsMovement = false
     var body: some View {
         HStack(spacing: 14) {
             ForEach([SleepStage.awake, .rem, .light, .deep], id: \.self) { s in
                 HStack(spacing: 6) {
                     Circle().fill(s.nunaColor).frame(width: 9, height: 9)
                     Text(s.nunaName).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                }
+            }
+            if showsMovement {
+                HStack(spacing: 6) {
+                    Capsule().fill(NunaPalette.textSecondary).frame(width: 3, height: 12)
+                    Text("Movement").font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
             }
             Spacer(minLength: 0)

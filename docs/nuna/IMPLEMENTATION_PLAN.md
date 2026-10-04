@@ -86,7 +86,8 @@ Status (built and checked in the iOS simulator with a restored backup):
 - `StrandiOS/Nuna/Health/NunaHealthView.swift`: Health hub with All / Vital / Body / Sleep tabs and the fitness age screen (weekly value, plus or minus 5 year band against the real age, "comparison, not biological age"). It replaces the Health tab root in `NunaRootView`.
 - The Rest ring on Today and the Sleep rows in Your Cards / Added Cards open the Nuna sleep screen. Vitals, oxygen, skin temperature, weight and stress open the shared Nuna metric screen from Phase 1.
 - Opened as before (existing screens): live heart rate, Lab Book, Rhythm with its consent gate, Apple Health permissions, cycle tracker, mood check-in, nutrition import. Their look is re-themed in later phases.
-- Known gaps: the nightly movement strip (needs the movement summary in `DATA_REQUIREMENTS.md`), the "smart alarm" row, journal notes on the night, adding a nap by hand, Rhythm empty / unsupported states in Nuna style, and the waist tile reads the profile only.
+- Movement strip (added later): the Sleep summary and Sleep stages screens draw the stored 30-second movement under the hypnogram, with Movement, Position changes and Restlessness. Counts are derived on the fly from `sessionMotions` (a movement is a burst above 0.3, a position change a burst peaking above 6, restlessness is movements per hour: under 6 low, under 12 medium). Magnitudes are uncalibrated, so the counts are relative to the strap and the screen says so. No stored summary was needed.
+- Known gaps: the "smart alarm" row, journal notes on the night, adding a nap by hand, Rhythm empty / unsupported states in Nuna style, and the waist tile reads the profile only.
 
 ## Phase 3: Tren (M)
 
