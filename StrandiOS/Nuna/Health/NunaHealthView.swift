@@ -821,41 +821,55 @@ struct NunaHealthView: View {
         }
         let mean = starts.reduce(0, +) / Double(max(starts.count, 1))
         let sd = (starts.map { ($0 - mean) * ($0 - mean) }.reduce(0, +) / Double(max(starts.count, 1))).squareRoot()
+        // One shared clock: whole hours around the earliest bedtime and latest wake, five evenly spaced ticks.
         let lo = floor((starts.min() ?? 21) - 0.25), hi = ceil((ends.max() ?? 32) + 0.25)
         let span = max(hi - lo, 1)
-        let ticks = stride(from: lo, through: hi, by: max(1, (span / 4).rounded())).map { $0 }
+        let ticks = (0...4).map { lo + span * Double($0) / 4 }
+        func tickLabel(_ h: Double) -> String {
+            let half = (h * 2).rounded() / 2
+            let hh = Int(half) % 24, mm = half.truncatingRemainder(dividingBy: 1) == 0 ? 0 : 30
+            return String(format: "%02d:%02d", hh, mm)
+        }
         return NunaCard {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     cardTitle("Bedtime consistency")
                     Spacer()
-                    NunaChip(verbatim: String(localized: "Spread \(Int((sd * 60).rounded())) min"))
+                    NunaChip(verbatim: String(localized: "Spread \(Int((sd * 60).rounded())) min"), color: NunaPalette.restText)
                 }
-                VStack(spacing: 0) {
-                    ForEach(nights.indices, id: \.self) { i in
-                        HStack(spacing: 10) {
-                            Text(verbatim: weekday(nights[i].wakeDate)).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 34, alignment: .leading)
-                            GeometryReader { geo in
-                                let x0 = geo.size.width * CGFloat((starts[i] - lo) / span)
-                                let x1 = geo.size.width * CGFloat((min(ends[i], hi) - lo) / span)
-                                ZStack(alignment: .leading) {
-                                    Capsule().fill(NunaPalette.glass)
-                                    Capsule().fill(NunaPalette.rest).frame(width: max(8, x1 - x0)).offset(x: x0)
-                                }
-                            }
-                            .frame(height: 16)
+                HStack(alignment: .top, spacing: 10) {
+                    VStack(spacing: 0) {
+                        ForEach(nights.indices, id: \.self) { i in
+                            Text(verbatim: weekday(nights[i].wakeDate)).font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(NunaPalette.textSecondary).frame(width: 30, height: 34, alignment: .leading)
                         }
-                        .frame(height: 34)
                     }
+                    GeometryReader { geo in
+                        let w = geo.size.width
+                        ZStack(alignment: .topLeading) {
+                            ForEach(1..<4, id: \.self) { t in
+                                Rectangle().fill(NunaPalette.hairlineSoft).frame(width: 1, height: geo.size.height)
+                                    .offset(x: w * CGFloat(t) / 4)
+                            }
+                            ForEach(nights.indices, id: \.self) { i in
+                                let x0 = w * CGFloat((starts[i] - lo) / span)
+                                let x1 = w * CGFloat((min(ends[i], hi) - lo) / span)
+                                Capsule().fill(NunaPalette.glass).frame(width: w, height: 16).offset(y: CGFloat(i) * 34 + 9)
+                                Capsule().fill(NunaPalette.rest).frame(width: max(8, x1 - x0), height: 16)
+                                    .offset(x: x0, y: CGFloat(i) * 34 + 9)
+                            }
+                        }
+                    }
+                    .frame(height: CGFloat(nights.count) * 34)
                 }
                 HStack(spacing: 10) {
-                    Color.clear.frame(width: 34, height: 1)
+                    Color.clear.frame(width: 30, height: 1)
                     GeometryReader { geo in
-                        ForEach(ticks.indices, id: \.self) { t in
-                            let h = Int(ticks[t]) % 24
-                            Text(verbatim: String(format: "%02d:00", h)).font(.system(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                                .fixedSize()
-                                .position(x: min(max(geo.size.width * CGFloat((ticks[t] - lo) / span), 18), geo.size.width - 18), y: 8)
+                        ForEach(0..<ticks.count, id: \.self) { t in
+                            let label = tickLabel(ticks[t])
+                            Text(verbatim: label).font(.system(size: 11, weight: .semibold)).monospacedDigit()
+                                .foregroundStyle(NunaPalette.textSecondary).fixedSize()
+                                .position(x: min(max(geo.size.width * CGFloat(t) / 4, 18), geo.size.width - 18), y: 8)
                         }
                     }
                     .frame(height: 16)
