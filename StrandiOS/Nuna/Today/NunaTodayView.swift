@@ -584,7 +584,7 @@ struct NunaTodayView: View {
             if !rows.isEmpty { NunaRowsCard(rows: rows) { showCoach = true } }
         case .menstrualCycle:
             if appModel.cyclePhase != nil {
-                NavigationLink(value: TabRoute.health) {
+                NavigationLink(value: NunaTodayRoute.cycle) {
                     NunaCard(small: true) {
                         NunaListRow("Menstrual Cycle", subtitle: "Cycle awareness", systemImage: "drop.fill",
                                     tint: NunaPalette.alertText, showsChevron: true)
