@@ -76,6 +76,12 @@ struct NunaRootView: View {
         .sheet(isPresented: $showDevices) { sheetStack { NunaDevicesView() } }
         .sheet(item: $routed) { dest in sheetStack { destinationView(dest) } }
         .onChange(of: router.requestedDestination) { _, dest in handle(dest) }
+        .onChange(of: router.openNotificationSettings) { _, on in
+            guard on else { return }
+            selection = Tab.me.rawValue
+            paths[Tab.me.rawValue] = NavigationPath([NunaMeRoute.notifications])
+            router.openNotificationSettings = false
+        }
     }
 
     /// Light or dark is also set on the windows themselves, because pages pushed inside the tabs are hosted by UIKit and
@@ -134,7 +140,7 @@ struct NunaRootView: View {
         case .workouts: NunaWorkoutsView()
         case .activeWorkout: NunaWorkoutsView(autoOpenStart: true)
         case .liveSession: LiquidTodayView()
-        case .journal: InsightsView()
+        case .journal: NunaJournalView()
         case .coach: NunaAnyaView()
         }
     }

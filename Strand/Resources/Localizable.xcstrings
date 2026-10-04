@@ -1,6 +1,33 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Logging ahead for tomorrow: today's activities inform tomorrow's recovery. Tomorrow's answers line up with tomorrow's morning.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mencatat untuk besok: aktivitas hari ini memengaruhi pemulihan besok. Jawaban besok sejajar dengan pagi besok."}}
+    } },
+    "Display name": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Nama tampilan"}}
+    } },
+    "Nothing here yet": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Belum ada isinya"}}
+    } },
+    "Delete this custom item": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hapus item kustom ini"}}
+    } },
+    "Hide this item": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sembunyikan item ini"}}
+    } },
+    "Add your own": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tambahkan sendiri"}}
+    } },
+    "Add a custom item…": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tambah item kustom…"}}
+    } },
+    "Yes/No": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ya/Tidak"}}
+    } },
+    "Notification settings": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Atur notifikasi"}}
+    } },
     "One suggestion for today": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Satu saran untuk hari ini"}}
     } },
@@ -20740,6 +20767,7 @@
     },
     "%lld unread": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "%lld belum dibaca"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -35613,6 +35641,7 @@
     },
     "All caught up": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Semua sudah dibaca"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -55346,6 +55375,7 @@
     },
     "Clear all": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Hapus semua"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -105806,6 +105836,7 @@
     },
     "Mark all read": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tandai dibaca"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -113544,6 +113575,7 @@
     },
     "New release notes and fresh data will land here.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Catatan rilis dan data baru akan muncul di sini."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -143970,6 +144002,7 @@
     },
     "Restore to Today": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Kembalikan ke Hari Ini"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -185119,6 +185152,7 @@
     },
     "What's new in the app and your data": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Yang baru di aplikasi dan datamu"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -189039,6 +189073,7 @@
     },
     "You're all caught up.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Semua sudah dibaca."}},
         "de": {
           "stringUnit": {
             "state": "translated",

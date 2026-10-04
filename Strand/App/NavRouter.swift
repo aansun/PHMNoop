@@ -61,6 +61,9 @@ final class NavRouter: ObservableObject {
     /// flight, so this is the one path that re-opens the live workout for an existing session.
     @Published var presentActiveWorkout = false
 
+    /// One-shot: the Updates inbox's "Notification settings" button. The Nuna shell opens Me > Notifications; other shells ignore it.
+    @Published var openNotificationSettings = false
+
     /// Ask the shell to open the quick-action sheet (Live HR · workout · journal · breathe).
     func requestQuickActions() { quickActionsRequested = true }
 
