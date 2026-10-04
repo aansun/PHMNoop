@@ -112,6 +112,59 @@ extension NunaHeroCard where Footer == EmptyView {
     }
 }
 
+// MARK: - Gauge hero card
+
+/// Top card of the Charge and Effort screens: caption and status chip, a ring gauge with the score inside,
+/// and a short note beside it.
+struct NunaGaugeHeroCard<Note: View>: View {
+    let caption: LocalizedStringKey
+    var chip: LocalizedStringKey?
+    var chipColor: Color?
+    let fraction: Double
+    let number: String
+    var unit: String = ""
+    var suffix: String = ""
+    let color: Color
+    let note: Note
+
+    init(caption: LocalizedStringKey, chip: LocalizedStringKey? = nil, chipColor: Color? = nil, fraction: Double,
+         number: String, unit: String = "", suffix: String = "", color: Color, @ViewBuilder note: () -> Note) {
+        self.caption = caption; self.chip = chip; self.chipColor = chipColor; self.fraction = fraction
+        self.number = number; self.unit = unit; self.suffix = suffix; self.color = color; self.note = note()
+    }
+
+    var body: some View {
+        NunaCard(padding: EdgeInsets(top: 22, leading: 22, bottom: 22, trailing: 22)) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack {
+                    Text(caption).font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
+                        .foregroundStyle(NunaPalette.textSecondary)
+                    Spacer()
+                    if let chip { NunaChip(chip, color: chipColor) }
+                }
+                HStack(spacing: 20) {
+                    NunaRingGauge(fraction: fraction, color: color, size: 128, lineWidth: 12) {
+                        VStack(spacing: 0) {
+                            HStack(alignment: .firstTextBaseline, spacing: 1) {
+                                Text(verbatim: number).font(.system(size: 34, weight: .bold, design: .rounded))
+                                    .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
+                                if !unit.isEmpty && number != "–" {
+                                    Text(verbatim: unit).font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                                }
+                            }
+                            if !suffix.isEmpty {
+                                Text(verbatim: suffix).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                            }
+                        }
+                    }
+                    note
+                    Spacer(minLength: 0)
+                }
+            }
+        }
+    }
+}
+
 // MARK: - Collapsible "How it's calculated" row
 
 struct NunaExpandRow: View {
