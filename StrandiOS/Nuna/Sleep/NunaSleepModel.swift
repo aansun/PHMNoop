@@ -20,9 +20,44 @@ struct NunaNight: Identifiable {
     let daily: DailyMetric?
     /// True when the stage split is the daily aggregate (no per-epoch timeline).
     let proportional: Bool
+    /// Movement magnitude per 30 s epoch, placed in seconds from `onset`. Empty when the night has none.
+    var motion: [NunaMotionEpoch] = []
 
     var asleepMin: Double { stages.asleep }
     var inBedMin: Double { stages.total }
+}
+
+struct NunaMotionEpoch { let t: TimeInterval; let v: Double }
+
+/// What the movement strip adds up to. Magnitudes are not calibrated, so these are relative counts:
+/// a movement is a burst above `moveThreshold`, a position change a burst whose peak clears `positionPeak`,
+/// and restlessness is movements per hour of sleep window.
+struct NunaMovementSummary {
+    static let moveThreshold = 0.3
+    static let positionPeak = 6.0
+
+    enum Level { case low, medium, high }
+    let movements: Int
+    let positionChanges: Int
+    let level: Level
+
+    init?(_ epochs: [NunaMotionEpoch], hours: Double) {
+        guard epochs.count >= 10, hours > 0 else { return nil }
+        var moves = 0, positions = 0, peak = 0.0, inBurst = false
+        for e in epochs {
+            if e.v > Self.moveThreshold {
+                if !inBurst { moves += 1; inBurst = true; peak = 0 }
+                peak = max(peak, e.v)
+            } else if inBurst {
+                if peak > Self.positionPeak { positions += 1 }
+                inBurst = false
+            }
+        }
+        if inBurst, peak > Self.positionPeak { positions += 1 }
+        movements = moves; positionChanges = positions
+        let perHour = Double(moves) / hours
+        level = perHour < 6 ? .low : (perHour < 12 ? .medium : .high)
+    }
 }
 
 struct NunaNap: Identifiable {
@@ -128,6 +163,7 @@ final class NunaSleepModel: ObservableObject {
     func load(repo: Repository) async {
         let hab = await repo.habitualMidsleepSec()
         let sessions = await repo.allSleepSessions(days: 60)
+        let motions = await repo.sessionMotions(sessions: sessions)
         var daily: [String: DailyMetric] = [:]
         for d in repo.days { daily[d.day] = d }
 
@@ -157,6 +193,12 @@ final class NunaSleepModel: ObservableObject {
                     stages.awake += s.awake; stages.light += s.light; stages.deep += s.deep; stages.rem += s.rem
                 }
             }
+            var motion: [NunaMotionEpoch] = []
+            for block in main {
+                guard let m = motions[block.startTs] else { continue }
+                let base = TimeInterval(block.effectiveStartTs - onsetTs)
+                for (i, v) in m.enumerated() { motion.append(NunaMotionEpoch(t: base + TimeInterval(i) * 30, v: v)) }
+            }
             var proportional = intervals.isEmpty
             if !found, let row, let asleep = row.totalSleepMin, asleep > 0 {
                 let eff = row.efficiency.map { $0 > 1 ? $0 / 100 : $0 }
@@ -178,7 +220,7 @@ final class NunaSleepModel: ObservableObject {
             out.append(NunaNight(dayKey: key, wakeDate: wakeDate,
                                  onset: Date(timeIntervalSince1970: TimeInterval(onsetTs)),
                                  wake: wakeDate, stages: stages, intervals: intervals, naps: naps,
-                                 daily: row, proportional: proportional))
+                                 daily: row, proportional: proportional, motion: motion))
         }
         nights = out
 

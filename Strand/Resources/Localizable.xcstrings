@@ -1,6 +1,15 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "Position changes": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pindah posisi"}}
+        } },
+        "Restlessness": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Gelisah"}}
+        } },
+        "Stages are estimated from heart rate and movement. Movement counts are relative to this strap and are not a medical sleep study.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Fase tidur diperkirakan dari detak jantung dan gerak. Hitungan gerak bersifat relatif terhadap strap ini dan bukan studi tidur medis."}}
+        } },
         "Your body clock estimate": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Perkiraan jam tubuhmu"}}
         } },
