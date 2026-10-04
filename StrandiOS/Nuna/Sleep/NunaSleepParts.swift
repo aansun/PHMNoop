@@ -218,15 +218,17 @@ struct NunaStatTile: View {
 /// "Last night" style picker: older / newer chevrons around a title.
 struct NunaNightPicker: View {
     @ObservedObject var model: NunaSleepModel
+    var caption: LocalizedStringKey?
+    var date: Date?
     var body: some View {
         HStack {
             step("chevron.left", enabled: model.hasOlder) { model.index += 1 }
             Spacer()
             VStack(spacing: 2) {
-                Text(model.index == 0 ? "Last night" : "Earlier night")
+                Text(caption ?? (model.index == 0 ? "Last night" : "Earlier night"))
                     .font(.system(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textSecondary)
-                Text(verbatim: model.night.map { NunaSleepFormat.nightTitle($0.wakeDate) } ?? "–")
+                Text(verbatim: (date ?? model.night?.wakeDate).map { NunaSleepFormat.nightTitle($0) } ?? "–")
                     .font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
             }
             Spacer()

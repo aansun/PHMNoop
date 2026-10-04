@@ -195,11 +195,12 @@ struct NunaAnyaCard: View {
     let title: Text
     var buttonTitle: LocalizedStringKey?
     var onButton: (() -> Void)?
+    var highlight = true
     let action: () -> Void
 
-    init(title: LocalizedStringKey, buttonTitle: LocalizedStringKey? = nil, onButton: (() -> Void)? = nil,
+    init(title: LocalizedStringKey, highlight: Bool = true, buttonTitle: LocalizedStringKey? = nil, onButton: (() -> Void)? = nil,
          action: @escaping () -> Void) {
-        self.title = Text(title); self.buttonTitle = buttonTitle; self.onButton = onButton; self.action = action
+        self.title = Text(title); self.highlight = highlight; self.buttonTitle = buttonTitle; self.onButton = onButton; self.action = action
     }
 
     /// For text that is already localized (the readiness one-liner).
@@ -209,7 +210,7 @@ struct NunaAnyaCard: View {
     }
 
     var body: some View {
-        NunaCard(small: true, highlight: true, padding: EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)) {
+        NunaCard(small: true, highlight: highlight, padding: EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)) {
             HStack(spacing: 12) {
                 Button(action: action) {
                     HStack(spacing: 12) {

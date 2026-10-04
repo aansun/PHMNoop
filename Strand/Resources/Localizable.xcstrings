@@ -1,6 +1,78 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "Added by you": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ditambahkan olehmu"}}
+        } },
+        "By time of day": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Menurut jam"}}
+        } },
+        "Today's peaks": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Puncak hari ini"}}
+        } },
+        "A gentle buzz on the strap helps the rhythm": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Getar lembut di strap membantu ritme"}}
+        } },
+        "Shown as a card on Today": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tampil sebagai kartu di Hari ini"}}
+        } },
+        "About your usual baseline (%@)": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sekitar baseline biasamu (%@)"}}
+        } },
+        "Calmer than your baseline (%@)": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lebih tenang dari baseline-mu (%@)"}}
+        } },
+        "Tenser than your baseline (%@)": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lebih tegang dari baseline-mu (%@)"}}
+        } },
+        "Stress compares your heart rate and heart rate variability with your own calm reference, point by point through the day. Times when you were moving are left out so exercise is not read as stress.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Stres membandingkan detak jantung dan HRV dengan acuan tenangmu sendiri, titik demi titik sepanjang hari. Saat kamu bergerak tidak dihitung agar olahraga tidak terbaca sebagai stres."}}
+        } },
+        "Earlier day": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hari sebelumnya"}}
+        } },
+        "No nap this day": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidak ada tidur siang di hari ini"}}
+        } },
+        "First nap": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidur siang pertama"}}
+        } },
+        "A nap is any sleep that is not your main night. It is detected automatically when you rest without moving for a while.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidur siang adalah tidur di luar tidur malam utama. Terdeteksi otomatis saat kamu beristirahat tanpa bergerak beberapa saat."}}
+        } },
+        "A nap under 30 minutes is safest for your night's sleep": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidur siang di bawah 30 menit paling aman untuk tidur malam"}}
+        } },
+        "Add a nap by hand": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tambah tidur siang manual"}}
+        } },
+        "The order of stages is not available for this nap.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Urutan fase tidak tersedia untuk tidur siang ini."}}
+        } },
+        "Effect on tonight": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dampak ke malam ini"}}
+        } },
+        "Total sleep this day": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Total tidur hari ini"}}
+        } },
+        "Counted toward your need": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dihitung ke kebutuhan"}}
+        } },
+        "Tonight's need": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kebutuhan malam ini"}}
+        } },
+        "A nap counts toward your sleep need but does not change last night's Rest score.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidur siang dihitung ke kebutuhan tidur tapi tidak mengubah skor Rest semalam."}}
+        } },
+        "Nap history": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Riwayat tidur siang"}}
+        } },
+        "Save nap": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Simpan tidur siang"}}
+        } },
+        "The nap is staged from your strap's heart rate and movement when it has data for that time.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Fase tidur siang dihitung dari detak jantung dan gerak strap bila ada datanya."}}
+        } },
         "Position changes": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Pindah posisi"}}
         } },
