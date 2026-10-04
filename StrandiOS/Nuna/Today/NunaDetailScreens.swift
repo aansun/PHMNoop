@@ -39,10 +39,20 @@ struct NunaChargeDetailView: View {
             NunaSegmented(rangeOptions(), selection: $range)
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
-                    NunaColorBars(values: slots.map(\.value), dates: slots.map(\.date), maxValue: 100, color: nunaChargeColor)
-                    HStack(spacing: 14) {
-                        legend(NunaPalette.charge, "67+"); legend(NunaPalette.warning, "34–66"); legend(NunaPalette.alert, "0–33")
-                        Spacer()
+                    if range == 7 {
+                        NunaColumns(items: slots.map { s in
+                            NunaColumns.Item(weekday: weekday(s.date), date: s.date, fraction: s.value.map { $0 / 100 },
+                                             valueText: s.value.map { String(format: "%.0f", $0) },
+                                             highlight: Calendar.current.isDateInToday(s.date), color: s.value.map(nunaChargeColor))
+                        }, color: NunaPalette.charge)
+                    } else {
+                        NunaLine2Chart(points: series.readings(range), color: .white, decimals: 0, baseline: series.baseline)
+                    }
+                    if range == 7 {
+                        HStack(spacing: 14) {
+                            legend(NunaPalette.charge, "67+"); legend(NunaPalette.warning, "34–66"); legend(NunaPalette.alert, "0–33")
+                            Spacer()
+                        }
                     }
                 }
             }
@@ -74,6 +84,11 @@ struct NunaChargeDetailView: View {
             await day.load(repo: repo, profile: profile)
         }
         .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: "Charge") }
+    }
+
+    private func weekday(_ d: Date) -> String {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE")
+        return f.string(from: d)
     }
 
     private var chip: (LocalizedStringKey, Bool)? {
@@ -177,9 +192,8 @@ struct NunaEffortDetailView: View {
                                          highlight: Calendar.current.isDateInToday(s.date))
                     }, color: NunaPalette.effort, highlightColor: NunaPalette.effortText)
                 } else {
-                    NunaColorBars(values: slots.map(\.value), dates: slots.map(\.date),
-                                  maxValue: max(slots.compactMap(\.value).max() ?? 1, 1), color: { _ in NunaPalette.effort },
-                                  format: { UnitFormatter.effortDisplay($0, scale: scale) })
+                    NunaLine2Chart(points: series.readings(range).map { ($0.date, UnitFormatter.effortValue($0.value, scale: scale)) },
+                                   color: .white, decimals: 1, baseline: series.baseline.map { UnitFormatter.effortValue($0, scale: scale) })
                 }
             }
             NunaExpandRow(title: "How it's calculated", subtitle: "Cardio load across the day",
@@ -262,9 +276,6 @@ struct NunaMetricDetailView: View {
                             NunaColumns.Item(weekday: weekday(s.date), date: s.date, fraction: s.value.map { $0 / top },
                                              valueText: s.value.map { fmtShort($0) }, highlight: Calendar.current.isDateInToday(s.date))
                         }, color: NunaPalette.restText.opacity(0.85), highlightColor: NunaPalette.textPrimary)
-                    } else if isColumns {
-                        NunaColorBars(values: slots.map(\.value), dates: slots.map(\.date), maxValue: max(present.max() ?? 1, 1),
-                                      color: { _ in NunaPalette.restText }, format: { fmtShort($0) })
                     } else {
                         NunaLine2Chart(points: series.readings(range), color: .white, decimals: metric.decimals, baseline: series.baseline)
                     }

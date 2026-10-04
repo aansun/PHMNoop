@@ -244,6 +244,8 @@ struct NunaColumns: View {
     struct Item: Identifiable {
         let id = UUID(); let weekday: String; let date: Date; let fraction: Double?; let valueText: String?
         var highlight = false
+        /// Overrides the column colour (Charge uses its three zones).
+        var color: Color?
     }
     let items: [Item]
     let color: Color
@@ -258,7 +260,7 @@ struct NunaColumns: View {
                         .lineLimit(1).minimumScaleFactor(0.6)
                     ZStack(alignment: .bottom) {
                         Capsule().fill(Color.white.opacity(0.08)).frame(width: 30, height: 110)
-                        Capsule().fill(item.highlight ? (highlightColor ?? color) : color)
+                        Capsule().fill(item.color ?? (item.highlight ? (highlightColor ?? color) : color))
                             .frame(width: 30, height: max(14, 110 * CGFloat(min(max(item.fraction ?? 0, 0), 1))))
                             .opacity(item.fraction == nil ? 0 : 1)
                     }
