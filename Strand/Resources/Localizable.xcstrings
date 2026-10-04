@@ -1,6 +1,69 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "One suggestion for today": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Satu saran untuk hari ini"}}
+    } },
+    "Average and timeline": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Rata-rata dan garis waktu"}}
+    } },
+    "The metrics you choose": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Metrik pilihanmu"}}
+    } },
+    "Water, journal and mood": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Air, jurnal, dan suasana hati"}}
+    } },
+    "Start a live session": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mulai sesi langsung"}}
+    } },
+    "Discard your changes?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Buang perubahanmu?"}}
+    } },
+    "Hold the grip to drag a card. Turn the switch off to hide it; hidden cards stay here.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tahan ikon garis untuk menggeser kartu. Matikan sakelar untuk menyembunyikannya; kartu yang disembunyikan tetap ada di sini."}}
+    } },
+    "Active cards": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kartu aktif"}}
+    } },
+    "Choose the metrics on Today and put them in order.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pilih metrik di Hari Ini dan atur urutannya."}}
+    } },
+    "Pick the cards in Your cards and set their order.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pilih kartu di Kartu Anda dan atur urutannya."}}
+    } },
+    "Add cards from Sleep and Trends to Today.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tambahkan kartu dari Tidur dan Tren ke Hari Ini."}}
+    } },
+    "Discard changes": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Buang perubahan"}}
+    } },
+    "Keep editing": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Lanjut mengatur"}}
+    } },
+    "%lld cards shown · Stress included": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%lld kartu tampil · termasuk Stres"}}
+    } },
+    "%lld cards shown · Stress available in Edit": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%lld kartu tampil · Stres tersedia di Edit"}}
+    } },
+    "Display": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tampilan"}}
+    } },
+    "Reset this layout": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Atur ulang susunan ini"}}
+    } },
+    "Hold the grip on the right, then drag to reorder. Tap X to hide a card.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tahan ikon garis di kanan lalu geser untuk mengurutkan. Ketuk X untuk menyembunyikan kartu."}}
+    } },
+    "Every card is already on Today.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Semua kartu sudah ada di Hari Ini."}}
+    } },
+    "Hidden cards": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kartu tersembunyi"}}
+    } },
+    "For Your cards": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Untuk Kartumu"}}
+    } },
     "The app is available in %lld languages. Dates and numbers follow the language.": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Aplikasi tersedia dalam %lld bahasa. Tanggal dan angka mengikuti bahasa."}}
     } },
@@ -5720,6 +5783,7 @@
           "de": {"stringUnit": {"state": "translated", "value": "7-Tage-Trend"}}, "es": {"stringUnit": {"state": "translated", "value": "Tendencia de 7 días"}}, "fr": {"stringUnit": {"state": "translated", "value": "Tendance sur 7 jours"}}, "it": {"stringUnit": {"state": "translated", "value": "Tendenza a 7 giorni"}}, "pl": {"stringUnit": {"state": "translated", "value": "Trend 7-dniowy"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Tendência de 7 dias"}}, "ru": {"stringUnit": {"state": "translated", "value": "Тренд за 7 дней"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "7 天趋势"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "7 天趨勢"}}
         } },
         "Added to Today": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Ditambahkan ke Hari Ini"}},
           "de": {"stringUnit": {"state": "translated", "value": "Zu Heute hinzugefügt"}}, "es": {"stringUnit": {"state": "translated", "value": "Añadido a Hoy"}}, "fr": {"stringUnit": {"state": "translated", "value": "Ajouté à Aujourd'hui"}}, "it": {"stringUnit": {"state": "translated", "value": "Aggiunto a Oggi"}}, "pl": {"stringUnit": {"state": "translated", "value": "Dodano do Dzisiaj"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Adicionado a Hoje"}}, "ru": {"stringUnit": {"state": "translated", "value": "Добавлено в «Сегодня»"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "已添加到今天"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "已新增至今天"}}
         } },
         "Available": { "localizations": {
@@ -5727,6 +5791,7 @@
         ,
           "id": {"stringUnit": {"state": "translated", "value": "Tersedia"}}} },
         "None added yet": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Belum ada yang ditambahkan"}},
           "de": {"stringUnit": {"state": "translated", "value": "Noch nichts hinzugefügt"}}, "es": {"stringUnit": {"state": "translated", "value": "Aún no has añadido ninguno"}}, "fr": {"stringUnit": {"state": "translated", "value": "Aucun ajouté pour l'instant"}}, "it": {"stringUnit": {"state": "translated", "value": "Nessuno aggiunto finora"}}, "pl": {"stringUnit": {"state": "translated", "value": "Nic jeszcze nie dodano"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Ainda não foi adicionado nenhum"}}, "ru": {"stringUnit": {"state": "translated", "value": "Пока ничего не добавлено"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "尚未添加任何内容"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "尚未新增任何項目"}}
         } },
         "Shown on Today": { "localizations": {
@@ -5769,9 +5834,11 @@
           "de": {"stringUnit": {"state": "translated", "value": "%lld Karten angezeigt"}}, "es": {"stringUnit": {"state": "translated", "value": "%lld tarjetas mostradas"}}, "fr": {"stringUnit": {"state": "translated", "value": "%lld cartes affichées"}}, "it": {"stringUnit": {"state": "translated", "value": "%lld schede mostrate"}}, "pl": {"stringUnit": {"state": "translated", "value": "Pokazane karty: %lld"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "%lld cartões mostrados"}}, "ru": {"stringUnit": {"state": "translated", "value": "Показано карточек: %lld"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "显示 %lld 张卡片"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "顯示 %lld 張卡片"}}
         } },
         "%lld added": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "%lld ditambahkan"}},
           "de": {"stringUnit": {"state": "translated", "value": "%lld hinzugefügt"}}, "es": {"stringUnit": {"state": "translated", "value": "%lld añadidos"}}, "fr": {"stringUnit": {"state": "translated", "value": "%lld ajoutés"}}, "it": {"stringUnit": {"state": "translated", "value": "%lld aggiunti"}}, "pl": {"stringUnit": {"state": "translated", "value": "Dodano: %lld"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "%lld adicionados"}}, "ru": {"stringUnit": {"state": "translated", "value": "Добавлено: %lld"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "已添加 %lld 个"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "已新增 %lld 個"}}
         } },
         "%lld metrics shown": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "%lld metrik tampil"}},
           "de": {"stringUnit": {"state": "translated", "value": "%lld Werte angezeigt"}}, "es": {"stringUnit": {"state": "translated", "value": "%lld métricas mostradas"}}, "fr": {"stringUnit": {"state": "translated", "value": "%lld mesures affichées"}}, "it": {"stringUnit": {"state": "translated", "value": "%lld metriche mostrate"}}, "pl": {"stringUnit": {"state": "translated", "value": "Pokazane wskaźniki: %lld"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "%lld métricas mostradas"}}, "ru": {"stringUnit": {"state": "translated", "value": "Показано показателей: %lld"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "显示 %lld 项指标"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "顯示 %lld 項指標"}}
         } },
         "Looks like a workout around %@-%@ (avg HR %lld, %lld min). Save it?": { "localizations": {
@@ -24883,6 +24950,7 @@
     },
     "1 month": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "1 bulan"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -24941,6 +25009,7 @@
     },
     "1 week": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "1 minggu"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -25724,6 +25793,7 @@
     },
     "2 weeks": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "2 minggu"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -62880,6 +62950,7 @@
     },
     "Customize Today": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Atur Hari Ini"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -66399,6 +66470,7 @@
     },
     "Detailed tiles": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Ubin detail"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -86598,6 +86670,7 @@
     },
     "Hidden": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Disembunyikan"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -120699,6 +120772,7 @@
     },
     "Nothing hidden": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tidak ada yang disembunyikan"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -151911,6 +151985,7 @@
     },
     "Show a trend graph beneath each metric.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tampilkan grafik tren di bawah setiap metrik."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -196485,6 +196560,7 @@
     },
     "from %@": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "dari %@"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -208060,6 +208136,7 @@
     },
     "Shown": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tampil"}},
         "de": {
           "stringUnit": {
             "state": "translated",

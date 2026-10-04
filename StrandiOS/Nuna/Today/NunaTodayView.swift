@@ -74,23 +74,23 @@ struct NunaTodayView: View {
 
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            ScrollView {
-                VStack(spacing: NunaSpacing.section) {
-                    if editing {
-                        editList
-                    } else {
+            if editing {
+                editScreen
+            } else {
+                ScrollView {
+                    VStack(spacing: NunaSpacing.section) {
                         header
                         datePill
                         if !model.isToday { pastDayBanner }
                         ForEach(sections) { section in sectionView(section) }
                         customizeButton
                     }
+                    .padding(.horizontal, NunaSpacing.screenH)
+                    .padding(.top, 8)
+                    .padding(.bottom, 160)
                 }
-                .padding(.horizontal, NunaSpacing.screenH)
-                .padding(.top, 8)
-                .padding(.bottom, 160)
+                .scrollIndicators(.hidden)
             }
-            .scrollIndicators(.hidden)
 
             if model.isToday && !editing {
                 NunaFAB { showQuick = true }
@@ -102,8 +102,10 @@ struct NunaTodayView: View {
         .nunaTodayDestinations()
         .task(id: "\(repo.refreshSeq)-\(model.dayOffset)") { await model.load(repo: repo, profile: profile) }
         .sheet(isPresented: $showCustomize) {
-            TodayCustomizationSheet(
+            NunaTodayCustomizeSheet(
                 initialDestination: customizeDestination,
+                order: effectiveOrder, hidden: effectiveHidden,
+                defaultHidden: Self.nunaDefaultHidden, defaultOrder: Self.nunaDefaultOrder,
                 sectionOrderRaw: $sectionOrderRaw, hiddenSectionsRaw: $hiddenSectionsRaw,
                 keyMetricsRaw: $keyMetricsRaw, keyMetricsDetailed: $keyMetricsDetailed,
                 keyMetricsWindowDays: $keyMetricsWindowDays,
@@ -127,26 +129,7 @@ struct NunaTodayView: View {
             }
             .preferredColorScheme(NunaTheme.colorScheme)
         }
-        .sheet(isPresented: $showAddCard) {
-            VStack(alignment: .leading, spacing: 14) {
-                Text("Add a card").font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).padding(.top, 22)
-                NunaCard(small: true) {
-                    VStack(spacing: 0) {
-                        ForEach(Array(hiddenSections.enumerated()), id: \.element.id) { idx, sec in
-                            if idx > 0 { NunaDivider() }
-                            Button { add(sec, after: addAfter); showAddCard = false } label: {
-                                NunaListRow(nunaTitle(sec), systemImage: "plus") { Text("Add").font(.nuna(size: 14, weight: .heavy)).foregroundStyle(NunaPalette.charge) }
-                            }.buttonStyle(.plain)
-                        }
-                    }
-                }
-                Spacer(minLength: 0)
-            }
-            .padding(.horizontal, NunaSpacing.screenH)
-            .background(NunaPalette.card.ignoresSafeArea())
-            .preferredColorScheme(NunaTheme.colorScheme)
-            .nunaSheetChrome(detents: [.medium, .large])
-        }
+        .sheet(isPresented: $showAddCard) { addCardSheet }
         .sheet(isPresented: $showMood) {
             NavigationStack {
                 ScrollView { MindSection().padding() }
@@ -250,8 +233,11 @@ struct NunaTodayView: View {
         }
     }
 
-    private var editList: some View {
-        VStack(spacing: 14) {
+    /// Arrange mode. A native list with the system reorder grip, so dragging works the same way everywhere (hold the grip, then drag)
+    /// and VoiceOver gets move actions.
+    private var editScreen: some View {
+        let visible = effectiveOrder.filter { !effectiveHidden.contains($0) }
+        return List {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 2) {
@@ -264,27 +250,48 @@ struct NunaTodayView: View {
                     Button { withAnimation(.easeInOut(duration: 0.2)) { editing = false } } label: { Text("Done") }
                         .buttonStyle(.nuna(.primary, height: 44)).fixedSize()
                 }
-                Text("Hold the grip, then drag to reorder. Tap X to hide a card.")
+                Text("Hold the grip on the right, then drag to reorder. Tap X to hide a card.")
                     .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }
-            let visible = effectiveOrder.filter { !effectiveHidden.contains($0) }
-            ForEach(Array(visible.enumerated()), id: \.element.id) { idx, section in
-                editFrame(section)
-                if !hiddenSections.isEmpty && (idx % 3 == 0 || idx == visible.count - 1) {
-                    NunaAddCard("Add a card here") { addAfter = section; showAddCard = true }
+            .moveDisabled(true).plainRow()
+
+            ForEach(Array(visible.enumerated()), id: \.element) { idx, section in
+                VStack(spacing: 10) {
+                    editFrame(section)
+                    if !hiddenSections.isEmpty && (idx % 3 == 0 || idx == visible.count - 1) {
+                        NunaAddCard("Add a card here") { addAfter = section; showAddCard = true }
+                    }
                 }
+                .plainRow()
             }
+            .onMove { from, to in moveVisible(visible, from: from, to: to) }
+
             if visible.isEmpty && !hiddenSections.isEmpty {
-                NunaAddCard("Add a card here") { addAfter = nil; showAddCard = true }
+                NunaAddCard("Add a card here") { addAfter = nil; showAddCard = true }.moveDisabled(true).plainRow()
             }
-            HStack(spacing: 12) {
-                Button { showCustomize = true } label: { Label("Card settings", systemImage: "slider.horizontal.3").lineLimit(1).minimumScaleFactor(0.8) }
+            VStack(spacing: 10) {
+                Button { customizeDestination = .today; showCustomize = true } label: { Label("Card settings", systemImage: "slider.horizontal.3").lineLimit(1).minimumScaleFactor(0.8) }
                     .buttonStyle(.nuna(.ghost, height: 52, fullWidth: true))
-                Button { sectionOrderRaw = ""; hiddenSectionsRaw = ""; keyMetricsRaw = "" } label: { Text("Restore defaults").lineLimit(1).minimumScaleFactor(0.8) }
+                Button { sectionOrderRaw = ""; hiddenSectionsRaw = ""; keyMetricsRaw = ""; dashboardCardsRaw = ""; hostedCardsRaw = "" } label: { Text("Restore defaults").lineLimit(1).minimumScaleFactor(0.8) }
                     .buttonStyle(.nuna(.ghost, height: 52, fullWidth: true))
             }
-            .padding(.top, 4)
+            .moveDisabled(true).plainRow()
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .scrollIndicators(.hidden)
+        .contentMargins(.bottom, 140, for: .scrollContent)
+        .environment(\.editMode, .constant(.active))
+    }
+
+    /// Puts the dragged card where it was dropped, among the visible ones; hidden cards keep their places.
+    private func moveVisible(_ visible: [TodaySection], from: IndexSet, to: Int) {
+        var moved = visible
+        moved.move(fromOffsets: from, toOffset: to)
+        var queue = moved[...]
+        let hiddenSet = Set(effectiveHidden)
+        let order = effectiveOrder.map { hiddenSet.contains($0) ? $0 : queue.popFirst() ?? $0 }
+        persist(order: order)
     }
 
     private var hiddenSections: [TodaySection] { effectiveOrder.filter { effectiveHidden.contains($0) } }
@@ -292,8 +299,6 @@ struct NunaTodayView: View {
     private func editFrame(_ section: TodaySection) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
-                Image(systemName: "line.3.horizontal").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                    .frame(width: 22)
                 Text(nunaTitle(section)).font(.nuna(size: 15.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
                 Spacer()
                 Button { withAnimation { toggleHidden(section) } } label: {
@@ -302,17 +307,11 @@ struct NunaTodayView: View {
                 }
                 .accessibilityLabel(Text("Hide"))
             }
-            .contentShape(Rectangle())
-            .draggable(section.rawValue)
             editPreview(section)
         }
         .padding(12)
         .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous)
             .strokeBorder(NunaPalette.ink.opacity(0.22), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5])))
-        .dropDestination(for: String.self) { items, _ in
-            guard let raw = items.first, let dragged = TodaySection(rawValue: raw) else { return false }
-            reorder(dragged, before: section); return true
-        }
         .accessibilityAction(named: Text("Move up")) { move(section, by: -1) }
         .accessibilityAction(named: Text("Move down")) { move(section, by: 1) }
     }
@@ -387,15 +386,6 @@ struct NunaTodayView: View {
         .frame(maxWidth: .infinity)
     }
 
-    private func reorder(_ dragged: TodaySection, before target: TodaySection) {
-        guard dragged != target else { return }
-        var order = effectiveOrder
-        order.removeAll { $0 == dragged }
-        let idx = order.firstIndex(of: target) ?? order.endIndex
-        order.insert(dragged, at: idx)
-        persist(order: order)
-    }
-
     private func move(_ section: TodaySection, by delta: Int) {
         var order = effectiveOrder
         guard let i = order.firstIndex(of: section), order.indices.contains(i + delta) else { return }
@@ -422,6 +412,76 @@ struct NunaTodayView: View {
         if sectionOrderRaw.trimmingCharacters(in: .whitespaces).isEmpty { sectionOrderRaw = TodayLayoutPrefs.encode(effectiveOrder) }
         // Always write an explicit value, so the Nuna defaults stop applying once the person has chosen.
         hiddenSectionsRaw = hidden.isEmpty ? "none" : TodayLayoutPrefs.encodeHidden(hidden)
+    }
+
+    // MARK: Add a card
+
+    private var hiddenDashboardCards: [DashboardCard] {
+        let on = DashboardCardPrefs.decodeEnabled(dashboardCardsRaw)
+        return DashboardCard.canonicalOrder.filter { !on.contains($0) }
+    }
+    private var hiddenHostedCards: [HostedCard] {
+        let on = HostedCardPrefs.decodeEnabled(hostedCardsRaw)
+        return HostedCard.canonicalOrder.filter { !on.contains($0) }
+    }
+
+    /// Everything that can be put on Today: a hidden card, one more entry for Your cards, or a card from Sleep or Trends.
+    private var addCardSheet: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                Text("Add a card").font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).padding(.top, 22)
+                if hiddenSections.isEmpty && hiddenDashboardCards.isEmpty && hiddenHostedCards.isEmpty {
+                    Text("Every card is already on Today.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                }
+                if !hiddenSections.isEmpty {
+                    NunaSettingsGroup("Hidden cards") {
+                        ForEach(Array(hiddenSections.enumerated()), id: \.element.id) { idx, sec in
+                            if idx > 0 { NunaDivider() }
+                            Button { add(sec, after: addAfter); showAddCard = false } label: {
+                                NunaListRow(LocalizedStringKey(sec.nunaName), subtitle: LocalizedStringKey(sec.nunaNote), systemImage: sec.customizationIcon) { addLabel }
+                            }.buttonStyle(.plain)
+                        }
+                    }
+                }
+                if !hiddenDashboardCards.isEmpty {
+                    NunaSettingsGroup("For Your cards") {
+                        ForEach(Array(hiddenDashboardCards.enumerated()), id: \.element.id) { idx, card in
+                            if idx > 0 { NunaDivider() }
+                            Button {
+                                dashboardCardsRaw = DashboardCardPrefs.encode(DashboardCardPrefs.decodeEnabled(dashboardCardsRaw) + [card])
+                                add(.yourCards, after: addAfter); showAddCard = false
+                            } label: { NunaListRow(LocalizedStringKey(card.title), subtitle: LocalizedStringKey(card.subtitle), systemImage: card.icon) { addLabel } }.buttonStyle(.plain)
+                        }
+                    }
+                }
+                ForEach(hostedGroups, id: \.name) { g in
+                    NunaSettingsGroup(LocalizedStringKey(String(localized: "From \(g.name)"))) {
+                        ForEach(Array(g.cards.enumerated()), id: \.element.id) { idx, card in
+                            if idx > 0 { NunaDivider() }
+                            Button {
+                                hostedCardsRaw = HostedCardPrefs.encode(HostedCardPrefs.decodeEnabled(hostedCardsRaw) + [card])
+                                add(.addedCards, after: addAfter); showAddCard = false
+                            } label: { NunaListRow(LocalizedStringKey(card.title), systemImage: card.customizationIcon) { addLabel } }.buttonStyle(.plain)
+                        }
+                    }
+                }
+                Button { showAddCard = false; customizeDestination = .today; DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { showCustomize = true } } label: {
+                    Text("Card settings").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.glassStrong, in: Capsule())
+                }.buttonStyle(.plain)
+            }
+            .padding(.horizontal, NunaSpacing.screenH).padding(.bottom, 24)
+        }
+        .background(NunaPalette.card.ignoresSafeArea())
+        .preferredColorScheme(NunaTheme.colorScheme)
+        .nunaSheetChrome(detents: [.medium, .large])
+    }
+
+    private var addLabel: some View { Text("Add").font(.nuna(size: 14, weight: .heavy)).foregroundStyle(NunaPalette.charge) }
+
+    private var hostedGroups: [(name: String, cards: [HostedCard])] {
+        var order: [String] = []; var buckets: [String: [HostedCard]] = [:]
+        for c in hiddenHostedCards { if buckets[c.origin] == nil { order.append(c.origin) }; buckets[c.origin, default: []].append(c) }
+        return order.map { (name: $0, cards: buckets[$0] ?? []) }
     }
 
     /// Unhide `section` and place it right after `anchor` (or at the end).
