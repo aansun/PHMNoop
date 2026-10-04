@@ -289,7 +289,11 @@ struct NunaHealthView: View {
             fitnessCard
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
-                    row("Rhythm", "Beat-to-beat view. Experimental", "waveform.path.ecg.rectangle") { router.requestedDestination = .rhythm }
+                    NavigationLink(value: NunaTodayRoute.rhythm) {
+                        NunaListRow("Rhythm", subtitle: "Beat-to-beat view", systemImage: "waveform.path.ecg.rectangle", showsChevron: true) {
+                            NunaChip("Experimental")
+                        }
+                    }.buttonStyle(.plain)
                 }
             }
             earlyWarningCard
