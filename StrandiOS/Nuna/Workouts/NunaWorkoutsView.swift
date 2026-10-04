@@ -87,7 +87,7 @@ struct NunaWorkoutsView: View {
             await m.load(repo: repo)
             suggestion = autoDetect ? await repo.autoDetectSuggestion() : nil
         }
-        .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: "workouts") }
+        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "workouts") }
     }
 
     // MARK: Header

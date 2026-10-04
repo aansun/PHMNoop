@@ -40,7 +40,7 @@ struct NunaRootView: View {
             stack(.today) { NunaTodayView() }
             stack(.health) { NunaHealthView() }
             stack(.trends) { NunaTrendsView() }
-            if coachEnabled { stack(.anya) { CoachView() } }
+            if coachEnabled { stack(.anya) { NunaAnyaView() } }
             stack(.me) { NunaMeView() }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -74,6 +74,7 @@ struct NunaRootView: View {
                 .background(NunaPalette.canvas.ignoresSafeArea())
                 .toolbar(.hidden, for: .navigationBar)
                 .tabRouteDestinations()
+                .nunaAnyaDestinations()
         }
         .toolbar(.hidden, for: .tabBar)
         .tag(tab.rawValue)
@@ -106,7 +107,7 @@ struct NunaRootView: View {
         case .activeWorkout: NunaWorkoutsView(autoOpenStart: true)
         case .liveSession: LiquidTodayView()
         case .journal: InsightsView()
-        case .coach: CoachView()
+        case .coach: NunaAnyaView()
         }
     }
 

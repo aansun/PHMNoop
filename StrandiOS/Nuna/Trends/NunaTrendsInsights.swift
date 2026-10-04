@@ -42,7 +42,7 @@ struct NunaInsightsView: View {
             }
         }
         .task(id: repo.refreshSeq) { await load() }
-        .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: "trends") }
+        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "trends") }
     }
 
     private var anyaLine: String {

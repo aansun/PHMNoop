@@ -140,7 +140,7 @@ struct NunaBodyClockView: View {
             // The estimate is computed in the analytics pass; make sure it is fresh when this screen opens.
             if appModel.circadianPhase == nil { await appModel.refreshV5Signals() }
         }
-        .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: "body clock") }
+        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "body clock") }
     }
 
     private var night: NunaNight? { sleep.nights.first }

@@ -1,0 +1,196 @@
+#if os(iOS)
+import SwiftUI
+import StrandDesign
+
+/// The sheet every Anya card and header button opens (AnyaSheet*.dc). The top is always the local read: a line that cites
+/// its figures, computed on this iPhone. A provider adds a short explanation only after it is connected and data access is
+/// allowed; follow-up questions are answered inside the sheet, and "Open full conversation" hands over to the Anya tab.
+struct NunaAnyaSheet: View {
+    let context: String
+    @EnvironmentObject private var coach: AICoachEngine
+    @EnvironmentObject private var repo: Repository
+    @EnvironmentObject private var profile: ProfileStore
+    @EnvironmentObject private var router: NavRouter
+    @Environment(\.dismiss) private var dismiss
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    @State private var read: NunaAnyaRead?
+    @State private var loaded = false
+    @State private var explanation: String?
+    @State private var explaining = false
+    @State private var turns: [ChatMessage] = []
+    @State private var draft = ""
+    @State private var sending = false
+    @FocusState private var focused: Bool
+    @State private var path = NavigationPath()
+
+    private var module: NunaAnyaModule { NunaAnyaModule(context: context) }
+
+    var body: some View {
+        NavigationStack(path: $path) {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    top
+                    if let read { card(read) } else if loaded { empty }
+                    connectState
+                    if !turns.isEmpty { conversation }
+                    if let read { questions(read) }
+                    composer
+                    Button { openFull() } label: {
+                        Text("Open full conversation").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            .frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.glassStrong, in: Capsule())
+                    }.buttonStyle(.plain)
+                }
+                .padding(.horizontal, NunaSpacing.screenH).padding(.top, 20).padding(.bottom, 24)
+            }
+            .scrollIndicators(.hidden).scrollDismissesKeyboard(.interactively)
+            .background(NunaPalette.canvas.ignoresSafeArea())
+            .toolbar(.hidden, for: .navigationBar)
+            .nunaAnyaDestinations()
+        }
+        .presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
+        .preferredColorScheme(.dark)
+        .task(id: context) {
+            read = await NunaAnyaReader.read(context: context, repo: repo, profile: profile, scale: UnitPrefs.resolveEffortScale(effortScaleRaw))
+            loaded = true
+        }
+    }
+
+    // MARK: Parts
+
+    private var top: some View {
+        HStack(spacing: 10) {
+            NunaIconTile("sparkles")
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Anya").font(.system(size: 22, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                Text("Anya sees").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            }
+            Spacer()
+            Text(module.title).font(.system(size: 11.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                .padding(.horizontal, 12).frame(height: 30).background(NunaPalette.glassStrong, in: Capsule())
+        }
+    }
+
+    private func card(_ r: NunaAnyaRead) -> some View {
+        NunaCard(highlight: true) {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(verbatim: r.headline).font(.system(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                if let d = r.detail { Text(verbatim: d).font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true) }
+                if explaining {
+                    HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                } else if let explanation {
+                    NunaDivider()
+                    Text(verbatim: explanation).font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                }
+                HStack(spacing: 6) {
+                    Text("Read:").font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    ForEach(r.read, id: \.self) { Text(verbatim: $0).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                }
+                if coach.isConfigured, coach.dataConsent, explanation == nil, !explaining {
+                    Button { Task { await explain() } } label: {
+                        HStack(spacing: 6) { Image(systemName: "sparkles").font(.system(size: 12, weight: .bold)); Text("Explain with \(coach.provider.nunaIsOnDevice ? String(localized: "Apple Intelligence") : coach.provider.displayName)") }
+                            .font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 40).background(NunaPalette.glassStrong, in: Capsule())
+                    }.buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private var empty: some View {
+        NunaCard(small: true) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Nothing to read yet").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                Text("Anya shows a line only when it has figures to cite. Wear the strap and sync, then ask again.").font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            }.frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    /// Shown when asking needs something the wearer has not done yet. Never sends anything.
+    @ViewBuilder private var connectState: some View {
+        if !coach.isConfigured {
+            NavigationLink(value: NunaAnyaRoute.connect) {
+                NunaCard(small: true) { NunaListRow("Connect Anya", subtitle: "Get advice from your own data", systemImage: "link", showsChevron: true) }
+            }.buttonStyle(.plain)
+        } else if !coach.dataConsent {
+            NunaCard(small: true) {
+                NunaToggleRow("Let Anya use my numbers", subtitle: "Without this, Anya sees only your question", systemImage: "lock.open", isOn: $coach.dataConsent)
+            }
+        }
+    }
+
+    private func questions(_ r: NunaAnyaRead) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            ForEach(r.questions) { q in
+                Button {
+                    if q.kind == .plan { path.append(NunaAnyaRoute.plan) } else { Task { await ask(q.prompt, shown: q.title) } }
+                } label: {
+                    HStack {
+                        Text(verbatim: q.title).font(.system(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Spacer()
+                        Image(systemName: q.kind == .plan ? "chevron.right" : "arrow.up.right").font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                    }
+                    .padding(.horizontal, 18).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
+                }.buttonStyle(.plain).disabled(sending || (q.kind == .ask && !(coach.isConfigured)))
+                    .opacity(q.kind == .ask && !coach.isConfigured ? 0.45 : 1)
+            }
+        }
+    }
+
+    private var conversation: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            ForEach(turns) { t in
+                if t.role == .user {
+                    HStack { Spacer(minLength: 40)
+                        Text(verbatim: t.text).font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 14).padding(.vertical, 9).background(NunaPalette.textPrimary, in: RoundedRectangle(cornerRadius: 18, style: .continuous)) }
+                } else {
+                    NunaCard(small: true) { Text(verbatim: t.text).font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading) }
+                }
+            }
+            if sending { HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) } }
+        }
+    }
+
+    private var composer: some View {
+        HStack(spacing: 8) {
+            TextField("", text: $draft, prompt: Text(coach.isConfigured ? "Ask a follow-up" : "Connect Anya to ask").foregroundStyle(NunaPalette.textMuted), axis: .vertical)
+                .font(.system(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1...3).focused($focused)
+                .padding(.leading, 16).padding(.vertical, 12).disabled(!coach.isConfigured).onSubmit { submit() }
+            Button { submit() } label: {
+                Image(systemName: "arrow.up").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(width: 38, height: 38).background(NunaPalette.textPrimary, in: Circle())
+            }.buttonStyle(.plain).disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty || sending || !coach.isConfigured)
+                .opacity(draft.trimmingCharacters(in: .whitespaces).isEmpty ? 0.4 : 1).padding(.trailing, 5)
+        }
+        .frame(minHeight: 48).background(Color.black.opacity(0.28), in: Capsule()).overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+    }
+
+    // MARK: Actions
+
+    private func submit() {
+        let q = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !q.isEmpty else { return }
+        draft = ""; focused = false
+        Task { await ask(q, shown: q) }
+    }
+
+    /// Answers inside the sheet. Needs a provider and data access; otherwise it hands the question to the full conversation
+    /// where the same gates are explained, so nothing is sent from here without them.
+    private func ask(_ prompt: String, shown: String) async {
+        guard coach.isConfigured else { return }
+        guard coach.dataConsent else { coach.pendingPrompt = prompt; openFull(); return }
+        turns.append(ChatMessage(id: UUID(), role: .user, text: shown))
+        sending = true; defer { sending = false }
+        let reply = await coach.answerContextualMessage(pageContext: context, notice: read?.headline, history: Array(turns.dropLast()), question: prompt)
+        turns.append(ChatMessage(id: UUID(), role: .assistant, text: reply ?? String(localized: "I couldn't answer right now. Check the provider in Anya settings.")))
+    }
+
+    private func explain() async {
+        explaining = true; defer { explaining = false }
+        explanation = await coach.generateContextualBrief(pageContext: context)
+    }
+
+    private func openFull() {
+        if let last = turns.last(where: { $0.role == .user })?.text, coach.pendingPrompt == nil, turns.count == 1 { coach.pendingPrompt = last }
+        dismiss()
+        router.requestedDestination = .coach
+    }
+}
+#endif

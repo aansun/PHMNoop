@@ -36,7 +36,7 @@ struct NunaGymSessionView: View {
         .sheet(isPresented: $editing) {
             if let session { LiftSessionEditSheet(session: session, sets: sets) { await load() } }
         }
-        .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: "workouts") }
+        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "workouts") }
         .confirmationDialog("Delete this workout?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) { Task { await deleteSession() } }
             Button("Cancel", role: .cancel) {}

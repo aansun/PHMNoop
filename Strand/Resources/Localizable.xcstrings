@@ -1,6 +1,699 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Connect Anya": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hubungkan Anya"}}
+    } },
+    "Choose a provider": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pilih penyedia"}}
+    } },
+    "Your day, without a provider": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Harimu, tanpa penyedia"}}
+    } },
+    "Today's plan": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Rencana hari ini"}}
+    } },
+    "Built on this iPhone from your Charge, no provider needed": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Dibuat di iPhone dari Charge-mu, tanpa penyedia"}}
+    } },
+    "Anya reads": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Anya membaca"}}
+    } },
+    "Adjust": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Atur"}}
+    } },
+    "Anya only sees your question. Allow data access": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Anya hanya melihat pertanyaanmu. Izinkan akses data"}}
+    } },
+    "Memory active · %lld": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Memory aktif · %lld"}}
+    } },
+    "Patterns and Lab Book": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pola dan Lab Book"}}
+    } },
+    "Workouts 7 days": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Latihan 7 hari"}}
+    } },
+    "I'm here with you": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Aku di sini bersamamu"}}
+    } },
+    "Anya reads your baseline, load and sleep together, then picks the next small step.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Anya membaca baseline, beban, dan tidurmu sekaligus, lalu memilihkan langkah kecil berikutnya."}}
+    } },
+    "Recommendation for today": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Rekomendasi untuk hari ini"}}
+    } },
+    "Build today's plan": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Susun rencana hari ini"}}
+    } },
+    "Try asking": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Coba tanyakan"}}
+    } },
+    "Recommend a workout": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Rekomendasikan latihan"}}
+    } },
+    "From Charge, Effort, Rest and your goal": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Dari Charge, Effort, Rest, dan targetmu"}}
+    } },
+    "Why is my sleep short?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kenapa tidurku kurang?"}}
+    } },
+    "Compare the last 7 nights": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bandingkan 7 malam terakhir"}}
+    } },
+    "Why did HRV drop?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kenapa HRV turun?"}}
+    } },
+    "Look for triggers in the journal and workouts": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Cari pemicu dari jurnal dan latihan"}}
+    } },
+    "What should I eat today?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Apa yang sebaiknya kumakan hari ini?"}}
+    } },
+    "From calories out and training": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Dari kalori keluar dan latihan"}}
+    } },
+    "Give Anya a memory": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Beri Anya ingatan"}}
+    } },
+    "Your goals, events and preferences": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tujuan, acara, dan preferensimu"}}
+    } },
+    "Anya is thinking…": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Anya sedang berpikir…"}}
+    } },
+    "Read:": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Dibaca:"}}
+    } },
+    "Based only on your question": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hanya berdasarkan pertanyaanmu"}}
+    } },
+    "What should I do next?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Apa yang sebaiknya kulakukan?"}}
+    } },
+    "Tell me more": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ceritakan lebih lanjut"}}
+    } },
+    "Update the key": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Perbarui kunci"}}
+    } },
+    "The file is read on this iPhone and only its text is sent with your question.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "File dibaca di iPhone dan hanya teksnya dikirim bersama pertanyaanmu."}}
+    } },
+    "Ask Anya about your data": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tanya Anya tentang datamu"}}
+    } },
+    "Listening": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mendengarkan"}}
+    } },
+    "Say what you want to ask": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ucapkan yang ingin kamu tanyakan"}}
+    } },
+    "Recognised on this iPhone. Your voice is not sent anywhere.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Dikenali di iPhone. Suaramu tidak dikirim ke mana pun."}}
+    } },
+    "Apple Intelligence · on device": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Apple Intelligence · di perangkat"}}
+    } },
+    "Your own server": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Server sendiri"}}
+    } },
+    "No key": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tanpa kunci"}}
+    } },
+    "Account": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Akun"}}
+    } },
+    "Your own API key": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kunci API sendiri"}}
+    } },
+    "Recommended": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Disarankan"}}
+    } },
+    "Anya uses the AI provider you choose. Your key is kept in the Keychain and does not leave this iPhone.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Anya memakai penyedia AI pilihanmu. Kunci disimpan di Keychain dan tidak keluar dari iPhone."}}
+    } },
+    "Let Anya use my numbers": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Izinkan Anya memakai datamu"}}
+    } },
+    "Summaries of your computed scores, not raw data": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ringkasan skor yang sudah dihitung, bukan data mentah"}}
+    } },
+    "Summaries of computed scores, not raw data": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ringkasan skor yang sudah dihitung, bukan data mentah"}}
+    } },
+    "Summaries of computed scores": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ringkasan skor yang sudah dihitung"}}
+    } },
+    "On this iPhone. No account, no key, no network.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Di iPhone. Tanpa akun, tanpa kunci, tanpa jaringan."}}
+    } },
+    "ChatGPT (sign in)": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "ChatGPT (masuk)"}}
+    } },
+    "Sign in with your ChatGPT account using a one-time device code.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Masuk dengan akun ChatGPT lewat kode perangkat sekali pakai."}}
+    } },
+    "Paste a key, pick a Claude model.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tempel kunci, pilih model Claude."}}
+    } },
+    "Paste a key, pick a GPT model.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tempel kunci, pilih model GPT."}}
+    } },
+    "Can also send chart images.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bisa juga mengirim gambar grafik."}}
+    } },
+    "Ollama, LM Studio, llama.cpp, or any OpenAI-compatible gateway.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ollama, LM Studio, llama.cpp, atau gateway kompatibel OpenAI."}}
+    } },
+    "Only a text summary of numbers already computed on this iPhone is sent to your chosen provider, and only after you allow it and ask. Raw heartbeat intervals, PPG and motion are never sent.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hanya ringkasan teks dari angka yang sudah dihitung di iPhone yang dikirim ke penyedia pilihanmu, dan hanya setelah kamu mengizinkan dan bertanya. R-R, PPG, dan gerak mentah tidak pernah dikirim."}}
+    } },
+    "Paste your key": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tempel kuncimu"}}
+    } },
+    "Paste from clipboard": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tempel dari clipboard"}}
+    } },
+    "The key is kept in this iPhone's Keychain.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kunci disimpan di Keychain iPhone ini."}}
+    } },
+    "Key accepted · %lld models found": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kunci valid · %lld model ditemukan"}}
+    } },
+    "A key is saved for this provider": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kunci tersimpan untuk penyedia ini"}}
+    } },
+    "Check key": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Cek kunci"}}
+    } },
+    "Reload the list": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Muat ulang daftar"}}
+    } },
+    "Another model id": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Id model lain"}}
+    } },
+    "Usage is billed by the provider to your account. The key only leaves this iPhone to reach this provider.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Biaya pemakaian ditagih penyedia ke akunmu. Kunci tidak pernah keluar dari iPhone selain ke penyedia ini."}}
+    } },
+    "Save and start": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Simpan dan mulai"}}
+    } },
+    "Remove the key": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hapus kunci"}}
+    } },
+    "Any OpenAI-compatible server: Ollama, LM Studio, llama.cpp or your own gateway. It stays on your network.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Server apa pun yang kompatibel OpenAI: Ollama, LM Studio, llama.cpp, atau gateway milikmu. Tetap di jaringanmu."}}
+    } },
+    "Key (optional)": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kunci (opsional)"}}
+    } },
+    "Only if your server asks for one": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hanya bila servermu memintanya"}}
+    } },
+    "Bearer for most local servers. x-api-key for gateways that want the key in that header.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bearer untuk kebanyakan server lokal. x-api-key untuk gateway yang meminta kunci di header itu."}}
+    } },
+    "%lld models found · %lld ms": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%lld model ditemukan · %lld ms"}}
+    } },
+    "Test connection": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Uji koneksi"}}
+    } },
+    "Testing…": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Menguji…"}}
+    } },
+    "Sign in to ChatGPT": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Masuk ChatGPT"}}
+    } },
+    "ChatGPT connected": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "ChatGPT tersambung"}}
+    } },
+    "The token is kept in this iPhone's Keychain and refreshed automatically.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Token disimpan di Keychain iPhone dan diperbarui otomatis."}}
+    } },
+    "Sign out of ChatGPT": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Keluar dari ChatGPT"}}
+    } },
+    "Device code": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kode perangkat"}}
+    } },
+    "Open the ChatGPT sign-in page in your browser and enter this code. It is valid for 15 minutes.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Buka halaman masuk ChatGPT di browser, lalu masukkan kode ini. Berlaku 15 menit."}}
+    } },
+    "Open the sign-in page": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Buka halaman masuk"}}
+    } },
+    "Copy the code": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Salin kode"}}
+    } },
+    "Waiting for approval…": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Menunggu persetujuan…"}}
+    } },
+    "The app checks every few seconds": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Aplikasi memeriksa tiap beberapa detik"}}
+    } },
+    "Sign in with your ChatGPT account using a one-time device code, without pasting an API key.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Masuk dengan akun ChatGPT memakai kode perangkat sekali pakai, tanpa menempelkan kunci API."}}
+    } },
+    "Getting a code…": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mengambil kode…"}}
+    } },
+    "Get a device code": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ambil kode perangkat"}}
+    } },
+    "The token is kept in Apple's Keychain and refreshed automatically. Sign out any time from Anya settings.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Token disimpan di Keychain Apple dan diperbarui otomatis. Keluar kapan saja dari Pengaturan Anya."}}
+    } },
+    "Anya settings": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pengaturan Anya"}}
+    } },
+    "What Anya may read, how it answers and when it writes to you.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Apa yang boleh Anya baca, cara menjawab, dan kapan ia menulis kepadamu."}}
+    } },
+    "Show Anya": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tampilkan Anya"}}
+    } },
+    "The tab, the cards and the buttons": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tab, kartu, dan tombolnya"}}
+    } },
+    "Choose a provider  ": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pilih penyedia"}}
+    } },
+    "Model and key": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Model dan kunci"}}
+    } },
+    "Data access": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Akses data"}}
+    } },
+    "Share patterns and Lab Book": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bagikan pola dan Lab Book"}}
+    } },
+    "Correlations and lab markers. Off by default": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Korelasi dan penanda lab, mati bawaan"}}
+    } },
+    "Send chart images to Gemini": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kirim gambar grafik ke Gemini"}}
+    } },
+    "Only with the Gemini provider": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hanya bila penyedia Gemini"}}
+    } },
+    "Anya names the figures it reads in every answer. Raw heartbeat intervals, PPG and motion are never sent.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Anya menyebut angka yang ia baca di tiap jawaban. R-R, PPG, dan gerak mentah tidak pernah dikirim."}}
+    } },
+    "How Anya answers": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Cara Anya menjawab"}}
+    } },
+    "Indonesian": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Indonesia"}}
+    } },
+    "English": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "English"}}
+    } },
+    "Follow app": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ikuti aplikasi"}}
+    } },
+    "Style": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Gaya"}}
+    } },
+    "Short": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Singkat"}}
+    } },
+    "Detailed": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Rinci"}}
+    } },
+    "Anya's instructions": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Instruksi Anya"}}
+    } },
+    "Shape how it thinks and talks": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Atur cara berpikir dan berbicara"}}
+    } },
+    "Anya writes to you": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Anya menulis kepadamu"}}
+    } },
+    "Every day at %@": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Setiap hari %@"}}
+    } },
+    "Voice coach during sessions": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pelatih suara saat sesi"}}
+    } },
+    "Suggestion cards on each screen": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kartu saran di tiap layar"}}
+    } },
+    "One short card per module, always with figures": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Satu kartu singkat per modul, selalu dengan angka"}}
+    } },
+    "Memory and history": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Memory dan riwayat"}}
+    } },
+    "%lld active": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%lld aktif"}}
+    } },
+    "Conversation history": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Riwayat percakapan"}}
+    } },
+    "%lld conversations, kept on this iPhone": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%lld percakapan, tersimpan di iPhone"}}
+    } },
+    "Delete all conversations": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hapus semua percakapan"}}
+    } },
+    "Delete all conversations?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hapus semua percakapan?"}}
+    } },
+    "This removes the current conversation and the saved ones from this iPhone.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ini menghapus percakapan saat ini dan yang tersimpan dari iPhone."}}
+    } },
+    "Anya is not a medical tool. Its answers are personal notes, not a doctor's advice.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Anya bukan alat medis. Jawabannya catatan pribadi, bukan nasihat dokter."}}
+    } },
+    "Change how Anya thinks and talks. It applies from your next message, on top of Anya's built-in safety rules.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ubah cara Anya berpikir dan berbicara. Berlaku mulai pesanmu berikutnya, di atas aturan keselamatan bawaan Anya."}}
+    } },
+    "For example: answer casually, always name the numbers you use, and give one next step.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Contoh: jawab santai, selalu sebut angka yang dipakai, dan beri satu langkah berikutnya."}}
+    } },
+    "%lld of %lld characters": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%lld dari %lld karakter"}}
+    } },
+    "Examples": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Contoh"}}
+    } },
+    "Running coach": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pelatih lari"}}
+    } },
+    "Focus on pace, zones and recovery": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Fokus pace, zona, dan pemulihan"}}
+    } },
+    "Sleep adviser": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Penasihat tidur"}}
+    } },
+    "Focus on routine and bedtime": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Fokus rutinitas dan jam tidur"}}
+    } },
+    "Safety rules, the data you allow and your memories always apply. These instructions cannot turn them off.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Aturan keselamatan, data yang kamu izinkan, dan memory-mu selalu berlaku. Instruksi ini tidak bisa mematikannya."}}
+    } },
+    "What Anya remembers about you: goals, events and preferences. Delete or pause any of it at any time.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Yang Anya ingat tentangmu: tujuan, acara, dan preferensi. Hapus atau jeda kapan saja."}}
+    } },
+    "From conversation": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Dari percakapan"}}
+    } },
+    "Add a memory": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tambah memory"}}
+    } },
+    "For example: I don't eat dairy": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Contoh: aku tidak makan susu"}}
+    } },
+    "Add memory": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tambah memory"}}
+    } },
+    "Save automatically from conversations": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Simpan otomatis dari percakapan"}}
+    } },
+    "Anya offers, you can delete": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Anya menawarkan, kamu bisa menghapus"}}
+    } },
+    "Delete all memory": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hapus semua memory"}}
+    } },
+    "Delete all memory?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hapus semua memory?"}}
+    } },
+    "Memory is used with every AI provider and is stored only on this iPhone.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Memory dipakai di semua penyedia AI, dan hanya tersimpan di iPhone."}}
+    } },
+    "Search conversations": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Cari percakapan"}}
+    } },
+    "Finished conversations are kept here, on this iPhone.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Percakapan yang selesai disimpan di sini, di iPhone."}}
+    } },
+    "No conversation matches.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tidak ada percakapan yang cocok."}}
+    } },
+    "Saved on this iPhone. Tap Edit to delete a conversation.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tersimpan di iPhone. Ketuk Ubah untuk menghapus percakapan."}}
+    } },
+    "Anya writes a short brief on this iPhone each morning and shows it as a notification.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Anya menulis ringkasan singkat di iPhone tiap pagi dan menampilkannya sebagai notifikasi."}}
+    } },
+    "Made on this iPhone every morning": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Dibuat di iPhone tiap pagi"}}
+    } },
+    "Write one now": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tulis sekarang"}}
+    } },
+    "Writing…": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Menulis…"}}
+    } },
+    "Allow Anya to use my numbers first": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Izinkan Anya memakai datamu dulu"}}
+    } },
+    "Connect Anya first": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hubungkan Anya dulu"}}
+    } },
+    "Uses the connected provider. iOS may delay the notification by a few minutes.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Memakai penyedia yang terhubung. iOS bisa menunda notifikasi beberapa menit."}}
+    } },
+    "Your brief appears here": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ringkasanmu muncul di sini"}}
+    } },
+    "Notifications are off for this app. Turn them on in iOS Settings first.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Notifikasi mati untuk aplikasi ini. Nyalakan dulu di Pengaturan iOS."}}
+    } },
+    "Couldn't write a brief now. Check the provider and data access.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ringkasan belum bisa dibuat. Cek penyedia dan akses data."}}
+    } },
+    "Voice coach": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pelatih suara"}}
+    } },
+    "Anya's voice coach": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pelatih suara Anya"}}
+    } },
+    "Short spoken cues during a session, through earphones": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Aba-aba singkat saat sesi, lewat earphone"}}
+    } },
+    "Example cue": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Contoh aba-aba"}}
+    } },
+    "Hear an example": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Dengarkan contoh"}}
+    } },
+    "When Anya speaks": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kapan Anya bicara"}}
+    } },
+    "Start, pause and finish": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mulai, jeda, dan selesai"}}
+    } },
+    "Confirms each change": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mengonfirmasi tiap perubahan"}}
+    } },
+    "Out of the target zone": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Keluar zona"}}
+    } },
+    "When your heart rate leaves the zone": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Saat detak keluar dari zona target"}}
+    } },
+    "Every kilometre": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Setiap kilometer"}}
+    } },
+    "Distance, time and heart rate": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Jarak, waktu, dan detak"}}
+    } },
+    "Smart cues": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Aba-aba pintar"}}
+    } },
+    "Experimental: a short cue when a trend is reliable": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Eksperimental: aba-aba singkat saat tren dapat diandalkan"}}
+    } },
+    "How often": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Seberapa sering"}}
+    } },
+    "Rarely": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Jarang"}}
+    } },
+    "Often": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sering"}}
+    } },
+    "Let the AI word the cues": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Biarkan AI menyusun kalimat"}}
+    } },
+    "Uses the connected provider; a local fallback stays": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Memakai penyedia terhubung; cadangan lokal tetap ada"}}
+    } },
+    "Spoken on this iPhone with the system voice. Music is lowered briefly and returns to normal. Silent strap vibrations are set under strap automations.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Diucapkan di iPhone dengan suara sistem. Musik dikecilkan sebentar lalu kembali normal. Getar senyap strap diatur di otomatisasi strap."}}
+    } },
+    "Planned for you": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Disusun untukmu"}}
+    } },
+    "Main": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Inti"}}
+    } },
+    "Cool-down": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pendinginan"}}
+    } },
+    "Heart-rate zones": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Zona detak"}}
+    } },
+    "Why this": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kenapa ini"}}
+    } },
+    "Ask Anya to change it": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Minta Anya mengubahnya"}}
+    } },
+    "estimated": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "perkiraan"}}
+    } },
+    "No plan yet": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Belum ada rencana"}}
+    } },
+    "Anya needs today's Charge to suggest a session. Wear the strap overnight and sync, then come back.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Anya butuh Charge hari ini untuk menyarankan sesi. Pakai strap semalam dan sinkron, lalu kembali."}}
+    } },
+    "A suggestion from your own numbers, not a prescription. Listen to how you feel and stop if something hurts.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Saran dari angkamu sendiri, bukan resep. Dengarkan tubuhmu dan berhenti bila ada yang sakit."}}
+    } },
+    "Charge %lld%%": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Charge %lld%%"}}
+    } },
+    "Easy movement, %lld min": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Gerak ringan, %lld mnt"}}
+    } },
+    "Easy zone 2, %lld min": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Zona 2 ringan, %lld mnt"}}
+    } },
+    "Steady zone 2, %lld min": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Zona 2 stabil, %lld mnt"}}
+    } },
+    "Tempo session, %lld min": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sesi tempo, %lld mnt"}}
+    } },
+    "A light day that helps you recover. Keep it gentle.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hari ringan yang membantu pulih. Jaga tetap pelan."}}
+    } },
+    "Enough to keep moving without digging into tomorrow's Charge.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Cukup untuk tetap bergerak tanpa menguras Charge besok."}}
+    } },
+    "A calm, steady effort that builds fitness and protects tomorrow's Charge.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Usaha tenang dan stabil yang membangun kebugaran dan menjaga Charge besok."}}
+    } },
+    "Your body is ready for harder work. A controlled tempo session fits.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tubuhmu siap untuk kerja lebih berat. Sesi tempo terkontrol cocok."}}
+    } },
+    "Anya sees": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Anya melihat"}}
+    } },
+    "Nothing to read yet": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Belum ada yang dibaca"}}
+    } },
+    "Anya shows a line only when it has figures to cite. Wear the strap and sync, then ask again.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Anya menampilkan baris hanya bila ada angka untuk dikutip. Pakai strap dan sinkron, lalu tanya lagi."}}
+    } },
+    "Ask a follow-up": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tanya lanjutan"}}
+    } },
+    "Connect Anya to ask": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hubungkan Anya untuk bertanya"}}
+    } },
+    "Open full conversation": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Buka percakapan penuh"}}
+    } },
+    "Get advice from your own data": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Dapatkan saran dari datamu sendiri"}}
+    } },
+    "Without this, Anya sees only your question": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tanpa ini, Anya hanya melihat pertanyaanmu"}}
+    } },
+    "Explain with %@": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Jelaskan dengan %@"}}
+    } },
+    "Apple Intelligence": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Apple Intelligence"}}
+    } },
+    "Charge %lld%%, %@": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Charge %lld%%, %@"}}
+    } },
+    "ready for a hard session": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "siap sesi berat"}}
+    } },
+    "ready for a moderate load": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "siap beban sedang"}}
+    } },
+    "take it easy today": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "pelan saja hari ini"}}
+    } },
+    "still learning your baseline": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "masih mempelajari baseline-mu"}}
+    } },
+    "Resting heart rate down %lld bpm": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Detak istirahat turun %lld bpm"}}
+    } },
+    "Resting heart rate up %lld bpm": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Detak istirahat naik %lld bpm"}}
+    } },
+    "HRV up %lld ms": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "HRV naik %lld ms"}}
+    } },
+    "HRV down %lld ms": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "HRV turun %lld ms"}}
+    } },
+    "Effort so far %@": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Effort sejauh ini %@"}}
+    } },
+    "Why did Charge change?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kenapa Charge berubah?"}}
+    } },
+    "Summarise my day": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ringkas hariku"}}
+    } },
+    "Explain my HRV": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Jelaskan HRV-ku"}}
+    } },
+    "What is fitness age?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Apa itu usia kebugaran?"}}
+    } },
+    "Check my lab results": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Cek hasil lab"}}
+    } },
+    "Why did I wake up?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kenapa aku terbangun?"}}
+    } },
+    "Compare with last week": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bandingkan minggu lalu"}}
+    } },
+    "Why did Charge move?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kenapa Charge bergerak?"}}
+    } },
+    "My hardest day": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hari paling berat"}}
+    } },
+    "Plan next week": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Susun minggu depan"}}
+    } },
+    "Today's recommendation": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Rekomendasi hari ini"}}
+    } },
+    "Plan this week": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Rencana minggu ini"}}
+    } },
+    "Recover faster": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Cara pulih lebih cepat"}}
+    } },
+    "Dinner suggestion": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Saran makan malam"}}
+    } },
+    "How much protein do I need?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Berapa protein idealku?"}}
+    } },
+    "Why did the strap disconnect?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kenapa strap terputus?"}}
+    } },
+    "How do I charge the battery?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Cara mengisi baterai"}}
+    } },
     "5 yr": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "5 thn"}}
     } },
@@ -28665,6 +29358,7 @@
     },
     "API key": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Kunci API"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -29895,6 +30589,7 @@
     },
     "Active": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Aktif"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -31795,6 +32490,7 @@
     },
     "Advanced": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Lanjutan"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -34188,6 +34884,7 @@
     },
     "Key header": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Header kunci"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -39591,6 +40288,7 @@
     },
     "Balanced": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Seimbang"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -51071,6 +51769,7 @@
     },
     "Checking…": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Memeriksa…"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -52482,6 +53181,7 @@
     },
     "Clear": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Kosongkan"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -62995,6 +63695,7 @@
     },
     "Default": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Bawaan"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -84220,6 +84921,7 @@
     },
     "History": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Riwayat"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -117727,6 +118429,7 @@
     },
     "Nothing": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tidak ada"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -125479,6 +126182,7 @@
     },
     "Paused": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Dijeda"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -147280,6 +147984,7 @@
     },
     "Server URL": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "URL server"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -169474,6 +170179,7 @@
     },
     "This week": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Minggu ini"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -174426,6 +175132,7 @@
     },
     "Use": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Pakai"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -217894,6 +218601,7 @@
         "zh-Hant": {"stringUnit": {"state": "translated", "value": "· 可能超出小型上下文視窗"}}
     } },
     "Ask out loud": {"localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tanya dengan suara"}},
         "en": {"stringUnit": {"state": "translated", "value": "Ask out loud"}},
         "de": {"stringUnit": {"state": "translated", "value": "Laut fragen"}},
         "es": {"stringUnit": {"state": "translated", "value": "Preguntar en voz alta"}},

@@ -38,7 +38,7 @@ struct NunaWorkoutSummaryView: View {
             }
         }
         .task(id: repo.refreshSeq) { await m.load(repo: repo); if let r = m.row(key) { await loadDetail(r) } }
-        .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: "workouts") }
+        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "workouts") }
         .confirmationDialog("Delete this workout?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) {
                 if let r = m.row(key) { Task { await repo.deleteWorkout(r); await repo.refresh(); dismiss() } }

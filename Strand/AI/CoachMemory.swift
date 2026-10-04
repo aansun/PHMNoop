@@ -183,7 +183,11 @@ final class CoachMemoryStore: ObservableObject {
     /// Auto-capture a memory from a user's Coach message (called on every send, any provider). Saves at
     /// most one candidate, skips duplicates (same detail or title, case-insensitive). Off-actor so the
     /// send flow can call it without hopping. Everything captured is user-deletable in My Memory.
+    nonisolated static let autoCaptureKey = "coach.memory.autoCapture"
+
     nonisolated static func autoCapture(from message: String) {
+        // The switch in Anya settings; on unless the wearer turned it off.
+        guard UserDefaults.standard.object(forKey: autoCaptureKey) as? Bool ?? true else { return }
         guard let cand = CoachMemoryExtractor.extract(from: message) else { return }
         var all = loadAll()
         let normDetail = cand.detail.lowercased().trimmingCharacters(in: .whitespacesAndNewlines)

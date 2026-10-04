@@ -20,7 +20,7 @@ struct NunaMeView: View {
                     NunaDivider()
                     row("Devices", deviceSubtitle, "applewatch", nil) { DevicesView() }
                     NunaDivider()
-                    row("Anya", "AI coach, memory, providers", "sparkles", nil) { CoachSettingsView() }
+                    row("Anya", "AI coach, memory, providers", "sparkles", nil) { NunaAnyaSettingsView() }
                 }
                 section("Appearance") {
                     row("Appearance", "Experience, theme, language, units", "slider.horizontal.3", NunaPalette.effortText) { NunaAppearanceView() }

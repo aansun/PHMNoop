@@ -369,7 +369,36 @@ final class AICoachEngine: ObservableObject {
         #endif
         // === PHM OVERLAY (PHMNOOP) === fold the user's ACTIVE Coach memories into every request so
         // saved goals/events/preferences steer replies. Empty when none exist (prompt unchanged).
-        return base + languagePrompt + CoachMemoryStore.activePromptBlock()
+        return base + languagePrompt + Self.answerStyleBlock() + CoachMemoryStore.activePromptBlock()
+    }
+
+    // MARK: Answer style (Nuna Anya settings)
+
+    /// How Anya answers: language, length and the user's own extra instructions. All three live in plain
+    /// UserDefaults, are read fresh on every request, and are inert at their defaults (follow the app, balanced, none),
+    /// so a build or platform that never sets them sends exactly the prompt it always did.
+    static let responseLanguageKey = "ai.responseLanguage"      // "app" | "id" | "en"
+    static let responseStyleKey = "ai.responseStyle"            // "short" | "balanced" | "detailed"
+    static let extraInstructionsKey = "ai.extraInstructions"    // free text, appended after the built-in prompt
+    static let maxExtraInstructionsLength = 600
+
+    static func answerStyleBlock(_ defaults: UserDefaults = .standard) -> String {
+        var out = ""
+        switch defaults.string(forKey: responseLanguageKey) ?? "app" {
+        case "id": out += "\n\nLANGUAGE: Always reply in natural, concise Indonesian, whatever language the question is in. Keep established health and product terms in their original form: Charge, Effort, Rest, Heart Rate, HRV, RHR, SpO₂, Zone, Pace, Cadence, Baseline."
+        case "en": out += "\n\nLANGUAGE: Always reply in clear, concise English, whatever language the question is in."
+        default: break
+        }
+        switch defaults.string(forKey: responseStyleKey) ?? "balanced" {
+        case "short": out += "\n\nLENGTH: Keep every answer very short: at most 60 words and no more than 3 bullets."
+        case "detailed": out += "\n\nLENGTH: The user wants detail. Explain the reasoning and the evidence in full, up to about 250 words, still without padding."
+        default: break
+        }
+        let extra = (defaults.string(forKey: extraInstructionsKey) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        if !extra.isEmpty {
+            out += "\n\nTHE USER'S OWN INSTRUCTIONS (follow them unless they conflict with the safety rules above):\n" + String(extra.prefix(maxExtraInstructionsLength))
+        }
+        return out
     }
 
     /// The user's stored prompt override, or the default when nothing custom is set. The UI binds its
@@ -963,6 +992,18 @@ final class AICoachEngine: ObservableObject {
         currentConversationID = nil
         conversationDay = nil
         droppedSummary = nil      // K13: reset the summary cache on clear
+        droppedSummaryKey = []
+        Task { try? await repo.storeHandle()?.clearCoachMessages() }
+    }
+
+    /// Delete the open conversation and every saved one ("Delete all conversations" in Anya settings).
+    func deleteAllConversations() {
+        conversationHistory = []
+        CoachConversationHistoryStore.save([])
+        messages = []
+        currentConversationID = nil
+        conversationDay = nil
+        droppedSummary = nil
         droppedSummaryKey = []
         Task { try? await repo.storeHandle()?.clearCoachMessages() }
     }

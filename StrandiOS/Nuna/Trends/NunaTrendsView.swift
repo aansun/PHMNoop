@@ -72,7 +72,7 @@ struct NunaTrendsView: View {
         .nunaTodayDestinations()
         .task(id: repo.refreshSeq) { await m.load(repo: repo) }
         .sheet(isPresented: $showReport) { TrendsReportSheet(days: repo.days).environmentObject(repo).preferredColorScheme(.dark) }
-        .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: "trends") }
+        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "trends") }
     }
 
     // MARK: Header
