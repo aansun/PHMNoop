@@ -414,8 +414,8 @@ final class NunaSeriesModel: ObservableObject {
     @Published private(set) var byDay: [String: Double] = [:]
     @Published private(set) var loaded = false
 
-    func load(repo: Repository, key: String, source: String) async {
-        let s = await repo.exploreSeries(key: key, source: source, days: 130)
+    func load(repo: Repository, key: String, source: String, days: Int = 130) async {
+        let s = await repo.exploreSeries(key: key, source: source, days: days)
         byDay = Dictionary(s.map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l })
         loaded = true
     }
@@ -438,6 +438,15 @@ final class NunaSeriesModel: ObservableObject {
     var latest: (day: String, value: Double)? {
         guard let k = byDay.keys.sorted().last, let v = byDay[k] else { return nil }
         return (k, v)
+    }
+
+    /// Mean, spread and extremes of the last 30 readings before the latest one.
+    var band: (mean: Double, sd: Double, lo: Double, hi: Double)? {
+        let v = byDay.keys.sorted().dropLast().suffix(30).compactMap { byDay[$0] }
+        guard v.count >= 5 else { return nil }
+        let m = v.reduce(0, +) / Double(v.count)
+        let sd = (v.map { ($0 - m) * ($0 - m) }.reduce(0, +) / Double(v.count)).squareRoot()
+        return (m, sd, v.min() ?? m, v.max() ?? m)
     }
 
     /// Mean of the last 30 days that have a value, excluding the latest one.

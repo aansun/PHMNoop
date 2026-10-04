@@ -521,11 +521,11 @@ struct NunaStressDetailView: View {
         return NunaMetricsGrid(tiles: [
             NunaMetricTile(id: "hrv", label: "HRV", value: num(day.hrv), unit: "ms",
                            route: MetricCatalog.metric(key: "hrv", source: "my-whoop").map { .metric($0) },
-                           delta: h?.0, deltaGood: h?.1),
+                           delta: h?.0, deltaGood: h?.1, icon: "waveform.path.ecg"),
             NunaMetricTile(id: "rhr", label: "Resting HR", value: num(day.restingHr), unit: "bpm",
                            route: MetricCatalog.metric(key: "rhr", source: "my-whoop").map { .metric($0) },
-                           delta: r?.0, deltaGood: r?.1),
-        ])
+                           delta: r?.0, deltaGood: r?.1, icon: "heart"),
+        ], layout: .list)
     }
 
     /// The finer 30-minute timeline when it has scored points, otherwise the hourly read the Today card uses.

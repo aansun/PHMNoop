@@ -1,6 +1,132 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "30-day average: %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rata-rata 30 hari: %@"}}
+        } },
+        "Average last night": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rata-rata semalam"}}
+        } },
+        "Down %lld from yesterday": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Turun %lld dari kemarin"}}
+        } },
+        "Up %lld from yesterday": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Naik %lld dari kemarin"}}
+        } },
+        "Stable": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Stabil"}}
+        } },
+        "Small deviation": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Deviasi kecil"}}
+        } },
+        "Larger deviation": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Deviasi lebih besar"}}
+        } },
+        "Down %@ kg in 30 days": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Turun %@ kg dalam 30 hari"}}
+        } },
+        "Up %@ kg in 30 days": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Naik %@ kg dalam 30 hari"}}
+        } },
+        "Last sync %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sinkron terakhir %@"}}
+        } },
+        "Read from iPhone, write the strap estimate": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Baca dari iPhone, tulis estimasi strap"}}
+        } },
+        "Read only": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hanya baca"}}
+        } },
+        "Fills your profile for the VO₂max estimate": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Mengisi profil untuk estimasi VO₂max"}}
+        } },
+        "Read + write": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Baca + tulis"}}
+        } },
+        "Read": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Baca"}}
+        } },
+        "Manage permissions": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kelola izin"}}
+        } },
+        "HRV · average last night": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "HRV · rata-rata semalam"}}
+        } },
+        " vs yesterday": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": " vs kemarin"}}
+        } },
+        "Calculated from heart rate and HRV through the day, against your own baseline.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dihitung dari detak jantung dan HRV sepanjang hari, dibanding baseline pribadimu."}}
+        } },
+        "Your age %lld": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Usiamu %lld"}}
+        } },
+        "Safe": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Aman"}}
+        } },
+        "Some signals are away from your range. Take it easy and watch how you feel.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Beberapa sinyal menyimpang dari rentangmu. Santai saja dan perhatikan kondisimu."}}
+        } },
+        "No signs of strain. It takes two signals away from your range to raise a warning.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidak ada tanda tubuh tegang. Butuh dua sinyal menyimpang untuk memunculkan peringatan."}}
+        } },
+        "Read from Apple Health. Add a measurement there and it shows up here.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dibaca dari Apple Health. Tambah pengukuran di sana dan akan muncul di sini."}}
+        } },
+        "Body composition": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Komposisi tubuh"}}
+        } },
+        "Lean mass": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Massa tanpa lemak"}}
+        } },
+        "kcal in": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "kkal masuk"}}
+        } },
+        "Out %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Keluar %@"}}
+        } },
+        "No nutrition imported yet. Import a CSV from Cronometer or MacroFactor, processed on this phone.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Belum ada nutrisi yang diimpor. Impor CSV dari Cronometer atau MacroFactor, diproses di ponsel ini."}}
+        } },
+        "Last 7 nights": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "7 malam terakhir"}}
+        } },
+        "Average Rest %lld%%": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rest rata-rata %lld%%"}}
+        } },
+        "Wake-ups": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bangun"}}
+        } },
+        "Need vs actual": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kebutuhan vs aktual"}}
+        } },
+        "Sleep debt %lld min": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Utang tidur %lld mnt"}}
+        } },
+        "Need": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Butuh"}}
+        } },
+        "Bedtime consistency": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Konsistensi jam tidur"}}
+        } },
+        "Spread %lld min": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Selisih %lld mnt"}}
+        } },
+        "Average stages": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Fase tidur rata-rata"}}
+        } },
+        "Marker = your usual": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Penanda = biasanya"}}
+        } },
+        "No naps this week": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidak ada tidur siang minggu ini"}}
+        } },
+        "This week · %lld": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Minggu ini · %lld"}}
+        } },
+        "See last night in detail": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lihat detail semalam"}}
+        } },
         "Now %@": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Sekarang %@"}}
         } },
