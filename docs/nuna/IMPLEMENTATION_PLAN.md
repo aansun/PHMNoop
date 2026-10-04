@@ -46,6 +46,8 @@ Follow-up: the Customise chip next to the date pill was removed (the dashed "Add
 
 Icon colour rule (requested): every symbol is neutral (white, grey or black). `NunaIconTile` ignores its `tint`, chip and quick-action icons are white, and the add-card plus is white. Colour stays on scores, rings, chart marks, chips' text and status.
 
+Charts (requested): every trend chart now shows day and month on its axis and the real value of each reading. Lines use NOOP's own Line2 chart (`TrendChart` with point values and month-over-day axis labels) for metric history, stress 7D / 30D, sleep trends and fitness age. Bars (Charge, Effort, steps) write the value above each bar for 7 to 14 days, or the highest and latest for longer ranges, with the date under each bar (start, middle and end for 30D / 90D). Days without a reading are left out of lines and drawn as a faint stub in bars; nothing is filled in. The body-clock rhythm curve is the only drawn shape that is an estimate, and its card says "Estimated shape".
+
 Design pass (against docs/nuna/mockups, compared one screen at a time in the browser pane):
 - Today now follows Main: strap chip with battery, bell with unread dot, date pill plus "Customise" chip, score card with `%` units and the ready chip, Anya card with a white "Start" button, stress card, "Key metrics" with "Edit" and "All", "Activity" with "All workouts", quick-log chips (water, journal, mood), dashed "Add or arrange cards". Default order and metrics follow the mockup until the person arranges their own (shared keys; Your Cards hidden by default).
 - Stress uses NOOP's own intraday curve (`StressDayCurve` and `DaytimeLoadLine`, the same drawing as Default Today and the widget), in a Nuna card.

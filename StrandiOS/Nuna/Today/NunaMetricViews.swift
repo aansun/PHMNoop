@@ -46,43 +46,6 @@ extension View {
     }
 }
 
-/// Plain bar chart: one bar per day, a dashed average line, gaps for days without data.
-struct NunaBars: View {
-    let values: [Double?]
-    let color: Color
-    let average: Double?
-
-    var body: some View {
-        let present = values.compactMap { $0 }
-        let hi = present.max() ?? 1
-        let lo0 = present.min() ?? 0
-        let lo = max(0, lo0 - (hi - lo0) * 0.5)
-        let span = max(hi - lo, 0.0001)
-        GeometryReader { geo in
-            let gap: CGFloat = values.count > 40 ? 1 : 3
-            let w = min(26, max(1, (geo.size.width - gap * CGFloat(values.count - 1)) / CGFloat(max(values.count, 1))))
-            ZStack(alignment: .bottom) {
-                HStack(alignment: .bottom, spacing: gap) {
-                    ForEach(values.indices, id: \.self) { i in
-                        if let v = values[i] {
-                            Capsule().fill(color)
-                                .frame(width: w, height: max(4, geo.size.height * CGFloat((v - lo) / span)))
-                        } else {
-                            Capsule().fill(Color.white.opacity(0.06)).frame(width: w, height: 4)
-                        }
-                    }
-                }
-                if let average {
-                    let y = geo.size.height * CGFloat(1 - (average - lo) / span)
-                    Path { p in p.move(to: CGPoint(x: 0, y: y)); p.addLine(to: CGPoint(x: geo.size.width, y: y)) }
-                        .stroke(Color.white.opacity(0.55), style: StrokeStyle(lineWidth: 1.5, dash: [4, 4]))
-                }
-            }
-        }
-        .accessibilityHidden(true)
-    }
-}
-
 // MARK: - Early warning
 
 struct NunaEarlyWarningCard: View {

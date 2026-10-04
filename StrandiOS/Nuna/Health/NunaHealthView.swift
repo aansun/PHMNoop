@@ -292,6 +292,10 @@ struct NunaHealthView: View {
 /// Weekly fitness comparison (docs/FITNESS_AGE.md): a number with a plus or minus 5 year band, against
 /// the real age. It is a comparison, not a biological age. Reads the stored weekly series only.
 struct NunaFitnessAgeView: View {
+    private static let dayParser: DateFormatter = {
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; f.locale = Locale(identifier: "en_US_POSIX"); return f
+    }()
+
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
     @State private var series: [(day: String, value: Double)] = []
@@ -331,7 +335,7 @@ struct NunaFitnessAgeView: View {
                     NunaCard {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Last weeks").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                            NunaBars(values: series.suffix(12).map { Optional($0.value) }, color: NunaPalette.charge, average: nil).frame(height: 100)
+                            NunaLine2Chart(points: series.suffix(12).compactMap { r in Self.dayParser.date(from: r.day).map { ($0, r.value) } }, color: .white, decimals: 0, height: 170)
                         }
                     }
                 }

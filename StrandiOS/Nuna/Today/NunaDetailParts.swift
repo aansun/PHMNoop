@@ -153,57 +153,120 @@ func nunaChargeColor(_ v: Double) -> Color {
     v >= 67 ? NunaPalette.charge : (v >= 34 ? NunaPalette.warning : NunaPalette.alert)
 }
 
-/// Rounded vertical bars, one per slot, coloured by `color(value)`. Gaps draw as a faint stub.
-struct NunaColorBars: View {
-    let values: [Double?]
-    let maxValue: Double
-    let color: (Double) -> Color
-    var height: CGFloat = 120
+/// "5 Okt"-style date for chart axes (day and month, in the app language).
+func nunaAxisDate(_ d: Date) -> String {
+    let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("d MMM")
+    return f.string(from: d)
+}
 
+/// Start, middle and end dates under a chart, each with day and month.
+struct NunaDateAxis: View {
+    let dates: [Date]
     var body: some View {
-        GeometryReader { geo in
-            let gap: CGFloat = values.count > 40 ? 2 : 5
-            let w = min(28, max(2, (geo.size.width - gap * CGFloat(max(values.count - 1, 0))) / CGFloat(max(values.count, 1))))
-            HStack(alignment: .bottom, spacing: gap) {
-                ForEach(values.indices, id: \.self) { i in
-                    if let v = values[i] {
-                        RoundedRectangle(cornerRadius: min(5, w / 2), style: .continuous).fill(color(v))
-                            .frame(width: w, height: max(6, height * CGFloat(min(max(v / maxValue, 0), 1))))
-                    } else {
-                        RoundedRectangle(cornerRadius: min(5, w / 2), style: .continuous).fill(Color.white.opacity(0.06))
-                            .frame(width: w, height: 6)
-                    }
-                }
+        if let first = dates.first, let last = dates.last {
+            HStack {
+                Text(verbatim: nunaAxisDate(first))
+                Spacer()
+                if dates.count > 4 { Text(verbatim: nunaAxisDate(dates[dates.count / 2])); Spacer() }
+                Text(verbatim: nunaAxisDate(last))
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-            .overlay {
-                if values.allSatisfy({ $0 == nil }) {
-                    Text("No data in this period").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                }
-            }
+            .font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
         }
-        .frame(height: height)
     }
 }
 
-/// Tall capsule columns with a fill and a label, as in the Effort and Steps mockups.
+/// Rounded vertical bars, one per day. Real values are written above the bars (every bar up to 14 days,
+/// otherwise the highest and the latest), and the dates sit underneath.
+struct NunaColorBars: View {
+    let values: [Double?]
+    let dates: [Date]
+    let maxValue: Double
+    let color: (Double) -> Color
+    var format: (Double) -> String = { String(format: "%.0f", $0) }
+    var height: CGFloat = 130
+
+    var body: some View {
+        let present = values.compactMap { $0 }
+        let topIdx = values.indices.max(by: { (values[$0] ?? -1) < (values[$1] ?? -1) })
+        let lastIdx = values.indices.last(where: { values[$0] != nil })
+        let dense = values.count > 14
+        let spread = values.count <= 14
+        VStack(spacing: 8) {
+            GeometryReader { geo in
+                let gap: CGFloat = values.count > 40 ? 2 : 5
+                let cell = geo.size.width / CGFloat(max(values.count, 1))
+                let w = spread ? min(30, max(8, cell - 6))
+                               : min(28, max(2, (geo.size.width - gap * CGFloat(max(values.count - 1, 0))) / CGFloat(max(values.count, 1))))
+                let barMax = height - 16
+                HStack(alignment: .bottom, spacing: spread ? 0 : gap) {
+                    ForEach(values.indices, id: \.self) { i in
+                        VStack(spacing: 2) {
+                            if let v = values[i], !dense || i == topIdx || i == lastIdx {
+                                Text(verbatim: format(v)).font(.system(size: 9.5, weight: .bold)).monospacedDigit()
+                                    .foregroundStyle(NunaPalette.textSecondary).fixedSize().frame(width: w)
+                                    // keep the last label inside the card
+                                    .offset(x: (dense && i >= values.count - 2) ? -8 : 0)
+                            } else { Color.clear.frame(width: w, height: 12) }
+                            if let v = values[i] {
+                                RoundedRectangle(cornerRadius: min(5, w / 2), style: .continuous).fill(color(v))
+                                    .frame(width: w, height: max(5, barMax * CGFloat(min(max(v / maxValue, 0), 1))))
+                            } else {
+                                RoundedRectangle(cornerRadius: min(5, w / 2), style: .continuous).fill(Color.white.opacity(0.06))
+                                    .frame(width: w, height: 5)
+                            }
+                        }
+                        .frame(width: spread ? cell : nil)
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+                .overlay {
+                    if present.isEmpty {
+                        Text("No data in this period").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    }
+                }
+            }
+            .frame(height: height)
+            if values.count <= 7, dates.count == values.count {
+                HStack(spacing: 0) {
+                    ForEach(dates.indices, id: \.self) { i in
+                        Text(verbatim: nunaAxisDate(dates[i])).font(.system(size: 10, weight: .semibold))
+                            .foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.7).frame(maxWidth: .infinity)
+                    }
+                }
+            } else if !dates.isEmpty { NunaDateAxis(dates: dates) }
+        }
+        .accessibilityHidden(true)
+    }
+}
+
+/// Tall capsule columns for a week, one per day, with the real value above and weekday plus date below.
 struct NunaColumns: View {
-    struct Item: Identifiable { let id = UUID(); let label: String; let fraction: Double?; var highlight = false }
+    struct Item: Identifiable {
+        let id = UUID(); let weekday: String; let date: Date; let fraction: Double?; let valueText: String?
+        var highlight = false
+    }
     let items: [Item]
     let color: Color
     var highlightColor: Color?
 
     var body: some View {
-        HStack(alignment: .bottom) {
+        HStack(alignment: .bottom, spacing: 4) {
             ForEach(items) { item in
                 VStack(spacing: 6) {
+                    Text(verbatim: item.valueText ?? "–").font(.system(size: 10.5, weight: .bold)).monospacedDigit()
+                        .foregroundStyle(item.highlight ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+                        .lineLimit(1).minimumScaleFactor(0.6)
                     ZStack(alignment: .bottom) {
                         Capsule().fill(Color.white.opacity(0.08)).frame(width: 30, height: 110)
                         Capsule().fill(item.highlight ? (highlightColor ?? color) : color)
                             .frame(width: 30, height: max(14, 110 * CGFloat(min(max(item.fraction ?? 0, 0), 1))))
                             .opacity(item.fraction == nil ? 0 : 1)
                     }
-                    Text(verbatim: item.label).font(.system(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    VStack(spacing: 1) {
+                        Text(verbatim: item.weekday).font(.system(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textPrimary.opacity(item.highlight ? 1 : 0.8))
+                        Text(verbatim: nunaAxisDate(item.date)).font(.system(size: 9.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            .lineLimit(1).minimumScaleFactor(0.7)
+                    }
                 }
                 .frame(maxWidth: .infinity)
             }
@@ -212,51 +275,37 @@ struct NunaColumns: View {
     }
 }
 
-/// Smooth line over a soft "normal range" band, with a ring on the last point.
-struct NunaBandLine: View {
-    let values: [Double?]
-    let color: Color
-    var height: CGFloat = 130
+/// NOOP's own "Line2" trend chart (`TrendChart`): a clean line with a labelled point per reading while
+/// there are 60 or fewer, month-over-day labels on the axis, and a dashed personal baseline. Every value
+/// drawn is a stored reading; days without one are simply absent from the line.
+struct NunaLine2Chart: View {
+    let points: [(date: Date, value: Double)]
+    var color: Color = NunaPalette.textPrimary
+    var decimals = 0
+    var baseline: Double?
+    var height: CGFloat = 190
 
     var body: some View {
-        let present = values.compactMap { $0 }
-        GeometryReader { geo in
-            if present.count >= 2 {
-                let mean = present.reduce(0, +) / Double(present.count)
-                let sd = (present.map { ($0 - mean) * ($0 - mean) }.reduce(0, +) / Double(present.count)).squareRoot()
-                let lo = min(present.min()!, mean - sd) , hi = max(present.max()!, mean + sd)
-                let pad = (hi - lo) * 0.12
-                let span = max(hi - lo + 2 * pad, 0.0001)
-                let y: (Double) -> CGFloat = { geo.size.height * CGFloat(1 - ($0 - (lo - pad)) / span) }
-                let n = values.count
-                let x: (Int) -> CGFloat = { n <= 1 ? 0 : geo.size.width * CGFloat($0) / CGFloat(n - 1) }
-                let pts: [CGPoint] = values.enumerated().compactMap { i, v in v.map { CGPoint(x: x(i), y: y($0)) } }
-                ZStack {
-                    RoundedRectangle(cornerRadius: 6, style: .continuous).fill(color.opacity(0.12))
-                        .frame(height: max(8, y(mean - sd) - y(mean + sd)))
-                        .position(x: geo.size.width / 2, y: (y(mean - sd) + y(mean + sd)) / 2)
-                    Path { p in
-                        p.move(to: pts[0])
-                        for i in 1..<pts.count {
-                            let a = pts[i - 1], b = pts[i]
-                            let mid = CGPoint(x: (a.x + b.x) / 2, y: (a.y + b.y) / 2)
-                            p.addQuadCurve(to: mid, control: CGPoint(x: (a.x + mid.x) / 2 + 0.01, y: a.y))
-                            p.addQuadCurve(to: b, control: CGPoint(x: (mid.x + b.x) / 2 - 0.01, y: b.y))
-                        }
-                    }
-                    .stroke(color, style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
-                    if let last = pts.last {
-                        Circle().strokeBorder(color, lineWidth: 3).background(Circle().fill(NunaPalette.card))
-                            .frame(width: 11, height: 11).position(last)
-                    }
-                }
-            } else {
-                Text("Not enough data yet").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
+        let vals = points.map(\.value)
+        if vals.count >= 2, let lo = vals.min(), let hi = vals.max() {
+            let pad = max((hi - lo) * 0.15, 0.5)
+            TrendChart(
+                points: points.map { TrendPoint(date: $0.date, value: $0.value) },
+                gradient: Gradient(colors: [color, color]),
+                valueRange: (lo - pad)...(hi + pad * 1.6),
+                showsArea: false,
+                showsPointValues: true,
+                baselineValue: baseline,
+                height: height,
+                valueFormat: { String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, $0) },
+                dateFormat: { TrendChart.defaultDateString($0) },
+                xAxisDateFormat: { TrendChart.line2AxisDateString($0) }
+            )
+        } else {
+            Text(vals.count == 1 ? "Not enough data yet" : "No data in this period")
+                .font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                .frame(maxWidth: .infinity, minHeight: 120)
         }
-        .frame(height: height)
-        .accessibilityHidden(true)
     }
 }
 
@@ -324,6 +373,11 @@ final class NunaSeriesModel: ObservableObject {
             let d = cal.date(byAdding: .day, value: -i, to: today) ?? today
             return (d, byDay[Repository.localDayKey(d)])
         }
+    }
+
+    /// Real readings in the last `days` days, oldest first (days without a reading are left out).
+    func readings(_ days: Int) -> [(date: Date, value: Double)] {
+        window(days).compactMap { s in s.value.map { (s.date, $0) } }
     }
 
     var latest: (day: String, value: Double)? {

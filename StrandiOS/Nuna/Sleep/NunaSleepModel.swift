@@ -146,6 +146,11 @@ final class NunaSleepModel: ObservableObject {
     /// Debt in minutes as of the latest night, when there is one.
     var debtMin: Double? { index == 0 ? ledger.flatMap { $0.isDebt ? $0.magnitudeMin : nil } : nil }
 
+    /// Real readings for the last `count` nights ending at the selected one, with their dates (oldest first).
+    func recentPoints(count: Int = 14, _ f: (NunaNight) -> Double?) -> [(date: Date, value: Double)] {
+        nights.dropFirst(index).prefix(count).reversed().compactMap { n in f(n).map { (n.wakeDate, $0) } }
+    }
+
     /// A per-night figure for the last `count` nights ending at the selected one (oldest first).
     func recent(count: Int = 14, _ f: (NunaNight) -> Double?) -> [Double?] {
         nights.dropFirst(index).prefix(count).reversed().map(f)
