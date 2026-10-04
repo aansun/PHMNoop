@@ -2,17 +2,9 @@
 import SwiftUI
 import StrandDesign
 import StrandAnalytics
+import Charts
 
 typealias NunaDaySeries = [(day: String, value: Double)]
-
-/// Maps a window of `count` calendar days onto 0...1 along the x axis; `index` is the day offset from the window start.
-private func unitX(_ index: Int, _ count: Int) -> CGFloat { count <= 1 ? 0.5 : CGFloat(index) / CGFloat(count - 1) }
-
-/// Day offset of `day` from `start` (both yyyy-MM-dd).
-private func dayIndex(_ day: String, from start: String) -> Int? {
-    guard let a = NunaDayFormat.parse(start), let b = NunaDayFormat.parse(day) else { return nil }
-    return Calendar(identifier: .gregorian).dateComponents([.day], from: a, to: b).day
-}
 
 enum NunaDayFormat {
     static let parser: DateFormatter = {
@@ -22,23 +14,123 @@ enum NunaDayFormat {
     static func parse(_ s: String) -> Date? { parser.date(from: s) }
 }
 
-/// Start, middle and end dates under a chart, in day and month.
-struct NunaDayAxis: View {
-    let first: String
-    let last: String
+/// The Trends chart. It is drawn the way `TrendChart` draws every other line in the app (Swift Charts, a smoothed 2.5 pt
+/// round line, a dot per reading, hairline grid with the scale on the left, dates underneath) and the bars are rounded like
+/// the other bar charts, so a line or a bar looks the same here as on Today, Health and Sleep. Each series is scaled by its own
+/// maximum onto 0 to 100. Every mark is a stored reading; a day without one has no bar and the line skips it.
+struct NunaTrendChart: View {
+    struct Series: Identifiable {
+        let id = UUID()
+        let points: NunaDaySeries
+        let max: Double
+        let color: Color
+        var bars = false
+    }
+    let start: String
+    let days: Int
+    let series: [Series]
+    var height: CGFloat = 150
+    /// When set, touching or dragging selects a day (yyyy-MM-dd) and draws a dashed guide there.
+    var selected: Binding<String?>?
+
+    private var origin: Date { NunaDayFormat.parse(start) ?? Date() }
+    private func date(_ day: String) -> Date? { NunaDayFormat.parse(day) }
+    private func scaled(_ v: Double, _ s: Series) -> Double { min(max(v / max(s.max, 0.0001), 0), 1) * 100 }
+    private var window: ClosedRange<Date> {
+        let cal = Calendar(identifier: .gregorian)
+        let lo = cal.date(byAdding: .hour, value: -12, to: origin) ?? origin
+        let hi = cal.date(byAdding: .hour, value: 12, to: cal.date(byAdding: .day, value: max(days - 1, 0), to: origin) ?? origin) ?? origin
+        return lo...hi
+    }
+
     var body: some View {
-        if let a = NunaDayFormat.parse(first), let b = NunaDayFormat.parse(last) {
-            let mid = Date(timeIntervalSince1970: (a.timeIntervalSince1970 + b.timeIntervalSince1970) / 2)
-            HStack {
-                Text(verbatim: nunaAxisDate(a)); Spacer(); Text(verbatim: nunaAxisDate(mid)); Spacer(); Text(verbatim: nunaAxisDate(b))
+        GeometryReader { geo in
+            let slot = max(geo.size.width - 36, 1) / CGFloat(max(days, 1))
+            let barWidth = max(2, min(12, slot * 0.62))
+            Chart {
+                ForEach(series) { s in
+                    if s.bars {
+                        ForEach(s.points, id: \.day) { p in
+                            if let d = date(p.day) {
+                                BarMark(x: .value("Day", d, unit: .day), y: .value("Value", scaled(p.value, s)), width: .fixed(barWidth))
+                                    .cornerRadius(min(4, barWidth / 2))
+                                    .foregroundStyle(s.color.opacity(selected?.wrappedValue == nil || selected?.wrappedValue == p.day ? 0.6 : 0.3))
+                            }
+                        }
+                    }
+                }
+                ForEach(series) { s in
+                    if !s.bars {
+                        ForEach(s.points, id: \.day) { p in
+                            if let d = date(p.day) {
+                                LineMark(x: .value("Day", d), y: .value("Value", scaled(p.value, s)), series: .value("Series", s.id.uuidString))
+                                    .interpolationMethod(.catmullRom)
+                                    .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
+                                    .foregroundStyle(s.color)
+                            }
+                        }
+                        if s.points.count <= 60 {
+                            ForEach(s.points, id: \.day) { p in
+                                if let d = date(p.day) {
+                                    PointMark(x: .value("Day", d), y: .value("Value", scaled(p.value, s))).symbolSize(18).foregroundStyle(s.color)
+                                }
+                            }
+                        }
+                        if selected?.wrappedValue == nil, let l = s.points.last, let d = date(l.day) {
+                            PointMark(x: .value("Day", d), y: .value("Value", scaled(l.value, s))).symbolSize(70).foregroundStyle(NunaPalette.ink)
+                        }
+                    }
+                }
+                if let sel = selected?.wrappedValue, let d = date(sel) {
+                    RuleMark(x: .value("Day", d)).lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4])).foregroundStyle(NunaPalette.textSecondary)
+                    ForEach(series.filter { !$0.bars }) { s in
+                        if let p = s.points.first(where: { $0.day == sel }) {
+                            PointMark(x: .value("Day", d), y: .value("Value", scaled(p.value, s))).symbolSize(70).foregroundStyle(NunaPalette.ink)
+                        }
+                    }
+                }
             }
-            .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            .chartXScale(domain: window)
+            .chartYScale(domain: 0...100)
+            .chartPlotStyle { $0.clipped() }
+            .chartXAxis {
+                AxisMarks(values: .automatic(desiredCount: 3)) { value in
+                    AxisGridLine().foregroundStyle(NunaPalette.hairline.opacity(0.4))
+                    if let d = value.as(Date.self) {
+                        AxisValueLabel(collisionResolution: .greedy) { Text(verbatim: nunaAxisDate(d)) }
+                            .foregroundStyle(NunaPalette.textMuted).font(.nuna(size: 11.5, weight: .semibold))
+                    }
+                }
+            }
+            .chartYAxis {
+                AxisMarks(position: .leading, values: [0, 50, 100]) { _ in
+                    AxisGridLine().foregroundStyle(NunaPalette.hairline.opacity(0.4))
+                    AxisValueLabel().foregroundStyle(NunaPalette.textMuted).font(.nuna(size: 11.5, weight: .semibold))
+                }
+            }
+            .chartOverlay { proxy in
+                if selected != nil {
+                    GeometryReader { g in
+                        Rectangle().fill(.clear).contentShape(Rectangle())
+                            .gesture(DragGesture(minimumDistance: 0).onChanged { v in
+                                guard let frame = proxy.plotFrame else { return }
+                                let x = v.location.x - g[frame].origin.x
+                                guard let d: Date = proxy.value(atX: x) else { return }
+                                let cal = Calendar(identifier: .gregorian)
+                                let i = Int((d.timeIntervalSince(origin) / 86400).rounded())
+                                guard i >= 0, i < days, let day = cal.date(byAdding: .day, value: i, to: origin) else { return }
+                                selected?.wrappedValue = NunaDayFormat.parser.string(from: day)
+                            })
+                    }
+                }
+            }
         }
+        .frame(height: height)
+        .accessibilityHidden(true)
     }
 }
 
-/// Bars (one per day, e.g. Effort) with a line over them (e.g. Charge) on one shared day axis. Every mark is a
-/// stored reading; a day without a reading has no bar and the line skips it. Touch or drag to read a day.
+/// Bars (one per day, e.g. Effort) with a line over them (e.g. Charge) on one shared day axis.
 struct NunaComboChart: View {
     let start: String
     let days: Int
@@ -53,53 +145,14 @@ struct NunaComboChart: View {
     var interactive = true
 
     var body: some View {
-        GeometryReader { geo in
-            let w = geo.size.width, h = geo.size.height
-            Canvas { ctx, size in
-                var grid = Path()
-                for i in 1...2 { let y = size.height * CGFloat(i) / 3; grid.move(to: CGPoint(x: 0, y: y)); grid.addLine(to: CGPoint(x: size.width, y: y)) }
-                ctx.stroke(grid, with: .color(NunaPalette.ink.opacity(0.07)), lineWidth: 1)
-                let slot = size.width / CGFloat(max(days, 1))
-                let bw = max(2, min(10, slot * 0.62))
-                for b in bars {
-                    guard let i = dayIndex(b.day, from: start), i >= 0, i < days else { continue }
-                    let x = (CGFloat(i) + 0.5) * slot
-                    let bh = max(2, size.height * CGFloat(min(b.value / max(barMax, 0.0001), 1)))
-                    let r = CGRect(x: x - bw / 2, y: size.height - bh, width: bw, height: bh)
-                    ctx.fill(Path(roundedRect: r, cornerRadius: min(3, bw / 2)), with: .color(barColor.opacity(b.day == selected ? 1 : 0.55)))
-                }
-                var p = Path(); var started = false
-                var last: CGPoint?
-                for l in line {
-                    guard let i = dayIndex(l.day, from: start), i >= 0, i < days else { continue }
-                    let pt = CGPoint(x: (CGFloat(i) + 0.5) * slot, y: size.height * (1 - CGFloat(min(max(l.value / max(lineMax, 0.0001), 0), 1))))
-                    if started { p.addLine(to: pt) } else { p.move(to: pt); started = true }
-                    last = pt
-                }
-                ctx.stroke(p, with: .color(lineColor), style: StrokeStyle(lineWidth: 2.6, lineCap: .round, lineJoin: .round))
-                if let s = selected, let i = dayIndex(s, from: start) {
-                    let x = (CGFloat(i) + 0.5) * slot
-                    var v = Path(); v.move(to: CGPoint(x: x, y: 0)); v.addLine(to: CGPoint(x: x, y: size.height))
-                    ctx.stroke(v, with: .color(NunaPalette.ink.opacity(0.35)), style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
-                } else if let last {
-                    ctx.fill(Path(ellipseIn: CGRect(x: last.x - 5, y: last.y - 5, width: 10, height: 10)), with: .color(NunaPalette.ink))
-                }
-            }
-            .contentShape(Rectangle())
-            .gesture(interactive ? DragGesture(minimumDistance: 0).onChanged { v in
-                let slot = w / CGFloat(max(days, 1))
-                let i = Int((v.location.x / max(slot, 1)).rounded(.down))
-                guard i >= 0, i < days, let d0 = NunaDayFormat.parse(start),
-                      let d = Calendar(identifier: .gregorian).date(byAdding: .day, value: i, to: d0) else { return }
-                selected = NunaDayFormat.parser.string(from: d)
-            } : nil)
-            .frame(width: w, height: h)
-        }
-        .frame(height: height)
+        NunaTrendChart(start: start, days: days,
+                       series: [.init(points: bars, max: barMax, color: barColor, bars: true), .init(points: line, max: lineMax, color: lineColor)],
+                       height: height + 24,
+                       selected: interactive ? $selected : nil)
     }
 }
 
-/// Two or more lines scaled to the same 0...1 box (each by its own maximum), for "two lines moving together".
+/// Two or more lines on the same 0 to 100 scale (each by its own maximum), for "two lines moving together".
 struct NunaMultiLineChart: View {
     struct Line { let series: NunaDaySeries; let max: Double; let color: Color }
     let start: String
@@ -108,47 +161,33 @@ struct NunaMultiLineChart: View {
     var height: CGFloat = 130
 
     var body: some View {
-        Canvas { ctx, size in
-            var grid = Path()
-            for i in 1...2 { let y = size.height * CGFloat(i) / 3; grid.move(to: CGPoint(x: 0, y: y)); grid.addLine(to: CGPoint(x: size.width, y: y)) }
-            ctx.stroke(grid, with: .color(NunaPalette.ink.opacity(0.07)), lineWidth: 1)
-            let slot = size.width / CGFloat(max(days, 1))
-            for line in lines {
-                var p = Path(); var started = false; var last: CGPoint?
-                for r in line.series {
-                    guard let i = dayIndex(r.day, from: start), i >= 0, i < days else { continue }
-                    let pt = CGPoint(x: (CGFloat(i) + 0.5) * slot, y: size.height * (1 - CGFloat(min(max(r.value / max(line.max, 0.0001), 0), 1))))
-                    if started { p.addLine(to: pt) } else { p.move(to: pt); started = true }
-                    last = pt
-                }
-                ctx.stroke(p, with: .color(line.color), style: StrokeStyle(lineWidth: 2.6, lineCap: .round, lineJoin: .round))
-                if let last { ctx.fill(Path(ellipseIn: CGRect(x: last.x - 4, y: last.y - 4, width: 8, height: 8)), with: .color(NunaPalette.ink)) }
-            }
-        }
-        .frame(height: height)
-        .accessibilityHidden(true)
+        NunaTrendChart(start: start, days: days, series: lines.map { .init(points: $0.series, max: $0.max, color: $0.color) }, height: height + 24)
     }
 }
 
-/// A tiny line with its newest point marked.
+/// A small line in the same style (smoothed 2.5 pt round line) with its newest point marked.
 struct NunaSpark: View {
     let values: [Double]
     var color: Color = NunaPalette.ink
     var body: some View {
-        Canvas { ctx, size in
-            guard values.count >= 2, let lo = values.min(), let hi = values.max() else { return }
-            let span = max(hi - lo, 0.0001)
-            func pt(_ i: Int) -> CGPoint {
-                CGPoint(x: size.width * CGFloat(i) / CGFloat(values.count - 1),
-                        y: 4 + (size.height - 8) * (1 - CGFloat((values[i] - lo) / span)))
+        if values.count >= 2, let lo = values.min(), let hi = values.max() {
+            let pad = max((hi - lo) * 0.12, 0.0001)
+            Chart {
+                ForEach(Array(values.enumerated()), id: \.offset) { i, v in
+                    LineMark(x: .value("i", i), y: .value("v", v))
+                        .interpolationMethod(.catmullRom)
+                        .lineStyle(StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+                        .foregroundStyle(color)
+                }
+                if let last = values.last {
+                    PointMark(x: .value("i", values.count - 1), y: .value("v", last)).symbolSize(48).foregroundStyle(NunaPalette.ink)
+                }
             }
-            var p = Path(); p.move(to: pt(0))
-            for i in 1..<values.count { p.addLine(to: pt(i)) }
-            ctx.stroke(p, with: .color(color), style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round))
-            let e = pt(values.count - 1)
-            ctx.fill(Path(ellipseIn: CGRect(x: e.x - 3.5, y: e.y - 3.5, width: 7, height: 7)), with: .color(NunaPalette.ink))
+            .chartXAxis(.hidden).chartYAxis(.hidden)
+            .chartYScale(domain: (lo - pad)...(hi + pad))
+            .chartPlotStyle { $0.padding(.horizontal, 4) }
+            .accessibilityHidden(true)
         }
-        .accessibilityHidden(true)
     }
 }
 

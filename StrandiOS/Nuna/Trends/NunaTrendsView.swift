@@ -227,7 +227,6 @@ struct NunaTrendsView: View {
                     }
                     NunaComboChart(start: windowStart, days: range, bars: efDisp, barMax: max(efDisp.map(\.value).max() ?? 1, 1),
                                    line: ch, lineMax: 100, selected: .constant(nil), height: 110, interactive: false)
-                    NunaDayAxis(first: windowStart, last: m.todayKey)
                     HStack(spacing: 14) { NunaLegendItem(color: NunaPalette.charge, text: "Charge"); NunaLegendItem(color: NunaPalette.effort, text: "Effort", dot: true) }
                     if let hi = b[2].meanOutcome, let lo = b[0].meanOutcome {
                         insightRow("bolt", Text("After a high-Effort day, next-morning Charge averages \(Int(hi.rounded()))%. After a light day, \(Int(lo.rounded()))%."))
@@ -251,7 +250,6 @@ struct NunaTrendsView: View {
                         if let corr { NunaChip(verbatim: NunaTrendsFormat.relationChip(corr.r)) }
                     }
                     NunaMultiLineChart(start: windowStart, days: range, lines: [.init(series: rs, max: 100, color: NunaPalette.rest), .init(series: ch, max: 100, color: NunaPalette.charge)], height: 110)
-                    NunaDayAxis(first: windowStart, last: m.todayKey)
                     HStack(spacing: 14) { NunaLegendItem(color: NunaPalette.charge, text: "Charge"); NunaLegendItem(color: NunaPalette.rest, text: "Rest") }
                     if let hi = b[2].meanOutcome, let lo = b[0].meanOutcome {
                         insightRow("moon", Text("Nights with Rest above 86% are followed by Charge \(Int(hi.rounded()))%, versus \(Int(lo.rounded()))% when Rest is below 78%."))

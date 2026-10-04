@@ -88,7 +88,6 @@ struct NunaChargeEffortView: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack { nunaTrendsCap(LocalizedStringKey(String(localized: "\(range) days"))); Spacer(); Text("Bars: Effort · Line: Charge").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                 NunaComboChart(start: start, days: range, bars: ef, barMax: eMax, line: ch, lineMax: 100, selected: $selected, height: 150)
-                NunaDayAxis(first: start, last: m.todayKey)
                 HStack(spacing: 14) { NunaLegendItem(color: NunaPalette.charge, text: "Charge"); NunaLegendItem(color: NunaPalette.effort, text: "Effort", dot: true) }
                 if let sel, let d = m.date(sel) {
                     HStack(spacing: 10) {
@@ -192,7 +191,6 @@ struct NunaChargeRestView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack { nunaTrendsCap(LocalizedStringKey(String(localized: "\(range) days"))); Spacer(); Text("Two lines moving together").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                     NunaMultiLineChart(start: start, days: range, lines: [.init(series: rs, max: 100, color: NunaPalette.rest), .init(series: ch, max: 100, color: NunaPalette.charge)], height: 150)
-                    NunaDayAxis(first: start, last: m.todayKey)
                     HStack(spacing: 14) { NunaLegendItem(color: NunaPalette.charge, text: "Charge"); NunaLegendItem(color: NunaPalette.rest, text: "Rest") }
                 }
             }
