@@ -26,34 +26,16 @@ struct NunaChargeDetailView: View {
         let latest = series.latest
         let slots = series.window(range)
         NunaDetailScreen("Charge", onAnya: coachEnabled ? { showCoach = true } : nil) {
-            NunaHeroCard(caption: "Today", chip: chip?.0, chipColor: NunaPalette.charge,
-                         number: (day.charge.pct ?? latest?.value).map { String(format: "%.0f", $0) } ?? "–",
-                         unit: "%", color: NunaPalette.charge) {
+            NunaGaugeHeroCard(caption: "Today", chip: chip?.0, chipColor: NunaPalette.charge,
+                              fraction: (day.charge.pct ?? latest?.value ?? 0) / 100,
+                              number: (day.charge.pct ?? latest?.value).map { String(format: "%.0f", $0) } ?? "–",
+                              unit: "%", color: NunaPalette.charge) {
                 if let v = day.charge.pct ?? latest?.value, let base = series.baseline {
                     let d = Int((v - base).rounded())
                     Text(verbatim: d == 0 ? String(localized: "In line with your 30-day average")
                          : (d > 0 ? String(localized: "\(d) points above your 30-day average") : String(localized: "\(-d) points below your 30-day average")))
-                        .font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                }
-            }
-            NunaSegmented(rangeOptions(), selection: $range)
-            NunaCard {
-                VStack(alignment: .leading, spacing: 12) {
-                    if range == 7 {
-                        NunaColumns(items: slots.map { s in
-                            NunaColumns.Item(weekday: weekday(s.date), date: s.date, fraction: s.value.map { $0 / 100 },
-                                             valueText: s.value.map { String(format: "%.0f", $0) },
-                                             highlight: Calendar.current.isDateInToday(s.date), color: s.value.map(nunaChargeColor))
-                        }, color: NunaPalette.charge)
-                    } else {
-                        NunaLine2Chart(points: series.readings(range), color: .white, decimals: 0, baseline: series.baseline)
-                    }
-                    if range == 7 {
-                        HStack(spacing: 14) {
-                            legend(NunaPalette.charge, "67+"); legend(NunaPalette.warning, "34–66"); legend(NunaPalette.alert, "0–33")
-                            Spacer()
-                        }
-                    }
+                        .font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
             NunaTitleRow(title: "Drivers") { EmptyView() }
@@ -74,6 +56,20 @@ struct NunaChargeDetailView: View {
                         }
                         .frame(minHeight: 58)
                     }.buttonStyle(.plain)
+                }
+            }
+            NunaSegmented(rangeOptions(), selection: $range)
+            NunaCard {
+                VStack(alignment: .leading, spacing: 12) {
+                    if range == 7 {
+                        NunaColumns(items: slots.map { s in
+                            NunaColumns.Item(weekday: weekday(s.date), date: s.date, fraction: s.value.map { $0 / 100 },
+                                             valueText: s.value.map { String(format: "%.0f", $0) },
+                                             highlight: Calendar.current.isDateInToday(s.date), color: s.value.map(nunaChargeColor))
+                        }, color: NunaPalette.charge)
+                    } else {
+                        NunaLine2Chart(points: series.readings(range), color: .white, decimals: 0, baseline: series.baseline)
+                    }
                 }
             }
             NunaExpandRow(title: "How it's calculated", subtitle: "Three signals, against your own baseline",
@@ -98,13 +94,6 @@ struct NunaChargeDetailView: View {
         case .balanced: return ("Ready for a moderate load", true)
         case .strained, .rundown: return ("Take it easy today", false)
         case .insufficient: return nil
-        }
-    }
-
-    private func legend(_ color: Color, _ text: String) -> some View {
-        HStack(spacing: 6) {
-            RoundedRectangle(cornerRadius: 3, style: .continuous).fill(color).frame(width: 10, height: 10)
-            Text(verbatim: text).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
         }
     }
 
@@ -145,11 +134,13 @@ struct NunaEffortDetailView: View {
     var body: some View {
         let slots = series.window(range)
         NunaDetailScreen("Effort") {
-            NunaHeroCard(caption: "Today", chip: level.map { $0.0 }, chipColor: NunaPalette.effortText,
-                         number: day.effort.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–",
-                         suffix: String(localized: "of \(UnitFormatter.effortScaleMax(scale))"),
-                         color: NunaPalette.effortText) {
-                NunaProgressBar(fraction: (day.effort ?? 0) / 100, color: NunaPalette.effort).padding(.top, 4)
+            NunaGaugeHeroCard(caption: "Today", chip: level.map { $0.0 }, chipColor: NunaPalette.effortText,
+                              fraction: (day.effort ?? 0) / 100,
+                              number: day.effort.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–",
+                              suffix: String(localized: "of \(UnitFormatter.effortScaleMax(scale))"),
+                              color: NunaPalette.effortText) {
+                Text("Cardio load so far today").font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             NunaTitleRow(title: "Today's sources") { EmptyView() }
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
