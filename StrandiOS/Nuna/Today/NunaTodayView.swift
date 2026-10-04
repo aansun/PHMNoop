@@ -155,7 +155,7 @@ struct NunaTodayView: View {
             .environmentObject(repo)
         }
         .sheet(isPresented: $showInbox) { UpdatesInboxView(onClose: { showInbox = false }) }
-        .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: "today") }
+        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "today") }
     }
 
     // MARK: Header

@@ -41,7 +41,7 @@ struct NunaTrainingLoadView: View {
             await m.load(repo: repo)
             await loadZones()
         }
-        .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: "workouts") }
+        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "workouts") }
     }
 
     private var anyaLine: String {

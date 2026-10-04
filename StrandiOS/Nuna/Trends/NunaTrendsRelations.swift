@@ -46,7 +46,7 @@ struct NunaChargeEffortView: View {
                           text: "Each point pairs one day's Effort with the Charge you woke up with the next morning. The strength shows how closely they move together in your own data. It does not prove that one causes the other.")
         }
         .task(id: repo.refreshSeq) { await m.load(repo: repo) }
-        .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: "trends") }
+        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "trends") }
     }
 
     private func sweetSpot(_ b: [TrendInsights.Bucket], hi: Double, lo: Double) -> String {
@@ -232,7 +232,7 @@ struct NunaChargeRestView: View {
                           text: "Each point pairs a night's Rest with the Charge you woke up with. The line shows the general direction in your own data. Charge also depends on HRV, resting heart rate and how hard the day before was.")
         }
         .task(id: repo.refreshSeq) { await m.load(repo: repo); await sleep.load(repo: repo) }
-        .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: "trends") }
+        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "trends") }
     }
 
     private func anyaLine(_ b: [TrendInsights.Bucket]) -> String {

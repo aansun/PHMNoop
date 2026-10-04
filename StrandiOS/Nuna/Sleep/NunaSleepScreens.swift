@@ -69,7 +69,7 @@ struct NunaSleepView: View {
                 if coachEnabled { NunaAnyaCard(title: "How can I sleep better tonight?") { showCoach = true } }
             }
         }
-        .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: "sleep") }
+        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "sleep") }
     }
 
     @EnvironmentObject private var appModel: AppModel
@@ -472,7 +472,7 @@ private struct NunaNapContent: View {
     var body: some View {
         Group { content }
             .sheet(isPresented: $showAdd) { NunaAddNapSheet(day: night?.wakeDate ?? Date()) { await repo.refresh(); await model.load(repo: repo) } }
-            .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: "nap") }
+            .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "nap") }
     }
 
     @ViewBuilder private var content: some View {

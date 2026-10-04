@@ -209,7 +209,14 @@ struct NunaAnyaCard: View {
         self.title = Text(verbatim: verbatim); self.buttonTitle = buttonTitle; self.onButton = onButton; self.action = action
     }
 
+    /// "Suggestion cards on each screen" in Anya settings.
+    @AppStorage(NunaAnyaPrefs.cardsKey) private var cardsOn = true
+
     var body: some View {
+        if cardsOn { content }
+    }
+
+    private var content: some View {
         NunaCard(small: true, highlight: highlight, padding: EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)) {
             HStack(spacing: 12) {
                 Button(action: action) {

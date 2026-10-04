@@ -145,11 +145,26 @@ Still open:
 - Pause in the gym session (the engine has no paused state) and adding an exercise in the middle of a session (the plan is a snapshot taken at start).
 - Dummy data: the 90-day dummy has no GPS routes, so the route map was checked with a route injected into the simulator only.
 
-## Phase 5: Anya everywhere (M)
+## Phase 5: Anya everywhere (M): built, with gaps
 
-Contextual card and header button per module; extend `CoachLauncherSheet` contexts; day-plan response; provider setup screens (Apple Intelligence, ChatGPT, API key, custom server); memory, history, attachments, voice input, morning brief, voice coach.
+Built in `StrandiOS/Nuna/Anya/`. Nuna's Anya tab, every Anya card and header button, and Me > Anya now use these screens; the Default Coach screens are untouched and both share the same engine (`AICoachEngine`), memory, history and brief scheduler.
 
-Acceptance: one card per screen, always cites figures, hideable; "Connect Anya" row when no provider; consent off means no data leaves the device.
+- [x] Anya tab (Anya, AnyaStart): provider and "what Anya reads" chips, today's recommendation with a "Build today's plan" button, starter questions, the conversation (Markdown answers, copy, share, save to Journal, follow-up chips), composer with attachments (photo, PDF, text) and an on-device voice sheet (AnyaVoice). Connect state when no provider: a local read of the day and the plan still work.
+- [x] Contextual sheet (AnyaSheet*): every card and header button opens one sheet. The top is a local read that always cites figures (`NunaAnyaReader`, per module: Today, Health, Sleep, Trends, Workouts, plus Nutrition and Devices questions). A provider only adds an explanation after it is connected and data access is allowed; follow-ups are answered inside the sheet; "Open full conversation" hands over to the tab. No figures, no line.
+- [x] Today's plan (AnyaPlan) from `DayPlan` (pure, 7 tests): kind of session from Charge, yesterday's Effort against the usual, and the load band; warm-up, main and cool-down with the wearer's own heart-rate zones in bpm; Effort range from the wearer's own median Effort per minute, left out under 3 sessions. Works with no provider.
+- [x] Connect flow (AnyaConnect, AnyaKey, AnyaCustom, AnyaChatGPT): Apple Intelligence, ChatGPT device code, Anthropic / OpenAI / Gemini keys with model list and key check, own server with header choice and a connection test.
+- [x] Settings (AnyaSettings): provider, data access (numbers, patterns and Lab Book, Gemini charts), answer language and length, extra instructions, morning brief, voice coach, suggestion cards on or off, memory, history, delete all.
+- [x] Instructions (AnyaInstructions): up to 600 characters appended after the built-in prompt; safety rules and consent always apply. Language and length also feed the prompt (`AICoachEngine.answerStyleBlock`, inert at defaults).
+- [x] Memory (AnyaMemory): add, pause, delete, auto-save switch (`CoachMemoryStore.autoCaptureKey`). History (AnyaHistory): search, grouped, open, delete.
+- [x] Morning brief (AnyaBrief): the existing scheduler, with a notification preview and "write one now". Voice coach (AnyaVoiceCoach): the existing audio coach (zone alerts, kilometre cues, smart cues, speed) behind the mockup's layout, with a test cue.
+
+Not built, and why:
+- A separate spoken-cue wording per level ("Rarely / Balanced / Often") beyond the three spacings the audio coach already has; the mockup's "Pace far from target", "Warm-up done" and "5 minutes left" cues do not exist in the audio engine and were not invented.
+- Volume ducking and earphone-only switches in the voice coach: the engine ducks music always and has no earphone-only mode.
+- Proactive nutrition and device cards (no Nuna Nutrition or Device screens yet); their questions exist in the sheet for when those land in Phase 6.
+- Apple Intelligence answers could not be checked in the simulator (the on-device model returned a generation error); the cloud providers were not run (no keys).
+
+Acceptance: one card per screen and it cites figures; the cards can be switched off in Anya settings; "Connect Anya" when no provider; with consent off nothing but the question is sent.
 
 ## Phase 6: Perangkat (M)
 

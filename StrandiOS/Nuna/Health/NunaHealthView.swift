@@ -110,7 +110,7 @@ struct NunaHealthView: View {
             }
             .environmentObject(repo).environmentObject(appModel)
         }
-        .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: "health") }
+        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "health") }
     }
 
     // MARK: Tabs

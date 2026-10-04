@@ -79,7 +79,7 @@ struct NunaChargeDetailView: View {
             await series.load(repo: repo, key: "recovery", source: "my-whoop")
             await day.load(repo: repo, profile: profile)
         }
-        .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: "Charge") }
+        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "Charge") }
     }
 
     private func weekday(_ d: Date) -> String {
@@ -289,7 +289,7 @@ struct NunaMetricDetailView: View {
                           text: LocalizedStringKey("Source: \(metric.sourceLabel). Values are read from the data stored on this phone."))
         }
         .task(id: "\(metric.id)-\(repo.refreshSeq)") { await series.load(repo: repo, key: metric.key, source: metric.source) }
-        .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: metric.title) }
+        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: metric.title) }
     }
 
     private var previous: Double? {
@@ -464,7 +464,7 @@ struct NunaStressDetailView: View {
         .sheet(isPresented: $showBreathing) {
             NavigationStack { BreathingView().toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { showBreathing = false } } } }
         }
-        .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: "stress") }
+        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "stress") }
     }
 
     private var chartCard: some View {

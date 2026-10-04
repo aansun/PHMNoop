@@ -152,7 +152,7 @@ struct NunaEarlyWarningView: View {
         .scrollIndicators(.hidden)
         .background(NunaPalette.canvas.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
-        .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: "early warning") }
+        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "early warning") }
     }
 
     private func label(_ level: IllnessSignalEngine.Level) -> LocalizedStringKey {
