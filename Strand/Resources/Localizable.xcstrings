@@ -1,6 +1,90 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "SpO₂": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "SpO₂"}}
+        } },
+        "Smart strap alarm": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Alarm cerdas strap"}}
+        } },
+        "Bedtime reminder": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pengingat waktu tidur"}}
+        } },
+        "Wake %@ · buzz on your wrist": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bangun %@ · getar di pergelangan"}}
+        } },
+        "Off · buzz on your wrist": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Mati · getar di pergelangan"}}
+        } },
+        "%@ · %lld min before bed": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%@ · %lld menit sebelum tidur"}}
+        } },
+        "Off · a calm evening nudge": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Mati · pengingat malam yang tenang"}}
+        } },
+        "On": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Nyala"}}
+        } },
+        "Repeat": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ulangi"}}
+        } },
+        "Not armed on this strap": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Belum aktif di strap ini"}}
+        } },
+        "Turn it on to buzz your wrist at wake time": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Nyalakan agar pergelangan bergetar saat bangun"}}
+        } },
+        "Arms the strap to buzz at your wake time, even if NOOP is closed.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Mengaktifkan strap agar bergetar saat bangun, bahkan saat NOOP tertutup."}}
+        } },
+        "Some days have a time of their own, set in the bedtime reminder.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Beberapa hari punya waktu sendiri, diatur di pengingat waktu tidur."}}
+        } },
+        "Your WHOOP 5/MG won't arm this until Experimental mode is on (Settings, Experimental). Right now your wake time is saved but the strap is NOT armed.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "WHOOP 5/MG tidak akan mengaktifkan ini sebelum mode Eksperimental menyala (Pengaturan, Eksperimental). Saat ini waktu bangun tersimpan tetapi strap BELUM aktif."}}
+        } },
+        "Armed on the strap itself with the experimental 5/MG command. A strap-driven wake is still unconfirmed on 5/MG, so keep a backup alarm.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Diaktifkan di strap dengan perintah eksperimental 5/MG. Bangun lewat strap belum terkonfirmasi di 5/MG, jadi siapkan alarm cadangan."}}
+        } },
+        "Armed on the strap itself, so it can buzz at your wake time even if your phone is asleep or NOOP is closed. Keep a backup alarm for anything you truly can't miss.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Diaktifkan di strap itu sendiri, jadi bisa bergetar saat bangun walau ponsel tidur atau NOOP tertutup. Siapkan alarm cadangan untuk hal yang tidak boleh terlewat."}}
+        } },
+        "The strap keeps reporting a different time than NOOP sends, so its alarm won't fire at your wake time. Reset the strap in the official WHOOP app (or fully charge it and reconnect), and keep your phone's Clock alarm as your wake until it takes.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Strap terus melaporkan waktu yang berbeda dari yang dikirim NOOP, jadi alarmnya tidak berbunyi saat bangun. Reset strap di aplikasi WHOOP resmi (atau isi penuh lalu sambungkan ulang), dan pakai alarm Jam ponsel sampai berhasil."}}
+        } },
+        "It buzzes your wrist from the strap's own firmware and can't sound a loud alarm. A backup notification is scheduled too, but Focus or silent mode can mute it. Keep your phone's Clock alarm as your real backup.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Alarm ini menggetarkan pergelangan dari firmware strap dan tidak bisa membunyikan suara keras. Notifikasi cadangan juga dijadwalkan, tetapi Fokus atau mode senyap bisa membisukannya. Pakai alarm Jam ponsel sebagai cadangan sebenarnya."}}
+        } },
+        "Turn on the reminder to land at your usual wake time rested.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Nyalakan pengingat agar bangun pada waktu biasa dengan segar."}}
+        } },
+        "Your strap alarm is what wakes you, at %@.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Alarm strap yang membangunkanmu, pukul %@."}}
+        } },
+        "A lie-in at the weekend, say. These times move your strap alarm AND the evening reminder on those days.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Misalnya bangun siang di akhir pekan. Waktu ini menggeser alarm strap DAN pengingat malam pada hari tersebut."}}
+        } },
+        "Notifications are off": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Notifikasi mati"}}
+        } },
+        "Open Settings": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Buka Pengaturan"}}
+        } },
+        "Add a manual measurement": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tambah pengukuran manual"}}
+        } },
+        "Reads the latest value from Apple Health and fills your profile for the VO₂max estimate.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Membaca nilai terbaru dari Apple Health dan mengisi profilmu untuk estimasi VO₂max."}}
+        } },
+        "Fat %lld%%": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lemak %lld%%"}}
+        } },
+        "Lean mass %lld kg": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Massa tanpa lemak %lld kg"}}
+        } },
+        "Bars show each macro's share of calories": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Batang menunjukkan porsi kalori tiap makro"}}
+        } },
         "vs yesterday": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "dibanding kemarin"}}
         } },

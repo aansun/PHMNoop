@@ -87,6 +87,8 @@ public struct TrendChart: View {
     public var showsBars: Bool
     /// Draw value annotations on the visible points for the comparison-friendly Line2 style.
     public var showsPointValues: Bool
+    /// Label every Nth point (the newest is always labelled) so dense Line2 charts stay readable. 1 = every point.
+    public var pointValueStride: Int = 1
     public var yAxisStep: Double?
     /// Use compact suffixes for large axis values, e.g. 5K and 1.2M.
     public var usesCompactYAxis: Bool
@@ -392,6 +394,12 @@ public struct TrendChart: View {
                 // GPU a mark each — hide them past a threshold; the line carries the data there. The gate
                 // stays on the full `points.count` (≤60 is never downsampled, so displayPoints == points).
                 if points.count <= 60 {
+                    let labelled: Set<Date> = {
+                        let stride = max(1, pointValueStride)
+                        guard stride > 1 else { return Set(displayPoints.map(\.date)) }
+                        let n = displayPoints.count
+                        return Set(displayPoints.enumerated().compactMap { (n - 1 - $0.offset) % stride == 0 ? $0.element.date : nil })
+                    }()
                     ForEach(displayPoints) { p in
                         PointMark(
                             x: .value("Date", p.date),
@@ -399,10 +407,10 @@ public struct TrendChart: View {
                         )
                         // Line2 is intended for sparse, comparison-friendly data. Its points need to
                         // read as actual data anchors rather than disappearing into the stroke.
-                        .symbolSize(showsPointValues ? 96 : 18)
+                        .symbolSize(showsPointValues ? (pointValueStride > 1 ? 44 : 96) : 18)
                         .foregroundStyle(StrandPalette.sample(stops: gradient.toStops(), at: unit(p.value)))
                         .annotation(position: .top, spacing: 3) {
-                            if showsPointValues {
+                            if showsPointValues && labelled.contains(p.date) {
                                 Text(Self.line2ValueString(p.value, formattedValue: valueFormat(p.value)))
                                     .font(StrandFont.captionNumber)
                                     .foregroundStyle(StrandPalette.textSecondary)
@@ -731,3 +739,12 @@ private func sampleTrend(days: Int, base: Double, swing: Double) -> [TrendPoint]
 }
 #endif
 #endif
+
+public extension TrendChart {
+    /// Label only every Nth point on a Line2 chart (see `pointValueStride`).
+    func pointValueStride(_ stride: Int) -> TrendChart {
+        var copy = self
+        copy.pointValueStride = stride
+        return copy
+    }
+}

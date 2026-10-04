@@ -27,15 +27,21 @@ struct NunaHealthView: View {
     @StateObject private var fatS = NunaSeriesModel()
     @StateObject private var leanS = NunaSeriesModel()
     @StateObject private var kcalInS = NunaSeriesModel()
+    @StateObject private var proteinS = NunaSeriesModel()
+    @StateObject private var carbsS = NunaSeriesModel()
+    @StateObject private var fatGS = NunaSeriesModel()
+    @State private var showWaist = false
     @AppStorage(HydrationStore.enabledKey) private var hydrationEnabled = false
     @State private var waterML = 0
-    @State private var weightRange = 30
+    @State private var weightRange = 90
     @State private var hrvRange = 14
 
     @State private var tab = 0
+    @State private var didSetTab = false
     @State private var legacy: Legacy?
     @State private var showCoach = false
     @State private var fitSeries: [(day: String, value: Double)] = []
+    @State private var lastMaxHR: (bpm: Int, sport: String)?
 
     private enum Legacy: String, Identifiable { case appleHealth, live, mood, cycle, breathing; var id: String { rawValue } }
 
@@ -66,7 +72,7 @@ struct NunaHealthView: View {
         .background(NunaPalette.canvas.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .nunaTodayDestinations()
-        .onAppear { tab = initialTab }
+        .onAppear { if !didSetTab { tab = initialTab; didSetTab = true } }
         .task(id: repo.refreshSeq) {
             await day.load(repo: repo, profile: profile)
             await sleep.load(repo: repo)
@@ -79,7 +85,13 @@ struct NunaHealthView: View {
             await fatS.load(repo: repo, key: "body_fat", source: "apple-health", days: 400)
             await leanS.load(repo: repo, key: "lean_mass", source: "apple-health", days: 400)
             await kcalInS.load(repo: repo, key: "calories_in", source: "nutrition-csv", days: 30)
+            await proteinS.load(repo: repo, key: "protein_g", source: "nutrition-csv", days: 30)
+            await carbsS.load(repo: repo, key: "carbs_g", source: "nutrition-csv", days: 30)
+            await fatGS.load(repo: repo, key: "fat_g", source: "nutrition-csv", days: 30)
             fitSeries = await repo.exploreSeries(key: "fitness_age", source: "my-whoop", days: 120)
+            if let w = await repo.workoutRows().filter({ ($0.maxHr ?? 0) > 0 }).max(by: { $0.startTs < $1.startTs }), let m = w.maxHr {
+                lastMaxHR = (m, w.sport.replacingOccurrences(of: "_", with: " ").capitalized)
+            }
             await reloadWater()
         }
         .sheet(item: $legacy) { which in
@@ -273,12 +285,8 @@ struct NunaHealthView: View {
         VStack(spacing: NunaSpacing.section) {
             liveCard
             hrvHero
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-                tile("Resting HR", "rhr", fmt(day.restingHr), "bpm", caption: day.restingHrDelta.map { abs($0.rounded()) < 1 ? LocalizedStringKey("Same as yesterday") : ($0 < 0 ? LocalizedStringKey("Down \(Int(abs($0).rounded())) from yesterday") : LocalizedStringKey("Up \(Int($0.rounded())) from yesterday")) })
-                tile("Blood Oxygen", "spo2", fmt(day.spo2), "%", caption: day.spo2.map { $0 >= 95 ? "Normal" : "Low" })
-                tile("Respiratory", "resp_rate", fmt(day.respiratory, 1), "/min", caption: bandCaption(day.respiratory, respS))
-                tile("Skin Temp", "skin_temp", fmt(day.extras["skin_temp"], 1), "°C", caption: skinCaption)
-            }
+            rhrHero
+            vitalBento
             stressCard
             fitnessCard
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
@@ -287,6 +295,58 @@ struct NunaHealthView: View {
                 }
             }
             earlyWarningCard
+        }
+    }
+
+    private var rhrHero: some View {
+        let pts = rhrS.readings(14)
+        let d = day.restingHrDelta
+        return NavigationLink(value: metricRoute("rhr")) {
+            NunaCard {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        cardTitle("Resting HR")
+                        Spacer()
+                        if let d, abs(d.rounded()) >= 1 {
+                            NunaChip(verbatim: (d > 0 ? "+" : "−") + "\(Int(abs(d).rounded()))" + String(localized: " vs yesterday"),
+                                     color: d < 0 ? NunaPalette.charge : NunaPalette.warning)
+                        }
+                    }
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text(verbatim: fmt(day.restingHr)).font(.system(size: 56, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("bpm").font(.system(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    }
+                    NunaLine2Chart(points: pts, color: .white, decimals: 0, baseline: rhrS.band?.mean, height: 120)
+                }
+            }
+        }.buttonStyle(.plain)
+    }
+
+    private func metricRoute(_ key: String) -> NunaTodayRoute {
+        MetricCatalog.metric(key: key, source: "my-whoop").map { .metric($0) } ?? .allMetrics
+    }
+
+    private func linked(_ key: String, _ tile: some View) -> some View {
+        NavigationLink(value: metricRoute(key)) { tile }.buttonStyle(.plain)
+    }
+
+    /// SpO2, respiratory, skin temperature and the highest recent heart rate, each with its status chip.
+    private var vitalBento: some View {
+        let spo2 = day.spo2
+        let spo2Chip: (LocalizedStringKey, Color)? = spo2.map { $0 >= 95 ? ("Normal", NunaPalette.charge) : ("Low", NunaPalette.warning) }
+        var respChip: (LocalizedStringKey, Color)?
+        if let v = day.respiratory, let b = respS.band {
+            let tol = max(b.sd, 0.3)
+            respChip = abs(v - b.mean) <= tol ? ("Normal", NunaPalette.charge) : (v > b.mean ? ("Above range", NunaPalette.warning) : ("Below range", NunaPalette.warning))
+        }
+        let skin = day.extras["skin_temp"]
+        let skinChip: (LocalizedStringKey, Color)? = skin.map { abs($0) < 0.5 ? ("Small deviation", NunaPalette.charge) : ("Larger deviation", NunaPalette.warning) }
+        let skinText = skin.map { (($0 >= 0 ? "+" : "−") + String(format: "%.1f", locale: AppLanguage.activeLocale, abs($0))) } ?? "–"
+        return LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+            linked("spo2", NunaVitalTile(icon: "drop", label: "SpO₂", value: fmt(spo2), unit: "%", chip: spo2Chip?.0, chipColor: spo2Chip?.1 ?? NunaPalette.charge))
+            linked("resp_rate", NunaVitalTile(icon: "wind", label: "Respiratory", value: fmt(day.respiratory, 1), unit: "/min", chip: respChip?.0, chipColor: respChip?.1 ?? NunaPalette.charge))
+            linked("skin_temp", NunaVitalTile(icon: "thermometer.medium", label: "Skin Temp", value: skinText, unit: "°C", chip: skinChip?.0, chipColor: skinChip?.1 ?? NunaPalette.charge))
+            NunaVitalTile(icon: "bolt.heart", label: "Max HR", value: lastMaxHR.map { String($0.bpm) } ?? "–", unit: "bpm", note: lastMaxHR?.sport)
         }
     }
 
@@ -313,8 +373,8 @@ struct NunaHealthView: View {
                     Text("ms").font(.system(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     if let d = day.hrvDelta, abs(d.rounded()) >= 1 {
-                        Text(verbatim: (d > 0 ? "+" : "−") + "\(Int(abs(d).rounded()))" + String(localized: " vs yesterday"))
-                            .font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        NunaChip(verbatim: (d > 0 ? "+" : "−") + "\(Int(abs(d).rounded()))" + String(localized: " vs yesterday"),
+                                 color: d > 0 ? NunaPalette.charge : NunaPalette.warning)
                     }
                 }
                 NunaSegmented([(value: 14, title: "14D"), (value: 30, title: "30D"), (value: 90, title: "90D")], selection: $hrvRange)
@@ -364,15 +424,22 @@ struct NunaHealthView: View {
                             .font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                     }
                 }.buttonStyle(.plain)
-                Button { legacy = .breathing } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "wind").font(.system(size: 14, weight: .bold))
-                        Text("Breathe 5 min").font(.system(size: 15, weight: .bold))
+                HStack(spacing: 10) {
+                    Button { legacy = .breathing } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "wind").font(.system(size: 14, weight: .bold))
+                            Text("Breathe 5 min").font(.system(size: 15, weight: .bold))
+                        }
+                        .foregroundStyle(NunaPalette.onAccent)
+                        .frame(maxWidth: .infinity).frame(height: 48)
+                        .background(NunaPalette.textPrimary, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+                    }.buttonStyle(.plain)
+                    Button { legacy = .mood } label: {
+                        Image(systemName: "face.smiling").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            .frame(width: 48, height: 48).background(NunaPalette.glassStrong, in: Circle())
                     }
-                    .foregroundStyle(NunaPalette.onAccent)
-                    .frame(maxWidth: .infinity).frame(height: 48)
-                    .background(NunaPalette.textPrimary, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
-                }.buttonStyle(.plain)
+                    .buttonStyle(.plain).accessibilityLabel(Text("Mood check-in"))
+                }
             }
         }
     }
@@ -472,6 +539,7 @@ struct NunaHealthView: View {
         VStack(spacing: NunaSpacing.section) {
             weightHero
             compositionCard
+            waistCard
             nutritionCard
             if hydrationEnabled { waterCard }
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
@@ -481,13 +549,10 @@ struct NunaHealthView: View {
                         NunaDivider()
                         row("Menstrual cycle", "Cycle awareness", "drop.fill") { legacy = .cycle }
                     }
-                    NunaDivider()
-                    row("Mood check-in", "How are you feeling", "face.smiling") { legacy = .mood }
-                    NunaDivider()
-                    row("Apple Health permissions", "What PHMNOOP reads and writes", "heart.text.square.fill") { legacy = .appleHealth }
                 }
             }
         }
+        .sheet(isPresented: $showWaist) { NunaWaistSheet() }
     }
 
     private var weightHero: some View {
@@ -517,35 +582,113 @@ struct NunaHealthView: View {
         let w = weightS.latest?.value ?? (profile.weightKg > 0 ? profile.weightKg : nil)
         let h = profile.heightCm
         let bmi: Double? = (w != nil && h > 0) ? w! / pow(h / 100, 2) : nil
-        return VStack(alignment: .leading, spacing: 12) {
-            NunaTitleRow(title: "Body composition") { EmptyView() }
-            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-                if let f = fatS.latest?.value { NunaStatTile(label: "Body fat", value: fmt(f, 1), unit: "%") }
-                if let l = leanS.latest?.value { NunaStatTile(label: "Lean mass", value: fmt(l, 1), unit: "kg") }
-                NunaStatTile(label: "BMI", value: fmt(bmi, 1))
-                NunaStatTile(label: "Waist", value: profile.waistCm > 0 ? fmt(profile.waistCm) : "–", unit: profile.waistCm > 0 ? "cm" : "")
+        let fat = fatS.latest?.value, lean = leanS.latest?.value
+        return NunaCard {
+            VStack(alignment: .leading, spacing: 14) {
+                cardTitle("Body composition")
+                if let fat, let lean, let w, w > 0 {
+                    let fatShare = max(0, min(100, fat)), leanShare = max(0, min(100 - fatShare, lean / w * 100))
+                    HStack(spacing: 3) {
+                        Capsule().fill(NunaPalette.warning).frame(maxWidth: .infinity).layoutPriority(fatShare)
+                        Capsule().fill(NunaPalette.charge).frame(maxWidth: .infinity).layoutPriority(leanShare)
+                        Capsule().fill(NunaPalette.zoneBase).frame(maxWidth: .infinity).layoutPriority(max(0.5, 100 - fatShare - leanShare))
+                    }
+                    .frame(height: 16)
+                    .accessibilityHidden(true)
+                    HStack {
+                        Text(verbatim: String(localized: "Fat \(Int(fat.rounded()))%")); Spacer()
+                        Text(verbatim: String(localized: "Lean mass \(Int(lean.rounded())) kg"))
+                    }
+                    .font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                }
+                HStack(spacing: 10) {
+                    miniTile("Body fat", fat.map { fmt($0, 1) } ?? "–", fat == nil ? "" : "%")
+                    miniTile("Lean mass", lean.map { fmt($0, 1) } ?? "–", lean == nil ? "" : "kg")
+                    miniTile("BMI", fmt(bmi, 1), "")
+                }
+            }
+        }
+    }
+
+    private func miniTile(_ label: LocalizedStringKey, _ value: String, _ unit: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Text(verbatim: value).font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
+                if !unit.isEmpty { Text(verbatim: unit).font(.system(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+            }
+        }
+        .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+        .background(NunaPalette.glass, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(NunaPalette.hairlineSoft, lineWidth: 1))
+    }
+
+    private var waistCard: some View {
+        NunaCard {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 12) {
+                    NunaIconTile("ruler")
+                    VStack(alignment: .leading, spacing: 2) {
+                        cardTitle("Waist")
+                        HStack(alignment: .firstTextBaseline, spacing: 4) {
+                            Text(verbatim: profile.waistCm > 0 ? fmt(profile.waistCm) : "–").font(.system(size: 28, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                            if profile.waistCm > 0 { Text("cm").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+                        }
+                    }
+                    Spacer()
+                }
+                Text("Reads the latest value from Apple Health and fills your profile for the VO₂max estimate.")
+                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                Button { showWaist = true } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "plus").font(.system(size: 13, weight: .bold))
+                        Text("Add a manual measurement").font(.system(size: 15, weight: .bold))
+                    }
+                    .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 46)
+                    .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+                }.buttonStyle(.plain)
             }
         }
     }
 
     private var nutritionCard: some View {
         let kcalIn = kcalInS.latest
+        let macros: [(LocalizedStringKey, Double?, Double, Color)] = [
+            ("Protein", proteinS.latest?.value, 4, NunaPalette.charge),
+            ("Carbs", carbsS.latest?.value, 4, NunaPalette.effort),
+            ("Fat", fatGS.latest?.value, 9, NunaPalette.warning),
+        ]
         return NavigationLink(value: TabRoute.dataSources) {
             NunaCard {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text("Nutrition").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        cardTitle("Nutrition")
                         Spacer()
                         NunaChip("Import CSV")
                     }
                     if let kcalIn {
                         HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            Text(verbatim: fmt(kcalIn.value)).font(.system(size: NunaTypeSize.numberL, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: fmt(kcalIn.value)).font(.system(size: 40, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
                             Text("kcal in").font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                             Spacer()
                             if let out = day.calories { Text(verbatim: String(localized: "Out \(fmt(out))")).font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                         }
-                        Text(verbatim: kcalIn.day).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        if let out = day.calories, out > 0 { NunaProgressBar(fraction: min(kcalIn.value / out, 1), color: NunaPalette.warning) }
+                        VStack(spacing: 12) {
+                            ForEach(0..<macros.count, id: \.self) { i in
+                                if let g = macros[i].1 {
+                                    VStack(spacing: 6) {
+                                        HStack {
+                                            Text(macros[i].0).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                            Spacer()
+                                            Text(verbatim: "\(fmt(g)) g").font(.system(size: 17, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                                        }
+                                        NunaProgressBar(fraction: kcalIn.value > 0 ? g * macros[i].2 / kcalIn.value : 0, color: macros[i].3)
+                                    }
+                                }
+                            }
+                        }
+                        Text(verbatim: kcalIn.day + " · " + String(localized: "Bars show each macro's share of calories")).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     } else {
                         Text("No nutrition imported yet. Import a CSV from Cronometer or MacroFactor, processed on this phone.")
                             .font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
@@ -601,6 +744,7 @@ struct NunaHealthView: View {
                 bedtimeCard(recent)
                 stagesAverageCard(recent)
                 napsWeekCard(recent)
+                NunaSleepAlarmRows()
                 NavigationLink(value: NunaTodayRoute.sleep(0)) {
                     NunaCard(small: true) { NunaListRow("See last night in detail", systemImage: "moon.zzz.fill", showsChevron: true) }
                 }.buttonStyle(.plain)
@@ -662,42 +806,60 @@ struct NunaHealthView: View {
         }
     }
 
-    /// Bedtime for each of the 7 nights and how far they spread.
+    /// Bedtime to wake time for each of the 7 nights as a bar on one shared clock, and how far bedtimes spread.
     private func bedtimeCard(_ nights: [NunaNight]) -> some View {
         let cal = Calendar.current
-        let hours: [Double] = nights.map { n in
-            let c = cal.dateComponents([.hour, .minute], from: n.onset)
+        func hour(_ d: Date, evening: Bool) -> Double {
+            let c = cal.dateComponents([.hour, .minute], from: d)
             let h = Double(c.hour ?? 0) + Double(c.minute ?? 0) / 60
-            return h < 12 ? h + 24 : h
+            return evening && h < 12 ? h + 24 : (evening ? h : h + 24)
         }
-        let mean = hours.reduce(0, +) / Double(max(hours.count, 1))
-        let sd = (hours.map { ($0 - mean) * ($0 - mean) }.reduce(0, +) / Double(max(hours.count, 1))).squareRoot()
-        let lo = (hours.min() ?? mean) - 0.5, hi = (hours.max() ?? mean) + 0.5
+        let starts = nights.map { hour($0.onset, evening: true) }
+        let ends = nights.map { n -> Double in
+            let h = hour(n.wake, evening: false)
+            return h < 24 ? h + 24 : h
+        }
+        let mean = starts.reduce(0, +) / Double(max(starts.count, 1))
+        let sd = (starts.map { ($0 - mean) * ($0 - mean) }.reduce(0, +) / Double(max(starts.count, 1))).squareRoot()
+        let lo = floor((starts.min() ?? 21) - 0.25), hi = ceil((ends.max() ?? 32) + 0.25)
+        let span = max(hi - lo, 1)
+        let ticks = stride(from: lo, through: hi, by: max(1, (span / 4).rounded())).map { $0 }
         return NunaCard {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text("Bedtime consistency").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    cardTitle("Bedtime consistency")
                     Spacer()
                     NunaChip(verbatim: String(localized: "Spread \(Int((sd * 60).rounded())) min"))
                 }
-                GeometryReader { geo in
-                    ZStack(alignment: .topLeading) {
-                        ForEach(nights.indices, id: \.self) { i in
-                            let x = geo.size.width * (CGFloat(i) + 0.5) / CGFloat(nights.count)
-                            let y = geo.size.height * CGFloat((hours[i] - lo) / max(hi - lo, 0.01))
-                            Circle().fill(.white).frame(width: 10, height: 10).position(x: x, y: y)
-                            Text(verbatim: NunaSleepFormat.clock(nights[i].onset)).font(.system(size: 10, weight: .semibold)).monospacedDigit()
-                                .foregroundStyle(NunaPalette.textSecondary).position(x: x, y: min(geo.size.height, y + 16))
+                VStack(spacing: 0) {
+                    ForEach(nights.indices, id: \.self) { i in
+                        HStack(spacing: 10) {
+                            Text(verbatim: weekday(nights[i].wakeDate)).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 34, alignment: .leading)
+                            GeometryReader { geo in
+                                let x0 = geo.size.width * CGFloat((starts[i] - lo) / span)
+                                let x1 = geo.size.width * CGFloat((min(ends[i], hi) - lo) / span)
+                                ZStack(alignment: .leading) {
+                                    Capsule().fill(NunaPalette.glass)
+                                    Capsule().fill(NunaPalette.rest).frame(width: max(8, x1 - x0)).offset(x: x0)
+                                }
+                            }
+                            .frame(height: 16)
+                        }
+                        .frame(height: 34)
+                    }
+                }
+                HStack(spacing: 10) {
+                    Color.clear.frame(width: 34, height: 1)
+                    GeometryReader { geo in
+                        ForEach(ticks.indices, id: \.self) { t in
+                            let h = Int(ticks[t]) % 24
+                            Text(verbatim: String(format: "%02d:00", h)).font(.system(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                .fixedSize()
+                                .position(x: min(max(geo.size.width * CGFloat((ticks[t] - lo) / span), 18), geo.size.width - 18), y: 8)
                         }
                     }
+                    .frame(height: 16)
                 }
-                .frame(height: 110)
-                HStack(spacing: 0) {
-                    ForEach(nights) { n in
-                        Text(verbatim: weekday(n.wakeDate)).frame(maxWidth: .infinity)
-                    }
-                }
-                .font(.system(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }
         }
     }
@@ -749,7 +911,7 @@ struct NunaHealthView: View {
                 }
                 ForEach(Array(naps.enumerated()), id: \.offset) { idx, nap in
                     if idx > 0 { NunaDivider() }
-                    NunaListRow(LocalizedStringKey(napTitle(nap)), subtitle: LocalizedStringKey(NunaSleepFormat.duration(nap.asleepMin))) {
+                    NunaListRow(LocalizedStringKey(napTitle(nap)), subtitle: LocalizedStringKey(NunaSleepFormat.duration(nap.asleepMin)), systemImage: "moon") {
                         NunaChip(nap.manual ? "Manual" : "Auto")
                     }
                 }
