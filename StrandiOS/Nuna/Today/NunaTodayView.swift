@@ -131,13 +131,11 @@ struct NunaTodayView: View {
         }
         .sheet(isPresented: $showAddCard) { addCardSheet }
         .sheet(isPresented: $showMood) {
-            NavigationStack {
-                ScrollView { MindSection().padding() }
-                    .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { showMood = false } } }
-            }
-            .environmentObject(repo)
+            NavigationStack { NunaMoodView().toolbar(.hidden, for: .navigationBar) }
+                .environmentObject(repo)
+                .preferredColorScheme(NunaTheme.colorScheme)
         }
-        .sheet(isPresented: $showInbox) { UpdatesInboxView(onClose: { showInbox = false }) }
+        .sheet(isPresented: $showInbox) { NunaUpdatesInbox(onClose: { showInbox = false }).nunaSheetChrome(detents: [.large]) }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "today") }
     }
 
