@@ -1,6 +1,528 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "Green": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hijau"}}
+        } },
+        "Yellow": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kuning"}}
+        } },
+        "Red": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Merah"}}
+        } },
+        "%lld of %lld days green": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld dari %lld hari hijau"}}
+        } },
+        "Comparisons": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Perbandingan"}}
+        } },
+        "Tap for details": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ketuk untuk detail"}}
+        } },
+        "Charge and Effort": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Charge dan Effort"}}
+        } },
+        "Charge and Rest": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Charge dan Rest"}}
+        } },
+        "Charge heat map": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Peta panas Charge"}}
+        } },
+        "12 weeks · a year": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "12 minggu · setahun"}}
+        } },
+        "Against the previous period": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dibanding periode sebelumnya"}}
+        } },
+        "This period": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Periode ini"}}
+        } },
+        "Previous period": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Periode sebelumnya"}}
+        } },
+        "Explore further": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Jelajahi lebih jauh"}}
+        } },
+        "A catalogue of every signal": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Katalog semua sinyal"}}
+        } },
+        "Stack 2 to 4 metrics": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tumpuk 2 sampai 4 metrik"}}
+        } },
+        "Behaviour effects and links between metrics": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Efek perilaku dan hubungan antar metrik"}}
+        } },
+        "Export report": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ekspor laporan"}}
+        } },
+        "A PDF summary of your trends": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "PDF ringkasan trenmu"}}
+        } },
+        "Trends appear once your strap has recorded a few days.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tren muncul setelah strap merekam beberapa hari."}}
+        } },
+        "Charge held steady against the previous period": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Charge stabil dibanding periode sebelumnya"}}
+        } },
+        "Charge has no earlier period to compare with yet": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Charge belum punya periode sebelumnya untuk dibandingkan"}}
+        } },
+        "Charge rose %lld points from the previous period": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Charge naik %lld poin dari periode sebelumnya"}}
+        } },
+        "Charge fell %lld points from the previous period": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Charge turun %lld poin dari periode sebelumnya"}}
+        } },
+        "Effort stayed about the same": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Effort hampir sama"}}
+        } },
+        "Effort rose": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Effort naik"}}
+        } },
+        "Effort fell a little": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Effort turun sedikit"}}
+        } },
+        "Rest stayed about the same": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rest hampir sama"}}
+        } },
+        "Rest was higher": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rest lebih tinggi"}}
+        } },
+        "Rest was lower": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rest lebih rendah"}}
+        } },
+        "while": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "sementara"}}
+        } },
+        "Your recovery is improving.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pemulihanmu membaik."}}
+        } },
+        "Your recovery is slipping.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pemulihanmu menurun."}}
+        } },
+        "Your recovery is steady.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pemulihanmu stabil."}}
+        } },
+        "points": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "poin"}}
+        } },
+        "Bars: Effort · Line: Charge": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Batang: Effort · Garis: Charge"}}
+        } },
+        "Weak": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lemah"}}
+        } },
+        "Relationship": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hubungan"}}
+        } },
+        "Tomorrow's Charge, by Effort": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Charge esok hari, menurut Effort"}}
+        } },
+        "Spread": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sebaran"}}
+        } },
+        "Days that stand out": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hari yang menonjol"}}
+        } },
+        "Light · under 10": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ringan · di bawah 10"}}
+        } },
+        "Moderate · 10 to 14": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sedang · 10 sampai 14"}}
+        } },
+        "High · over 14": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tinggi · di atas 14"}}
+        } },
+        "Light · under 48": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ringan · di bawah 48"}}
+        } },
+        "Moderate · 48 to 67": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sedang · 48 sampai 67"}}
+        } },
+        "High · over 67": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tinggi · di atas 67"}}
+        } },
+        "The harder your Effort today, the lower your Charge tomorrow morning.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Makin berat Effort hari ini, makin rendah Charge besok pagi."}}
+        } },
+        "In your data, a harder day is followed by a slightly higher Charge.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Di datamu, hari yang lebih berat diikuti Charge yang sedikit lebih tinggi."}}
+        } },
+        "Your Effort and next-day Charge show almost no link in this period.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Effort dan Charge esokmu hampir tidak berkaitan pada periode ini."}}
+        } },
+        "Not enough paired days yet.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Belum cukup hari berpasangan."}}
+        } },
+        "Each dot is one day. The dashed line is the general direction.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tiap titik satu hari. Garis putus-putus adalah arah umumnya."}}
+        } },
+        "Effort →": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Effort →"}}
+        } },
+        "↑ next-day Charge": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "↑ Charge esok hari"}}
+        } },
+        "A link, not proof of cause": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hubungan, bukan sebab-akibat pasti"}}
+        } },
+        "Each point pairs one day's Effort with the Charge you woke up with the next morning. The strength shows how closely they move together in your own data. It does not prove that one causes the other.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tiap titik memasangkan Effort satu hari dengan Charge yang kamu dapat esok paginya. Kekuatannya menunjukkan seberapa searah keduanya di datamu sendiri. Ini tidak membuktikan yang satu menyebabkan yang lain."}}
+        } },
+        "Each point pairs a night's Rest with the Charge you woke up with. The line shows the general direction in your own data. Charge also depends on HRV, resting heart rate and how hard the day before was.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tiap titik memasangkan Rest semalam dengan Charge yang kamu dapat. Garisnya menunjukkan arah umum di datamu. Charge juga bergantung pada HRV, detak istirahat, dan beratnya hari sebelumnya."}}
+        } },
+        "Sleep is one of the biggest drivers of your Charge.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidur adalah salah satu pendorong terbesar Charge-mu."}}
+        } },
+        "Your sleep score and Charge show only a loose link in this period.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Skor tidur dan Charge-mu hanya berkaitan longgar pada periode ini."}}
+        } },
+        "Two lines moving together": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dua garis bergerak searah"}}
+        } },
+        "Charge, by last night's Rest": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Charge, menurut Rest semalam"}}
+        } },
+        "Rest under 78%": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rest di bawah 78%"}}
+        } },
+        "Rest 78 to 86%": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rest 78 sampai 86%"}}
+        } },
+        "Rest over 86%": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rest di atas 86%"}}
+        } },
+        "Rest →": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rest →"}}
+        } },
+        "↑ Charge": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "↑ Charge"}}
+        } },
+        "What shapes Rest": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Yang membentuk Rest"}}
+        } },
+        "Average duration": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Durasi rata-rata"}}
+        } },
+        "similar bedtimes": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "jam tidur mirip"}}
+        } },
+        "of time in bed asleep": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "waktu tidur nyata"}}
+        } },
+        "average gap to your need": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "selisih rata-rata ke kebutuhanmu"}}
+        } },
+        "Sleep debt": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Utang tidur"}}
+        } },
+        "Need and sleep debt": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kebutuhan dan utang tidur"}}
+        } },
+        "Rest affects Charge, but is not the only thing": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rest memengaruhi Charge, tapi bukan satu-satunya"}}
+        } },
+        "More nights of data will show how much your sleep moves your Charge.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lebih banyak malam akan menunjukkan seberapa besar tidur memengaruhi Charge-mu."}}
+        } },
+        "3 mo": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "3 bln"}}
+        } },
+        "6 mo": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "6 bln"}}
+        } },
+        "1 yr": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "1 thn"}}
+        } },
+        "Last %lld weeks": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld minggu terakhir"}}
+        } },
+        "One square = one day": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Satu kotak = satu hari"}}
+        } },
+        "Green days": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hari hijau"}}
+        } },
+        "Yellow days": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hari kuning"}}
+        } },
+        "Red days": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hari merah"}}
+        } },
+        "Weekly pattern": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pola mingguan"}}
+        } },
+        "By month": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Per bulan"}}
+        } },
+        "Not enough days yet.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Belum cukup hari."}}
+        } },
+        "Not enough days yet to show a pattern.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Belum cukup hari untuk menunjukkan pola."}}
+        } },
+        "Best green streak": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rangkaian hijau terbaik"}}
+        } },
+        "%lld days in a row, ending %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld hari berturut-turut, berakhir %@"}}
+        } },
+        "Charge is highest on %@ and lowest on %@.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Charge paling tinggi hari %@ dan paling rendah hari %@."}}
+        } },
+        "%lld days recorded. At least 14 needed.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld hari tercatat. Butuh minimal 14."}}
+        } },
+        "What moves your Charge, from your own habits.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Apa yang menggeser Charge, dari kebiasaanmu sendiri."}}
+        } },
+        "Behaviour effects": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Efek perilaku"}}
+        } },
+        "No behaviour effects yet": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Belum ada efek perilaku"}}
+        } },
+        "%lld days with, %lld days without": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld hari dengan, %lld hari tanpa"}}
+        } },
+        "Charge, points": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Charge, poin"}}
+        } },
+        "High confidence": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Keyakinan tinggi"}}
+        } },
+        "Medium confidence": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Keyakinan sedang"}}
+        } },
+        "Cost of activity": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Biaya aktivitas"}}
+        } },
+        "back to normal": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "kembali normal"}}
+        } },
+        "+%lld day": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "+%lld hari"}}
+        } },
+        "Links between metrics": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hubungan antar metrik"}}
+        } },
+        "Tracked behaviours": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Perilaku yang dipantau"}}
+        } },
+        "Nothing logged yet": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Belum ada catatan"}}
+        } },
+        "Habits you log in the journal appear here": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kebiasaan yang kamu catat di jurnal muncul di sini"}}
+        } },
+        "%lld days logged": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld hari tercatat"}}
+        } },
+        "Log yes or no habits in your journal (caffeine, alcohol, hydration, late workouts). Once a habit has days with and without it, its effect on Charge shows here.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Catat kebiasaan ya atau tidak di jurnal (kafein, alkohol, hidrasi, latihan malam). Begitu satu kebiasaan punya hari dengan dan tanpanya, efeknya pada Charge tampil di sini."}}
+        } },
+        "Keep logging habits in your journal. After a few weeks this page shows what moves your Charge.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Terus catat kebiasaan di jurnal. Setelah beberapa minggu, halaman ini menunjukkan apa yang menggeser Charge-mu."}}
+        } },
+        "A link is not proof of cause. Effects are computed from your own data and recalculated every day. Confidence rises as more days are logged.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hubungan bukan sebab-akibat pasti. Efek dihitung dari datamu sendiri dan dihitung ulang tiap hari. Tingkat keyakinan naik seiring bertambahnya hari tercatat."}}
+        } },
+        "Pick 2 to 4 metrics": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pilih 2 sampai 4 metrik"}}
+        } },
+        "%lld picked": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld dipilih"}}
+        } },
+        "Compared": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dibandingkan"}}
+        } },
+        "Scale normalised": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Skala dinormalkan"}}
+        } },
+        "Correlation": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Korelasi"}}
+        } },
+        "Not enough days": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Belum cukup hari"}}
+        } },
+        "Shift the period": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Geser periode"}}
+        } },
+        "Compare with the previous %lld days": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bandingkan dengan %lld hari sebelumnya"}}
+        } },
+        "Draws the first metric from the period before as a faint line": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Menggambar metrik pertama dari periode sebelumnya sebagai garis tipis"}}
+        } },
+        "Save comparison": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Simpan perbandingan"}}
+        } },
+        "Search signals": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Cari sinyal"}}
+        } },
+        "Favourites": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Favorit"}}
+        } },
+        "Favourite": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Favorit"}}
+        } },
+        "Scores": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Skor"}}
+        } },
+        "Breathing and oxygen": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Napas dan oksigen"}}
+        } },
+        "No signals match.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidak ada sinyal yang cocok."}}
+        } },
+        "Daily Charge": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Charge harian"}}
+        } },
+        "Daily Effort": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Effort harian"}}
+        } },
+        "Daily Rest": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rest harian"}}
+        } },
+        "Last night's sleep score": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Skor tidur semalam"}}
+        } },
+        "%lld-day average": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rata-rata %lld hari"}}
+        } },
+        "Previous period %@%@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Periode sebelumnya %@%@"}}
+        } },
+        "Your recovery is up from the previous period.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pemulihanmu naik dibanding periode sebelumnya."}}
+        } },
+        "Your recovery is down from the previous period.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pemulihanmu turun dibanding periode sebelumnya."}}
+        } },
+        "Your recovery is about the same as the previous period.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pemulihanmu hampir sama dengan periode sebelumnya."}}
+        } },
+        "Your load is higher than in the previous period.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bebanmu lebih tinggi dari periode sebelumnya."}}
+        } },
+        "Your load is lower than in the previous period.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bebanmu lebih rendah dari periode sebelumnya."}}
+        } },
+        "Your load is steady compared with the previous period.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bebanmu stabil dibanding periode sebelumnya."}}
+        } },
+        "Your sleep score is up from the previous period.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Skor tidurmu naik dibanding periode sebelumnya."}}
+        } },
+        "Your sleep score is down from the previous period.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Skor tidurmu turun dibanding periode sebelumnya."}}
+        } },
+        "Your sleep score is about the same as the previous period.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Skor tidurmu hampir sama dengan periode sebelumnya."}}
+        } },
+        "There is no earlier period to compare with yet.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Belum ada periode sebelumnya untuk dibandingkan."}}
+        } },
+        "Zones": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Zona"}}
+        } },
+        "Load zones": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Zona beban"}}
+        } },
+        "Load per week": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Beban per minggu"}}
+        } },
+        "Red · 0 to 33": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Merah · 0 sampai 33"}}
+        } },
+        "Yellow · 34 to 66": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kuning · 34 sampai 66"}}
+        } },
+        "Green · 67 and up": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hijau · 67 ke atas"}}
+        } },
+        "Heavy · 14 to 18": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Berat · 14 sampai 18"}}
+        } },
+        "Maximal · 18 and up": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Maksimal · 18 ke atas"}}
+        } },
+        "Heavy · 67 to 86": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Berat · 67 sampai 86"}}
+        } },
+        "Maximal · 86 and up": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Maksimal · 86 ke atas"}}
+        } },
+        "Low · under 65": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rendah · di bawah 65"}}
+        } },
+        "Fair · 65 to 79": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Cukup · 65 sampai 79"}}
+        } },
+        "Good · 80 and up": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Baik · 80 ke atas"}}
+        } },
+        "Heavy": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Berat"}}
+        } },
+        "Maximal": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Maksimal"}}
+        } },
+        "needs %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "butuh %@"}}
+        } },
+        "Compare with Charge": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bandingkan dengan Charge"}}
+        } },
+        "Compare with Effort": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bandingkan dengan Effort"}}
+        } },
+        "How Effort shapes tomorrow's Charge": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Seberapa besar Effort memengaruhi Charge besok"}}
+        } },
+        "How sleep shapes Charge": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Seberapa besar tidur memengaruhi Charge"}}
+        } },
+        "The link between load and recovery": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hubungan beban dan pemulihan"}}
+        } },
+        "See today's Charge": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lihat Charge hari ini"}}
+        } },
+        "See today's Effort": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lihat Effort hari ini"}}
+        } },
+        "See last night": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lihat tidur semalam"}}
+        } },
+        "After Effort above %lld, give yourself one light day before the next hard session.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Setelah Effort di atas %lld, beri satu hari ringan sebelum latihan berat berikutnya."}}
+        } },
+        "Your Charge is highest the morning after a %@ Effort day (%lld%%).": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Charge-mu paling tinggi di pagi setelah hari Effort %@ (%lld%%)."}}
+        } },
+        "light": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "ringan"}}
+        } },
+        "HRV up %lld ms from the previous period": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "HRV naik %lld ms dari periode sebelumnya"}}
+        } },
+        "HRV down %lld ms from the previous period": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "HRV turun %lld ms dari periode sebelumnya"}}
+        } },
+        "Resting HR down %lld bpm": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Detak istirahat turun %lld bpm"}}
+        } },
+        "Resting HR up %lld bpm": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Detak istirahat naik %lld bpm"}}
+        } },
+        "Rest averaged %lld%%": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rest rata-rata %lld%%"}}
+        } },
+        "Highest on %@, lowest on %@.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tertinggi hari %@, terendah hari %@."}}
+        } },
         "Beat-to-beat view": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Gambaran waktu antar detak"}}
         } },

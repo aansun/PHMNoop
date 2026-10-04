@@ -228,6 +228,7 @@ enum NunaSignals {
 @MainActor
 final class NunaSignalStore: ObservableObject {
     @Published private(set) var series: [String: NunaDaySeries] = [:]
+    func isEmpty(_ id: String) -> Bool { series[id]?.isEmpty == true }
     private var loading: Set<String> = []
 
     func ensure(_ s: NunaSignal, repo: Repository) async {
@@ -402,13 +403,15 @@ struct NunaCompareView: View {
 struct NunaExploreView: View {
     @EnvironmentObject private var repo: Repository
     @StateObject private var store = NunaSignalStore()
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
     @State private var query = ""
     @State private var filter = "all"
     @State private var favourites: Set<String> = Set(UserDefaults.standard.stringArray(forKey: "nuna.explore.fav") ?? [])
 
     private var visible: [NunaSignal] {
         NunaSignals.all.filter { s in
-            (query.isEmpty || s.title.localizedCaseInsensitiveContains(query))
+            !store.isEmpty(s.id)
+                && (query.isEmpty || s.title.localizedCaseInsensitiveContains(query))
                 && (filter == "all" || (filter == "fav" && favourites.contains(s.id)) || s.group == filter)
         }
     }
@@ -416,6 +419,7 @@ struct NunaExploreView: View {
 
     var body: some View {
         NunaDetailScreen("Explore") {
+            Color.clear.frame(height: 0).task { for s in NunaSignals.all { await store.ensure(s, repo: repo) } }
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass").foregroundStyle(NunaPalette.textMuted)
                 TextField("", text: $query, prompt: Text("Search signals").foregroundStyle(NunaPalette.textMuted)).font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
@@ -441,7 +445,7 @@ struct NunaExploreView: View {
                     }
                 }
             }
-            if visible.isEmpty { Text("No signals match.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+            if visible.isEmpty && !store.series.isEmpty { Text("No signals match.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
         }
     }
 
@@ -453,7 +457,9 @@ struct NunaExploreView: View {
     }
 
     private func row(_ s: NunaSignal) -> some View {
-        let data = store.series[s.id] ?? []
+        let scale = UnitPrefs.resolveEffortScale(effortScaleRaw)
+        let conv: (Double) -> Double = { s.id == "strain" ? UnitFormatter.effortValue($0, scale: scale) : $0 }
+        let data = (store.series[s.id] ?? []).map { (day: $0.day, value: conv($0.value)) }
         let last30 = Array(data.suffix(30)).map(\.value)
         let route: NunaTodayRoute? = MetricCatalog.metric(key: s.id, source: s.source).map { .metric($0) }
         return HStack(spacing: 10) {
@@ -476,7 +482,7 @@ struct NunaExploreView: View {
 
     private func content(_ s: NunaSignal, _ spark: [Double], _ last: Double?) -> some View {
         HStack(spacing: 12) {
-            Text(verbatim: s.title).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+            Text(verbatim: s.title).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).minimumScaleFactor(0.85)
             Spacer(minLength: 8)
             NunaSpark(values: spark).frame(width: 64, height: 30)
             HStack(alignment: .firstTextBaseline, spacing: 3) {

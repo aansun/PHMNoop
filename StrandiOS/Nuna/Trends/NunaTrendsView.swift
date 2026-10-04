@@ -416,15 +416,15 @@ struct NunaHeatGrid: View {
         let today = Date()
         let weekStart = cal.dateInterval(of: .weekOfYear, for: today)?.start ?? today
         let byDay = Dictionary(model.charge.map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l })
-        HStack(spacing: 4) {
+        HStack(spacing: weeks > 16 ? 2 : 4) {
             ForEach(0..<weeks, id: \.self) { w in
-                VStack(spacing: 4) {
+                VStack(spacing: weeks > 16 ? 2 : 4) {
                     ForEach(0..<7, id: \.self) { d in
                         let date = cal.date(byAdding: .day, value: (w - (weeks - 1)) * 7 + d, to: weekStart) ?? today
                         let v = date > today ? nil : byDay[Repository.localDayKey(date)]
-                        RoundedRectangle(cornerRadius: 5, style: .continuous)
+                        RoundedRectangle(cornerRadius: weeks > 16 ? 2 : 5, style: .continuous)
                             .fill(v.map { nunaZoneColor($0).opacity(0.35 + 0.55 * min($0 / 100, 1)) } ?? Color.white.opacity(date > today ? 0 : 0.06))
-                            .frame(width: cell, height: cell)
+                            .aspectRatio(1, contentMode: .fit)
                     }
                 }
                 .frame(maxWidth: .infinity)

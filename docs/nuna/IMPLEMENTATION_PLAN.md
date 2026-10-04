@@ -102,11 +102,20 @@ Status (built and checked in the iOS simulator with a restored backup):
 - Stress detail (matches `TodayStress`, then revised on request): the Day average is a ring gauge (0 to 3) beside the baseline note, HRV and Resting HR tiles with the change from the night before, Today / 7D / 30D, a line chart (NOOP's own `DaytimeLoadLine` for today, a smooth band line for 7D / 30D), stress zones with minutes and share, the two highest peaks, 2-minute breathing, Anya, and a switch that shows or hides the Stress card on Today. Stress monitoring itself lives in Today (the card), not in Health. Not wired: the "remind me when high for a long time" toggle, because no such setting exists in the app yet.
 - Known gaps: the "smart alarm" row, journal notes on the night, adding a nap by hand, Rhythm empty / unsupported states in Nuna style, and the waist tile reads the profile only.
 
-## Phase 3: Tren (M)
+## Phase 3: Tren (M): done
 
-Summary with ring gauges, Charge-vs-Effort and Charge-vs-Rest comparisons, per-metric trend screens, heat map, insights, compare, explore.
+Built in `StrandiOS/Nuna/Trends/` and mounted as the Trends tab (`NunaTrendsView`). Everything is computed from the stored daily series (`repo.exploreSeries`); no figure is typed in. The pure helpers live in `Packages/StrandAnalytics/.../TrendInsights.swift` with unit tests (zone counts, weekday and weekly patterns, next-day buckets, strength label, longest streak).
 
-Needs: a correlation/bucket analytics function with unit tests. Keep each Trends sub-view in its own file; `TrendsView` is already near the type-check budget.
+- [x] Root (Trends.dc): range 7D / 30D / 90D / 1Y, summary sentence and three rings with the change from the previous period, best and lowest day, Charge-and-Effort and Charge-and-Rest cards with real correlation and "after a hard day" figures, daily signals (HRV, resting HR, stress, steps) with change and sparkline, 12-week Charge heat map, against-the-previous-period bars, Anya line from the data, Explore / Compare / Insights links, PDF export (existing report sheet).
+- [x] Charge, Effort and Rest (TrendsCharge / TrendsEffort / TrendsRest): ring hero with the period change, 7D bars or Line2 chart with dates, zones with day counts, weekly pattern, highest and lowest with dates, drivers (Charge), load per week (Effort), what shapes Rest from the nights themselves (duration against need, consistency, efficiency, debt). Effort follows the chosen scale.
+- [x] Charge and Effort (TrendsChargeEffort): bars and line on one day axis with touch-to-read, Charge tomorrow by Effort band, scatter with the fitted line, days that stand out.
+- [x] Charge and Rest (TrendsChargeRest): two lines, Charge by Rest band, scatter, what shapes Rest.
+- [x] Heat map (TrendsHeatmap): 3 / 6 / 12 months, green / yellow / red counts, weekly pattern, by month, best green streak.
+- [x] Insights (TrendsInsights): data sufficiency, behaviour effects from journal answers (with and without days, confidence), cost of activity (`ActivityCostEngine`), links between metrics, tracked behaviours.
+- [x] Compare (TrendsCompare): pick 2 to 4 metrics, normalised lines, correlation per pair, previous-period overlay, saved comparisons kept on this phone.
+- [x] Explore (TrendsExplore): search, filters, favourites kept on this phone, every signal that has data with sparkline and latest value; opens the metric screen.
+
+Not built: the "Pilih periode" custom date picker, and Insights rows for caffeine / hydration / late workouts that need their own journal entries (they appear only once those answers exist). Dummy-data note: the 90-day dummy Rest is almost always above 86%, so the low-Rest bucket on Charge and Rest is empty there; the screen shows a dash rather than inventing a value.
 
 ## Phase 4: Latihan (L)
 

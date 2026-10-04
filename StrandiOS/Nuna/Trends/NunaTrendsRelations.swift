@@ -283,9 +283,9 @@ struct NunaHeatmapView: View {
                 }
             }
             HStack(spacing: 10) {
-                NunaStatTile(label: "Green days", value: "\(z[2])")
-                NunaStatTile(label: "Yellow days", value: "\(z[1])")
-                NunaStatTile(label: "Red days", value: "\(z[0])")
+                NunaStatTile(label: "Green", value: "\(z[2])", unit: String(localized: "days"))
+                NunaStatTile(label: "Yellow", value: "\(z[1])", unit: String(localized: "days"))
+                NunaStatTile(label: "Red", value: "\(z[0])", unit: String(localized: "days"))
             }
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
