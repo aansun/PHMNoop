@@ -117,11 +117,25 @@ Built in `StrandiOS/Nuna/Trends/` and mounted as the Trends tab (`NunaTrendsView
 
 Not built: the "Pilih periode" custom date picker, and Insights rows for caffeine / hydration / late workouts that need their own journal entries (they appear only once those answers exist). Dummy-data note: the 90-day dummy Rest is almost always above 86%, so the low-Rest bucket on Charge and Rest is empty there; the screen shows a dash rather than inventing a value.
 
-## Phase 4: Latihan (L)
+## Phase 4: Latihan (L): built, with gaps
 
-Hub, start, summary. Gym programs (templates), import, session summary, "save as program". Training load (summary, cardio, muscular), calendar, history. Auto-detect on/off. Live sessions for GPS (run, walk, cycle) and non-GPS (HIIT, indoor), lock-screen Live Activity, Dynamic Island, zone alerts.
+Built in `StrandiOS/Nuna/Workouts/`. The Workouts destination (Today's "All workouts", Effort's session rows, the Quick sheet's Start session) now opens `NunaWorkoutsView`; the Default screens are untouched. Everything reads saved workouts (`repo.workoutRows`), daily Effort, lifting sessions and sets, and the stored heart rate.
 
-Acceptance: GPS sessions always show distance, time and pace (speed for cycling) on the session screen, lock screen and Island; non-GPS sessions never show distance or pace; the lock screen has no Pause/End buttons.
+- [x] Hub (Workouts.dc): last 7 days of Effort against the usual week with cardio and strength columns, sessions / duration / calories, training-load card with the acute-to-chronic ratio, 5-week calendar, auto-detect suggestion card with Save / Not a workout, start grid, history, banner for a running session.
+- [x] Start (WorkoutStart.dc): sport picker over the existing catalogue, Free / Time / Distance / Zone target, readiness line from today's Charge, GPS and strap-buzz options, 3-second countdown, then `AppModel.startWorkout` (GPS arming and persistence are the existing ones).
+- [x] Live session: elapsed time, heart rate, zone, Effort building, average and peak, GPS distance and pace when a route is recorded, progress to the target, a strap buzz when the target is reached or the zone is left, pause, resume, end and discard. Uses `AppModel.activeWorkout`, the same state the Default screen uses, so a session can be resumed from either.
+- [x] Summary (WorkoutSummary.dc): distance, time, pace for on-foot sports, route trace when one was recorded, Effort added with the day's total, time per heart-rate zone, heart-rate curve, delete.
+- [x] History (WorkoutHistory.dc): search, filters, totals, grouped by week, newest or oldest first.
+- [x] Calendar (WorkoutCalendar.dc): 7 weeks of days coloured cardio / strength / both, tap a day for its sessions, active and rest days, streak, longest gap, weekday pattern.
+- [x] Training load (TrainingLoad, Cardio, Muscle): summary with the load balance scale and 6 weeks of cardio and strength; cardio with form, fitness and fatigue from the existing `TrainingLoadEngine`, daily form, form states, load sources, time per zone; strength with weekly volume, volume by muscle group and personal records from the Lift Log tables.
+- [x] Auto-detect (WorkoutAutoDetect / Off): the switch, the fixed rules read from `AutoWorkoutDetector`, the latest suggestion.
+- [x] Pure helpers with tests: `TrendInsights.loadRatio`, `loadBand`, `formState`.
+
+Not built, and why:
+- Lock-screen Live Activity and Dynamic Island for a running session, voice coach, Strava push, GPS and non-GPS live templates (LiveWalk, LiveCycle, LiveHIIT, LiveIndoor, LiveIsland, LiveZone): the Default live activity, Strava and voice code stay as they are. The Nuna live screen does not yet drive them.
+- Gym programs, import and "save as program" (WorkoutGym, WorkoutProgram, WorkoutProgramImport, WorkoutProgramItem, WorkoutSaveProgram, WorkoutLift, WorkoutSummaryGym) are reached through the existing Lift Log; their Nuna redesign is the next slice.
+- A map under the route trace (only the line is drawn), per-kilometre splits, and the Write-to-Health and Strava switches on the summary (the sync handles Health; Strava is not wired here).
+- Dummy data: the 90-day dummy now has four lifting sessions with sets so Strength can be checked; its run and walk rows have no GPS route, so the route trace and splits could not be seen.
 
 ## Phase 5: Anya everywhere (M)
 

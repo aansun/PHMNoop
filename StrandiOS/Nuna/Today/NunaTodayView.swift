@@ -482,7 +482,7 @@ struct NunaTodayView: View {
             if let w = model.workouts.last {
                 VStack(spacing: 12) {
                     NunaTitleRow(title: "Activity") {
-                        NavigationLink(value: TabRoute.workouts) { NunaLinkLabel(text: "All workouts", chevron: true) }
+                        Button { router.requestedDestination = .workouts } label: { NunaLinkLabel(text: "All workouts", chevron: true) }
                     }
                     NunaActivityRow(workout: w, effortScale: effortScale)
                 }

@@ -131,4 +131,29 @@ public enum TrendInsights {
         }
         return best.map { (length: $0.0, endDay: $0.1) }
     }
+
+    // MARK: Load balance
+
+    public enum LoadBand: String, Sendable { case under, optimal, high, excessive }
+
+    /// Acute-to-chronic balance: the last block against the mean of all blocks (the last one included), e.g. this
+    /// week's load against the average of the last six weeks. Nil unless at least `minBlocks` blocks carry load.
+    public static func loadRatio(blocks: [Double], minBlocks: Int = 3) -> Double? {
+        let loaded = blocks.filter { $0 > 0 }
+        guard loaded.count >= minBlocks, let last = blocks.last else { return nil }
+        let mean = blocks.reduce(0, +) / Double(blocks.count)
+        return mean > 0 ? last / mean : nil
+    }
+
+    /// Under 0.8, 0.8 to 1.3 optimal, 1.3 to 1.5 high, above that excessive.
+    public static func loadBand(_ ratio: Double) -> LoadBand {
+        ratio < 0.8 ? .under : (ratio <= 1.3 ? .optimal : (ratio <= 1.5 ? .high : .excessive))
+    }
+
+    /// Form (CTL minus ATL) read as a state: above +2 fresh, -3 to +2 balanced, -6 to -3 loaded, below -6 overreached.
+    public enum FormState: String, Sendable { case fresh, balanced, loaded, overreached }
+
+    public static func formState(_ tsb: Double) -> FormState {
+        tsb > 2 ? .fresh : (tsb >= -3 ? .balanced : (tsb >= -6 ? .loaded : .overreached))
+    }
 }

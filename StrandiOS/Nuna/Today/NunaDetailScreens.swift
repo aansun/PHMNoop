@@ -122,6 +122,7 @@ struct NunaChargeDetailView: View {
 // MARK: - Effort
 
 struct NunaEffortDetailView: View {
+    @EnvironmentObject private var router: NavRouter
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
@@ -147,7 +148,7 @@ struct NunaEffortDetailView: View {
                 VStack(spacing: 0) {
                     ForEach(Array(day.workouts.enumerated()), id: \.offset) { idx, w in
                         if idx > 0 { NunaDivider() }
-                        NavigationLink(value: TabRoute.workouts) {
+                        Button { router.requestedDestination = .workouts } label: {
                             HStack(spacing: 12) {
                                 NunaIconTile("flame", tint: NunaPalette.effortText)
                                 VStack(alignment: .leading, spacing: 2) {
