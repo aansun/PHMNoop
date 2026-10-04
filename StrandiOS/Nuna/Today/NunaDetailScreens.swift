@@ -39,13 +39,7 @@ struct NunaChargeDetailView: View {
             NunaSegmented(rangeOptions(), selection: $range)
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
-                    NunaColorBars(values: slots.map(\.value), maxValue: 100, color: nunaChargeColor)
-                    HStack {
-                        Text(verbatim: String(localized: "\(range) days ago"))
-                        Spacer()
-                        Text("Today")
-                    }
-                    .font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    NunaColorBars(values: slots.map(\.value), dates: slots.map(\.date), maxValue: 100, color: nunaChargeColor)
                     HStack(spacing: 14) {
                         legend(NunaPalette.charge, "67+"); legend(NunaPalette.warning, "34–66"); legend(NunaPalette.alert, "0–33")
                         Spacer()
@@ -176,12 +170,16 @@ struct NunaEffortDetailView: View {
             NunaSegmented(rangeOptions(), selection: $range)
             NunaCard {
                 if range == 7 {
+                    let top = max(slots.compactMap(\.value).max() ?? 1, 1)
                     NunaColumns(items: slots.map { s in
-                        NunaColumns.Item(label: weekday(s.date), fraction: s.value.map { $0 / 100 },
+                        NunaColumns.Item(weekday: weekday(s.date), date: s.date, fraction: s.value.map { $0 / top },
+                                         valueText: s.value.map { UnitFormatter.effortDisplay($0, scale: scale) },
                                          highlight: Calendar.current.isDateInToday(s.date))
                     }, color: NunaPalette.effort, highlightColor: NunaPalette.effortText)
                 } else {
-                    NunaColorBars(values: slots.map(\.value), maxValue: 100, color: { _ in NunaPalette.effort })
+                    NunaColorBars(values: slots.map(\.value), dates: slots.map(\.date),
+                                  maxValue: max(slots.compactMap(\.value).max() ?? 1, 1), color: { _ in NunaPalette.effort },
+                                  format: { UnitFormatter.effortDisplay($0, scale: scale) })
                 }
             }
             NunaExpandRow(title: "How it's calculated", subtitle: "Cardio load across the day",
@@ -233,6 +231,9 @@ struct NunaMetricDetailView: View {
         String(format: "%.\(metric.decimals)f", locale: AppLanguage.activeLocale, v)
     }
 
+    /// Compact label for chart columns: 8.2K for 8,214 steps.
+    private func fmtShort(_ v: Double) -> String { TrendChart.line2ValueString(v, formattedValue: fmt(v)) }
+
     var body: some View {
         let slots = series.window(range)
         let present = slots.compactMap(\.value)
@@ -258,22 +259,14 @@ struct NunaMetricDetailView: View {
                     } else if isColumns && range == 7 {
                         let top = max(present.max() ?? 1, 1)
                         NunaColumns(items: slots.map { s in
-                            NunaColumns.Item(label: weekday(s.date), fraction: s.value.map { $0 / top }, highlight: Calendar.current.isDateInToday(s.date))
-                        }, color: NunaPalette.restText.opacity(0.85), highlightColor: NunaPalette.charge)
+                            NunaColumns.Item(weekday: weekday(s.date), date: s.date, fraction: s.value.map { $0 / top },
+                                             valueText: s.value.map { fmtShort($0) }, highlight: Calendar.current.isDateInToday(s.date))
+                        }, color: NunaPalette.restText.opacity(0.85), highlightColor: NunaPalette.textPrimary)
                     } else if isColumns {
-                        NunaColorBars(values: slots.map(\.value), maxValue: max(present.max() ?? 1, 1), color: { _ in NunaPalette.restText })
+                        NunaColorBars(values: slots.map(\.value), dates: slots.map(\.date), maxValue: max(present.max() ?? 1, 1),
+                                      color: { _ in NunaPalette.restText }, format: { fmtShort($0) })
                     } else {
-                        NunaBandLine(values: slots.map(\.value), color: color)
-                    }
-                    if !isColumns {
-                        HStack {
-                            Text(verbatim: String(localized: "\(range) days ago"))
-                            Spacer()
-                            if present.count >= 2 { Text("Band: your normal range") }
-                            Spacer()
-                            Text("Today")
-                        }
-                        .font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        NunaLine2Chart(points: series.readings(range), color: .white, decimals: metric.decimals, baseline: series.baseline)
                     }
                 }
             }
@@ -504,10 +497,7 @@ struct NunaStressDetailView: View {
                             .frame(maxWidth: .infinity, minHeight: 110)
                     }
                 } else {
-                    let slots = series.window(range)
-                    NunaBandLine(values: slots.map(\.value), color: NunaPalette.warning)
-                    HStack { Text(verbatim: String(localized: "\(range) days ago")); Spacer(); Text("Today") }
-                        .font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    NunaLine2Chart(points: series.readings(range), color: .white, decimals: 1, baseline: series.baseline)
                 }
                 HStack(spacing: 14) {
                     legend(NunaPalette.charge, "Low"); legend(NunaPalette.warning, "Medium"); legend(NunaPalette.alert, "High")

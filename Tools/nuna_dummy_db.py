@@ -152,28 +152,34 @@ def main():
             naps.append(build_nap(rng, ns, nd))
 
     # ---- computed-layer rows ----------------------------------------------------------------------
+    # The same daily rows go in twice. The app re-scores the last ~21 days from raw heart rate whenever it
+    # opens and overwrites the computed layer; this synthetic raw data is too simple to reproduce the
+    # scores, so the imported layer (which wins and is never re-scored) carries the intended values.
     for d, v in daily.items():
         n = v["night"]
-        db.execute(
+        for dev in (COMP, RAW):
+          db.execute(
             "insert into dailyMetric (deviceId,day,totalSleepMin,efficiency,deepMin,remMin,lightMin,disturbances,restingHr,"
             "avgHrv,recovery,strain,exerciseCount,spo2Pct,skinTempDevC,respRateBpm,steps,activeKcalEst,avgSdnn,skinTempC)"
             " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (COMP, d.isoformat(), n and n["asleep"], n and n["eff"], n and n["deep"], n and n["rem"], n and n["light"],
+            (dev, d.isoformat(), n and n["asleep"], n and n["eff"], n and n["deep"], n and n["rem"], n and n["light"],
              n and n["wakes"], v["rhr"], v["hrv"], v["rec"], round(v["strain"], 2), len(workouts.get(d, [])),
              round(v["spo2"], 1), round(v["skin_dev"], 2), round(v["resp"], 1), v["steps"], round(v["kcal"], 1),
              v["hrv"] * 1.12, round(v["skin_abs"], 2)))
     for d, n in nights.items():
+      for dev in (COMP, RAW):
         db.execute(
             "insert into sleepSession (deviceId,startTs,endTs,efficiency,restingHr,avgHrv,stagesJSON,userEdited,motionJSON)"
             " values (?,?,?,?,?,?,?,0,?)",
-            (COMP, n["start"], n["end"], n["eff"], daily[d]["rhr"], daily[d]["hrv"],
+            (dev, n["start"], n["end"], n["eff"], daily[d]["rhr"], daily[d]["hrv"],
              json.dumps(n["segments"], separators=(",", ":"), sort_keys=True),
              json.dumps([round(x, 4) for x in n["motion"]], separators=(",", ":"))))
     for nap in naps:
+      for dev in (COMP, RAW):
         db.execute(
             "insert into sleepSession (deviceId,startTs,endTs,efficiency,restingHr,avgHrv,stagesJSON,userEdited,motionJSON)"
             " values (?,?,?,?,?,?,?,0,?)",
-            (COMP, nap["start"], nap["end"], nap["eff"], None, None,
+            (dev, nap["start"], nap["end"], nap["eff"], None, None,
              json.dumps(nap["segments"], separators=(",", ":"), sort_keys=True),
              json.dumps([round(x, 4) for x in nap["motion"]], separators=(",", ":"))))
 
@@ -229,6 +235,7 @@ def main():
             db.execute("insert into appleDaily (deviceId,day,steps,activeKcal,basalKcal,vo2max,avgHr,maxHr,walkingHr,weightKg)"
                        " values (?,?,?,?,?,?,?,?,?,?)",
                        (APPLE, d.isoformat(), None, None, None, None, None, None, None, round(w, 1)))
+    ms = ms + [(RAW, d, k, v) for (dev, d, k, v) in ms if dev == COMP]
     db.executemany("insert or replace into metricSeries (deviceId,day,key,value) values (?,?,?,?)", ms)
 
     # journal

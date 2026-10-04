@@ -427,20 +427,20 @@ struct NunaSleepPerformanceView: View {
                         Spacer(minLength: 0)
                     }
                 }
-                trend("Hours vs needed, last 14 nights", model.recent { model.hoursVsNeeded($0) }, NunaPalette.rest)
-                trend("Consistency, last 14 nights", model.recent { model.consistency($0) }, NunaPalette.restText)
-                trend("Efficiency, last 14 nights", model.recent { model.efficiency($0) }, NunaPalette.restLight)
+                trend("Hours vs needed, last 14 nights", model.recentPoints { model.hoursVsNeeded($0) })
+                trend("Consistency, last 14 nights", model.recentPoints { model.consistency($0) })
+                trend("Efficiency, last 14 nights", model.recentPoints { model.efficiency($0) })
             }
         }
     }
 
-    @ViewBuilder private func trend(_ title: LocalizedStringKey, _ values: [Double?], _ color: Color) -> some View {
-        if values.contains(where: { $0 != nil }) {
+    @ViewBuilder private func trend(_ title: LocalizedStringKey, _ points: [(date: Date, value: Double)]) -> some View {
+        if !points.isEmpty {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(title).font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textSecondary)
-                    NunaBars(values: values, color: color, average: nil).frame(height: 110)
+                    NunaLine2Chart(points: points, color: .white, decimals: 0, height: 170)
                 }
             }
         }
