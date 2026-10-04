@@ -370,17 +370,41 @@ struct NunaStressDetailView: View {
         let score = day.stress
         let tint: Color = score.map(color) ?? NunaPalette.textPrimary
         NunaDetailScreen("Stress monitor") {
-            NunaHeroCard(caption: "Day average", chip: score.map { $0 < 1 ? "Low" : ($0 < 2 ? "Medium" : "High") },
-                         chipColor: tint, number: score.map { String(format: "%.1f", locale: AppLanguage.activeLocale, $0) } ?? "–",
-                         suffix: "/ 3", color: tint) {
-                if let score, let base = series.baseline {
-                    let b = String(format: "%.1f", locale: AppLanguage.activeLocale, base)
-                    Text(verbatim: score < base - 0.05 ? String(localized: "Calmer than your baseline (\(b))")
-                         : (score > base + 0.05 ? String(localized: "Tenser than your baseline (\(b))")
-                            : String(localized: "About your usual baseline (\(b))")))
-                        .font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            NunaCard(padding: EdgeInsets(top: 22, leading: 22, bottom: 22, trailing: 22)) {
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack {
+                        Text("Day average").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
+                            .foregroundStyle(NunaPalette.textSecondary)
+                        Spacer()
+                        if let score { NunaChip(score < 1 ? "Low" : (score < 2 ? "Medium" : "High"), color: tint) }
+                    }
+                    HStack(spacing: 20) {
+                        NunaRingGauge(fraction: (score ?? 0) / 3, color: tint, size: 128, lineWidth: 12) {
+                            VStack(spacing: 0) {
+                                Text(verbatim: score.map { String(format: "%.1f", locale: AppLanguage.activeLocale, $0) } ?? "–")
+                                    .font(.system(size: 38, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                                Text(verbatim: "/ 3").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                            }
+                        }
+                        VStack(alignment: .leading, spacing: 8) {
+                            if let score, let base = series.baseline {
+                                let b = String(format: "%.1f", locale: AppLanguage.activeLocale, base)
+                                Text(verbatim: score < base - 0.05 ? String(localized: "Calmer than your baseline (\(b))")
+                                     : (score > base + 0.05 ? String(localized: "Tenser than your baseline (\(b))")
+                                        : String(localized: "About your usual baseline (\(b))")))
+                                    .font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            if let latest = day.stressCurve?.hours.last(where: { $0.level != nil })?.level, day.isToday {
+                                Text(verbatim: String(localized: "Now \(String(format: "%.1f", locale: AppLanguage.activeLocale, latest))"))
+                                    .font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            }
+                        }
+                        Spacer(minLength: 0)
+                    }
                 }
             }
+            recoveryTiles
             NunaSegmented([(value: 1, title: "Today"), (value: 7, title: "7D"), (value: 30, title: "30D")], selection: $range)
             chartCard
             if range == 1, let curve = day.stressCurve {
@@ -457,24 +481,31 @@ struct NunaStressDetailView: View {
                         Text("By time of day").font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     if let curve = day.stressCurve, let pts = chartPoints(curve) {
-                        NunaStressBars(points: pts)
+                        // The same line NOOP draws on Default Today and in the widget.
+                        HStack(alignment: .top, spacing: 8) {
+                            VStack(alignment: .trailing, spacing: 0) {
+                                ForEach([3, 2, 1, 0], id: \.self) { t in
+                                    Text(verbatim: "\(t)").font(.system(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                                    if t > 0 { Spacer(minLength: 0) }
+                                }
+                            }
+                            .frame(width: 14, height: 110)
+                            DaytimeLoadLine(hours: pts).frame(height: 110)
+                        }
                         HStack {
                             if let f = pts.first(where: { $0.level != nil }) { Text(verbatim: NunaSleepFormat.clock(Date(timeIntervalSince1970: TimeInterval(f.startTs)))) }
-                            Spacer()
-                            if let mid = pts[safe: pts.count / 2] { Text(verbatim: NunaSleepFormat.clock(Date(timeIntervalSince1970: TimeInterval(mid.startTs)))) }
                             Spacer()
                             Text("Now")
                         }
                         .font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .padding(.leading, 22)
                     } else {
                         Text("Calibrating").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                            .frame(maxWidth: .infinity, minHeight: 96)
+                            .frame(maxWidth: .infinity, minHeight: 110)
                     }
                 } else {
                     let slots = series.window(range)
-                    NunaStressBars(points: slots.enumerated().map { i, s in
-                        DaytimeStress.HourPoint(hour: i, startTs: Int(s.date.timeIntervalSince1970), level: s.value, meanHR: nil, rmssd: nil)
-                    })
+                    NunaBandLine(values: slots.map(\.value), color: NunaPalette.warning)
                     HStack { Text(verbatim: String(localized: "\(range) days ago")); Spacer(); Text("Today") }
                         .font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
@@ -484,6 +515,41 @@ struct NunaStressDetailView: View {
                 }
             }
         }
+    }
+
+    /// HRV and resting heart rate, the two signals the stress read leans on, with the change from the night before.
+    private var recoveryTiles: some View {
+        HStack(spacing: 12) {
+            signalTile("HRV", key: "hrv", value: day.hrv, unit: "ms", delta: day.hrvDelta, downIsGood: false)
+            signalTile("Resting HR", key: "rhr", value: day.restingHr, unit: "bpm", delta: day.restingHrDelta, downIsGood: true)
+        }
+    }
+
+    @ViewBuilder private func signalTile(_ label: LocalizedStringKey, key: String, value: Double?, unit: String,
+                                         delta: Double?, downIsGood: Bool) -> some View {
+        let tile = NunaCard(small: true) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text(label).font(.system(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                HStack(alignment: .firstTextBaseline, spacing: 3) {
+                    Text(verbatim: value.map { String(format: "%.0f", locale: AppLanguage.activeLocale, $0) } ?? "–")
+                        .font(.system(size: NunaTypeSize.numberM, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    if value != nil { Text(verbatim: unit).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+                }
+                if let delta, abs(delta.rounded()) >= 1 {
+                    let good = downIsGood ? delta < 0 : delta > 0
+                    let c = good ? NunaPalette.charge : NunaPalette.warning
+                    Text(verbatim: (delta > 0 ? "▲ " : "▼ ") + "\(Int(abs(delta).rounded()))")
+                        .font(.system(size: 11.5, weight: .bold)).foregroundStyle(c)
+                        .padding(.horizontal, 8).frame(height: 24).background(NunaPalette.tint(c), in: Capsule())
+                } else {
+                    Text(verbatim: " ").font(.system(size: 11.5)).frame(height: 24)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        if let m = MetricCatalog.metric(key: key, source: "my-whoop") {
+            NavigationLink(value: NunaTodayRoute.metric(m)) { tile }.buttonStyle(.plain)
+        } else { tile }
     }
 
     /// The finer 30-minute timeline when it has scored points, otherwise the hourly read the Today card uses.

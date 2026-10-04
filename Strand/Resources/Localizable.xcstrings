@@ -1,6 +1,9 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "Now %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sekarang %@"}}
+        } },
         "Added by you": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Ditambahkan olehmu"}}
         } },
