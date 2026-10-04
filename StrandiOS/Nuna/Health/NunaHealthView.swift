@@ -35,8 +35,9 @@ struct NunaHealthView: View {
     @State private var tab = 0
     @State private var legacy: Legacy?
     @State private var showCoach = false
+    @State private var fitSeries: [(day: String, value: Double)] = []
 
-    private enum Legacy: String, Identifiable { case appleHealth, live, mood, cycle; var id: String { rawValue } }
+    private enum Legacy: String, Identifiable { case appleHealth, live, mood, cycle, breathing; var id: String { rawValue } }
 
     var body: some View {
         ScrollView {
@@ -78,6 +79,7 @@ struct NunaHealthView: View {
             await fatS.load(repo: repo, key: "body_fat", source: "apple-health", days: 400)
             await leanS.load(repo: repo, key: "lean_mass", source: "apple-health", days: 400)
             await kcalInS.load(repo: repo, key: "calories_in", source: "nutrition-csv", days: 30)
+            fitSeries = await repo.exploreSeries(key: "fitness_age", source: "my-whoop", days: 120)
             await reloadWater()
         }
         .sheet(item: $legacy) { which in
@@ -86,6 +88,7 @@ struct NunaHealthView: View {
                     switch which {
                     case .appleHealth: AppleHealthView()
                     case .live: LiveView()
+                    case .breathing: BreathingView()
                     case .mood: ScrollView { MindSection().padding() }
                     case .cycle:
                         if let cycle = appModel.cyclePhase { CycleTrackerView(result: cycle, curve: appModel.cycleCurve) }
@@ -158,22 +161,21 @@ struct NunaHealthView: View {
         }
     }
 
-    /// The four vitals as long rows, each compared with the average of the previous 14 days.
+    /// The four vitals as long rows, each compared with the night before (up or down since yesterday).
     private var vitalList: some View {
-        func change(_ cur: Double?, _ series: NunaSeriesModel, decimals: Int, upIsGood: Bool?) -> (String, Bool?)? {
-            guard let cur, let avg = series.average(days: 14) else { return nil }
-            let d = cur - avg
+        func change(_ d: Double?, decimals: Int, upIsGood: Bool?) -> (String, Bool?)? {
+            guard let d else { return nil }
             let step = decimals == 0 ? 1.0 : 0.1
             guard abs(d) >= step - 0.0001 else { return nil }
             let shown = String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, abs(d))
             return ((d > 0 ? "▲ " : "▼ ") + shown, upIsGood.map { d > 0 ? $0 : !$0 })
         }
         func route(_ key: String) -> NunaTodayRoute? { MetricCatalog.metric(key: key, source: "my-whoop").map { .metric($0) } }
-        let h = change(day.hrv, hrvS, decimals: 0, upIsGood: true)
-        let r = change(day.restingHr, rhrS, decimals: 0, upIsGood: false)
-        let o = change(day.spo2, spo2S, decimals: 0, upIsGood: true)
-        let b = change(day.respiratory, respS, decimals: 1, upIsGood: nil)
-        let cap: LocalizedStringKey = "vs last 14 days"
+        let h = change(day.hrvDelta, decimals: 0, upIsGood: true)
+        let r = change(day.restingHrDelta, decimals: 0, upIsGood: false)
+        let o = change(day.spo2Delta, decimals: 0, upIsGood: true)
+        let b = change(day.respiratoryDelta, decimals: 1, upIsGood: nil)
+        let cap: LocalizedStringKey = "vs yesterday"
         return NunaMetricsGrid(tiles: [
             NunaMetricTile(id: "hrv", label: "HRV", value: fmt(day.hrv), unit: "ms", route: route("hrv"), delta: h?.0, deltaGood: h?.1, icon: "waveform.path.ecg", caption: cap),
             NunaMetricTile(id: "rhr", label: "Resting HR", value: fmt(day.restingHr), unit: "bpm", route: route("rhr"), delta: r?.0, deltaGood: r?.1, icon: "heart", caption: cap),
@@ -334,26 +336,45 @@ struct NunaHealthView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    private func cardTitle(_ t: LocalizedStringKey) -> some View {
+        Text(t).font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+    }
+
     private var stressCard: some View {
         let score = day.stress
         let level: (LocalizedStringKey, Color)? = score.map { $0 < 1 ? ("Low", NunaPalette.charge) : ($0 < 2 ? ("Medium", NunaPalette.warning) : ("High", NunaPalette.alert)) }
-        return NavigationLink(value: stressRoute) {
-            NunaCard {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack {
-                        Text("Stress monitor").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                        Spacer()
-                        if let level { NunaChip(level.0, color: level.1) }
+        return NunaCard {
+            VStack(alignment: .leading, spacing: 12) {
+                NavigationLink(value: stressRoute) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            cardTitle("Stress monitor")
+                            Spacer()
+                            if let level { NunaChip(level.0, color: level.1) }
+                        }
+                        NunaHalfGauge(value: score, maxValue: 3, color: level?.1 ?? NunaPalette.textSecondary)
+                            .frame(height: 112)
+                            .overlay(alignment: .bottom) {
+                                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                                    Text(verbatim: fmt(score, 1)).font(.system(size: 40, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                                    Text(verbatim: "/ 3").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                                }
+                            }
+                        Text("Calculated from heart rate and HRV through the day, against your own baseline.")
+                            .font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                     }
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(verbatim: fmt(score, 1)).font(.system(size: NunaTypeSize.numberL, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: "/ 3").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                }.buttonStyle(.plain)
+                Button { legacy = .breathing } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "wind").font(.system(size: 14, weight: .bold))
+                        Text("Breathe 5 min").font(.system(size: 15, weight: .bold))
                     }
-                    Text("Calculated from heart rate and HRV through the day, against your own baseline.")
-                        .font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
-                }
+                    .foregroundStyle(NunaPalette.onAccent)
+                    .frame(maxWidth: .infinity).frame(height: 48)
+                    .background(NunaPalette.textPrimary, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+                }.buttonStyle(.plain)
             }
-        }.buttonStyle(.plain)
+        }
     }
 
     private var fitnessCard: some View {
@@ -362,67 +383,88 @@ struct NunaHealthView: View {
         let diff: Int? = (fit != nil && age > 0) ? Int((Double(age) - fit!).rounded()) : nil
         return NavigationLink(value: NunaTodayRoute.fitnessAge) {
             NunaCard {
-                VStack(alignment: .leading, spacing: 10) {
+                VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text("Fitness age").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        cardTitle("Fitness age")
                         Spacer()
                         NunaChip("Estimate ±5 years")
                     }
-                    HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Text(verbatim: fmt(fit)).font(.system(size: NunaTypeSize.numberL, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("years").font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(verbatim: fmt(fit)).font(.system(size: 52, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("years").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        Spacer()
+                        if let diff, diff != 0 {
+                            NunaChip(diff > 0 ? LocalizedStringKey("\(diff) years younger") : LocalizedStringKey("\(-diff) years older"),
+                                     color: diff > 0 ? NunaPalette.charge : NunaPalette.warning)
+                        }
                     }
-                    if let diff {
-                        Text(verbatim: diff == 0 ? String(localized: "About the same as your age")
-                             : (diff > 0 ? String(localized: "\(diff) years younger than your age") : String(localized: "\(-diff) years older than your age")))
-                            .font(.system(size: 14, weight: .bold)).foregroundStyle(diff >= 0 ? NunaPalette.charge : NunaPalette.warning)
-                        Text(verbatim: String(localized: "Your age \(age)")).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    if age > 0 {
+                        Text(verbatim: String(localized: "Actual age \(age)")).font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    }
+                    if let fit, age > 0 { NunaAgeSlider(fitness: fit, age: Double(age)) }
+                    if let note = fitnessFooter {
+                        Text(verbatim: note).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
                     }
                 }
             }
         }.buttonStyle(.plain)
     }
 
+    /// "Updated Saturday · 4-week trend ▼ 1 yr", from the stored weekly series.
+    private var fitnessFooter: String? {
+        guard let last = fitSeries.last else { return nil }
+        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; f.locale = Locale(identifier: "en_US_POSIX")
+        var text = ""
+        if let d = f.date(from: last.day) {
+            let w = DateFormatter(); w.locale = AppLanguage.activeLocale; w.setLocalizedDateFormatFromTemplate("EEEE")
+            text = String(localized: "Updated \(w.string(from: d))")
+        }
+        if fitSeries.count >= 5 {
+            let delta = last.value - fitSeries[fitSeries.count - 5].value
+            let n = Int(abs(delta).rounded())
+            if n >= 1 { text += (text.isEmpty ? "" : " · ") + String(localized: "4-week trend") + (delta < 0 ? " ▼ " : " ▲ ") + String(localized: "\(n) yr") }
+        }
+        return text.isEmpty ? nil : text
+    }
+
     private var earlyWarningCard: some View {
         let raised = appModel.illnessSignal.map { $0.level != .quiet } ?? false
+        let fired = (appModel.illnessSignal?.firedSignals ?? []).map { $0.lowercased() }
+        func hit(_ keys: [String]) -> Bool { fired.contains { f in keys.contains { f.contains($0) } } }
+        let signals: [(LocalizedStringKey, Bool)] = [
+            ("Resting HR", hit(["rhr", "resting"])), ("HRV", hit(["hrv"])),
+            ("Skin Temp", hit(["skin"])), ("Respiratory", hit(["respirat"])),
+        ]
         return NavigationLink(value: NunaTodayRoute.earlyWarning) {
             NunaCard {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack {
-                        Text("Early warning").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(spacing: 10) {
+                        Image(systemName: raised ? "exclamationmark.triangle" : "checkmark.shield").font(.system(size: 18, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                        cardTitle("Early warning")
                         Spacer()
                         NunaChip(raised ? "Signals are up" : "Safe", color: raised ? NunaPalette.warning : NunaPalette.charge)
                     }
                     Text(raised ? "Some signals are away from your range. Take it easy and watch how you feel."
                                 : "No signs of strain. It takes two signals away from your range to raise a warning.")
                         .font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
-                    HStack(spacing: 8) {
-                        NunaChip("Resting HR"); NunaChip("HRV"); NunaChip("Skin Temp"); NunaChip("Respiratory")
+                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+                        ForEach(0..<signals.count, id: \.self) { i in
+                            HStack(spacing: 8) {
+                                Image(systemName: signals[i].1 ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
+                                    .font(.system(size: 15)).foregroundStyle(signals[i].1 ? NunaPalette.warning : NunaPalette.textSecondary)
+                                Text(signals[i].0).font(.system(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
+                                Spacer(minLength: 0)
+                            }
+                            .padding(.horizontal, 12).frame(height: 40)
+                            .background(NunaPalette.glassStrong, in: Capsule())
+                        }
                     }
                 }
             }
         }.buttonStyle(.plain)
     }
 
-    private var liveCard: some View {
-        Button { legacy = .live } label: {
-            NunaCard {
-                HStack(alignment: .center) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text("Live heart rate").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                        HStack(alignment: .firstTextBaseline, spacing: 4) {
-                            Image(systemName: "heart.fill").foregroundStyle(NunaPalette.textPrimary)
-                            Text(verbatim: live.heartRate.map(String.init) ?? "–")
-                                .font(.system(size: NunaTypeSize.numberL, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
-                            Text("bpm").font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                        }
-                    }
-                    Spacer()
-                    NunaChip(live.connected ? "Strap connected" : "Not connected", color: live.connected ? NunaPalette.charge : NunaPalette.warning)
-                }
-            }
-        }.buttonStyle(.plain)
-    }
+    private var liveCard: some View { NunaLiveHRCard() }
 
     // MARK: Body
 
