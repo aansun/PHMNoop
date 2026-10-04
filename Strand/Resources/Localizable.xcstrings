@@ -1,6 +1,381 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Active strap": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Strap aktif"}}
+    } },
+    "Firmware": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Firmware"}}
+    } },
+    "Not charging": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tidak mengisi"}}
+    } },
+    "Opening your on-device data. Your paired bands appear here in a moment.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Membuka data di perangkat. Strap yang dipasangkan akan muncul sebentar lagi."}}
+    } },
+    "Other WHOOP": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "WHOOP lain"}}
+    } },
+    "history kept": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "riwayat tersimpan"}}
+    } },
+    "Data kept. Tap to add it back": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Data tersimpan. Ketuk untuk menambahkan lagi"}}
+    } },
+    "Help": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bantuan"}}
+    } },
+    "Level, trend and care": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Level, tren, dan perawatan"}}
+    } },
+    "Strap not found?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Strap tidak terdeteksi?"}}
+    } },
+    "Steps to check, one by one": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Langkah memeriksa satu per satu"}}
+    } },
+    "Models and support": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Model dan dukungan"}}
+    } },
+    "WHOOP 4.0, 5.0 and MG": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "WHOOP 4.0, 5.0, dan MG"}}
+    } },
+    "Strap log": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Log strap"}}
+    } },
+    "Copy it when reporting a problem": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Salin saat melapor masalah"}}
+    } },
+    "No strap yet": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Belum ada strap"}}
+    } },
+    "Add your WHOOP to record heart rate, sleep and workouts. NOOP connects directly over Bluetooth, without the WHOOP app or any cloud.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tambahkan WHOOP untuk merekam detak, tidur, dan latihan. NOOP tersambung langsung lewat Bluetooth tanpa aplikasi WHOOP atau awan."}}
+    } },
+    "Syncing history…": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Menyinkron riwayat…"}}
+    } },
+    "Strap history pulled": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Riwayat strap sudah ditarik"}}
+    } },
+    "Can't connect: the strap's pairing was reset": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tidak bisa tersambung: ikatan strap direset"}}
+    } },
+    "See how to pair it again": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Lihat cara memasangkan ulang"}}
+    } },
+    "This device is no longer in the list.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Perangkat ini tidak ada lagi di daftar."}}
+    } },
+    "Device ID": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "ID perangkat"}}
+    } },
+    "History format": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Format riwayat"}}
+    } },
+    "Added": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ditambahkan"}}
+    } },
+    "Actions": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Aksi"}}
+    } },
+    "Reconnect": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sambung ulang"}}
+    } },
+    "Disconnect, then scan again": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Putus lalu pindai kembali"}}
+    } },
+    "Test vibration": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Uji getar"}}
+    } },
+    "The strap vibrates once to confirm": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Strap bergetar sekali untuk memastikan"}}
+    } },
+    "Sent": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Terkirim"}}
+    } },
+    "Restart strap": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mulai ulang strap"}}
+    } },
+    "Disconnects for about 30 seconds": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Terputus sekitar 30 detik"}}
+    } },
+    "Manage": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kelola"}}
+    } },
+    "Add it back": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tambahkan lagi"}}
+    } },
+    "Make it an active device again": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Jadikan perangkat aktif lagi"}}
+    } },
+    "It provides your live data": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Menyediakan data langsungmu"}}
+    } },
+    "Active device": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Perangkat aktif"}}
+    } },
+    "Remove from the list": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hapus dari daftar"}}
+    } },
+    "Data stays and it can be added again": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Data tetap tersimpan, bisa ditambahkan lagi"}}
+    } },
+    "Delete all data of this device": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hapus semua data perangkat ini"}}
+    } },
+    "Permanent and cannot be undone": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Permanen dan tidak bisa dibatalkan"}}
+    } },
+    "Remove for good": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hapus selamanya"}}
+    } },
+    "Takes it out of the list entirely": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mengeluarkannya dari daftar sepenuhnya"}}
+    } },
+    "It disconnects for about 30 seconds, then reconnects on its own. Your recorded data is kept.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Terputus sekitar 30 detik lalu menyambung sendiri. Data yang sudah tercatat tetap aman."}}
+    } },
+    "NOOP stops connecting to it. Its recorded data is kept and you can add it back.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "NOOP berhenti menyambung ke sana. Data tercatat tetap tersimpan dan bisa ditambahkan lagi."}}
+    } },
+    "This permanently deletes everything recorded from this device. It can't be undone.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Semua data yang direkam dari perangkat ini dihapus permanen. Tidak bisa dibatalkan."}}
+    } },
+    "Remove it for good?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hapus selamanya?"}}
+    } },
+    "The device leaves the list completely. Data already recorded is kept.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Perangkat keluar dari daftar sepenuhnya. Data yang sudah tercatat tetap tersimpan."}}
+    } },
+    "Connect the strap to read its battery.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hubungkan strap untuk membaca baterainya."}}
+    } },
+    "Voltage": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tegangan"}}
+    } },
+    "Readings appear here as the strap reports them. Keep it connected for a while to see the trend.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pembacaan muncul di sini saat strap melaporkannya. Biarkan tersambung beberapa saat untuk melihat tren."}}
+    } },
+    "Looking after the battery": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Merawat baterai"}}
+    } },
+    "Charge while you are awake": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Isi saat tidak tidur"}}
+    } },
+    "In the shower or at your desk, so no sleep data is lost": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Saat mandi atau bekerja agar tidak kehilangan data tidur"}}
+    } },
+    "Avoid heat": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hindari panas"}}
+    } },
+    "Do not charge in direct sunlight": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Jangan mengisi di bawah sinar matahari"}}
+    } },
+    "Dry the contacts": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Keringkan kontak"}}
+    } },
+    "Clean and dry them before charging": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bersihkan dan keringkan sebelum mengisi"}}
+    } },
+    "The percentage is read from the strap. The time left is estimated from the readings of this session only and gets better the longer the strap stays connected.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Persentase dibaca langsung dari strap. Estimasi sisa waktu dihitung dari pembacaan sesi ini saja dan makin baik bila strap lama tersambung."}}
+    } },
+    "Status": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Status"}}
+    } },
+    "Up to date": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sudah mutakhir"}}
+    } },
+    "Failed": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Gagal"}}
+    } },
+    "packets so far": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "paket sejauh ini"}}
+    } },
+    "All the history on the strap has been pulled. The next sync runs on its own when the strap is nearby.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Semua riwayat di strap sudah ditarik. Sinkron berikutnya berjalan otomatis saat strap dekat."}}
+    } },
+    "No sync has run since the app opened.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Belum ada sinkron sejak aplikasi dibuka."}}
+    } },
+    "How sync happens": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Cara sinkron"}}
+    } },
+    "Tap Sync now at any time": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ketuk Sinkron sekarang kapan saja"}}
+    } },
+    "In the background": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Di latar belakang"}}
+    } },
+    "Whenever the strap is detected": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tiap kali strap terdeteksi"}}
+    } },
+    "Siri or Shortcuts": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Lewat Siri atau Pintasan"}}
+    } },
+    "The Sync Strap command": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Perintah Sinkron Strap"}}
+    } },
+    "Progress in the Dynamic Island": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kemajuan di Dynamic Island"}}
+    } },
+    "And on the Lock Screen while a sync runs": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Dan di layar kunci saat sinkron berjalan"}}
+    } },
+    "The strap keeps its history until it is pulled. If a sync is delayed for a long time, today's scores wait for the data to arrive.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Strap menyimpan riwayat di dalamnya sampai ditarik. Jika sinkron tertunda lama, skor hari ini menunggu data masuk."}}
+    } },
+    "Try these one by one, from the top. It is usually solved by step 3.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Coba satu per satu dari atas. Biasanya selesai di langkah 3."}}
+    } },
+    "Bring the strap close": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Dekatkan strap"}}
+    } },
+    "Within 1 metre and nothing blocking it.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Jarak di bawah 1 meter dan tanpa penghalang tubuh."}}
+    } },
+    "Check Bluetooth on the iPhone": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Cek Bluetooth iPhone"}}
+    } },
+    "Turn it off and on again if needed.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Nyalakan lalu matikan lagi bila perlu."}}
+    } },
+    "Scan again": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Cari ulang"}}
+    } },
+    "Disconnect, then scan once more.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Putus sambungan lalu pindai kembali."}}
+    } },
+    "Charge the strap": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Isi daya strap"}}
+    } },
+    "A very low battery makes the strap stop advertising.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Baterai sangat rendah membuat strap berhenti menyiarkan sinyal."}}
+    } },
+    "Restart the strap": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mulai ulang strap"}}
+    } },
+    "Disconnects for about 30 seconds, then reconnects by itself.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Terputus sekitar 30 detik lalu menyambung sendiri."}}
+    } },
+    "Pair it again": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pasang ulang"}}
+    } },
+    "Remove the strap from the list and add it again. Your data stays safe.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hapus strap dari daftar lalu tambahkan lagi. Data tetap aman."}}
+    } },
+    "See how": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Lihat caranya"}}
+    } },
+    "Connection states": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Keadaan koneksi"}}
+    } },
+    "Data arrives live": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Data masuk langsung"}}
+    } },
+    "Reconnecting": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Menyambung ulang"}}
+    } },
+    "Trying again on its own": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mencoba lagi otomatis"}}
+    } },
+    "Tap Scan again": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ketuk Cari ulang"}}
+    } },
+    "Still failing? Send the log": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Masih gagal? Kirim log"}}
+    } },
+    "It records what the app sees from the strap": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Memuat apa yang dilihat aplikasi dari strap"}}
+    } },
+    "Can't connect": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tidak bisa tersambung"}}
+    } },
+    "The strap's pairing with this iPhone seems to have been reset.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ikatan strap dengan iPhone tampaknya sudah direset."}}
+    } },
+    "This happens when the strap was paired to another phone or app. iOS still keeps the old pairing, so it has to be forgotten first.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ini terjadi bila strap dipasangkan ke ponsel atau aplikasi lain. iOS masih menyimpan ikatan lama, jadi perlu dilupakan dulu."}}
+    } },
+    "Forget the strap in iOS": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Lupakan strap di iOS"}}
+    } },
+    "Settings, Bluetooth, tap the i next to WHOOP, then Forget This Device.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pengaturan, Bluetooth, ketuk i di samping WHOOP, lalu Lupakan Perangkat Ini."}}
+    } },
+    "Remove it from NOOP's list": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hapus dari daftar NOOP"}}
+    } },
+    "Data already recorded stays.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Data yang sudah tercatat tetap tersimpan."}}
+    } },
+    "Add it again": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tambahkan lagi"}}
+    } },
+    "Turn the strap on and follow the pairing steps.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Nyalakan strap dan ikuti langkah pemasangan."}}
+    } },
+    "Add WHOOP": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tambah WHOOP"}}
+    } },
+    "The last 14 days are pulled from the strap again if they are still on it.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Riwayat 14 hari ditarik lagi dari strap bila masih ada di dalamnya."}}
+    } },
+    "Take this when reporting a problem. It holds what the app sees from the strap.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ambil ini saat melapor masalah. Isinya apa yang dilihat aplikasi dari strap."}}
+    } },
+    "Nothing logged yet.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Belum ada yang dicatat."}}
+    } },
+    "Copied": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tersalin"}}
+    } },
+    "Test": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Uji"}}
+    } },
+    "The strap vibrates once": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Strap bergetar sekali"}}
+    } },
+    "The log only holds connection and sync events. No health data is in it.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Log hanya berisi kejadian koneksi dan sinkron. Tidak ada data kesehatan di dalamnya."}}
+    } },
+    "WHOOP 4.0 is the fully supported path. The deeper metrics on 5.0 and MG are still being researched.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "WHOOP 4.0 adalah jalur yang didukung penuh. Metrik lebih dalam di 5.0 dan MG masih dalam penelitian."}}
+    } },
+    "Fully supported": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Didukung penuh"}}
+    } },
+    "HRV and R-R": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "HRV dan R-R"}}
+    } },
+    "History and sync": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Riwayat dan sinkron"}}
+    } },
+    "Sleep and stages": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tidur dan fase"}}
+    } },
+    "Vibration and alarm": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Getar dan alarm"}}
+    } },
+    "Rename the strap": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ganti nama strap"}}
+    } },
+    "Limited": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Terbatas"}}
+    } },
+    "Basic": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Dasar"}}
+    } },
+    "None": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tidak ada"}}
+    } },
+    "MG, research": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "MG, riset"}}
+    } },
+    "Support for 5.0 and MG grows as their protocol is mapped. Research features are under Experiments.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Dukungan 5.0 dan MG terus bertambah seiring protokolnya dipetakan. Fitur riset ada di Eksperimen."}}
+    } },
     "Connect Anya": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Hubungkan Anya"}}
     } },
@@ -31556,6 +31931,7 @@
     },
     "Add a device": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tambah perangkat"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -51537,6 +51913,7 @@
     },
     "Charging": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Mengisi"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -58552,6 +58929,7 @@
     },
     "Copy": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Salin"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -63871,6 +64249,7 @@
     },
     "Delete all of this device's data?": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Hapus semua data perangkat ini?"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -64509,6 +64888,7 @@
     },
     "Device": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Perangkat"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -71158,6 +71538,7 @@
     },
     "Estimate": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Estimasi"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -73450,6 +73831,7 @@
     },
     "Experimental": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Eksperimental"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -85096,6 +85478,7 @@
     },
     "History sync": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Sinkron riwayat"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -95657,6 +96040,7 @@
     },
     "Last sync": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Sinkron terakhir"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -102372,6 +102756,7 @@
     },
     "Make active": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Jadikan aktif"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -102959,6 +103344,7 @@
     },
     "Make this your active strap?": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Jadikan strap aktif?"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -118249,6 +118635,7 @@
     },
     "Not synced yet": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Belum disinkron"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -119666,6 +120053,7 @@
     },
     "Now": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Sekarang"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -125426,6 +125814,7 @@
     },
     "Paired": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Dipasangkan"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -137842,6 +138231,7 @@
     },
     "Remove this device?": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Hapus perangkat ini?"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -137900,6 +138290,7 @@
     },
     "Removed": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Dihapus"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -138306,6 +138697,7 @@
     },
     "Rename device": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Ganti nama perangkat"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -140482,6 +140874,7 @@
     },
     "Restart": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Mulai ulang"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -140650,6 +141043,7 @@
     },
     "Restart this strap?": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Mulai ulang strap ini?"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -149055,6 +149449,7 @@
     },
     "Share": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Bagikan"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -158057,6 +158452,7 @@
     },
     "Stop sync": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Hentikan sinkron"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -162107,6 +162503,7 @@
     },
     "Sync now": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Sinkron sekarang"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -169593,6 +169990,7 @@
     },
     "This session": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Sesi ini"}},
         "de": {
           "stringUnit": {
             "state": "translated",

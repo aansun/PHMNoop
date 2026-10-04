@@ -166,9 +166,25 @@ Not built, and why:
 
 Acceptance: one card per screen and it cites figures; the cards can be switched off in Anya settings; "Connect Anya" when no provider; with consent off nothing but the question is sent.
 
-## Phase 6: Perangkat (M)
+## Phase 6: Perangkat (M): built, with gaps
 
-Device manager and detail, battery, sync history, add-WHOOP flow, help and re-pair flow, model comparison, log, restart, sync Live Activity. WHOOP 4.0, 5.0 and MG only; keep the BLE safety contract in `docs/CONTRIBUTING.md`.
+Built in `StrandiOS/Nuna/Devices/`. The Today "Connect" pill, Me > Devices and the router now open `NunaDevicesView`; the Default Devices screen and every BLE path are untouched. The Nuna screens only read `LiveState` / `DeviceRegistry` and call the same actions the Default screen calls (`syncNow`, `abortBackfill`, `disconnect` + `connect`, `rebootStrap`, `buzzStrapOnce`, registry rename / activate / archive / delete / forget). No new BLE command was added.
+
+- [x] Devices (Devices): the active strap with battery and estimate, last sync and firmware; a sync row with Sync now; other paired WHOOP with Make active; removed devices; help list; re-pair banner when iOS reports a reset pairing.
+- [x] Strap detail (DeviceDetail, DeviceRestart): name (rename), model, ID, firmware, history format, sync now, reconnect, test vibration, restart (5.0 / MG only, the same rule as the Default screen), make active, remove, delete data, remove for good.
+- [x] Battery (DeviceBattery): level, charging, estimated time left from `BatteryEstimator`, voltage, this session's readings as a line, care tips.
+- [x] History sync (DeviceSync, DeviceSyncIsland): live packet count, pages waiting at connect, stop, last sync or error, how sync happens, the Dynamic Island switch (`liveActivity.sync.enabled`).
+- [x] Strap not found (DeviceHelp), Pair again (DeviceRepair), Strap log (DeviceLog: copy, share, vibration test), Models and support (DeviceModels).
+- [x] Add a device keeps the existing wizard (WHOOP present-scan, HR straps, Oura and the experimental tier).
+
+Not built, and why:
+- Signal strength in dBm, battery cycles and temperature, "worn on" wrist and the packet-by-packet progress with elapsed and remaining seconds: the app does not read or store them, so they were left out instead of invented.
+- A persistent sync history list and the 6-day battery history: only this session's readings and the last sync are kept. A store for them would need a migration and is a separate change.
+- Low-battery and evening-charge reminders, background sync and auto-connect switches: no such settings exist in the app yet.
+- Ping the strap (round-trip time): no such command, and a new BLE command needs the issue-first review in `docs/CONTRIBUTING.md`.
+- The Nuna restyle of the Add wizard itself (Pairing, DeviceModel) and the onboarding device step: the pairing flow is BLE-sensitive and was not touched. Left for the onboarding phase.
+- The Anya card on Devices (battery under 30% or sync failed) is not drawn yet; the header button opens the sheet with Device questions.
+- Nothing was run against a real strap (BLE cannot be tested in the simulator); the screens were checked with a strap registered but not connected.
 
 ## Phase 7: Saya (M)
 

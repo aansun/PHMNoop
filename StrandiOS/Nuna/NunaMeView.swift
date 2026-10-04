@@ -18,7 +18,7 @@ struct NunaMeView: View {
                 section("Account and device") {
                     row("Persona", "Profile, heart-rate zones, goals", "person.fill", NunaPalette.charge) { SettingsView() }
                     NunaDivider()
-                    row("Devices", deviceSubtitle, "applewatch", nil) { DevicesView() }
+                    row("Devices", deviceSubtitle, "applewatch", nil) { NunaDevicesView() }
                     NunaDivider()
                     row("Anya", "AI coach, memory, providers", "sparkles", nil) { NunaAnyaSettingsView() }
                 }
