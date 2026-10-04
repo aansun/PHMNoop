@@ -1,6 +1,65 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Trained %lld days ago" : {
+      "localizations" : {
+        "id" : { "stringUnit" : { "state" : "translated", "value" : "Dilatih %lld hari lalu" } }
+      }
+    },
+        "Excess": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Berlebih"}}
+        } },
+        "This week's breakdown": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rincian minggu ini"}}
+        } },
+        "above +2 · ready for hard training": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "di atas +2 · siap latihan berat"}}
+        } },
+        "−3 to +2 · you are here": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "−3 sampai +2 · kamu di sini"}}
+        } },
+        "−6 to −3 · ease off": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "−6 sampai −3 · kurangi intensitas"}}
+        } },
+        "below −6 · needs rest": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "di bawah −6 · butuh istirahat"}}
+        } },
+        "Effort %@ · %lld sessions with heart rate": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Effort %@ · %lld sesi dengan detak"}}
+        } },
+        "Open Lift Log": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Buka Lift Log"}}
+        } },
+        "Some muscle groups are still recovering": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Beberapa kelompok otot masih memulihkan diri"}}
+        } },
+        "All muscle groups are recovered": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Semua kelompok otot sudah pulih"}}
+        } },
+        "Rest today": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Istirahat hari ini"}}
+        } },
+        "%@ are ready to train today": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%@ siap dilatih hari ini"}}
+        } },
+        "and": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "dan"}}
+        } },
+        "Up %lld%% from your 6-week average.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Naik %lld%% dari rata-rata 6 minggumu."}}
+        } },
+        "Down %lld%% from your 6-week average.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Turun %lld%% dari rata-rata 6 minggumu."}}
+        } },
+        "%lld lifting sessions and %lld working sets.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld sesi angkat dan %lld set kerja."}}
+        } },
+        "%lld weeks": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld minggu"}}
+        } },
+        "Days with a session over the last 12 weeks. %@ is the one most often empty. A good day for full rest.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hari dengan sesi dalam 12 minggu terakhir. %@ adalah yang paling sering kosong. Itu hari yang cocok untuk istirahat penuh."}}
+        } },
         "4 wk": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "4 mgg"}}
         } },

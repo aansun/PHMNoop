@@ -125,39 +125,38 @@ struct NunaWorkoutCalendarView: View {
     @AppStorage(UnitPrefs.distanceSystemKey) private var distanceRaw = ""
     @StateObject private var m = NunaWorkoutsModel()
     @State private var kind = "all"
-    @State private var selected: String? = Repository.localDayKey(Date())
+    @State private var selected: String?
+    @State private var page = 0
     @State private var showCoach = false
+    private let weeks = 7
 
     private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
     private var system: UnitSystem { UnitPrefs.resolveDistance(system: UnitSystem(rawValue: unitSystemRaw) ?? .metric, override: distanceRaw) }
 
+    private func matches(_ r: WorkoutRow) -> Bool { kind == "all" || (kind == "cardio") != NunaWorkoutKind.isStrength(r) }
+
     var body: some View {
-        let stats = NunaWorkoutStats(model: m, days: 35)
-        let day = (selected ?? "")
-        let dayRows = m.rows.filter { m.dayKey($0.startTs) == day }.filter { kind == "all" || (kind == "cardio") != NunaWorkoutKind.isStrength($0) }
-        NunaDetailScreen("Workout calendar") {
+        let stats = NunaWorkoutStats(model: m, days: 35, filter: matches)
+        let day = selected ?? ""
+        let dayRows = m.rows.filter { m.dayKey($0.startTs) == day }.filter(matches)
+        NunaDetailScreen("Workout calendar", trailing: AnyView(todayChip)) {
             NunaSegmented([(value: "all", title: "All"), (value: "cardio", title: "Cardio"), (value: "strength", title: "Strength")], selection: $kind)
             NunaCard {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack { nunaTrendsCap("Last 7 weeks"); Spacer() }
-                    NunaWorkoutMonthGrid(model: m, weeks: 7, selected: $selected)
-                }
-            }
-            if !day.isEmpty {
-                NunaCard(highlight: true) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text(verbatim: dayTitle(day)).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            Spacer()
-                            Text(verbatim: String(localized: "\(dayRows.count) sessions")).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                VStack(spacing: 14) {
+                    HStack {
+                        pageButton("chevron.left", enabled: true) { page += 1 }
+                        Spacer()
+                        VStack(spacing: 2) {
+                            Text(verbatim: rangeTitle).font(.system(size: 16, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: page == 0 ? String(localized: "Last \(weeks) weeks") : String(localized: "\(weeks) weeks")).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         }
-                        if dayRows.isEmpty { Text("Rest day").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
-                        ForEach(Array(dayRows.enumerated()), id: \.offset) { _, r in
-                            NavigationLink(value: NunaWorkoutRoute.summary(m.key(r))) { NunaWorkoutRow(row: r, system: system, effortScale: scale) }.buttonStyle(.plain)
-                        }
+                        Spacer()
+                        pageButton("chevron.right", enabled: page > 0) { page -= 1 }
                     }
+                    NunaWorkoutMonthGrid(model: m, weeks: weeks, selected: $selected, offset: page, filter: kind)
                 }
             }
+            if !day.isEmpty { dayCard(day, dayRows) }
             HStack(spacing: 12) {
                 NunaStatTile(label: "Active days", value: "\(stats.active)", unit: "/ 35")
                 NunaStatTile(label: "Rest days", value: "\(stats.rest)")
@@ -169,8 +168,50 @@ struct NunaWorkoutCalendarView: View {
             weekdayPattern
             NunaAnyaCard(verbatim: anyaLine(stats.streak)) { showCoach = true }
         }
-        .task(id: repo.refreshSeq) { await m.load(repo: repo) }
+        .task(id: repo.refreshSeq) {
+            await m.load(repo: repo)
+            if selected == nil { selected = m.rows.first.map { m.dayKey($0.startTs) } ?? m.todayKey }
+        }
         .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: "workouts") }
+    }
+
+    private var todayChip: some View {
+        Button { page = 0; selected = m.todayKey } label: {
+            Text("Today").font(.system(size: 13, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 38)
+                .background(NunaPalette.glassStrong, in: Capsule()).overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+        }.buttonStyle(.plain)
+    }
+
+    private func pageButton(_ symbol: String, enabled: Bool, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol).font(.system(size: 14, weight: .bold)).foregroundStyle(enabled ? NunaPalette.textPrimary : NunaPalette.textMuted.opacity(0.4))
+                .frame(width: 40, height: 40).background(NunaPalette.glassStrong, in: Circle())
+        }.buttonStyle(.plain).disabled(!enabled)
+    }
+
+    private var rangeTitle: String {
+        let first = NunaWorkoutMonthGrid.firstMonday(weeks: weeks, offset: page)
+        let last = Calendar(identifier: .gregorian).date(byAdding: .day, value: weeks * 7 - 1, to: first) ?? first
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale
+        f.setLocalizedDateFormatFromTemplate("MMMM"); let a = f.string(from: first)
+        f.setLocalizedDateFormatFromTemplate("MMMM yyyy"); let b = f.string(from: last)
+        return a == String(b.split(separator: " ").first ?? "") ? b : a + " – " + b
+    }
+
+    private func dayCard(_ day: String, _ rows: [WorkoutRow]) -> some View {
+        NunaCard(highlight: true) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text(verbatim: dayTitle(day)).font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Spacer()
+                    NunaChip(verbatim: String(localized: "\(rows.count) sessions"))
+                }
+                if rows.isEmpty { Text("Rest day").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                ForEach(Array(rows.enumerated()), id: \.offset) { _, r in
+                    NavigationLink(value: NunaWorkoutRoute.summary(m.key(r))) { NunaWorkoutRow(row: r, system: system, effortScale: scale) }.buttonStyle(.plain)
+                }
+            }
+        }
     }
 
     private func dayTitle(_ key: String) -> String {
@@ -179,18 +220,33 @@ struct NunaWorkoutCalendarView: View {
     }
 
     private var weekdayPattern: some View {
-        let cutoff = TrendInsights.shift(m.todayKey, by: -84) ?? m.todayKey
-        let counts = Dictionary(grouping: m.rows.filter { m.dayKey($0.startTs) >= cutoff }, by: { TrendInsights.weekday(m.dayKey($0.startTs)) ?? 0 }).mapValues { Set($0.map { m.dayKey($0.startTs) }).count }
+        let cutoff = TrendInsights.shift(m.todayKey, by: -83) ?? m.todayKey
+        let counts = Dictionary(grouping: m.rows.filter { m.dayKey($0.startTs) >= cutoff }.filter(matches), by: { TrendInsights.weekday(m.dayKey($0.startTs)) ?? 0 }).mapValues { Set($0.map { m.dayKey($0.startTs) }).count }
+        let order = [2, 3, 4, 5, 6, 7, 1]
         let top = max(counts.values.max() ?? 1, 1)
+        let lowest = order.min(by: { (counts[$0] ?? 0) < (counts[$1] ?? 0) })
         return VStack(alignment: .leading, spacing: 12) {
             NunaTitleRow(title: "Weekly pattern") { EmptyView() }
             NunaCard {
-                VStack(alignment: .leading, spacing: 10) {
-                    NunaColumns(items: [2, 3, 4, 5, 6, 7, 1].map { wd in
-                        NunaColumns.Item(weekday: NunaTrendsFormat.weekdayShort(wd), date: Date(), fraction: Double(counts[wd] ?? 0) / Double(top), valueText: "\(counts[wd] ?? 0)", highlight: counts[wd] == counts.values.max())
-                    }, color: NunaPalette.effort, highlightColor: NunaPalette.effortText, showsDates: false)
-                    if let lo = [2, 3, 4, 5, 6, 7, 1].min(by: { (counts[$0] ?? 0) < (counts[$1] ?? 0) }), !m.rows.isEmpty {
-                        Text(verbatim: String(localized: "Days with a session over the last 12 weeks. \(longDay(lo)) is the one most often empty.")).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .bottom, spacing: 8) {
+                        ForEach(order, id: \.self) { wd in
+                            let c = counts[wd] ?? 0
+                            VStack(spacing: 6) {
+                                Text(verbatim: "\(c)").font(.system(size: 12, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+                                ZStack(alignment: .bottom) {
+                                    Color.clear
+                                    RoundedRectangle(cornerRadius: 8, style: .continuous).fill(NunaPalette.effort.opacity(wd == lowest ? 0.45 : 1))
+                                        .frame(height: max(8, 64 * CGFloat(c) / CGFloat(top)))
+                                }.frame(height: 64)
+                                Text(verbatim: NunaTrendsFormat.weekdayShort(wd)).font(.system(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                    }
+                    if let lowest, !m.rows.isEmpty {
+                        Text(verbatim: String(localized: "Days with a session over the last 12 weeks. \(longDay(lowest)) is the one most often empty. A good day for full rest."))
+                            .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                     }
                 }
             }
