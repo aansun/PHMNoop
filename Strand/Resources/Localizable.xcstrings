@@ -1,6 +1,9 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "vs last 14 days": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "vs 14 hari terakhir"}}
+        } },
         "30-day average: %@": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Rata-rata 30 hari: %@"}}
         } },

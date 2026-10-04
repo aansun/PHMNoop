@@ -105,10 +105,10 @@ struct NunaHealthView: View {
         VStack(spacing: NunaSpacing.section) {
             rangeCard
             if coachEnabled { NunaAnyaCard(title: "Are my vitals normal today?") { showCoach = true } }
-            vitalGrid
+            vitalList
             NunaTitleRow(title: "Body") { EmptyView() }
-            bodyGrid
-            appleHealthCard
+            weightCard
+            bodyPair
             strapCard
         }
     }
@@ -158,16 +158,28 @@ struct NunaHealthView: View {
         }
     }
 
-    private var vitalGrid: some View {
-        let rhrDelta = day.restingHrDelta
-        return LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-            tile("HRV", "hrv", fmt(day.hrv), "ms", caption: "Average last night")
-            tile("Resting HR", "rhr", fmt(day.restingHr), "bpm",
-                 caption: rhrDelta.map { abs($0.rounded()) < 1 ? LocalizedStringKey("Same as yesterday")
-                                         : ($0 < 0 ? LocalizedStringKey("Down \(Int(abs($0).rounded())) from yesterday") : LocalizedStringKey("Up \(Int($0.rounded())) from yesterday")) })
-            tile("Blood Oxygen", "spo2", fmt(day.spo2), "%", caption: day.spo2.map { $0 >= 95 ? "Normal" : "Low" })
-            tile("Respiratory", "resp_rate", fmt(day.respiratory, 1), "/min", caption: bandCaption(day.respiratory, respS))
+    /// The four vitals as long rows, each compared with the average of the previous 14 days.
+    private var vitalList: some View {
+        func change(_ cur: Double?, _ series: NunaSeriesModel, decimals: Int, upIsGood: Bool?) -> (String, Bool?)? {
+            guard let cur, let avg = series.average(days: 14) else { return nil }
+            let d = cur - avg
+            let step = decimals == 0 ? 1.0 : 0.1
+            guard abs(d) >= step - 0.0001 else { return nil }
+            let shown = String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, abs(d))
+            return ((d > 0 ? "▲ " : "▼ ") + shown, upIsGood.map { d > 0 ? $0 : !$0 })
         }
+        func route(_ key: String) -> NunaTodayRoute? { MetricCatalog.metric(key: key, source: "my-whoop").map { .metric($0) } }
+        let h = change(day.hrv, hrvS, decimals: 0, upIsGood: true)
+        let r = change(day.restingHr, rhrS, decimals: 0, upIsGood: false)
+        let o = change(day.spo2, spo2S, decimals: 0, upIsGood: true)
+        let b = change(day.respiratory, respS, decimals: 1, upIsGood: nil)
+        let cap: LocalizedStringKey = "vs last 14 days"
+        return NunaMetricsGrid(tiles: [
+            NunaMetricTile(id: "hrv", label: "HRV", value: fmt(day.hrv), unit: "ms", route: route("hrv"), delta: h?.0, deltaGood: h?.1, icon: "waveform.path.ecg", caption: cap),
+            NunaMetricTile(id: "rhr", label: "Resting HR", value: fmt(day.restingHr), unit: "bpm", route: route("rhr"), delta: r?.0, deltaGood: r?.1, icon: "heart", caption: cap),
+            NunaMetricTile(id: "spo2", label: "Blood Oxygen", value: fmt(day.spo2), unit: "%", route: route("spo2"), delta: o?.0, deltaGood: o?.1, icon: "drop", caption: cap),
+            NunaMetricTile(id: "resp", label: "Respiratory", value: fmt(day.respiratory, 1), unit: "/min", route: route("resp_rate"), delta: b?.0, deltaGood: b?.1, icon: "wind", caption: cap),
+        ], layout: .list)
     }
 
     /// "Stable" when the value sits inside the person's own recent range, otherwise up or down.
@@ -177,12 +189,43 @@ struct NunaHealthView: View {
         return abs(v - b.mean) <= tol ? "Stable" : (v > b.mean ? "Above range" : "Below range")
     }
 
-    private var bodyGrid: some View {
+    /// Weight with its last 30 days, as on the Body tab but fixed to 30D.
+    private var weightCard: some View {
+        let pts = weightS.readings(30)
+        let latest = weightS.latest?.value ?? (profile.weightKg > 0 ? profile.weightKg : nil)
+        let delta: Double? = pts.count >= 2 ? pts.last!.value - pts.first!.value : nil
+        return NavigationLink(value: weightRoute) {
+            NunaCard {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("Weight").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Spacer()
+                        Text("30D").font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    }
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text(verbatim: fmt(latest, 1)).font(.system(size: 48, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("kg").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        Spacer()
+                        if let delta {
+                            NunaChip(verbatim: (delta <= 0 ? "−" : "+") + String(format: "%.1f", locale: AppLanguage.activeLocale, abs(delta)) + " kg")
+                        }
+                    }
+                    NunaLine2Chart(points: pts, color: .white, decimals: 1, height: 160)
+                }
+            }
+        }.buttonStyle(.plain)
+    }
+
+    private var weightRoute: NunaTodayRoute {
+        MetricCatalog.metric(key: "weight", source: "apple-health").map { .metric($0) } ?? .allMetrics
+    }
+
+    /// Waist and BMI side by side under the weight card.
+    private var bodyPair: some View {
         let w = weightS.latest?.value ?? (profile.weightKg > 0 ? profile.weightKg : nil)
         let h = profile.heightCm
         let bmi: Double? = (w != nil && h > 0) ? w! / pow(h / 100, 2) : nil
-        return LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-            tile("Weight", "weight", fmt(w, 1), "kg", source: "apple-health", caption: weightDeltaCaption)
+        return HStack(spacing: 12) {
             NunaStatTile(label: "Waist", value: profile.waistCm > 0 ? fmt(profile.waistCm) : "–", unit: profile.waistCm > 0 ? "cm" : "")
             NunaStatTile(label: "BMI", value: fmt(bmi, 1))
         }
@@ -195,34 +238,6 @@ struct NunaHealthView: View {
         let d = last - first
         let t = String(format: "%.1f", locale: AppLanguage.activeLocale, abs(d))
         return d <= 0 ? LocalizedStringKey("Down \(t) kg in 30 days") : LocalizedStringKey("Up \(t) kg in 30 days")
-    }
-
-    private var appleHealthCard: some View {
-        NunaCard(small: true, padding: EdgeInsets(top: 14, leading: 18, bottom: 6, trailing: 18)) {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack {
-                    Text("Apple Health").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                    Spacer()
-                    if let t = live.lastSyncedAt {
-                        Text(verbatim: String(localized: "Last sync \(NunaSleepFormat.clock(Date(timeIntervalSince1970: t)))"))
-                            .font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                    }
-                }
-                .padding(.bottom, 6)
-                healthRow("Steps", "Read from iPhone, write the strap estimate", "Read + write")
-                NunaDivider()
-                healthRow("Weight", "Read only", "Read")
-                NunaDivider()
-                healthRow("Waist", "Fills your profile for the VO₂max estimate", "Read")
-                NunaDivider()
-                Button { legacy = .appleHealth } label: { NunaListRow("Manage permissions", systemImage: "heart.text.square", showsChevron: true) }
-                    .buttonStyle(.plain)
-            }
-        }
-    }
-
-    private func healthRow(_ title: LocalizedStringKey, _ sub: LocalizedStringKey, _ chip: LocalizedStringKey) -> some View {
-        NunaListRow(title, subtitle: sub) { NunaChip(chip) }
     }
 
     private var strapCard: some View {
