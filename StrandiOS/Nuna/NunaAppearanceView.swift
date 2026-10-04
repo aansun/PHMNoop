@@ -32,10 +32,8 @@ struct NunaAppearanceView: View {
                 experienceCard
                 NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                     VStack(spacing: 0) {
-                        Button { if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) } } label: {
-                            NunaListRow("Language", subtitle: LocalizedStringKey(languageName), systemImage: "globe", showsChevron: true) {
-                                Image(systemName: "arrow.up.right").font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                            }
+                        NavigationLink(value: NunaMeRoute.language) {
+                            NunaListRow("Language", subtitle: LocalizedStringKey(languageName), systemImage: "globe", showsChevron: true)
                         }.buttonStyle(.plain)
                         NunaDivider()
                         NavigationLink(value: NunaMeRoute.units) { NunaListRow("Units", subtitle: LocalizedStringKey(unitsSummary), systemImage: "ruler.fill", showsChevron: true) }.buttonStyle(.plain)
@@ -50,7 +48,7 @@ struct NunaAppearanceView: View {
                 #if os(iOS)
                 iconCard
                 #endif
-                nunaFootnote("Language is changed in iOS Settings > NOOP > Language, so it follows the system. Haptics are under Strap automations, the Live Activity under History sync and the morning brief under Anya.")
+                nunaFootnote("Haptics are under Strap automations, the Live Activity under History sync and the morning brief under Anya.")
             }
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 14).padding(.bottom, 24)
         }

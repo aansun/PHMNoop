@@ -77,40 +77,129 @@ struct NunaUnitsView: View {
 
 // MARK: - Language (Language.dc)
 
+/// Everything the Language screen needs to show a language in that language: its bundle for translated copy and its locale for
+/// dates and numbers. The sample strings are read from the language's own `.lproj`, so a preview never depends on the language the
+/// app is currently running in.
+private extension AppLanguage {
+    /// The language the iPhone asks for, if the app has it, otherwise English.
+    static var systemResolved: AppLanguage {
+        let have = Bundle.main.localizations
+        let pick = Bundle.preferredLocalizations(from: have, forPreferences: Locale.preferredLanguages).first ?? "en"
+        return from(code: pick) ?? .english
+    }
+    static func from(code: String) -> AppLanguage? {
+        let c = code.lowercased()
+        if c.hasPrefix("zh") { return .chinese }
+        if c.hasPrefix("pt") { return .portuguese }
+        let base = c.split(separator: "-").first.map(String.init) ?? c
+        return allCases.first { $0 != .system && $0.rawValue.lowercased().split(separator: "-").first.map(String.init) == base }
+    }
+    /// The language that is really in use when this choice is made.
+    var effective: AppLanguage { self == .system ? Self.systemResolved : self }
+    var lprojName: String { self == .chinese ? "zh-Hans" : rawValue }
+    var bundle: Bundle {
+        let l = effective
+        guard let path = Bundle.main.path(forResource: l.lprojName, ofType: "lproj"), let b = Bundle(path: path) else { return Bundle.main }
+        return b
+    }
+    var sampleLocale: Locale { Locale(identifier: effective == .chinese ? "zh-Hans" : effective.rawValue) }
+    var code: String {
+        switch self {
+        case .system: return "AUTO"
+        case .chinese: return "ZH"
+        case .portuguese: return "PT"
+        default: return rawValue.uppercased()
+        }
+    }
+    func say(_ key: String) -> String { bundle.localizedString(forKey: key, value: key, table: nil) }
+}
+
 struct NunaLanguageView: View {
     @AppStorage(AppLanguage.storageKey) private var raw = AppLanguage.system.rawValue
     @AppStorage("ai.responseLanguage") private var anyaLanguage = "app"
-    private var current: AppLanguage { AppLanguage.resolve(raw) }
+    private var picked: AppLanguage { AppLanguage.resolve(raw) }
+    /// The language this running copy of the app was started in.
+    private var running: AppLanguage { AppLanguage.from(code: Bundle.main.preferredLocalizations.first ?? "en") ?? .english }
+    private var choices: [AppLanguage] { AppLanguage.allCases.filter { $0 != .system } }
 
     var body: some View {
         NunaDetailScreen("Language") {
-            Text("The app is available in Indonesian, English and more. Dates and numbers follow the language.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
-            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                VStack(spacing: 0) {
-                    ForEach(Array(AppLanguage.allCases.enumerated()), id: \.element.id) { i, l in
-                        if i > 0 { NunaDivider() }
-                        Button { raw = l.rawValue; AppLanguage.apply(l.rawValue) } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 3) {
-                                    Text(verbatim: l == .system ? String(localized: "Follow iPhone") : l.autonym).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                    if l == .system { Text("Uses the iPhone's language when the app has it, otherwise English").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
-                                }
-                                Spacer()
-                                Image(systemName: current == l ? "checkmark.circle.fill" : "circle").font(.nuna(size: 21)).foregroundStyle(current == l ? NunaPalette.textPrimary : NunaPalette.textMuted)
-                            }.padding(.vertical, 14).contentShape(Rectangle())
-                        }.buttonStyle(.plain)
+            Text("The app is available in \(choices.count) languages. Dates and numbers follow the language.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+            option(.system)
+            ForEach(choices) { option($0) }
+            if picked.effective != running {
+                NunaCard(small: true) {
+                    HStack(alignment: .top, spacing: 12) {
+                        Image(systemName: "arrow.clockwise").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.top, 2)
+                        Text("Fully quit and reopen NOOP to switch to \(picked.effective.autonym).").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                     }
                 }
+                preview(running, title: String(localized: "Preview"))
+                preview(picked.effective, title: String(localized: "If \(picked.effective.autonym)"))
+            } else {
+                preview(running, title: String(localized: "Preview"))
             }
             NunaCard(small: true) {
-                NavigationLink(value: NunaAnyaRoute.settings) {
-                    NunaListRow("Anya's reply language", subtitle: LocalizedStringKey(anyaLanguage == "id" ? String(localized: "Always Indonesian") : (anyaLanguage == "en" ? String(localized: "Always English") : String(localized: "Follows the app language"))), systemImage: "sparkles", showsChevron: true)
-                }.buttonStyle(.plain)
+                VStack(spacing: 0) {
+                    NavigationLink(value: NunaAnyaRoute.settings) {
+                        NunaListRow("Anya's reply language", subtitle: LocalizedStringKey(anyaLanguage == "id" ? String(localized: "Always Indonesian") : (anyaLanguage == "en" ? String(localized: "Always English") : String(localized: "Follows the app language"))), systemImage: "sparkles", showsChevron: true)
+                    }.buttonStyle(.plain)
+                    NunaDivider()
+                    NavigationLink(value: NunaMeRoute.units) { NunaListRow("Units are set separately", subtitle: "Km or miles, kg or lb, °C or °F", systemImage: "ruler.fill", showsChevron: true) }.buttonStyle(.plain)
+                }
             }
             Button { openIOSSettings() } label: {
                 Text("Open language in iOS Settings").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.glassStrong, in: Capsule())
             }.buttonStyle(.plain)
-            nunaFootnote("Changing the language reloads the app for a moment. Units are set separately.")
+            nunaFootnote("Changing the language reloads the app for a moment. Dates and numbers follow the language. The language can also be set per app in iOS Settings.")
+        }
+    }
+
+    private func option(_ l: AppLanguage) -> some View {
+        let on = picked == l
+        return Button { raw = l.rawValue; AppLanguage.apply(l.rawValue) } label: {
+            NunaCard(highlight: on) {
+                HStack(spacing: 14) {
+                    Text(verbatim: l.code).font(.nuna(size: 12.5, weight: .heavy)).tracking(0.5).foregroundStyle(NunaPalette.textPrimary)
+                        .frame(width: 44, height: 44).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(verbatim: l == .system ? String(localized: "Follow iPhone") : l.autonym).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: l == .system ? String(localized: "Now: \(AppLanguage.systemResolved.autonym). If the iPhone uses a language the app does not have, the app uses English.") : l.say("All screens, notifications, and Anya replies"))
+                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer(minLength: 8)
+                    Image(systemName: on ? "checkmark.circle.fill" : "circle").font(.nuna(size: 22)).foregroundStyle(on ? NunaPalette.accent : NunaPalette.textMuted)
+                }
+            }
+        }.buttonStyle(.plain)
+    }
+
+    /// Score, button, date and number as they read in `l`, from its own strings and locale.
+    private func preview(_ l: AppLanguage, title: String) -> some View {
+        let f = DateFormatter(); f.locale = l.sampleLocale; f.setLocalizedDateFormatFromTemplate("EEEEdMMMM")
+        let n = NumberFormatter(); n.locale = l.sampleLocale; n.numberStyle = .decimal; n.minimumFractionDigits = 1; n.maximumFractionDigits = 1
+        let g = NumberFormatter(); g.locale = l.sampleLocale; g.numberStyle = .decimal; g.maximumFractionDigits = 0
+        let unit = l.effective == .indonesian ? "kkal" : "kcal"
+        return NunaCard(small: true) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text(verbatim: title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Spacer()
+                    Text(verbatim: l.effective.autonym).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                }
+                row(l.say("Score"), "Charge 78% · \(l.say("Ready"))")
+                row(l.say("Button"), l.say("Start workout"))
+                row(l.say("Date"), f.string(from: Date()))
+                row(l.say("Number"), "\(n.string(from: 12.4) ?? "12.4") Effort · \(g.string(from: 1240) ?? "1240") \(unit)")
+            }
+        }
+    }
+
+    private func row(_ label: String, _ value: String) -> some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(verbatim: label).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Spacer(minLength: 12)
+            Text(verbatim: value).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).multilineTextAlignment(.trailing)
         }
     }
 }
