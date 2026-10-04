@@ -123,7 +123,8 @@ enum NunaWorkoutFormat {
         let d = Date(timeIntervalSince1970: TimeInterval(ts)), cal = Calendar.current
         if cal.isDateInToday(d) { return String(localized: "Today") }
         if cal.isDateInYesterday(d) { return String(localized: "Yesterday") }
-        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE d MMM"); return f.string(from: d)
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; // An older year needs the year as well, now that the history reaches back five years.
+        f.setLocalizedDateFormatFromTemplate(cal.isDate(d, equalTo: Date(), toGranularity: .year) ? "EEE d MMM" : "d MMM yyyy"); return f.string(from: d)
     }
 
     static func clock(_ ts: Int) -> String {

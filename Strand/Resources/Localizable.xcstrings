@@ -1,6 +1,36 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "5 yr": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "5 thn"}}
+    } },
+    "Tap a day": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ketuk satu hari"}}
+    } },
+    "Tap a month": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ketuk satu bulan"}}
+    } },
+    "Show all": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tampilkan semua"}}
+    } },
+    "Sessions per week": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sesi per minggu"}}
+    } },
+    "Sessions per month": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sesi per bulan"}}
+    } },
+    "Sessions per quarter": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sesi per kuartal"}}
+    } },
+    "Highest %lld": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tertinggi %lld"}}
+    } },
+    "Per week": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Per minggu"}}
+    } },
+    "Longest session": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sesi terlama"}}
+    } },
     "Add muscle": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Tambah otot"}}
     } },
@@ -147668,6 +147698,7 @@
     },
     "Sessions": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Sesi"}},
         "de": {
           "stringUnit": {
             "state": "translated",
