@@ -19,6 +19,12 @@ enum NunaTodayRoute: Hashable {
     case bodyClockPlan
     case deepTimeline
     case liveHeart
+    case mood
+    case weight
+    case waist
+    case nutrition
+    case labBook
+    case cycle
     case smartAlarm
     case windDown
 }
@@ -51,6 +57,12 @@ extension View {
             case .bodyClockPlan: NunaBodyClockPlanView()
             case .deepTimeline: NunaDeepTimelineView()
             case .liveHeart: NunaLiveHeartView()
+            case .mood: NunaMoodView()
+            case .weight: NunaWeightView()
+            case .waist: NunaWaistView()
+            case .nutrition: NunaNutritionView()
+            case .labBook: NunaLabBookView()
+            case .cycle: NunaCycleView()
             case .smartAlarm: NunaSmartAlarmView()
             case .windDown: NunaWindDownView()
             }

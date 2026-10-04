@@ -35,7 +35,9 @@ struct NunaMeView: View {
                     row("Optional features", "Water, journal, workout detection", "checkmark.circle.fill", nil) { SettingsView() }
                 }
                 section("Data") {
-                    row("Data and integrations", "Apple Health, Strava, import, export", "square.and.arrow.up", nil) { DataSourcesView() }
+                    row("Apple Health", "Permissions, what is read and written", "heart.text.square.fill", nil) { NunaAppleHealthView() }
+                    NunaDivider()
+                    row("Data and integrations", "Strava, import, export", "square.and.arrow.up", nil) { DataSourcesView() }
                     NunaDivider()
                     row("Backup", "Back up and restore", "clock.arrow.circlepath", NunaPalette.charge) { BackupSyncView() }
                     NunaDivider()

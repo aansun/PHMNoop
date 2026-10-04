@@ -595,7 +595,7 @@ enum LabBookFormat {
 
 // MARK: - Marker detail (history + trend + "compare with a signal")
 
-private struct MarkerDetailView: View {
+struct MarkerDetailView: View {
     let markerKey: String
     let readings: [LabMarkerRow]
     let onDelete: (_ id: String) async -> Void
@@ -1004,7 +1004,7 @@ enum LabBookSignals {
 
 // MARK: - First-use / linked disclaimer
 
-private struct LabBookDisclaimerView: View {
+struct LabBookDisclaimerView: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {

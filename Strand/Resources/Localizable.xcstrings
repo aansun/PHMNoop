@@ -1,6 +1,303 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "Read only, from your scale": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hanya baca, dari timbanganmu"}}
+        } },
+        "Heart rate, HRV, oxygen, breathing": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Detak jantung, HRV, oksigen, napas"}}
+        } },
+        "Energy, workouts and routes": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Energi, latihan, dan rute"}}
+        } },
+        "Trips": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Perjalanan"}}
+        } },
+        "How are you feeling right now?": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bagaimana perasaanmu sekarang?"}}
+        } },
+        "Family": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Keluarga"}}
+        } },
+        "Social": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sosial"}}
+        } },
+        "Energy": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Energi"}}
+        } },
+        "Tired": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lelah"}}
+        } },
+        "Energetic": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bertenaga"}}
+        } },
+        "Saved together with your mood": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dicatat bersama suasana hatimu"}}
+        } },
+        "What tracks your mood": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Yang berjalan bersama suasana hatimu"}}
+        } },
+        "medium": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "sedang"}}
+        } },
+        "Stress today %@ · %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Stres hari ini %@ · %@"}}
+        } },
+        "Target %@ kg · reached": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Target %@ kg · tercapai"}}
+        } },
+        "Target %@ kg · %@ kg to go": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Target %@ kg · tersisa %@ kg"}}
+        } },
+        "Add a measurement": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tambah pengukuran"}}
+        } },
+        "Weight target": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Target berat"}}
+        } },
+        "Read from Apple Health": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Baca dari Apple Health"}}
+        } },
+        "Read only. Manage it in Me › Apple Health. A weight you type in is kept on this phone and also used for calorie and VO₂max estimates.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hanya baca. Atur di Saya › Apple Health. Berat yang kamu ketik disimpan di ponsel ini dan dipakai untuk estimasi kalori dan VO₂max."}}
+        } },
+        "About body composition": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tentang komposisi tubuh"}}
+        } },
+        "From a smart scale via Apple Health": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dari timbangan pintar via Apple Health"}}
+        } },
+        "Body fat and lean mass appear only when Apple Health has them, for example from a smart scale. NOOP never estimates them.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lemak tubuh dan massa tanpa lemak hanya muncul bila Apple Health memilikinya, misalnya dari timbangan pintar. NOOP tidak pernah memperkirakannya."}}
+        } },
+        "Under": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kurang"}}
+        } },
+        "Over": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lebih"}}
+        } },
+        "Read from Apple Health, or typed in under Details.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dibaca dari Apple Health, atau diketik di Detail."}}
+        } },
+        "Read from Apple Health when it has one, or typed in here": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dibaca dari Apple Health bila ada, atau diketik di sini"}}
+        } },
+        "Not set yet": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Belum diatur"}}
+        } },
+        "Waist to height ratio": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rasio pinggang ke tinggi"}}
+        } },
+        "Healthy": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sehat"}}
+        } },
+        "Above": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Di atas"}}
+        } },
+        "Below 0.5 is generally considered healthy for a height of %lld cm.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Di bawah 0,5 umumnya dianggap sehat untuk tinggi %lld cm."}}
+        } },
+        "Used for VO₂max": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dipakai untuk VO₂max"}}
+        } },
+        "Opens the fitness age screen": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Membuka layar usia kebugaran"}}
+        } },
+        "Fill the profile from Apple Health": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Isi profil dari Apple Health"}}
+        } },
+        "The latest value is read automatically. Manage it in Me › Apple Health.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Nilai terbaru dibaca otomatis. Atur di Saya › Apple Health."}}
+        } },
+        "Out": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Keluar"}}
+        } },
+        "Mild deficit": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Defisit ringan"}}
+        } },
+        "Surplus": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Surplus"}}
+        } },
+        "Macros": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Makronutrien"}}
+        } },
+        "Cronometer": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Cronometer"}}
+        } },
+        "MacroFactor": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "MacroFactor"}}
+        } },
+        "Processed on this phone. Never uploaded.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Diproses di ponsel ini. Tidak diunggah."}}
+        } },
+        "Caffeine %lld mg active": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kafein %lld mg aktif"}}
+        } },
+        "Caffeine active": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kafein aktif"}}
+        } },
+        "No caffeine active": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidak ada kafein aktif"}}
+        } },
+        "Last one about %lld h ago": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Terakhir sekitar %lld jam lalu"}}
+        } },
+        "Logged caffeine fades with a 5.5 hour half-life": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kafein yang dicatat berkurang dengan waktu paruh 5,5 jam"}}
+        } },
+        "Last test": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tes terakhir"}}
+        } },
+        "Your own logbook": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Catatan pribadimu"}}
+        } },
+        "Keep the numbers you get from your doctor or pharmacy, next to your wearable signals. Everything stays on this phone.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Simpan angka dari dokter atau apotek, berdampingan dengan sinyal wearable. Semua tetap di ponsel ini."}}
+        } },
+        "Add a result": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tambah hasil"}}
+        } },
+        "Saved on this phone. Not a medical diagnosis. NOOP does not read results for you.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Disimpan di ponsel. Bukan diagnosis medis. NOOP tidak membacakan hasil untukmu."}}
+        } },
+        "Within your range": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dalam rentangmu"}}
+        } },
+        "Outside your range": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Di luar rentangmu"}}
+        } },
+        "Follicular phase": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Fase folikuler"}}
+        } },
+        "Around ovulation": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sekitar ovulasi"}}
+        } },
+        "Luteal phase": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Fase luteal"}}
+        } },
+        "No clear pattern yet": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Belum ada pola jelas"}}
+        } },
+        "day": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "hari"}}
+        } },
+        "Next period around %@ to %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Menstruasi berikutnya sekitar %@ sampai %@"}}
+        } },
+        "%lld-day cycle": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Siklus %lld hari"}}
+        } },
+        "Period start": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Mulai haid"}}
+        } },
+        "Period start logged today": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Mulai haid dicatat hari ini"}}
+        } },
+        "Period started today": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Haid dimulai hari ini"}}
+        } },
+        "Track my cycle": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lacak siklusku"}}
+        } },
+        "Optional, only on this phone": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Opsional, hanya di ponsel ini"}}
+        } },
+        "Effect on Charge": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pengaruh ke Charge"}}
+        } },
+        "HRV baseline adjusted per phase": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Baseline HRV disesuaikan per fase"}}
+        } },
+        "Period starts": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Mulai haid"}}
+        } },
+        "Cycle data never leaves this iPhone": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Data siklus tidak pernah keluar dari iPhone"}}
+        } },
+        "For awareness only. Not a medical device and not contraception.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hanya untuk kesadaran. Bukan alat medis dan bukan alat kontrasepsi."}}
+        } },
+        "Read from your iPhone": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dibaca dari iPhone"}}
+        } },
+        "Weight and body composition": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Berat dan komposisi tubuh"}}
+        } },
+        "Read only. Body fat and lean mass when your scale shares them": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hanya baca. Lemak dan massa tanpa lemak bila timbanganmu membagikannya"}}
+        } },
+        "Heart rate and vitals": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Detak jantung dan vital"}}
+        } },
+        "Heart rate, HRV, blood oxygen, respiratory rate, VO₂max": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Detak jantung, HRV, oksigen darah, laju napas, VO₂max"}}
+        } },
+        "Water and caffeine": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Air dan kafein"}}
+        } },
+        "Drinks logged in other apps": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Minuman yang dicatat di aplikasi lain"}}
+        } },
+        "Workouts and energy": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Latihan dan energi"}}
+        } },
+        "Active and resting energy, workouts and their routes": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Energi aktif dan istirahat, latihan dan rutenya"}}
+        } },
+        "Estimated strap steps": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Langkah estimasi strap"}}
+        } },
+        "Without double counting with your iPhone": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tanpa hitung ganda dengan iPhone"}}
+        } },
+        "Continuous heart rate from the strap": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Detak jantung berkelanjutan dari strap"}}
+        } },
+        "Nightly vitals": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Vital semalam"}}
+        } },
+        "Resting heart rate, HRV, blood oxygen, respiratory rate": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Detak istirahat, HRV, oksigen darah, laju napas"}}
+        } },
+        "Stages from the strap": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Fase dari strap"}}
+        } },
+        "Run, walk, cycle and other sessions": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lari, jalan, sepeda, dan sesi lain"}}
+        } },
+        "Written": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ditulis"}}
+        } },
+        "Read from Health": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dibaca dari Health"}}
+        } },
+        "Written to Health": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ditulis ke Health"}}
+        } },
+        "Steps without double counting": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Langkah tanpa hitung ganda"}}
+        } },
+        "A sample NOOP wrote is never read back as a phone step": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sampel yang ditulis NOOP tidak pernah dibaca kembali sebagai langkah ponsel"}}
+        } },
+        "Open iOS Health settings": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Buka pengaturan Kesehatan iOS"}}
+        } },
+        "Access is managed by iOS. Turning it off there does not delete data.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Izin dikelola oleh iOS. Mematikannya di sana tidak menghapus data."}}
+        } },
+        "Unavailable": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidak tersedia"}}
+        } },
+        "Last synced %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sinkron terakhir %@"}}
+        } },
+        "Permissions, what is read and written": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Izin, apa yang dibaca dan ditulis"}}
+        } },
+        "Strava, import, export": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Strava, impor, ekspor"}}
+        } },
         "Zones today": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Zona hari ini"}}
         } },
