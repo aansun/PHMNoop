@@ -61,7 +61,7 @@ struct NunaRootView: View {
             guard !liftSession.isActive, let snapshot = LiftSessionPersistence.load() else { return }
             liftSession.resume(from: snapshot)
         }
-        .sheet(isPresented: $showDevices) { sheetStack { DevicesView() } }
+        .sheet(isPresented: $showDevices) { sheetStack { NunaDevicesView() } }
         .sheet(item: $routed) { dest in sheetStack { destinationView(dest) } }
         .onChange(of: router.requestedDestination) { _, dest in handle(dest) }
     }
@@ -75,6 +75,7 @@ struct NunaRootView: View {
                 .toolbar(.hidden, for: .navigationBar)
                 .tabRouteDestinations()
                 .nunaAnyaDestinations()
+                .nunaDeviceDestinations()
         }
         .toolbar(.hidden, for: .tabBar)
         .tag(tab.rawValue)
@@ -84,6 +85,8 @@ struct NunaRootView: View {
         NavigationStack {
             content()
                 .tabRouteDestinations()
+                .nunaDeviceDestinations()
+                .nunaAnyaDestinations()
                 .background(NunaPalette.canvas.ignoresSafeArea())
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbarBackground(.hidden, for: .navigationBar)
@@ -101,7 +104,7 @@ struct NunaRootView: View {
         case .labBook: LabBookView()
         case .fusedRecord: FusedRecordHost()
         case .rhythm: RhythmHost(onClose: { routed = nil })
-        case .devices: DevicesView()
+        case .devices: NunaDevicesView()
         case .trends: TrendsView()
         case .workouts: NunaWorkoutsView()
         case .activeWorkout: NunaWorkoutsView(autoOpenStart: true)
