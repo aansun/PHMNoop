@@ -1,6 +1,70 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "The app is available in %lld languages. Dates and numbers follow the language.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Aplikasi tersedia dalam %lld bahasa. Tanggal dan angka mengikuti bahasa."}}
+    } },
+    "Changing the language reloads the app for a moment. Dates and numbers follow the language. The language can also be set per app in iOS Settings.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mengganti bahasa memuat ulang aplikasi sebentar. Format tanggal dan angka mengikuti bahasa. Bahasa per aplikasi juga bisa diatur di Pengaturan iOS."}}
+    } },
+    "Fully quit and reopen NOOP to switch to %@.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tutup NOOP sepenuhnya lalu buka lagi untuk beralih ke %@."}}
+    } },
+    "Units are set separately": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Satuan diatur terpisah"}}
+    } },
+    "Km or miles, kg or lb, °C or °F": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Km atau mil, kg atau lb, °C atau °F"}}
+    } },
+    "Now: %@. If the iPhone uses a language the app does not have, the app uses English.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sekarang: %@. Jika iPhone memakai bahasa yang tidak ada di aplikasi, aplikasi memakai English."}}
+    } },
+    "Haptics are under Strap automations, the Live Activity under History sync and the morning brief under Anya.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Haptik ada di Otomasi strap, Live Activity di Sinkron riwayat, dan ringkasan pagi di Anya."}}
+    } },
+    "If %@": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Jika %@"}}
+    } },
+    "All screens, notifications, and Anya replies": { "localizations": {
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "所有界面、通知以及 Anya 的回复"}},
+        "pl": {"stringUnit": {"state": "translated", "value": "Wszystkie ekrany, powiadomienia i odpowiedzi Anyi"}},
+        "pt-PT": {"stringUnit": {"state": "translated", "value": "Todos os ecrãs, notificações e respostas da Anya"}},
+        "fr": {"stringUnit": {"state": "translated", "value": "Tous les écrans, notifications et réponses d'Anya"}},
+        "es": {"stringUnit": {"state": "translated", "value": "Todas las pantallas, notificaciones y respuestas de Anya"}},
+        "de": {"stringUnit": {"state": "translated", "value": "Alle Bildschirme, Mitteilungen und Antworten von Anya"}},
+        "en": {"stringUnit": {"state": "translated", "value": "All screens, notifications, and Anya replies"}},
+      "id": {"stringUnit": {"state": "translated", "value": "Semua layar, notifikasi, dan jawaban Anya"}}
+    } },
+    "Score": { "localizations": {
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "分数"}},
+        "pl": {"stringUnit": {"state": "translated", "value": "Wynik"}},
+        "pt-PT": {"stringUnit": {"state": "translated", "value": "Pontuação"}},
+        "fr": {"stringUnit": {"state": "translated", "value": "Score"}},
+        "es": {"stringUnit": {"state": "translated", "value": "Puntuación"}},
+        "de": {"stringUnit": {"state": "translated", "value": "Wert"}},
+        "en": {"stringUnit": {"state": "translated", "value": "Score"}},
+      "id": {"stringUnit": {"state": "translated", "value": "Skor"}}
+    } },
+    "Button": { "localizations": {
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "按钮"}},
+        "pl": {"stringUnit": {"state": "translated", "value": "Przycisk"}},
+        "pt-PT": {"stringUnit": {"state": "translated", "value": "Botão"}},
+        "fr": {"stringUnit": {"state": "translated", "value": "Bouton"}},
+        "es": {"stringUnit": {"state": "translated", "value": "Botón"}},
+        "de": {"stringUnit": {"state": "translated", "value": "Taste"}},
+        "en": {"stringUnit": {"state": "translated", "value": "Button"}},
+      "id": {"stringUnit": {"state": "translated", "value": "Tombol"}}
+    } },
+    "Number": { "localizations": {
+        "zh-Hans": {"stringUnit": {"state": "translated", "value": "数字"}},
+        "pl": {"stringUnit": {"state": "translated", "value": "Liczba"}},
+        "pt-PT": {"stringUnit": {"state": "translated", "value": "Número"}},
+        "fr": {"stringUnit": {"state": "translated", "value": "Nombre"}},
+        "es": {"stringUnit": {"state": "translated", "value": "Número"}},
+        "de": {"stringUnit": {"state": "translated", "value": "Zahl"}},
+        "en": {"stringUnit": {"state": "translated", "value": "Number"}},
+      "id": {"stringUnit": {"state": "translated", "value": "Angka"}}
+    } },
     "S · M · L · Lock Screen": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "S · M · L · Layar Kunci"}}
     } },
@@ -64249,6 +64313,7 @@
     },
     "Date": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tanggal"}},
         "de": {
           "stringUnit": {
             "state": "translated",
