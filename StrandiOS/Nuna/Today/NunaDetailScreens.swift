@@ -509,39 +509,23 @@ struct NunaStressDetailView: View {
         }
     }
 
-    /// HRV and resting heart rate, the two signals the stress read leans on, with the change from the night before.
+    /// HRV and resting heart rate, the two signals the stress read leans on. The same tile as Key metrics on
+    /// Today, with the change from the night before.
     private var recoveryTiles: some View {
-        HStack(spacing: 12) {
-            signalTile("HRV", key: "hrv", value: day.hrv, unit: "ms", delta: day.hrvDelta, downIsGood: false)
-            signalTile("Resting HR", key: "rhr", value: day.restingHr, unit: "bpm", delta: day.restingHrDelta, downIsGood: true)
+        func delta(_ d: Double?, downIsGood: Bool) -> (String, Bool)? {
+            guard let d, abs(d.rounded()) >= 1 else { return nil }
+            return ((d > 0 ? "▲ " : "▼ ") + "\(Int(abs(d).rounded()))", downIsGood ? d < 0 : d > 0)
         }
-    }
-
-    @ViewBuilder private func signalTile(_ label: LocalizedStringKey, key: String, value: Double?, unit: String,
-                                         delta: Double?, downIsGood: Bool) -> some View {
-        let tile = NunaCard(small: true) {
-            VStack(alignment: .leading, spacing: 8) {
-                Text(label).font(.system(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                HStack(alignment: .firstTextBaseline, spacing: 3) {
-                    Text(verbatim: value.map { String(format: "%.0f", locale: AppLanguage.activeLocale, $0) } ?? "–")
-                        .font(.system(size: NunaTypeSize.numberM, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
-                    if value != nil { Text(verbatim: unit).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
-                }
-                if let delta, abs(delta.rounded()) >= 1 {
-                    let good = downIsGood ? delta < 0 : delta > 0
-                    let c = good ? NunaPalette.charge : NunaPalette.warning
-                    Text(verbatim: (delta > 0 ? "▲ " : "▼ ") + "\(Int(abs(delta).rounded()))")
-                        .font(.system(size: 11.5, weight: .bold)).foregroundStyle(c)
-                        .padding(.horizontal, 8).frame(height: 24).background(NunaPalette.tint(c), in: Capsule())
-                } else {
-                    Text(verbatim: " ").font(.system(size: 11.5)).frame(height: 24)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-        if let m = MetricCatalog.metric(key: key, source: "my-whoop") {
-            NavigationLink(value: NunaTodayRoute.metric(m)) { tile }.buttonStyle(.plain)
-        } else { tile }
+        func num(_ v: Double?) -> String { v.map { String(format: "%.0f", locale: AppLanguage.activeLocale, $0) } ?? "–" }
+        let h = delta(day.hrvDelta, downIsGood: false), r = delta(day.restingHrDelta, downIsGood: true)
+        return NunaMetricsGrid(tiles: [
+            NunaMetricTile(id: "hrv", label: "HRV", value: num(day.hrv), unit: "ms",
+                           route: MetricCatalog.metric(key: "hrv", source: "my-whoop").map { .metric($0) },
+                           delta: h?.0, deltaGood: h?.1),
+            NunaMetricTile(id: "rhr", label: "Resting HR", value: num(day.restingHr), unit: "bpm",
+                           route: MetricCatalog.metric(key: "rhr", source: "my-whoop").map { .metric($0) },
+                           delta: r?.0, deltaGood: r?.1),
+        ])
     }
 
     /// The finer 30-minute timeline when it has scored points, otherwise the hourly read the Today card uses.
