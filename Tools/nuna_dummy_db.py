@@ -191,6 +191,34 @@ def main():
                 (RAW, w["start"], w["end"], w["sport"], "manual", w["dur"] * 60.0, w["kcal"], w["avg"], w["max"],
                  round(w["strain"], 2), w["dist"], None, None, w["steps"]))
 
+    # lifting sessions behind the strength workouts: a few exercises, working sets with weight and reps
+    lift_plan = [
+        ("Back squat", "quads", ["glutes", "hamstrings"], 100.0),
+        ("Bench press", "chest", ["frontDelts", "triceps"], 80.0),
+        ("Barbell row", "lats", ["upperBack", "biceps"], 70.0),
+        ("Overhead press", "frontDelts", ["triceps"], 47.5),
+        ("Romanian deadlift", "hamstrings", ["glutes", "lowerBack"], 90.0),
+    ]
+    lift_n = 0
+    for d, ws in sorted(workouts.items()):
+        for w in ws:
+            if w["sport"] != "TraditionalStrengthTraining":
+                continue
+            lift_n += 1
+            sid = f"dummy-lift-{w['start']}"
+            db.execute("insert into liftSession (id,deviceId,startTs,endTs,sport,programId,programName,sessionRpe,note)"
+                       " values (?,?,?,?,?,?,?,?,?)", (sid, RAW, w["start"], w["end"], w["sport"], None, None, 7.0 + (lift_n % 3) * 0.5, None))
+            picks = lift_plan[(lift_n % 2)::2] if lift_n % 2 == 0 else lift_plan[:3]
+            order = 0
+            for name, prim, sec, base in picks:
+                load = base * (1 + 0.012 * lift_n)
+                for k in range(4):
+                    reps = [8, 8, 6, 6][k]
+                    db.execute("insert into liftSet (id,deviceId,sessionId,ord,exercise,primaryMuscle,secondaryMuscles,setIndex,weightKg,reps,rpe,isWarmup,startTs,endTs,restSec,note)"
+                               " values (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
+                               (f"{sid}-{order}", RAW, sid, order, name, prim, ",".join(sec), k + 1, round(load * (0.8 if k == 0 else 1.0) / 2.5) * 2.5, reps,
+                                7.0 + k * 0.5, 0, None, None, 120, None))
+                    order += 1
     # series the screens read from metricSeries (the rest come from the daily columns)
     ms = []
     nonnull = [d for d in dates if daily[d]["night"]]

@@ -454,9 +454,10 @@ struct NunaMetricsGrid: View {
 struct NunaActivityRow: View {
     let workout: WorkoutRow
     let effortScale: EffortScale
+    @EnvironmentObject private var router: NavRouter
 
     var body: some View {
-        NavigationLink(value: TabRoute.workouts) {
+        Button { router.requestedDestination = .workouts } label: {
             NunaCard(small: true, padding: EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)) {
                 HStack(spacing: 12) {
                     NunaIconTile("flame", tint: NunaPalette.effortText)

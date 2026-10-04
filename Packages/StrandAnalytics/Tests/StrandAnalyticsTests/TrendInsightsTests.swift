@@ -74,4 +74,26 @@ final class TrendInsightsTests: XCTestCase {
         XCTAssertEqual(r?.length, 3); XCTAssertEqual(r?.endDay, "2026-09-06")
         XCTAssertNil(TrendInsights.longestStreak([("2026-09-01", 10)], atLeast: 67))
     }
+
+    func testLoadRatio() {
+        // Blocks 10, 10, 10, 10, 10, 20: mean 11.67, last 20 -> 1.714.
+        XCTAssertEqual(TrendInsights.loadRatio(blocks: [10, 10, 10, 10, 10, 20]) ?? 0, 20.0 / (70.0 / 6.0), accuracy: 1e-9)
+        XCTAssertNil(TrendInsights.loadRatio(blocks: [0, 0, 0, 0, 5, 6], minBlocks: 3))   // only two loaded blocks
+        XCTAssertNil(TrendInsights.loadRatio(blocks: [10, 12], minBlocks: 3))
+    }
+
+    func testLoadBandEdges() {
+        XCTAssertEqual(TrendInsights.loadBand(0.79), .under)
+        XCTAssertEqual(TrendInsights.loadBand(0.8), .optimal)
+        XCTAssertEqual(TrendInsights.loadBand(1.3), .optimal)
+        XCTAssertEqual(TrendInsights.loadBand(1.4), .high)
+        XCTAssertEqual(TrendInsights.loadBand(1.6), .excessive)
+    }
+
+    func testFormState() {
+        XCTAssertEqual(TrendInsights.formState(2.5), .fresh)
+        XCTAssertEqual(TrendInsights.formState(-1.7), .balanced)
+        XCTAssertEqual(TrendInsights.formState(-4), .loaded)
+        XCTAssertEqual(TrendInsights.formState(-9), .overreached)
+    }
 }

@@ -1,6 +1,522 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "4 wk": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "4 mgg"}}
+        } },
+        "5 wk": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "5 mgg"}}
+        } },
+        "Workout calendar": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kalender latihan"}}
+        } },
+        "All sessions": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Semua sesi"}}
+        } },
+        "Search sessions": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Cari sesi"}}
+        } },
+        "No sessions match.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidak ada sesi yang cocok."}}
+        } },
+        "of your usual": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "dari biasanya"}}
+        } },
+        "Cardio": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kardio"}}
+        } },
+        "Strength": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Otot"}}
+        } },
+        "Both": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Keduanya"}}
+        } },
+        "A steady session suits today.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sesi stabil cocok untuk hari ini."}}
+        } },
+        "Keep it easy today.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Santai saja hari ini."}}
+        } },
+        "Ready for a hard session.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Siap untuk sesi berat."}}
+        } },
+        "Auto-detect": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Deteksi otomatis"}}
+        } },
+        "Suggests when your heart rate stays up": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Menyarankan saat detakmu naik terus"}}
+        } },
+        "Average heart rate %lld bpm. Save it as a workout?": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Detak rata-rata %lld bpm. Simpan sebagai latihan?"}}
+        } },
+        "Run": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lari"}}
+        } },
+        "Walk": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Jalan"}}
+        } },
+        "Cycle": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sepeda"}}
+        } },
+        "Gym": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Gym"}}
+        } },
+        "Swim": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Renang"}}
+        } },
+        "HIIT": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "HIIT"}}
+        } },
+        "Yoga": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Yoga"}}
+        } },
+        "See all": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lihat semua"}}
+        } },
+        "Start one above or let auto-detect suggest one": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Mulai satu di atas atau biarkan deteksi otomatis menyarankan"}}
+        } },
+        "Workout in progress": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Latihan sedang berjalan"}}
+        } },
+        "Excessive": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Berlebih"}}
+        } },
+        "Needs at least three weeks with workouts to read your balance.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Butuh minimal tiga minggu dengan latihan untuk membaca keseimbanganmu."}}
+        } },
+        "Below your usual load. There is room to add some.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Di bawah bebanmu yang biasa. Masih ada ruang untuk menambah."}}
+        } },
+        "Within the safe range of 0.8 to 1.3. You can raise intensity a little.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dalam rentang aman 0,8 sampai 1,3. Aman menaikkan intensitas sedikit."}}
+        } },
+        "Above your usual load. Keep the next sessions easier.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Di atas bebanmu yang biasa. Buat sesi berikutnya lebih ringan."}}
+        } },
+        "Well above your usual load. Take a rest day.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Jauh di atas bebanmu yang biasa. Ambil hari istirahat."}}
+        } },
+        "Active days": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hari aktif"}}
+        } },
+        "Rest days": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hari istirahat"}}
+        } },
+        "In a row": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Berturut"}}
+        } },
+        "Current streak": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Berturut sekarang"}}
+        } },
+        "Longest gap": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Jeda terpanjang"}}
+        } },
+        "Rest day": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hari istirahat"}}
+        } },
+        "Never saves on its own": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidak pernah menyimpan sendiri"}}
+        } },
+        "Detection only suggests, through one card in Workouts. You decide: Save or Not a workout.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Deteksi hanya menyarankan lewat satu kartu di Latihan. Kamu yang memutuskan: Simpan atau Bukan latihan."}}
+        } },
+        "Detect workouts automatically": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Deteksi latihan otomatis"}}
+        } },
+        "Looking for workouts you have not logged": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Mencari latihan yang belum kamu catat"}}
+        } },
+        "Nothing is scanned": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidak ada yang dipindai"}}
+        } },
+        "Missed workouts are not recorded": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Latihan yang terlewat tidak tercatat"}}
+        } },
+        "Turn it on so sessions without Start can still be saved": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Nyalakan agar sesi tanpa Mulai tetap bisa disimpan"}}
+        } },
+        "How it works": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Cara kerjanya"}}
+        } },
+        "Minimum length": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Durasi minimal"}}
+        } },
+        "Heart rate must stay up": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Detak harus tetap naik"}}
+        } },
+        "Heart-rate threshold": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ambang detak"}}
+        } },
+        "Above your resting heart rate": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Di atas detak istirahat"}}
+        } },
+        "Tolerated dip": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Jeda ditoleransi"}}
+        } },
+        "A short drop does not end the session": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Turun sebentar tidak memutus sesi"}}
+        } },
+        "Used as confirmation when it exists": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dipakai sebagai konfirmasi bila ada"}}
+        } },
+        "The rules are deliberately conservative so stress, caffeine or climbing stairs are not counted as workouts. Short or light sessions can be missed.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Aturan sengaja konservatif agar stres, kafein, atau naik tangga tidak dianggap latihan. Sesi singkat atau ringan bisa terlewat."}}
+        } },
+        "Latest suggestion": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Saran terakhir"}}
+        } },
+        "Nothing waiting": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidak ada yang menunggu"}}
+        } },
+        "No unlogged workout was found in the last two days": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidak ada latihan belum tercatat dalam dua hari terakhir"}}
+        } },
+        "Free": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bebas"}}
+        } },
+        "Target duration": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Durasi target"}}
+        } },
+        "Target distance": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Jarak target"}}
+        } },
+        "No target. The session records heart rate, Effort and, for outdoor sports, your route.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tanpa target. Sesi merekam detak jantung, Effort, dan untuk olahraga luar ruang, rutemu."}}
+        } },
+        "GPS and route": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "GPS dan rute"}}
+        } },
+        "The route is recorded when location is allowed": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rute direkam saat lokasi diizinkan"}}
+        } },
+        "Not used for this sport": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidak dipakai untuk olahraga ini"}}
+        } },
+        "Silent buzz on the strap": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Getar senyap di strap"}}
+        } },
+        "When you leave the target zone or reach the target": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Saat keluar dari zona target atau mencapai target"}}
+        } },
+        "Log sets and weights": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Catat set dan beban"}}
+        } },
+        "Open the Lift Log to run a program or a freehand session": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Buka Lift Log untuk menjalankan program atau sesi bebas"}}
+        } },
+        "Start in 3 seconds": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Mulai dalam 3 detik"}}
+        } },
+        "Minimise": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kecilkan"}}
+        } },
+        "In zone": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dalam zona"}}
+        } },
+        "Below zone": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Di bawah zona"}}
+        } },
+        "Above zone": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Di atas zona"}}
+        } },
+        "End and save": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Akhiri dan simpan"}}
+        } },
+        "Session finished": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sesi selesai"}}
+        } },
+        "Sessions under a minute are not saved.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sesi di bawah satu menit tidak disimpan."}}
+        } },
+        "Effort added": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Effort ditambahkan"}}
+        } },
+        "Heart rate zones": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Zona detak jantung"}}
+        } },
+        "No heart-rate readings were recorded for this session.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidak ada bacaan detak jantung pada sesi ini."}}
+        } },
+        "Delete this workout?": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hapus latihan ini?"}}
+        } },
+        "This session is no longer saved.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sesi ini tidak lagi tersimpan."}}
+        } },
+        "Imported file": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Berkas impor"}}
+        } },
+        "Workouts, energy and distance are written by the sync. Manage it in Me": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Latihan, energi, dan jarak ditulis oleh sinkron. Atur di Saya"}}
+        } },
+        "Load balance": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Keseimbangan beban"}}
+        } },
+        "Your last 7 days against your usual week over 6 weeks. Between 0.8 and 1.3 is the safe range.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "7 harimu dibanding minggu biasamu selama 6 minggu. Antara 0,8 dan 1,3 adalah rentang aman."}}
+        } },
+        "6 weeks": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "6 minggu"}}
+        } },
+        "Top: strength · bottom: cardio": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Atas: otot · bawah: kardio"}}
+        } },
+        "Cardio · Effort": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kardio · Effort"}}
+        } },
+        "Strength · volume kg": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Otot · volume kg"}}
+        } },
+        "Effort · see cardio": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Effort · lihat kardio"}}
+        } },
+        "kg · see strength": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "kg · lihat otot"}}
+        } },
+        "See the workout calendar": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lihat kalender latihan"}}
+        } },
+        "Cardio is counted from daily Effort, not TRIMP. Strength is estimated from the volume you lift and is not added to cardio, because the heart strain of lifting is not invented.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kardio dihitung dari Effort harian, bukan TRIMP. Beban otot diperkirakan dari volume angkat dan tidak dijumlahkan dengan kardio, karena strain jantung angkat beban tidak dikarang."}}
+        } },
+        "Form (fitness minus fatigue)": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Form (kebugaran dikurangi kelelahan)"}}
+        } },
+        "Fitness · CTL": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kebugaran · CTL"}}
+        } },
+        "Fatigue · ATL": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kelelahan · ATL"}}
+        } },
+        "Fresh": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Segar"}}
+        } },
+        "Loaded": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Terbebani"}}
+        } },
+        "Overreached": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Berlebih"}}
+        } },
+        "Fatigue and fitness are in balance.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kelelahan dan kebugaran seimbang."}}
+        } },
+        "Fatigue is above your fitness. Common after a heavy week; ease off.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kelelahan di atas kebugaranmu. Wajar setelah minggu padat; kurangi intensitas."}}
+        } },
+        "Fatigue is below your fitness. You are fresh for a hard session.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kelelahan di bawah kebugaranmu. Kamu segar untuk sesi berat."}}
+        } },
+        "Fatigue is well above your fitness. Rest.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kelelahan jauh di atas kebugaranmu. Istirahat."}}
+        } },
+        "The model needs at least 14 days in a row with Effort before it draws anything.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Model butuh minimal 14 hari berturut-turut dengan Effort sebelum menggambar apa pun."}}
+        } },
+        "Fitness and fatigue": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kebugaran dan kelelahan"}}
+        } },
+        "Fitness · 42 days": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kebugaran · 42 hari"}}
+        } },
+        "Fatigue · 7 days": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kelelahan · 7 hari"}}
+        } },
+        "Daily form": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Form harian"}}
+        } },
+        "Green fresh · yellow loaded": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hijau segar · kuning terbebani"}}
+        } },
+        "Form states": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kondisi form"}}
+        } },
+        "Fresh above +2 · ready for hard training": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Segar di atas +2 · siap latihan berat"}}
+        } },
+        "Balanced −3 to +2": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Seimbang −3 sampai +2"}}
+        } },
+        "Loaded −6 to −3 · ease off": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Terbebani −6 sampai −3 · kurangi intensitas"}}
+        } },
+        "Overreached below −6 · needs rest": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Berlebih di bawah −6 · butuh istirahat"}}
+        } },
+        "You are here": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kamu di sini"}}
+        } },
+        "Load sources, 7 days": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sumber beban 7 hari"}}
+        } },
+        "No workouts in the last 7 days.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidak ada latihan dalam 7 hari terakhir."}}
+        } },
+        "Time per heart-rate zone": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Waktu per zona detak"}}
+        } },
+        "No heart-rate readings in saved sessions this week.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidak ada bacaan detak di sesi tersimpan minggu ini."}}
+        } },
+        "Fitness (CTL) averages Effort over 42 days, fatigue (ATL) over 7 days, and form is the gap. Descriptive only: it does not change Charge or any other score.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kebugaran (CTL) rata-rata Effort 42 hari, kelelahan (ATL) rata-rata 7 hari, dan form adalah selisihnya. Hanya deskriptif: tidak memengaruhi Charge atau skor lain."}}
+        } },
+        "Cardio load is above your usual. Choose an easy day next.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Beban kardio di atas biasanya. Pilih hari santai berikutnya."}}
+        } },
+        "Cardio load is well above your usual. Take a rest day.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Beban kardio jauh di atas biasanya. Ambil hari istirahat."}}
+        } },
+        "Your load is balanced with your usual. Keep the same rhythm.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bebanmu seimbang dengan biasanya. Pertahankan ritme."}}
+        } },
+        "Your load is below your usual. A harder session is fine if you feel good.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bebanmu di bawah biasanya. Sesi lebih berat boleh jika kamu merasa baik."}}
+        } },
+        "Training load needs at least three weeks with workouts.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Beban latihan butuh minimal tiga minggu dengan latihan."}}
+        } },
+        "No lifting sessions yet": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Belum ada sesi angkat beban"}}
+        } },
+        "Log a gym session with sets and weights in the Lift Log. Volume, muscle groups and personal records appear here.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Catat sesi gym dengan set dan beban di Lift Log. Volume, kelompok otot, dan rekor pribadi muncul di sini."}}
+        } },
+        "Volume, 7 days": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Volume 7 hari"}}
+        } },
+        "tonnes": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "ton"}}
+        } },
+        "Volume per week": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Volume per minggu"}}
+        } },
+        "By muscle group": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Per kelompok otot"}}
+        } },
+        "Legs": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kaki"}}
+        } },
+        "Shoulders": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bahu"}}
+        } },
+        "Arms": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lengan"}}
+        } },
+        "Core": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Inti"}}
+        } },
+        "Recovered": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Pulih"}}
+        } },
+        "Recovering": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Memulihkan"}}
+        } },
+        "Classify your exercises by muscle in the Lift Log to see this.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Klasifikasikan latihanmu per otot di Lift Log untuk melihat ini."}}
+        } },
+        "Personal records": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rekor pribadi"}}
+        } },
+        "Sets, weights, rest and records": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Set, beban, istirahat, dan rekor"}}
+        } },
+        "Estimated from lifting volume (weight × reps). This is not heart strain, so it is not added to cardio Effort.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Diperkirakan dari volume angkat (beban × ulangan). Ini bukan strain jantung, jadi tidak ditambahkan ke Effort kardio."}}
+        } },
+        "Totals for this filter": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Total filter ini"}}
+        } },
+        "Newest": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Terbaru"}}
+        } },
+        "Oldest": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Terlama"}}
+        } },
+        "Last 7 weeks": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "7 minggu terakhir"}}
+        } },
+        "Your calendar is built from your saved sessions. Keep logging to see your rhythm.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kalendermu dibangun dari sesi tersimpan. Terus catat untuk melihat ritmemu."}}
+        } },
+        "Cardio load": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Beban kardio"}}
+        } },
+        "Charge %lld%%. %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Charge %lld%%. %@"}}
+        } },
+        "Last %lld days ago": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Terakhir %lld hari lalu"}}
+        } },
+        "Average %lld · max %lld": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rata-rata %lld · maks %lld"}}
+        } },
+        "Week of %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Minggu %@"}}
+        } },
+        "Since %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sejak %@"}}
+        } },
+        "%lld min left": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld mnt tersisa"}}
+        } },
+        "Target %lld min": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Target %lld mnt"}}
+        } },
+        "Target zone %lld": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Zona target %lld"}}
+        } },
+        "That day reached %@ of %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hari itu mencapai %@ dari %@"}}
+        } },
+        "This week: %lld sessions, Effort %@.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Minggu ini: %lld sesi, Effort %@."}}
+        } },
+        "%lld sessions · Effort %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld sesi · Effort %@"}}
+        } },
+        "%lld sessions · %lld min": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld sesi · %lld mnt"}}
+        } },
+        "%lld kg · %lld lifting sessions · %lld sets": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld kg · %lld sesi angkat · %lld set"}}
+        } },
+        "%lld sessions, %lld sets": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld sesi, %lld set"}}
+        } },
+        "Most of this session, %lld%%, was in zone %lld.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sebagian besar sesi ini, %lld%%, ada di zona %lld."}}
+        } },
+        "You have been active %lld days in a row. Make tomorrow an easy day.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kamu aktif %lld hari berturut-turut. Jadikan besok hari santai."}}
+        } },
+        "%lld of your usual": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld%% dari biasanya"}}
+        } },
+        "%lld%% of your usual": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld%% dari biasanya"}}
+        } },
+        "Days with a session over the last 12 weeks. %@ is the one most often empty.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hari dengan sesi dalam 12 minggu terakhir. %@ adalah yang paling sering kosong."}}
+        } },
+        "Up %lld%% from your usual week.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Naik %lld%% dari minggu biasamu."}}
+        } },
+        "Down %lld%% from your usual week.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Turun %lld%% dari minggu biasamu."}}
+        } },
+        "Acute-to-chronic load ratio %@. %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rasio beban akut ke kronis %@. %@"}}
+        } },
+        "Look at the full history": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lihat riwayat lengkap"}}
+        } },
+        "Fitness": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kebugaran"}}
+        } },
+        "Fatigue": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kelelahan"}}
+        } },
         "Green": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Hijau"}}
         } },
