@@ -348,6 +348,8 @@ struct NunaMetricTile: Identifiable {
     var deltaGood: Bool?
     var icon = "circle"
     var tint: Color?
+    /// Small line under the label in the long layout, e.g. what the change is measured against.
+    var caption: LocalizedStringKey?
 }
 
 /// How the key metrics are laid out: two-column cards, or one long list.
@@ -374,7 +376,10 @@ struct NunaMetricsGrid: View {
     private func row(_ tile: NunaMetricTile) -> some View {
         HStack(spacing: 12) {
             NunaIconTile(tile.icon, tint: tile.tint)
-            Text(tile.label).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(tile.label).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                if let c = tile.caption { Text(c).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8) }
+            }
             Spacer(minLength: 8)
             HStack(alignment: .firstTextBaseline, spacing: 3) {
                 Text(verbatim: tile.value).font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)

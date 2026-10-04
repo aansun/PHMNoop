@@ -440,6 +440,16 @@ final class NunaSeriesModel: ObservableObject {
         return (k, v)
     }
 
+    /// Mean of the readings in the last `days` days, leaving out the latest reading itself.
+    func average(days: Int) -> Double? {
+        let latestKey = latest?.day
+        let v = window(days + 1).compactMap { s -> Double? in
+            guard let val = s.value, Repository.localDayKey(s.date) != latestKey else { return nil }
+            return val
+        }
+        return v.count >= 3 ? v.reduce(0, +) / Double(v.count) : nil
+    }
+
     /// Mean, spread and extremes of the last 30 readings before the latest one.
     var band: (mean: Double, sd: Double, lo: Double, hi: Double)? {
         let v = byDay.keys.sorted().dropLast().suffix(30).compactMap { byDay[$0] }
