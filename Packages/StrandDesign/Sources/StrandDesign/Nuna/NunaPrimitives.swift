@@ -167,9 +167,10 @@ public struct NunaIconTile: View {
     public var body: some View {
         Image(systemName: systemImage)
             .font(.system(size: 17, weight: .bold))
-            .foregroundStyle(tint ?? NunaPalette.textPrimary)
+            // Icons are neutral by design: colour is kept for scores and status, never for symbols.
+            .foregroundStyle(NunaPalette.textPrimary)
             .frame(width: 40, height: 40)
-            .background((tint.map { NunaPalette.tint($0) }) ?? Color.white.opacity(0.08),
+            .background(Color.white.opacity(0.08),
                         in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
             .accessibilityHidden(true)
     }
@@ -305,7 +306,7 @@ public struct NunaAddCard: View {
                 Image(systemName: "plus").font(.system(size: 17, weight: .bold))
                 Text(title).font(.system(size: 15, weight: .heavy))
             }
-            .foregroundStyle(NunaPalette.charge)
+            .foregroundStyle(NunaPalette.textPrimary)
             .frame(maxWidth: .infinity, minHeight: 58)
             .overlay(RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous)
                 .strokeBorder(Color.white.opacity(0.22), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5])))

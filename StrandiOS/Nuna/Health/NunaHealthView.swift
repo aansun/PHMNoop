@@ -214,7 +214,7 @@ struct NunaHealthView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Live heart rate").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
-                            Image(systemName: "heart.fill").foregroundStyle(NunaPalette.alertText)
+                            Image(systemName: "heart.fill").foregroundStyle(NunaPalette.textPrimary)
                             Text(verbatim: live.heartRate.map(String.init) ?? "–")
                                 .font(.system(size: NunaTypeSize.numberL, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
                             Text("bpm").font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)

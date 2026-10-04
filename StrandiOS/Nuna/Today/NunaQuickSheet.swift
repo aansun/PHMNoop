@@ -127,10 +127,9 @@ struct NunaQuickSheet: View {
         Button(action: action) {
             VStack(spacing: 8) {
                 Image(systemName: icon).font(.system(size: 22, weight: .semibold))
-                    .foregroundStyle(tint ?? NunaPalette.textPrimary)
+                    .foregroundStyle(NunaPalette.textPrimary)
                     .frame(width: 60, height: 60)
-                    .background((tint.map { NunaPalette.tint($0) }) ?? Color.white.opacity(0.08),
-                                in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
                 Text(title).font(.system(size: 12.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
                     .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.8)
             }
