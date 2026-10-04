@@ -37,6 +37,9 @@ struct NunaWorkoutsView: View {
     @StateObject private var m = NunaWorkoutsModel()
     @State private var suggestion: AutoWorkoutSuggestion?
     @State private var showCoach = false
+    @State private var tab = 0
+    @State private var query = ""
+    @State private var showAllSports = false
 
     private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
     private var system: UnitSystem { UnitPrefs.resolveDistance(system: UnitSystem(rawValue: unitSystemRaw) ?? .metric, override: distanceRaw) }
@@ -51,17 +54,20 @@ struct NunaWorkoutsView: View {
         ScrollView {
             VStack(spacing: NunaSpacing.section) {
                 header
+                NunaSegmented([(value: 0, title: "Workout"), (value: 1, title: "Insight")], selection: $tab)
                 NunaActiveWorkoutBanner()
                 if !m.loaded {
                     ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 160)
+                } else if tab == 0 {
+                    startSection
+                    suggestionCard
+                    historySection
                 } else {
                     weekCard
                     anyaCard
                     loadCard
                     calendarCard
-                    detectCard
-                    startSection
-                    historySection
+                    autoDetectRow
                 }
             }
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 60)
@@ -90,7 +96,6 @@ struct NunaWorkoutsView: View {
             }.buttonStyle(.plain).accessibilityLabel(Text("Back"))
             Text("Workouts").font(.system(size: 24, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
             Spacer()
-            roundLink(.calendar, "calendar", "Workout calendar")
             roundLink(.history, "line.3.horizontal.decrease", "All sessions")
         }
     }
@@ -246,7 +251,7 @@ struct NunaWorkoutsView: View {
 
     // MARK: Auto-detect
 
-    @ViewBuilder private var detectCard: some View {
+    @ViewBuilder private var suggestionCard: some View {
         if let s = suggestion {
             let w = s.workout
             NunaCard(highlight: true) {
@@ -271,6 +276,9 @@ struct NunaWorkoutsView: View {
                 }
             }
         }
+    }
+
+    private var autoDetectRow: some View {
         NavigationLink(value: NunaWorkoutRoute.autoDetect) {
             NunaCard(small: true) {
                 NunaListRow("Auto-detect", subtitle: "Suggests when your heart rate stays up", systemImage: "sparkles") {
@@ -283,30 +291,61 @@ struct NunaWorkoutsView: View {
     // MARK: Start
 
     private var startSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Start a workout").font(.system(size: NunaTypeSize.h2, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
-                Spacer()
-                NavigationLink(value: NunaWorkoutRoute.start(nil)) { Text("All").font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary) }
-            }
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 4), spacing: 10) {
-                ForEach(starts, id: \.0) { sport, title, icon in
-                    NavigationLink(value: NunaWorkoutRoute.start(sport)) {
-                        VStack(spacing: 8) {
-                            Image(systemName: icon).font(.system(size: 20, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                            Text(LocalizedStringKey(title)).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        }
-                        .frame(maxWidth: .infinity).frame(height: 78).background(NunaPalette.glass, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
-                    }.buttonStyle(.plain)
-                }
-                NavigationLink(value: NunaWorkoutRoute.start(nil)) {
-                    VStack(spacing: 8) {
-                        Image(systemName: "plus").font(.system(size: 20, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("More").font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+        let q = query.trimmingCharacters(in: .whitespaces)
+        let matches = WorkoutCatalog.matching(q)
+        return NunaCard {
+            VStack(alignment: .leading, spacing: 14) {
+                nunaTrendsCap("Start a workout")
+                HStack(spacing: 10) {
+                    Image(systemName: "magnifyingglass").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                    TextField("", text: $query, prompt: Text("Search all workouts").foregroundStyle(NunaPalette.textMuted))
+                        .font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).autocorrectionDisabled()
+                    if !query.isEmpty {
+                        Button { query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(NunaPalette.textMuted) }.buttonStyle(.plain)
                     }
-                    .frame(maxWidth: .infinity).frame(height: 78).background(NunaPalette.glass, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(NunaPalette.hairline, style: StrokeStyle(lineWidth: 1, dash: [4, 4])))
+                }
+                .padding(.horizontal, 14).frame(height: 44).background(NunaPalette.glassStrong, in: Capsule())
+                if !q.isEmpty {
+                    if matches.isEmpty {
+                        Text("No workouts match").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    } else {
+                        sportGrid(matches.map { ($0.name, $0.name) })
+                    }
+                } else if showAllSports {
+                    sportGrid(WorkoutCatalog.all.map { ($0.name, $0.name) })
+                    moreButton(expanded: true)
+                } else {
+                    sportGrid(starts.map { ($0.0, $0.1) }, localized: true)
+                    moreButton(expanded: false)
+                }
+            }
+        }
+    }
+
+    private func moreButton(expanded: Bool) -> some View {
+        Button { withAnimation(.easeInOut(duration: 0.2)) { showAllSports.toggle() } } label: {
+            HStack(spacing: 6) {
+                Text(expanded ? "Show fewer" : "More").font(.system(size: 14, weight: .bold))
+                Image(systemName: expanded ? "chevron.up" : "chevron.down").font(.system(size: 11, weight: .bold))
+            }
+            .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 44)
+            .background(NunaPalette.glassStrong, in: Capsule())
+        }.buttonStyle(.plain)
+    }
+
+    /// A grid of sports; `sport` is the stored catalogue name and `title` the label (the quick set has short, localised ones).
+    private func sportGrid(_ items: [(String, String)], localized: Bool = false) -> some View {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 4), spacing: 10) {
+            ForEach(items, id: \.0) { sport, title in
+                NavigationLink(value: NunaWorkoutRoute.start(sport)) {
+                    VStack(spacing: 8) {
+                        Image(systemName: NunaWorkoutKind.isStrengthName(sport) ? "dumbbell" : sportSymbol(sport)).font(.system(size: 20, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).frame(height: 26)
+                        Group { if localized { Text(LocalizedStringKey(title)) } else { Text(verbatim: title) } }
+                            .font(.system(size: 11.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).minimumScaleFactor(0.75).multilineTextAlignment(.center).frame(height: 30, alignment: .top)
+                    }
+                    .frame(maxWidth: .infinity).frame(height: 84).padding(.horizontal, 2)
+                    .background(NunaPalette.glass, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
                 }.buttonStyle(.plain)
             }
         }
