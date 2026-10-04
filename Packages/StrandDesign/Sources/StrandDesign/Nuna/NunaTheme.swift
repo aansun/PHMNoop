@@ -131,7 +131,7 @@ public struct NunaChip: View {
     }
     public var body: some View {
         HStack(spacing: 6) {
-            if let systemImage { Image(systemName: systemImage).font(.system(size: 12, weight: .bold)) }
+            if let systemImage { Image(systemName: systemImage).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textPrimary) }
             text.font(.system(size: 12.5, weight: .bold))
         }
         .foregroundStyle(color ?? NunaPalette.textPrimary)

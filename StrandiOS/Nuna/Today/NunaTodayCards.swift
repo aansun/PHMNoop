@@ -98,7 +98,7 @@ struct NunaScoreCard: View {
                         if let heartRate {
                             NavigationLink(value: TabRoute.fullDayChart) {
                                 HStack(spacing: 6) {
-                                    Image(systemName: "heart").font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.alert)
+                                    Image(systemName: "heart").font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                                     Text(verbatim: "\(heartRate) bpm").font(.system(size: 12.5, weight: .bold))
                                 }
                                 .foregroundStyle(NunaPalette.textPrimary)
@@ -491,7 +491,7 @@ struct NunaQuickChip: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
-                Image(systemName: systemImage).font(.system(size: 14, weight: .bold)).foregroundStyle(tint ?? NunaPalette.textPrimary)
+                Image(systemName: systemImage).font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 Text(title).font(.system(size: 13.5, weight: .bold))
             }
             .foregroundStyle(NunaPalette.textPrimary)

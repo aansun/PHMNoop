@@ -174,7 +174,7 @@ private struct ExperienceConfirmSheet: View {
             }
             if target == .standard {
                 HStack(alignment: .top, spacing: 10) {
-                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(NunaPalette.warning)
+                    Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(NunaPalette.textSecondary)
                     Text("Features that exist only in Nuna, like customisable Today cards and Anya in every module, do not appear in Default.")
                         .font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.warning)
                         .fixedSize(horizontal: false, vertical: true)
@@ -193,7 +193,7 @@ private struct ExperienceConfirmSheet: View {
 
     private func bullet(_ text: LocalizedStringKey) -> some View {
         HStack(alignment: .top, spacing: 10) {
-            Image(systemName: "checkmark").font(.system(size: 13, weight: .heavy)).foregroundStyle(NunaPalette.charge).padding(.top, 3)
+            Image(systemName: "checkmark").font(.system(size: 13, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).padding(.top, 3)
             Text(text).font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
         }
     }
