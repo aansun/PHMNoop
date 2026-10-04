@@ -2,7 +2,7 @@
 
 Generated from the Design Canvas. "Existing view" is a best-effort pointer to a SwiftUI view in this repository that can be reused or revised; `NEW` (new) means there is no counterpart yet. Screen titles are the Indonesian UI strings used in the mockups.
 
-Total: 178 screens and boards (including the feature map boards and documentation boards).
+Total: 180 screens and boards (including the feature map boards and documentation boards).
 
 ## Peta fitur PHMNOOP
 
@@ -178,11 +178,13 @@ Total: 178 screens and boards (including the feature map boards and documentatio
 
 | Screen | Mockup | Size | Links to | Existing view |
 |---|---|---|---|---|
-| **Tidur · Ringkasan** (`Sleep`) | [Sleep.dc.html](mockups/Sleep.dc.html) | 390×2260 | `Anya`, `AnyaSheetSleep`, `Health`, `HealthSleep`, `Main`, `Personalize`… | SleepView |
+| **Tidur · Ringkasan** (`Sleep`) | [Sleep.dc.html](mockups/Sleep.dc.html) | 390×2400 | `Anya`, `AnyaSheetSleep`, `Health`, `HealthSleep`, `Main`, `Personalize`… | SleepView |
 | **Fase tidur** (`SleepStages`) | [SleepStages.dc.html](mockups/SleepStages.dc.html) | 390×1740 | `Anya`, `AnyaSheetSleep`, `Health`, `Main`, `Personalize`, `Sleep`… | StagesCard, StagesVsTypicalCard, Hypnogram |
 | **Vital semalam** (`SleepVitals`) | [SleepVitals.dc.html](mockups/SleepVitals.dc.html) | 390×1460 | `Anya`, `Health`, `Main`, `Personalize`, `Sleep`, `Trends` | NightDetailCard |
 | **Kinerja tidur** (`SleepPerformance`) | [SleepPerformance.dc.html](mockups/SleepPerformance.dc.html) | 390×1520 | `Anya`, `Health`, `Main`, `Personalize`, `Sleep`, `Trends` | HoursVsNeededCard, SleepDebtLedgerCard |
 | **Tidur siang** (`SleepNap`) | [SleepNap.dc.html](mockups/SleepNap.dc.html) | 390×1700 | `Anya`, `Health`, `Main`, `Personalize`, `Sleep`, `Trends` | NEW |
+| **Jam tubuh** (`SleepBodyClock`) | [SleepBodyClock.dc.html](mockups/SleepBodyClock.dc.html) | 390×1900 | `Anya`, `AnyaSheetSleep`, `Health`, `Main`, `Personalize`, `Sleep`… | BodyClockCard, BodyClockDialCard, BodyClockDialSection (CircadianEngine) |
+| **Rencana jam tubuh** (`SleepBodyClockPlan`) | [SleepBodyClockPlan.dc.html](mockups/SleepBodyClockPlan.dc.html) | 390×1760 | `Anya`, `AnyaSheetSleep`, `Health`, `Main`, `Personalize`, `SleepBodyClock`… | NEW (CircadianEngine.planShift) |
 
 ## 6. Anya: percakapan
 

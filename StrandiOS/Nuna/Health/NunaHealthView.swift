@@ -176,6 +176,8 @@ struct NunaHealthView: View {
                     NavigationLink(value: NunaTodayRoute.sleepPerformance(0)) { NunaListRow("Need and debt", systemImage: "gauge.medium", tint: NunaPalette.restText, showsChevron: true) }.buttonStyle(.plain)
                     NunaDivider()
                     NavigationLink(value: NunaTodayRoute.sleepNaps(0)) { NunaListRow("Naps", systemImage: "zzz", tint: NunaPalette.restText, showsChevron: true) }.buttonStyle(.plain)
+                    NunaDivider()
+                    NavigationLink(value: NunaTodayRoute.bodyClock) { NunaListRow("Body clock", systemImage: "timer", tint: NunaPalette.restText, showsChevron: true) }.buttonStyle(.plain)
                 }
             } else {
                 NavigationLink(value: NunaTodayRoute.sleep(0)) {
