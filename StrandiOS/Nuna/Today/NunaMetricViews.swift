@@ -18,6 +18,8 @@ enum NunaTodayRoute: Hashable {
     case bodyClock
     case bodyClockPlan
     case deepTimeline
+    case smartAlarm
+    case windDown
 }
 
 extension View {
@@ -43,6 +45,8 @@ extension View {
             case .bodyClock: NunaBodyClockView()
             case .bodyClockPlan: NunaBodyClockPlanView()
             case .deepTimeline: NunaDeepTimelineView()
+            case .smartAlarm: NunaSmartAlarmView()
+            case .windDown: NunaWindDownView()
             }
         }
     }

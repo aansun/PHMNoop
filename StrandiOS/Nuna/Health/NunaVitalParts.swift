@@ -61,4 +61,91 @@ struct NunaAgeSlider: View {
         .accessibilityHidden(true)
     }
 }
+
+/// Small status chip for the vital tiles ("Normal", "Small deviation"). Colour carries the meaning.
+struct NunaMiniChip: View {
+    let text: LocalizedStringKey
+    var color: Color = NunaPalette.charge
+    var body: some View {
+        Text(text).font(.system(size: 11.5, weight: .bold)).foregroundStyle(color)
+            .padding(.horizontal, 9).frame(height: 24)
+            .background(NunaPalette.tint(color), in: Capsule())
+            .overlay(Capsule().strokeBorder(color.opacity(0.35), lineWidth: 1))
+    }
+}
+
+/// Vital tile from the Health Vital mockup: icon tile and label, the value, then a status chip or note.
+struct NunaVitalTile: View {
+    let icon: String
+    let label: LocalizedStringKey
+    let value: String
+    var unit: String = ""
+    var chip: LocalizedStringKey?
+    var chipColor: Color = NunaPalette.charge
+    var note: String?
+
+    var body: some View {
+        NunaCard(small: true) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
+                    Image(systemName: icon).font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        .frame(width: 34, height: 34).background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    Text(label).font(.system(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase)
+                        .foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
+                }
+                HStack(alignment: .firstTextBaseline, spacing: 3) {
+                    Text(verbatim: value).font(.system(size: NunaTypeSize.numberM, weight: .bold, design: .rounded))
+                        .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
+                    if !unit.isEmpty && value != "–" {
+                        Text(verbatim: unit).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    }
+                }
+                if let chip { NunaMiniChip(text: chip, color: chipColor) }
+                else if let note { Text(verbatim: note).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).frame(height: 24, alignment: .leading) }
+                else { Color.clear.frame(height: 24) }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+}
+
+/// Manual waist entry. Writes the profile value that the VO₂max estimate reads.
+struct NunaWaistSheet: View {
+    @EnvironmentObject private var profile: ProfileStore
+    @Environment(\.dismiss) private var dismiss
+    @State private var cm: Double = 0
+
+    var body: some View {
+        VStack(spacing: 24) {
+            Text("Waist").font(.system(size: NunaTypeSize.h2, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(verbatim: String(format: "%.0f", cm)).font(.system(size: 64, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                Text("cm").font(.system(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+            }
+            HStack(spacing: 16) {
+                stepButton("minus") { cm = max(60, cm - 1) }
+                stepButton("plus") { cm = min(160, cm + 1) }
+            }
+            Button {
+                profile.waistCm = cm; dismiss()
+            } label: {
+                Text("Save").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
+                    .frame(maxWidth: .infinity).frame(height: 52)
+                    .background(NunaPalette.textPrimary, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+            }.buttonStyle(.plain)
+        }
+        .padding(24)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(NunaPalette.canvas.ignoresSafeArea())
+        .presentationDetents([.height(380)])
+        .onAppear { cm = profile.waistCm > 0 ? profile.waistCm : 80 }
+    }
+
+    private func stepButton(_ symbol: String, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol).font(.system(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                .frame(width: 64, height: 64).background(NunaPalette.glassStrong, in: Circle())
+        }.buttonStyle(.plain)
+    }
+}
 #endif
