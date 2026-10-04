@@ -11,7 +11,7 @@ extension View {
             case .start(let sport): NunaWorkoutStartView(sport: sport)
             case .summary(let k): NunaWorkoutSummaryView(key: k)
             case .history: NunaWorkoutHistoryView()
-            case .calendar: NunaWorkoutCalendarView()
+            case .calendar: NunaWorkoutHistoryView()
             case .load: NunaTrainingLoadView(tab: 0)
             case .loadCardio: NunaTrainingLoadView(tab: 1)
             case .loadMuscle: NunaTrainingLoadView(tab: 2)

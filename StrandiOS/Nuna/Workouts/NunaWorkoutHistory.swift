@@ -18,6 +18,7 @@ struct NunaWorkoutHistoryView: View {
     @State private var oldestFirst = false
     /// A day key ("yyyy-MM-dd") or a month key ("yyyy-MM"); the list below the calendar narrows to it.
     @State private var selected: String?
+    @State private var showCoach = false
 
     private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
     private var system: UnitSystem { UnitPrefs.resolveDistance(system: UnitSystem(rawValue: unitSystemRaw) ?? .metric, override: distanceRaw) }
@@ -30,6 +31,8 @@ struct NunaWorkoutHistoryView: View {
         let back = cal.date(byAdding: .month, value: -months, to: today) ?? today
         return back
     }
+
+    private var rangeDays: Int { max(1, (cal.dateComponents([.day], from: startDate, to: cal.startOfDay(for: Date())).day ?? 0) + 1) }
 
     private var topSports: [String] {
         Dictionary(grouping: m.rows, by: \.sport).sorted { $0.value.count > $1.value.count }.prefix(3).map(\.key)
@@ -77,9 +80,12 @@ struct NunaWorkoutHistoryView: View {
             }
             overview(list)
             calendarCard(list)
+            rhythm(list)
             sessions(shown)
+            NunaAnyaCard(verbatim: anyaLine(NunaWorkoutStats(model: m, days: rangeDays, filter: matchesFilter).streak)) { showCoach = true }
         }
         .task(id: repo.refreshSeq) { await m.load(repo: repo) }
+        .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: "workouts") }
         .onChange(of: months) { _ in selected = nil }
         .onChange(of: filter) { _ in selected = nil }
     }
@@ -296,6 +302,20 @@ struct NunaWorkoutHistoryView: View {
         }
     }
 
+    /// Active and rest days, the streak, the longest gap and the weekday pattern over the chosen range.
+    @ViewBuilder private func rhythm(_ list: [WorkoutRow]) -> some View {
+        let stats = NunaWorkoutStats(model: m, days: rangeDays, filter: matchesFilter)
+        HStack(spacing: 12) {
+            NunaStatTile(label: "Active days", value: "\(stats.active)", unit: "/ \(rangeDays)")
+            NunaStatTile(label: "Rest days", value: "\(stats.rest)")
+        }
+        HStack(spacing: 12) {
+            NunaStatTile(label: "Current streak", value: "\(stats.streak)", unit: String(localized: "days"))
+            NunaStatTile(label: "Longest gap", value: "\(stats.longestGap)", unit: String(localized: "days"))
+        }
+        weekdayPattern(list)
+    }
+
     // MARK: Sessions, grouped by week (3 and 6 months) or by month (a year, five years)
 
     @ViewBuilder private func sessions(_ list: [WorkoutRow]) -> some View {
@@ -352,120 +372,8 @@ struct NunaWorkoutHistoryView: View {
         return f.string(from: start)
     }
 
-    private func tile(_ l: LocalizedStringKey, _ v: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(l).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
-            Text(verbatim: v).font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
-        }.frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-// MARK: - Calendar (WorkoutCalendar)
-
-struct NunaWorkoutCalendarView: View {
-    @EnvironmentObject private var repo: Repository
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
-    @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
-    @AppStorage(UnitPrefs.distanceSystemKey) private var distanceRaw = ""
-    @StateObject private var m = NunaWorkoutsModel()
-    @State private var kind = "all"
-    @State private var selected: String?
-    @State private var page = 0
-    @State private var showCoach = false
-    private let weeks = 7
-
-    private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
-    private var system: UnitSystem { UnitPrefs.resolveDistance(system: UnitSystem(rawValue: unitSystemRaw) ?? .metric, override: distanceRaw) }
-
-    private func matches(_ r: WorkoutRow) -> Bool { kind == "all" || (kind == "cardio") != NunaWorkoutKind.isStrength(r) }
-
-    var body: some View {
-        let stats = NunaWorkoutStats(model: m, days: 35, filter: matches)
-        let day = selected ?? ""
-        let dayRows = m.rows.filter { m.dayKey($0.startTs) == day }.filter(matches)
-        NunaDetailScreen("Workout calendar", trailing: AnyView(todayChip)) {
-            NunaSegmented([(value: "all", title: "All"), (value: "cardio", title: "Cardio"), (value: "strength", title: "Strength")], selection: $kind)
-            NunaCard {
-                VStack(spacing: 14) {
-                    HStack {
-                        pageButton("chevron.left", enabled: true) { page += 1 }
-                        Spacer()
-                        VStack(spacing: 2) {
-                            Text(verbatim: rangeTitle).font(.system(size: 16, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
-                            Text(verbatim: page == 0 ? String(localized: "Last \(weeks) weeks") : String(localized: "\(weeks) weeks")).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                        }
-                        Spacer()
-                        pageButton("chevron.right", enabled: page > 0) { page -= 1 }
-                    }
-                    NunaWorkoutMonthGrid(model: m, weeks: weeks, selected: $selected, offset: page, filter: kind)
-                }
-            }
-            if !day.isEmpty { dayCard(day, dayRows) }
-            HStack(spacing: 12) {
-                NunaStatTile(label: "Active days", value: "\(stats.active)", unit: "/ 35")
-                NunaStatTile(label: "Rest days", value: "\(stats.rest)")
-            }
-            HStack(spacing: 12) {
-                NunaStatTile(label: "Current streak", value: "\(stats.streak)", unit: String(localized: "days"))
-                NunaStatTile(label: "Longest gap", value: "\(stats.longestGap)", unit: String(localized: "days"))
-            }
-            weekdayPattern
-            NunaAnyaCard(verbatim: anyaLine(stats.streak)) { showCoach = true }
-        }
-        .task(id: repo.refreshSeq) {
-            await m.load(repo: repo)
-            if selected == nil { selected = m.rows.first.map { m.dayKey($0.startTs) } ?? m.todayKey }
-        }
-        .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: "workouts") }
-    }
-
-    private var todayChip: some View {
-        Button { page = 0; selected = m.todayKey } label: {
-            Text("Today").font(.system(size: 13, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 38)
-                .background(NunaPalette.glassStrong, in: Capsule()).overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
-        }.buttonStyle(.plain)
-    }
-
-    private func pageButton(_ symbol: String, enabled: Bool, _ action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: symbol).font(.system(size: 14, weight: .bold)).foregroundStyle(enabled ? NunaPalette.textPrimary : NunaPalette.textMuted.opacity(0.4))
-                .frame(width: 40, height: 40).background(NunaPalette.glassStrong, in: Circle())
-        }.buttonStyle(.plain).disabled(!enabled)
-    }
-
-    private var rangeTitle: String {
-        let first = NunaWorkoutMonthGrid.firstMonday(weeks: weeks, offset: page)
-        let last = Calendar(identifier: .gregorian).date(byAdding: .day, value: weeks * 7 - 1, to: first) ?? first
-        let f = DateFormatter(); f.locale = AppLanguage.activeLocale
-        f.setLocalizedDateFormatFromTemplate("MMMM"); let a = f.string(from: first)
-        f.setLocalizedDateFormatFromTemplate("MMMM yyyy"); let b = f.string(from: last)
-        return a == String(b.split(separator: " ").first ?? "") ? b : a + " – " + b
-    }
-
-    private func dayCard(_ day: String, _ rows: [WorkoutRow]) -> some View {
-        NunaCard(highlight: true) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Text(verbatim: dayTitle(day)).font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                    Spacer()
-                    NunaChip(verbatim: String(localized: "\(rows.count) sessions"))
-                }
-                if rows.isEmpty { Text("Rest day").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
-                ForEach(Array(rows.enumerated()), id: \.offset) { _, r in
-                    NavigationLink(value: NunaWorkoutRoute.summary(m.key(r))) { NunaWorkoutRow(row: r, system: system, effortScale: scale) }.buttonStyle(.plain)
-                }
-            }
-        }
-    }
-
-    private func dayTitle(_ key: String) -> String {
-        guard let d = NunaDayFormat.parse(key) else { return key }
-        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEEE d MMMM"); return f.string(from: d)
-    }
-
-    private var weekdayPattern: some View {
-        let cutoff = TrendInsights.shift(m.todayKey, by: -83) ?? m.todayKey
-        let counts = Dictionary(grouping: m.rows.filter { m.dayKey($0.startTs) >= cutoff }.filter(matches), by: { TrendInsights.weekday(m.dayKey($0.startTs)) ?? 0 }).mapValues { Set($0.map { m.dayKey($0.startTs) }).count }
+    private func weekdayPattern(_ list: [WorkoutRow]) -> some View {
+        let counts = Dictionary(grouping: list, by: { TrendInsights.weekday(m.dayKey($0.startTs)) ?? 0 }).mapValues { Set($0.map { m.dayKey($0.startTs) }).count }
         let order = [2, 3, 4, 5, 6, 7, 1]
         let top = max(counts.values.max() ?? 1, 1)
         let lowest = order.min(by: { (counts[$0] ?? 0) < (counts[$1] ?? 0) })
@@ -488,8 +396,8 @@ struct NunaWorkoutCalendarView: View {
                             .frame(maxWidth: .infinity)
                         }
                     }
-                    if let lowest, !m.rows.isEmpty {
-                        Text(verbatim: String(localized: "Days with a session over the last 12 weeks. \(longDay(lowest)) is the one most often empty. A good day for full rest."))
+                    if let lowest, !list.isEmpty {
+                        Text(verbatim: String(localized: "Days with a session in this range. \(longDay(lowest)) is the one most often empty. A good day for full rest."))
                             .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                     }
                 }
@@ -499,9 +407,16 @@ struct NunaWorkoutCalendarView: View {
 
     private func longDay(_ w: Int) -> String { let f = DateFormatter(); f.locale = AppLanguage.activeLocale; return f.weekdaySymbols[(w - 1) % 7] }
 
+
     private func anyaLine(_ streak: Int) -> String {
         streak >= 3 ? String(localized: "You have been active \(streak) days in a row. Make tomorrow an easy day.")
                     : String(localized: "Your calendar is built from your saved sessions. Keep logging to see your rhythm.")
+    }
+    private func tile(_ l: LocalizedStringKey, _ v: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(l).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
+            Text(verbatim: v).font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
+        }.frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 #endif
