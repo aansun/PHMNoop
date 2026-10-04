@@ -71,9 +71,8 @@ private struct HealthSectionsStack: View {
             // "fitness_age" metricSeries). Its own view depending only on `repo`/`profile`,
             // so the live HR stream never re-renders it.
             FitnessAgeSection()
-            // Vitality / Body Age (weekly, computed by IntelligenceEngine from the mortality-
-            // hazard model). Its own view depending only on repo/profile.
-            VitalitySection()
+            // Vitality / Body Age remains available to the model and future detail surfaces, but is
+            // intentionally hidden from the Health Monitor's primary list.
             // Screen-5 recovery detail: the CONTRIBUTORS to today's recovery as
             // labelled progress bars (HRV / Resting HR / Sleep / Respiratory), each
             // scored against the on-device baseline. Depends only on `repo`.
@@ -735,6 +734,10 @@ private struct FitnessAgeSection: View {
     /// Estimator captured beside the latest value. nil is an honest legacy-unknown state, never inferred
     /// from today's waist because the profile may have changed since the point was scored.
     @State private var vo2maxEstimator: Vo2MaxEstimator?
+    /// Latest resting heart rate used as a contextual Fitness Age contributor when available.
+    @State private var restingHeartRate: Int?
+    /// An optional trend-derived pace. It stays nil until the series has enough history to support it.
+    @State private var paceOfAging: Double?
     @State private var loaded = false
     /// True while a manual "refresh Fitness Age" recompute is running (spinner in the readiness card).
     @State private var refreshing = false
@@ -837,14 +840,6 @@ private struct FitnessAgeSection: View {
         }
     }
 
-    /// The hero vessel's fill (0…1): younger reads FULLER. Maps a fitness age across a 20…70-year span
-    /// onto a full→empty gauge, so a 30-year fitness age fills high and a 65 fills low. Purely a visual
-    /// anchor for the gauge — the number and the ± band carry the real read-out.
-    private func fitnessAgeFraction(_ age: Double) -> Double {
-        let lo = 20.0, hi = 70.0
-        return max(0.05, min(1, (hi - age) / (hi - lo)))
-    }
-
     /// The younger/older-than-your-age subtitle as whole-phrase variants per count and direction, so
     /// translators see complete sentences (never a stitched plural or direction fragment).
     private func ageDeltaLine(years: Int, younger: Bool, bound: String = "") -> String {
@@ -871,9 +866,6 @@ private struct FitnessAgeSection: View {
         }
     }
 
-    /// The shown-value hero: a scenic Charge-world backdrop, the big Fitness Age number, a
-    /// younger/older-than-your-age subtitle, the optional VO₂max, the ±band disclaimer, and the two
-    /// affordances (tap-through to the trend + the "How accurate is this?" disclosure).
     /// VO₂max is already shown from heart rate alone (the Uth fallback), so this nudges the user to add a
     /// waist to upgrade it to the more accurate Nes waist-based estimate. Tapping opens Settings — a
     /// one-step sharpen, shown only while no waist is set.
@@ -901,93 +893,111 @@ private struct FitnessAgeSection: View {
         let shown = Int(age.rounded())
         let bound = fitnessAgeBoundSymbol(age)
         let delta = Double(profile.age) - age        // +ve = fitness age younger than chronological
-        let years = Int(abs(delta).rounded())
+        let years = abs(delta)
         let younger = delta >= 0
+        let comparison = String(format: "%.1f", years)
+        let pace = paceOfAging.map { String(format: "%.1fx", $0) } ?? "—"
+        let deltaLine = ageDeltaLine(years: Int(years.rounded()), younger: younger, bound: bound)
         return VStack(alignment: .leading, spacing: NoopMetrics.space4) {
-            // Tap the primary readout to open the full "fitness_age" trend.
+            // Tap the hero to open the full "fitness_age" trend. Contextual contributors flank one
+            // unmistakable Fitness Age hero, matching the reference composition.
             Button { fitnessSheet = .trend } label: {
-                HStack(alignment: .center, spacing: NoopMetrics.space5) {
-                    // The liquid gauge anchors the primary readout: younger = fuller, with the age counting
-                    // up over it. It remains one tap target with the trend detail.
-                    ZStack {
-                        LiquidVessel(value: fitnessAgeFraction(age), tint: StrandPalette.chargeColor,
-                                     animated: true, tapPassesThrough: true)
-                            .frame(width: 88, height: 88)
-                        CountUpNumber(value: Double(shown), font: StrandFont.rounded(30), prefix: bound)
-                            .foregroundStyle(.white)
-                            .shadow(color: .black.opacity(0.5), radius: 6, y: 1)
-                            .allowsHitTesting(false)
+                VStack(spacing: NoopMetrics.space3) {
+                    HStack(alignment: .center, spacing: NoopMetrics.space3) {
+                        FitnessAgeSideMetric(
+                            value: comparison,
+                            label: younger ? "YEARS YOUNGER" : "YEARS OLDER",
+                            tint: younger ? StrandPalette.statusPositive : StrandPalette.statusWarning)
+                        FitnessAgeOrb(age: "\(bound)\(shown)")
+                        FitnessAgeSideMetric(
+                            value: pace,
+                            label: "PACE OF AGING",
+                            tint: StrandPalette.textPrimary,
+                            secondary: paceOfAging == nil ? "Needs trend history" : nil)
                     }
-                    VStack(alignment: .leading, spacing: NoopMetrics.space2) {
-                        Text("Fitness Age").strandOverline()
-                        Text(ageDeltaLine(years: years, younger: younger, bound: bound))
-                            .font(StrandFont.subhead)
+                    .frame(maxWidth: .infinity)
+                    VStack(spacing: NoopMetrics.space1) {
+                        Text("FITNESS AGE")
+                            .font(StrandFont.overline)
+                            .foregroundStyle(StrandPalette.textSecondary)
+                            .tracking(StrandFont.overlineTracking)
+                        Text(deltaLine)
+                            .font(StrandFont.footnote.weight(.semibold))
                             .foregroundStyle(younger ? StrandPalette.statusPositive : StrandPalette.statusWarning)
-                        Text("Tap to view the weekly trend")
-                            .font(StrandFont.footnote)
-                            .foregroundStyle(StrandPalette.textTertiary)
+                            .multilineTextAlignment(.center)
                     }
-                    Spacer(minLength: 0)
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(StrandPalette.textTertiary)
-                        .accessibilityHidden(true)
+                    .frame(maxWidth: .infinity)
+                    HStack {
+                        Text("Tap for your age trend")
+                        Spacer(minLength: 0)
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .accessibilityHidden(true)
+                    }
+                    .font(StrandFont.footnote)
+                    .foregroundStyle(StrandPalette.textTertiary)
                 }
                 .contentShape(Rectangle())
             }
             .buttonStyle(LiquidPressStyle())
             .accessibilityElement(children: .ignore)
             // The spoken label carries the bound too, so a screen reader is not told a floored reading is exact.
-            .accessibilityLabel("Fitness Age \(bound)\(shown), \(ageDeltaLine(years: years, younger: younger, bound: bound)). Tap to see the trend.")
+            .accessibilityLabel("Fitness Age \(bound)\(shown), \(deltaLine). Tap to see the trend.")
 
             if let vo2 = vo2max {
                 Divider().overlay(StrandPalette.hairline)
-                HStack(alignment: .firstTextBaseline, spacing: NoopMetrics.space3) {
-                    VStack(alignment: .leading, spacing: NoopMetrics.space1) {
-                        Text("VO₂max").strandOverline()
-                        HStack(alignment: .firstTextBaseline, spacing: 5) {
-                            Text(String(format: "%.0f", vo2))
-                                .font(StrandFont.number(28))
-                                .foregroundStyle(StrandPalette.metricCyan)
-                            Text("ml/kg/min")
-                                .font(StrandFont.footnote)
-                                .foregroundStyle(StrandPalette.textSecondary)
-                        }
-                    }
-                    Spacer(minLength: 0)
-                    Text("\(String(localized: "On-device")) · \(vo2MaxEstimatorDisplayName(vo2maxEstimator))")
-                        .font(StrandFont.footnote)
-                        .foregroundStyle(StrandPalette.textTertiary)
-                        .multilineTextAlignment(.trailing)
-                        .lineLimit(2)
-                        .frame(maxWidth: 118, alignment: .trailing)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                FitnessAgeRangeRow(
+                    title: "VO₂ MAX",
+                    value: String(format: "%.0f", vo2),
+                    unit: "ml/kg/min",
+                    range: 15...70,
+                    position: vo2,
+                    trailing: vo2MaxEstimatorDisplayName(vo2maxEstimator),
+                    tint: StrandPalette.metricCyan)
+            }
+            if let rhr = restingHeartRate {
+                FitnessAgeRangeRow(
+                    title: "RHR",
+                    value: "\(rhr)",
+                    unit: "bpm",
+                    range: 40...80,
+                    position: Double(rhr),
+                    trailing: "Resting heart rate",
+                    tint: StrandPalette.statusPositive)
             }
 
             // At a bound the age has stopped carrying information: every model output past the end of
             // the scale banks as the same number, so someone still improving sees nothing move (#2184).
-            // The VO₂max in the row above is NOT clamped and is the same estimate this age derives from,
-            // so it keeps resolving where the age cannot. Pointing at it asserts nothing the model cannot
-            // support, which an extended reporting floor could not manage: two more years of range would
-            // still sit inside the ±5 band the line below states.
-            //
-            // FULL WIDTH, beside that band line, rather than inside the VStack holding the vessel and the
-            // delta: that column shares an HStack with the VO₂max readout, so a 44-character sentence
-            // would wrap in half a card and crowd the number it explains.
+            // The VO₂max in the row above is NOT clamped and keeps resolving where the age cannot.
             if !bound.isEmpty, vo2max != nil {
                 Text("Fitness Age stops here. VO₂max keeps moving.")
                     .font(StrandFont.footnote)
                     .foregroundStyle(StrandPalette.textTertiary)
             }
 
-            HStack(alignment: .firstTextBaseline, spacing: NoopMetrics.space3) {
-                Text("± \(Int(FitnessAgeEngine.displayBandYears)) yr · a fitness comparison, not a biological age")
-                    .font(StrandFont.footnote)
-                    .foregroundStyle(StrandPalette.textTertiary)
-                    .fixedSize(horizontal: false, vertical: true)
-                Spacer(minLength: 0)
+            Divider().overlay(StrandPalette.hairline)
+            Button { fitnessSheet = .trend } label: {
+                HStack {
+                    Text("Trend view")
+                        .font(StrandFont.subhead.weight(.semibold))
+                        .foregroundStyle(StrandPalette.textPrimary)
+                    Spacer(minLength: 0)
+                    Text("Fitness Age trend")
+                        .font(StrandFont.footnote)
+                        .foregroundStyle(StrandPalette.textTertiary)
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(StrandPalette.textTertiary)
+                        .accessibilityHidden(true)
+                }
+                .contentShape(Rectangle())
             }
+            .buttonStyle(LiquidPressStyle())
+
+            Text("± \(Int(FitnessAgeEngine.displayBandYears)) yr · a fitness comparison, not a biological age")
+                .font(StrandFont.footnote)
+                .foregroundStyle(StrandPalette.textTertiary)
+                .fixedSize(horizontal: false, vertical: true)
 
             Divider().overlay(StrandPalette.hairline)
 
@@ -1026,7 +1036,204 @@ private struct FitnessAgeSection: View {
         .clipShape(RoundedRectangle(cornerRadius: NoopMetrics.cardRadius, style: .continuous))
     }
 
-    /// Load the latest weekly Fitness Age (+ optional VO₂max) from the strap's metricSeries. Uses the
+private struct FitnessAgeSideMetric: View {
+    let value: String
+    let label: String
+    let tint: Color
+    var secondary: String?
+
+    var body: some View {
+        VStack(spacing: NoopMetrics.space1) {
+            Text(value)
+                .font(StrandFont.number(20))
+                .foregroundStyle(tint)
+                .monospacedDigit()
+            Text(label)
+                .font(StrandFont.overline)
+                .foregroundStyle(StrandPalette.textSecondary)
+                .tracking(StrandFont.overlineTracking)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+            if let secondary {
+                Text(secondary)
+                    .font(.system(size: 8, weight: .medium))
+                    .foregroundStyle(StrandPalette.textTertiary)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+            }
+        }
+        .frame(width: 72)
+    }
+}
+
+private struct FitnessAgeOrb: View {
+    let age: String
+
+    private let particles: [(CGPoint, CGFloat, Double)] = [
+        (CGPoint(x: 24, y: 28), 2.4, 0.78), (CGPoint(x: 45, y: 17), 1.6, 0.62),
+        (CGPoint(x: 78, y: 24), 2.1, 0.72), (CGPoint(x: 96, y: 45), 1.3, 0.54),
+        (CGPoint(x: 18, y: 62), 1.2, 0.52), (CGPoint(x: 39, y: 83), 2.0, 0.68),
+        (CGPoint(x: 72, y: 91), 1.4, 0.58), (CGPoint(x: 101, y: 77), 2.5, 0.76),
+        (CGPoint(x: 58, y: 106), 1.0, 0.50), (CGPoint(x: 84, y: 59), 1.0, 0.68),
+        (CGPoint(x: 29, y: 44), 0.9, 0.70), (CGPoint(x: 66, y: 31), 1.1, 0.65)
+    ]
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(StrandPalette.chargeGlow.opacity(0.16))
+                .frame(width: 142, height: 142)
+                .blur(radius: 18)
+            FitnessAgeBlob()
+                .fill(
+                    RadialGradient(
+                        colors: [
+                            StrandPalette.chargeColor.opacity(0.96),
+                            StrandPalette.chargeGlow.opacity(0.72),
+                            StrandPalette.chargeColor.opacity(0.32)
+                        ],
+                        center: UnitPoint(x: 0.42, y: 0.34),
+                        startRadius: 2,
+                        endRadius: 74))
+                .shadow(color: StrandPalette.chargeGlow.opacity(0.42), radius: 16)
+                .overlay {
+                    FitnessAgeBlob()
+                        .stroke(
+                            LinearGradient(
+                                colors: [.white.opacity(0.48), StrandPalette.chargeGlow.opacity(0.15), .white.opacity(0.08)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing),
+                            lineWidth: 1)
+                }
+            ZStack {
+                ForEach(particles.indices, id: \.self) { index in
+                    let particle = particles[index]
+                    Circle()
+                        .fill(Color.white.opacity(particle.2))
+                        .frame(width: particle.1, height: particle.1)
+                        .position(particle.0)
+                }
+            }
+            .frame(width: 122, height: 122)
+            .clipShape(FitnessAgeBlob())
+            Circle()
+                .fill(.white.opacity(0.15))
+                .frame(width: 28, height: 18)
+                .blur(radius: 9)
+                .offset(x: -25, y: -34)
+            VStack(spacing: NoopMetrics.space1) {
+                Text(age)
+                    .font(StrandFont.rounded(26))
+                    .foregroundStyle(.white)
+                    .monospacedDigit()
+                Text("FITNESS AGE")
+                    .font(.system(size: 7, weight: .bold))
+                    .foregroundStyle(.white.opacity(0.86))
+                    .tracking(1.1)
+            }
+        }
+        .frame(width: 122, height: 122)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Fitness Age \(age)")
+    }
+}
+
+private struct FitnessAgeBlob: Shape {
+    func path(in rect: CGRect) -> Path {
+        let x = rect.minX, y = rect.minY, w = rect.width, h = rect.height
+        var path = Path()
+        path.move(to: CGPoint(x: x + 0.48 * w, y: y + 0.04 * h))
+        path.addCurve(to: CGPoint(x: x + 0.86 * w, y: y + 0.18 * h),
+                      control1: CGPoint(x: x + 0.68 * w, y: y - 0.01 * h),
+                      control2: CGPoint(x: x + 0.80 * w, y: y + 0.07 * h))
+        path.addCurve(to: CGPoint(x: x + 0.98 * w, y: y + 0.58 * h),
+                      control1: CGPoint(x: x + 0.98 * w, y: y + 0.28 * h),
+                      control2: CGPoint(x: x + 1.03 * w, y: y + 0.45 * h))
+        path.addCurve(to: CGPoint(x: x + 0.71 * w, y: y + 0.91 * h),
+                      control1: CGPoint(x: x + 0.96 * w, y: y + 0.73 * h),
+                      control2: CGPoint(x: x + 0.87 * w, y: y + 0.89 * h))
+        path.addCurve(to: CGPoint(x: x + 0.28 * w, y: y + 0.96 * h),
+                      control1: CGPoint(x: x + 0.56 * w, y: y + 1.01 * h),
+                      control2: CGPoint(x: x + 0.39 * w, y: y + 0.98 * h))
+        path.addCurve(to: CGPoint(x: x + 0.05 * w, y: y + 0.67 * h),
+                      control1: CGPoint(x: x + 0.11 * w, y: y + 0.91 * h),
+                      control2: CGPoint(x: x - 0.01 * w, y: y + 0.79 * h))
+        path.addCurve(to: CGPoint(x: x + 0.15 * w, y: y + 0.24 * h),
+                      control1: CGPoint(x: x + 0.03 * w, y: y + 0.53 * h),
+                      control2: CGPoint(x: x + 0.05 * w, y: y + 0.34 * h))
+        path.addCurve(to: CGPoint(x: x + 0.48 * w, y: y + 0.04 * h),
+                      control1: CGPoint(x: x + 0.25 * w, y: y + 0.08 * h),
+                      control2: CGPoint(x: x + 0.35 * w, y: y + 0.01 * h))
+        path.closeSubpath()
+        return path
+    }
+}
+
+private struct FitnessAgeRangeRow: View {
+    let title: String
+    let value: String
+    let unit: String
+    let range: ClosedRange<Double>
+    let position: Double
+    let trailing: String
+    let tint: Color
+
+    private var fraction: Double {
+        min(1, max(0, (position - range.lowerBound) / (range.upperBound - range.lowerBound)))
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: NoopMetrics.space2) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(title).strandOverline()
+                Spacer(minLength: 0)
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(value)
+                        .font(StrandFont.number(22))
+                        .foregroundStyle(StrandPalette.textPrimary)
+                        .monospacedDigit()
+                    Text(unit)
+                        .font(StrandFont.footnote)
+                        .foregroundStyle(StrandPalette.textSecondary)
+                }
+            }
+            GeometryReader { proxy in
+                let markerX = min(proxy.size.width - 5, max(5, proxy.size.width * fraction))
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(
+                            LinearGradient(
+                                colors: [
+                                    StrandPalette.statusWarning.opacity(0.90),
+                                    tint.opacity(0.90),
+                                    StrandPalette.statusPositive.opacity(0.90),
+                                    StrandPalette.textTertiary.opacity(0.72)
+                                ],
+                                startPoint: .leading,
+                                endPoint: .trailing))
+                        .frame(height: 7)
+                    Image(systemName: "arrowtriangle.down.fill")
+                        .font(.system(size: 9, weight: .bold))
+                        .foregroundStyle(StrandPalette.textPrimary)
+                        .position(x: markerX, y: 2)
+                }
+            }
+            .frame(height: 10)
+            HStack {
+                Text(String(format: "%.0f", range.lowerBound))
+                Spacer(minLength: 0)
+                Text(trailing)
+                    .lineLimit(1)
+                Spacer(minLength: 0)
+                Text(String(format: "%.0f", range.upperBound))
+            }
+            .font(.system(size: 9, weight: .medium))
+            .foregroundStyle(StrandPalette.textTertiary)
+        }
+    }
+}
+
+/// Load the latest weekly Fitness Age (+ optional VO₂max) from the strap's metricSeries. Uses the
     /// same `exploreSeries(key:source:)` path every other metric on this screen reads, with source
     /// "my-whoop" (the Repository merges the computed "-noop" rows under any real import). Takes the
     /// freshest point — the weekly value is keyed to the week's Saturday and refines through the week.
@@ -1034,6 +1241,8 @@ private struct FitnessAgeSection: View {
         let faPts = await repo.exploreSeries(key: "fitness_age", source: "my-whoop")
         let vo2Resolution = await repo.resolvedSeries(key: "vo2max_est", source: "my-whoop")
         fitnessAge = faPts.last?.value
+        paceOfAging = faPts.count >= 2 ? abs(faPts[faPts.count - 1].value - faPts[faPts.count - 2].value) : nil
+        restingHeartRate = repo.days.last(where: { $0.restingHr != nil })?.restingHr
         if let latest = vo2Resolution.points.last {
             vo2max = latest.value
             let tag = await repo.scoreProvenanceTag(
