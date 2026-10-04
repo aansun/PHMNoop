@@ -9,6 +9,8 @@ import WhoopStore
 struct NunaDetailHeader: View {
     let title: LocalizedStringKey
     var onAnya: (() -> Void)?
+    /// Extra control at the trailing edge (for example a "Today" chip), shown when there is no Anya button.
+    var trailing: AnyView?
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
@@ -23,6 +25,7 @@ struct NunaDetailHeader: View {
             .accessibilityLabel(Text("Back"))
             Text(title).font(.system(size: 24, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
             Spacer(minLength: 8)
+            if let trailing { trailing }
             if let onAnya {
                 Button(action: onAnya) {
                     Image(systemName: "sparkles").font(.system(size: 17, weight: .bold))
@@ -39,14 +42,15 @@ struct NunaDetailHeader: View {
 struct NunaDetailScreen<Content: View>: View {
     let title: LocalizedStringKey
     var onAnya: (() -> Void)?
+    var trailing: AnyView?
     let content: Content
-    init(_ title: LocalizedStringKey, onAnya: (() -> Void)? = nil, @ViewBuilder content: () -> Content) {
-        self.title = title; self.onAnya = onAnya; self.content = content()
+    init(_ title: LocalizedStringKey, onAnya: (() -> Void)? = nil, trailing: AnyView? = nil, @ViewBuilder content: () -> Content) {
+        self.title = title; self.onAnya = onAnya; self.trailing = trailing; self.content = content()
     }
     var body: some View {
         ScrollView {
             VStack(spacing: NunaSpacing.section) {
-                NunaDetailHeader(title: title, onAnya: onAnya)
+                NunaDetailHeader(title: title, onAnya: onAnya, trailing: trailing)
                 content
             }
             .padding(.horizontal, NunaSpacing.screenH)

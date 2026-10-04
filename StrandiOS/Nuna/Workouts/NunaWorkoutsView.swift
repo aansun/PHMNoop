@@ -337,10 +337,10 @@ struct NunaWorkoutsView: View {
 /// Counts over the last N calendar days.
 struct NunaWorkoutStats {
     let active: Int, rest: Int, streak: Int, longestGap: Int
-    @MainActor init(model m: NunaWorkoutsModel, days: Int) {
+    @MainActor init(model m: NunaWorkoutsModel, days: Int, filter: (WorkoutRow) -> Bool = { _ in true }) {
         let cal = Calendar.current
         let keys = (0..<days).map { cal.date(byAdding: .day, value: -$0, to: Date()).map(Repository.localDayKey) ?? "" }   // today first
-        let on = Set(m.rows.map { m.dayKey($0.startTs) })
+        let on = Set(m.rows.filter(filter).map { m.dayKey($0.startTs) })
         active = keys.filter(on.contains).count
         rest = days - active
         var s = 0
@@ -352,54 +352,95 @@ struct NunaWorkoutStats {
     }
 }
 
-/// Weeks of days, Monday first, oldest week on top. A dot per day: cardio, strength or both; today is outlined.
+/// Weeks of days, Monday first, oldest week on top (WorkoutCalendar). Each day shows its number with a dot under it:
+/// blue for cardio, white for strength, both when both happened, a dash for a rest day. The selected day is a filled
+/// circle, today is ringed and days after today are dimmed. `offset` shifts the window back by that many 7-week pages.
 struct NunaWorkoutMonthGrid: View {
     @ObservedObject var model: NunaWorkoutsModel
     let weeks: Int
     @Binding var selected: String?
+    var offset = 0
+    var filter = "all"
     var interactive = true
 
-    private static func symbols() -> DateFormatter { let f = DateFormatter(); f.locale = AppLanguage.activeLocale; return f }
+    /// Monday of the first row shown.
+    static func firstMonday(weeks: Int, offset: Int) -> Date {
+        let cal = Calendar(identifier: .gregorian)
+        let today = cal.startOfDay(for: Date())
+        let monday = cal.date(byAdding: .day, value: -((cal.component(.weekday, from: today) + 5) % 7), to: today) ?? today
+        // The window ends one week after the current week; older pages step back a whole window at a time.
+        return cal.date(byAdding: .day, value: -7 * (weeks - 2) - 7 * weeks * offset, to: monday) ?? monday
+    }
+
+    private func symbols() -> [String] {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale
+        return [1, 2, 3, 4, 5, 6, 0].map { String(f.shortWeekdaySymbols[$0].prefix(3)) }
+    }
 
     var body: some View {
         let cal = Calendar(identifier: .gregorian)
         let today = cal.startOfDay(for: Date())
-        let weekday = (cal.component(.weekday, from: today) + 5) % 7   // Monday = 0
-        let monday = cal.date(byAdding: .day, value: -weekday, to: today) ?? today
-        let first = cal.date(byAdding: .day, value: -7 * (weeks - 1), to: monday) ?? monday
-        let f = Self.symbols()
+        let first = Self.firstMonday(weeks: weeks, offset: offset)
         let byDay = Dictionary(grouping: model.rows, by: { model.dayKey($0.startTs) })
-        VStack(spacing: 8) {
+        let mf = DateFormatter()
+        VStack(spacing: 10) {
             HStack {
-                ForEach([1, 2, 3, 4, 5, 6, 0], id: \.self) { i in
-                    Text(verbatim: String(f.shortWeekdaySymbols[i].prefix(3))).font(.system(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity)
-                }
+                ForEach(symbols(), id: \.self) { Text(verbatim: $0).font(.system(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity) }
             }
             ForEach(0..<weeks, id: \.self) { w in
-                HStack(spacing: 6) {
+                HStack(spacing: 0) {
                     ForEach(0..<7, id: \.self) { d in
                         let date = cal.date(byAdding: .day, value: w * 7 + d, to: first) ?? first
                         let key = Repository.localDayKey(date)
-                        let rs = byDay[key] ?? []
+                        let rs = (byDay[key] ?? []).filter { filter == "all" || (filter == "cardio") != NunaWorkoutKind.isStrength($0) }
                         let cardio = rs.contains { !NunaWorkoutKind.isStrength($0) }, strength = rs.contains(where: NunaWorkoutKind.isStrength)
                         let future = date > today
-                        let fill: Color = future ? .clear : (cardio && strength ? NunaPalette.charge : (cardio ? NunaPalette.effort : (strength ? NunaPalette.rest : Color.white.opacity(0.06))))
-                        Button { if interactive { selected = key } } label: {
-                            Text(verbatim: "\(cal.component(.day, from: date))").font(.system(size: 12, weight: .bold, design: .rounded))
-                                .foregroundStyle(rs.isEmpty ? NunaPalette.textSecondary : NunaPalette.onAccent.opacity(0.9))
-                                .frame(maxWidth: .infinity).aspectRatio(1, contentMode: .fit)
-                                .background(fill, in: Circle())
-                                .overlay(Circle().strokeBorder(selected == key ? NunaPalette.textPrimary : (cal.isDate(date, inSameDayAs: today) ? NunaPalette.textPrimary.opacity(0.6) : .clear), lineWidth: 2))
+                        let isSel = selected == key
+                        let isToday = cal.isDate(date, inSameDayAs: today)
+                        Button { if interactive, !future { selected = key } } label: {
+                            VStack(spacing: 3) {
+                                Text(verbatim: dayLabel(date, cal, first: w == 0 && d == 0))
+                                    .font(.system(size: 14, weight: .heavy, design: .rounded)).monospacedDigit()
+                                    .foregroundStyle(isSel ? NunaPalette.onAccent : (future ? NunaPalette.textMuted.opacity(0.7) : NunaPalette.textPrimary))
+                                    .minimumScaleFactor(0.7).lineLimit(1)
+                                if future {
+                                    Color.clear.frame(height: 5)
+                                } else if rs.isEmpty {
+                                    Capsule().fill(isSel ? NunaPalette.onAccent.opacity(0.5) : NunaPalette.textMuted).frame(width: 8, height: 1.5).frame(height: 5)
+                                } else {
+                                    HStack(spacing: 3) {
+                                        if cardio { Circle().fill(NunaPalette.effort).frame(width: 5, height: 5) }
+                                        if strength { Circle().fill(isSel ? NunaPalette.onAccent : NunaPalette.textPrimary).frame(width: 5, height: 5) }
+                                    }
+                                }
+                            }
+                            .frame(width: 42, height: 46)
+                            .background(Circle().fill(isSel ? NunaPalette.textPrimary : .clear))
+                            .overlay(Circle().strokeBorder(isToday && !isSel ? NunaPalette.textPrimary.opacity(0.8) : .clear, lineWidth: 1.5))
+                            .frame(maxWidth: .infinity)
                         }.buttonStyle(.plain).disabled(!interactive || future)
                     }
                 }
             }
-            HStack(spacing: 14) {
-                NunaLegendItem(color: NunaPalette.effort, text: "Cardio", dot: true); NunaLegendItem(color: NunaPalette.rest, text: "Strength", dot: true)
-                NunaLegendItem(color: NunaPalette.charge, text: "Both", dot: true); NunaLegendItem(color: Color.white.opacity(0.2), text: "Rest", dot: true)
+            HStack(spacing: 16) {
+                legend(NunaPalette.effort, "Cardio"); legend(NunaPalette.textPrimary, "Strength")
+                HStack(spacing: 6) { Capsule().fill(NunaPalette.textMuted).frame(width: 9, height: 1.5); Text("Rest").font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 4)
         }
+        .onAppear { _ = mf }
+    }
+
+    /// The first day of a month, and the very first cell, also carry the month, so the grid reads without a header.
+    private func dayLabel(_ d: Date, _ cal: Calendar, first: Bool) -> String {
+        let n = cal.component(.day, from: d)
+        guard n == 1 || first else { return "\(n)" }
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("MMM")
+        return "\(n) " + f.string(from: d).replacingOccurrences(of: ".", with: "")
+    }
+
+    private func legend(_ c: Color, _ t: LocalizedStringKey) -> some View {
+        HStack(spacing: 6) { Circle().fill(c).frame(width: 7, height: 7); Text(t).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
     }
 }
 

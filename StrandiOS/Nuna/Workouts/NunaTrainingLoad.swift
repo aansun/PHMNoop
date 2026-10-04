@@ -22,17 +22,19 @@ struct NunaTrainingLoadView: View {
     private func eff(_ v: Double) -> Double { UnitFormatter.effortValue(v, scale: scale) }
 
     var body: some View {
-        NunaDetailScreen("Training load") {
+        NunaDetailScreen("Training load", onAnya: tab == 1 ? { showCoach = true } : nil) {
             NunaSegmented([(value: 0, title: "Summary"), (value: 1, title: "Cardio"), (value: 2, title: "Strength")], selection: $tab)
             switch tab {
             case 1: cardio
             case 2: muscle
             default: summary
             }
-            NunaAnyaCard(verbatim: anyaLine) { showCoach = true }
-            NavigationLink(value: NunaWorkoutRoute.calendar) {
-                NunaCard(small: true) { NunaListRow("See the workout calendar", systemImage: "calendar", showsChevron: true) }
-            }.buttonStyle(.plain)
+            if tab == 0 {
+                NunaAnyaCard(verbatim: anyaLine) { showCoach = true }
+                NavigationLink(value: NunaWorkoutRoute.calendar) {
+                    NunaCard(small: true) { NunaListRow("See the workout calendar", systemImage: "calendar", showsChevron: true) }
+                }.buttonStyle(.plain)
+            }
         }
         .nunaWorkoutDestinations()
         .task(id: repo.refreshSeq) {
@@ -59,26 +61,24 @@ struct NunaTrainingLoadView: View {
         let cardio = m.weeklyEffort(weeks: 6), vol = m.weeklyVolume(weeks: 6)
         let ratio = TrendInsights.loadRatio(blocks: cardio)
         let band = ratio.map(TrendInsights.loadBand)
+        let cBand = TrendInsights.loadRatio(blocks: cardio).map(TrendInsights.loadBand)
+        let vBand = TrendInsights.loadRatio(blocks: vol).map(TrendInsights.loadBand)
         let week = m.recent(days: 7)
         let lifts = m.liftSessions.filter { Double($0.startTs) >= Date().addingTimeInterval(-7 * 86_400).timeIntervalSince1970 }
         let sets = lifts.flatMap { m.liftSets[$0.id] ?? [] }.filter { !$0.isWarmup }
+        let cTop = max(cardio.max() ?? 1, 1), vTop = max(vol.max() ?? 1, 1)
         return VStack(spacing: NunaSpacing.section) {
             NunaCard {
-                VStack(alignment: .leading, spacing: 14) {
+                VStack(spacing: 16) {
                     HStack { nunaTrendsCap("Last 7 days"); Spacer(); if let band { NunaChip(bandName(band), color: band == .optimal ? NunaPalette.charge : NunaPalette.warning) } }
-                    HStack(alignment: .top, spacing: 16) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("Cardio").font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                            Text(verbatim: UnitFormatter.effortDisplay(cardio.last ?? 0, scale: scale)).font(.system(size: 30, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
-                            NunaSpark(values: cardio).frame(height: 36)
-                            NavigationLink(value: NunaWorkoutRoute.loadCardio) { Text("Effort · see cardio").font(.system(size: 12.5, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
-                        }.frame(maxWidth: .infinity, alignment: .leading)
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("Strength").font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                            Text(verbatim: vol.last.map { $0 >= 1000 ? String(format: "%.1f k", locale: AppLanguage.activeLocale, $0 / 1000) : NunaTrendsFormat.num($0) } ?? "–").font(.system(size: 30, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
-                            NunaSpark(values: vol).frame(height: 36)
-                            NavigationLink(value: NunaWorkoutRoute.loadMuscle) { Text("kg · see strength").font(.system(size: 12.5, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
-                        }.frame(maxWidth: .infinity, alignment: .leading)
+                    HStack(alignment: .top, spacing: 0) {
+                        ringColumn("Cardio", UnitFormatter.effortDisplay(cardio.last ?? 0, scale: scale), "", (cardio.last ?? 0) / cTop, NunaPalette.effort, cBand, NunaPalette.effortText)
+                        ringColumn("Strength", vol.last.map { $0 >= 1000 ? String(format: "%.1f", locale: AppLanguage.activeLocale, $0 / 1000) : NunaTrendsFormat.num($0) } ?? "–", (vol.last ?? 0) >= 1000 ? "k" : "",
+                                   (vol.last ?? 0) / vTop, NunaPalette.textPrimary, vBand, NunaPalette.textPrimary)
+                    }
+                    HStack(spacing: 10) {
+                        NavigationLink(value: NunaWorkoutRoute.loadCardio) { pill("Effort · see cardio") }.buttonStyle(.plain)
+                        NavigationLink(value: NunaWorkoutRoute.loadMuscle) { pill("kg · see strength") }.buttonStyle(.plain)
                     }
                 }
             }
@@ -86,30 +86,48 @@ struct NunaTrainingLoadView: View {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack { nunaTrendsCap("6 weeks"); Spacer(); Text("Top: strength · bottom: cardio").font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
-                    weeklyPair(cardio.map(eff), vol)
-                    HStack(spacing: 14) { NunaLegendItem(color: NunaPalette.effort, text: "Cardio · Effort", dot: true); NunaLegendItem(color: NunaPalette.rest, text: "Strength · volume kg", dot: true) }
+                    weeklyPair(cardio, vol)
+                    HStack(spacing: 14) { NunaLegendItem(color: NunaPalette.effort, text: "Cardio · Effort", dot: true); NunaLegendItem(color: NunaPalette.textPrimary, text: "Strength · volume kg", dot: true) }
                 }
             }
-            NunaTitleRow(title: "This week") { EmptyView() }
+            NunaTitleRow(title: "This week's breakdown") { EmptyView() }
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
                     NavigationLink(value: NunaWorkoutRoute.loadCardio) {
-                        NunaListRow("Cardio", subtitle: LocalizedStringKey(String(localized: "Effort \(UnitFormatter.effortDisplay(m.effort(week), scale: scale)) · \(week.count) sessions")), systemImage: "heart", showsChevron: true)
+                        NunaListRow("Cardio", subtitle: LocalizedStringKey(String(localized: "Effort \(UnitFormatter.effortDisplay(m.effort(week), scale: scale)) · \(week.count) sessions with heart rate")), systemImage: "heart", showsChevron: true)
                     }.buttonStyle(.plain)
                     NunaDivider()
                     NavigationLink(value: NunaWorkoutRoute.loadMuscle) {
-                        NunaListRow("Strength", subtitle: LocalizedStringKey(String(localized: "\(Int((vol.last ?? 0).rounded())) kg · \(lifts.count) lifting sessions · \(sets.count) sets")), systemImage: "dumbbell", showsChevron: true)
+                        NunaListRow("Strength", subtitle: LocalizedStringKey(String(localized: "\(Int((vol.last ?? 0).rounded())) kg · \(lifts.count) lifting sessions · \(sets.count) sets")), systemImage: "bolt", showsChevron: true)
                     }.buttonStyle(.plain)
                 }
             }
             NunaCard(small: true) {
                 HStack(alignment: .top, spacing: 12) {
-                    Image(systemName: "info.circle").foregroundStyle(NunaPalette.textMuted)
+                    Image(systemName: "sparkles").foregroundStyle(NunaPalette.textMuted)
                     Text("Cardio is counted from daily Effort, not TRIMP. Strength is estimated from the volume you lift and is not added to cardio, because the heart strain of lifting is not invented.")
                         .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
+    }
+
+    private func ringColumn(_ title: LocalizedStringKey, _ v: String, _ unit: String, _ f: Double, _ color: Color, _ band: TrendInsights.LoadBand?, _ bandColor: Color) -> some View {
+        VStack(spacing: 8) {
+            NunaRingGauge(fraction: max(f, 0.02), color: color, size: 104, lineWidth: 9) {
+                HStack(alignment: .firstTextBaseline, spacing: 1) {
+                    Text(verbatim: v).font(.system(size: 28, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
+                    if !unit.isEmpty { Text(verbatim: unit).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+                }
+            }
+            Text(title).font(.system(size: 11.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            if let band { Text(bandName(band)).font(.system(size: 13, weight: .heavy)).foregroundStyle(bandColor) }
+        }.frame(maxWidth: .infinity)
+    }
+
+    private func pill(_ t: LocalizedStringKey) -> some View {
+        Text(t).font(.system(size: 12.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 36)
+            .background(NunaPalette.glassStrong, in: Capsule())
     }
 
     private func bandName(_ b: TrendInsights.LoadBand) -> LocalizedStringKey {
@@ -119,13 +137,16 @@ struct NunaTrainingLoadView: View {
     private func balanceCard(_ ratio: Double?, _ band: TrendInsights.LoadBand?) -> some View {
         NunaCard {
             VStack(alignment: .leading, spacing: 12) {
-                nunaTrendsCap("Load balance")
+                HStack {
+                    nunaTrendsCap("Load balance")
+                    Spacer()
+                    if let ratio { NunaChip(verbatim: String(format: "%.2f", locale: AppLanguage.activeLocale, ratio), color: band == .optimal ? NunaPalette.charge : NunaPalette.warning) }
+                }
                 if let ratio {
-                    Text(verbatim: String(format: "%.2f", locale: AppLanguage.activeLocale, ratio)).font(.system(size: 40, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
                     Text("Your last 7 days against your usual week over 6 weeks. Between 0.8 and 1.3 is the safe range.").font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                     NunaScaleBar(parts: [(3, NunaPalette.zoneBase), (5, NunaPalette.charge), (2, NunaPalette.warning), (2, NunaPalette.alert)], position: min(max((ratio - 0.5) / 1.1, 0), 1))
                     HStack { Text(verbatim: "0,5"); Spacer(); Text(verbatim: "1,6") }.font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                    HStack { Text("Light"); Spacer(); Text("Optimal").foregroundStyle(NunaPalette.charge).fontWeight(.heavy); Spacer(); Text("High"); Spacer(); Text("Excessive") }
+                    HStack { Text("Under"); Spacer(); Text("Optimal").foregroundStyle(NunaPalette.charge).fontWeight(.heavy); Spacer(); Text("High"); Spacer(); Text("Excess") }
                         .font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 } else {
                     Text("Needs at least three weeks with workouts to read your balance.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
@@ -134,26 +155,23 @@ struct NunaTrainingLoadView: View {
         }
     }
 
-    /// Two stacked bar rows over the same weeks: strength above, cardio below.
+    /// Six weeks side by side. In each column the strength volume sits above (white) and cardio Effort below (blue), each
+    /// scaled to its own best week, so a week with no lifting shows only a thin line.
     private func weeklyPair(_ cardio: [Double], _ vol: [Double]) -> some View {
         let cTop = max(cardio.max() ?? 1, 1), vTop = max(vol.max() ?? 1, 1)
         let labels: [String] = (0..<cardio.count).map { i in
             let d = Calendar.current.date(byAdding: .day, value: -7 * (cardio.count - 1 - i), to: Date()) ?? Date()
             return nunaAxisDate(d)
         }
-        return VStack(spacing: 6) {
-            HStack(alignment: .bottom, spacing: 8) {
-                ForEach(0..<vol.count, id: \.self) { i in
-                    RoundedRectangle(cornerRadius: 5).fill(NunaPalette.rest.opacity(vol[i] > 0 ? 1 : 0.2)).frame(height: max(4, 50 * CGFloat(vol[i] / vTop))).frame(maxWidth: .infinity)
-                }
-            }.frame(height: 52, alignment: .bottom)
-            HStack(alignment: .top, spacing: 8) {
-                ForEach(0..<cardio.count, id: \.self) { i in
-                    RoundedRectangle(cornerRadius: 5).fill(NunaPalette.effort.opacity(cardio[i] > 0 ? 1 : 0.2)).frame(height: max(4, 50 * CGFloat(cardio[i] / cTop))).frame(maxWidth: .infinity)
-                }
-            }.frame(height: 52, alignment: .top)
-            HStack(spacing: 8) {
-                ForEach(0..<labels.count, id: \.self) { i in Text(verbatim: labels[i]).font(.system(size: 10, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity).lineLimit(1).minimumScaleFactor(0.6) }
+        return HStack(alignment: .top, spacing: 10) {
+            ForEach(0..<cardio.count, id: \.self) { i in
+                VStack(spacing: 6) {
+                    VStack(spacing: 4) {
+                        ZStack(alignment: .bottom) { Color.clear; RoundedRectangle(cornerRadius: 8, style: .continuous).fill(NunaPalette.textPrimary.opacity(vol[i] > 0 ? 0.92 : 0.18)).frame(height: max(3, 56 * CGFloat(vol[i] / vTop))) }.frame(height: 56)
+                        ZStack(alignment: .top) { Color.clear; RoundedRectangle(cornerRadius: 8, style: .continuous).fill(NunaPalette.effort.opacity(cardio[i] > 0 ? 1 : 0.25)).frame(height: max(3, 56 * CGFloat(cardio[i] / cTop))) }.frame(height: 56)
+                    }
+                    Text(verbatim: labels[i]).font(.system(size: 10, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.6)
+                }.frame(maxWidth: .infinity)
             }
         }
         .accessibilityHidden(true)
@@ -171,16 +189,22 @@ struct NunaTrainingLoadView: View {
         let shown = Array(pts.suffix(weeks == 12 ? 90 : weeks * 7))
         let last = pts.last
         let form = last?.tsb
+        let ctlColor = NunaPalette.restText
         return VStack(spacing: NunaSpacing.section) {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
-                    HStack { nunaTrendsCap("Form (fitness minus fatigue)"); Spacer(); if let form { NunaChip(formName(TrendInsights.formState(form)), color: formColor(TrendInsights.formState(form))) } }
+                    HStack(alignment: .top) {
+                        Text("Form (fitness minus fatigue)").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        Spacer(minLength: 8)
+                        if let form { NunaChip(formName(TrendInsights.formState(form)), color: formColor(TrendInsights.formState(form))) }
+                    }
                     if let last, let form {
-                        Text(verbatim: NunaTrendsFormat.signed(eff(form), 1)).font(.system(size: 40, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: formSentence(TrendInsights.formState(form))).font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        Text(verbatim: NunaTrendsFormat.signed(eff(form), 1)).font(.system(size: 64, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: formSentence(TrendInsights.formState(form))).font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        NunaDivider()
                         HStack {
-                            VStack(alignment: .leading, spacing: 4) { Text("Fitness · CTL").font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary); Text(verbatim: NunaTrendsFormat.num(eff(last.ctl), 1)).font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary) }.frame(maxWidth: .infinity, alignment: .leading)
-                            VStack(alignment: .leading, spacing: 4) { Text("Fatigue · ATL").font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary); Text(verbatim: NunaTrendsFormat.num(eff(last.atl), 1)).font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary) }.frame(maxWidth: .infinity, alignment: .leading)
+                            VStack(alignment: .leading, spacing: 4) { Text("Fitness · CTL").font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary); Text(verbatim: NunaTrendsFormat.num(eff(last.ctl), 1)).font(.system(size: 24, weight: .bold, design: .rounded)).foregroundStyle(ctlColor) }.frame(maxWidth: .infinity, alignment: .leading)
+                            VStack(alignment: .leading, spacing: 4) { Text("Fatigue · ATL").font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary); Text(verbatim: NunaTrendsFormat.num(eff(last.atl), 1)).font(.system(size: 24, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.effortText) }.frame(maxWidth: .infinity, alignment: .leading)
                         }
                     } else {
                         Text("The model needs at least 14 days in a row with Effort before it draws anything.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
@@ -195,10 +219,14 @@ struct NunaTrainingLoadView: View {
                         let all = shown.flatMap { [$0.ctl, $0.atl] }
                         let lo = all.min() ?? 0, span = max((all.max() ?? 1) - lo, 0.0001)
                         NunaMultiLineChart(start: shown.first!.day, days: shown.count,
-                                           lines: [.init(series: shown.map { ($0.day, ($0.ctl - lo) / span) }, max: 1, color: NunaPalette.charge),
-                                                   .init(series: shown.map { ($0.day, ($0.atl - lo) / span) }, max: 1, color: NunaPalette.effortText)], height: 150)
-                        NunaDayAxis(first: shown.first!.day, last: shown.last!.day)
-                        HStack(spacing: 14) { NunaLegendItem(color: NunaPalette.charge, text: "Fitness · 42 days"); NunaLegendItem(color: NunaPalette.effortText, text: "Fatigue · 7 days") }
+                                           lines: [.init(series: shown.map { ($0.day, ($0.ctl - lo) / span) }, max: 1, color: ctlColor),
+                                                   .init(series: shown.map { ($0.day, ($0.atl - lo) / span) }, max: 1, color: NunaPalette.effort)], height: 120)
+                        HStack {
+                            Text(verbatim: nunaAxisDate(NunaDayFormat.parse(shown.first!.day) ?? Date())); Spacer(); Text("Today")
+                        }.font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        HStack(spacing: 14) {
+                            squareLegend(ctlColor, "Fitness · 42 days"); squareLegend(NunaPalette.effort, "Fatigue · 7 days")
+                        }
                     }
                 }
                 NunaCard {
@@ -207,36 +235,51 @@ struct NunaTrainingLoadView: View {
                         let top = max(shown.map { abs($0.tsb) }.max() ?? 1, 0.5)
                         HStack(alignment: .center, spacing: 1) {
                             ForEach(Array(shown.enumerated()), id: \.offset) { _, p in
-                                let h = max(2, 40 * CGFloat(abs(p.tsb) / top))
+                                let h = max(2, 22 * CGFloat(abs(p.tsb) / top))
                                 VStack(spacing: 0) {
-                                    ZStack(alignment: .bottom) { Color.clear; if p.tsb >= 0 { RoundedRectangle(cornerRadius: 1).fill(NunaPalette.charge).frame(height: h) } }.frame(height: 40)
-                                    ZStack(alignment: .top) { Color.clear; if p.tsb < 0 { RoundedRectangle(cornerRadius: 1).fill(p.tsb >= -3 ? NunaPalette.rest : NunaPalette.warning).frame(height: h) } }.frame(height: 40)
+                                    ZStack(alignment: .bottom) { Color.clear; if p.tsb >= 0 { RoundedRectangle(cornerRadius: 1.5).fill(NunaPalette.charge).frame(height: h) } }.frame(height: 24)
+                                    ZStack(alignment: .top) { Color.clear; if p.tsb < 0 { RoundedRectangle(cornerRadius: 1.5).fill(NunaPalette.warning).frame(height: h) } }.frame(height: 24)
                                 }.frame(maxWidth: .infinity)
                             }
-                        }.frame(height: 80)
+                        }.frame(height: 48)
                     }
                 }
             }
-            NunaTitleRow(title: "Form states") { EmptyView() }
-            NunaCard {
-                VStack(spacing: 12) {
-                    ForEach([(TrendInsights.FormState.fresh, "Fresh above +2 · ready for hard training"), (.balanced, "Balanced −3 to +2"), (.loaded, "Loaded −6 to −3 · ease off"), (.overreached, "Overreached below −6 · needs rest")], id: \.0) { st, text in
-                        HStack(spacing: 10) {
-                            Circle().fill(formColor(st)).frame(width: 9, height: 9)
-                            Text(LocalizedStringKey(text)).font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            Text("Form states").font(.system(size: NunaTypeSize.h2, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity, alignment: .leading)
+            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
+                VStack(spacing: 0) {
+                    let states: [(TrendInsights.FormState, LocalizedStringKey, LocalizedStringKey)] = [
+                        (.fresh, "Fresh", "above +2 · ready for hard training"), (.balanced, "Balanced", "−3 to +2 · you are here"),
+                        (.loaded, "Loaded", "−6 to −3 · ease off"), (.overreached, "Overreached", "below −6 · needs rest"),
+                    ]
+                    ForEach(Array(states.enumerated()), id: \.offset) { i, st in
+                        if i > 0 { NunaDivider() }
+                        HStack(spacing: 12) {
+                            RoundedRectangle(cornerRadius: 3).fill(formColor(st.0)).frame(width: 10, height: 10)
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(st.1).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                Text(st.2).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            }
                             Spacer()
-                            if let form, TrendInsights.formState(form) == st { NunaChip("You are here") }
-                        }
+                            if let form, TrendInsights.formState(form) == st.0 { NunaChip("Now", color: NunaPalette.charge) }
+                        }.frame(minHeight: 60)
                     }
                 }
             }
             sources
             zonesCard
             NunaCard(small: true) {
-                Text("Fitness (CTL) averages Effort over 42 days, fatigue (ATL) over 7 days, and form is the gap. Descriptive only: it does not change Charge or any other score.")
-                    .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                HStack(alignment: .top, spacing: 12) {
+                    Image(systemName: "sparkles").foregroundStyle(NunaPalette.textMuted)
+                    Text("Fitness (CTL) averages Effort over 42 days, fatigue (ATL) over 7 days, and form is the gap. Descriptive only: it does not change Charge or any other score.")
+                        .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                }
             }
         }
+    }
+
+    private func squareLegend(_ c: Color, _ t: LocalizedStringKey) -> some View {
+        HStack(spacing: 6) { RoundedRectangle(cornerRadius: 3).fill(c).frame(width: 12, height: 12); Text(t).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
     }
 
     private func formName(_ s: TrendInsights.FormState) -> LocalizedStringKey {
@@ -255,20 +298,25 @@ struct NunaTrainingLoadView: View {
     private var sources: some View {
         let week = m.recent(days: 7)
         let groups = Dictionary(grouping: week, by: \.sport).map { (sport: $0.key, rows: $0.value) }.sorted { m.effort($0.rows) > m.effort($1.rows) }
+        let top = max(groups.map { m.effort($0.rows) }.max() ?? 1, 1)
         return VStack(alignment: .leading, spacing: 12) {
-            NunaTitleRow(title: "Load sources, 7 days") { EmptyView() }
-            NunaCard {
-                VStack(spacing: 14) {
-                    if groups.isEmpty { Text("No workouts in the last 7 days.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading) }
-                    ForEach(groups, id: \.sport) { g in
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(verbatim: WorkoutSource.displaySport(g.sport)).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                Text(verbatim: String(localized: "\(g.rows.count) sessions · \(Int(m.minutes(g.rows).rounded())) min")).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text("Load sources, 7 days").font(.system(size: NunaTypeSize.h2, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+            NunaCard(small: true, padding: EdgeInsets(top: 6, leading: 18, bottom: 6, trailing: 18)) {
+                VStack(spacing: 0) {
+                    if groups.isEmpty { Text("No workouts in the last 7 days.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 56, alignment: .leading) }
+                    ForEach(Array(groups.enumerated()), id: \.offset) { i, g in
+                        if i > 0 { NunaDivider() }
+                        VStack(spacing: 8) {
+                            HStack(alignment: .top) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(verbatim: WorkoutSource.displaySport(g.sport)).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                    Text(verbatim: String(localized: "\(g.rows.count) sessions · \(Int(m.minutes(g.rows).rounded())) min")).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                }
+                                Spacer()
+                                Text(verbatim: UnitFormatter.effortDisplay(m.effort(g.rows), scale: scale)).font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
                             }
-                            Spacer()
-                            Text(verbatim: UnitFormatter.effortDisplay(m.effort(g.rows), scale: scale)).font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
-                        }
+                            NunaProgressBar(fraction: m.effort(g.rows) / top, color: NunaPalette.effort)
+                        }.padding(.vertical, 12)
                     }
                 }
             }
@@ -277,24 +325,21 @@ struct NunaTrainingLoadView: View {
 
     private var zonesCard: some View {
         let total = zoneMinutes.reduce(0, +)
-        let colors: [Color] = [NunaPalette.zoneBase, NunaPalette.rest, NunaPalette.charge, NunaPalette.warning, NunaPalette.alert]
-        return VStack(alignment: .leading, spacing: 12) {
-            NunaTitleRow(title: "Time per heart-rate zone") { EmptyView() }
-            NunaCard {
-                VStack(spacing: 12) {
-                    if total > 0 {
-                        HStack { Spacer(); Text(verbatim: String(localized: "\(Int(total.rounded())) min")).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
-                        NunaProportionBar(parts: zoneMinutes.enumerated().map { ($1, colors[$0]) })
-                        ForEach(0..<5, id: \.self) { i in
-                            HStack(spacing: 10) {
-                                Circle().fill(colors[i]).frame(width: 9, height: 9)
-                                Text(verbatim: String(localized: "Zone \(i + 1)")).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                Spacer()
-                                Text(verbatim: String(localized: "\(Int(zoneMinutes[i].rounded())) min")).font(.system(size: 15, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
-                            }
+        let colors: [Color] = [NunaPalette.zoneBase, NunaPalette.charge, NunaPalette.restText, NunaPalette.warning, NunaPalette.alert]
+        return NunaCard {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack { nunaTrendsCap("Time per heart-rate zone"); Spacer(); if total > 0 { Text(verbatim: String(localized: "\(Int(total.rounded())) min")).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) } }
+                if total > 0 {
+                    NunaProportionBar(parts: zoneMinutes.enumerated().map { ($1, colors[$0]) }, height: 12)
+                    ForEach(0..<5, id: \.self) { i in
+                        HStack(spacing: 10) {
+                            RoundedRectangle(cornerRadius: 3).fill(colors[i]).frame(width: 10, height: 10)
+                            Text(verbatim: String(localized: "Zone \(i + 1)")).font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Spacer()
+                            Text(verbatim: String(localized: "\(Int(zoneMinutes[i].rounded())) min")).font(.system(size: 15, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
                         }
-                    } else { Text("No heart-rate readings in saved sessions this week.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading) }
-                }
+                    }
+                } else { Text("No heart-rate readings in saved sessions this week.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
             }
         }
     }
@@ -320,6 +365,7 @@ struct NunaTrainingLoadView: View {
         let usual = vol.dropLast().filter { $0 > 0 }
         let usualMean = usual.isEmpty ? nil : usual.reduce(0, +) / Double(usual.count)
         let change = (usualMean ?? 0) > 0 ? ((vol.last ?? 0) / usualMean! - 1) * 100 : nil
+        let band = TrendInsights.loadRatio(blocks: vol).map(TrendInsights.loadBand)
         return VStack(spacing: NunaSpacing.section) {
             if m.liftSessions.isEmpty {
                 NunaCard {
@@ -331,12 +377,16 @@ struct NunaTrainingLoadView: View {
             } else {
                 NunaCard {
                     VStack(alignment: .leading, spacing: 12) {
-                        HStack { nunaTrendsCap("Volume, 7 days"); Spacer(); if let change { NunaChip(change >= -10 && change <= 30 ? "Optimal" : (change > 30 ? "High" : "Light"), color: change >= -10 && change <= 30 ? NunaPalette.charge : NunaPalette.warning) } }
-                        HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            Text(verbatim: String(format: "%.1f", locale: AppLanguage.activeLocale, (vol.last ?? 0) / 1000)).font(.system(size: 44, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
-                            Text("tonnes").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        HStack { nunaTrendsCap("Volume, 7 days"); Spacer(); if let band { NunaChip(bandName(band), color: band == .optimal ? NunaPalette.charge : NunaPalette.warning) } }
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            Text(verbatim: String(format: "%.1f", locale: AppLanguage.activeLocale, (vol.last ?? 0) / 1000)).font(.system(size: 64, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                            Text("tonnes").font(.system(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         }
-                        if let change { Text(verbatim: String(localized: "\(change >= 0 ? "Up" : "Down") \(Int(abs(change).rounded()))% from your usual week.")).font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                        if let change {
+                            Text(verbatim: (change >= 0 ? String(localized: "Up \(Int(abs(change).rounded()))% from your 6-week average.") : String(localized: "Down \(Int(abs(change).rounded()))% from your 6-week average.")) + " " + String(localized: "\(lifts.count) lifting sessions and \(weekSets.count) working sets."))
+                                .font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        }
+                        NunaDivider()
                         HStack { tileSmall("Sessions", "\(lifts.count)"); tileSmall("Sets", "\(weekSets.count)"); tileSmall("Reps", "\(reps)") }
                     }
                 }
@@ -344,30 +394,41 @@ struct NunaTrainingLoadView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack { nunaTrendsCap("Volume per week"); Spacer(); Text("Tonnes").font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                         let top = max(vol.max() ?? 1, 1)
-                        NunaColumns(items: vol.enumerated().map { i, v in
-                            let d = Calendar.current.date(byAdding: .day, value: -7 * (vol.count - 1 - i), to: Date()) ?? Date()
-                            return NunaColumns.Item(weekday: "", date: d, fraction: v / top, valueText: String(format: "%.1f", locale: AppLanguage.activeLocale, v / 1000), highlight: i == vol.count - 1)
-                        }, color: NunaPalette.rest, highlightColor: NunaPalette.restText)
+                        HStack(alignment: .bottom, spacing: 10) {
+                            ForEach(0..<vol.count, id: \.self) { i in
+                                let d = Calendar.current.date(byAdding: .day, value: -7 * (vol.count - 1 - i), to: Date()) ?? Date()
+                                VStack(spacing: 6) {
+                                    Text(verbatim: String(format: "%.1f", locale: AppLanguage.activeLocale, vol[i] / 1000)).font(.system(size: 11.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+                                    Spacer(minLength: 0)
+                                    RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color.white.opacity(vol[i] > 0 ? 0.55 : 0.12)).frame(height: max(3, 70 * CGFloat(vol[i] / top)))
+                                    Text(verbatim: nunaAxisDate(d)).font(.system(size: 10, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.6)
+                                }.frame(maxWidth: .infinity).frame(height: 112)
+                            }
+                        }
                     }
                 }
                 groupsCard
+                recoveryNote
                 recordsCard
             }
             NavigationLink { LiftLogView() } label: {
-            NunaCard(small: true) {
-                HStack(spacing: 12) {
-                    NunaIconTile("books.vertical")
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Lift Log").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("Sets, weights, rest and records").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                NunaCard(small: true) {
+                    HStack(spacing: 12) {
+                        NunaIconTile("books.vertical")
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Open Lift Log").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            Text("Sets, weights, rest and records").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        }
+                        Spacer()
+                        Image(systemName: "chevron.right").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                     }
-                    Spacer()
-                    Image(systemName: "chevron.right").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                 }
-            }
             }.buttonStyle(.plain)
             NunaCard(small: true) {
-                Text("Estimated from lifting volume (weight × reps). This is not heart strain, so it is not added to cardio Effort.").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                HStack(alignment: .top, spacing: 12) {
+                    Image(systemName: "sparkles").foregroundStyle(NunaPalette.textMuted)
+                    Text("Estimated from lifting volume (weight × reps). This is not heart strain, so it is not added to cardio Effort.").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                }
             }
         }
     }
@@ -394,7 +455,8 @@ struct NunaTrainingLoadView: View {
         switch g { case .legs: return "Legs"; case .chest: return "Chest"; case .back: return "Back"; case .shoulders: return "Shoulders"; case .arms: return "Arms"; case .core: return "Core" }
     }
 
-    private var groupsCard: some View {
+    /// Volume (kg) in the last 7 days and days since last trained, per muscle group.
+    private var groupStats: [(g: MuscleGroup, kg: Double, days: Int)] {
         let weekStart = Date().addingTimeInterval(-7 * 86_400).timeIntervalSince1970
         var volume: [MuscleGroup: Double] = [:], last: [MuscleGroup: Int] = [:]
         for s in m.liftSessions {
@@ -405,29 +467,65 @@ struct NunaTrainingLoadView: View {
                 if Double(s.startTs) >= weekStart, let w = set.weightKg, let r = set.reps { volume[g, default: 0] += w * Double(r) }
             }
         }
-        let shown = MuscleGroup.allCases.filter { last[$0] != nil }
+        return MuscleGroup.allCases.compactMap { g in
+            last[g].map { (g, volume[g] ?? 0, Int((Date().timeIntervalSince1970 - Double($0)) / 86_400)) }
+        }.sorted { $0.kg > $1.kg }
+    }
+
+    private var groupsCard: some View {
+        let stats = groupStats
+        let top = max(stats.map(\.kg).max() ?? 1, 1)
         return VStack(alignment: .leading, spacing: 12) {
-            NunaTitleRow(title: "By muscle group") { EmptyView() }
-            NunaCard {
-                VStack(spacing: 14) {
-                    if shown.isEmpty { Text("Classify your exercises by muscle in the Lift Log to see this.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading) }
-                    ForEach(shown, id: \.self) { g in
-                        let days = Int((Date().timeIntervalSince1970 - Double(last[g] ?? 0)) / 86_400)
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(groupName(g)).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                Text(verbatim: String(localized: "Last \(days) days ago")).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text("By muscle group").font(.system(size: NunaTypeSize.h2, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+            NunaCard(small: true, padding: EdgeInsets(top: 6, leading: 18, bottom: 6, trailing: 18)) {
+                VStack(spacing: 0) {
+                    if stats.isEmpty { Text("Classify your exercises by muscle in the Lift Log to see this.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 56, alignment: .leading) }
+                    ForEach(Array(stats.enumerated()), id: \.offset) { i, st in
+                        if i > 0 { NunaDivider() }
+                        VStack(spacing: 8) {
+                            HStack(alignment: .firstTextBaseline) {
+                                Text(groupName(st.g)).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                Spacer()
+                                Text(verbatim: NunaTrendsFormat.num(st.kg)).font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                                Text("kg").font(.system(size: 10, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                             }
-                            Spacer()
-                            VStack(alignment: .trailing, spacing: 4) {
-                                Text(verbatim: "\(Int((volume[g] ?? 0).rounded())) kg").font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
-                                NunaChip(days >= 2 ? "Recovered" : "Recovering", color: days >= 2 ? NunaPalette.charge : NunaPalette.warning)
+                            NunaProgressBar(fraction: st.kg / top, color: NunaPalette.textPrimary)
+                            HStack {
+                                Text(verbatim: String(localized: "Trained \(st.days) days ago")).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                Spacer()
+                                Text(st.days >= 2 ? "Recovered" : "Recovering").font(.system(size: 12, weight: .heavy)).foregroundStyle(st.days >= 2 ? NunaPalette.charge : NunaPalette.warning)
                             }
-                        }
+                        }.padding(.vertical, 12)
                     }
                 }
             }
         }
+    }
+
+    private var recoveryNote: some View {
+        let stats = groupStats
+        let recovering = stats.filter { $0.days < 2 }
+        let ready = stats.filter { $0.days >= 2 }.sorted { $0.days > $1.days }.prefix(2).map { String(localized: String.LocalizationValue(groupKey($0.g))) }
+        return Group {
+            if !stats.isEmpty {
+                NunaCard(highlight: true) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "checkmark").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.charge)
+                            .frame(width: 40, height: 40).background(NunaPalette.tint(NunaPalette.charge), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(recovering.isEmpty ? "All muscle groups are recovered" : "Some muscle groups are still recovering").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: ready.isEmpty ? String(localized: "Rest today") : String(localized: "\(ready.joined(separator: " and ")) are ready to train today"))
+                                .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                }
+            }
+        }
+    }
+
+    private func groupKey(_ g: MuscleGroup) -> String {
+        switch g { case .legs: return "Legs"; case .chest: return "Chest"; case .back: return "Back"; case .shoulders: return "Shoulders"; case .arms: return "Arms"; case .core: return "Core" }
     }
 
     private var recordsCard: some View {

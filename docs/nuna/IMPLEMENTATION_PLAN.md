@@ -128,6 +128,7 @@ Built in `StrandiOS/Nuna/Workouts/`. The Workouts destination (Today's "All work
 - [x] History (WorkoutHistory.dc): search, filters, totals, grouped by week, newest or oldest first.
 - [x] Calendar (WorkoutCalendar.dc): 7 weeks of days coloured cardio / strength / both, tap a day for its sessions, active and rest days, streak, longest gap, weekday pattern.
 - [x] Training load (TrainingLoad, Cardio, Muscle): summary with the load balance scale and 6 weeks of cardio and strength; cardio with form, fitness and fatigue from the existing `TrainingLoadEngine`, daily form, form states, load sources, time per zone; strength with weekly volume, volume by muscle group and personal records from the Lift Log tables.
+- [x] Design-fidelity pass on Calendar and Training load: the calendar now has the Today chip, filter, paged 5-week grid with a selected-day card, four stat tiles and weekly pattern bars with counts; Training load matches the mockups tab by tab (two rings and balance scale on Summary, 64pt form number with fitness / fatigue chart and daily form on Cardio, 64pt tonnes with weekly columns, muscle-group recovery and records on Strength). `NunaDetailScreen` gained a `trailing` slot and per-tab Anya button.
 - [x] Auto-detect (WorkoutAutoDetect / Off): the switch, the fixed rules read from `AutoWorkoutDetector`, the latest suggestion.
 - [x] Pure helpers with tests: `TrendInsights.loadRatio`, `loadBand`, `formState`.
 
