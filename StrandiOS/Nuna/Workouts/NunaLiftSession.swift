@@ -63,7 +63,7 @@ struct NunaLiftSessionView: View {
                 Text("No session running").font(.system(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(NunaTheme.colorScheme)
         .presentationDragIndicator(.visible)
         .toolbar { ToolbarItemGroup(placement: .keyboard) {
             Spacer()
@@ -86,12 +86,12 @@ struct NunaLiftSessionView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: session.programName.map { String(localized: "Gym session · \($0)") } ?? String(localized: "Gym session"))
                     .font(.system(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1)
-                Text("Lift Log").font(.system(size: 24, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                Text("Lift Log").font(.system(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             }
             Spacer(minLength: 8)
             HStack(spacing: 7) {
                 Circle().fill(NunaPalette.alert).frame(width: 8, height: 8)
-                Text(verbatim: LiftFormat.duration(max(0, session.now - engine.startTs))).font(.system(size: 14.5, weight: .bold, design: .rounded)).monospacedDigit()
+                Text(verbatim: LiftFormat.duration(max(0, session.now - engine.startTs))).font(.system(size: 14.5, weight: .bold, design: NunaType.design)).monospacedDigit()
             }
             .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 36).background(NunaPalette.glassStrong, in: Capsule())
         }
@@ -114,7 +114,7 @@ struct NunaLiftSessionView: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text(l).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
                 HStack(alignment: .firstTextBaseline, spacing: 3) {
-                    Text(verbatim: v).font(.system(size: 22, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+                    Text(verbatim: v).font(.system(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
                     if let unit { Text(verbatim: unit).font(.system(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                 }
             }.frame(maxWidth: .infinity, alignment: .leading)
@@ -130,7 +130,7 @@ struct NunaLiftSessionView: View {
             NunaCard(highlight: true) {
                 HStack(spacing: 16) {
                     NunaRingGauge(fraction: done ? 1 : min(1, Double(remaining) / total), color: NunaPalette.rest, size: 96, lineWidth: 8) {
-                        Text(verbatim: LiftFormat.duration(remaining)).font(.system(size: 22, weight: .bold, design: .rounded)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: LiftFormat.duration(remaining)).font(.system(size: 22, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
                     }
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Rest period").font(.system(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.restText)
@@ -147,7 +147,7 @@ struct NunaLiftSessionView: View {
         case .working:
             NunaCard(highlight: true) {
                 HStack(spacing: 14) {
-                    Text(verbatim: LiftFormat.duration(max(0, session.now - engine.stageStartedAt))).font(.system(size: 30, weight: .bold, design: .rounded)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: LiftFormat.duration(max(0, session.now - engine.stageStartedAt))).font(.system(size: 30, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
                     VStack(alignment: .leading, spacing: 3) {
                         Text("This set").font(.system(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.charge)
                         Text("Tap Set done when you finish").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
@@ -188,7 +188,7 @@ struct NunaLiftSessionView: View {
                                 Text(verbatim: LiftMuscleSummary.line(primary: item.primaryMuscle, secondaries: item.secondaryMuscles)).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                             }
                             Spacer()
-                            Text(verbatim: "\(done)/\(slots.count)").font(.system(size: 13, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: "\(done)/\(slots.count)").font(.system(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
                         }.contentShape(Rectangle())
                     }.buttonStyle(.plain)
                     if let note = item.note, !note.isEmpty {
@@ -249,7 +249,7 @@ struct NunaLiftSessionView: View {
         let warm = session.isWarmup(slot)
         return HStack(spacing: 8) {
             Button { session.setWarmup(slot, !warm) } label: {
-                Text(verbatim: warm ? String(localized: "W") : "\(slot.setIndex)").font(.system(size: 16, weight: .bold, design: .rounded))
+                Text(verbatim: warm ? String(localized: "W") : "\(slot.setIndex)").font(.system(size: 16, weight: .bold, design: NunaType.design))
                     .foregroundStyle(warm ? NunaPalette.warning : (isWorking ? NunaPalette.restText : NunaPalette.textSecondary))
                     .frame(width: setColumn, height: 44).contentShape(Rectangle())
             }.buttonStyle(.plain)
@@ -275,7 +275,7 @@ struct NunaLiftSessionView: View {
 
     private func field(text: Binding<String>, ghost: String, target: FocusTarget, decimal: Bool, big: Bool) -> some View {
         TextField("", text: text, prompt: Text(verbatim: ghost).foregroundStyle(NunaPalette.textMuted))
-            .font(.system(size: big ? 20 : 17, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+            .font(.system(size: big ? 20 : 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             .keyboardType(decimal ? .decimalPad : .numberPad)
             .focused($focused, equals: target)
             .frame(minHeight: 44)
@@ -319,7 +319,7 @@ struct NunaLiftSessionView: View {
                     ForEach(rows, id: \.key) { mu, v in
                         VStack(spacing: 6) {
                             HStack { Text(verbatim: mu.displayName).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary); Spacer()
-                                Text(verbatim: NunaTrendsFormat.num(v) + " " + UnitFormatter.massUnit(system)).font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary) }
+                                Text(verbatim: NunaTrendsFormat.num(v) + " " + UnitFormatter.massUnit(system)).font(.system(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary) }
                             NunaProgressBar(fraction: v / (rows.first?.value ?? 1), color: NunaPalette.textPrimary)
                         }
                     }
@@ -339,7 +339,7 @@ struct NunaLiftSessionView: View {
             }.buttonStyle(.plain).disabled(!engine.canUndo).accessibilityLabel(Text("Undo"))
             Button { session.advance() } label: {
                 Text(actionLabel(engine)).font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                    .frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.textPrimary, in: Capsule())
+                    .frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: Capsule())
             }.buttonStyle(.plain)
             Button {
                 unfinishedChoice = nil; programChoice = nil; setCountChanges = []
@@ -436,14 +436,14 @@ struct NunaLiftSessionView: View {
                             nunaTrendsCap("Program")
                             Text("You changed the number of sets. Keep the new counts in the program for next time?").font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                             ForEach(setCountChanges, id: \.itemId) { c in
-                                Text("\(c.exercise): \(c.from) → \(c.to) sets").font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textSecondary)
+                                Text("\(c.exercise): \(c.from) → \(c.to) sets").font(.system(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
                             }
                             NunaSegmented([(value: ProgramChoice?.some(.update), title: "Update program"), (value: ProgramChoice?.some(.keep), title: "Keep as it was")], selection: $programChoice)
                         }
                     }
                 }
                 Button { Task { await save() } } label: {
-                    Text("Save session").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.textPrimary, in: Capsule())
+                    Text("Save session").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: Capsule())
                 }.buttonStyle(.plain).disabled(saving || !answered).opacity(saving || !answered ? 0.4 : 1)
                 if !answered { Text("Choose an option above to save.").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) }
                 Button(role: .destructive) { confirmingDiscard = true } label: {
@@ -454,7 +454,7 @@ struct NunaLiftSessionView: View {
             .toolbar(.hidden, for: .navigationBar)
             .toolbar { ToolbarItemGroup(placement: .keyboard) { Spacer(); Button("Done") { focused = nil } } }
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(NunaTheme.colorScheme)
         .task { await loadSetCountChanges() }
         .confirmationDialog("Discard this session?", isPresented: $confirmingDiscard, titleVisibility: .visible) {
             Button("Discard", role: .destructive) { session.discard(); showingFinish = false }
@@ -547,7 +547,7 @@ struct NunaLiftBar: View {
                             .font(.system(size: 12.5, weight: .semibold)).monospacedDigit().foregroundStyle(NunaPalette.textSecondary)
                     }
                     Spacer()
-                    Text("Open").font(.system(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 16).frame(height: 34).background(NunaPalette.textPrimary, in: Capsule())
+                    Text("Open").font(.system(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 16).frame(height: 34).background(NunaPalette.accent, in: Capsule())
                 }
                 .padding(.horizontal, 14).padding(.vertical, 10)
                 .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(NunaPalette.canvas))

@@ -11,7 +11,7 @@ private func nunaPill(_ title: String, on: Bool, action: @escaping () -> Void) -
         Text(verbatim: title).font(.system(size: 13.5, weight: .bold))
             .foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary)
             .padding(.horizontal, 14).frame(height: 38)
-            .background(on ? NunaPalette.textPrimary : NunaPalette.glassStrong, in: Capsule())
+            .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
             .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: on ? 0 : 1))
     }.buttonStyle(.plain)
 }
@@ -80,7 +80,7 @@ struct NunaProgramEditor: View {
     private var saveButton: some View {
         Button { Task { await save() } } label: {
             Text("Save").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                .padding(.horizontal, 20).frame(height: 44).background(NunaPalette.textPrimary, in: Capsule())
+                .padding(.horizontal, 20).frame(height: 44).background(NunaPalette.accent, in: Capsule())
         }.buttonStyle(.plain).disabled(!canSave).opacity(canSave ? 1 : 0.4)
     }
 
@@ -102,7 +102,7 @@ struct NunaProgramEditor: View {
                                 }
                                 Spacer(minLength: 6)
                                 if let s = item.targetSets {
-                                    Text(verbatim: item.targetRepsLow.map { "\(s) × \($0)" } ?? "\(s)").font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                                    Text(verbatim: item.targetRepsLow.map { "\(s) × \($0)" } ?? "\(s)").font(.system(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                                 }
                             }.contentShape(Rectangle())
                         }.buttonStyle(.plain)
@@ -141,7 +141,7 @@ struct NunaProgramEditor: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(l).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text(verbatim: v).font(.system(size: 22, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: v).font(.system(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 if let unit { Text(verbatim: unit).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
             }
         }.frame(maxWidth: .infinity, alignment: .leading)
@@ -258,7 +258,7 @@ struct NunaProgramItemView: View {
             .toolbar(.hidden, for: .navigationBar)
             .nunaKeyboardDone()
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(NunaTheme.colorScheme)
         .task { await loadIfNeeded() }
         .confirmationDialog(forgetting.map { Text(verbatim: String(localized: "Forget \($0.name)?")) } ?? Text(verbatim: ""), isPresented: Binding(get: { forgetting != nil }, set: { if !$0 { forgetting = nil } }), titleVisibility: .visible) {
             Button("Forget", role: .destructive) { Task { await forget() } }
@@ -272,7 +272,7 @@ struct NunaProgramItemView: View {
     private var saveButton: some View {
         Button { Task { await save() } } label: {
             Text("Save").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                .padding(.horizontal, 20).frame(height: 44).background(NunaPalette.textPrimary, in: Capsule())
+                .padding(.horizontal, 20).frame(height: 44).background(NunaPalette.accent, in: Capsule())
         }.buttonStyle(.plain).disabled(!canSave).opacity(canSave ? 1 : 0.4)
     }
 
@@ -331,7 +331,7 @@ struct NunaProgramItemView: View {
                         let mu = LiftMuscle(rawValue: id)!
                         Button { secondaries.remove(mu) } label: {
                             HStack(spacing: 6) { Text(verbatim: mu.displayName).font(.system(size: 13.5, weight: .bold)); Image(systemName: "xmark").font(.system(size: 10, weight: .bold)) }
-                                .foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 14).frame(height: 38).background(NunaPalette.textPrimary, in: Capsule())
+                                .foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 14).frame(height: 38).background(NunaPalette.accent, in: Capsule())
                         }.buttonStyle(.plain)
                     }
                 }
@@ -460,7 +460,7 @@ struct NunaProgramImportView: View {
 
     private func step(_ n: Int, _ t: LocalizedStringKey) -> some View {
         HStack(spacing: 12) {
-            Text(verbatim: "\(n)").font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary).frame(width: 30, height: 30).background(NunaPalette.glassStrong, in: Circle())
+            Text(verbatim: "\(n)").font(.system(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 30, height: 30).background(NunaPalette.glassStrong, in: Circle())
             Text(t).font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -514,7 +514,7 @@ struct NunaProgramImportView: View {
 
     private func primary(_ title: LocalizedStringKey, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(title).font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.textPrimary, in: Capsule())
+            Text(title).font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: Capsule())
         }.buttonStyle(.plain)
     }
 

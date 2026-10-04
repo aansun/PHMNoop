@@ -197,6 +197,8 @@ Built in `StrandiOS/Nuna/Me/` and `NunaMeView.swift`. Every Me row now opens a N
 - [x] Advanced, Experiments, About (Advanced, Experiments, About): HRV capture and window, exponential Effort, power saving, the experimental switches with their re-score side effects, version and credits.
 - [x] Anya settings (Phase 5) and Devices (Phase 6) are reached from here.
 
+Appearance follow-up: Theme, accent and typography have their own screen (`NunaThemeView`) with a live preview. Theme is Automatic / Light / Dark (the Nuna palette is now adaptive: `NunaPalette` tokens carry a light and a dark value, and the UIKit windows are set too so pushed pages follow); the accent (white, green, blue, steel, yellow) colours buttons, selections and the FAB through `NunaPalette.accent`, while data colours stay fixed; typography is Bold (rounded), Geometric (expanded width) or System. Language no longer has its own screen: the row opens iOS Settings. Units is a full screen (body, distance, temperature, skin temperature, Effort scale, preview). Light mode was only checked on a few screens; the many white-on-black details drawn inside charts follow the adaptive ink, but each screen has not been reviewed one by one.
+
 Not built, and why:
 - Mockups for AutoAlerts, AutoCoaching, Widgets, WidgetsLock, WidgetSettings, WidgetVital*, Strava (Setup, Connected), TestCentre and the Connected step. Widgets are Phase 8; Strava and Test Centre keep their existing screens (reached from the new Data hub and Advanced); the heart-rate zone vibration coaching and the finer per-cue alert switches have no separate store beyond the switches already on the Automations screen.
 - The photo and name edit on Persona (the profile has no name field; the avatar stays on the Default Profile screen).

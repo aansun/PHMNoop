@@ -58,7 +58,7 @@ struct NunaComboChart: View {
             Canvas { ctx, size in
                 var grid = Path()
                 for i in 1...2 { let y = size.height * CGFloat(i) / 3; grid.move(to: CGPoint(x: 0, y: y)); grid.addLine(to: CGPoint(x: size.width, y: y)) }
-                ctx.stroke(grid, with: .color(.white.opacity(0.07)), lineWidth: 1)
+                ctx.stroke(grid, with: .color(NunaPalette.ink.opacity(0.07)), lineWidth: 1)
                 let slot = size.width / CGFloat(max(days, 1))
                 let bw = max(2, min(10, slot * 0.62))
                 for b in bars {
@@ -80,9 +80,9 @@ struct NunaComboChart: View {
                 if let s = selected, let i = dayIndex(s, from: start) {
                     let x = (CGFloat(i) + 0.5) * slot
                     var v = Path(); v.move(to: CGPoint(x: x, y: 0)); v.addLine(to: CGPoint(x: x, y: size.height))
-                    ctx.stroke(v, with: .color(.white.opacity(0.35)), style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
+                    ctx.stroke(v, with: .color(NunaPalette.ink.opacity(0.35)), style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
                 } else if let last {
-                    ctx.fill(Path(ellipseIn: CGRect(x: last.x - 5, y: last.y - 5, width: 10, height: 10)), with: .color(.white))
+                    ctx.fill(Path(ellipseIn: CGRect(x: last.x - 5, y: last.y - 5, width: 10, height: 10)), with: .color(NunaPalette.ink))
                 }
             }
             .contentShape(Rectangle())
@@ -111,7 +111,7 @@ struct NunaMultiLineChart: View {
         Canvas { ctx, size in
             var grid = Path()
             for i in 1...2 { let y = size.height * CGFloat(i) / 3; grid.move(to: CGPoint(x: 0, y: y)); grid.addLine(to: CGPoint(x: size.width, y: y)) }
-            ctx.stroke(grid, with: .color(.white.opacity(0.07)), lineWidth: 1)
+            ctx.stroke(grid, with: .color(NunaPalette.ink.opacity(0.07)), lineWidth: 1)
             let slot = size.width / CGFloat(max(days, 1))
             for line in lines {
                 var p = Path(); var started = false; var last: CGPoint?
@@ -122,7 +122,7 @@ struct NunaMultiLineChart: View {
                     last = pt
                 }
                 ctx.stroke(p, with: .color(line.color), style: StrokeStyle(lineWidth: 2.6, lineCap: .round, lineJoin: .round))
-                if let last { ctx.fill(Path(ellipseIn: CGRect(x: last.x - 4, y: last.y - 4, width: 8, height: 8)), with: .color(.white)) }
+                if let last { ctx.fill(Path(ellipseIn: CGRect(x: last.x - 4, y: last.y - 4, width: 8, height: 8)), with: .color(NunaPalette.ink)) }
             }
         }
         .frame(height: height)
@@ -133,7 +133,7 @@ struct NunaMultiLineChart: View {
 /// A tiny line with its newest point marked.
 struct NunaSpark: View {
     let values: [Double]
-    var color: Color = .white
+    var color: Color = NunaPalette.ink
     var body: some View {
         Canvas { ctx, size in
             guard values.count >= 2, let lo = values.min(), let hi = values.max() else { return }
@@ -146,7 +146,7 @@ struct NunaSpark: View {
             for i in 1..<values.count { p.addLine(to: pt(i)) }
             ctx.stroke(p, with: .color(color), style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round))
             let e = pt(values.count - 1)
-            ctx.fill(Path(ellipseIn: CGRect(x: e.x - 3.5, y: e.y - 3.5, width: 7, height: 7)), with: .color(.white))
+            ctx.fill(Path(ellipseIn: CGRect(x: e.x - 3.5, y: e.y - 3.5, width: 7, height: 7)), with: .color(NunaPalette.ink))
         }
         .accessibilityHidden(true)
     }
@@ -165,19 +165,19 @@ struct NunaScatter: View {
             let pad: CGFloat = 10
             func mx(_ v: Double) -> CGFloat { pad + CGFloat((v - xRange.lowerBound) / max(xRange.upperBound - xRange.lowerBound, 0.0001)) * (size.width - pad * 2) }
             func my(_ v: Double) -> CGFloat { size.height - pad - CGFloat((v - yRange.lowerBound) / max(yRange.upperBound - yRange.lowerBound, 0.0001)) * (size.height - pad * 2) }
-            ctx.fill(Path(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: 14), with: .color(.black.opacity(0.28)))
+            ctx.fill(Path(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: 14), with: .color(NunaPalette.shade.opacity(0.28)))
             var grid = Path()
             for i in 1...3 {
                 let y = size.height * CGFloat(i) / 4, x = size.width * CGFloat(i) / 4
                 grid.move(to: CGPoint(x: 0, y: y)); grid.addLine(to: CGPoint(x: size.width, y: y))
                 grid.move(to: CGPoint(x: x, y: 0)); grid.addLine(to: CGPoint(x: x, y: size.height))
             }
-            ctx.stroke(grid, with: .color(.white.opacity(0.06)), lineWidth: 1)
+            ctx.stroke(grid, with: .color(NunaPalette.ink.opacity(0.06)), lineWidth: 1)
             if let slope, let intercept {
                 var p = Path()
                 p.move(to: CGPoint(x: mx(xRange.lowerBound), y: my(slope * xRange.lowerBound + intercept)))
                 p.addLine(to: CGPoint(x: mx(xRange.upperBound), y: my(slope * xRange.upperBound + intercept)))
-                ctx.stroke(p, with: .color(.white.opacity(0.5)), style: StrokeStyle(lineWidth: 1.5, dash: [5, 5]))
+                ctx.stroke(p, with: .color(NunaPalette.ink.opacity(0.5)), style: StrokeStyle(lineWidth: 1.5, dash: [5, 5]))
             }
             for p in points {
                 ctx.fill(Path(ellipseIn: CGRect(x: mx(p.x) - 3.5, y: my(p.y) - 3.5, width: 7, height: 7)), with: .color(color.opacity(0.85)))

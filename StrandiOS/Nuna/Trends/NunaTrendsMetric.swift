@@ -96,7 +96,7 @@ struct NunaTrendsMetricView: View {
                 HStack(alignment: .top, spacing: 18) {
                     NunaRingGauge(fraction: frac, color: color, size: 112, lineWidth: 10) {
                         HStack(alignment: .firstTextBaseline, spacing: 1) {
-                            Text(verbatim: NunaTrendsFormat.num(now, decimals)).font(.system(size: 30, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: NunaTrendsFormat.num(now, decimals)).font(.system(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                             if !unit.isEmpty { Text(verbatim: unit).font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                         }
                     }
@@ -170,7 +170,7 @@ struct NunaTrendsMetricView: View {
     private func mini(_ l: LocalizedStringKey, _ v: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(l).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: v).font(.system(size: 19, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+            Text(verbatim: v).font(.system(size: 19, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -187,7 +187,7 @@ struct NunaTrendsMetricView: View {
                             Circle().fill(zoneColors[ci]).frame(width: 9, height: 9)
                             Text(zoneNames[ci]).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             Spacer()
-                            Text(verbatim: String(localized: "\(counts[ci]) days")).font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: String(localized: "\(counts[ci]) days")).font(.system(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         }
                     }
                     NunaProportionBar(parts: (0..<counts.count).map { (Double(counts[$0]), zoneColors[$0]) }, height: 10)
@@ -295,11 +295,11 @@ struct NunaTrendsMetricView: View {
                 HStack {
                     Text(title).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Spacer()
-                    Text(verbatim: NunaTrendsFormat.num(now, kind == .effort ? 1 : 1) + unit).font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: NunaTrendsFormat.num(now, kind == .effort ? 1 : 1) + unit).font(.system(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text(verbatim: "vs " + NunaTrendsFormat.num(before, 1)).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 NunaProgressBar(fraction: (now ?? 0) / top, color: bar)
-                NunaProgressBar(fraction: (before ?? 0) / top, color: Color.white.opacity(0.3)).frame(height: 5)
+                NunaProgressBar(fraction: (before ?? 0) / top, color: NunaPalette.ink.opacity(0.3)).frame(height: 5)
             }
         }
     }

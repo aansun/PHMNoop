@@ -113,7 +113,7 @@ struct NunaAboutView: View {
                 HStack(spacing: 14) {
                     NunaIconTile("waveform.path.ecg")
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("PHMNOOP").font(.system(size: 22, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("PHMNOOP").font(.system(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         Text(verbatim: "v\(version) · build \(build)").font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     Spacer()

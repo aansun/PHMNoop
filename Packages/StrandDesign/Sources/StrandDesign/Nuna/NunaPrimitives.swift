@@ -39,7 +39,7 @@ public struct NunaButtonStyle: ButtonStyle {
     }
     private var background: Color {
         switch kind {
-        case .primary: return NunaPalette.textPrimary
+        case .primary: return NunaPalette.accent
         case .ghost: return NunaPalette.glassStrong
         case .destructive: return NunaPalette.alert.opacity(0.14)
         }
@@ -47,7 +47,7 @@ public struct NunaButtonStyle: ButtonStyle {
     private var border: Color {
         switch kind {
         case .primary: return .clear
-        case .ghost: return Color.white.opacity(0.12)
+        case .ghost: return NunaPalette.ink.opacity(0.12)
         case .destructive: return NunaPalette.alert.opacity(0.45)
         }
     }
@@ -76,7 +76,7 @@ public struct NunaIconButton: View {
                 .font(.system(size: 16, weight: .bold))
                 .foregroundStyle(filled ? NunaPalette.onAccent : NunaPalette.textPrimary)
                 .frame(width: 44, height: 44)
-                .background(filled ? NunaPalette.textPrimary : NunaPalette.glassStrong, in: Circle())
+                .background(filled ? NunaPalette.accent : NunaPalette.glassStrong, in: Circle())
                 .overlay(Circle().strokeBorder(NunaPalette.hairline, lineWidth: filled ? 0 : 1))
         }
         .buttonStyle(.plain)
@@ -97,8 +97,8 @@ public struct NunaFAB: View {
                 .font(.system(size: 24, weight: .bold))
                 .foregroundStyle(NunaPalette.onAccent)
                 .frame(width: 58, height: 58)
-                .background(NunaPalette.textPrimary, in: Circle())
-                .shadow(color: .black.opacity(0.5), radius: 14, y: 8)
+                .background(NunaPalette.accent, in: Circle())
+                .shadow(color: NunaPalette.shade.opacity(0.5), radius: 14, y: 8)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
@@ -170,7 +170,7 @@ public struct NunaIconTile: View {
             // Icons are neutral by design: colour is kept for scores and status, never for symbols.
             .foregroundStyle(NunaPalette.textPrimary)
             .frame(width: 40, height: 40)
-            .background(Color.white.opacity(0.08),
+            .background(NunaPalette.ink.opacity(0.08),
                         in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
             .accessibilityHidden(true)
     }
@@ -309,7 +309,7 @@ public struct NunaAddCard: View {
             .foregroundStyle(NunaPalette.textPrimary)
             .frame(maxWidth: .infinity, minHeight: 58)
             .overlay(RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous)
-                .strokeBorder(Color.white.opacity(0.22), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5])))
+                .strokeBorder(NunaPalette.ink.opacity(0.22), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5])))
         }
         .buttonStyle(.plain)
     }
@@ -361,7 +361,7 @@ public struct NunaTabBar: View {
         .padding(.horizontal, 8)
         .frame(height: 72)
         .background(Color(hex: "#14181D"), in: Capsule())
-        .shadow(color: .black.opacity(0.45), radius: 12, y: 4)
+        .shadow(color: NunaPalette.shade.opacity(0.45), radius: 12, y: 4)
         .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
         .padding(.horizontal, 14)
         .padding(.bottom, 6)

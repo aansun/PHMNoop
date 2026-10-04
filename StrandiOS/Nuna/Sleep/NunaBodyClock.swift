@@ -40,11 +40,11 @@ struct NunaBodyClockDial: View {
                 return CGPoint(x: c.x + r * scale * CGFloat(cos(a)), y: c.y + r * scale * CGFloat(sin(a)))
             }
             ctx.stroke(Path(ellipseIn: CGRect(x: c.x - 100 * scale, y: c.y - 100 * scale, width: 200 * scale, height: 200 * scale)),
-                       with: .color(.white.opacity(0.09)), lineWidth: 1.5)
+                       with: .color(NunaPalette.ink.opacity(0.09)), lineWidth: 1.5)
             for h in 0..<24 {
                 var p = Path()
                 p.move(to: point(Double(h), 100)); p.addLine(to: point(Double(h), h % 6 == 0 ? 94 : 97))
-                ctx.stroke(p, with: .color(.white.opacity(h % 6 == 0 ? 0.35 : 0.14)), lineWidth: 1.5)
+                ctx.stroke(p, with: .color(NunaPalette.ink.opacity(h % 6 == 0 ? 0.35 : 0.14)), lineWidth: 1.5)
             }
             for (h, t) in [(0.0, "00"), (6.0, "06"), (12.0, "12"), (18.0, "18")] {
                 ctx.draw(Text(verbatim: t).font(.system(size: 11, weight: .bold)).foregroundColor(NunaPalette.textSecondary),
@@ -63,7 +63,7 @@ struct NunaBodyClockDial: View {
             let m = point(tempMin, 88)
             let dot = Path(ellipseIn: CGRect(x: m.x - 6 * scale, y: m.y - 6 * scale, width: 12 * scale, height: 12 * scale))
             ctx.fill(dot, with: .color(NunaPalette.canvas))
-            ctx.stroke(dot, with: .color(.white), lineWidth: 2.5)
+            ctx.stroke(dot, with: .color(NunaPalette.ink), lineWidth: 2.5)
         }
         .frame(width: 248, height: 248)
         .accessibilityHidden(true)
@@ -96,7 +96,7 @@ struct NunaRhythmCurve: View {
             }
             for h in [6.0, 12.0, 18.0] {
                 var g = Path(); g.move(to: CGPoint(x: x(h), y: 4)); g.addLine(to: CGPoint(x: x(h), y: size.height - 4))
-                ctx.stroke(g, with: .color(.white.opacity(0.07)), lineWidth: 1)
+                ctx.stroke(g, with: .color(NunaPalette.ink.opacity(0.07)), lineWidth: 1)
             }
             var p = Path()
             for i in 0...96 {
@@ -110,7 +110,7 @@ struct NunaRhythmCurve: View {
                 let r = Path(ellipseIn: CGRect(x: c.x - 5, y: c.y - 5, width: 10, height: 10))
                 ctx.fill(r, with: .color(fill)); ctx.stroke(r, with: .color(stroke), lineWidth: 2.5)
             }
-            marker(tempMin, fill: NunaPalette.canvas, stroke: .white)
+            marker(tempMin, fill: NunaPalette.canvas, stroke: NunaPalette.ink)
             marker(acrophase, fill: NunaPalette.charge, stroke: NunaPalette.card)
         }
         .frame(height: 96)
@@ -157,7 +157,7 @@ struct NunaBodyClockView: View {
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     Text(verbatim: NunaClockHour.text(est.tempMinHour))
-                        .font(.system(size: 64, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.restText)
+                        .font(.system(size: 64, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.restText)
                         .minimumScaleFactor(0.6).lineLimit(1)
                     Text("lowest point").font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
@@ -203,7 +203,7 @@ struct NunaBodyClockView: View {
                 }
                 HStack(spacing: 6) {
                     ForEach(0..<3, id: \.self) { i in
-                        Capsule().fill(i < (est.confidence == .solid ? 3 : 2) ? NunaPalette.rest : Color.white.opacity(0.09)).frame(height: 8)
+                        Capsule().fill(i < (est.confidence == .solid ? 3 : 2) ? NunaPalette.rest : NunaPalette.ink.opacity(0.09)).frame(height: 8)
                     }
                 }
                 HStack {
@@ -262,7 +262,7 @@ struct NunaBodyClockView: View {
                     VStack(spacing: 2) {
                         Text("Difference").font(.system(size: 10.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         HStack(alignment: .firstTextBaseline, spacing: 3) {
-                            Text(verbatim: (off <= 0 ? "−" : "+") + "\(mins)").font(.system(size: 34, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: (off <= 0 ? "−" : "+") + "\(mins)").font(.system(size: 34, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                             Text("min").font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                         Text(off <= 0 ? "earlier" : "later").font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
@@ -271,7 +271,7 @@ struct NunaBodyClockView: View {
                 HStack(spacing: 14) {
                     legend(AnyView(Text(verbatim: "···").font(.system(size: 14, weight: .black)).foregroundStyle(NunaPalette.restText)), "Ideal window")
                     legend(AnyView(Capsule().fill(NunaPalette.rest).frame(width: 14, height: 6)), "Last night")
-                    legend(AnyView(Circle().strokeBorder(.white, lineWidth: 2.5).frame(width: 10, height: 10)), "Lowest point")
+                    legend(AnyView(Circle().strokeBorder(NunaPalette.ink, lineWidth: 2.5).frame(width: 10, height: 10)), "Lowest point")
                 }
                 Text(verbatim: String(localized: "Your sleep was \(mins) minutes \(off <= 0 ? String(localized: "earlier") : String(localized: "later")) than the ideal window (\(NunaClockHour.text(ideal.bed)) to \(NunaClockHour.text(ideal.wake))). The night has the same length, so this is about timing, not duration."))
                     .font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center)
@@ -325,7 +325,7 @@ struct NunaBodyClockPlanView: View {
                         stepper("minus", enabled: hours > 1) { hours -= 1 }
                         Spacer()
                         VStack(spacing: 2) {
-                            Text(verbatim: (forward ? "+" : "−") + "\(hours)").font(.system(size: 52, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: (forward ? "+" : "−") + "\(hours)").font(.system(size: 52, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                             Text("hours").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                         Spacer()
@@ -359,7 +359,7 @@ struct NunaBodyClockPlanView: View {
                     NunaChip("Light and sleep timing only")
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(verbatim: "\(plan.estimatedDays)").font(.system(size: 40, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: "\(plan.estimatedDays)").font(.system(size: 40, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text("days").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 Text(verbatim: forward
@@ -394,7 +394,7 @@ struct NunaBodyClockPlanView: View {
     private func row(_ icon: String, _ tint: Color?, _ title: LocalizedStringKey, _ value: String) -> some View {
         HStack(spacing: 10) {
             Image(systemName: icon).font(.system(size: 14, weight: .bold)).foregroundStyle(tint ?? NunaPalette.textPrimary)
-                .frame(width: 32, height: 32).background((tint.map { NunaPalette.tint($0) }) ?? Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .frame(width: 32, height: 32).background((tint.map { NunaPalette.tint($0) }) ?? NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             VStack(alignment: .leading, spacing: 1) {
                 Text(title).font(.system(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 Text(verbatim: value).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)

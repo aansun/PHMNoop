@@ -48,7 +48,7 @@ struct NunaAnyaSheet: View {
             .nunaAnyaDestinations()
         }
         .presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(NunaTheme.colorScheme)
         .task(id: context) {
             read = await NunaAnyaReader.read(context: context, repo: repo, profile: profile, scale: UnitPrefs.resolveEffortScale(effortScaleRaw))
             loaded = true
@@ -61,7 +61,7 @@ struct NunaAnyaSheet: View {
         HStack(spacing: 10) {
             NunaIconTile("sparkles")
             VStack(alignment: .leading, spacing: 2) {
-                Text("Anya").font(.system(size: 22, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                Text("Anya").font(.system(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 Text("Anya sees").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }
             Spacer()
@@ -140,7 +140,7 @@ struct NunaAnyaSheet: View {
             ForEach(turns) { t in
                 if t.role == .user {
                     HStack { Spacer(minLength: 40)
-                        Text(verbatim: t.text).font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 14).padding(.vertical, 9).background(NunaPalette.textPrimary, in: RoundedRectangle(cornerRadius: 18, style: .continuous)) }
+                        Text(verbatim: t.text).font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 14).padding(.vertical, 9).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: 18, style: .continuous)) }
                 } else {
                     NunaCard(small: true) { Text(verbatim: t.text).font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading) }
                 }
@@ -155,11 +155,11 @@ struct NunaAnyaSheet: View {
                 .font(.system(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1...3).focused($focused)
                 .padding(.leading, 16).padding(.vertical, 12).disabled(!coach.isConfigured).onSubmit { submit() }
             Button { submit() } label: {
-                Image(systemName: "arrow.up").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(width: 38, height: 38).background(NunaPalette.textPrimary, in: Circle())
+                Image(systemName: "arrow.up").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(width: 38, height: 38).background(NunaPalette.accent, in: Circle())
             }.buttonStyle(.plain).disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty || sending || !coach.isConfigured)
                 .opacity(draft.trimmingCharacters(in: .whitespaces).isEmpty ? 0.4 : 1).padding(.trailing, 5)
         }
-        .frame(minHeight: 48).background(Color.black.opacity(0.28), in: Capsule()).overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+        .frame(minHeight: 48).background(NunaPalette.shade.opacity(0.28), in: Capsule()).overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
     }
 
     // MARK: Actions

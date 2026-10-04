@@ -138,7 +138,7 @@ struct NunaAnyaView: View {
         VStack(spacing: 12) {
             HStack(spacing: 10) {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Anya").font(.system(size: 30, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("Anya").font(.system(size: 30, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     if coach.isConfigured {
                         HStack(spacing: 6) {
                             Image(systemName: coach.provider.nunaIsOnDevice ? "iphone" : "cloud").font(.system(size: 11, weight: .bold))
@@ -215,12 +215,12 @@ struct NunaAnyaView: View {
             NunaCard(highlight: true) {
                 VStack(alignment: .leading, spacing: 14) {
                     NunaIconTile("sparkles")
-                    Text("Connect Anya").font(.system(size: 22, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("Connect Anya").font(.system(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text("Anya uses the AI provider you choose. Your key stays in the Keychain on this iPhone, and nothing is sent until you allow it and ask a question.")
                         .font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                     NavigationLink(value: NunaAnyaRoute.connect) {
                         Text("Choose a provider").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                            .frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.textPrimary, in: Capsule())
+                            .frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.accent, in: Capsule())
                     }.buttonStyle(.plain)
                 }
             }
@@ -246,7 +246,7 @@ struct NunaAnyaView: View {
             VStack(alignment: .leading, spacing: NunaSpacing.section) {
                 VStack(alignment: .leading, spacing: 10) {
                     NunaIconTile("sparkles")
-                    Text("I'm here with you").font(.system(size: 26, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("I'm here with you").font(.system(size: 26, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text("Anya reads your baseline, load and sleep together, then picks the next small step.")
                         .font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }
@@ -258,7 +258,7 @@ struct NunaAnyaView: View {
                             if let d = reading.detail { Text(verbatim: d).font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true) }
                             NavigationLink(value: NunaAnyaRoute.plan) {
                                 Text("Build today's plan").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                                    .padding(.horizontal, 22).frame(height: 44).background(NunaPalette.textPrimary, in: Capsule())
+                                    .padding(.horizontal, 22).frame(height: 44).background(NunaPalette.accent, in: Capsule())
                             }.buttonStyle(.plain)
                         }
                     }
@@ -336,7 +336,7 @@ struct NunaAnyaView: View {
             HStack {
                 Spacer(minLength: 56)
                 Text(verbatim: m.text).font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.onAccent).textSelection(.enabled)
-                    .padding(.horizontal, 16).padding(.vertical, 11).background(NunaPalette.textPrimary, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                    .padding(.horizontal, 16).padding(.vertical, 11).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
             }
         case .assistant:
             VStack(alignment: .leading, spacing: 10) {
@@ -425,11 +425,11 @@ struct NunaAnyaView: View {
                         }.buttonStyle(.plain).accessibilityLabel(Text("Ask out loud"))
                     } else {
                         Button { send(draft) } label: {
-                            Image(systemName: "arrow.up").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(width: 38, height: 38).background(NunaPalette.textPrimary, in: Circle())
+                            Image(systemName: "arrow.up").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(width: 38, height: 38).background(NunaPalette.accent, in: Circle())
                         }.buttonStyle(.plain).accessibilityLabel(Text("Send"))
                     }
                 }
-                .frame(minHeight: 48).background(Color.black.opacity(0.28), in: Capsule()).overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                .frame(minHeight: 48).background(NunaPalette.shade.opacity(0.28), in: Capsule()).overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
             }
         }
         .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 8)
@@ -513,7 +513,7 @@ struct NunaAnyaVoiceSheet: View {
                 Image(systemName: voice.isRecording ? "waveform" : "mic.fill").font(.system(size: 34, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                     .symbolEffect(.variableColor.iterative, isActive: voice.isRecording)
             }
-            Text(voice.isRecording ? "Listening" : "Paused").font(.system(size: 22, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+            Text(voice.isRecording ? "Listening" : "Paused").font(.system(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             ScrollView {
                 Text(verbatim: text.isEmpty ? (voice.statusMessage ?? String(localized: "Say what you want to ask")) : text)
                     .font(.system(size: 20, weight: .semibold)).foregroundStyle(text.isEmpty ? NunaPalette.textMuted : NunaPalette.textPrimary)
@@ -526,13 +526,13 @@ struct NunaAnyaVoiceSheet: View {
                     Text("Cancel").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 54).background(NunaPalette.glassStrong, in: Capsule())
                 }.buttonStyle(.plain)
                 Button { voice.stopTranscribing { final in onFinish(final.isEmpty ? text : final) } } label: {
-                    Text("Send").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54).background(NunaPalette.textPrimary, in: Capsule())
+                    Text("Send").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54).background(NunaPalette.accent, in: Capsule())
                 }.buttonStyle(.plain).disabled(text.isEmpty).opacity(text.isEmpty ? 0.4 : 1)
             }
         }
         .padding(.horizontal, NunaSpacing.screenH).padding(.bottom, 20)
         .background(NunaPalette.canvas.ignoresSafeArea())
-        .presentationDetents([.medium, .large]).preferredColorScheme(.dark)
+        .presentationDetents([.medium, .large]).preferredColorScheme(NunaTheme.colorScheme)
         .task {
             guard !started else { return }
             started = true

@@ -18,13 +18,13 @@ struct NunaHalfGauge: View {
                 p.addArc(center: c, radius: r, startAngle: .degrees(180), endAngle: .degrees(180 + 180 * f), clockwise: false)
                 return p
             }
-            ctx.stroke(arc(1), with: .color(.white.opacity(0.09)), style: StrokeStyle(lineWidth: lw, lineCap: .round))
+            ctx.stroke(arc(1), with: .color(NunaPalette.ink.opacity(0.09)), style: StrokeStyle(lineWidth: lw, lineCap: .round))
             guard let value else { return }
             let f = max(0, min(1, value / maxValue))
             if f > 0 { ctx.stroke(arc(f), with: .color(color), style: StrokeStyle(lineWidth: lw, lineCap: .round)) }
             let a = Angle.degrees(180 + 180 * f).radians
             let m = CGPoint(x: c.x + r * CGFloat(cos(a)), y: c.y + r * CGFloat(sin(a)))
-            ctx.fill(Path(ellipseIn: CGRect(x: m.x - 7, y: m.y - 7, width: 14, height: 14)), with: .color(.white))
+            ctx.fill(Path(ellipseIn: CGRect(x: m.x - 7, y: m.y - 7, width: 14, height: 14)), with: .color(NunaPalette.ink))
         }
         .accessibilityHidden(true)
     }
@@ -43,14 +43,14 @@ struct NunaAgeSlider: View {
             let x: (Double) -> CGFloat = { CGFloat(($0 - lo) / span) * w }
             let fx = min(max(x(fitness), 18), w - 18), ax = min(max(x(age), 30), w - 30)
             ZStack(alignment: .topLeading) {
-                Capsule().fill(Color.white.opacity(0.09)).frame(height: 8).offset(y: 30)
+                Capsule().fill(NunaPalette.ink.opacity(0.09)).frame(height: 8).offset(y: 30)
                 Capsule().fill(NunaPalette.charge.opacity(0.6)).frame(width: abs(x(age) - x(fitness)), height: 8)
                     .offset(x: min(x(age), x(fitness)), y: 30)
                 Text(verbatim: String(format: "%.0f", fitness))
                     .font(.system(size: 12, weight: .heavy)).foregroundStyle(NunaPalette.onAccent)
                     .padding(.horizontal, 8).frame(height: 22).background(NunaPalette.charge, in: Capsule())
                     .position(x: fx, y: 11)
-                Circle().strokeBorder(.white, lineWidth: 3).background(Circle().fill(NunaPalette.card))
+                Circle().strokeBorder(NunaPalette.ink, lineWidth: 3).background(Circle().fill(NunaPalette.card))
                     .frame(width: 16, height: 16).position(x: x(age), y: 34)
                 Text(verbatim: String(localized: "Your age \(Int(age))"))
                     .font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
@@ -89,12 +89,12 @@ struct NunaVitalTile: View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
                     Image(systemName: icon).font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(width: 34, height: 34).background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .frame(width: 34, height: 34).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                     Text(label).font(.system(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 3) {
-                    Text(verbatim: value).font(.system(size: NunaTypeSize.numberM, weight: .bold, design: .rounded))
+                    Text(verbatim: value).font(.system(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design))
                         .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
                     if !unit.isEmpty && value != "–" {
                         Text(verbatim: unit).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
@@ -117,9 +117,9 @@ struct NunaWaistSheet: View {
 
     var body: some View {
         VStack(spacing: 24) {
-            Text("Waist").font(.system(size: NunaTypeSize.h2, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+            Text("Waist").font(.system(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(verbatim: String(format: "%.0f", cm)).font(.system(size: 64, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: String(format: "%.0f", cm)).font(.system(size: 64, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 Text("cm").font(.system(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
             }
             HStack(spacing: 16) {
@@ -131,7 +131,7 @@ struct NunaWaistSheet: View {
             } label: {
                 Text("Save").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
                     .frame(maxWidth: .infinity).frame(height: 52)
-                    .background(NunaPalette.textPrimary, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+                    .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
             }.buttonStyle(.plain)
         }
         .padding(24)

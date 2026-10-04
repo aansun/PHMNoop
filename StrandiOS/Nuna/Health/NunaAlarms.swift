@@ -192,7 +192,7 @@ struct NunaSmartAlarmView: View {
                     NunaChip(behavior.smartAlarmEnabled ? "On" : "Off", color: behavior.smartAlarmEnabled ? NunaPalette.charge : nil)
                 }
                 Text(verbatim: NunaAlarmFormat.clock(behavior.smartAlarmMinutes))
-                    .font(.system(size: 56, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    .font(.system(size: 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 TimelineView(.periodic(from: .now, by: 60)) { tick in
                     VStack(alignment: .leading, spacing: 2) {
                         if let c = countdown(from: tick.date) {
@@ -240,7 +240,7 @@ struct NunaSmartAlarmView: View {
                                         .font(.system(size: 13, weight: .heavy))
                                         .foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textSecondary)
                                         .frame(maxWidth: .infinity).frame(height: 40)
-                                        .background(on ? NunaPalette.textPrimary : NunaPalette.glassStrong, in: Circle())
+                                        .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: Circle())
                                 }
                                 .buttonStyle(.plain)
                                 .accessibilityLabel(Text(verbatim: NunaAlarmFormat.weekdayName(dow)))
@@ -342,7 +342,7 @@ struct NunaWindDownView: View {
     private func timeBlock(_ label: LocalizedStringKey, _ time: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             nunaCaption(label)
-            Text(verbatim: time).font(.system(size: 34, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+            Text(verbatim: time).font(.system(size: 34, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }
     }
 

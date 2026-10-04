@@ -71,7 +71,7 @@ struct ExperienceView: View {
                         Spacer(minLength: 0)
                         Image(systemName: selected ? "checkmark.circle.fill" : "circle")
                             .font(.system(size: 24))
-                            .foregroundStyle(selected ? NunaPalette.charge : Color.white.opacity(0.3))
+                            .foregroundStyle(selected ? NunaPalette.charge : NunaPalette.ink.opacity(0.3))
                     }
                     HStack(alignment: .top, spacing: 16) {
                         ExperiencePreview(mode: mode)
@@ -106,22 +106,22 @@ private struct ExperiencePreview: View {
         }
         .frame(width: 116, height: 220)
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(Color.white.opacity(0.16), lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(NunaPalette.ink.opacity(0.16), lineWidth: 1))
         .accessibilityHidden(true)
     }
 
     private var nuna: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Today").font(.system(size: 11, weight: .heavy)).foregroundStyle(.white)
+            Text("Today").font(.system(size: 11, weight: .heavy)).foregroundStyle(NunaPalette.ink)
             HStack(spacing: 6) {
                 ring(NunaPalette.charge, 0.78); ring(NunaPalette.effort, 0.59); ring(NunaPalette.rest, 0.86)
             }
             .padding(8).frame(maxWidth: .infinity)
-            .background(Color.white.opacity(0.07), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-            RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.white.opacity(0.1)).frame(height: 26)
-            RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color.white.opacity(0.06)).frame(height: 26)
+            .background(NunaPalette.ink.opacity(0.07), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            RoundedRectangle(cornerRadius: 10, style: .continuous).fill(NunaPalette.ink.opacity(0.1)).frame(height: 26)
+            RoundedRectangle(cornerRadius: 10, style: .continuous).fill(NunaPalette.ink.opacity(0.06)).frame(height: 26)
             Spacer(minLength: 0)
-            Capsule().fill(Color.white.opacity(0.08)).frame(height: 24)
+            Capsule().fill(NunaPalette.ink.opacity(0.08)).frame(height: 24)
         }
         .padding(10)
         .background(NunaPalette.canvas)
@@ -129,7 +129,7 @@ private struct ExperiencePreview: View {
 
     private func ring(_ color: Color, _ f: Double) -> some View {
         ZStack {
-            Circle().stroke(Color.white.opacity(0.1), lineWidth: 4)
+            Circle().stroke(NunaPalette.ink.opacity(0.1), lineWidth: 4)
             Circle().trim(from: 0, to: f).stroke(color, style: StrokeStyle(lineWidth: 4, lineCap: .round)).rotationEffect(.degrees(-90))
         }
         .frame(width: 28, height: 28)
@@ -139,11 +139,11 @@ private struct ExperiencePreview: View {
         VStack(spacing: 8) {
             Text("Today").font(.system(size: 10, weight: .heavy)).foregroundStyle(Color(hex: "#9FB4D8")).frame(maxWidth: .infinity, alignment: .leading)
             Circle().fill(Color(hex: "#2E7BE8")).frame(width: 52, height: 52).padding(.top, 6)
-            Text("Recovery 78").font(.system(size: 10, weight: .heavy)).foregroundStyle(.white)
+            Text("Recovery 78").font(.system(size: 10, weight: .heavy)).foregroundStyle(NunaPalette.ink)
             HStack(spacing: 8) {
                 ForEach([Color(hex: "#3AA0FF"), Color(hex: "#5C6BFF"), Color(hex: "#38C6C0")], id: \.self) { Circle().fill($0).frame(width: 24, height: 24) }
             }
-            RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Color.white.opacity(0.08)).frame(height: 24)
+            RoundedRectangle(cornerRadius: 8, style: .continuous).fill(NunaPalette.ink.opacity(0.08)).frame(height: 24)
             Spacer(minLength: 0)
         }
         .padding(10)

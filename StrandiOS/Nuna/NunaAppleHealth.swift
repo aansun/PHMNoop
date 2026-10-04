@@ -54,7 +54,7 @@ struct NunaAppleHealthView: View {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 12) {
                     Image(systemName: "heart.fill").font(.system(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(width: 48, height: 48).background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
+                        .frame(width: 48, height: 48).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Apple Health").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         Text(verbatim: syncCaption).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
@@ -79,7 +79,7 @@ struct NunaAppleHealthView: View {
                             Image(systemName: "arrow.triangle.2.circlepath").font(.system(size: 14, weight: .bold))
                             Text("Sync now").font(.system(size: 15, weight: .bold))
                         }
-                        .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 48).background(NunaPalette.textPrimary, in: Capsule())
+                        .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 48).background(NunaPalette.accent, in: Capsule())
                     }.buttonStyle(.plain).disabled(health.syncing).opacity(health.syncing ? 0.5 : 1)
                 default:
                     Button {
@@ -89,7 +89,7 @@ struct NunaAppleHealthView: View {
                         }
                     } label: {
                         Text("Enable Apple Health").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                            .frame(maxWidth: .infinity).frame(height: 48).background(NunaPalette.textPrimary, in: Capsule())
+                            .frame(maxWidth: .infinity).frame(height: 48).background(NunaPalette.accent, in: Capsule())
                     }.buttonStyle(.plain)
                     if health.auth == .denied {
                         Text("If you don't see the prompt, allow PHMNOOP under Settings › Health › Data Access & Devices.")

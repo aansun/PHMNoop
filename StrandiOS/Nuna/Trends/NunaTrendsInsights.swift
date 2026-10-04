@@ -79,7 +79,7 @@ struct NunaInsightsView: View {
                         HStack(alignment: .firstTextBaseline) {
                             Text(verbatim: e.behavior).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             Spacer()
-                            Text(verbatim: NunaTrendsFormat.signed(e.delta, 0)).font(.system(size: 26, weight: .bold, design: .rounded))
+                            Text(verbatim: NunaTrendsFormat.signed(e.delta, 0)).font(.system(size: 26, weight: .bold, design: NunaType.design))
                                 .foregroundStyle(e.delta >= 0 ? NunaPalette.charge : NunaPalette.warning)
                         }
                         HStack {
@@ -105,7 +105,7 @@ struct NunaInsightsView: View {
                         HStack {
                             Text(verbatim: WorkoutSource.displaySport(cost.sport)).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             Spacer()
-                            Text(verbatim: NunaTrendsFormat.signed(-cost.delta, 0)).font(.system(size: 22, weight: .bold, design: .rounded)).foregroundStyle(cost.delta >= 1 ? NunaPalette.warning : NunaPalette.charge)
+                            Text(verbatim: NunaTrendsFormat.signed(-cost.delta, 0)).font(.system(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(cost.delta >= 1 ? NunaPalette.warning : NunaPalette.charge)
                         }
                         Text(verbatim: cost.sentence()).font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                         if let d = cost.daysToBaseline {
@@ -147,7 +147,7 @@ struct NunaInsightsView: View {
                         if i > 0 { NunaDivider() }
                         NunaListRow(r.title) {
                             VStack(alignment: .trailing, spacing: 2) {
-                                Text(verbatim: NunaTrendsFormat.signed(r.r, 2)).font(.system(size: 17, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                                Text(verbatim: NunaTrendsFormat.signed(r.r, 2)).font(.system(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                                 Text(verbatim: NunaTrendsFormat.strengthLabel(r.r)).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                             }
                         }
@@ -293,7 +293,7 @@ struct NunaCompareView: View {
                     } label: {
                         Text(verbatim: NunaSignals.find(id)?.title ?? id).font(.system(size: 13.5, weight: .bold))
                             .foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 38)
-                            .background(on ? NunaPalette.textPrimary : NunaPalette.glassStrong, in: Capsule())
+                            .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
                             .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: on ? 0 : 1))
                     }.buttonStyle(.plain)
                 }
@@ -424,7 +424,7 @@ struct NunaExploreView: View {
                 Image(systemName: "magnifyingglass").foregroundStyle(NunaPalette.textMuted)
                 TextField("", text: $query, prompt: Text("Search signals").foregroundStyle(NunaPalette.textMuted)).font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
             }
-            .padding(.horizontal, 16).frame(height: 48).background(Color.black.opacity(0.28), in: Capsule()).overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+            .padding(.horizontal, 16).frame(height: 48).background(NunaPalette.shade.opacity(0.28), in: Capsule()).overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     chip("all", String(localized: "All")); chip("fav", String(localized: "Favourites"))
@@ -433,7 +433,7 @@ struct NunaExploreView: View {
             }
             ForEach(groups, id: \.self) { g in
                 VStack(alignment: .leading, spacing: 10) {
-                    Text(LocalizedStringKey(g)).font(.system(size: NunaTypeSize.h2, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(LocalizedStringKey(g)).font(.system(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     NunaCard(small: true, padding: EdgeInsets(top: 2, leading: 16, bottom: 2, trailing: 16)) {
                         VStack(spacing: 0) {
                             let rows = visible.filter { $0.group == g }
@@ -452,7 +452,7 @@ struct NunaExploreView: View {
     private func chip(_ id: String, _ title: String) -> some View {
         Button { filter = id } label: {
             Text(verbatim: title).font(.system(size: 13.5, weight: .bold)).foregroundStyle(filter == id ? NunaPalette.onAccent : NunaPalette.textPrimary)
-                .padding(.horizontal, 14).frame(height: 36).background(filter == id ? NunaPalette.textPrimary : NunaPalette.glassStrong, in: Capsule())
+                .padding(.horizontal, 14).frame(height: 36).background(filter == id ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
         }.buttonStyle(.plain)
     }
 
@@ -486,7 +486,7 @@ struct NunaExploreView: View {
             Spacer(minLength: 8)
             NunaSpark(values: spark).frame(width: 64, height: 30)
             HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text(verbatim: last.map { s.id == "strain" ? NunaTrendsFormat.num($0, 1) : NunaTrendsFormat.num($0, s.digits) } ?? "–").font(.system(size: 17, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: last.map { s.id == "strain" ? NunaTrendsFormat.num($0, 1) : NunaTrendsFormat.num($0, s.digits) } ?? "–").font(.system(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 if last != nil, !s.unit.isEmpty { Text(verbatim: s.unit).font(.system(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
             }
             .frame(minWidth: 70, alignment: .trailing)

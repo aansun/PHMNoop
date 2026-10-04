@@ -111,7 +111,7 @@ struct NunaWorkoutSummaryView: View {
     private func big(_ l: LocalizedStringKey, _ v: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(l).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: v).font(.system(size: 24, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.7).lineLimit(1)
+            Text(verbatim: v).font(.system(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.7).lineLimit(1)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -127,7 +127,7 @@ struct NunaWorkoutSummaryView: View {
         return NunaCard {
             HStack(spacing: 16) {
                 NunaRingGauge(fraction: UnitFormatter.effortValue(dayEffort ?? s, scale: scale) / max, color: NunaPalette.effortText, size: 84, lineWidth: 8) {
-                    Text(verbatim: "+" + UnitFormatter.effortDisplay(s, scale: scale)).font(.system(size: 17, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: "+" + UnitFormatter.effortDisplay(s, scale: scale)).font(.system(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 }
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Effort added").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
@@ -163,7 +163,7 @@ struct NunaWorkoutSummaryView: View {
                                 Circle().fill(colors[i]).frame(width: 9, height: 9)
                                 Text(verbatim: String(localized: "Zone \(i + 1)")).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                                 Spacer()
-                                Text(verbatim: String(localized: "\(Int(mins[i].rounded())) min · \(Int((mins[i] / total * 100).rounded()))%")).font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                                Text(verbatim: String(localized: "\(Int(mins[i].rounded())) min · \(Int((mins[i] / total * 100).rounded()))%")).font(.system(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                             }
                         }
                     }
@@ -220,7 +220,7 @@ struct NunaWorkoutHRCurve: View {
                 Canvas { ctx, size in
                     var grid = Path()
                     for i in 0...2 { let y = size.height * CGFloat(i) / 2; grid.move(to: CGPoint(x: 0, y: y)); grid.addLine(to: CGPoint(x: size.width, y: y)) }
-                    ctx.stroke(grid, with: .color(.white.opacity(0.07)), lineWidth: 1)
+                    ctx.stroke(grid, with: .color(NunaPalette.ink.opacity(0.07)), lineWidth: 1)
                     var p = Path(); var first = true
                     for b in buckets.sorted(by: { $0.ts < $1.ts }) {
                         let pt = CGPoint(x: size.width * CGFloat(Double(b.ts - start) / span), y: size.height * (1 - CGFloat((b.bpm - lo) / max(hi - lo, 1))))
@@ -256,9 +256,9 @@ struct NunaRouteTrace: View {
                 let q = CGPoint(x: ox + (pt.lon - lo0) * k * scale, y: size.height - oy - (pt.lat - la0) * scale)
                 if i == 0 { p.move(to: q) } else { p.addLine(to: q) }
             }
-            ctx.stroke(p, with: .color(.white), style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
+            ctx.stroke(p, with: .color(NunaPalette.ink), style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
         }
-        .background(Color.black.opacity(0.28), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(NunaPalette.shade.opacity(0.28), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .accessibilityHidden(true)
     }
 }

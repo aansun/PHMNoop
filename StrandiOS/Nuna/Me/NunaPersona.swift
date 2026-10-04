@@ -22,7 +22,7 @@ struct NunaStepRow: View {
             }
             Spacer(minLength: 6)
             Button(action: onMinus) { glyph("minus") }.buttonStyle(.plain).disabled(!canDecrement).opacity(canDecrement ? 1 : 0.35)
-            Text(verbatim: value).font(.system(size: 17, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit().frame(minWidth: 64)
+            Text(verbatim: value).font(.system(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit().frame(minWidth: 64)
             Button(action: onPlus) { glyph("plus") }.buttonStyle(.plain)
         }.padding(.vertical, 12)
     }
@@ -168,7 +168,7 @@ struct NunaZonesView: View {
         NunaDetailScreen("Heart-rate zones") {
             NunaCard(small: true) {
                 HStack { Text("Maximum heart rate").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary); Spacer()
-                    Text(verbatim: "\(profile.hrMax) bpm").font(.system(size: 17, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary) }
+                    Text(verbatim: "\(profile.hrMax) bpm").font(.system(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary) }
             }
             NunaCard(small: true) {
                 NunaToggleRow("Your own zones", subtitle: "Set where each zone starts. Turn off to return to percentages", systemImage: "slider.horizontal.3",
@@ -188,7 +188,7 @@ struct NunaZonesView: View {
                                 Text(verbatim: pcts[i] + " " + String(localized: "of maximum")).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                             }
                             Spacer()
-                            Text(verbatim: "\(bpm) bpm").font(.system(size: 17, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: "\(bpm) bpm").font(.system(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         }.padding(.vertical, 14)
                     }
                 }
@@ -232,7 +232,7 @@ struct NunaGoalsView: View {
                         Text(verbatim: String(localized: "Your Effort over the last 7 days was \(UnitFormatter.effortDisplay(w, scale: scale)). A weekly target of \(UnitFormatter.effortDisplay(w * 1.1, scale: scale)) to \(UnitFormatter.effortDisplay(w * 1.2, scale: scale)) is a realistic step up."))
                             .font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                         Button { effort = (w * 1.15).rounded() } label: {
-                            Text("Use it").font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 20).frame(height: 40).background(NunaPalette.textPrimary, in: Capsule())
+                            Text("Use it").font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 20).frame(height: 40).background(NunaPalette.accent, in: Capsule())
                         }.buttonStyle(.plain)
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }

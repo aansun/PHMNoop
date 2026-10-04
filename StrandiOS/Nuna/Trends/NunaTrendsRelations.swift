@@ -96,7 +96,7 @@ struct NunaChargeEffortView: View {
                         Text(verbatim: NunaTrendsFormat.withWeekday(d) + " · " + String(localized: "Effort") + " " + NunaTrendsFormat.num(eSel?.value, 1) + " · Charge " + NunaTrendsFormat.num(cSel?.value) + "%")
                             .font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     }
-                    .padding(12).frame(maxWidth: .infinity, alignment: .leading).background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .padding(12).frame(maxWidth: .infinity, alignment: .leading).background(NunaPalette.shade.opacity(0.22), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
             }
         }
@@ -113,7 +113,7 @@ struct NunaChargeEffortView: View {
                                 Text(names[i]).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                                 Spacer()
                                 Text(verbatim: String(localized: "\(b[i].n) days")).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                                Text(verbatim: b[i].meanOutcome.map { "\(Int($0.rounded()))%" } ?? "–").font(.system(size: 17, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary).frame(width: 52, alignment: .trailing)
+                                Text(verbatim: b[i].meanOutcome.map { "\(Int($0.rounded()))%" } ?? "–").font(.system(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 52, alignment: .trailing)
                             }
                             NunaProgressBar(fraction: (b[i].meanOutcome ?? 0) / 100, color: b[i].meanOutcome.map(nunaChargeColor) ?? NunaPalette.zoneBase)
                         }
@@ -206,7 +206,7 @@ struct NunaChargeRestView: View {
                                 Text(names[i]).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                                 Spacer()
                                 Text(verbatim: String(localized: "\(b[i].n) days")).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                                Text(verbatim: b[i].meanOutcome.map { "\(Int($0.rounded()))%" } ?? "–").font(.system(size: 17, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary).frame(width: 52, alignment: .trailing)
+                                Text(verbatim: b[i].meanOutcome.map { "\(Int($0.rounded()))%" } ?? "–").font(.system(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 52, alignment: .trailing)
                             }
                             NunaProgressBar(fraction: (b[i].meanOutcome ?? 0) / 100, color: b[i].meanOutcome.map(nunaChargeColor) ?? NunaPalette.zoneBase)
                         }

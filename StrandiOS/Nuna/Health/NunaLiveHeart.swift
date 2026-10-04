@@ -45,7 +45,7 @@ struct NunaLiveHRCard: View {
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
                         Image(systemName: "heart.fill").font(.system(size: 20)).foregroundStyle(NunaPalette.textPrimary)
                         Text(verbatim: bigBpm.map(String.init) ?? "–")
-                            .font(.system(size: 52, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                            .font(.system(size: 52, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         Text("bpm").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     Text(subtitle).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
@@ -81,7 +81,7 @@ struct NunaLiveHRCard: View {
     private func stat(_ label: LocalizedStringKey, _ v: Double?) -> some View {
         HStack(spacing: 5) {
             Text(label).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: v.map { String(Int($0.rounded())) } ?? "–").font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+            Text(verbatim: v.map { String(Int($0.rounded())) } ?? "–").font(.system(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }
     }
 }
@@ -99,7 +99,7 @@ struct NunaHRTrace: View {
             for i in 0...2 {
                 var g = Path(); let y = size.height * CGFloat(i) / 2
                 g.move(to: CGPoint(x: 0, y: y)); g.addLine(to: CGPoint(x: size.width, y: y))
-                ctx.stroke(g, with: .color(.white.opacity(0.07)), lineWidth: 1)
+                ctx.stroke(g, with: .color(NunaPalette.ink.opacity(0.07)), lineWidth: 1)
             }
             func pt(_ i: Int) -> CGPoint {
                 CGPoint(x: size.width * CGFloat(i) / CGFloat(values.count - 1),
@@ -109,12 +109,12 @@ struct NunaHRTrace: View {
             for run in runs {
                 if run.count == 1 {
                     let c = pt(run.lowerBound)
-                    ctx.fill(Path(ellipseIn: CGRect(x: c.x - 2.5, y: c.y - 2.5, width: 5, height: 5)), with: .color(.white))
+                    ctx.fill(Path(ellipseIn: CGRect(x: c.x - 2.5, y: c.y - 2.5, width: 5, height: 5)), with: .color(NunaPalette.ink))
                     continue
                 }
                 var p = Path(); p.move(to: pt(run.lowerBound))
                 for i in (run.lowerBound + 1)...run.upperBound { p.addLine(to: pt(i)) }
-                ctx.stroke(p, with: .color(.white), style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
+                ctx.stroke(p, with: .color(NunaPalette.ink), style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
             }
         }
         .accessibilityHidden(true)
@@ -178,7 +178,7 @@ struct NunaDeepTimelineView: View {
                         Text(verbatim: m.title).font(.system(size: 13.5, weight: .bold))
                             .foregroundStyle(metric == m ? NunaPalette.onAccent : NunaPalette.textPrimary)
                             .padding(.horizontal, 14).frame(height: 38)
-                            .background(metric == m ? NunaPalette.textPrimary : NunaPalette.glassStrong, in: Capsule())
+                            .background(metric == m ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
                             .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: metric == m ? 0 : 1))
                     }.buttonStyle(.plain)
                 }
@@ -233,7 +233,7 @@ struct NunaDeepTimelineView: View {
                 }
                 if let last = displayPoints.last {
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(verbatim: format(last.value)).font(.system(size: 34, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: format(last.value)).font(.system(size: 34, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         Text(verbatim: unit).font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                 }
@@ -248,7 +248,7 @@ struct NunaDeepTimelineView: View {
                         .frame(maxWidth: .infinity, minHeight: 260)
                     } else {
                         OverviewHRChart(points: displayPoints, sleep: sleepSpan, workouts: workoutSpans,
-                                        gradient: Gradient(colors: [Color.white.opacity(0.55), Color.white]),
+                                        gradient: Gradient(colors: [NunaPalette.ink.opacity(0.55), Color.white]),
                                         valueRange: range(displayPoints), xRange: dayBounds, height: 260, touchScrub: true,
                                         zoomDomain: $zoomDomain, zoomBounds: panBounds,
                                         valueFormat: { format($0) },

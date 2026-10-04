@@ -70,7 +70,7 @@ struct NunaUnitsView: View {
     private func preview(_ l: LocalizedStringKey, _ v: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(l).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: v).font(.system(size: 19, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+            Text(verbatim: v).font(.system(size: 19, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 }
@@ -215,7 +215,7 @@ struct NunaPrivacyView: View {
             NunaCard(highlight: true) {
                 VStack(alignment: .leading, spacing: 8) {
                     Image(systemName: "lock.shield").font(.system(size: 22, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("Your data stays on this iPhone").font(.system(size: 20, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("Your data stays on this iPhone").font(.system(size: 20, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text("There is no account and no server. Scores are computed on the device from the strap and Apple Health.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }

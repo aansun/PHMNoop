@@ -163,7 +163,7 @@ struct NunaAnyaInstructionsView: View {
             if t.isEmpty { UserDefaults.standard.removeObject(forKey: AICoachEngine.extraInstructionsKey) } else { UserDefaults.standard.set(t, forKey: AICoachEngine.extraInstructionsKey) }
             dismiss()
         } label: {
-            Text("Save").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 20).frame(height: 44).background(NunaPalette.textPrimary, in: Capsule())
+            Text("Save").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 20).frame(height: 44).background(NunaPalette.accent, in: Capsule())
         }.buttonStyle(.plain)
     }
 
@@ -263,13 +263,13 @@ struct NunaAnyaHistoryView: View {
                 Image(systemName: "magnifyingglass").foregroundStyle(NunaPalette.textMuted)
                 TextField("", text: $query, prompt: Text("Search conversations").foregroundStyle(NunaPalette.textMuted)).font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
             }
-            .padding(.horizontal, 16).frame(height: 48).background(Color.black.opacity(0.28), in: Capsule()).overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+            .padding(.horizontal, 16).frame(height: 48).background(NunaPalette.shade.opacity(0.28), in: Capsule()).overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
             if items.isEmpty {
                 NunaCard(small: true) { Text(coach.conversationHistory.isEmpty ? "Finished conversations are kept here, on this iPhone." : "No conversation matches.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading) }
             }
             ForEach(groups(items), id: \.title) { g in
                 VStack(alignment: .leading, spacing: 10) {
-                    Text(verbatim: g.title).font(.system(size: 17, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: g.title).font(.system(size: 17, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                         VStack(spacing: 0) {
                             ForEach(Array(g.items.enumerated()), id: \.element.id) { i, item in

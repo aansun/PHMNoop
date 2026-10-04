@@ -40,7 +40,7 @@ struct NunaHypnogramStrip: View {
             let laneH = size.height / CGFloat(Self.lanes.count)
             for (i, lane) in Self.lanes.enumerated() {
                 let band = CGRect(x: 0, y: CGFloat(i) * laneH + 2, width: size.width, height: laneH - 4)
-                ctx.fill(Path(roundedRect: band, cornerRadius: 4), with: .color(Color.white.opacity(0.04)))
+                ctx.fill(Path(roundedRect: band, cornerRadius: 4), with: .color(NunaPalette.ink.opacity(0.04)))
                 for iv in intervals where iv.stage == lane {
                     let x = size.width * CGFloat(iv.start / total)
                     let w = max(2, size.width * CGFloat((iv.end - iv.start) / total))
@@ -66,7 +66,7 @@ struct NunaMotionStrip: View {
         Canvas { ctx, size in
             var base = Path()
             base.move(to: CGPoint(x: 0, y: size.height - 0.5)); base.addLine(to: CGPoint(x: size.width, y: size.height - 0.5))
-            ctx.stroke(base, with: .color(.white.opacity(0.12)), lineWidth: 1)
+            ctx.stroke(base, with: .color(NunaPalette.ink.opacity(0.12)), lineWidth: 1)
             for e in epochs where e.v > NunaMovementSummary.moveThreshold {
                 let x = size.width * CGFloat(min(max(e.t / max(total, 1), 0), 1))
                 let h = max(3, (size.height - 2) * CGFloat((e.v / peak).squareRoot()))
@@ -92,7 +92,7 @@ struct NunaMovementStats: View {
                     Text("Restlessness").font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textSecondary).lineLimit(2).fixedSize(horizontal: false, vertical: true)
                     Text(m.level == .low ? "Low" : (m.level == .medium ? "Medium" : "High"))
-                        .font(.system(size: 21, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                        .font(.system(size: 21, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -106,7 +106,7 @@ struct NunaMovementStats: View {
             Text(label).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase)
                 .foregroundStyle(NunaPalette.textSecondary).lineLimit(2).fixedSize(horizontal: false, vertical: true)
             HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text(verbatim: value).font(.system(size: 21, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: value).font(.system(size: 21, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 Text(verbatim: unit).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
             }
         }
@@ -181,7 +181,7 @@ struct NunaProgressBar: View {
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
-                Capsule().fill(Color.white.opacity(0.09))
+                Capsule().fill(NunaPalette.ink.opacity(0.09))
                 Capsule().fill(color).frame(width: max(6, geo.size.width * CGFloat(min(max(fraction, 0), 1))))
             }
         }
@@ -205,11 +205,11 @@ struct NunaRangeBar: View {
             let span = max(hi - lo, 0.0001)
             let x: (Double) -> CGFloat = { geo.size.width * CGFloat(min(max(($0 - lo) / span, 0), 1)) }
             ZStack(alignment: .leading) {
-                Capsule().fill(Color.white.opacity(0.09))
+                Capsule().fill(NunaPalette.ink.opacity(0.09))
                 if let value, !showsMarkerDot { Capsule().fill(color).frame(width: max(6, x(value))) }
-                if let mean { Rectangle().fill(Color.white.opacity(0.7)).frame(width: 2, height: 16).offset(x: x(mean) - 1) }
+                if let mean { Rectangle().fill(NunaPalette.ink.opacity(0.7)).frame(width: 2, height: 16).offset(x: x(mean) - 1) }
                 if let value, showsMarkerDot {
-                    Circle().fill(.white).frame(width: 14, height: 14).offset(x: min(max(x(value) - 7, 0), geo.size.width - 14))
+                    Circle().fill(NunaPalette.ink).frame(width: 14, height: 14).offset(x: min(max(x(value) - 7, 0), geo.size.width - 14))
                 }
             }
             .frame(height: 16)
@@ -232,7 +232,7 @@ struct NunaStatTile: View {
                 Text(label).font(.system(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textSecondary)
                 HStack(alignment: .firstTextBaseline, spacing: 3) {
-                    Text(verbatim: value).font(.system(size: NunaTypeSize.numberM, weight: .bold, design: .rounded))
+                    Text(verbatim: value).font(.system(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design))
                         .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
                     if !unit.isEmpty {
                         Text(verbatim: unit).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
@@ -274,7 +274,7 @@ struct NunaNightPicker: View {
         Button(action: action) {
             Image(systemName: symbol).font(.system(size: 15, weight: .bold))
                 .foregroundStyle(enabled ? NunaPalette.textPrimary : NunaPalette.textMuted.opacity(0.4))
-                .frame(width: 44, height: 44).background(Color.white.opacity(0.08), in: Circle())
+                .frame(width: 44, height: 44).background(NunaPalette.ink.opacity(0.08), in: Circle())
         }
         .disabled(!enabled)
     }

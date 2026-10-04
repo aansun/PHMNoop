@@ -73,7 +73,7 @@ struct NunaLiveHeartView: View {
                     Text("Start a session with heart rate").font(.system(size: 16, weight: .bold))
                 }
                 .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56)
-                .background(NunaPalette.textPrimary, in: Capsule())
+                .background(NunaPalette.accent, in: Capsule())
             }.buttonStyle(.plain)
         }
         .task(id: repo.refreshSeq) { await loadDay() }
@@ -99,7 +99,7 @@ struct NunaLiveHeartView: View {
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     Image(systemName: "heart.fill").font(.system(size: 26)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(verbatim: currentBpm.map(String.init) ?? "–").font(.system(size: 76, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: currentBpm.map(String.init) ?? "–").font(.system(size: 76, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text("bpm").font(.system(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 HStack {
@@ -170,7 +170,7 @@ struct NunaLiveHeartView: View {
             Circle().fill(color).frame(width: 9, height: 9)
             title.font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
             Spacer()
-            Text(verbatim: dur(seconds)).font(.system(size: 17, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+            Text(verbatim: dur(seconds)).font(.system(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }
     }
 
@@ -256,7 +256,7 @@ struct NunaOxygenView: View {
                     if let latest { NunaChip(latest >= 95 ? "Normal" : "Low", color: latest >= 95 ? NunaPalette.charge : NunaPalette.warning) }
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(verbatim: nunaFmt(latest)).font(.system(size: 68, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: nunaFmt(latest)).font(.system(size: 68, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text("%").font(.system(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 if vals.count >= 2 {
@@ -307,10 +307,10 @@ struct NunaOxygenView: View {
                     if let chip { NunaChip(chip.0, color: chip.1) }
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(verbatim: nunaFmt(latest, 1)).font(.system(size: 56, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: nunaFmt(latest, 1)).font(.system(size: 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text("/min").font(.system(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
-                NunaLine2Chart(points: respS.readings(14), color: .white, decimals: 1, baseline: b?.mean, height: 150)
+                NunaLine2Chart(points: respS.readings(14), color: NunaPalette.ink, decimals: 1, baseline: b?.mean, height: 150)
                 if let b {
                     Text(verbatim: String(localized: "Your personal range \(nunaFmt(b.lo, 1)) – \(nunaFmt(b.hi, 1)). Spikes in breathing often appear before illness."))
                         .font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
@@ -339,7 +339,7 @@ struct NunaSkinTempView: View {
                         if let latest { NunaChip(abs(latest) < 0.5 ? "Small deviation" : "Larger deviation", color: abs(latest) < 0.5 ? NunaPalette.charge : NunaPalette.warning) }
                     }
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(verbatim: latest.map { nunaSigned($0) } ?? "–").font(.system(size: 68, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: latest.map { nunaSigned($0) } ?? "–").font(.system(size: 68, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         if latest != nil { Text("°C").font(.system(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                     }
                     Text("Compared with your personal baseline").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
@@ -419,7 +419,7 @@ struct NunaDivergingBars: View {
                     }
                 }
                 Path { p in p.move(to: CGPoint(x: 0, y: mid)); p.addLine(to: CGPoint(x: geo.size.width, y: mid)) }
-                    .stroke(Color.white.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                    .stroke(NunaPalette.ink.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
             }
         }
         .frame(height: 120)
@@ -434,9 +434,9 @@ struct NunaDeviationScale: View {
         GeometryReader { geo in
             let f = CGFloat(min(max((value + 1) / 2, 0), 1))
             ZStack(alignment: .leading) {
-                NunaProportionBar(parts: [(3, NunaPalette.zoneBase), (4, Color.white.opacity(0.2)), (3, NunaPalette.zoneBase)], height: 12)
-                Capsule().fill(.white).frame(width: 6, height: 20)
-                    .shadow(color: .white.opacity(0.2), radius: 3)
+                NunaProportionBar(parts: [(3, NunaPalette.zoneBase), (4, NunaPalette.ink.opacity(0.2)), (3, NunaPalette.zoneBase)], height: 12)
+                Capsule().fill(NunaPalette.ink).frame(width: 6, height: 20)
+                    .shadow(color: NunaPalette.ink.opacity(0.2), radius: 3)
                     .offset(x: min(max(geo.size.width * f - 3, 0), geo.size.width - 6))
             }
         }

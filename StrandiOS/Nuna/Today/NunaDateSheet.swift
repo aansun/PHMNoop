@@ -34,7 +34,7 @@ struct NunaDateSheet: View {
         }
         .scrollIndicators(.hidden)
         .background(NunaPalette.canvas.ignoresSafeArea())
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(NunaTheme.colorScheme)
         .onAppear {
             picked = cal.date(byAdding: .day, value: -dayOffset, to: today) ?? today
             month = picked
@@ -117,12 +117,12 @@ struct NunaDateSheet: View {
             Button { if !isFuture { picked = date } } label: {
                 VStack(spacing: 3) {
                     Text(verbatim: "\(cal.component(.day, from: date))")
-                        .font(.system(size: 15, weight: row != nil ? .heavy : .semibold, design: .rounded))
+                        .font(.system(size: 15, weight: row != nil ? .heavy : .semibold, design: NunaType.design))
                         .foregroundStyle(isPicked ? NunaPalette.onAccent : (isFuture ? NunaPalette.textMuted.opacity(0.5) : (row != nil ? NunaPalette.textPrimary : NunaPalette.textSecondary)))
                     Circle().fill(dot(row, isPicked)).frame(width: 6, height: 6)
                 }
                 .frame(width: 42, height: 46)
-                .background(isPicked ? NunaPalette.textPrimary : Color.clear, in: RoundedRectangle(cornerRadius: 21, style: .continuous))
+                .background(isPicked ? NunaPalette.accent : Color.clear, in: RoundedRectangle(cornerRadius: 21, style: .continuous))
             }
             .buttonStyle(.plain).disabled(isFuture)
         } else {
@@ -190,7 +190,7 @@ struct NunaDateSheet: View {
 
     private func score(_ label: LocalizedStringKey, _ value: String?, _ color: Color) -> some View {
         VStack(spacing: 4) {
-            Text(verbatim: value ?? "–").font(.system(size: 26, weight: .bold, design: .rounded)).foregroundStyle(value == nil ? NunaPalette.textMuted : color)
+            Text(verbatim: value ?? "–").font(.system(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(value == nil ? NunaPalette.textMuted : color)
             Text(label).font(.system(size: 11.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
         }
         .frame(maxWidth: .infinity)
