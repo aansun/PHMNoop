@@ -1,6 +1,9 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "From Anya's plan": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Dari rencana Anya"}}
+    } },
     "Logging ahead for tomorrow: today's activities inform tomorrow's recovery. Tomorrow's answers line up with tomorrow's morning.": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Mencatat untuk besok: aktivitas hari ini memengaruhi pemulihan besok. Jawaban besok sejajar dengan pagi besok."}}
     } },
@@ -145631,7 +145634,7 @@
     },
     "Running": {
       "localizations": {
-        "id": {"stringUnit": {"state": "translated", "value": "Berjalan"}},
+        "id": {"stringUnit": {"state": "translated", "value": "Berlari"}},
         "de": {
           "stringUnit": {
             "state": "translated",

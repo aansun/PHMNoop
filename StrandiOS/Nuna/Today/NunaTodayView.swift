@@ -51,6 +51,8 @@ struct NunaTodayView: View {
     @State private var showMood = false
     @AppStorage("nuna.keyMetricsLayout") private var metricsLayoutRaw = NunaMetricsLayout.cards.rawValue
     @State private var showAddCard = false
+    /// Today's suggested session, the same one the plan screen shows. Nil until Charge exists.
+    @State private var dayPlan: NunaDayPlanResult?
     @State private var addAfter: TodaySection?
     @State private var customizeDestination: TodayCustomizationDestination = .today
 
@@ -100,7 +102,10 @@ struct NunaTodayView: View {
         }
         .background(NunaPalette.canvas.ignoresSafeArea())
         .nunaTodayDestinations()
-        .task(id: "\(repo.refreshSeq)-\(model.dayOffset)") { await model.load(repo: repo, profile: profile) }
+        .task(id: "\(repo.refreshSeq)-\(model.dayOffset)") {
+            await model.load(repo: repo, profile: profile)
+            dayPlan = model.isToday ? await NunaDayPlanResult.load(repo: repo, profile: profile) : nil
+        }
         .sheet(isPresented: $showCustomize) {
             NunaTodayCustomizeSheet(
                 initialDestination: customizeDestination,
@@ -508,8 +513,11 @@ struct NunaTodayView: View {
             }
         case .synthesis:
             if coachEnabled && model.isToday {
-                NunaAnyaCard(verbatim: synthLine, buttonTitle: "Start",
-                             onButton: { router.requestedDestination = .activeWorkout }) { showCoach = true }
+                NunaAnyaCard(verbatim: dayPlan?.title ?? synthLine, buttonTitle: "Start",
+                             onButton: {
+                                 if let r = dayPlan { router.plannedSession = .init(title: r.title, minutes: r.plan.totalMinutes, zone: r.plan.mainZone) }
+                                 router.requestedDestination = .activeWorkout
+                             }) { showCoach = true }
             }
         case .recoveryVitals:
             if model.stress != nil || model.stressCurve != nil {

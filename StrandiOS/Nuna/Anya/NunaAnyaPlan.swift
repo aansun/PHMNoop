@@ -6,6 +6,48 @@ import WhoopStore
 
 /// Today's plan (AnyaPlan.dc): a suggested session built on this iPhone from Charge, yesterday's Effort, the load band and
 /// the wearer's own heart-rate zones. It needs no provider. Asking Anya to change it hands the plan to the conversation.
+/// Today's suggested session worked out from the stored numbers. Shared by the plan screen and the Anya card on Today,
+/// so both always show the same session.
+struct NunaDayPlanResult {
+    var plan: DayPlan.Plan
+    var charge: Int
+    var yesterdayEffort: Double?
+    var band: TrendInsights.LoadBand?
+
+    var title: String {
+        switch plan.kind {
+        case .recovery: return String(localized: "Easy movement, \(plan.totalMinutes) min")
+        case .easy: return String(localized: "Easy zone 2, \(plan.totalMinutes) min")
+        case .steady: return String(localized: "Steady zone 2, \(plan.totalMinutes) min")
+        case .quality: return String(localized: "Tempo session, \(plan.totalMinutes) min")
+        }
+    }
+
+    @MainActor static func load(repo: Repository, profile: ProfileStore) async -> NunaDayPlanResult? {
+        let m = NunaTodayModel()
+        await m.load(repo: repo, profile: profile)
+        guard let c = m.charge.pct else { return nil }
+        let days = repo.days
+        let y = days.dropLast().last?.strain
+        let efforts = days.compactMap(\.strain).filter { $0 > 0 }.suffix(30).sorted()
+        let usual = efforts.isEmpty ? nil : efforts[efforts.count / 2]
+        // Six 7-day blocks of daily Effort for the load band.
+        let blocks: [Double] = (0..<6).reversed().map { w in
+            let slice = days.suffix(7 * (w + 1)).prefix(7)
+            return slice.compactMap(\.strain).reduce(0, +)
+        }
+        let b = TrendInsights.loadRatio(blocks: blocks).map(TrendInsights.loadBand)
+        let rows = await repo.workoutRows()
+        let from = Int(Date().addingTimeInterval(-60 * 86_400).timeIntervalSince1970)
+        let perMinute = rows.filter { $0.startTs >= from }.compactMap { r -> Double? in
+            guard let s = r.strain, s > 0, let d = r.durationS ?? Optional(Double(r.endTs - r.startTs)), d > 300 else { return nil }
+            return s / (d / 60)
+        }
+        let plan = DayPlan.plan(charge: c, yesterdayEffort: y, usualEffort: usual, loadBand: b, effortPerMinute: perMinute)
+        return NunaDayPlanResult(plan: plan, charge: Int(c.rounded()), yesterdayEffort: y, band: b)
+    }
+}
+
 struct NunaAnyaPlanView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
@@ -135,7 +177,10 @@ struct NunaAnyaPlanView: View {
 
     private func actions(_ plan: DayPlan.Plan, _ charge: Int) -> some View {
         VStack(spacing: 12) {
-            Button { router.requestedDestination = .activeWorkout } label: {
+            Button {
+                router.plannedSession = .init(title: NunaDayPlanResult(plan: plan, charge: charge, yesterdayEffort: nil, band: nil).title, minutes: plan.totalMinutes, zone: plan.mainZone)
+                router.requestedDestination = .activeWorkout
+            } label: {
                 Text("Start session").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: Capsule())
             }.buttonStyle(.plain)
             if coach.isConfigured {
@@ -216,28 +261,9 @@ struct NunaAnyaPlanView: View {
     // MARK: Data
 
     private func load() async {
-        let m = NunaTodayModel()
-        await m.load(repo: repo, profile: profile)
-        guard let c = m.charge.pct else { loaded = true; plan = nil; return }
-        let days = repo.days
-        let y = days.dropLast().last?.strain
-        let efforts = days.compactMap(\.strain).filter { $0 > 0 }.suffix(30).sorted()
-        let usual = efforts.isEmpty ? nil : efforts[efforts.count / 2]
-        // Six 7-day blocks of daily Effort for the load band.
-        let blocks: [Double] = (0..<6).reversed().map { w in
-            let slice = days.suffix(7 * (w + 1)).prefix(7)
-            return slice.compactMap(\.strain).reduce(0, +)
-        }
-        let b = TrendInsights.loadRatio(blocks: blocks).map(TrendInsights.loadBand)
-        let rows = await repo.workoutRows()
-        let from = Int(Date().addingTimeInterval(-60 * 86_400).timeIntervalSince1970)
-        let perMinute = rows.filter { $0.startTs >= from }.compactMap { r -> Double? in
-            guard let s = r.strain, s > 0, let d = r.durationS ?? Optional(Double(r.endTs - r.startTs)), d > 300 else { return nil }
-            return s / (d / 60)
-        }
-        charge = Int(c.rounded()); yesterdayEffort = y; band = b
-        plan = DayPlan.plan(charge: c, yesterdayEffort: y, usualEffort: usual, loadBand: b, effortPerMinute: perMinute)
-        loaded = true
+        defer { loaded = true }
+        guard let r = await NunaDayPlanResult.load(repo: repo, profile: profile) else { plan = nil; return }
+        charge = r.charge; yesterdayEffort = r.yesterdayEffort; band = r.band; plan = r.plan
     }
 }
 #endif
