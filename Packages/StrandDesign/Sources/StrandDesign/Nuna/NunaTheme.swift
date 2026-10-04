@@ -14,36 +14,109 @@ import SwiftUI
 //    (WHOOP typography preset), not from web fonts used in the mockups.
 
 public enum NunaPalette {
+    // Every surface and text token is adaptive: the first hex is the light value, the second the dark one. The dark
+    // values are the Nuna originals; the light ones keep the same hierarchy on a white-grey canvas.
+
     // Surfaces
-    public static let canvas       = Color(hex: "#0A0D10")
-    public static let card         = Color(hex: "#14181D")
-    public static let cardHighlight = Color(hex: "#191F25")
-    public static let glass        = Color.white.opacity(0.05)
-    public static let glassStrong  = Color.white.opacity(0.09)
-    public static let hairline     = Color.white.opacity(0.10)
-    public static let hairlineSoft = Color.white.opacity(0.08)
+    public static let canvas        = Color(light: "#F2F4F6", dark: "#0A0D10")
+    public static let card          = Color(light: "#FFFFFF", dark: "#14181D")
+    public static let cardHighlight = Color(light: "#E9EEF2", dark: "#191F25")
+    public static let glass         = Color(light: "#0A0D100D", dark: "#FFFFFF0D")
+    public static let glassStrong   = Color(light: "#0A0D1014", dark: "#FFFFFF17")
+    public static let hairline      = Color(light: "#0A0D1020", dark: "#FFFFFF1A")
+    public static let hairlineSoft  = Color(light: "#0A0D1016", dark: "#FFFFFF14")
+
+    /// The foreground ink of the theme (white on dark, near-black on light) and the matching shade for wells.
+    /// Use `.opacity` on them wherever a translucent overlay of the text colour is wanted.
+    public static let ink   = Color(light: "#0A0D10", dark: "#FFFFFF")
+    public static let shade = Color(light: "#0A0D10", dark: "#000000")
 
     // Text
-    public static let textPrimary   = Color(hex: "#FFFFFF")
-    public static let textSecondary = Color(hex: "#9AA4AC")
-    public static let textMuted     = Color(hex: "#6B7177")
-    public static let onAccent      = Color(hex: "#000000")
+    public static let textPrimary   = Color(light: "#0A0D10", dark: "#FFFFFF")
+    public static let textSecondary = Color(light: "#4C565E", dark: "#9AA4AC")
+    public static let textMuted     = Color(light: "#7A848C", dark: "#6B7177")
 
     // Meaning colours (fills) and their readable text variants
-    public static let charge        = Color(hex: "#16EC06")   // ok, Charge, active toggles
-    public static let effort        = Color(hex: "#0093E7")
-    public static let effortText    = Color(hex: "#38AEF5")
-    public static let rest          = Color(hex: "#7BA1BB")
-    public static let restText      = Color(hex: "#9DBBD0")
-    public static let restLight     = Color(hex: "#B8CCE0")   // REM
-    public static let restDeep      = Color(hex: "#4A7090")   // deep sleep
-    public static let warning       = Color(hex: "#FFDE00")
-    public static let alert         = Color(hex: "#FF0026")
-    public static let alertText     = Color(hex: "#FF5468")
-    public static let zoneBase      = Color(hex: "#3B4258")   // zone 1 / awake track
+    public static let charge        = Color(light: "#0CB300", dark: "#16EC06")   // ok, Charge, active toggles
+    public static let effort        = Color(light: "#0084D1", dark: "#0093E7")
+    public static let effortText    = Color(light: "#0070B5", dark: "#38AEF5")
+    public static let rest          = Color(light: "#5F8AA6", dark: "#7BA1BB")
+    public static let restText      = Color(light: "#43698A", dark: "#9DBBD0")
+    public static let restLight     = Color(light: "#8FA9C4", dark: "#B8CCE0")   // REM
+    public static let restDeep      = Color(light: "#3C5F7D", dark: "#4A7090")   // deep sleep
+    public static let warning       = Color(light: "#C99A00", dark: "#FFDE00")
+    public static let alert         = Color(light: "#E0001F", dark: "#FF0026")
+    public static let alertText     = Color(light: "#D0102C", dark: "#FF5468")
+    public static let zoneBase      = Color(light: "#C3C9D6", dark: "#3B4258")   // zone 1 / awake track
+
+    // Primary action. White (the theme ink) by default; the wearer can pick a colour in Me > Appearance.
+    public static var accent: Color { NunaThemePrefs.accent.fill }
+    public static var onAccent: Color { NunaThemePrefs.accent.label }
 
     // Tinted chip backgrounds
     public static func tint(_ c: Color) -> Color { c.opacity(0.14) }
+}
+
+/// The wearer's theme choices, kept in UserDefaults so the palette can read them from anywhere.
+public enum NunaThemePrefs {
+    public static let accentKey = "nuna.accent"
+    public static let typographyKey = "nuna.typography"
+
+    public enum Accent: String, CaseIterable, Identifiable {
+        case ink, green, blue, steel, yellow
+        public var id: String { rawValue }
+        public var fill: Color {
+            switch self {
+            case .ink:    return Color(light: "#0A0D10", dark: "#FFFFFF")
+            case .green:  return Color(light: "#0CB300", dark: "#16EC06")
+            case .blue:   return Color(light: "#0084D1", dark: "#0093E7")
+            case .steel:  return Color(light: "#5F8AA6", dark: "#7BA1BB")
+            case .yellow: return Color(light: "#C99A00", dark: "#FFDE00")
+            }
+        }
+        /// The colour of text and icons drawn on top of `fill`.
+        public var label: Color {
+            self == .yellow ? Color(hex: "#000000") : Color(light: "#FFFFFF", dark: "#000000")
+        }
+        /// The swatch shown in the picker, the same in both themes so it reads as a colour name.
+        public var swatch: Color {
+            switch self {
+            case .ink: return Color(hex: "#FFFFFF"); case .green: return Color(hex: "#16EC06"); case .blue: return Color(hex: "#0093E7")
+            case .steel: return Color(hex: "#7BA1BB"); case .yellow: return Color(hex: "#FFDE00")
+            }
+        }
+    }
+
+    public enum Typography: String, CaseIterable, Identifiable {
+        /// Rounded system face: heavy, compact numbers (the original Nuna look).
+        case bold
+        /// System face with expanded width: wider numerals.
+        case geometric
+        /// Plain system face.
+        case system
+        public var id: String { rawValue }
+        public var design: Font.Design { self == .bold ? .rounded : .default }
+    }
+
+    public static var accent: Accent { Accent(rawValue: UserDefaults.standard.string(forKey: accentKey) ?? "") ?? .ink }
+    public static var typography: Typography { Typography(rawValue: UserDefaults.standard.string(forKey: typographyKey) ?? "") ?? .bold }
+}
+
+/// Light, dark or follow the iPhone. Nuna is dark until the wearer chooses otherwise.
+public enum NunaTheme {
+    public static let storageKey = "nuna.theme"
+    public enum Mode: String, CaseIterable, Identifiable {
+        case auto, light, dark
+        public var id: String { rawValue }
+        public var scheme: ColorScheme? { self == .auto ? nil : (self == .light ? .light : .dark) }
+    }
+    public static var mode: Mode { Mode(rawValue: UserDefaults.standard.string(forKey: storageKey) ?? "") ?? .dark }
+    public static var colorScheme: ColorScheme? { mode.scheme }
+}
+
+/// The font design the Nuna screens use for numerals and headings.
+public enum NunaType {
+    public static var design: Font.Design { NunaThemePrefs.typography.design }
 }
 
 public enum NunaRadius {

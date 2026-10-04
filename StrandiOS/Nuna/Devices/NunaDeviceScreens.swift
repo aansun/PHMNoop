@@ -25,7 +25,7 @@ struct NunaDeviceBatteryView: View {
                 VStack(alignment: .leading, spacing: 14) {
                     HStack { nunaTrendsCap("Now"); Spacer(); NunaChip(live.charging == true ? "Charging" : (live.connected ? "Not charging" : "Not connected"), color: live.charging == true ? NunaPalette.charge : nil) }
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(verbatim: pct.map { "\(Int($0.rounded()))" } ?? "–").font(.system(size: 64, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: pct.map { "\(Int($0.rounded()))" } ?? "–").font(.system(size: 64, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         if pct != nil { Text("%").font(.system(size: 22, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                     }
                     if let est, live.charging != true {
@@ -69,7 +69,7 @@ struct NunaDeviceBatteryView: View {
     private func stat(_ l: LocalizedStringKey, _ v: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(l).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: v).font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+            Text(verbatim: v).font(.system(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }
     }
 }
@@ -89,7 +89,7 @@ struct NunaDeviceSyncView: View {
                         NunaChip(live.backfilling ? "Syncing" : (live.lastSyncError == nil ? "Up to date" : "Failed"), color: live.backfilling || live.lastSyncError != nil ? nil : NunaPalette.charge) }
                     if live.backfilling {
                         HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            Text(verbatim: "\(live.syncChunksThisSession)").font(.system(size: 56, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: "\(live.syncChunksThisSession)").font(.system(size: 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                             Text("packets so far").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                         if let behind = live.pagesBehindAtConnect, behind > 0 {
@@ -99,13 +99,13 @@ struct NunaDeviceSyncView: View {
                             Text("Stop sync").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 20).frame(height: 42).background(NunaPalette.glassStrong, in: Capsule())
                         }.buttonStyle(.plain)
                     } else {
-                        Text(verbatim: live.lastSyncedAt.map { NunaDeviceFormat.clock($0) } ?? "–").font(.system(size: 52, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: live.lastSyncedAt.map { NunaDeviceFormat.clock($0) } ?? "–").font(.system(size: 52, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         Text(verbatim: live.lastSyncError ?? (live.lastSyncedAt != nil ? String(localized: "All the history on the strap has been pulled. The next sync runs on its own when the strap is nearby.") : String(localized: "No sync has run since the app opened.")))
                             .font(.system(size: 14, weight: .semibold)).foregroundStyle(live.lastSyncError == nil ? NunaPalette.textSecondary : NunaPalette.alertText).fixedSize(horizontal: false, vertical: true)
                     }
                     if !live.backfilling {
                         Button { model.ble.syncNow() } label: {
-                            Text("Sync now").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54).background(NunaPalette.textPrimary, in: Capsule())
+                            Text("Sync now").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54).background(NunaPalette.accent, in: Capsule())
                         }.buttonStyle(.plain).disabled(!live.connected).opacity(live.connected ? 1 : 0.4)
                     }
                 }
@@ -177,7 +177,7 @@ struct NunaDeviceHelpView: View {
     @ViewBuilder private func step<C: View>(_ n: Int, _ title: LocalizedStringKey, _ detail: LocalizedStringKey, @ViewBuilder _ action: () -> C = { EmptyView() }) -> some View {
         NunaCard(small: true) {
             HStack(alignment: .top, spacing: 14) {
-                Text(verbatim: "\(n)").font(.system(size: 15, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary).frame(width: 32, height: 32).background(NunaPalette.glassStrong, in: Circle())
+                Text(verbatim: "\(n)").font(.system(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 32, height: 32).background(NunaPalette.glassStrong, in: Circle())
                 VStack(alignment: .leading, spacing: 6) {
                     Text(title).font(.system(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Text(detail).font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
@@ -206,7 +206,7 @@ struct NunaDeviceRepairView: View {
         NunaDetailScreen("Pair again") {
             NunaCard(highlight: true) {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Can't connect").font(.system(size: 22, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("Can't connect").font(.system(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text("The strap's pairing with this iPhone seems to have been reset.").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                     Text("This happens when the strap was paired to another phone or app. iOS still keeps the old pairing, so it has to be forgotten first.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }.frame(maxWidth: .infinity, alignment: .leading)
@@ -226,7 +226,7 @@ struct NunaDeviceRepairView: View {
     private func step(_ n: Int, _ title: LocalizedStringKey, _ detail: LocalizedStringKey, _ button: LocalizedStringKey, _ run: @escaping () -> Void) -> some View {
         NunaCard(small: true) {
             HStack(alignment: .top, spacing: 14) {
-                Text(verbatim: "\(n)").font(.system(size: 15, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary).frame(width: 32, height: 32).background(NunaPalette.glassStrong, in: Circle())
+                Text(verbatim: "\(n)").font(.system(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 32, height: 32).background(NunaPalette.glassStrong, in: Circle())
                 VStack(alignment: .leading, spacing: 6) {
                     Text(title).font(.system(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Text(detail).font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
@@ -264,7 +264,7 @@ struct NunaDeviceLogView: View {
             }
             HStack(spacing: 10) {
                 Button { UIPasteboard.general.string = live.log.joined(separator: "\n"); copied = true; DispatchQueue.main.asyncAfter(deadline: .now() + 2) { copied = false } } label: {
-                    Text(copied ? "Copied" : "Copy").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.textPrimary, in: Capsule())
+                    Text(copied ? "Copied" : "Copy").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.accent, in: Capsule())
                 }.buttonStyle(.plain).disabled(lines.isEmpty)
                 ShareLink(item: live.log.joined(separator: "\n")) {
                     Text("Share").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())

@@ -60,11 +60,11 @@ struct NunaBackupView: View {
             NunaCard(highlight: lastMs > 0) {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack { nunaTrendsCap("Status"); Spacer(); NunaChip(lastMs > 0 ? "Running" : "Not yet", color: lastMs > 0 ? NunaPalette.charge : nil) }
-                    Text(verbatim: lastMs > 0 ? NunaDataHubView.when(lastMs) : "–").font(.system(size: 32, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: lastMs > 0 ? NunaDataHubView.when(lastMs) : "–").font(.system(size: 32, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text(verbatim: String(localized: "\(snapshots.count) backups kept")).font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     Text("Saved in the folder you choose. Point it at iCloud Drive to reach every Apple device.").font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                     Button { backupNow() } label: {
-                        Text(busy ? "Working…" : "Back up now").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54).background(NunaPalette.textPrimary, in: Capsule())
+                        Text(busy ? "Working…" : "Back up now").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54).background(NunaPalette.accent, in: Capsule())
                     }.buttonStyle(.plain).disabled(busy || !FolderBackup.hasFolder).opacity(FolderBackup.hasFolder ? 1 : 0.4)
                 }
             }

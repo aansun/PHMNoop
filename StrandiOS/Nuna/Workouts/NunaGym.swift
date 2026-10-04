@@ -145,7 +145,7 @@ struct NunaGymView: View {
                 Spacer(minLength: 8)
                 Button { if session.isActive { session.isPresented = true } else { picking = true } } label: {
                     Text(session.isActive ? "Open" : "Start").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                        .padding(.horizontal, 22).frame(height: 44).background(NunaPalette.textPrimary, in: Capsule())
+                        .padding(.horizontal, 22).frame(height: 44).background(NunaPalette.accent, in: Capsule())
                 }.buttonStyle(.plain)
             }
         }
@@ -193,7 +193,7 @@ struct NunaGymView: View {
                 }.buttonStyle(.plain)
                 Button { Task { await NunaGymStore.start(program: p, repo: repo, session: session) } } label: {
                     Text(session.isActive ? "Open" : "Start").font(.system(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                        .padding(.horizontal, 20).frame(height: 42).background(NunaPalette.textPrimary, in: Capsule())
+                        .padding(.horizontal, 20).frame(height: 42).background(NunaPalette.accent, in: Capsule())
                 }.buttonStyle(.plain).disabled((c?.exercises ?? 0) == 0).opacity((c?.exercises ?? 0) == 0 ? 0.4 : 1)
             }
         }
@@ -218,12 +218,12 @@ struct NunaGymView: View {
                         let n = sums[g] ?? 0
                         VStack(spacing: 6) {
                             HStack { Text(g.title).font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary); Spacer()
-                                Text(verbatim: LiftFormat.trim(n)).font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary) }
+                                Text(verbatim: LiftFormat.trim(n)).font(.system(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary) }
                             GeometryReader { geo in
                                 ZStack(alignment: .leading) {
-                                    Capsule().fill(Color.white.opacity(0.09))
-                                    Capsule().fill(NunaPalette.textPrimary.opacity(n >= floorSets ? 1 : 0.5)).frame(width: max(6, geo.size.width * min(1, n / Self.setsBarSpan)))
-                                    Capsule().fill(n >= floorSets ? NunaPalette.onAccent.opacity(0.7) : NunaPalette.textPrimary.opacity(0.55)).frame(width: 2, height: 12).offset(x: geo.size.width * min(1, floorSets / Self.setsBarSpan) - 1)
+                                    Capsule().fill(NunaPalette.ink.opacity(0.09))
+                                    Capsule().fill(NunaPalette.accent.opacity(n >= floorSets ? 1 : 0.5)).frame(width: max(6, geo.size.width * min(1, n / Self.setsBarSpan)))
+                                    Capsule().fill(n >= floorSets ? NunaPalette.onAccent.opacity(0.7) : NunaPalette.accent.opacity(0.55)).frame(width: 2, height: 12).offset(x: geo.size.width * min(1, floorSets / Self.setsBarSpan) - 1)
                                 }
                             }.frame(height: 8)
                         }
@@ -337,14 +337,14 @@ struct NunaExercisePicker: View {
                 Button { onStart(chosen) } label: {
                     Text(verbatim: chosen.isEmpty ? String(localized: "Pick at least one exercise") : String(localized: "Start with \(chosen.count) exercises"))
                         .font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56)
-                        .background(NunaPalette.textPrimary, in: Capsule())
+                        .background(NunaPalette.accent, in: Capsule())
                 }.buttonStyle(.plain).disabled(chosen.isEmpty).opacity(chosen.isEmpty ? 0.4 : 1)
             }
             .scrollDismissesKeyboard(.interactively)
             .toolbar(.hidden, for: .navigationBar)
             .nunaKeyboardDone()
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(NunaTheme.colorScheme)
         .task { if let s = await repo.storeHandle() { vocabulary = ((try? await s.liftExercises(deviceId: repo.deviceId)) ?? []).sorted { ($0.lastUsedTs ?? 0) > ($1.lastUsedTs ?? 0) } } }
     }
 

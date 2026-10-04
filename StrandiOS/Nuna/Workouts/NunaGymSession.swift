@@ -93,7 +93,7 @@ struct NunaGymSessionView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Volume").font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
-                            Text(verbatim: volume.map { NunaTrendsFormat.num($0) } ?? "–").font(.system(size: 44, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: volume.map { NunaTrendsFormat.num($0) } ?? "–").font(.system(size: 44, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                             Text(verbatim: UnitFormatter.massUnit(system)).font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                     }
@@ -101,7 +101,7 @@ struct NunaGymSessionView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Duration").font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
-                            Text(verbatim: secs > 0 ? "\(max(1, secs / 60))" : "–").font(.system(size: 30, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: secs > 0 ? "\(max(1, secs / 60))" : "–").font(.system(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                             Text("min").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                     }
@@ -119,7 +119,7 @@ struct NunaGymSessionView: View {
     private func miniStat(_ l: LocalizedStringKey, _ v: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(l).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
-            Text(verbatim: v).font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+            Text(verbatim: v).font(.system(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -127,7 +127,7 @@ struct NunaGymSessionView: View {
         let day = session.flatMap { s in repo.days.first { $0.day == Repository.localDayKey(Date(timeIntervalSince1970: TimeInterval(s.startTs))) }?.strain }
         return NunaCard(small: true) {
             HStack(spacing: 14) {
-                Text(verbatim: "+" + UnitFormatter.effortDisplay(e, scale: scale)).font(.system(size: 22, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.effortText)
+                Text(verbatim: "+" + UnitFormatter.effortDisplay(e, scale: scale)).font(.system(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.effortText)
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Effort added").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     if let day { Text(verbatim: String(localized: "That day reached \(UnitFormatter.effortDisplay(day, scale: scale)) of \(UnitFormatter.effortScaleMax(scale))")).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
@@ -185,7 +185,7 @@ struct NunaGymSessionView: View {
                             HStack {
                                 Text(e.key.title).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                                 Spacer()
-                                Text(verbatim: NunaTrendsFormat.num(e.value) + " " + UnitFormatter.massUnit(system)).font(.system(size: 15, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                                Text(verbatim: NunaTrendsFormat.num(e.value) + " " + UnitFormatter.massUnit(system)).font(.system(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                             }.padding(.vertical, 14)
                         }
                     }
@@ -277,7 +277,7 @@ struct NunaSaveProgramView: View {
                     NunaToggleRow("Use this session's weights as targets", subtitle: "Off: only the name and number of sets", systemImage: "scalemass", isOn: $useWeights)
                 }
                 Button { Task { await save() } } label: {
-                    Text("Save program").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.textPrimary, in: Capsule())
+                    Text("Save program").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: Capsule())
                 }.buttonStyle(.plain).disabled(!canSave).opacity(canSave ? 1 : 0.4)
                 Text("It shows up in Gym under Programs and can be edited any time.").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
             }
@@ -285,7 +285,7 @@ struct NunaSaveProgramView: View {
             .toolbar(.hidden, for: .navigationBar)
             .nunaKeyboardDone()
         }
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(NunaTheme.colorScheme)
         .onAppear { if name.isEmpty { name = session.programName ?? "" } }
     }
 

@@ -1,5 +1,6 @@
 #if os(iOS)
 import SwiftUI
+import UIKit
 import StrandDesign
 
 /// The Nuna navigation shell: five tabs with a floating tab bar.
@@ -16,6 +17,10 @@ struct NunaRootView: View {
     /// The live gym session, owned at the app root. Both shells present it; this one with its own face.
     @EnvironmentObject private var liftSession: LiftSessionController
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
+    /// The theme choices. The palette reads them from UserDefaults, so a change rebuilds the tabs (the navigation paths are kept).
+    @AppStorage(NunaTheme.storageKey) private var themeRaw = NunaTheme.Mode.dark.rawValue
+    @AppStorage(NunaThemePrefs.accentKey) private var accentRaw = NunaThemePrefs.Accent.ink.rawValue
+    @AppStorage(NunaThemePrefs.typographyKey) private var typographyRaw = NunaThemePrefs.Typography.bold.rawValue
 
     private enum Tab: Int, CaseIterable { case today = 0, health, trends, anya, me }
 
@@ -53,8 +58,13 @@ struct NunaRootView: View {
             }
         }
         .nunaScreenBackground()
+        .fontWidth(typographyRaw == NunaThemePrefs.Typography.geometric.rawValue ? .expanded : nil)
+        .id("\(themeRaw)-\(accentRaw)-\(typographyRaw)")
         // Nuna is dark-first. The Appearance setting is honoured again once Phase 7 lands the Nuna theme screen.
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(NunaTheme.colorScheme)
+        .onAppear { Self.applyWindowStyle() }
+        .onChange(of: themeRaw) { _, _ in Self.applyWindowStyle() }
+        .onDisappear { Self.applyWindowStyle(reset: true) }
         .sheet(isPresented: $liftSession.isPresented) { NunaLiftSessionView() }
         // A session left running by a previous launch comes back as the bar, not as a sheet thrown in the user's face.
         .task {
@@ -64,6 +74,15 @@ struct NunaRootView: View {
         .sheet(isPresented: $showDevices) { sheetStack { NunaDevicesView() } }
         .sheet(item: $routed) { dest in sheetStack { destinationView(dest) } }
         .onChange(of: router.requestedDestination) { _, dest in handle(dest) }
+    }
+
+    /// Light or dark is also set on the windows themselves, because pages pushed inside the tabs are hosted by UIKit and
+    /// do not always pick up `preferredColorScheme`. Cleared when this shell goes away so the Default look is untouched.
+    static func applyWindowStyle(reset: Bool = false) {
+        let style: UIUserInterfaceStyle = reset ? .unspecified : (NunaTheme.colorScheme.map { $0 == .dark ? .dark : .light } ?? .unspecified)
+        for scene in UIApplication.shared.connectedScenes {
+            for window in (scene as? UIWindowScene)?.windows ?? [] { window.overrideUserInterfaceStyle = style }
+        }
     }
 
     // MARK: Tab roots
@@ -79,6 +98,8 @@ struct NunaRootView: View {
                 .nunaMeDestinations()
         }
         .toolbar(.hidden, for: .tabBar)
+        // Pushed screens live in UIKit hosting; they need the choice stated again to resolve the adaptive palette.
+        .preferredColorScheme(NunaTheme.colorScheme)
         .tag(tab.rawValue)
     }
 

@@ -118,7 +118,7 @@ struct NunaMeView: View {
     private func stat(_ l: LocalizedStringKey, _ v: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(l).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: v).font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+            Text(verbatim: v).font(.system(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -135,7 +135,7 @@ struct NunaMeView: View {
 }
 
 enum NunaMeRoute: Hashable {
-    case persona, zones, goals, devices, anya, appearance, widgets
+    case persona, zones, goals, devices, anya, appearance, widgets, theme
     case units, language, features, notifications, privacy
     case automations, doubleTap, presence, sessionCues, sedentary, shortcuts, alarm
     case data, backup, imports, appleHealth, strava
@@ -152,6 +152,7 @@ extension View {
             case .devices: NunaDevicesView()
             case .anya: NunaAnyaSettingsView()
             case .appearance: NunaAppearanceView()
+            case .theme: NunaThemeView()
             case .widgets: SettingsView()
             case .units: NunaUnitsView()
             case .language: NunaLanguageView()

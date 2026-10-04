@@ -71,7 +71,7 @@ struct NunaWorkoutHistoryView: View {
                 Image(systemName: "magnifyingglass").foregroundStyle(NunaPalette.textMuted)
                 TextField("", text: $query, prompt: Text("Search sessions").foregroundStyle(NunaPalette.textMuted)).font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
             }
-            .padding(.horizontal, 16).frame(height: 48).background(Color.black.opacity(0.28), in: Capsule()).overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+            .padding(.horizontal, 16).frame(height: 48).background(NunaPalette.shade.opacity(0.28), in: Capsule()).overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     chip("all", String(localized: "All")); chip("cardio", String(localized: "Cardio")); chip("strength", String(localized: "Strength"))
@@ -92,7 +92,7 @@ struct NunaWorkoutHistoryView: View {
     private func chip(_ id: String, _ title: String) -> some View {
         Button { filter = id } label: {
             Text(verbatim: title).font(.system(size: 13.5, weight: .bold)).foregroundStyle(filter == id ? NunaPalette.onAccent : NunaPalette.textPrimary)
-                .padding(.horizontal, 14).frame(height: 36).background(filter == id ? NunaPalette.textPrimary : NunaPalette.glassStrong, in: Capsule())
+                .padding(.horizontal, 14).frame(height: 36).background(filter == id ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
         }.buttonStyle(.plain)
     }
 
@@ -169,7 +169,7 @@ struct NunaWorkoutHistoryView: View {
                             Spacer(minLength: 0)
                             if b.strength > 0 { RoundedRectangle(cornerRadius: 2).fill(NunaPalette.rest).frame(height: 110 * CGFloat(b.strength) / CGFloat(top)) }
                             if b.cardio > 0 { RoundedRectangle(cornerRadius: 2).fill(NunaPalette.effort).frame(height: 110 * CGFloat(b.cardio) / CGFloat(top)) }
-                            if b.cardio + b.strength == 0 { RoundedRectangle(cornerRadius: 2).fill(Color.white.opacity(0.08)).frame(height: 3) }
+                            if b.cardio + b.strength == 0 { RoundedRectangle(cornerRadius: 2).fill(NunaPalette.ink.opacity(0.08)).frame(height: 3) }
                         }
                         .frame(maxWidth: .infinity).frame(height: 110)
                     }
@@ -249,8 +249,8 @@ struct NunaWorkoutHistoryView: View {
                             let on = !rs.isEmpty
                             Button { if on { selected = selected == key ? nil : key } } label: {
                                 RoundedRectangle(cornerRadius: weeks > 16 ? 3 : 6, style: .continuous)
-                                    .fill(on ? kindColor(cardio: rs.contains { !NunaWorkoutKind.isStrength($0) }, strength: rs.contains(where: NunaWorkoutKind.isStrength)) : Color.white.opacity(future ? 0 : 0.07))
-                                    .overlay(RoundedRectangle(cornerRadius: weeks > 16 ? 3 : 6, style: .continuous).strokeBorder(NunaPalette.textPrimary, lineWidth: selected == key ? 2 : 0).padding(-2))
+                                    .fill(on ? kindColor(cardio: rs.contains { !NunaWorkoutKind.isStrength($0) }, strength: rs.contains(where: NunaWorkoutKind.isStrength)) : NunaPalette.ink.opacity(future ? 0 : 0.07))
+                                    .overlay(RoundedRectangle(cornerRadius: weeks > 16 ? 3 : 6, style: .continuous).strokeBorder(NunaPalette.accent, lineWidth: selected == key ? 2 : 0).padding(-2))
                                     .aspectRatio(1, contentMode: .fit)
                             }.buttonStyle(.plain).disabled(!on)
                         }
@@ -290,9 +290,9 @@ struct NunaWorkoutHistoryView: View {
                         let on = !rs.isEmpty
                         Button { if on { selected = selected == key ? nil : key } } label: {
                             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                .fill(on ? kindColor(cardio: rs.contains { !NunaWorkoutKind.isStrength($0) }, strength: rs.contains(where: NunaWorkoutKind.isStrength)).opacity(0.3 + 0.7 * Double(rs.count) / Double(peak)) : Color.white.opacity(outside ? 0 : 0.07))
-                                .overlay(Text(verbatim: on ? "\(rs.count)" : "").font(.system(size: 10, weight: .bold, design: .rounded)).foregroundStyle(Double(rs.count) / Double(peak) > 0.5 ? NunaPalette.onAccent : NunaPalette.textPrimary).minimumScaleFactor(0.6))
-                                .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(NunaPalette.textPrimary, lineWidth: selected == key ? 2 : 0).padding(-2))
+                                .fill(on ? kindColor(cardio: rs.contains { !NunaWorkoutKind.isStrength($0) }, strength: rs.contains(where: NunaWorkoutKind.isStrength)).opacity(0.3 + 0.7 * Double(rs.count) / Double(peak)) : NunaPalette.ink.opacity(outside ? 0 : 0.07))
+                                .overlay(Text(verbatim: on ? "\(rs.count)" : "").font(.system(size: 10, weight: .bold, design: NunaType.design)).foregroundStyle(Double(rs.count) / Double(peak) > 0.5 ? NunaPalette.onAccent : NunaPalette.textPrimary).minimumScaleFactor(0.6))
+                                .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(NunaPalette.accent, lineWidth: selected == key ? 2 : 0).padding(-2))
                                 .aspectRatio(1, contentMode: .fit)
                         }.buttonStyle(.plain).disabled(!on)
                     }
@@ -305,7 +305,7 @@ struct NunaWorkoutHistoryView: View {
 
     @ViewBuilder private func sessions(_ list: [WorkoutRow]) -> some View {
         HStack {
-            Text(sessionsTitle).font(.system(size: NunaTypeSize.h2, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+            Text(sessionsTitle).font(.system(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             Spacer()
             Button { oldestFirst.toggle() } label: {
                 HStack(spacing: 4) { Text(oldestFirst ? "Oldest" : "Newest").font(.system(size: 13, weight: .bold)); Image(systemName: "chevron.up.chevron.down").font(.system(size: 10, weight: .bold)) }
@@ -324,7 +324,7 @@ struct NunaWorkoutHistoryView: View {
                 let ordered = oldestFirst ? rs.sorted { $0.startTs < $1.startTs } : rs.sorted { $0.startTs > $1.startTs }
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
-                        Text(verbatim: groupTitle(start)).font(.system(size: 17, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: groupTitle(start)).font(.system(size: 17, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         Spacer()
                         Text(verbatim: String(localized: "\(rs.count) sessions · Effort \(UnitFormatter.effortDisplay(m.effort(rs), scale: scale))")).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
@@ -364,7 +364,7 @@ struct NunaWorkoutHistoryView: View {
     private func tile(_ l: LocalizedStringKey, _ v: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(l).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
-            Text(verbatim: v).font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
+            Text(verbatim: v).font(.system(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 }

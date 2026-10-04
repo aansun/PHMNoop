@@ -96,7 +96,7 @@ struct NunaFitnessAgeView: View {
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(verbatim: String(format: "%.0f", locale: AppLanguage.activeLocale, latest.value))
-                        .font(.system(size: 96, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                        .font(.system(size: 96, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text("years").font(.system(size: 24, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 if let diff {
@@ -106,7 +106,7 @@ struct NunaFitnessAgeView: View {
                     NunaAgeSlider(fitness: latest.value, age: age)
                     HStack(spacing: 16) {
                         legend(Capsule().fill(NunaPalette.charge.opacity(0.3)).frame(width: 14, height: 10), "Range ±5 yr")
-                        legend(Circle().strokeBorder(.white, lineWidth: 2).frame(width: 10, height: 10), "Actual age")
+                        legend(Circle().strokeBorder(NunaPalette.ink, lineWidth: 2).frame(width: 10, height: 10), "Actual age")
                     }
                 }
             }
@@ -156,7 +156,7 @@ struct NunaFitnessAgeView: View {
                     Spacer()
                     VStack(alignment: .trailing, spacing: 2) {
                         HStack(alignment: .firstTextBaseline, spacing: 3) {
-                            Text(verbatim: value).font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: value).font(.system(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                             Text(verbatim: unit).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                         Text(verbatim: n == 0 ? "±0" : ((younger ? "−" : "+") + String(localized: "\(n) yr")))
@@ -167,10 +167,10 @@ struct NunaFitnessAgeView: View {
                     let w = geo.size.width, half = w / 2
                     let span = half * CGFloat(min(abs(years) / 6, 1))
                     ZStack(alignment: .leading) {
-                        Capsule().fill(Color.white.opacity(0.09)).frame(height: 8)
+                        Capsule().fill(NunaPalette.ink.opacity(0.09)).frame(height: 8)
                         Capsule().fill(younger ? NunaPalette.charge : NunaPalette.warning).frame(width: span, height: 8)
                             .offset(x: younger ? half - span : half)
-                        Rectangle().fill(Color.white.opacity(0.6)).frame(width: 2, height: 16).offset(x: half - 1)
+                        Rectangle().fill(NunaPalette.ink.opacity(0.6)).frame(width: 2, height: 16).offset(x: half - 1)
                     }
                 }
                 .frame(height: 16)
@@ -221,7 +221,7 @@ struct NunaFitnessAgeView: View {
                         HStack(spacing: 12) {
                             Text(verbatim: short(r.day)).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 56, alignment: .leading)
                             NunaProgressBar(fraction: min(max(1 - (r.value - 20) / 60, 0.05), 1), color: i == 0 ? NunaPalette.charge : NunaPalette.rest)
-                            Text(verbatim: String(format: "%.0f", r.value)).font(.system(size: 17, weight: .bold, design: .rounded))
+                            Text(verbatim: String(format: "%.0f", r.value)).font(.system(size: 17, weight: .bold, design: NunaType.design))
                                 .foregroundStyle(NunaPalette.textPrimary).frame(width: 40, alignment: .trailing)
                         }
                         .frame(minHeight: 50)
@@ -240,7 +240,7 @@ struct NunaFitnessAgeView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
-                            Text(verbatim: String(format: "%.0f", vo2)).font(.system(size: 40, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: String(format: "%.0f", vo2)).font(.system(size: 40, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                             Text("ml/kg/min").font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                         Spacer()
@@ -254,7 +254,7 @@ struct NunaFitnessAgeView: View {
                         NunaProportionBar(parts: [(2, NunaPalette.zoneBase), (2, NunaPalette.zoneBase), (2, NunaPalette.rest), (2, NunaPalette.charge), (2, NunaPalette.charge)], height: 12)
                         GeometryReader { geo in
                             let f = CGFloat(min(max((vo2 - 20) / 40, 0), 1))
-                            Capsule().fill(.white).frame(width: 6, height: 20).shadow(color: .white.opacity(0.2), radius: 3)
+                            Capsule().fill(NunaPalette.ink).frame(width: 6, height: 20).shadow(color: NunaPalette.ink.opacity(0.2), radius: 3)
                                 .offset(x: min(max(geo.size.width * f - 3, 0), geo.size.width - 6), y: -4)
                         }
                         .frame(height: 12)

@@ -57,7 +57,7 @@ struct NunaAutoDetectView: View {
     }
 
     private func value(_ t: String) -> some View {
-        Text(verbatim: t).font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+        Text(verbatim: t).font(.system(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
     }
 }
 #endif

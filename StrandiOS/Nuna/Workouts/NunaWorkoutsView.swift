@@ -98,7 +98,7 @@ struct NunaWorkoutsView: View {
                 Image(systemName: "chevron.left").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: Circle())
             }.buttonStyle(.plain).accessibilityLabel(Text("Back"))
-            Text("Workouts").font(.system(size: 24, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+            Text("Workouts").font(.system(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             Spacer()
             roundLink(.history, "line.3.horizontal.decrease", "All sessions")
         }
@@ -135,7 +135,7 @@ struct NunaWorkoutsView: View {
                     if let usual, usual > 0 { NunaChip(verbatim: String(localized: "\(Int((total / usual * 100).rounded()))% of your usual"), color: NunaPalette.effortText) }
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(verbatim: UnitFormatter.effortDisplay(total, scale: scale)).font(.system(size: 44, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: UnitFormatter.effortDisplay(total, scale: scale)).font(.system(size: 44, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     if let usual { Text(verbatim: "/ " + UnitFormatter.effortDisplay(usual, scale: scale)).font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                     Text("Effort").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
@@ -159,7 +159,7 @@ struct NunaWorkoutsView: View {
     private func stat(_ l: LocalizedStringKey, _ v: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(l).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: v).font(.system(size: 19, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+            Text(verbatim: v).font(.system(size: 19, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -197,11 +197,11 @@ struct NunaWorkoutsView: View {
                     if let ratio, let band {
                         HStack(spacing: 12) {
                             Image(systemName: "bolt").font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                .frame(width: 34, height: 34).background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                .frame(width: 34, height: 34).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                             Text(verbatim: String(localized: "Acute-to-chronic load ratio \(String(format: "%.2f", locale: AppLanguage.activeLocale, ratio)). \(bandSentence(band))"))
                                 .font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                         }
-                        .padding(12).background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .padding(12).background(NunaPalette.shade.opacity(0.22), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                     } else {
                         Text("Needs at least three weeks with workouts to read your balance.").font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
@@ -214,7 +214,7 @@ struct NunaWorkoutsView: View {
         VStack(spacing: 8) {
             NunaRingGauge(fraction: max(f, 0.02), color: color, size: 104, lineWidth: 9) {
                 HStack(alignment: .firstTextBaseline, spacing: 1) {
-                    Text(verbatim: v).font(.system(size: 28, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
+                    Text(verbatim: v).font(.system(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
                     if !unit.isEmpty { Text(verbatim: unit).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                 }
             }
@@ -271,7 +271,7 @@ struct NunaWorkoutsView: View {
                         Button {
                             Task { _ = await repo.saveDetectedWorkout(s); suggestion = nil; await repo.refresh() }
                         } label: {
-                            Text("Save").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 24).frame(height: 44).background(NunaPalette.textPrimary, in: Capsule())
+                            Text("Save").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 24).frame(height: 44).background(NunaPalette.accent, in: Capsule())
                         }.buttonStyle(.plain)
                         Button { repo.dismissDetectedSuggestion(w); suggestion = nil } label: {
                             Text("Not a workout").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 18).frame(height: 44).background(NunaPalette.glassStrong, in: Capsule())
@@ -360,7 +360,7 @@ struct NunaWorkoutsView: View {
     private var historySection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("History").font(.system(size: NunaTypeSize.h2, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                Text("History").font(.system(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 Spacer()
                 NavigationLink(value: NunaWorkoutRoute.history) {
                     HStack(spacing: 4) { Text("See all").font(.system(size: 14, weight: .bold)); Image(systemName: "chevron.right").font(.system(size: 11, weight: .bold)) }
@@ -450,7 +450,7 @@ struct NunaWorkoutMonthGrid: View {
                         Button { if interactive, !future { selected = key } } label: {
                             VStack(spacing: 3) {
                                 Text(verbatim: dayLabel(date, cal, first: weeks > 1 && w == 0 && d == 0))
-                                    .font(.system(size: 14, weight: .heavy, design: .rounded)).monospacedDigit()
+                                    .font(.system(size: 14, weight: .heavy, design: NunaType.design)).monospacedDigit()
                                     .foregroundStyle(isSel ? NunaPalette.onAccent : (future ? NunaPalette.textMuted.opacity(0.7) : NunaPalette.textPrimary))
                                     .minimumScaleFactor(0.7).lineLimit(1)
                                 if future {
@@ -460,13 +460,13 @@ struct NunaWorkoutMonthGrid: View {
                                 } else {
                                     HStack(spacing: 3) {
                                         if cardio { Circle().fill(NunaPalette.effort).frame(width: 5, height: 5) }
-                                        if strength { Circle().fill(isSel ? NunaPalette.onAccent : NunaPalette.textPrimary).frame(width: 5, height: 5) }
+                                        if strength { Circle().fill(isSel ? NunaPalette.onAccent : NunaPalette.accent).frame(width: 5, height: 5) }
                                     }
                                 }
                             }
                             .frame(width: 42, height: 46)
-                            .background(Circle().fill(isSel ? NunaPalette.textPrimary : .clear))
-                            .overlay(Circle().strokeBorder(isToday && !isSel ? NunaPalette.textPrimary.opacity(0.8) : .clear, lineWidth: 1.5))
+                            .background(Circle().fill(isSel ? NunaPalette.accent : .clear))
+                            .overlay(Circle().strokeBorder(isToday && !isSel ? NunaPalette.accent.opacity(0.8) : .clear, lineWidth: 1.5))
                             .frame(maxWidth: .infinity)
                         }.buttonStyle(.plain).disabled(!interactive || future)
                     }

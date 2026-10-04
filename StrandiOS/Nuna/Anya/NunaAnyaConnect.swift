@@ -133,7 +133,7 @@ struct NunaAnyaKeyView: View {
                 Text(verbatim: e).font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.alertText).fixedSize(horizontal: false, vertical: true)
             }
             Button { save() } label: {
-                Text("Save and start").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.textPrimary, in: Capsule())
+                Text("Save and start").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: Capsule())
             }.buttonStyle(.plain).disabled(key.trimmingCharacters(in: .whitespaces).isEmpty && !saved).opacity(key.trimmingCharacters(in: .whitespaces).isEmpty && !saved ? 0.4 : 1)
             if saved {
                 Button(role: .destructive) { coach.clearKey() } label: {
@@ -226,7 +226,7 @@ struct NunaAnyaCustomView: View {
                     HStack(spacing: 8) { ForEach(coach.availableModels.prefix(12), id: \.self) { m in
                         Button { coach.model = m } label: {
                             Text(verbatim: m).font(.system(size: 13, weight: .bold)).foregroundStyle(coach.model == m ? NunaPalette.onAccent : NunaPalette.textPrimary)
-                                .padding(.horizontal, 12).frame(height: 34).background(coach.model == m ? NunaPalette.textPrimary : NunaPalette.glassStrong, in: Capsule())
+                                .padding(.horizontal, 12).frame(height: 34).background(coach.model == m ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
                         }.buttonStyle(.plain)
                     } }
                 }
@@ -249,7 +249,7 @@ struct NunaAnyaCustomView: View {
                 Text(testing ? "Testing…" : "Test connection").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
             }.buttonStyle(.plain).disabled(testing || urlEmpty)
             Button { save() } label: {
-                Text("Save and start").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.textPrimary, in: Capsule())
+                Text("Save and start").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: Capsule())
             }.buttonStyle(.plain).disabled(urlEmpty).opacity(urlEmpty ? 0.4 : 1)
         }
         .scrollDismissesKeyboard(.interactively)
@@ -304,7 +304,7 @@ struct NunaAnyaChatGPTView: View {
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }
                 Button { auth.openVerificationPage() } label: {
-                    Text("Open the sign-in page").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.textPrimary, in: Capsule())
+                    Text("Open the sign-in page").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: Capsule())
                 }.buttonStyle(.plain)
                 Button { UIPasteboard.general.string = code.userCode } label: {
                     Text("Copy the code").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
@@ -322,7 +322,7 @@ struct NunaAnyaChatGPTView: View {
                         Text("Sign in with your ChatGPT account using a one-time device code, without pasting an API key.")
                             .font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                         Button { auth.startLogin() } label: {
-                            Text(auth.isBusy ? "Getting a code…" : "Get a device code").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.textPrimary, in: Capsule())
+                            Text(auth.isBusy ? "Getting a code…" : "Get a device code").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: Capsule())
                         }.buttonStyle(.plain).disabled(auth.isBusy)
                     }
                 }

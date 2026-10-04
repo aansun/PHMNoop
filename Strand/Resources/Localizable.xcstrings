@@ -1,6 +1,72 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Theme and type": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tema dan tipografi"}}
+    } },
+    "Set how the app looks. The change shows straight away in the preview.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Atur tampilan aplikasi. Perubahan langsung terlihat di pratinjau."}}
+    } },
+    "Dark": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Gelap"}}
+    } },
+    "White": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Putih"}}
+    } },
+    "Blue": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Biru"}}
+    } },
+    "Steel": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Baja"}}
+    } },
+    "The accent only colours buttons and selections. Data colours stay the same: green for Charge, blue for Effort, steel for Rest.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Aksen hanya mewarnai tombol dan penanda. Warna data tetap standar: hijau Charge, biru Effort, baja Rest."}}
+    } },
+    "Typography": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tipografi"}}
+    } },
+    "Bold": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tegas"}}
+    } },
+    "Geometric": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Geometris"}}
+    } },
+    "System": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sistem"}}
+    } },
+    "Rounded and compact. The original Nuna look.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Membulat dan padat. Tampilan Nuna asli."}}
+    } },
+    "Wider letters and numbers.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Huruf dan angka lebih lebar."}}
+    } },
+    "The plain iPhone font. Most neutral.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Font iPhone biasa. Paling netral."}}
+    } },
+    "Automatic follows the iPhone. The type styles use the iPhone's own system faces, so numbers and labels stay crisp at every size.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Otomatis mengikuti iPhone. Gaya huruf memakai font sistem iPhone, jadi angka dan label tetap tajam di semua ukuran."}}
+    } },
+    "Language is set in iOS Settings > NOOP > Language, so it follows the system and every app together.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bahasa diatur di Pengaturan iOS > NOOP > Bahasa, jadi mengikuti sistem."}}
+    } },
+    "Weight, height and waist": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Berat, tinggi, dan pinggang"}}
+    } },
+    "Distance and pace": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Jarak dan pace"}}
+    } },
+    "Workouts and live sessions": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Latihan dan sesi langsung"}}
+    } },
+    "Follow the body setting or pick one": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ikuti pengaturan tubuh atau pilih sendiri"}}
+    } },
+    "How Health shows it": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tampilan di Kesehatan"}}
+    } },
+    "The 0 to 21 scale is like WHOOP's": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Skala 0 sampai 21 seperti WHOOP"}}
+    } },
     "0 to 100": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "0 sampai 100"}}
     } },
@@ -7238,6 +7304,7 @@
       "de": { "stringUnit": { "state": "translated", "value": "Einheiten für Körpermaße" } }, "es": { "stringUnit": { "state": "translated", "value": "Unidades de medidas corporales" } }, "fr": { "stringUnit": { "state": "translated", "value": "Unités des mensurations" } }, "it": { "stringUnit": { "state": "translated", "value": "Unità delle misure corporee" } }, "pl": { "stringUnit": { "state": "translated", "value": "Jednostki pomiarów ciała" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Unidades das medidas corporais" } }, "ru": { "stringUnit": { "state": "translated", "value": "Единицы параметров тела" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "身体测量单位" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "身體測量單位" } }
     } },
     "Body measurements": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Ukuran tubuh"}},
       "de": { "stringUnit": { "state": "translated", "value": "Körpermaße" } }, "es": { "stringUnit": { "state": "translated", "value": "Medidas corporales" } }, "fr": { "stringUnit": { "state": "translated", "value": "Mensurations" } }, "it": { "stringUnit": { "state": "translated", "value": "Misure corporee" } }, "pl": { "stringUnit": { "state": "translated", "value": "Pomiary ciała" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Medidas corporais" } }, "ru": { "stringUnit": { "state": "translated", "value": "Параметры тела" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "身体测量" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "身體測量" } }
     } },
     "Choose body measurements and exercise distance separately. Your data is always stored the same way; these settings only change its display.": { "localizations": {
@@ -70876,6 +70943,7 @@
     },
     "Effort scale": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Skala Effort"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -98538,6 +98606,7 @@
     },
     "Light": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Terang"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -130072,6 +130141,7 @@
     },
     "Preview": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Pratinjau"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -168304,6 +168374,7 @@
     },
     "Theme": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tema"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -208284,6 +208355,7 @@
     },
     "Accent colour": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Warna aksen"}},
         "de": {
           "stringUnit": {
             "state": "translated",

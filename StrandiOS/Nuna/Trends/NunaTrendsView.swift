@@ -71,7 +71,7 @@ struct NunaTrendsView: View {
         .nunaTrendsDestinations()
         .nunaTodayDestinations()
         .task(id: repo.refreshSeq) { await m.load(repo: repo) }
-        .sheet(isPresented: $showReport) { TrendsReportSheet(days: repo.days).environmentObject(repo).preferredColorScheme(.dark) }
+        .sheet(isPresented: $showReport) { TrendsReportSheet(days: repo.days).environmentObject(repo).preferredColorScheme(NunaTheme.colorScheme) }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "trends") }
     }
 
@@ -86,7 +86,7 @@ struct NunaTrendsView: View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(verbatim: rangeCaption).font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                Text("Trends").font(.system(size: NunaTypeSize.h1, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                Text("Trends").font(.system(size: NunaTypeSize.h1, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             }
             Spacer()
             NavigationLink(value: NunaTrendsRoute.compare) {
@@ -139,7 +139,7 @@ struct NunaTrendsView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(verbatim: value).font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: value).font(.system(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 if let d = m.date(day) { Text(verbatim: NunaTrendsFormat.withWeekday(d)).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
             }
         }
@@ -152,7 +152,7 @@ struct NunaTrendsView: View {
             VStack(spacing: 8) {
                 NunaRingGauge(fraction: frac ?? 0, color: color, size: 96, lineWidth: 9) {
                     HStack(alignment: .firstTextBaseline, spacing: 1) {
-                        Text(verbatim: value).font(.system(size: 22, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: value).font(.system(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         if !unit.isEmpty { Text(verbatim: unit).font(.system(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                     }
                 }
@@ -200,7 +200,7 @@ struct NunaTrendsView: View {
     private var comparisonSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Comparisons").font(.system(size: NunaTypeSize.h2, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                Text("Comparisons").font(.system(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 Spacer()
                 Text("Tap for details").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }
@@ -264,18 +264,18 @@ struct NunaTrendsView: View {
     private func insightRow(_ icon: String, _ text: Text) -> some View {
         HStack(spacing: 12) {
             Image(systemName: icon).font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                .frame(width: 34, height: 34).background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .frame(width: 34, height: 34).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             text.font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
         }
-        .padding(12).background(Color.black.opacity(0.22), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .padding(12).background(NunaPalette.shade.opacity(0.22), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     // MARK: Daily signals
 
     private var signalsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Daily signals").font(.system(size: NunaTypeSize.h2, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+            Text("Daily signals").font(.system(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
                 signal("HRV", m.hrv, "ms", 0, upGood: true, route: .metricKey("hrv"))
                 signal("Resting HR", m.rhr, "bpm", 0, upGood: false, route: .metricKey("rhr"))
@@ -302,7 +302,7 @@ struct NunaTrendsView: View {
                     }
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 3) {
-                    Text(verbatim: NunaTrendsFormat.num(now, digits)).font(.system(size: NunaTypeSize.numberM, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: NunaTrendsFormat.num(now, digits)).font(.system(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     if !unit.isEmpty { Text(verbatim: unit).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                 }
                 NunaSpark(values: win.map(\.value)).frame(height: 34)
@@ -347,8 +347,8 @@ struct NunaTrendsView: View {
                 since("Effort", e, NunaPalette.effort, { $0.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–" }, 100)
                 since("Rest", r, NunaPalette.rest, { NunaTrendsFormat.num($0, 1) + "%" }, 100)
                 HStack(spacing: 16) {
-                    HStack(spacing: 6) { Capsule().fill(.white).frame(width: 14, height: 8); Text("This period") }
-                    HStack(spacing: 6) { Capsule().fill(Color.white.opacity(0.3)).frame(width: 14, height: 5); Text("Previous period") }
+                    HStack(spacing: 6) { Capsule().fill(NunaPalette.ink).frame(width: 14, height: 8); Text("This period") }
+                    HStack(spacing: 6) { Capsule().fill(NunaPalette.ink.opacity(0.3)).frame(width: 14, height: 5); Text("Previous period") }
                 }
                 .font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }
@@ -360,11 +360,11 @@ struct NunaTrendsView: View {
             HStack {
                 Text(title).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 Spacer()
-                Text(verbatim: fmt(v.now)).font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: fmt(v.now)).font(.system(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 Text(verbatim: "vs " + fmt(v.before).replacingOccurrences(of: "%", with: "")).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }
             NunaProgressBar(fraction: (v.now ?? 0) / top, color: color)
-            NunaProgressBar(fraction: (v.before ?? 0) / top, color: Color.white.opacity(0.3)).frame(height: 5)
+            NunaProgressBar(fraction: (v.before ?? 0) / top, color: NunaPalette.ink.opacity(0.3)).frame(height: 5)
         }
     }
 
@@ -382,7 +382,7 @@ struct NunaTrendsView: View {
 
     private var exploreSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Explore further").font(.system(size: NunaTypeSize.h2, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity, alignment: .leading)
+            Text("Explore further").font(.system(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity, alignment: .leading)
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
                     link(.explore, "Explore", "A catalogue of every signal", "chart.line.uptrend.xyaxis")
@@ -423,7 +423,7 @@ struct NunaHeatGrid: View {
                         let date = cal.date(byAdding: .day, value: (w - (weeks - 1)) * 7 + d, to: weekStart) ?? today
                         let v = date > today ? nil : byDay[Repository.localDayKey(date)]
                         RoundedRectangle(cornerRadius: weeks > 16 ? 2 : 5, style: .continuous)
-                            .fill(v.map { nunaZoneColor($0).opacity(0.35 + 0.55 * min($0 / 100, 1)) } ?? Color.white.opacity(date > today ? 0 : 0.06))
+                            .fill(v.map { nunaZoneColor($0).opacity(0.35 + 0.55 * min($0 / 100, 1)) } ?? NunaPalette.ink.opacity(date > today ? 0 : 0.06))
                             .aspectRatio(1, contentMode: .fit)
                     }
                 }

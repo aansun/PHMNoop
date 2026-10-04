@@ -23,14 +23,14 @@ struct NunaDetailHeader: View {
                     .overlay(Circle().strokeBorder(NunaPalette.hairline, lineWidth: 1))
             }
             .accessibilityLabel(Text("Back"))
-            Text(title).font(.system(size: 24, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+            Text(title).font(.system(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             Spacer(minLength: 8)
             if let trailing { trailing }
             if let onAnya {
                 Button(action: onAnya) {
                     Image(systemName: "sparkles").font(.system(size: 17, weight: .bold))
                         .foregroundStyle(NunaPalette.onAccent)
-                        .frame(width: 44, height: 44).background(NunaPalette.textPrimary, in: Circle())
+                        .frame(width: 44, height: 44).background(NunaPalette.accent, in: Circle())
                 }
                 .accessibilityLabel(Text("Ask Anya"))
             }
@@ -92,11 +92,11 @@ struct NunaHeroCard<Footer: View>: View {
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(verbatim: number)
-                        .font(.system(size: 72, weight: .bold, design: .rounded))
+                        .font(.system(size: 72, weight: .bold, design: NunaType.design))
                         .foregroundStyle(color)
                         .minimumScaleFactor(0.5).lineLimit(1)
                     if !unit.isEmpty {
-                        Text(verbatim: unit).font(.system(size: 26, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: unit).font(.system(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     if !suffix.isEmpty {
                         Text(verbatim: suffix).font(.system(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
@@ -150,7 +150,7 @@ struct NunaGaugeHeroCard<Note: View>: View {
                     NunaRingGauge(fraction: fraction, color: color, size: 128, lineWidth: 12) {
                         VStack(spacing: 0) {
                             HStack(alignment: .firstTextBaseline, spacing: 1) {
-                                Text(verbatim: number).font(.system(size: 34, weight: .bold, design: .rounded))
+                                Text(verbatim: number).font(.system(size: 34, weight: .bold, design: NunaType.design))
                                     .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
                                 if !unit.isEmpty && number != "–" {
                                     Text(verbatim: unit).font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
@@ -268,7 +268,7 @@ struct NunaColorBars: View {
                                 RoundedRectangle(cornerRadius: min(5, w / 2), style: .continuous).fill(color(v))
                                     .frame(width: w, height: max(5, barMax * CGFloat(min(max(v / maxValue, 0), 1))))
                             } else {
-                                RoundedRectangle(cornerRadius: min(5, w / 2), style: .continuous).fill(Color.white.opacity(0.06))
+                                RoundedRectangle(cornerRadius: min(5, w / 2), style: .continuous).fill(NunaPalette.ink.opacity(0.06))
                                     .frame(width: w, height: 5)
                             }
                         }
@@ -317,7 +317,7 @@ struct NunaColumns: View {
                         .foregroundStyle(item.highlight ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                         .lineLimit(1).minimumScaleFactor(0.6)
                     ZStack(alignment: .bottom) {
-                        Capsule().fill(Color.white.opacity(0.08)).frame(width: 30, height: 110)
+                        Capsule().fill(NunaPalette.ink.opacity(0.08)).frame(width: 30, height: 110)
                         Capsule().fill(item.color ?? (item.highlight ? (highlightColor ?? color) : color))
                             .frame(width: 30, height: max(14, 110 * CGFloat(min(max(item.fraction ?? 0, 0), 1))))
                             .opacity(item.fraction == nil ? 0 : 1)
@@ -393,7 +393,7 @@ struct NunaStressBars: View {
                         let y = geo.size.height * CGFloat(1 - lvl / 3)
                         p.move(to: CGPoint(x: 0, y: y)); p.addLine(to: CGPoint(x: geo.size.width, y: y))
                     }
-                    .stroke(Color.white.opacity(0.12), style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                    .stroke(NunaPalette.ink.opacity(0.12), style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
                 }
                 HStack(alignment: .bottom, spacing: gap) {
                     ForEach(points.indices, id: \.self) { i in
@@ -401,7 +401,7 @@ struct NunaStressBars: View {
                             RoundedRectangle(cornerRadius: 3, style: .continuous).fill(Self.color(l).opacity(l < 1 ? 0.85 : 0.95))
                                 .frame(width: w, height: max(5, geo.size.height * CGFloat(min(l, 3) / 3)))
                         } else {
-                            RoundedRectangle(cornerRadius: 3, style: .continuous).fill(Color.white.opacity(points[i].maskedForActivity ? 0.14 : 0.05))
+                            RoundedRectangle(cornerRadius: 3, style: .continuous).fill(NunaPalette.ink.opacity(points[i].maskedForActivity ? 0.14 : 0.05))
                                 .frame(width: w, height: 5)
                         }
                     }

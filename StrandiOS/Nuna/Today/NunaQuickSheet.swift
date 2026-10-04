@@ -22,7 +22,7 @@ struct NunaQuickSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Quick actions")
-                .font(.system(size: NunaTypeSize.h2, weight: .heavy, design: .rounded))
+                .font(.system(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design))
                 .foregroundStyle(NunaPalette.textPrimary)
                 .padding(.top, 22)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 14) {
@@ -38,7 +38,7 @@ struct NunaQuickSheet: View {
                     NunaCard(small: true, padding: EdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 14)) {
                         HStack(spacing: 12) {
                             Image(systemName: "sparkles").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                                .frame(width: 40, height: 40).background(NunaPalette.textPrimary, in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
+                                .frame(width: 40, height: 40).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Ask Anya").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                                 Text("About today, by voice or text").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
@@ -55,7 +55,7 @@ struct NunaQuickSheet: View {
         }
         .padding(.horizontal, NunaSpacing.screenH)
         .background(NunaPalette.card.ignoresSafeArea())
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(NunaTheme.colorScheme)
         .task { await reloadWater() }
         .sheet(item: $presented) { panel in
             NavigationStack {
@@ -69,7 +69,7 @@ struct NunaQuickSheet: View {
                 }
                 .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { presented = nil } } }
             }
-            .preferredColorScheme(.dark)
+            .preferredColorScheme(NunaTheme.colorScheme)
         }
     }
 
@@ -129,7 +129,7 @@ struct NunaQuickSheet: View {
                 Image(systemName: icon).font(.system(size: 22, weight: .semibold))
                     .foregroundStyle(NunaPalette.textPrimary)
                     .frame(width: 60, height: 60)
-                    .background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
                 Text(title).font(.system(size: 12.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
                     .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.8)
             }

@@ -125,11 +125,11 @@ struct NunaTodayView: View {
                     await model.load(repo: repo, profile: profile)
                 }
             }
-            .preferredColorScheme(.dark)
+            .preferredColorScheme(NunaTheme.colorScheme)
         }
         .sheet(isPresented: $showAddCard) {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Add a card").font(.system(size: NunaTypeSize.h2, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary).padding(.top, 22)
+                Text("Add a card").font(.system(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).padding(.top, 22)
                 NunaCard(small: true) {
                     VStack(spacing: 0) {
                         ForEach(Array(hiddenSections.enumerated()), id: \.element.id) { idx, sec in
@@ -144,7 +144,7 @@ struct NunaTodayView: View {
             }
             .padding(.horizontal, NunaSpacing.screenH)
             .background(NunaPalette.card.ignoresSafeArea())
-            .preferredColorScheme(.dark)
+            .preferredColorScheme(NunaTheme.colorScheme)
             .nunaSheetChrome(detents: [.medium, .large])
         }
         .sheet(isPresented: $showMood) {
@@ -163,7 +163,7 @@ struct NunaTodayView: View {
     private var header: some View {
         HStack(alignment: .top, spacing: 8) {
             Text("Today")
-                .font(.system(size: NunaTypeSize.h1, weight: .heavy, design: .rounded))
+                .font(.system(size: NunaTypeSize.h1, weight: .heavy, design: NunaType.design))
                 .foregroundStyle(NunaPalette.textPrimary)
             Spacer(minLength: 8)
             Button { router.openDevices() } label: {
@@ -257,7 +257,7 @@ struct NunaTodayView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Edit mode").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
                             .foregroundStyle(NunaPalette.textSecondary)
-                        Text("Arrange cards").font(.system(size: NunaTypeSize.h1, weight: .heavy, design: .rounded))
+                        Text("Arrange cards").font(.system(size: NunaTypeSize.h1, weight: .heavy, design: NunaType.design))
                             .foregroundStyle(NunaPalette.textPrimary)
                     }
                     Spacer()
@@ -308,7 +308,7 @@ struct NunaTodayView: View {
         }
         .padding(12)
         .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous)
-            .strokeBorder(Color.white.opacity(0.22), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5])))
+            .strokeBorder(NunaPalette.ink.opacity(0.22), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5])))
         .dropDestination(for: String.self) { items, _ in
             guard let raw = items.first, let dragged = TodaySection(rawValue: raw) else { return false }
             reorder(dragged, before: section); return true
@@ -337,7 +337,7 @@ struct NunaTodayView: View {
                 ForEach(metricTiles.prefix(4)) { t in
                     VStack(alignment: .leading, spacing: 4) {
                         Text(t.label).font(.system(size: 10.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                        Text(verbatim: t.value).font(.system(size: 22, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: t.value).font(.system(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     }
                     .padding(12).frame(maxWidth: .infinity, alignment: .leading).background(inner)
                 }
@@ -379,7 +379,7 @@ struct NunaTodayView: View {
     private func miniRing(_ value: Double?, _ label: LocalizedStringKey, _ color: Color, _ unit: String, fraction: Double? = nil) -> some View {
         VStack(spacing: 6) {
             NunaRingGauge(fraction: fraction ?? ((value ?? 0) / 100), color: color, size: 56, lineWidth: 6) {
-                Text(verbatim: value.map { String(format: "%.0f", $0) + unit } ?? "–").font(.system(size: 13, weight: .bold, design: .rounded))
+                Text(verbatim: value.map { String(format: "%.0f", $0) + unit } ?? "–").font(.system(size: 13, weight: .bold, design: NunaType.design))
                     .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6)
             }
             Text(label).font(.system(size: 10.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)

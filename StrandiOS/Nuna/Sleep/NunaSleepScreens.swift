@@ -106,14 +106,14 @@ struct NunaSleepView: View {
                 NunaRingGauge(fraction: (rest ?? 0) / 100, color: NunaPalette.rest, size: 112, lineWidth: 10) {
                     VStack(spacing: 0) {
                         Text(verbatim: rest.map { "\(Int($0.rounded()))%" } ?? "–")
-                            .font(.system(size: 28, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                            .font(.system(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         Text("Rest").font(.system(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase)
                             .foregroundStyle(NunaPalette.textSecondary)
                     }
                 }
                 VStack(alignment: .leading, spacing: 8) {
                     Text(verbatim: NunaSleepFormat.duration(night.asleepMin))
-                        .font(.system(size: NunaTypeSize.numberL - 6, weight: .bold, design: .rounded))
+                        .font(.system(size: NunaTypeSize.numberL - 6, weight: .bold, design: NunaType.design))
                         .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
                     Text(verbatim: "\(NunaSleepFormat.clock(night.onset)) – \(NunaSleepFormat.clock(night.wake))")
                         .font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
@@ -167,7 +167,7 @@ struct NunaSleepView: View {
                         Text("Nap").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
                             .foregroundStyle(NunaPalette.textSecondary)
                         Text(verbatim: NunaSleepFormat.duration(nap.asleepMin))
-                            .font(.system(size: NunaTypeSize.numberM, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                            .font(.system(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         Text(verbatim: "\(NunaSleepFormat.clock(nap.start)) – \(NunaSleepFormat.clock(nap.end))")
                             .font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
@@ -220,7 +220,7 @@ struct NunaSleepView: View {
                 Text(stage.nunaName).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 Spacer()
                 Text(verbatim: "\(NunaSleepFormat.duration(minutes)) · \(total > 0 ? Int((minutes / total * 100).rounded()) : 0)%")
-                    .font(.system(size: 14, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    .font(.system(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             }
             NunaProgressBar(fraction: total > 0 ? minutes / total * 2 : 0, color: stage.nunaColor)
             Text(verbatim: String(localized: "Usually \(NunaSleepFormat.duration(typical))"))
@@ -250,7 +250,7 @@ struct NunaSleepView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label).font(.system(size: 11, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 .lineLimit(1).minimumScaleFactor(0.7)
-            Text(verbatim: value).font(.system(size: 22, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+            Text(verbatim: value).font(.system(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -265,7 +265,7 @@ struct NunaSleepView: View {
                         .foregroundStyle(NunaPalette.textSecondary)
                     HStack {
                         Text(verbatim: need.map { NunaSleepFormat.duration($0) } ?? "–")
-                            .font(.system(size: NunaTypeSize.numberM, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                            .font(.system(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         Text("needed").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         Spacer()
                         if let debt, debt > 0 { NunaChip(verbatim: String(localized: "Debt \(Int(debt.rounded())) min"), color: NunaPalette.warning) }
@@ -290,7 +290,7 @@ struct NunaSleepStagesView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack(alignment: .firstTextBaseline) {
                             Text(verbatim: NunaSleepFormat.duration(night.asleepMin))
-                                .font(.system(size: NunaTypeSize.numberL, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                                .font(.system(size: NunaTypeSize.numberL, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                             Text("asleep").font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                             Spacer()
                         }
@@ -341,7 +341,7 @@ struct NunaSleepStagesView: View {
             }
             Spacer()
             VStack(alignment: .trailing, spacing: 2) {
-                Text(verbatim: NunaSleepFormat.duration(minutes)).font(.system(size: 17, weight: .bold, design: .rounded))
+                Text(verbatim: NunaSleepFormat.duration(minutes)).font(.system(size: 17, weight: .bold, design: NunaType.design))
                     .foregroundStyle(NunaPalette.textPrimary)
                 Text(verbatim: "\(total > 0 ? Int((minutes / total * 100).rounded()) : 0)%")
                     .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
@@ -381,7 +381,7 @@ struct NunaSleepVitalsView: View {
                 Text(label).font(.system(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 HStack(alignment: .firstTextBaseline, spacing: 3) {
                     Text(verbatim: value.map { String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, $0) } ?? "–")
-                        .font(.system(size: NunaTypeSize.numberM, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                        .font(.system(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text(verbatim: unit).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 if let value, let avg {
@@ -415,13 +415,13 @@ struct NunaSleepPerformanceView: View {
                     HStack(spacing: 18) {
                         NunaRingGauge(fraction: (hvn ?? 0) / 100, color: NunaPalette.rest, size: 112, lineWidth: 10) {
                             Text(verbatim: hvn.map { "\(Int($0.rounded()))%" } ?? "–")
-                                .font(.system(size: 28, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                                .font(.system(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         }
                         VStack(alignment: .leading, spacing: 6) {
                             Text("Hours vs needed").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
                                 .foregroundStyle(NunaPalette.textSecondary)
                             Text(verbatim: "\(NunaSleepFormat.duration(night.asleepMin)) / \(need.map { NunaSleepFormat.duration($0) } ?? "–")")
-                                .font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                                .font(.system(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                             if let debt, debt > 0 { NunaChip(verbatim: String(localized: "Debt \(Int(debt.rounded())) min"), color: NunaPalette.warning) }
                         }
                         Spacer(minLength: 0)
@@ -440,7 +440,7 @@ struct NunaSleepPerformanceView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     Text(title).font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textSecondary)
-                    NunaLine2Chart(points: points, color: .white, decimals: 0, height: 170)
+                    NunaLine2Chart(points: points, color: NunaPalette.ink, decimals: 0, height: 170)
                 }
             }
         }
@@ -501,7 +501,7 @@ private struct NunaNapContent: View {
                 .foregroundStyle(NunaPalette.charge)
                 .frame(maxWidth: .infinity, minHeight: 60)
                 .overlay(RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous)
-                    .strokeBorder(Color.white.opacity(0.22), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5])))
+                    .strokeBorder(NunaPalette.ink.opacity(0.22), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5])))
             }
             .buttonStyle(.plain)
             history
@@ -518,7 +518,7 @@ private struct NunaNapContent: View {
                     NunaChip(nap.manual ? "Added by you" : "Detected automatically", color: nap.manual ? nil : NunaPalette.charge)
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(verbatim: "\(Int(nap.asleepMin.rounded()))").font(.system(size: 60, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: "\(Int(nap.asleepMin.rounded()))").font(.system(size: 60, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text("min").font(.system(size: 22, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 Text(verbatim: "\(NunaSleepFormat.clock(nap.start)) – \(NunaSleepFormat.clock(nap.end))")
@@ -581,7 +581,7 @@ private struct NunaNapContent: View {
         HStack {
             Text(l).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
             Spacer()
-            Text(verbatim: v).font(.system(size: 17, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+            Text(verbatim: v).font(.system(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }
     }
 
@@ -603,7 +603,7 @@ private struct NunaNapContent: View {
                                         .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                                 }
                                 Spacer()
-                                Text(verbatim: "\(Int(pair.1.asleepMin.rounded()))m").font(.system(size: 17, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                                Text(verbatim: "\(Int(pair.1.asleepMin.rounded()))m").font(.system(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                                 NunaChip(pair.1.manual ? "Manual" : "Auto", color: pair.1.manual ? nil : NunaPalette.charge)
                             }
                             .frame(minHeight: 56)
@@ -631,7 +631,7 @@ private struct NunaAddNapSheet: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Add a nap").font(.system(size: NunaTypeSize.h2, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary).padding(.top, 22)
+            Text("Add a nap").font(.system(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).padding(.top, 22)
             NunaCard(small: true) {
                 VStack(spacing: 0) {
                     DatePicker("Start", selection: $start, in: ...Date(), displayedComponents: [.date, .hourAndMinute]).tint(NunaPalette.charge)
@@ -655,7 +655,7 @@ private struct NunaAddNapSheet: View {
         }
         .padding(.horizontal, NunaSpacing.screenH)
         .background(NunaPalette.canvas.ignoresSafeArea())
-        .preferredColorScheme(.dark)
+        .preferredColorScheme(NunaTheme.colorScheme)
         .nunaSheetChrome(detents: [.medium])
         .onAppear {
             let cal = Calendar.current

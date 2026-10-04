@@ -56,7 +56,7 @@ struct NunaMoodView: View {
                 .lineLimit(2...4)
                 .font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                 .padding(.horizontal, 18).padding(.vertical, 14)
-                .background(Color.black.opacity(0.28), in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
+                .background(NunaPalette.shade.opacity(0.28), in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
             if let stress {
                 NunaCard(small: true) {
@@ -67,7 +67,7 @@ struct NunaMoodView: View {
             Button { Task { await save() } } label: {
                 Text(savedFlash ? "Saved" : "Save").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
                     .frame(maxWidth: .infinity).frame(height: 56)
-                    .background(NunaPalette.textPrimary.opacity(mood == nil ? 0.35 : 1), in: Capsule())
+                    .background(NunaPalette.accent.opacity(mood == nil ? 0.35 : 1), in: Capsule())
             }
             .buttonStyle(.plain).disabled(mood == nil)
             weekCard
@@ -82,7 +82,7 @@ struct NunaMoodView: View {
         NunaCard {
             VStack(alignment: .leading, spacing: 18) {
                 Text(verbatim: Self.stamp.string(from: Date())).font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                Text("How are you feeling right now?").font(.system(size: 22, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                Text("How are you feeling right now?").font(.system(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 HStack(alignment: .top, spacing: 4) {
                     ForEach(Array(MoodStore.scale), id: \.self) { v in
                         let on = mood == v
@@ -90,7 +90,7 @@ struct NunaMoodView: View {
                             VStack(spacing: 8) {
                                 Text(verbatim: MoodStore.face(for: v)).font(.system(size: 26))
                                     .frame(width: 52, height: 52)
-                                    .background(on ? NunaPalette.textPrimary : Color.white.opacity(0.07), in: Circle())
+                                    .background(on ? NunaPalette.accent : NunaPalette.ink.opacity(0.07), in: Circle())
                                     .overlay(Circle().strokeBorder(NunaPalette.hairline, lineWidth: on ? 0 : 1))
                                 Text(verbatim: MoodStore.label(for: v)).font(.system(size: 11, weight: .bold))
                                     .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
@@ -119,7 +119,7 @@ struct NunaMoodView: View {
                         Text(factorKeys.first { $0.id == id }!.title).font(.system(size: 13.5, weight: .bold))
                             .foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary)
                             .padding(.horizontal, 14).frame(height: 38)
-                            .background(on ? NunaPalette.textPrimary : NunaPalette.glassStrong, in: Capsule())
+                            .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
                             .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: on ? 0 : 1))
                     }.buttonStyle(.plain)
                 }
@@ -134,7 +134,7 @@ struct NunaMoodView: View {
                     Text("Energy").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     Text(extras.energy < 0.34 ? "Low" : (extras.energy < 0.67 ? "Medium" : "High"))
-                        .font(.system(size: 17, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                        .font(.system(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 }
                 Slider(value: $extras.energy, in: 0...1).tint(NunaPalette.charge)
                 HStack { Text("Tired"); Spacer(); Text("Energetic") }
@@ -152,7 +152,7 @@ struct NunaMoodView: View {
                         let d = week[i]
                         VStack(spacing: 8) {
                             ZStack {
-                                Circle().fill(d.value == nil ? Color.white.opacity(0.12) : Color.white.opacity(0.14 + 0.16 * Double(d.value ?? 0)))
+                                Circle().fill(d.value == nil ? NunaPalette.ink.opacity(0.12) : NunaPalette.ink.opacity(0.14 + 0.16 * Double(d.value ?? 0)))
                                 if let v = d.value { Text(verbatim: MoodStore.face(for: v)).font(.system(size: 14)) }
                             }
                             .frame(width: 30, height: 30)

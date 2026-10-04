@@ -12,7 +12,7 @@ struct NunaTitleRow<Trailing: View>: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
             Text(title)
-                .font(.system(size: NunaTypeSize.h2, weight: .heavy, design: .rounded))
+                .font(.system(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design))
                 .foregroundStyle(NunaPalette.textPrimary)
                 .accessibilityAddTraits(.isHeader)
             Spacer(minLength: 8)
@@ -135,7 +135,7 @@ struct NunaScoreCard: View {
                 NunaRingGauge(fraction: v.fraction, color: v.color, size: 98, lineWidth: 9) {
                     HStack(alignment: .firstTextBaseline, spacing: 1) {
                         Text(verbatim: v.number)
-                            .font(.system(size: 25, weight: .bold, design: .rounded))
+                            .font(.system(size: 25, weight: .bold, design: NunaType.design))
                             .foregroundStyle(NunaPalette.textPrimary)
                             .minimumScaleFactor(0.6).lineLimit(1)
                         if !v.unit.isEmpty && v.number != "–" {
@@ -277,7 +277,7 @@ struct NunaStressCard: View {
                     HStack(alignment: .lastTextBaseline) {
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
                             Text(verbatim: headline.map { format($0) } ?? "–")
-                                .font(.system(size: NunaTypeSize.numberL, weight: .bold, design: .rounded))
+                                .font(.system(size: NunaTypeSize.numberL, weight: .bold, design: NunaType.design))
                                 .foregroundStyle(NunaPalette.textPrimary)
                             Text(verbatim: "/ 3").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         }
@@ -389,7 +389,7 @@ struct NunaMetricsGrid: View {
             }
             Spacer(minLength: 8)
             HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text(verbatim: tile.value).font(.system(size: 18, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: tile.value).font(.system(size: 18, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 if !tile.unit.isEmpty && tile.value != "–" {
                     Text(verbatim: tile.unit).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
@@ -444,7 +444,7 @@ struct NunaMetricsGrid: View {
                 .frame(minHeight: 24, alignment: .top)
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(verbatim: tile.value)
-                        .font(.system(size: NunaTypeSize.numberM, weight: .bold, design: .rounded))
+                        .font(.system(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design))
                         .foregroundStyle(NunaPalette.textPrimary)
                         .minimumScaleFactor(0.6).lineLimit(1)
                     if !tile.unit.isEmpty && tile.value != "–" {

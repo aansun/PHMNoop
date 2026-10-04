@@ -27,15 +27,15 @@ struct NunaRhythmConsentView: View {
                 }
                 VStack(alignment: .leading, spacing: 10) {
                     Image(systemName: "waveform.path.ecg").font(.system(size: 26, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(width: 56, height: 56).background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
-                    Text("Before you turn on Rhythm").font(.system(size: NunaTypeSize.h1 - 4, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                        .frame(width: 56, height: 56).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
+                    Text("Before you turn on Rhythm").font(.system(size: NunaTypeSize.h1 - 4, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text("An experimental picture of your beat-to-beat timing. Please read these first.")
                         .font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 VStack(alignment: .leading, spacing: 18) {
                     ForEach(Array(RhythmConsent.points.enumerated()), id: \.offset) { i, p in
                         HStack(alignment: .top, spacing: 14) {
-                            Text(verbatim: "\(i + 1)").font(.system(size: 14, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: "\(i + 1)").font(.system(size: 14, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                                 .frame(width: 30, height: 30).background(NunaPalette.glassStrong, in: Circle())
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(verbatim: p.0).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
@@ -56,7 +56,7 @@ struct NunaRhythmConsentView: View {
                 Button(action: onAccept) {
                     Text("Turn on Rhythm").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
                         .frame(maxWidth: .infinity).frame(height: 56)
-                        .background(NunaPalette.textPrimary.opacity(understood ? 1 : 0.35), in: Capsule())
+                        .background(NunaPalette.accent.opacity(understood ? 1 : 0.35), in: Capsule())
                 }.buttonStyle(.plain).disabled(!understood)
                 Button(action: onCancel) {
                     Text("Not now").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
@@ -83,17 +83,17 @@ struct NunaPoincarePlot: View {
         Canvas { ctx, size in
             let s = min(size.width, size.height), inset: CGFloat = 12, plot = s - inset * 2
             func map(_ v: Double) -> CGFloat { inset + CGFloat((min(max(v, lo), hi) - lo) / (hi - lo)) * plot }
-            ctx.fill(Path(roundedRect: CGRect(x: 0, y: 0, width: s, height: s), cornerRadius: 16), with: .color(.black.opacity(0.28)))
+            ctx.fill(Path(roundedRect: CGRect(x: 0, y: 0, width: s, height: s), cornerRadius: 16), with: .color(NunaPalette.shade.opacity(0.28)))
             var grid = Path()
             for i in 1...3 {
                 let p = inset + plot * CGFloat(i) / 4
                 grid.move(to: CGPoint(x: inset, y: p)); grid.addLine(to: CGPoint(x: s - inset, y: p))
                 grid.move(to: CGPoint(x: p, y: inset)); grid.addLine(to: CGPoint(x: p, y: s - inset))
             }
-            ctx.stroke(grid, with: .color(.white.opacity(0.07)), lineWidth: 1)
+            ctx.stroke(grid, with: .color(NunaPalette.ink.opacity(0.07)), lineWidth: 1)
             var diag = Path()
             diag.move(to: CGPoint(x: inset, y: s - inset)); diag.addLine(to: CGPoint(x: s - inset, y: inset))
-            ctx.stroke(diag, with: .color(.white.opacity(0.28)), style: StrokeStyle(lineWidth: 1, dash: [4, 6]))
+            ctx.stroke(diag, with: .color(NunaPalette.ink.opacity(0.28)), style: StrokeStyle(lineWidth: 1, dash: [4, 6]))
             guard !points.isEmpty else { return }
             let mx = points.map(\.x).reduce(0, +) / Double(points.count), my = points.map(\.y).reduce(0, +) / Double(points.count)
             if let sd1, let sd2 {
@@ -164,7 +164,7 @@ struct NunaRhythmView: View {
         }
         .sheet(isPresented: $showConsent) {
             NunaRhythmConsentView(onAccept: { acceptedVersion = RhythmConsent.currentVersion; showConsent = false }, onCancel: { showConsent = false })
-                .preferredColorScheme(.dark)
+                .preferredColorScheme(NunaTheme.colorScheme)
         }
     }
 
@@ -228,9 +228,9 @@ struct NunaRhythmView: View {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
                     Image(systemName: unsupported ? "applewatch" : "waveform.path.ecg").font(.system(size: 26, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(width: 56, height: 56).background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
+                        .frame(width: 56, height: 56).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
                     Text(unsupported ? "This device can't support a rhythm reading" : "No clear reading yet")
-                        .font(.system(size: 22, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                        .font(.system(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text(emptyMessage).font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
