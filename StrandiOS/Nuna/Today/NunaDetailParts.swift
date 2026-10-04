@@ -260,6 +260,48 @@ struct NunaBandLine: View {
     }
 }
 
+// MARK: - Stress bars (one bar per timeline point, coloured by stress band)
+
+struct NunaStressBars: View {
+    let points: [DaytimeStress.HourPoint]
+    var height: CGFloat = 96
+
+    static func color(_ level: Double) -> Color {
+        level < 1 ? NunaPalette.charge : (level < 2 ? NunaPalette.warning : NunaPalette.alert)
+    }
+
+    var body: some View {
+        GeometryReader { geo in
+            let gap: CGFloat = points.count > 30 ? 2 : 3
+            let w = min(22, max(2, (geo.size.width - gap * CGFloat(max(points.count - 1, 0))) / CGFloat(max(points.count, 1))))
+            ZStack(alignment: .bottomLeading) {
+                // The Medium and High thresholds, as in the mockup's dashed guides.
+                ForEach([1.0, 2.0], id: \.self) { lvl in
+                    Path { p in
+                        let y = geo.size.height * CGFloat(1 - lvl / 3)
+                        p.move(to: CGPoint(x: 0, y: y)); p.addLine(to: CGPoint(x: geo.size.width, y: y))
+                    }
+                    .stroke(Color.white.opacity(0.12), style: StrokeStyle(lineWidth: 1, dash: [4, 4]))
+                }
+                HStack(alignment: .bottom, spacing: gap) {
+                    ForEach(points.indices, id: \.self) { i in
+                        if let l = points[i].level {
+                            RoundedRectangle(cornerRadius: 3, style: .continuous).fill(Self.color(l).opacity(l < 1 ? 0.85 : 0.95))
+                                .frame(width: w, height: max(5, geo.size.height * CGFloat(min(l, 3) / 3)))
+                        } else {
+                            RoundedRectangle(cornerRadius: 3, style: .continuous).fill(Color.white.opacity(points[i].maskedForActivity ? 0.14 : 0.05))
+                                .frame(width: w, height: 5)
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
+            }
+        }
+        .frame(height: height)
+        .accessibilityHidden(true)
+    }
+}
+
 // MARK: - Series helper
 
 /// One metric's daily values over the last `days` days (oldest first), nil where missing.

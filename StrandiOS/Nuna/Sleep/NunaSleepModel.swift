@@ -66,7 +66,16 @@ struct NunaNap: Identifiable {
     let end: Date
     let asleepMin: Double
     let intervals: [SleepInterval]
+    /// Movement in seconds from `start`.
+    var motion: [NunaMotionEpoch] = []
+    /// Added or corrected by hand (otherwise detected from the strap).
+    var manual = false
     var spanMin: Double { end.timeIntervalSince(start) / 60 }
+
+    /// Minutes in a stage, from the timeline.
+    func minutes(_ stage: SleepStage) -> Double {
+        intervals.filter { $0.stage == stage }.reduce(0) { $0 + ($1.end - $1.start) } / 60
+    }
 }
 
 @MainActor
@@ -212,9 +221,10 @@ final class NunaSleepModel: ObservableObject {
                 let start = b.effectiveStartTs
                 let seg = SleepView.decodeSegments(b.stagesJSON, sessionStart: start)
                 let asleep = seg?.stages.asleep ?? SleepView.decodedAsleepMinutes(b.stagesJSON, effectiveStartTs: start)
+                let nm = (motions[b.startTs] ?? []).enumerated().map { NunaMotionEpoch(t: TimeInterval($0.offset) * 30, v: $0.element) }
                 return NunaNap(start: Date(timeIntervalSince1970: TimeInterval(start)),
                                end: Date(timeIntervalSince1970: TimeInterval(b.endTs)),
-                               asleepMin: asleep, intervals: seg?.intervals ?? [])
+                               asleepMin: asleep, intervals: seg?.intervals ?? [], motion: nm, manual: b.userEdited)
             }.sorted { $0.start < $1.start }
 
             out.append(NunaNight(dayKey: key, wakeDate: wakeDate,

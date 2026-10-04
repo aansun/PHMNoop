@@ -10,6 +10,15 @@ import WhoopStore
 /// (`today.sectionOrder`, `today.hiddenSections`, `today.keyMetrics`), so switching Experience keeps the
 /// user's arrangement. Sections without a Nuna card yet (Your Cards, Menstrual Cycle, Added Cards) are
 /// skipped here and stay available in the Default Experience.
+/// The order and visibility the Nuna Today screen uses until the person arranges their own.
+enum NunaTodayDefaults {
+    static let order: [TodaySection] = [
+        .hero, .synthesis, .recoveryVitals, .keyMetrics, .workouts, .journal,
+        .yourCards, .menstrualCycle, .addedCards, .heartRate, .liveSession,
+    ]
+    static let hidden: [TodaySection] = [.heartRate, .liveSession, .yourCards]
+}
+
 struct NunaTodayView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var router: NavRouter
@@ -48,11 +57,8 @@ struct NunaTodayView: View {
 
     /// The order and visibility the Nuna mockup shows until the person arranges the cards themselves.
     /// Stored values (shared with Default) win as soon as they exist.
-    private static let nunaDefaultOrder: [TodaySection] = [
-        .hero, .synthesis, .recoveryVitals, .keyMetrics, .workouts, .journal,
-        .yourCards, .menstrualCycle, .addedCards, .heartRate, .liveSession,
-    ]
-    private static let nunaDefaultHidden: [TodaySection] = [.heartRate, .liveSession, .yourCards]
+    private static let nunaDefaultOrder = NunaTodayDefaults.order
+    private static let nunaDefaultHidden = NunaTodayDefaults.hidden
     private static let nunaDefaultMetrics: [KeyMetric] = [.hrv, .restingHr, .steps, .rest]
 
     private var effectiveOrder: [TodaySection] {

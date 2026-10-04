@@ -172,7 +172,7 @@ struct NunaSleepView: View {
                             .font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     Spacer()
-                    NunaChip("Detected automatically", color: NunaPalette.charge)
+                    NunaChip(nap.manual ? "Added by you" : "Detected automatically", color: nap.manual ? nil : NunaPalette.charge)
                 }
             }
         }
@@ -453,26 +453,160 @@ struct NunaNapView: View {
     var startIndex = 0
     var body: some View {
         NunaSleepHost(title: "Naps", startIndex: startIndex) { model in
-            let recent = model.nights.prefix(14).flatMap { n in n.naps.map { (n, $0) } }
-            NunaCard {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Naps are detected automatically").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("A nap is any sleep that is not your main night. Naps add to your daily sleep, they do not replace it.")
-                        .font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            if recent.isEmpty {
-                NunaCard(small: true) {
-                    NunaListRow("No naps in the last 14 days", systemImage: "zzz", tint: NunaPalette.restText)
-                }
+            NunaNapContent(model: model)
+        }
+    }
+}
+
+private struct NunaNapContent: View {
+    @ObservedObject var model: NunaSleepModel
+    @EnvironmentObject private var repo: Repository
+    @AppStorage("noop.coachEnabled") private var coachEnabled = true
+    @State private var showAdd = false
+    @State private var showCoach = false
+
+    private var night: NunaNight? { model.night }
+    private var naps: [NunaNap] { night?.naps ?? [] }
+    private var isToday: Bool { night.map { Calendar.current.isDateInToday($0.wakeDate) } ?? false }
+
+    var body: some View {
+        Group { content }
+            .sheet(isPresented: $showAdd) { NunaAddNapSheet(day: night?.wakeDate ?? Date()) { await repo.refresh(); await model.load(repo: repo) } }
+            .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: "nap") }
+    }
+
+    @ViewBuilder private var content: some View {
+        if let night {
+            NunaNightPicker(model: model, caption: isToday ? "Today" : "Earlier day", date: night.wakeDate)
+            if let nap = naps.first {
+                hero(nap, count: naps.count)
+                tiles(nap)
+                impact(night)
+                if coachEnabled { NunaAnyaCard(title: "A nap under 30 minutes is safest for your night's sleep", highlight: false) { showCoach = true } }
             } else {
-                NunaSectionHeader("Last 14 days")
-                NunaCard(small: true) {
+                NunaCard {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("No nap this day").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("A nap is any sleep that is not your main night. It is detected automatically when you rest without moving for a while.")
+                            .font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            Button { showAdd = true } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "plus").font(.system(size: 17, weight: .bold))
+                    Text("Add a nap by hand").font(.system(size: 15, weight: .heavy))
+                }
+                .foregroundStyle(NunaPalette.charge)
+                .frame(maxWidth: .infinity, minHeight: 60)
+                .overlay(RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.22), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5])))
+            }
+            .buttonStyle(.plain)
+            history
+        }
+    }
+
+    private func hero(_ nap: NunaNap, count: Int) -> some View {
+        let total = max(nap.end.timeIntervalSince(nap.start), 1)
+        return NunaCard(padding: EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20)) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    Text(count > 1 ? "First nap" : "Nap").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Spacer()
+                    NunaChip(nap.manual ? "Added by you" : "Detected automatically", color: nap.manual ? nil : NunaPalette.charge)
+                }
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(verbatim: "\(Int(nap.asleepMin.rounded()))").font(.system(size: 60, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("min").font(.system(size: 22, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                }
+                Text(verbatim: "\(NunaSleepFormat.clock(nap.start)) – \(NunaSleepFormat.clock(nap.end))")
+                    .font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                if !nap.intervals.isEmpty {
+                    HStack(alignment: .top, spacing: 10) {
+                        VStack(alignment: .leading, spacing: 0) {
+                            ForEach(["Awake", "REM", "Light", "Deep"], id: \.self) { l in
+                                Text(LocalizedStringKey(l)).font(.system(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                    .frame(maxHeight: .infinity, alignment: .center)
+                            }
+                        }
+                        .frame(width: 48, height: 110, alignment: .leading)
+                        VStack(spacing: 6) {
+                            NunaHypnogramStrip(intervals: nap.intervals, height: 110)
+                            if nap.motion.count >= 4 { NunaMotionStrip(epochs: nap.motion, total: total, height: 30) }
+                        }
+                    }
+                    .padding(.top, 8)
+                    HStack {
+                        Spacer().frame(width: 58)
+                        Text(verbatim: NunaSleepFormat.clock(nap.start)); Spacer()
+                        Text(verbatim: NunaSleepFormat.clock(nap.start.addingTimeInterval(total / 2))); Spacer()
+                        Text(verbatim: NunaSleepFormat.clock(nap.end))
+                    }
+                    .font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    NunaStageLegend(showsMovement: nap.motion.count >= 4)
+                } else {
+                    Text("The order of stages is not available for this nap.").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                }
+            }
+        }
+    }
+
+    private func tiles(_ nap: NunaNap) -> some View {
+        let moves = NunaMovementSummary(nap.motion, hours: max(nap.spanMin / 60, 0.05))?.movements
+        return LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+            NunaStatTile(label: "Light", value: "\(Int(nap.minutes(.light).rounded()))", unit: "min")
+            NunaStatTile(label: "Deep", value: "\(Int(nap.minutes(.deep).rounded()))", unit: "min")
+            NunaStatTile(label: "REM", value: "\(Int(nap.minutes(.rem).rounded()))", unit: "min")
+            NunaStatTile(label: "Movement", value: moves.map(String.init) ?? "–", unit: moves == nil ? "" : "×")
+        }
+    }
+
+    private func impact(_ night: NunaNight) -> some View {
+        let napMin = naps.reduce(0) { $0 + $1.asleepMin }
+        return NunaCard {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Effect on tonight").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                line("Total sleep this day", NunaSleepFormat.duration(night.asleepMin + napMin))
+                line("Counted toward your need", "+" + NunaSleepFormat.duration(napMin))
+                line("Tonight's need", NunaSleepFormat.duration(model.need(night)))
+                Text("A nap counts toward your sleep need but does not change last night's Rest score.")
+                    .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            }
+        }
+    }
+
+    private func line(_ l: LocalizedStringKey, _ v: String) -> some View {
+        HStack {
+            Text(l).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            Spacer()
+            Text(verbatim: v).font(.system(size: 17, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+        }
+    }
+
+    private var history: some View {
+        let recent = model.nights.prefix(14).flatMap { n in n.naps.map { (n, $0) } }
+        return VStack(alignment: .leading, spacing: 12) {
+            NunaTitleRow(title: "Nap history") { EmptyView() }
+            if recent.isEmpty {
+                NunaCard(small: true) { NunaListRow("No naps in the last 14 days", systemImage: "zzz", tint: NunaPalette.restText) }
+            } else {
+                NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                     VStack(spacing: 0) {
                         ForEach(Array(recent.enumerated()), id: \.offset) { idx, pair in
                             if idx > 0 { NunaDivider() }
-                            napRow(pair.0, pair.1)
+                            HStack(spacing: 12) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(verbatim: weekday(pair.1.start)).font(.system(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                    Text(verbatim: "\(NunaSleepFormat.clock(pair.1.start)) – \(NunaSleepFormat.clock(pair.1.end))")
+                                        .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                }
+                                Spacer()
+                                Text(verbatim: "\(Int(pair.1.asleepMin.rounded()))m").font(.system(size: 17, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                                NunaChip(pair.1.manual ? "Manual" : "Auto", color: pair.1.manual ? nil : NunaPalette.charge)
+                            }
+                            .frame(minHeight: 56)
                         }
                     }
                 }
@@ -480,19 +614,55 @@ struct NunaNapView: View {
         }
     }
 
-    private func napRow(_ night: NunaNight, _ nap: NunaNap) -> some View {
-        HStack(spacing: 12) {
-            NunaIconTile("zzz", tint: NunaPalette.restText)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(verbatim: NunaSleepFormat.nightTitle(nap.start)).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                Text(verbatim: "\(NunaSleepFormat.clock(nap.start)) – \(NunaSleepFormat.clock(nap.end))")
-                    .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-            }
-            Spacer()
-            Text(verbatim: NunaSleepFormat.duration(nap.asleepMin)).font(.system(size: 17, weight: .bold, design: .rounded))
-                .foregroundStyle(NunaPalette.textPrimary)
-        }
-        .frame(minHeight: 62)
+    private func weekday(_ d: Date) -> String {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEEE")
+        return f.string(from: d)
     }
 }
+
+/// Add a nap by hand: pick the day and the start and end. Staged from the strap's raw data when there is any.
+private struct NunaAddNapSheet: View {
+    let day: Date
+    let onSaved: () async -> Void
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject private var repo: Repository
+    @State private var start = Date()
+    @State private var end = Date()
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Add a nap").font(.system(size: NunaTypeSize.h2, weight: .heavy, design: .rounded)).foregroundStyle(NunaPalette.textPrimary).padding(.top, 22)
+            NunaCard(small: true) {
+                VStack(spacing: 0) {
+                    DatePicker("Start", selection: $start, in: ...Date(), displayedComponents: [.date, .hourAndMinute]).tint(NunaPalette.charge)
+                        .foregroundStyle(NunaPalette.textPrimary).frame(minHeight: 52)
+                    NunaDivider()
+                    DatePicker("End", selection: $end, in: start...Date(), displayedComponents: [.date, .hourAndMinute]).tint(NunaPalette.charge)
+                        .foregroundStyle(NunaPalette.textPrimary).frame(minHeight: 52)
+                }
+            }
+            Text("The nap is staged from your strap's heart rate and movement when it has data for that time.")
+                .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Button {
+                Task {
+                    await repo.addManualNap(startTs: Int(start.timeIntervalSince1970), endTs: Int(end.timeIntervalSince1970))
+                    await onSaved(); dismiss()
+                }
+            } label: { Text("Save nap") }
+                .buttonStyle(.nuna(.primary, fullWidth: true))
+                .disabled(end.timeIntervalSince(start) < 5 * 60)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, NunaSpacing.screenH)
+        .background(NunaPalette.canvas.ignoresSafeArea())
+        .preferredColorScheme(.dark)
+        .nunaSheetChrome(detents: [.medium])
+        .onAppear {
+            let cal = Calendar.current
+            let base = cal.isDateInToday(day) ? Date() : (cal.date(bySettingHour: 14, minute: 0, second: 0, of: day) ?? day)
+            end = min(base, Date()); start = end.addingTimeInterval(-30 * 60)
+        }
+    }
+}
+
 #endif
