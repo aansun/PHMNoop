@@ -186,11 +186,23 @@ Not built, and why:
 - The Anya card on Devices (battery under 30% or sync failed) is not drawn yet; the header button opens the sheet with Device questions.
 - Nothing was run against a real strap (BLE cannot be tested in the simulator); the screens were checked with a strap registered but not connected.
 
-## Phase 7: Saya (M)
+## Phase 7: Saya (M): built, with gaps
 
-Hub, persona (profile, zones, goals), appearance, units, language, notifications, optional features, automations (double-tap, presence, haptic coaching, sedentary, alerts, shortcuts), data hub, backup, Strava, privacy, advanced, experiments, test centre, about.
+Built in `StrandiOS/Nuna/Me/` and `NunaMeView.swift`. Every Me row now opens a Nuna screen (`NunaMeRoute`, `nunaMeDestinations()`), over the same stored settings the Default screens edit, so a value changed in either Experience is the same value. The hub shows real values (age, height, weight, maximum heart rate, days of data, device and battery, provider and memories, units, what is on).
 
-Most screens re-skin existing settings; the new work is the hub, persona goals, language and privacy.
+- [x] Persona, Heart-rate zones, Targets (Persona, PersonaZones, PersonaGoals): profile fields (imperial or metric), maximum heart rate with automatic or manual, custom zone starts, day start, step calibration, restart baseline (`Baselines.recalibrateRecoveryBaselines`). Targets (weekly Effort, sleep, steps, water, target weight) are new, kept in the app's own preferences and read by Anya's prompt; a suggestion is computed from the last 7 days.
+- [x] Units, Language, Optional features (Units, Language, Features), Notifications overview (Notifications, with iOS permission state), Privacy (live iOS permission states, what can leave the phone).
+- [x] Strap automations (Automations, AutoDoubleTap, AutoPresence, AutoSedentary, AutoShortcuts) on `BehaviorStore`, `InactivityPrefs` and `HapticPrefs`: wrist master, double-tap action with a test and recent moments, shortcut names for strap on or off, session cues, zone coaching, stress check, sitting reminder with active hours, Siri and Shortcuts link.
+- [x] Data hub (DataHub) and Backup (Backup): folder backups over `FolderBackup` (back up now, change folder, daily switch, keep count, restore with confirmation); imports keep the existing importer screen.
+- [x] Advanced, Experiments, About (Advanced, Experiments, About): HRV capture and window, exponential Effort, power saving, the experimental switches with their re-score side effects, version and credits.
+- [x] Anya settings (Phase 5) and Devices (Phase 6) are reached from here.
+
+Not built, and why:
+- Mockups for AutoAlerts, AutoCoaching, Widgets, WidgetsLock, WidgetSettings, WidgetVital*, Strava (Setup, Connected), TestCentre and the Connected step. Widgets are Phase 8; Strava and Test Centre keep their existing screens (reached from the new Data hub and Advanced); the heart-rate zone vibration coaching and the finer per-cue alert switches have no separate store beyond the switches already on the Automations screen.
+- The photo and name edit on Persona (the profile has no name field; the avatar stays on the Default Profile screen).
+- Quiet hours for notifications, the bedtime and journal reminder times, and the per-notification schedule rows from Notifications.dc: the app has no such stores; the screen shows what exists and does not draw switches that would do nothing.
+- Language preview and the app-restart behaviour were not exercised.
+- Importing files from the Data hub and restoring a backup were not run (they replace data).
 
 ## Phase 8: Widgets (M)
 

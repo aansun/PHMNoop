@@ -76,6 +76,7 @@ struct NunaRootView: View {
                 .tabRouteDestinations()
                 .nunaAnyaDestinations()
                 .nunaDeviceDestinations()
+                .nunaMeDestinations()
         }
         .toolbar(.hidden, for: .tabBar)
         .tag(tab.rawValue)
@@ -87,6 +88,7 @@ struct NunaRootView: View {
                 .tabRouteDestinations()
                 .nunaDeviceDestinations()
                 .nunaAnyaDestinations()
+                .nunaMeDestinations()
                 .background(NunaPalette.canvas.ignoresSafeArea())
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbarBackground(.hidden, for: .navigationBar)

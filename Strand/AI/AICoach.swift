@@ -394,6 +394,15 @@ final class AICoachEngine: ObservableObject {
         case "detailed": out += "\n\nLENGTH: The user wants detail. Explain the reasoning and the evidence in full, up to about 250 words, still without padding."
         default: break
         }
+        // Goals the wearer set in Me > Persona > Targets; a line is added only for a goal that is set.
+        var goals: [String] = []
+        if defaults.double(forKey: "nuna.goal.weeklyEffort") > 0 { goals.append("weekly Effort target \(Int(defaults.double(forKey: "nuna.goal.weeklyEffort")))") }
+        let sleepGoal = defaults.integer(forKey: "nuna.goal.sleepMinutes")
+        if sleepGoal > 0 { goals.append("sleep target \(sleepGoal / 60)h \(sleepGoal % 60)m") }
+        if defaults.integer(forKey: "nuna.goal.steps") > 0 { goals.append("daily steps target \(defaults.integer(forKey: "nuna.goal.steps"))") }
+        if defaults.double(forKey: "nuna.goal.waterL") > 0 { goals.append("daily water target \(defaults.double(forKey: "nuna.goal.waterL")) L") }
+        if defaults.double(forKey: "nuna.goal.targetWeightKg") > 0 { goals.append("target weight \(defaults.double(forKey: "nuna.goal.targetWeightKg")) kg") }
+        if !goals.isEmpty { out += "\n\nTHE USER'S OWN GOALS (use them when advising; never invent others): " + goals.joined(separator: "; ") + "." }
         let extra = (defaults.string(forKey: extraInstructionsKey) ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
         if !extra.isEmpty {
             out += "\n\nTHE USER'S OWN INSTRUCTIONS (follow them unless they conflict with the safety rules above):\n" + String(extra.prefix(maxExtraInstructionsLength))
