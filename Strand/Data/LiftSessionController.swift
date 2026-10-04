@@ -200,6 +200,16 @@ final class LiftSessionController: ObservableObject {
         persist()
     }
 
+    /// Move the running rest's end by `seconds` (the +15 / -15 buttons). The next warning buzz is re-armed.
+    func adjustRest(by seconds: Int) {
+        guard engine != nil else { return }
+        let stamp = Int(Date().timeIntervalSince1970)
+        engine?.adjustRest(by: seconds, now: stamp)
+        now = stamp
+        warnedFor = nil
+        persist()
+    }
+
     // MARK: - Presentation
     //
     // What a running session looks like, resolved ONCE here rather than in each surface that shows

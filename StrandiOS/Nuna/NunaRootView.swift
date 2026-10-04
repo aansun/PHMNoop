@@ -13,6 +13,8 @@ struct NunaRootView: View {
     let homeScreenQuickActionsEnabled: Bool
 
     @EnvironmentObject private var router: NavRouter
+    /// The live gym session, owned at the app root. Both shells present it; this one with its own face.
+    @EnvironmentObject private var liftSession: LiftSessionController
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
 
     private enum Tab: Int, CaseIterable { case today = 0, health, trends, anya, me }
@@ -42,14 +44,23 @@ struct NunaRootView: View {
             stack(.me) { NunaMeView() }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            NunaTabBar(items: items, selection: $selection) { id in
-                // Re-tapping the active tab pops it to its root.
-                if id < paths.count { paths[id] = NavigationPath() }
+            VStack(spacing: 0) {
+                NunaLiftBar()
+                NunaTabBar(items: items, selection: $selection) { id in
+                    // Re-tapping the active tab pops it to its root.
+                    if id < paths.count { paths[id] = NavigationPath() }
+                }
             }
         }
         .nunaScreenBackground()
         // Nuna is dark-first. The Appearance setting is honoured again once Phase 7 lands the Nuna theme screen.
         .preferredColorScheme(.dark)
+        .sheet(isPresented: $liftSession.isPresented) { NunaLiftSessionView() }
+        // A session left running by a previous launch comes back as the bar, not as a sheet thrown in the user's face.
+        .task {
+            guard !liftSession.isActive, let snapshot = LiftSessionPersistence.load() else { return }
+            liftSession.resume(from: snapshot)
+        }
         .sheet(isPresented: $showDevices) { sheetStack { DevicesView() } }
         .sheet(item: $routed) { dest in sheetStack { destinationView(dest) } }
         .onChange(of: router.requestedDestination) { _, dest in handle(dest) }

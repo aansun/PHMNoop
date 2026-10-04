@@ -22,6 +22,7 @@ enum NunaTodayDefaults {
 struct NunaTodayView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var router: NavRouter
+    @EnvironmentObject private var liftSession: LiftSessionController
     @EnvironmentObject private var profile: ProfileStore
     @EnvironmentObject private var updateStore: UpdateStore
     @EnvironmentObject private var live: LiveState
@@ -94,7 +95,7 @@ struct NunaTodayView: View {
             if model.isToday && !editing {
                 NunaFAB { showQuick = true }
                     .padding(.trailing, NunaSpacing.screenH)
-                    .padding(.bottom, 104)
+                    .padding(.bottom, liftSession.isActive && !liftSession.isPresented ? 172 : 104)
             }
         }
         .background(NunaPalette.canvas.ignoresSafeArea())
