@@ -21,6 +21,11 @@ enum NunaWorkoutRoute: Hashable {
 
 enum NunaWorkoutKind {
     /// Strength work: lifting sessions and anything the catalogue names as strength training.
+    static func isStrengthName(_ sport: String) -> Bool {
+        let s = sport.lowercased()
+        return s.contains("strength") || s.contains("lift") || s.contains("weight") || s.contains("gym") || s.contains("crossfit") || s.contains("bodybuilding")
+    }
+
     static func isStrength(_ r: WorkoutRow) -> Bool {
         if WorkoutSource.classify(r.source) == .lifting { return true }
         let s = r.sport.lowercased()

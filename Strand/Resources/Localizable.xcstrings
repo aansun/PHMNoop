@@ -1,6 +1,12 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Search all workouts": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Cari semua latihan"}}
+    } },
+    "No workouts match": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tidak ada latihan yang cocok"}}
+    } },
     "Trained %lld days ago" : {
       "localizations" : {
         "id" : { "stringUnit" : { "state" : "translated", "value" : "Dilatih %lld hari lalu" } }
