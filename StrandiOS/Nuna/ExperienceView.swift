@@ -16,7 +16,7 @@ struct ExperienceView: View {
             VStack(alignment: .leading, spacing: NunaSpacing.section) {
                 NunaHeader("Experience", onBack: { dismiss() })
                 Text("Pick the look of the whole app. Your data, scores and settings stay the same.")
-                    .font(.system(size: 13.5, weight: .semibold))
+                    .font(.nuna(size: 13.5, weight: .semibold))
                     .foregroundStyle(NunaPalette.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -35,7 +35,7 @@ struct ExperienceView: View {
                     HStack(alignment: .top, spacing: 12) {
                         Image(systemName: "info.circle").foregroundStyle(NunaPalette.textMuted).padding(.top, 2)
                         Text("Switching reloads the app shell briefly. Widgets, Live Activities and Anya keep working with the same data.")
-                            .font(.system(size: 12.5, weight: .semibold))
+                            .font(.nuna(size: 12.5, weight: .semibold))
                             .foregroundStyle(NunaPalette.textSecondary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -65,24 +65,24 @@ struct ExperienceView: View {
                 VStack(alignment: .leading, spacing: 14) {
                     HStack(spacing: 10) {
                         Text(verbatim: mode.displayName)
-                            .font(.system(size: NunaTypeSize.h2, weight: .heavy))
+                            .font(.nuna(size: NunaTypeSize.h2, weight: .heavy))
                             .foregroundStyle(NunaPalette.textPrimary)
                         NunaChip(tag)
                         Spacer(minLength: 0)
                         Image(systemName: selected ? "checkmark.circle.fill" : "circle")
-                            .font(.system(size: 24))
+                            .font(.nuna(size: 24))
                             .foregroundStyle(selected ? NunaPalette.charge : NunaPalette.ink.opacity(0.3))
                     }
                     HStack(alignment: .top, spacing: 16) {
                         ExperiencePreview(mode: mode)
                         VStack(alignment: .leading, spacing: 10) {
                             Text(blurb)
-                                .font(.system(size: 13, weight: .semibold))
+                                .font(.nuna(size: 13, weight: .semibold))
                                 .foregroundStyle(NunaPalette.textSecondary)
                             ForEach(bullets.indices, id: \.self) { i in
                                 HStack(alignment: .top, spacing: 8) {
                                     Circle().fill(NunaPalette.textMuted).frame(width: 5, height: 5).padding(.top, 7)
-                                    Text(bullets[i]).font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                                    Text(bullets[i]).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                                 }
                             }
                         }
@@ -112,7 +112,7 @@ private struct ExperiencePreview: View {
 
     private var nuna: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Today").font(.system(size: 11, weight: .heavy)).foregroundStyle(NunaPalette.ink)
+            Text("Today").font(.nuna(size: 11, weight: .heavy)).foregroundStyle(NunaPalette.ink)
             HStack(spacing: 6) {
                 ring(NunaPalette.charge, 0.78); ring(NunaPalette.effort, 0.59); ring(NunaPalette.rest, 0.86)
             }
@@ -137,9 +137,9 @@ private struct ExperiencePreview: View {
 
     private var standard: some View {
         VStack(spacing: 8) {
-            Text("Today").font(.system(size: 10, weight: .heavy)).foregroundStyle(Color(hex: "#9FB4D8")).frame(maxWidth: .infinity, alignment: .leading)
+            Text("Today").font(.nuna(size: 10, weight: .heavy)).foregroundStyle(Color(hex: "#9FB4D8")).frame(maxWidth: .infinity, alignment: .leading)
             Circle().fill(Color(hex: "#2E7BE8")).frame(width: 52, height: 52).padding(.top, 6)
-            Text("Recovery 78").font(.system(size: 10, weight: .heavy)).foregroundStyle(NunaPalette.ink)
+            Text("Recovery 78").font(.nuna(size: 10, weight: .heavy)).foregroundStyle(NunaPalette.ink)
             HStack(spacing: 8) {
                 ForEach([Color(hex: "#3AA0FF"), Color(hex: "#5C6BFF"), Color(hex: "#38C6C0")], id: \.self) { Circle().fill($0).frame(width: 24, height: 24) }
             }
@@ -162,9 +162,9 @@ private struct ExperienceConfirmSheet: View {
                 NunaIconTile("slider.horizontal.3", tint: NunaPalette.effortText)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(target == .standard ? "Switch to the Default look?" : "Switch to Nuna?")
-                        .font(.system(size: 20, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+                        .font(.nuna(size: 20, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
                     Text(target == .standard ? "The original NOOP look" : "The new PHMNOOP design")
-                        .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
             }
             VStack(alignment: .leading, spacing: 10) {
@@ -176,7 +176,7 @@ private struct ExperienceConfirmSheet: View {
                 HStack(alignment: .top, spacing: 10) {
                     Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(NunaPalette.textSecondary)
                     Text("Features that exist only in Nuna, like customisable Today cards and Anya in every module, do not appear in Default.")
-                        .font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.warning)
+                        .font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.warning)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .padding(12)
@@ -193,8 +193,8 @@ private struct ExperienceConfirmSheet: View {
 
     private func bullet(_ text: LocalizedStringKey) -> some View {
         HStack(alignment: .top, spacing: 10) {
-            Image(systemName: "checkmark").font(.system(size: 13, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).padding(.top, 3)
-            Text(text).font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+            Image(systemName: "checkmark").font(.nuna(size: 13, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).padding(.top, 3)
+            Text(text).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
         }
     }
 }

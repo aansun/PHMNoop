@@ -41,11 +41,11 @@ struct NunaAppleHealthView: View {
             Button {
                 if let url = URL(string: "x-apple-health://") { UIApplication.shared.open(url) }
             } label: {
-                Text("Open iOS Health settings").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                Text("Open iOS Health settings").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     .frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
             }.buttonStyle(.plain)
             Text("Access is managed by iOS. Turning it off there does not delete data.")
-                .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).frame(maxWidth: .infinity, alignment: .center).multilineTextAlignment(.center)
+                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).frame(maxWidth: .infinity, alignment: .center).multilineTextAlignment(.center)
         }
     }
 
@@ -53,11 +53,11 @@ struct NunaAppleHealthView: View {
         NunaCard {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 12) {
-                    Image(systemName: "heart.fill").font(.system(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Image(systemName: "heart.fill").font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         .frame(width: 48, height: 48).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Apple Health").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: syncCaption).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Apple Health").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: syncCaption).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     Spacer()
                     switch health.auth {
@@ -69,15 +69,15 @@ struct NunaAppleHealthView: View {
                 switch health.auth {
                 case .entitlementMissing:
                     Text("This install can't connect to Apple Health directly. It was signed with a profile that doesn't include Apple's Health permission, so there is nothing to enable. Bring your data in with a Health export in Data and integrations.")
-                        .font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 case .unavailable:
                     Text("Apple Health isn't available on this device.")
-                        .font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 case .authorized:
                     Button { Task { await sync() } } label: {
                         HStack(spacing: 8) {
-                            Image(systemName: "arrow.triangle.2.circlepath").font(.system(size: 14, weight: .bold))
-                            Text("Sync now").font(.system(size: 15, weight: .bold))
+                            Image(systemName: "arrow.triangle.2.circlepath").font(.nuna(size: 14, weight: .bold))
+                            Text("Sync now").font(.nuna(size: 15, weight: .bold))
                         }
                         .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 48).background(NunaPalette.accent, in: Capsule())
                     }.buttonStyle(.plain).disabled(health.syncing).opacity(health.syncing ? 0.5 : 1)
@@ -88,16 +88,16 @@ struct NunaAppleHealthView: View {
                             await sync()
                         }
                     } label: {
-                        Text("Enable Apple Health").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
+                        Text("Enable Apple Health").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
                             .frame(maxWidth: .infinity).frame(height: 48).background(NunaPalette.accent, in: Capsule())
                     }.buttonStyle(.plain)
                     if health.auth == .denied {
                         Text("If you don't see the prompt, allow PHMNOOP under Settings › Health › Data Access & Devices.")
-                            .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 if let err = health.lastError {
-                    Text(verbatim: err).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.alertText).fixedSize(horizontal: false, vertical: true)
+                    Text(verbatim: err).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.alertText).fixedSize(horizontal: false, vertical: true)
                 }
             }
         }

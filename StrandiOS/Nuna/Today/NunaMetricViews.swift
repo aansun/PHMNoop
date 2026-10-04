@@ -82,13 +82,13 @@ struct NunaEarlyWarningCard: View {
                 HStack(spacing: 12) {
                     NunaIconTile("exclamationmark.triangle.fill", tint: warnColor(result.level))
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Early warning").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("Early warning").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         Text(verbatim: localizedIllnessCopy(result))
-                            .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                             .lineLimit(2).multilineTextAlignment(.leading)
                     }
                     Spacer(minLength: 8)
-                    Image(systemName: "chevron.right").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                    Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                 }
             }
         }
@@ -119,7 +119,7 @@ struct NunaEarlyWarningView: View {
                         VStack(alignment: .leading, spacing: 12) {
                             NunaChip(label(r.level), color: warnColor(r.level))
                             Text(verbatim: localizedIllnessCopy(r))
-                                .font(.system(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                                .font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -138,12 +138,12 @@ struct NunaEarlyWarningView: View {
                 } else {
                     NunaCard {
                         Text("Still learning your baseline and keeping an eye on your signals.")
-                            .font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
                 Text("On-device estimate. Not a diagnosis.")
-                    .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
                 if coachEnabled { NunaAnyaCard(title: "Ask Anya about this") { showCoach = true } }
             }
             .padding(.horizontal, NunaSpacing.screenH)

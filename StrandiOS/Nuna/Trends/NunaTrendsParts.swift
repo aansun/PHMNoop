@@ -32,7 +32,7 @@ struct NunaDayAxis: View {
             HStack {
                 Text(verbatim: nunaAxisDate(a)); Spacer(); Text(verbatim: nunaAxisDate(mid)); Spacer(); Text(verbatim: nunaAxisDate(b))
             }
-            .font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
         }
     }
 }
@@ -196,14 +196,14 @@ struct NunaLegendItem: View {
     var body: some View {
         HStack(spacing: 6) {
             Capsule().fill(color).frame(width: dot ? 10 : 14, height: dot ? 10 : 8)
-            Text(text).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text(text).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
         }
     }
 }
 
 /// Small caption used above cards.
 func nunaTrendsCap(_ t: LocalizedStringKey) -> some View {
-    Text(t).font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+    Text(t).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
 }
 
 /// Charge zone colour (green 67+, yellow 34 to 66, red below).

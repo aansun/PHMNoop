@@ -19,47 +19,47 @@ struct NunaRhythmConsentView: View {
             VStack(alignment: .leading, spacing: 20) {
                 HStack {
                     Button(action: onCancel) {
-                        Image(systemName: "xmark").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Image(systemName: "xmark").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: Circle())
                     }.buttonStyle(.plain).accessibilityLabel(Text("Close"))
                     Spacer()
                     NunaChip("Experimental")
                 }
                 VStack(alignment: .leading, spacing: 10) {
-                    Image(systemName: "waveform.path.ecg").font(.system(size: 26, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                    Image(systemName: "waveform.path.ecg").font(.nuna(size: 26, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                         .frame(width: 56, height: 56).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
-                    Text("Before you turn on Rhythm").font(.system(size: NunaTypeSize.h1 - 4, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("Before you turn on Rhythm").font(.nuna(size: NunaTypeSize.h1 - 4, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text("An experimental picture of your beat-to-beat timing. Please read these first.")
-                        .font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 VStack(alignment: .leading, spacing: 18) {
                     ForEach(Array(RhythmConsent.points.enumerated()), id: \.offset) { i, p in
                         HStack(alignment: .top, spacing: 14) {
-                            Text(verbatim: "\(i + 1)").font(.system(size: 14, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: "\(i + 1)").font(.nuna(size: 14, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                                 .frame(width: 30, height: 30).background(NunaPalette.glassStrong, in: Circle())
                             VStack(alignment: .leading, spacing: 4) {
-                                Text(verbatim: p.0).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                Text(verbatim: p.1).font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                                Text(verbatim: p.0).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                Text(verbatim: p.1).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                             }
                         }
                     }
                 }
                 Text("This is a wellness visualization, not a screening test. It does not tell you to see a clinician and it names no condition. This is not legal or medical advice.")
-                    .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
                 NunaCard {
                     HStack(alignment: .top, spacing: 14) {
                         Toggle("", isOn: $understood).labelsHidden().tint(NunaPalette.charge)
                         Text("I understand this is an experimental wellness feature, not a medical device or a diagnosis.")
-                            .font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                            .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 Button(action: onAccept) {
-                    Text("Turn on Rhythm").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
+                    Text("Turn on Rhythm").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
                         .frame(maxWidth: .infinity).frame(height: 56)
                         .background(NunaPalette.accent.opacity(understood ? 1 : 0.35), in: Capsule())
                 }.buttonStyle(.plain).disabled(!understood)
                 Button(action: onCancel) {
-                    Text("Not now").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("Not now").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         .frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
                 }.buttonStyle(.plain)
             }
@@ -113,10 +113,10 @@ struct NunaPoincarePlot: View {
         }
         .aspectRatio(1, contentMode: .fit)
         .overlay(alignment: .bottomLeading) {
-            Text("RR now (ms) →").font(.system(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).padding(12)
+            Text("RR now (ms) →").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).padding(12)
         }
         .overlay(alignment: .topLeading) {
-            Text("↑ next RR").font(.system(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).padding(12)
+            Text("↑ next RR").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).padding(12)
         }
         .accessibilityHidden(true)
     }
@@ -170,7 +170,7 @@ struct NunaRhythmView: View {
 
     @ViewBuilder private var content: some View {
         HStack {
-            Text("A picture of your beat-to-beat timing, not a verdict.").font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text("A picture of your beat-to-beat timing, not a verdict.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             Spacer(minLength: 8)
             NunaChip("Experimental")
         }
@@ -191,9 +191,9 @@ struct NunaRhythmView: View {
         }
         NunaCard {
             VStack(alignment: .leading, spacing: 8) {
-                Text("How this is measured").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text("How this is measured").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 Text("During quiet, still, resting windows, NOOP looks at the timing between your heartbeats (R-R intervals) and draws their Poincaré scatter. From the cloud it computes its short and long axes (SD1, SD2) and a few plain regularity numbers. Movement and noisy windows are skipped, not shown. These are transparent, published descriptive statistics: a picture of your timing, never a clinical measurement.")
-                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
             }
         }
         disclaimer
@@ -215,7 +215,7 @@ struct NunaRhythmView: View {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: "info.circle").foregroundStyle(NunaPalette.textMuted)
                 Text("Experimental wellness visualization: not a diagnosis, not an ECG, and not a medical device. It cannot detect any heart condition. Beat-to-beat variation has many ordinary, benign causes. If you feel unwell or are worried, contact a qualified professional; in an emergency, your local emergency service. Everything is computed on your device.")
-                    .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
             }
         }
     }
@@ -227,11 +227,11 @@ struct NunaRhythmView: View {
         return VStack(spacing: 16) {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
-                    Image(systemName: unsupported ? "applewatch" : "waveform.path.ecg").font(.system(size: 26, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                    Image(systemName: unsupported ? "applewatch" : "waveform.path.ecg").font(.nuna(size: 26, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                         .frame(width: 56, height: 56).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
                     Text(unsupported ? "This device can't support a rhythm reading" : "No clear reading yet")
-                        .font(.system(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(emptyMessage).font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        .font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(emptyMessage).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -277,12 +277,12 @@ struct NunaRhythmView: View {
         return NunaCard {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text("Last night").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Last night").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     NunaChip(confidence, systemImage: "checkmark", color: NunaPalette.restText)
                 }
                 NunaChip(label(overall), systemImage: overall == .steady ? "checkmark" : "waveform.path.ecg", color: NunaPalette.restText)
-                Text(detail).font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                Text(detail).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 if let h = headline {
                     VStack(spacing: 12) {
                         bar("Beat-to-beat variation", h.normRmssd, NunaPalette.restLight)
@@ -297,9 +297,9 @@ struct NunaRhythmView: View {
     private func bar(_ title: LocalizedStringKey, _ v: Double?, _ color: Color) -> some View {
         VStack(spacing: 6) {
             HStack {
-                Text(title).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text(title).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 Spacer()
-                Text(verbatim: pct(v)).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: pct(v)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }
             NunaProgressBar(fraction: min(max(v ?? 0, 0), 1), color: color)
         }
@@ -308,10 +308,10 @@ struct NunaRhythmView: View {
     private var plotCard: some View {
         NunaCard {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Beat-to-beat scatter").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text("Beat-to-beat scatter").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 NunaPoincarePlot(points: allPoints, sd1: headline?.sd1, sd2: headline?.sd2)
                 Text("Each dot pairs one heartbeat interval with the next. A tight line along the diagonal means a steady beat; a rounder, more spread-out cloud means the timing varied more.")
-                    .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
             }
         }
     }

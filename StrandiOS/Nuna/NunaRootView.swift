@@ -21,6 +21,8 @@ struct NunaRootView: View {
     @AppStorage(NunaTheme.storageKey) private var themeRaw = NunaTheme.Mode.dark.rawValue
     @AppStorage(NunaThemePrefs.accentKey) private var accentRaw = NunaThemePrefs.Accent.ink.rawValue
     @AppStorage(NunaThemePrefs.typographyKey) private var typographyRaw = NunaThemePrefs.Typography.bold.rawValue
+    @AppStorage(NunaThemePrefs.textSizeKey) private var textSizeRaw = NunaThemePrefs.TextSize.standard.rawValue
+    @AppStorage(NunaThemePrefs.densityKey) private var densityRaw = NunaThemePrefs.Density.standard.rawValue
 
     private enum Tab: Int, CaseIterable { case today = 0, health, trends, anya, me }
 
@@ -59,7 +61,7 @@ struct NunaRootView: View {
         }
         .nunaScreenBackground()
         .fontWidth(typographyRaw == NunaThemePrefs.Typography.geometric.rawValue ? .expanded : nil)
-        .id("\(themeRaw)-\(accentRaw)-\(typographyRaw)")
+        .id("\(themeRaw)-\(accentRaw)-\(typographyRaw)-\(textSizeRaw)-\(densityRaw)")
         // Nuna is dark-first. The Appearance setting is honoured again once Phase 7 lands the Nuna theme screen.
         .preferredColorScheme(NunaTheme.colorScheme)
         .onAppear { Self.applyWindowStyle() }

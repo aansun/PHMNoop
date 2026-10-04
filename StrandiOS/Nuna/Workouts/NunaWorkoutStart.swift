@@ -49,8 +49,8 @@ struct NunaWorkoutStartView: View {
             }
             Button { begin() } label: {
                 HStack(spacing: 8) {
-                    Image(systemName: "play.fill").font(.system(size: 14, weight: .bold))
-                    Text(model.activeWorkout == nil ? "Start in 3 seconds" : "View active workout").font(.system(size: 17, weight: .bold))
+                    Image(systemName: "play.fill").font(.nuna(size: 14, weight: .bold))
+                    Text(model.activeWorkout == nil ? "Start in 3 seconds" : "View active workout").font(.nuna(size: 17, weight: .bold))
                 }
                 .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: Capsule())
             }.buttonStyle(.plain)
@@ -70,7 +70,7 @@ struct NunaWorkoutStartView: View {
                 HStack(spacing: 10) {
                     Image(systemName: "bolt").foregroundStyle(NunaPalette.textPrimary)
                     Text(verbatim: String(localized: "Charge \(Int(c.rounded()))%. \(c >= 67 ? String(localized: "Ready for a hard session.") : (c >= 34 ? String(localized: "A steady session suits today.") : String(localized: "Keep it easy today.")))"))
-                        .font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        .font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Spacer(minLength: 0)
                 }
                 .padding(.horizontal, 16).padding(.vertical, 12).background(NunaPalette.tint(NunaPalette.charge), in: Capsule())
@@ -81,7 +81,7 @@ struct NunaWorkoutStartView: View {
     @ViewBuilder private var goalCard: some View {
         switch goal.mode {
         case .free:
-            NunaCard { Text("No target. The session records heart rate, Effort and, for outdoor sports, your route.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading) }
+            NunaCard { Text("No target. The session records heart rate, Effort and, for outdoor sports, your route.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading) }
         case .time:
             stepperCard("Target duration", "\(goal.minutes)", "min", minus: { goal.minutes = max(5, goal.minutes - 5) }, plus: { goal.minutes = min(300, goal.minutes + 5) })
         case .distance:
@@ -92,15 +92,15 @@ struct NunaWorkoutStartView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     nunaTrendsCap("Target zone")
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(verbatim: "Zone \(goal.zone)").font(.system(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: "Zone \(goal.zone)").font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         if let z = zoneSet.zones.first(where: { $0.number == goal.zone }) {
-                            Text(verbatim: "\(Int(z.lower.rounded()))–\(Int(z.upper.rounded())) bpm").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: "\(Int(z.lower.rounded()))–\(Int(z.upper.rounded())) bpm").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                     }
                     HStack(spacing: 8) {
                         ForEach(1...5, id: \.self) { z in
                             Button { goal.zone = z } label: {
-                                Text(verbatim: "\(z)").font(.system(size: 16, weight: .bold)).foregroundStyle(goal.zone == z ? NunaPalette.onAccent : NunaPalette.textPrimary)
+                                Text(verbatim: "\(z)").font(.nuna(size: 16, weight: .bold)).foregroundStyle(goal.zone == z ? NunaPalette.onAccent : NunaPalette.textPrimary)
                                     .frame(maxWidth: .infinity).frame(height: 44).background(goal.zone == z ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
                             }.buttonStyle(.plain)
                         }
@@ -118,8 +118,8 @@ struct NunaWorkoutStartView: View {
                     stepBtn("minus", minus)
                     Spacer()
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Text(verbatim: v).font(.system(size: 46, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: unit).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: v).font(.nuna(size: 46, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: unit).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     Spacer()
                     stepBtn("plus", plus)
@@ -129,7 +129,7 @@ struct NunaWorkoutStartView: View {
     }
 
     private func stepBtn(_ s: String, _ a: @escaping () -> Void) -> some View {
-        Button(action: a) { Image(systemName: s).font(.system(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 52, height: 52).background(NunaPalette.glassStrong, in: Circle()) }.buttonStyle(.plain)
+        Button(action: a) { Image(systemName: s).font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 52, height: 52).background(NunaPalette.glassStrong, in: Circle()) }.buttonStyle(.plain)
     }
 
     private var optionsCard: some View {
@@ -166,8 +166,8 @@ struct NunaWorkoutStartView: View {
         ZStack {
             NunaPalette.shade.opacity(0.85).ignoresSafeArea()
             VStack(spacing: 16) {
-                Text(verbatim: "\(c)").font(.system(size: 120, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                Button("Cancel") { countdown = nil }.font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: "\(c)").font(.nuna(size: 120, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                Button("Cancel") { countdown = nil }.font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
             }
         }
         .transition(.opacity)
@@ -216,13 +216,13 @@ struct NunaLiveWorkoutView: View {
                 }
             } else {
                 VStack(spacing: 16) {
-                    Text("Session finished").font(.system(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("Session finished").font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     if let last = model.lastWorkout {
-                        Text(verbatim: WorkoutSource.displaySport(last.sport) + " · " + NunaWorkoutFormat.duration(last.durationS)).font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: WorkoutSource.displaySport(last.sport) + " · " + NunaWorkoutFormat.duration(last.durationS)).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     } else {
-                        Text("Sessions under a minute are not saved.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Sessions under a minute are not saved.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
-                    Button(action: onClose) { Text("Done").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 40).frame(height: 52).background(NunaPalette.accent, in: Capsule()) }.buttonStyle(.plain)
+                    Button(action: onClose) { Text("Done").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 40).frame(height: 52).background(NunaPalette.accent, in: Capsule()) }.buttonStyle(.plain)
                 }
             }
         }
@@ -246,18 +246,18 @@ struct NunaLiveWorkoutView: View {
                 HStack {
                     NunaChip(w.isPaused ? "Paused" : "Recording", color: w.isPaused ? NunaPalette.warning : NunaPalette.charge)
                     Spacer()
-                    Text(verbatim: WorkoutSource.displaySport(w.sport)).font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: WorkoutSource.displaySport(w.sport)).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 }
                 NunaCard {
                     VStack(spacing: 8) {
-                        Text(verbatim: clock(elapsed)).font(.system(size: 64, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: clock(elapsed)).font(.nuna(size: 64, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
                         HStack(alignment: .firstTextBaseline, spacing: 6) {
                             Image(systemName: "heart.fill").foregroundStyle(NunaPalette.textPrimary)
-                            Text(verbatim: bpm.map(String.init) ?? "–").font(.system(size: 48, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            Text("bpm").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: bpm.map(String.init) ?? "–").font(.nuna(size: 48, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            Text("bpm").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                         if zone > 0 {
-                            HStack(spacing: 8) { Circle().fill(colors[min(zone, 5) - 1]).frame(width: 10, height: 10); Text(verbatim: "Zone \(zone)").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary) }
+                            HStack(spacing: 8) { Circle().fill(colors[min(zone, 5) - 1]).frame(width: 10, height: 10); Text(verbatim: "Zone \(zone)").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary) }
                         }
                     }.frame(maxWidth: .infinity)
                 }
@@ -275,15 +275,15 @@ struct NunaLiveWorkoutView: View {
                 }
                 HStack(spacing: 12) {
                     Button { model.toggleWorkoutPause() } label: {
-                        Text(w.isPaused ? "Resume" : "Pause").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(w.isPaused ? "Resume" : "Pause").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             .frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.glassStrong, in: Capsule())
                     }.buttonStyle(.plain)
                     Button { confirmEnd = true } label: {
-                        Text("End").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
+                        Text("End").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
                             .frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.alertText, in: Capsule())
                     }.buttonStyle(.plain)
                 }
-                Button(action: onClose) { Text("Minimise").font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }.buttonStyle(.plain)
+                Button(action: onClose) { Text("Minimise").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }.buttonStyle(.plain)
             }
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 20).padding(.bottom, 40)
         }
@@ -304,8 +304,8 @@ struct NunaLiveWorkoutView: View {
             NunaCard {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(verbatim: String(localized: "Target zone \(goal.zone)")).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        if let z = zoneSet.zones.first(where: { $0.number == goal.zone }) { Text(verbatim: "\(Int(z.lower.rounded()))–\(Int(z.upper.rounded())) bpm").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                        Text(verbatim: String(localized: "Target zone \(goal.zone)")).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        if let z = zoneSet.zones.first(where: { $0.number == goal.zone }) { Text(verbatim: "\(Int(z.lower.rounded()))–\(Int(z.upper.rounded())) bpm").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                     }
                     Spacer()
                     NunaChip(zone == goal.zone ? "In zone" : (zone < goal.zone ? "Below zone" : "Above zone"), color: zone == goal.zone ? NunaPalette.charge : NunaPalette.warning)
@@ -317,7 +317,7 @@ struct NunaLiveWorkoutView: View {
     private func progress(_ title: String, _ f: Double, _ detail: String) -> some View {
         NunaCard {
             VStack(alignment: .leading, spacing: 10) {
-                HStack { Text(verbatim: title).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary); Spacer(); Text(verbatim: detail).font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                HStack { Text(verbatim: title).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary); Spacer(); Text(verbatim: detail).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                 NunaProgressBar(fraction: f, color: f >= 1 ? NunaPalette.charge : NunaPalette.effort)
             }
         }

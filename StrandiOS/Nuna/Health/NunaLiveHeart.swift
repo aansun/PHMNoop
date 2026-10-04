@@ -34,21 +34,21 @@ struct NunaLiveHRCard: View {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         HStack(spacing: 6) {
-                            Text("Beats per minute").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
+                            Text("Beats per minute").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
                                 .foregroundStyle(NunaPalette.textSecondary)
-                            Image(systemName: "chevron.right").font(.system(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                            Image(systemName: "chevron.right").font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                         }
                         Spacer()
                         NunaChip(isLive ? "Live" : (live.connected ? "Strap connected" : "Not connected"),
                                  color: isLive ? NunaPalette.charge : (live.connected ? nil : NunaPalette.warning))
                     }
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Image(systemName: "heart.fill").font(.system(size: 20)).foregroundStyle(NunaPalette.textPrimary)
+                        Image(systemName: "heart.fill").font(.nuna(size: 20)).foregroundStyle(NunaPalette.textPrimary)
                         Text(verbatim: bigBpm.map(String.init) ?? "–")
-                            .font(.system(size: 52, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("bpm").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                            .font(.nuna(size: 52, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("bpm").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
-                    Text(subtitle).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(subtitle).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     if isLive || banked.count >= 2 {
                         NunaHRTrace(values: isLive ? samples : banked.map(\.bpm),
                                     segments: isLive ? nil : hrGapSegments(bucketTs: banked.map(\.ts), bucketSeconds: 300))
@@ -59,7 +59,7 @@ struct NunaLiveHRCard: View {
                         }
                     } else {
                         Text(live.connected ? "Waiting for a live heartbeat…" : "Connect your strap to see live heart rate")
-                            .font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                             .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading)
                     }
                 }
@@ -80,8 +80,8 @@ struct NunaLiveHRCard: View {
 
     private func stat(_ label: LocalizedStringKey, _ v: Double?) -> some View {
         HStack(spacing: 5) {
-            Text(label).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: v.map { String(Int($0.rounded())) } ?? "–").font(.system(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+            Text(label).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text(verbatim: v.map { String(Int($0.rounded())) } ?? "–").font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }
     }
 }
@@ -149,7 +149,7 @@ struct NunaDeepTimelineView: View {
 
     var body: some View {
         NunaDetailScreen("Deep timeline") {
-            Text("Every second of your day, zoomable.").font(.system(size: 14, weight: .semibold))
+            Text("Every second of your day, zoomable.").font(.nuna(size: 14, weight: .semibold))
                 .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading)
             metricChips
             dayNav
@@ -175,7 +175,7 @@ struct NunaDeepTimelineView: View {
             HStack(spacing: 8) {
                 ForEach(metrics) { m in
                     Button { metric = m } label: {
-                        Text(verbatim: m.title).font(.system(size: 13.5, weight: .bold))
+                        Text(verbatim: m.title).font(.nuna(size: 13.5, weight: .bold))
                             .foregroundStyle(metric == m ? NunaPalette.onAccent : NunaPalette.textPrimary)
                             .padding(.horizontal, 14).frame(height: 38)
                             .background(metric == m ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
@@ -190,7 +190,7 @@ struct NunaDeepTimelineView: View {
         HStack {
             step("chevron.left", true) { stepDay(-1) }
             Spacer()
-            Text(verbatim: dayLabel).font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            Text(verbatim: dayLabel).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
             Spacer()
             step("chevron.right", !isLatest) { stepDay(1) }
         }
@@ -198,7 +198,7 @@ struct NunaDeepTimelineView: View {
 
     private func step(_ s: String, _ enabled: Bool, _ a: @escaping () -> Void) -> some View {
         Button(action: a) {
-            Image(systemName: s).font(.system(size: 15, weight: .bold))
+            Image(systemName: s).font(.nuna(size: 15, weight: .bold))
                 .foregroundStyle(enabled ? NunaPalette.textPrimary : NunaPalette.textMuted.opacity(0.4))
                 .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: Circle())
         }.disabled(!enabled)
@@ -227,14 +227,14 @@ struct NunaDeepTimelineView: View {
         NunaCard(padding: EdgeInsets(top: 16, leading: 14, bottom: 16, trailing: 14)) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text(verbatim: metric.title).font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: metric.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
-                    Text(verbatim: resolution).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: resolution).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 if let last = displayPoints.last {
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(verbatim: format(last.value)).font(.system(size: 34, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: unit).font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: format(last.value)).font(.nuna(size: 34, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: unit).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                 }
                 Group {
@@ -242,8 +242,8 @@ struct NunaDeepTimelineView: View {
                         ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 260)
                     } else if series.points.isEmpty {
                         VStack(spacing: 8) {
-                            Image(systemName: "waveform.slash").font(.system(size: 26, weight: .light)).foregroundStyle(NunaPalette.textMuted)
-                            Text("Nothing recorded for this window").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Image(systemName: "waveform.slash").font(.nuna(size: 26, weight: .light)).foregroundStyle(NunaPalette.textMuted)
+                            Text("Nothing recorded for this window").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                         .frame(maxWidth: .infinity, minHeight: 260)
                     } else {
@@ -275,7 +275,7 @@ struct NunaDeepTimelineView: View {
             Spacer()
             if zoomDomain != nil { Button("Reset") { zoomDomain = nil }.foregroundStyle(NunaPalette.textPrimary) }
         }
-        .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
     }
 
     private var resolution: String {

@@ -89,10 +89,10 @@ struct NunaMovementStats: View {
                 cell("Movement", "\(m.movements)", "×")
                 cell("Position changes", "\(m.positionChanges)", "×")
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Restlessness").font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase)
+                    Text("Restlessness").font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textSecondary).lineLimit(2).fixedSize(horizontal: false, vertical: true)
                     Text(m.level == .low ? "Low" : (m.level == .medium ? "Medium" : "High"))
-                        .font(.system(size: 21, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        .font(.nuna(size: 21, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -103,11 +103,11 @@ struct NunaMovementStats: View {
 
     private func cell(_ label: LocalizedStringKey, _ value: String, _ unit: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(label).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase)
+            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase)
                 .foregroundStyle(NunaPalette.textSecondary).lineLimit(2).fixedSize(horizontal: false, vertical: true)
             HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text(verbatim: value).font(.system(size: 21, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                Text(verbatim: unit).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: value).font(.nuna(size: 21, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -143,13 +143,13 @@ struct NunaStageLegend: View {
             ForEach([SleepStage.awake, .rem, .light, .deep], id: \.self) { s in
                 HStack(spacing: 6) {
                     Circle().fill(s.nunaColor).frame(width: 9, height: 9)
-                    Text(s.nunaName).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(s.nunaName).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
             }
             if showsMovement {
                 HStack(spacing: 6) {
                     Capsule().fill(NunaPalette.textSecondary).frame(width: 3, height: 12)
-                    Text("Movement").font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Movement").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
             }
             Spacer(minLength: 0)
@@ -169,7 +169,7 @@ struct NunaTimeAxis: View {
             Spacer()
             Text(verbatim: NunaSleepFormat.clock(end))
         }
-        .font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+        .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
     }
 }
 
@@ -229,18 +229,18 @@ struct NunaStatTile: View {
     var body: some View {
         NunaCard(small: true) {
             VStack(alignment: .leading, spacing: 8) {
-                Text(label).font(.system(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase)
+                Text(label).font(.nuna(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textSecondary)
                 HStack(alignment: .firstTextBaseline, spacing: 3) {
-                    Text(verbatim: value).font(.system(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design))
+                    Text(verbatim: value).font(.nuna(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design))
                         .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
                     if !unit.isEmpty {
-                        Text(verbatim: unit).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                 }
                 if let fraction { NunaProgressBar(fraction: fraction, color: color) }
                 if let caption {
-                    Text(caption).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(caption).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         .lineLimit(2).fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -260,10 +260,10 @@ struct NunaNightPicker: View {
             Spacer()
             VStack(spacing: 2) {
                 Text(caption ?? (model.index == 0 ? "Last night" : "Earlier night"))
-                    .font(.system(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase)
+                    .font(.nuna(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textSecondary)
                 Text(verbatim: (date ?? model.night?.wakeDate).map { NunaSleepFormat.nightTitle($0) } ?? "–")
-                    .font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    .font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
             }
             Spacer()
             step("chevron.right", enabled: model.hasNewer) { model.index -= 1 }
@@ -272,7 +272,7 @@ struct NunaNightPicker: View {
 
     private func step(_ symbol: String, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: symbol).font(.system(size: 15, weight: .bold))
+            Image(systemName: symbol).font(.nuna(size: 15, weight: .bold))
                 .foregroundStyle(enabled ? NunaPalette.textPrimary : NunaPalette.textMuted.opacity(0.4))
                 .frame(width: 44, height: 44).background(NunaPalette.ink.opacity(0.08), in: Circle())
         }

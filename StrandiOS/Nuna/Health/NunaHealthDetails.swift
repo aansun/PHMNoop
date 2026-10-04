@@ -6,7 +6,7 @@ import WhoopProtocol
 import WhoopStore
 
 private func nunaCap(_ t: LocalizedStringKey) -> some View {
-    Text(t).font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+    Text(t).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
 }
 
 private func nunaFmt(_ v: Double?, _ digits: Int = 0) -> String {
@@ -69,8 +69,8 @@ struct NunaLiveHeartView: View {
             }.buttonStyle(.plain)
             Button { router.requestedDestination = .activeWorkout } label: {
                 HStack(spacing: 8) {
-                    Image(systemName: "play.fill").font(.system(size: 14, weight: .bold))
-                    Text("Start a session with heart rate").font(.system(size: 16, weight: .bold))
+                    Image(systemName: "play.fill").font(.nuna(size: 14, weight: .bold))
+                    Text("Start a session with heart rate").font(.nuna(size: 16, weight: .bold))
                 }
                 .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56)
                 .background(NunaPalette.accent, in: Capsule())
@@ -98,25 +98,25 @@ struct NunaLiveHeartView: View {
                     }
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Image(systemName: "heart.fill").font(.system(size: 26)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(verbatim: currentBpm.map(String.init) ?? "–").font(.system(size: 76, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("bpm").font(.system(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    Image(systemName: "heart.fill").font(.nuna(size: 26)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: currentBpm.map(String.init) ?? "–").font(.nuna(size: 76, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("bpm").font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 HStack {
                     if let stateLabel { NunaChip(stateLabel) }
                     Spacer()
                     Text(isLive ? "Updated every second" : (banked.last.map { lastReading($0.ts) } ?? "–"))
-                        .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 if isLive || banked.count >= 2 {
                     NunaHRTrace(values: isLive ? rolling : banked.suffix(36).map(\.bpm), segments: nil).frame(height: 100)
                     HStack {
                         Text(isLive ? "−\(rolling.count) s" : "Earlier today"); Spacer(); Text(isLive ? "Now" : "Latest")
                     }
-                    .font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 } else {
                     Text(live.connected ? "Waiting for a live heartbeat…" : "Connect your strap to see live heart rate")
-                        .font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
             }
         }
@@ -150,7 +150,7 @@ struct NunaLiveHeartView: View {
                 HStack {
                     nunaCap("Zones today")
                     Spacer()
-                    Text(verbatim: String(localized: "Total \(dur(tiz.total))")).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: String(localized: "Total \(dur(tiz.total))")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 if tiz.total > 0 {
                     NunaProportionBar(parts: (0..<6).map { i in (secs[i], i == 0 ? NunaPalette.zoneBase.opacity(0.6) : zoneColors[i - 1]) })
@@ -159,7 +159,7 @@ struct NunaLiveHeartView: View {
                         ForEach(0..<5, id: \.self) { i in zoneRow(Text(zoneNames[i]), secs[i + 1], zoneColors[i], dur) }
                     }
                 } else {
-                    Text("No heart-rate readings yet today").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("No heart-rate readings yet today").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
             }
         }
@@ -168,9 +168,9 @@ struct NunaLiveHeartView: View {
     private func zoneRow(_ title: Text, _ seconds: Double, _ color: Color, _ dur: (Double) -> String) -> some View {
         HStack(spacing: 10) {
             Circle().fill(color).frame(width: 9, height: 9)
-            title.font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            title.font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
             Spacer()
-            Text(verbatim: dur(seconds)).font(.system(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+            Text(verbatim: dur(seconds)).font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }
     }
 
@@ -256,12 +256,12 @@ struct NunaOxygenView: View {
                     if let latest { NunaChip(latest >= 95 ? "Normal" : "Low", color: latest >= 95 ? NunaPalette.charge : NunaPalette.warning) }
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(verbatim: nunaFmt(latest)).font(.system(size: 68, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("%").font(.system(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: nunaFmt(latest)).font(.nuna(size: 68, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("%").font(.nuna(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 if vals.count >= 2 {
                     Text(verbatim: String(localized: "7-night average: \(nunaFmt(vals.reduce(0, +) / Double(vals.count), 1))%"))
-                        .font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
             }
         }
@@ -270,10 +270,10 @@ struct NunaOxygenView: View {
                 HStack {
                     nunaCap("Last 7 nights")
                     Spacer()
-                    Text("Healthy range 95–100%").font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Healthy range 95–100%").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 if last7.isEmpty {
-                    Text("No SpO₂ readings yet").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("No SpO₂ readings yet").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 } else {
                     NunaColumns(items: last7.enumerated().map { i, r in
                         NunaColumns.Item(weekday: weekday(r.date), date: r.date, fraction: r.value / 100,
@@ -307,13 +307,13 @@ struct NunaOxygenView: View {
                     if let chip { NunaChip(chip.0, color: chip.1) }
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(verbatim: nunaFmt(latest, 1)).font(.system(size: 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("/min").font(.system(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: nunaFmt(latest, 1)).font(.nuna(size: 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("/min").font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 NunaLine2Chart(points: respS.readings(14), color: NunaPalette.ink, decimals: 1, baseline: b?.mean, height: 150)
                 if let b {
                     Text(verbatim: String(localized: "Your personal range \(nunaFmt(b.lo, 1)) – \(nunaFmt(b.hi, 1)). Spikes in breathing often appear before illness."))
-                        .font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
@@ -339,10 +339,10 @@ struct NunaSkinTempView: View {
                         if let latest { NunaChip(abs(latest) < 0.5 ? "Small deviation" : "Larger deviation", color: abs(latest) < 0.5 ? NunaPalette.charge : NunaPalette.warning) }
                     }
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(verbatim: latest.map { nunaSigned($0) } ?? "–").font(.system(size: 68, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        if latest != nil { Text("°C").font(.system(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+                        Text(verbatim: latest.map { nunaSigned($0) } ?? "–").font(.nuna(size: 68, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        if latest != nil { Text("°C").font(.nuna(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                     }
-                    Text("Compared with your personal baseline").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Compared with your personal baseline").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
             }
             NunaCard {
@@ -350,16 +350,16 @@ struct NunaSkinTempView: View {
                     HStack {
                         nunaCap("14 nights")
                         Spacer()
-                        Text("Centre line = baseline").font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Centre line = baseline").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     if nights.count >= 2 {
                         NunaDivergingBars(values: nights.map(\.value))
                         HStack {
                             Text(verbatim: nunaAxisDate(nights.first!.date)); Spacer(); Text(verbatim: nunaAxisDate(nights.last!.date))
                         }
-                        .font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     } else {
-                        Text("Not enough data yet").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Not enough data yet").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                 }
             }
@@ -367,7 +367,7 @@ struct NunaSkinTempView: View {
                 VStack(spacing: 8) {
                     NunaDeviationScale(value: latest)
                     HStack { Text("−1 °C"); Spacer(); Text("+1 °C") }
-                        .font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
             }
             NunaTitleRow(title: "What affects it") { EmptyView() }

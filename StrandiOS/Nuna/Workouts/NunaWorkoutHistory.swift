@@ -69,7 +69,7 @@ struct NunaWorkoutHistoryView: View {
             NunaSegmented([(value: 3, title: "3 mo"), (value: 6, title: "6 mo"), (value: 12, title: "1 yr"), (value: 60, title: "5 yr")], selection: $months)
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass").foregroundStyle(NunaPalette.textMuted)
-                TextField("", text: $query, prompt: Text("Search sessions").foregroundStyle(NunaPalette.textMuted)).font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                TextField("", text: $query, prompt: Text("Search sessions").foregroundStyle(NunaPalette.textMuted)).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
             }
             .padding(.horizontal, 16).frame(height: 48).background(NunaPalette.shade.opacity(0.28), in: Capsule()).overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
             ScrollView(.horizontal, showsIndicators: false) {
@@ -91,7 +91,7 @@ struct NunaWorkoutHistoryView: View {
 
     private func chip(_ id: String, _ title: String) -> some View {
         Button { filter = id } label: {
-            Text(verbatim: title).font(.system(size: 13.5, weight: .bold)).foregroundStyle(filter == id ? NunaPalette.onAccent : NunaPalette.textPrimary)
+            Text(verbatim: title).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(filter == id ? NunaPalette.onAccent : NunaPalette.textPrimary)
                 .padding(.horizontal, 14).frame(height: 36).background(filter == id ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
         }.buttonStyle(.plain)
     }
@@ -148,7 +148,7 @@ struct NunaWorkoutHistoryView: View {
                 HStack {
                     nunaTrendsCap("Totals for this filter")
                     Spacer()
-                    Text(verbatim: "\(axisDate(startDate)) – \(axisDate(Date()))").font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: "\(axisDate(startDate)) – \(axisDate(Date()))").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 HStack {
                     tile("Sessions", "\(list.count)"); tile("Duration", NunaWorkoutFormat.duration(m.minutes(list) * 60)); tile("Effort", UnitFormatter.effortDisplay(m.effort(list), scale: scale))
@@ -159,9 +159,9 @@ struct NunaWorkoutHistoryView: View {
                 }
                 NunaDivider()
                 HStack {
-                    Text(months <= 6 ? "Sessions per week" : (months == 12 ? "Sessions per month" : "Sessions per quarter")).font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(months <= 6 ? "Sessions per week" : (months == 12 ? "Sessions per month" : "Sessions per quarter")).font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Spacer()
-                    Text(verbatim: String(localized: "Highest \(top)")).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: String(localized: "Highest \(top)")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 HStack(alignment: .bottom, spacing: bs.count > 30 ? 2 : 4) {
                     ForEach(Array(bs.enumerated()), id: \.offset) { _, b in
@@ -180,7 +180,7 @@ struct NunaWorkoutHistoryView: View {
                     if bs.count > 4 { Text(verbatim: axisDate(bs[bs.count / 2].start)); Spacer() }
                     Text(verbatim: axisDate(bs.last?.start ?? Date()))
                 }
-                .font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 HStack(spacing: 14) { NunaLegendItem(color: NunaPalette.effort, text: "Cardio", dot: true); NunaLegendItem(color: NunaPalette.rest, text: "Strength", dot: true) }
             }
         }
@@ -197,11 +197,11 @@ struct NunaWorkoutHistoryView: View {
                         Spacer()
                         if selected != nil {
                             Button { selected = nil } label: {
-                                HStack(spacing: 4) { Text("Show all").font(.system(size: 13, weight: .bold)); Image(systemName: "xmark").font(.system(size: 10, weight: .bold)) }
+                                HStack(spacing: 4) { Text("Show all").font(.nuna(size: 13, weight: .bold)); Image(systemName: "xmark").font(.nuna(size: 10, weight: .bold)) }
                                     .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 12).frame(height: 30).background(NunaPalette.glassStrong, in: Capsule())
                             }.buttonStyle(.plain)
                         } else {
-                            Text(dailyView ? "Tap a day" : "Tap a month").font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(dailyView ? "Tap a day" : "Tap a month").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                     }
                     if dailyView { dayHeat(list) } else { monthHeat(list) }
@@ -234,7 +234,7 @@ struct NunaWorkoutHistoryView: View {
                     let prev = cal.component(.month, from: cal.date(byAdding: .day, value: -7, to: ws) ?? ws), next = cal.component(.month, from: cal.date(byAdding: .day, value: 7, to: ws) ?? ws)
                     // The first column only names its month when the month is not about to change at the next one.
                     let newMonth = w == 0 ? next == cal.component(.month, from: ws) : cal.component(.month, from: ws) != prev
-                    Text(verbatim: newMonth ? monthShort(ws, f) : "").font(.system(size: 10.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: newMonth ? monthShort(ws, f) : "").font(.nuna(size: 10.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         .fixedSize().frame(maxWidth: .infinity, alignment: .leading).lineLimit(1)
                 }
             }
@@ -276,12 +276,12 @@ struct NunaWorkoutHistoryView: View {
             HStack(spacing: 4) {
                 Text(verbatim: "").frame(width: 38)
                 ForEach(1...12, id: \.self) { mo in
-                    Text(verbatim: String(monthShort(cal.date(from: DateComponents(year: 2001, month: mo, day: 1)) ?? today, f).prefix(1))).font(.system(size: 10.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity)
+                    Text(verbatim: String(monthShort(cal.date(from: DateComponents(year: 2001, month: mo, day: 1)) ?? today, f).prefix(1))).font(.nuna(size: 10.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity)
                 }
             }
             ForEach(Array((startYear...endYear).reversed()), id: \.self) { y in
                 HStack(spacing: 4) {
-                    Text(verbatim: String(y)).font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 38, alignment: .leading)
+                    Text(verbatim: String(y)).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 38, alignment: .leading)
                     ForEach(1...12, id: \.self) { mo in
                         let key = String(format: "%04d-%02d", y, mo)
                         let rs = byMonth[key] ?? []
@@ -291,7 +291,7 @@ struct NunaWorkoutHistoryView: View {
                         Button { if on { selected = selected == key ? nil : key } } label: {
                             RoundedRectangle(cornerRadius: 6, style: .continuous)
                                 .fill(on ? kindColor(cardio: rs.contains { !NunaWorkoutKind.isStrength($0) }, strength: rs.contains(where: NunaWorkoutKind.isStrength)).opacity(0.3 + 0.7 * Double(rs.count) / Double(peak)) : NunaPalette.ink.opacity(outside ? 0 : 0.07))
-                                .overlay(Text(verbatim: on ? "\(rs.count)" : "").font(.system(size: 10, weight: .bold, design: NunaType.design)).foregroundStyle(Double(rs.count) / Double(peak) > 0.5 ? NunaPalette.onAccent : NunaPalette.textPrimary).minimumScaleFactor(0.6))
+                                .overlay(Text(verbatim: on ? "\(rs.count)" : "").font(.nuna(size: 10, weight: .bold, design: NunaType.design)).foregroundStyle(Double(rs.count) / Double(peak) > 0.5 ? NunaPalette.onAccent : NunaPalette.textPrimary).minimumScaleFactor(0.6))
                                 .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(NunaPalette.accent, lineWidth: selected == key ? 2 : 0).padding(-2))
                                 .aspectRatio(1, contentMode: .fit)
                         }.buttonStyle(.plain).disabled(!on)
@@ -305,15 +305,15 @@ struct NunaWorkoutHistoryView: View {
 
     @ViewBuilder private func sessions(_ list: [WorkoutRow]) -> some View {
         HStack {
-            Text(sessionsTitle).font(.system(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+            Text(sessionsTitle).font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             Spacer()
             Button { oldestFirst.toggle() } label: {
-                HStack(spacing: 4) { Text(oldestFirst ? "Oldest" : "Newest").font(.system(size: 13, weight: .bold)); Image(systemName: "chevron.up.chevron.down").font(.system(size: 10, weight: .bold)) }
+                HStack(spacing: 4) { Text(oldestFirst ? "Oldest" : "Newest").font(.nuna(size: 13, weight: .bold)); Image(systemName: "chevron.up.chevron.down").font(.nuna(size: 10, weight: .bold)) }
                     .foregroundStyle(NunaPalette.textPrimary)
             }.buttonStyle(.plain)
         }
         if list.isEmpty {
-            NunaCard { Text(m.loaded ? "No sessions match." : " ").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading) }
+            NunaCard { Text(m.loaded ? "No sessions match." : " ").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading) }
         }
         let groups = Dictionary(grouping: list, by: { r -> Date in
             let t = Date(timeIntervalSince1970: TimeInterval(r.startTs))
@@ -324,9 +324,9 @@ struct NunaWorkoutHistoryView: View {
                 let ordered = oldestFirst ? rs.sorted { $0.startTs < $1.startTs } : rs.sorted { $0.startTs > $1.startTs }
                 VStack(alignment: .leading, spacing: 10) {
                     HStack {
-                        Text(verbatim: groupTitle(start)).font(.system(size: 17, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: groupTitle(start)).font(.nuna(size: 17, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         Spacer()
-                        Text(verbatim: String(localized: "\(rs.count) sessions · Effort \(UnitFormatter.effortDisplay(m.effort(rs), scale: scale))")).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: String(localized: "\(rs.count) sessions · Effort \(UnitFormatter.effortDisplay(m.effort(rs), scale: scale))")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                         VStack(spacing: 0) {
@@ -363,8 +363,8 @@ struct NunaWorkoutHistoryView: View {
     }
     private func tile(_ l: LocalizedStringKey, _ v: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(l).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
-            Text(verbatim: v).font(.system(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
+            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
+            Text(verbatim: v).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 }

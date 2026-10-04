@@ -66,6 +66,31 @@ enum ScoreSection: String, CaseIterable, Identifiable {
         case .rest:   return String(localized: "Rest")
         }
     }
+
+    /// Headline / body / "vs WHOOP" copy, shared by the classic guide and the Nuna one.
+    var headline: String {
+        switch self {
+        case .charge: return String(localized: "Charge: how recovered are you?")
+        case .effort: return String(localized: "Effort: how hard did your heart work?")
+        case .rest: return String(localized: "Rest: how restorative was your sleep?")
+        }
+    }
+
+    var bodyText: String {
+        switch self {
+        case .charge: return String(localized: "Led by your heart-rate variability (HRV) measured against your own personal baseline, plus resting heart rate, last night's Rest, breathing rate, and a skin-temperature signal (an early illness or overreach flag). Higher HRV versus your baseline means more Charge. NOOP needs a few nights to learn your baseline first. Until then you'll see “Calibrating”.")
+        case .effort: return String(localized: "Your cardiovascular load. NOOP turns every second of heart rate into a training-impulse using heart-rate-reserve zones (Karvonen), weights time in harder zones more heavily (Edwards / Banister), and places it on a logarithmic 0-100 scale, so easy days sit low and an all-out day approaches 100, which stays genuinely rare. A long walk with little cardio still counts, through a steps / active-energy floor.")
+        case .rest: return String(localized: "A blend of how long you slept versus your personal need (the biggest factor), how efficiently (asleep versus in bed), how much was restorative (deep + REM sleep), and how consistent your sleep and wake timing is.")
+        }
+    }
+
+    var vsWhoop: String {
+        switch self {
+        case .charge: return String(localized: "Same core idea as WHOOP's Recovery % (HRV-led recovery), but our weighting and baseline maths are our own, and openly documented.")
+        case .effort: return String(localized: "Same cardiovascular-load idea as WHOOP's Day Strain (0-21). We rescaled the top of the ladder from 21 to 100 so all three scores share one scale. The rungs didn't move, so a 100 is as rare as a 21.0 was.")
+        case .rest: return String(localized: "Similar in spirit to WHOOP's Sleep Performance %; our composite is our own.")
+        }
+    }
 }
 
 struct ScoringGuideView: View {
@@ -88,18 +113,9 @@ struct ScoringGuideView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: NoopMetrics.sectionGap) {
                         introCard
-                        scoreCard(.charge,
-                                  headline: String(localized: "Charge: how recovered are you?"),
-                                  body: String(localized: "Led by your heart-rate variability (HRV) measured against your own personal baseline, plus resting heart rate, last night's Rest, breathing rate, and a skin-temperature signal (an early illness or overreach flag). Higher HRV versus your baseline means more Charge. NOOP needs a few nights to learn your baseline first. Until then you'll see “Calibrating”."),
-                                  vsWhoop: String(localized: "Same core idea as WHOOP's Recovery % (HRV-led recovery), but our weighting and baseline maths are our own, and openly documented."))
-                        scoreCard(.effort,
-                                  headline: String(localized: "Effort: how hard did your heart work?"),
-                                  body: String(localized: "Your cardiovascular load. NOOP turns every second of heart rate into a training-impulse using heart-rate-reserve zones (Karvonen), weights time in harder zones more heavily (Edwards / Banister), and places it on a logarithmic 0-100 scale, so easy days sit low and an all-out day approaches 100, which stays genuinely rare. A long walk with little cardio still counts, through a steps / active-energy floor."),
-                                  vsWhoop: String(localized: "Same cardiovascular-load idea as WHOOP's Day Strain (0-21). We rescaled the top of the ladder from 21 to 100 so all three scores share one scale. The rungs didn't move, so a 100 is as rare as a 21.0 was."))
-                        scoreCard(.rest,
-                                  headline: String(localized: "Rest: how restorative was your sleep?"),
-                                  body: String(localized: "A blend of how long you slept versus your personal need (the biggest factor), how efficiently (asleep versus in bed), how much was restorative (deep + REM sleep), and how consistent your sleep and wake timing is."),
-                                  vsWhoop: String(localized: "Similar in spirit to WHOOP's Sleep Performance %; our composite is our own."))
+                        scoreCard(.charge, headline: ScoreSection.charge.headline, body: ScoreSection.charge.bodyText, vsWhoop: ScoreSection.charge.vsWhoop)
+                        scoreCard(.effort, headline: ScoreSection.effort.headline, body: ScoreSection.effort.bodyText, vsWhoop: ScoreSection.effort.vsWhoop)
+                        scoreCard(.rest, headline: ScoreSection.rest.headline, body: ScoreSection.rest.bodyText, vsWhoop: ScoreSection.rest.vsWhoop)
                         confidenceCard
                         footerNote
                     }

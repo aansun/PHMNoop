@@ -21,7 +21,7 @@ struct NunaInsightsView: View {
 
     var body: some View {
         NunaDetailScreen("Insights") {
-            Text("What moves your Charge, from your own habits.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading)
+            Text("What moves your Charge, from your own habits.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading)
             NunaCard(small: true) {
                 NunaListRow(ready ? "Enough data" : "Not enough data yet",
                             subtitle: LocalizedStringKey(String(localized: "\(m.charge.count) days recorded. At least 14 needed.")), systemImage: ready ? "checkmark" : "hourglass") {
@@ -37,7 +37,7 @@ struct NunaInsightsView: View {
                 HStack(alignment: .top, spacing: 12) {
                     Image(systemName: "info.circle").foregroundStyle(NunaPalette.textMuted)
                     Text("A link is not proof of cause. Effects are computed from your own data and recalculated every day. Confidence rises as more days are logged.")
-                        .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
@@ -67,9 +67,9 @@ struct NunaInsightsView: View {
         if effects.isEmpty {
             NunaCard {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("No behaviour effects yet").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("No behaviour effects yet").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Text("Log yes or no habits in your journal (caffeine, alcohol, hydration, late workouts). Once a habit has days with and without it, its effect on Charge shows here.")
-                        .font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
         } else {
@@ -77,15 +77,15 @@ struct NunaInsightsView: View {
                 NunaCard {
                     VStack(alignment: .leading, spacing: 8) {
                         HStack(alignment: .firstTextBaseline) {
-                            Text(verbatim: e.behavior).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: e.behavior).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             Spacer()
-                            Text(verbatim: NunaTrendsFormat.signed(e.delta, 0)).font(.system(size: 26, weight: .bold, design: NunaType.design))
+                            Text(verbatim: NunaTrendsFormat.signed(e.delta, 0)).font(.nuna(size: 26, weight: .bold, design: NunaType.design))
                                 .foregroundStyle(e.delta >= 0 ? NunaPalette.charge : NunaPalette.warning)
                         }
                         HStack {
-                            Text(verbatim: String(localized: "\(e.nWith) days with, \(e.nWithout) days without")).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: String(localized: "\(e.nWith) days with, \(e.nWithout) days without")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                             Spacer()
-                            Text("Charge, points").font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text("Charge, points").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                         NunaChip(confidence(e), color: e.significant ? NunaPalette.restText : nil)
                     }
@@ -103,15 +103,15 @@ struct NunaInsightsView: View {
                 NunaCard {
                     VStack(alignment: .leading, spacing: 10) {
                         HStack {
-                            Text(verbatim: WorkoutSource.displaySport(cost.sport)).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: WorkoutSource.displaySport(cost.sport)).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             Spacer()
-                            Text(verbatim: NunaTrendsFormat.signed(-cost.delta, 0)).font(.system(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(cost.delta >= 1 ? NunaPalette.warning : NunaPalette.charge)
+                            Text(verbatim: NunaTrendsFormat.signed(-cost.delta, 0)).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(cost.delta >= 1 ? NunaPalette.warning : NunaPalette.charge)
                         }
-                        Text(verbatim: cost.sentence()).font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        Text(verbatim: cost.sentence()).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                         if let d = cost.daysToBaseline {
                             HStack(spacing: 10) {
                                 NunaChip(verbatim: String(localized: "+\(d) day"), color: nil)
-                                Text("back to normal").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                Text("back to normal").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                             }
                         }
                     }
@@ -147,8 +147,8 @@ struct NunaInsightsView: View {
                         if i > 0 { NunaDivider() }
                         NunaListRow(r.title) {
                             VStack(alignment: .trailing, spacing: 2) {
-                                Text(verbatim: NunaTrendsFormat.signed(r.r, 2)).font(.system(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                                Text(verbatim: NunaTrendsFormat.strengthLabel(r.r)).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                Text(verbatim: NunaTrendsFormat.signed(r.r, 2)).font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                                Text(verbatim: NunaTrendsFormat.strengthLabel(r.r)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                             }
                         }
                     }
@@ -284,14 +284,14 @@ struct NunaCompareView: View {
     private var pickerCard: some View {
         NunaCard {
             VStack(alignment: .leading, spacing: 12) {
-                HStack { nunaTrendsCap("Pick 2 to 4 metrics"); Spacer(); Text(verbatim: String(localized: "\(picked.count) picked")).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                HStack { nunaTrendsCap("Pick 2 to 4 metrics"); Spacer(); Text(verbatim: String(localized: "\(picked.count) picked")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                 NunaFlowChips(items: NunaSignals.all.map(\.id)) { id in
                     let on = picked.contains(id)
                     Button {
                         if on { if picked.count > 2 { picked.removeAll { $0 == id } } }
                         else if picked.count < 4 { picked.append(id); if let s = NunaSignals.find(id) { Task { await store.ensure(s, repo: repo) } } }
                     } label: {
-                        Text(verbatim: NunaSignals.find(id)?.title ?? id).font(.system(size: 13.5, weight: .bold))
+                        Text(verbatim: NunaSignals.find(id)?.title ?? id).font(.nuna(size: 13.5, weight: .bold))
                             .foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 38)
                             .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
                             .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: on ? 0 : 1))
@@ -317,7 +317,7 @@ struct NunaCompareView: View {
         }
         return NunaCard {
             VStack(alignment: .leading, spacing: 12) {
-                HStack { nunaTrendsCap("Compared"); Spacer(); Text("Scale normalised").font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                HStack { nunaTrendsCap("Compared"); Spacer(); Text("Scale normalised").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                 if lines.isEmpty {
                     ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 140)
                 } else {
@@ -327,7 +327,7 @@ struct NunaCompareView: View {
                 HStack(spacing: 14) {
                     ForEach(Array(picked.enumerated()), id: \.offset) { i, id in
                         HStack(spacing: 6) { Capsule().fill(colors[i % colors.count]).frame(width: 14, height: 8)
-                            Text(verbatim: NunaSignals.find(id)?.title ?? id).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                            Text(verbatim: NunaSignals.find(id)?.title ?? id).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                     }
                 }
             }
@@ -343,10 +343,10 @@ struct NunaCompareView: View {
                     ForEach((i + 1)..<max(ids.count, i + 1), id: \.self) { j in
                         let pairs = TrendInsights.pairs(driver: window(ids[i]), outcome: window(ids[j]), lag: 0)
                         HStack {
-                            Text(verbatim: (NunaSignals.find(ids[i])?.title ?? "") + " · " + (NunaSignals.find(ids[j])?.title ?? "")).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: (NunaSignals.find(ids[i])?.title ?? "") + " · " + (NunaSignals.find(ids[j])?.title ?? "")).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             Spacer()
                             if let c = CorrelationEngine.pearson(pairs.map { ($0.x, $0.y) }) { NunaChip(verbatim: NunaTrendsFormat.relationChip(c.r)) }
-                            else { Text("Not enough days").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                            else { Text("Not enough days").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                         }
                     }
                 }
@@ -365,7 +365,7 @@ struct NunaCompareView: View {
                     let item = SavedComparison(keys: picked, days: range)
                     if !saved.contains(where: { $0.keys == item.keys && $0.days == item.days }) { saved.append(item); SavedComparison.store(saved) }
                 } label: {
-                    HStack(spacing: 8) { Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)); Text("Save comparison").font(.system(size: 15, weight: .bold)) }
+                    HStack(spacing: 8) { Image(systemName: "checkmark").font(.nuna(size: 13, weight: .bold)); Text("Save comparison").font(.nuna(size: 15, weight: .bold)) }
                         .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 46).background(NunaPalette.glassStrong, in: Capsule())
                 }.buttonStyle(.plain)
             }
@@ -388,7 +388,7 @@ struct NunaCompareView: View {
                                             subtitle: LocalizedStringKey(String(localized: "\(s.days) days")), systemImage: "chart.line.uptrend.xyaxis", showsChevron: true)
                             }.buttonStyle(.plain)
                             Button { saved.removeAll { $0.id == s.id }; SavedComparison.store(saved) } label: {
-                                Image(systemName: "trash").font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textMuted).frame(width: 36, height: 36)
+                                Image(systemName: "trash").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textMuted).frame(width: 36, height: 36)
                             }.buttonStyle(.plain).accessibilityLabel(Text("Delete"))
                         }
                     }
@@ -422,7 +422,7 @@ struct NunaExploreView: View {
             Color.clear.frame(height: 0).task { for s in NunaSignals.all { await store.ensure(s, repo: repo) } }
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass").foregroundStyle(NunaPalette.textMuted)
-                TextField("", text: $query, prompt: Text("Search signals").foregroundStyle(NunaPalette.textMuted)).font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                TextField("", text: $query, prompt: Text("Search signals").foregroundStyle(NunaPalette.textMuted)).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
             }
             .padding(.horizontal, 16).frame(height: 48).background(NunaPalette.shade.opacity(0.28), in: Capsule()).overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
             ScrollView(.horizontal, showsIndicators: false) {
@@ -433,7 +433,7 @@ struct NunaExploreView: View {
             }
             ForEach(groups, id: \.self) { g in
                 VStack(alignment: .leading, spacing: 10) {
-                    Text(LocalizedStringKey(g)).font(.system(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(LocalizedStringKey(g)).font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     NunaCard(small: true, padding: EdgeInsets(top: 2, leading: 16, bottom: 2, trailing: 16)) {
                         VStack(spacing: 0) {
                             let rows = visible.filter { $0.group == g }
@@ -445,13 +445,13 @@ struct NunaExploreView: View {
                     }
                 }
             }
-            if visible.isEmpty && !store.series.isEmpty { Text("No signals match.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+            if visible.isEmpty && !store.series.isEmpty { Text("No signals match.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
         }
     }
 
     private func chip(_ id: String, _ title: String) -> some View {
         Button { filter = id } label: {
-            Text(verbatim: title).font(.system(size: 13.5, weight: .bold)).foregroundStyle(filter == id ? NunaPalette.onAccent : NunaPalette.textPrimary)
+            Text(verbatim: title).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(filter == id ? NunaPalette.onAccent : NunaPalette.textPrimary)
                 .padding(.horizontal, 14).frame(height: 36).background(filter == id ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
         }.buttonStyle(.plain)
     }
@@ -467,7 +467,7 @@ struct NunaExploreView: View {
                 if favourites.contains(s.id) { favourites.remove(s.id) } else { favourites.insert(s.id) }
                 UserDefaults.standard.set(Array(favourites), forKey: "nuna.explore.fav")
             } label: {
-                Image(systemName: favourites.contains(s.id) ? "star.fill" : "star").font(.system(size: 14, weight: .bold))
+                Image(systemName: favourites.contains(s.id) ? "star.fill" : "star").font(.nuna(size: 14, weight: .bold))
                     .foregroundStyle(favourites.contains(s.id) ? NunaPalette.textPrimary : NunaPalette.textMuted).frame(width: 30, height: 44)
             }.buttonStyle(.plain).accessibilityLabel(Text("Favourite"))
             Group {
@@ -482,15 +482,15 @@ struct NunaExploreView: View {
 
     private func content(_ s: NunaSignal, _ spark: [Double], _ last: Double?) -> some View {
         HStack(spacing: 12) {
-            Text(verbatim: s.title).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).minimumScaleFactor(0.85)
+            Text(verbatim: s.title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).minimumScaleFactor(0.85)
             Spacer(minLength: 8)
             NunaSpark(values: spark).frame(width: 64, height: 30)
             HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text(verbatim: last.map { s.id == "strain" ? NunaTrendsFormat.num($0, 1) : NunaTrendsFormat.num($0, s.digits) } ?? "–").font(.system(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                if last != nil, !s.unit.isEmpty { Text(verbatim: s.unit).font(.system(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+                Text(verbatim: last.map { s.id == "strain" ? NunaTrendsFormat.num($0, 1) : NunaTrendsFormat.num($0, s.digits) } ?? "–").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                if last != nil, !s.unit.isEmpty { Text(verbatim: s.unit).font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
             }
             .frame(minWidth: 70, alignment: .trailing)
-            Image(systemName: "chevron.right").font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+            Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
         }
         .contentShape(Rectangle())
     }

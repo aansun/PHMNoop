@@ -39,7 +39,7 @@ struct NunaRowsCard: View {
         let content = NunaListRow(LocalizedStringKey(row.title), subtitle: LocalizedStringKey(row.subtitle),
                                   systemImage: row.icon, tint: row.tint, showsChevron: true) {
             if let v = row.value {
-                Text(verbatim: v).font(.system(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: v).font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             }
         }
         switch row.target.kind {

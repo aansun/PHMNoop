@@ -29,7 +29,7 @@ struct NunaGymSessionView: View {
     var body: some View {
         NunaDetailScreen(LocalizedStringKey(session?.programName ?? String(localized: "Gym session")), onAnya: records.isEmpty ? nil : { showCoach = true }) {
             if let session { content(session) }
-            else if loaded { NunaCard { Text("This session is no longer saved.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading) } }
+            else if loaded { NunaCard { Text("This session is no longer saved.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading) } }
         }
         .task(id: repo.refreshSeq) { await load() }
         .sheet(isPresented: $saveProgram) { if let session { NunaSaveProgramView(session: session, sets: sets) } }
@@ -58,7 +58,7 @@ struct NunaGymSessionView: View {
     @ViewBuilder private func content(_ s: LiftSessionRow) -> some View {
         let secs = max(0, (s.endTs ?? s.startTs) - s.startTs)
         HStack {
-            Text(verbatim: NunaWorkoutFormat.day(s.startTs) + " · " + NunaWorkoutFormat.clock(s.startTs)).font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text(verbatim: NunaWorkoutFormat.day(s.startTs) + " · " + NunaWorkoutFormat.clock(s.startTs)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             Spacer()
             NunaChip("Done", systemImage: "checkmark")
         }
@@ -77,10 +77,10 @@ struct NunaGymSessionView: View {
             NunaListRow("Apple Health", subtitle: "Strength workout, duration and energy are written by the sync. Manage it in Me", systemImage: "heart.text.square")
         }
         Button { editing = true } label: {
-            Text("Edit sets").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
+            Text("Edit sets").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
         }.buttonStyle(.plain)
         Button(role: .destructive) { confirmDelete = true } label: {
-            Text("Delete").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
+            Text("Delete").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
         }.buttonStyle(.plain)
     }
 
@@ -91,18 +91,18 @@ struct NunaGymSessionView: View {
             VStack(spacing: 18) {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Volume").font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Volume").font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
-                            Text(verbatim: volume.map { NunaTrendsFormat.num($0) } ?? "–").font(.system(size: 44, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            Text(verbatim: UnitFormatter.massUnit(system)).font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: volume.map { NunaTrendsFormat.num($0) } ?? "–").font(.nuna(size: 44, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: UnitFormatter.massUnit(system)).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                     }
                     Spacer()
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Duration").font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Duration").font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
-                            Text(verbatim: secs > 0 ? "\(max(1, secs / 60))" : "–").font(.system(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            Text("min").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: secs > 0 ? "\(max(1, secs / 60))" : "–").font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            Text("min").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                     }
                 }
@@ -118,8 +118,8 @@ struct NunaGymSessionView: View {
 
     private func miniStat(_ l: LocalizedStringKey, _ v: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(l).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
-            Text(verbatim: v).font(.system(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
+            Text(verbatim: v).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -127,10 +127,10 @@ struct NunaGymSessionView: View {
         let day = session.flatMap { s in repo.days.first { $0.day == Repository.localDayKey(Date(timeIntervalSince1970: TimeInterval(s.startTs))) }?.strain }
         return NunaCard(small: true) {
             HStack(spacing: 14) {
-                Text(verbatim: "+" + UnitFormatter.effortDisplay(e, scale: scale)).font(.system(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.effortText)
+                Text(verbatim: "+" + UnitFormatter.effortDisplay(e, scale: scale)).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.effortText)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Effort added").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    if let day { Text(verbatim: String(localized: "That day reached \(UnitFormatter.effortDisplay(day, scale: scale)) of \(UnitFormatter.effortScaleMax(scale))")).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                    Text("Effort added").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    if let day { Text(verbatim: String(localized: "That day reached \(UnitFormatter.effortDisplay(day, scale: scale)) of \(UnitFormatter.effortScaleMax(scale))")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                 }
                 Spacer()
             }
@@ -144,8 +144,8 @@ struct NunaGymSessionView: View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(verbatim: s.exercise).font(.system(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: LiftMuscleSummary.line(primary: first?.primaryMuscle, secondaries: first?.secondaryMuscles ?? [])).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: s.exercise).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: LiftMuscleSummary.line(primary: first?.primaryMuscle, secondaries: first?.secondaryMuscles ?? [])).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     Spacer()
                     if records.contains(s.exercise) { NunaChip("PR") }
@@ -153,9 +153,9 @@ struct NunaGymSessionView: View {
                 ForEach(Array(rows.enumerated()), id: \.element.id) { i, r in
                     HStack {
                         Text(verbatim: r.isWarmup ? String(localized: "Warm-up") : String(localized: "Set \(rows.prefix(i + 1).filter { !$0.isWarmup }.count)"))
-                            .font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         Spacer()
-                        Text(verbatim: setText(r)).font(.system(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: setText(r)).font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     }
                 }
             }
@@ -183,9 +183,9 @@ struct NunaGymSessionView: View {
                         ForEach(Array(ordered.enumerated()), id: \.element.key) { i, e in
                             if i > 0 { NunaDivider() }
                             HStack {
-                                Text(e.key.title).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                Text(e.key.title).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                                 Spacer()
-                                Text(verbatim: NunaTrendsFormat.num(e.value) + " " + UnitFormatter.massUnit(system)).font(.system(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                                Text(verbatim: NunaTrendsFormat.num(e.value) + " " + UnitFormatter.massUnit(system)).font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                             }.padding(.vertical, 14)
                         }
                     }
@@ -249,9 +249,9 @@ struct NunaSaveProgramView: View {
         NavigationStack {
             NunaDetailScreen("Save as program") {
                 HStack {
-                    Text(verbatim: NunaWorkoutFormat.day(session.startTs)).font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: NunaWorkoutFormat.day(session.startTs)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
-                    Text(verbatim: session.programName ?? String(localized: "Gym")).font(.system(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: session.programName ?? String(localized: "Gym")).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 }
                 NunaFormField("Program name") { TextField("", text: $name, prompt: Text("Push · chest and shoulders").foregroundStyle(NunaPalette.textMuted)) }
                 NunaTitleRow(title: "Included exercises") { EmptyView() }
@@ -262,11 +262,11 @@ struct NunaSaveProgramView: View {
                             Button { if excluded.contains(s.exercise) { excluded.remove(s.exercise) } else { excluded.insert(s.exercise) } } label: {
                                 HStack(spacing: 12) {
                                     VStack(alignment: .leading, spacing: 3) {
-                                        Text(verbatim: s.exercise).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                        Text(verbatim: line(s)).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                        Text(verbatim: s.exercise).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                        Text(verbatim: line(s)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                                     }
                                     Spacer()
-                                    Image(systemName: excluded.contains(s.exercise) ? "circle" : "checkmark.circle.fill").font(.system(size: 22))
+                                    Image(systemName: excluded.contains(s.exercise) ? "circle" : "checkmark.circle.fill").font(.nuna(size: 22))
                                         .foregroundStyle(excluded.contains(s.exercise) ? NunaPalette.textMuted : NunaPalette.textPrimary)
                                 }.padding(.vertical, 12).contentShape(Rectangle())
                             }.buttonStyle(.plain)
@@ -277,9 +277,9 @@ struct NunaSaveProgramView: View {
                     NunaToggleRow("Use this session's weights as targets", subtitle: "Off: only the name and number of sets", systemImage: "scalemass", isOn: $useWeights)
                 }
                 Button { Task { await save() } } label: {
-                    Text("Save program").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: Capsule())
+                    Text("Save program").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: Capsule())
                 }.buttonStyle(.plain).disabled(!canSave).opacity(canSave ? 1 : 0.4)
-                Text("It shows up in Gym under Programs and can be edited any time.").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                Text("It shows up in Gym under Programs and can be edited any time.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
             }
             .scrollDismissesKeyboard(.interactively)
             .toolbar(.hidden, for: .navigationBar)

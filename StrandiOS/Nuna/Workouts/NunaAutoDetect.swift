@@ -40,7 +40,7 @@ struct NunaAutoDetectView: View {
                 }
             }
             Text("The rules are deliberately conservative so stress, caffeine or climbing stairs are not counted as workouts. Short or light sessions can be missed.")
-                .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
             if on {
                 NunaTitleRow(title: "Latest suggestion") { EmptyView() }
                 NunaCard(small: true) {
@@ -57,7 +57,7 @@ struct NunaAutoDetectView: View {
     }
 
     private func value(_ t: String) -> some View {
-        Text(verbatim: t).font(.system(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+        Text(verbatim: t).font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
     }
 }
 #endif
