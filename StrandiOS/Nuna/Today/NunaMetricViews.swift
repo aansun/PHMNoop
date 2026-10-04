@@ -17,6 +17,7 @@ enum NunaTodayRoute: Hashable {
     case fitnessAge
     case bodyClock
     case bodyClockPlan
+    case deepTimeline
 }
 
 extension View {
@@ -41,6 +42,7 @@ extension View {
             case .fitnessAge: NunaFitnessAgeView()
             case .bodyClock: NunaBodyClockView()
             case .bodyClockPlan: NunaBodyClockPlanView()
+            case .deepTimeline: NunaDeepTimelineView()
             }
         }
     }

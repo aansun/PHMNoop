@@ -1,6 +1,39 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "vs yesterday": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "dibanding kemarin"}}
+        } },
+        "Deep timeline": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Linimasa mendalam"}}
+        } },
+        "Nothing recorded for this window": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidak ada rekaman pada rentang ini"}}
+        } },
+        "Pinch to zoom · drag to pan · hold to read": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Cubit untuk zoom · geser · tahan untuk membaca"}}
+        } },
+        "Zoomed in. Drag to pan · hold to read": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Diperbesar. Geser · tahan untuk membaca"}}
+        } },
+        "Breathe 5 min": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Napas 5 menit"}}
+        } },
+        "%lld years younger": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld tahun lebih muda"}}
+        } },
+        "%lld years older": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld tahun lebih tua"}}
+        } },
+        "4-week trend": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "tren 4 minggu"}}
+        } },
+        "%lld yr": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld thn"}}
+        } },
+        "Actual age %lld": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Usia sebenarnya %lld"}}
+        } },
         "vs last 14 days": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "vs 14 hari terakhir"}}
         } },
