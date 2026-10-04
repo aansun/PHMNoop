@@ -239,6 +239,13 @@ struct LiftSessionEngine: Equatable {
         return max(0, endsAt - now)
     }
 
+    /// Lengthen or shorten the rest that is running. Not undoable and not a snapshot: it only moves the end time, and
+    /// the rest that is eventually recorded is still the one measured from the taps.
+    mutating func adjustRest(by seconds: Int, now: Int) {
+        guard case .resting(let slot, let endsAt) = stage, endsAt > now || seconds > 0 else { return }
+        stage = .resting(slot, endsAt: max(now, endsAt + seconds))
+    }
+
     /// The nearest earlier set of this exercise already performed in THIS session. Nil for the first
     /// set, or when nothing before it has been done yet.
     func previousSetInSession(for slot: LiftSlot) -> LiftRecordedSet? {

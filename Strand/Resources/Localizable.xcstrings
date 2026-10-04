@@ -1,6 +1,195 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Add muscle": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tambah otot"}}
+    } },
+    "Also works (counts half a set)": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Juga bekerja (dihitung setengah set)"}}
+    } },
+    "Choose exercises": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pilih latihan"}}
+    } },
+    "Direct sets count one, indirect sets count half.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Set langsung dihitung satu, set tidak langsung setengah."}}
+    } },
+    "Direct sets count one, indirect sets count half. This is the basis of the weekly sets per muscle.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Set langsung dihitung satu, tidak langsung setengah. Inilah dasar hitungan set per otot tiap minggu."}}
+    } },
+    "Every target is optional. Leave out what you do not need and fill it in during the session.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Semua target opsional. Kosongkan yang tidak perlu, dan isi saat sesi."}}
+    } },
+    "Every target is optional: this is the plan, not the record. What you lift is entered during the session. Sessions already logged from this program are kept.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Semua target opsional: ini rencana, bukan catatan. Yang kamu angkat sebenarnya diisi saat sesi. Sesi lama dari program ini tetap tersimpan."}}
+    } },
+    "Exercise name": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Nama latihan"}}
+    } },
+    "Finished sessions land here with every set": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sesi yang selesai muncul di sini beserta tiap set"}}
+    } },
+    "Gym session": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sesi gym"}}
+    } },
+    "Gym session · %@": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sesi gym · %@"}}
+    } },
+    "Import program": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Impor program"}}
+    } },
+    "Included exercises": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Latihan yang disertakan"}}
+    } },
+    "It shows up in Gym under Programs and can be edited any time.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Muncul di Gym, bagian Program. Bisa diubah kapan saja."}}
+    } },
+    "Last %@": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Terakhir %@"}}
+    } },
+    "Last sessions": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sesi terakhir"}}
+    } },
+    "Muscle load": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Beban otot"}}
+    } },
+    "Muscles trained": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Otot yang dilatih"}}
+    } },
+    "Never run": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Belum pernah"}}
+    } },
+    "No exercises yet. Add the first one below.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Belum ada latihan. Tambahkan yang pertama di bawah."}}
+    } },
+    "No gym sessions yet": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Belum ada sesi gym"}}
+    } },
+    "No programs yet. A program is a named list of exercises with your targets for each.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Belum ada program. Program adalah daftar latihan bernama dengan target untuk tiap latihan."}}
+    } },
+    "Note": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Catatan"}}
+    } },
+    "Off: only the name and number of sets": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mati: hanya nama dan jumlah set"}}
+    } },
+    "Once you log a session, this shows how many sets each muscle group got in the last 7 days.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Setelah kamu mencatat sesi, di sini terlihat berapa set yang didapat tiap kelompok otot dalam 7 hari terakhir."}}
+    } },
+    "Only the exercise name is required. The rest can stay empty and be filled in later or during the session.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hanya nama latihan yang wajib. Sisanya boleh kosong dan diisi nanti atau saat sesi."}}
+    } },
+    "PR": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "PR"}}
+    } },
+    "Pick at least one exercise": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pilih minimal satu latihan"}}
+    } },
+    "Program name": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Nama program"}}
+    } },
+    "Program summary": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ringkasan program"}}
+    } },
+    "Push · chest and shoulders": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Push · dada dan bahu"}}
+    } },
+    "Push · chest, shoulders, triceps": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Push · dada, bahu, trisep"}}
+    } },
+    "Repeat this session later with the same weights": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ulangi sesi ini lain kali dengan beban yang sama"}}
+    } },
+    "Rest (s)": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Istirahat (dtk)"}}
+    } },
+    "Save as program": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Simpan sebagai program"}}
+    } },
+    "Session RPE": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "RPE sesi"}}
+    } },
+    "Set %lld is ready soon": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Set %lld siap sebentar lagi"}}
+    } },
+    "Slow lowering, pause at the bottom": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Turun pelan, tahan di bawah"}}
+    } },
+    "Start the first set when you are ready.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mulai set pertama saat kamu siap."}}
+    } },
+    "Start with %lld exercises": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mulai dengan %lld latihan"}}
+    } },
+    "Strength workout, duration and energy are written by the sync. Manage it in Me": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Latihan kekuatan, durasi, dan energi ditulis oleh sinkronisasi. Atur di Saya"}}
+    } },
+    "Tap Set done when you finish": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ketuk Set selesai saat kamu selesai"}}
+    } },
+    "These lines still import. Anything unclassified can be set in the app.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Baris ini tetap diimpor. Yang belum dikelompokkan bisa diatur di aplikasi."}}
+    } },
+    "Tick = %@ sets": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tanda = %@ set"}}
+    } },
+    "Typing a dozen exercise rows on a phone is tiring. A spreadsheet is much faster.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mengisi belasan baris latihan di ponsel itu melelahkan. Spreadsheet jauh lebih cepat."}}
+    } },
+    "Use this session's weights as targets": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pakai beban sesi ini sebagai target"}}
+    } },
+    "Volume per muscle": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Volume per otot"}}
+    } },
+    "Volume, recovery and personal records": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Volume, pemulihan, dan rekor pribadi"}}
+    } },
+    "%@ are still under %@ sets.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%@ masih di bawah %@ set."}}
+    } },
+    "%lld programs · %lld exercises": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%lld program · %lld latihan"}}
+    } },
+    "%lld sets done": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%lld set selesai"}}
+    } },
+    "%lld sets not started": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%lld set belum dimulai"}}
+    } },
+    "rest %lld s": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "istirahat %lld dtk"}}
+    } },
+    "Personal record on %@. Give the trained muscles two days to recover before the next session.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Rekor pribadi di %@. Beri otot yang dilatih dua hari untuk pulih sebelum sesi berikutnya."}}
+    } },
+    "−15 s": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "−15 dtk"}}
+    } },
+    "+15 s": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "+15 dtk"}}
+    } },
+    "Choose file": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pilih file"}}
+    } },
+    "Import 1 program": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Impor 1 program"}}
+    } },
+    "Import %lld programs": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Impor %lld program"}}
+    } },
+    "Pick the exercises you want to do": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pilih latihan yang ingin kamu lakukan"}}
+    } },
+    "Start an empty session": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mulai sesi kosong"}}
+    } },
+    "Open it to keep logging sets": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Buka untuk terus mencatat set"}}
+    } },
+    "Sets per muscle this week": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Set per otot minggu ini"}}
+    } },
     "Search all workouts": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Cari semua latihan"}}
     } },
@@ -4508,9 +4697,11 @@
       "de": {"stringUnit": {"state": "translated", "value": "%@ Pause"}}, "es": {"stringUnit": {"state": "translated", "value": "%@ de descanso"}}, "fr": {"stringUnit": {"state": "translated", "value": "%@ de repos"}}, "it": {"stringUnit": {"state": "translated", "value": "%@ di recupero"}}, "pl": {"stringUnit": {"state": "translated", "value": "%@ przerwy"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "%@ de descanso"}}, "ru": {"stringUnit": {"state": "translated", "value": "отдых %@"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "休息 %@"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "休息 %@"}}
     } },
     "%lld sets": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "%lld set"}},
       "de": {"stringUnit": {"state": "translated", "value": "%lld Sätze"}}, "es": {"stringUnit": {"state": "translated", "value": "%lld series"}}, "fr": {"stringUnit": {"state": "translated", "value": "%lld séries"}}, "it": {"stringUnit": {"state": "translated", "value": "%lld serie"}}, "pl": {"stringUnit": {"state": "translated", "value": "%lld serii"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "%lld séries"}}, "ru": {"stringUnit": {"state": "translated", "value": "%lld подходов"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "%lld 组"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "%lld 組"}}
     } },
     "Anything you want to remember": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Apa pun yang ingin kamu ingat"}},
       "de": {"stringUnit": {"state": "translated", "value": "Alles, was du dir merken willst"}}, "es": {"stringUnit": {"state": "translated", "value": "Cualquier cosa que quieras recordar"}}, "fr": {"stringUnit": {"state": "translated", "value": "Tout ce que tu veux retenir"}}, "it": {"stringUnit": {"state": "translated", "value": "Qualsiasi cosa tu voglia ricordare"}}, "pl": {"stringUnit": {"state": "translated", "value": "Cokolwiek chcesz zapamiętać"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Tudo o que queiras recordar"}}, "ru": {"stringUnit": {"state": "translated", "value": "Всё, что хочешь запомнить"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "任何你想记住的内容"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "任何你想記住的內容"}}
     } },
     "Build a program once, then tap through it at the gym. Kept on %@.": { "localizations": {
@@ -4526,9 +4717,11 @@
       "de": {"stringUnit": {"state": "translated", "value": "Übung bearbeiten"}}, "es": {"stringUnit": {"state": "translated", "value": "Editar ejercicio"}}, "fr": {"stringUnit": {"state": "translated", "value": "Modifier l'exercice"}}, "it": {"stringUnit": {"state": "translated", "value": "Modifica esercizio"}}, "pl": {"stringUnit": {"state": "translated", "value": "Edytuj ćwiczenie"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Editar exercício"}}, "ru": {"stringUnit": {"state": "translated", "value": "Изменить упражнение"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "编辑动作"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "編輯動作"}}
     } },
     "Edit program": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Ubah program"}},
       "de": {"stringUnit": {"state": "translated", "value": "Programm bearbeiten"}}, "es": {"stringUnit": {"state": "translated", "value": "Editar programa"}}, "fr": {"stringUnit": {"state": "translated", "value": "Modifier le programme"}}, "it": {"stringUnit": {"state": "translated", "value": "Modifica programma"}}, "pl": {"stringUnit": {"state": "translated", "value": "Edytuj program"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Editar programa"}}, "ru": {"stringUnit": {"state": "translated", "value": "Изменить программу"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "编辑计划"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "編輯計畫"}}
     } },
     "Finish session": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Selesaikan sesi"}},
       "de": {"stringUnit": {"state": "translated", "value": "Einheit beenden"}}, "es": {"stringUnit": {"state": "translated", "value": "Terminar sesión"}}, "fr": {"stringUnit": {"state": "translated", "value": "Terminer la séance"}}, "it": {"stringUnit": {"state": "translated", "value": "Termina sessione"}}, "pl": {"stringUnit": {"state": "translated", "value": "Zakończ sesję"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Terminar sessão"}}, "ru": {"stringUnit": {"state": "translated", "value": "Завершить тренировку"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "结束训练"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "結束訓練"}}
     } },
     "In order": { "localizations": {
@@ -4538,6 +4731,7 @@
       "de": {"stringUnit": {"state": "translated", "value": "In deinen Worten"}}, "es": {"stringUnit": {"state": "translated", "value": "En tus palabras"}}, "fr": {"stringUnit": {"state": "translated", "value": "Dans tes mots"}}, "it": {"stringUnit": {"state": "translated", "value": "Con parole tue"}}, "pl": {"stringUnit": {"state": "translated", "value": "Twoimi słowami"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Nas tuas palavras"}}, "ru": {"stringUnit": {"state": "translated", "value": "Своими словами"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "用你的话"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "用你的話"}}
     } },
     "Incline dumbbell press": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Incline dumbbell press"}},
       "de": {"stringUnit": {"state": "translated", "value": "Schrägbankdrücken mit Kurzhanteln"}}, "es": {"stringUnit": {"state": "translated", "value": "Press inclinado con mancuernas"}}, "fr": {"stringUnit": {"state": "translated", "value": "Développé incliné haltères"}}, "it": {"stringUnit": {"state": "translated", "value": "Panca inclinata con manubri"}}, "pl": {"stringUnit": {"state": "translated", "value": "Wyciskanie hantli na skosie"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Supino inclinado com halteres"}}, "ru": {"stringUnit": {"state": "translated", "value": "Жим гантелей на наклонной"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "上斜哑铃卧推"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "上斜啞鈴臥推"}}
     } },
     "Lift Log": { "localizations": {
@@ -4545,6 +4739,7 @@
       "id": {"stringUnit": {"state": "translated", "value": "Catatan Angkat Beban"}}
 } },
     "No targets set": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Target belum diisi"}},
       "de": {"stringUnit": {"state": "translated", "value": "Keine Ziele gesetzt"}}, "es": {"stringUnit": {"state": "translated", "value": "Sin objetivos"}}, "fr": {"stringUnit": {"state": "translated", "value": "Aucun objectif défini"}}, "it": {"stringUnit": {"state": "translated", "value": "Nessun obiettivo impostato"}}, "pl": {"stringUnit": {"state": "translated", "value": "Brak celów"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Sem objetivos definidos"}}, "ru": {"stringUnit": {"state": "translated", "value": "Цели не заданы"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "未设定目标"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "未設定目標"}}
     } },
     "One number for the whole session, so a leg day can be compared with a run.": { "localizations": {
@@ -4557,15 +4752,18 @@
       "de": {"stringUnit": {"state": "translated", "value": "Pause (Sekunden)"}}, "es": {"stringUnit": {"state": "translated", "value": "Descanso (segundos)"}}, "fr": {"stringUnit": {"state": "translated", "value": "Repos (secondes)"}}, "it": {"stringUnit": {"state": "translated", "value": "Recupero (secondi)"}}, "pl": {"stringUnit": {"state": "translated", "value": "Przerwa (sekundy)"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Descanso (segundos)"}}, "ru": {"stringUnit": {"state": "translated", "value": "Отдых (секунды)"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "休息（秒）"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "休息（秒）"}}
     } },
     "Set done": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Set selesai"}},
       "de": {"stringUnit": {"state": "translated", "value": "Satz fertig"}}, "es": {"stringUnit": {"state": "translated", "value": "Serie hecha"}}, "fr": {"stringUnit": {"state": "translated", "value": "Série terminée"}}, "it": {"stringUnit": {"state": "translated", "value": "Serie completata"}}, "pl": {"stringUnit": {"state": "translated", "value": "Seria gotowa"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Série concluída"}}, "ru": {"stringUnit": {"state": "translated", "value": "Подход выполнен"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "完成这一组"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "完成這一組"}}
     } },
     "Slow eccentric, pause at the bottom": { "localizations": {
       "de": {"stringUnit": {"state": "translated", "value": "Langsam ablassen, unten kurz halten"}}, "es": {"stringUnit": {"state": "translated", "value": "Excéntrica lenta, pausa abajo"}}, "fr": {"stringUnit": {"state": "translated", "value": "Excentrique lente, pause en bas"}}, "it": {"stringUnit": {"state": "translated", "value": "Eccentrica lenta, pausa in basso"}}, "pl": {"stringUnit": {"state": "translated", "value": "Powolna faza ekscentryczna, pauza na dole"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Excêntrica lenta, pausa em baixo"}}, "ru": {"stringUnit": {"state": "translated", "value": "Медленная негативная фаза, пауза внизу"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "慢速离心，底部停顿"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "慢速離心，底部停頓"}}
     } },
     "Start first set": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Mulai set pertama"}},
       "de": {"stringUnit": {"state": "translated", "value": "Ersten Satz starten"}}, "es": {"stringUnit": {"state": "translated", "value": "Empezar la primera serie"}}, "fr": {"stringUnit": {"state": "translated", "value": "Démarrer la première série"}}, "it": {"stringUnit": {"state": "translated", "value": "Avvia la prima serie"}}, "pl": {"stringUnit": {"state": "translated", "value": "Rozpocznij pierwszą serię"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Iniciar a primeira série"}}, "ru": {"stringUnit": {"state": "translated", "value": "Начать первый подход"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "开始第一组"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "開始第一組"}}
     } },
     "Start next set": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Mulai set berikutnya"}},
       "de": {"stringUnit": {"state": "translated", "value": "Nächsten Satz starten"}}, "es": {"stringUnit": {"state": "translated", "value": "Empezar la siguiente serie"}}, "fr": {"stringUnit": {"state": "translated", "value": "Démarrer la série suivante"}}, "it": {"stringUnit": {"state": "translated", "value": "Avvia la serie successiva"}}, "pl": {"stringUnit": {"state": "translated", "value": "Rozpocznij następną serię"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Iniciar a série seguinte"}}, "ru": {"stringUnit": {"state": "translated", "value": "Начать следующий подход"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "开始下一组"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "開始下一組"}}
     } },
     "Type any name you like. NOOP remembers it, with the muscles you give it.": { "localizations": {
@@ -4575,6 +4773,7 @@
       "de": {"stringUnit": {"state": "translated", "value": "Oberkörper A"}}, "es": {"stringUnit": {"state": "translated", "value": "Tren superior A"}}, "fr": {"stringUnit": {"state": "translated", "value": "Haut du corps A"}}, "it": {"stringUnit": {"state": "translated", "value": "Parte alta A"}}, "pl": {"stringUnit": {"state": "translated", "value": "Góra A"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Tronco superior A"}}, "ru": {"stringUnit": {"state": "translated", "value": "Верх A"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "上肢 A"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "上肢 A"}}
     } },
     "Warm-up": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Pemanasan"}},
       "de": {"stringUnit": {"state": "translated", "value": "Aufwärmen"}}, "es": {"stringUnit": {"state": "translated", "value": "Calentamiento"}}, "fr": {"stringUnit": {"state": "translated", "value": "Échauffement"}}, "it": {"stringUnit": {"state": "translated", "value": "Riscaldamento"}}, "pl": {"stringUnit": {"state": "translated", "value": "Rozgrzewka"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Aquecimento"}}, "ru": {"stringUnit": {"state": "translated", "value": "Разминка"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "热身"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "熱身"}}
     } },
     "What you're aiming for": { "localizations": {
@@ -4706,6 +4905,7 @@
       "de": {"stringUnit": {"state": "translated", "value": "aus der Herzfrequenz gemessen"}}, "es": {"stringUnit": {"state": "translated", "value": "medido a partir de la frecuencia cardíaca"}}, "fr": {"stringUnit": {"state": "translated", "value": "mesuré à partir de la fréquence cardiaque"}}, "it": {"stringUnit": {"state": "translated", "value": "misurato dalla frequenza cardiaca"}}, "pl": {"stringUnit": {"state": "translated", "value": "mierzone z tętna"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "medido a partir da frequência cardíaca"}}, "ru": {"stringUnit": {"state": "translated", "value": "измерено по пульсу"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "由心率测得"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "由心率測得"}}
     } },
     "Chest": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Dada"}},
       "de": {"stringUnit": {"state": "translated", "value": "Brust"}}, "es": {"stringUnit": {"state": "translated", "value": "Pecho"}}, "fr": {"stringUnit": {"state": "translated", "value": "Pectoraux"}}, "it": {"stringUnit": {"state": "translated", "value": "Petto"}}, "pl": {"stringUnit": {"state": "translated", "value": "Klatka piersiowa"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Peito"}}, "ru": {"stringUnit": {"state": "translated", "value": "Грудь"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "胸部"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "胸部"}}
     } },
     "Front delts": { "localizations": {
@@ -4778,39 +4978,51 @@
       "de": {"stringUnit": {"state": "translated", "value": "Rumpfmuskulatur"}}, "es": {"stringUnit": {"state": "translated", "value": "Músculos del tronco"}}, "fr": {"stringUnit": {"state": "translated", "value": "Muscles du tronc"}}, "it": {"stringUnit": {"state": "translated", "value": "Muscoli del tronco"}}, "pl": {"stringUnit": {"state": "translated", "value": "Mięśnie tułowia"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Músculos do tronco"}}, "ru": {"stringUnit": {"state": "translated", "value": "Мышцы корпуса"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "躯干肌群"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "軀幹肌群"}}
     } },
     "Add set": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tambah set"}},
       "de": {"stringUnit": {"state": "translated", "value": "Satz hinzufügen"}}, "en": {"stringUnit": {"state": "translated", "value": "Add set"}}, "es": {"stringUnit": {"state": "translated", "value": "Añadir serie"}}, "fr": {"stringUnit": {"state": "translated", "value": "Ajouter une série"}}, "it": {"stringUnit": {"state": "translated", "value": "Aggiungi serie"}}, "pl": {"stringUnit": {"state": "translated", "value": "Dodaj serię"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Adicionar série"}}, "ru": {"stringUnit": {"state": "translated", "value": "Добавить подход"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "添加一组"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "新增一組"}}
     } },
     "Unfinished sets": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Set belum selesai"}},
       "de": {"stringUnit": {"state": "translated", "value": "Unvollständige Sätze"}}, "en": {"stringUnit": {"state": "translated", "value": "Unfinished sets"}}, "es": {"stringUnit": {"state": "translated", "value": "Series sin terminar"}}, "fr": {"stringUnit": {"state": "translated", "value": "Séries non terminées"}}, "it": {"stringUnit": {"state": "translated", "value": "Serie incomplete"}}, "pl": {"stringUnit": {"state": "translated", "value": "Niedokończone serie"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Séries por terminar"}}, "ru": {"stringUnit": {"state": "translated", "value": "Незавершённые подходы"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "未完成的组"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "未完成的組"}}
     } },
     "%lld sets have no numbers typed in — sets you did not start, or finished without typing.": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "%lld set belum diisi angka — set yang tidak dimulai, atau selesai tanpa mengetik."}},
       "de": {"stringUnit": {"state": "translated", "value": "%lld Sätze haben keine eingetragenen Werte – nicht begonnene oder ohne Eingabe beendete Sätze."}}, "en": {"stringUnit": {"state": "translated", "value": "%lld sets have no numbers typed in — sets you did not start, or finished without typing."}}, "es": {"stringUnit": {"state": "translated", "value": "%lld series no tienen números: series que no empezaste o que terminaste sin escribir nada."}}, "fr": {"stringUnit": {"state": "translated", "value": "%lld séries n'ont aucun chiffre saisi — des séries non commencées ou terminées sans saisie."}}, "it": {"stringUnit": {"state": "translated", "value": "%lld serie non hanno numeri inseriti: serie non iniziate o finite senza scrivere nulla."}}, "pl": {"stringUnit": {"state": "translated", "value": "Serie bez wpisanych liczb: %lld – nierozpoczęte lub zakończone bez wpisywania."}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "%lld séries não têm números: séries que não começaste ou que terminaste sem escrever nada."}}, "ru": {"stringUnit": {"state": "translated", "value": "Подходов без введённых чисел: %lld — не начатые или завершённые без ввода."}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "有 %lld 组没有输入数字：未开始的组，或完成时没有输入的组。"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "有 %lld 組沒有輸入數字：未開始的組，或完成時沒有輸入的組。"}}
     } },
     "Complete them": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Selesaikan"}},
       "de": {"stringUnit": {"state": "translated", "value": "Abschließen"}}, "en": {"stringUnit": {"state": "translated", "value": "Complete them"}}, "es": {"stringUnit": {"state": "translated", "value": "Completarlas"}}, "fr": {"stringUnit": {"state": "translated", "value": "Les compléter"}}, "it": {"stringUnit": {"state": "translated", "value": "Completale"}}, "pl": {"stringUnit": {"state": "translated", "value": "Uzupełnij"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Completá-las"}}, "ru": {"stringUnit": {"state": "translated", "value": "Завершить"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "补全"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "補全"}}
     } },
     "Discard them": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Buang"}},
       "de": {"stringUnit": {"state": "translated", "value": "Verwerfen"}}, "en": {"stringUnit": {"state": "translated", "value": "Discard them"}}, "es": {"stringUnit": {"state": "translated", "value": "Descartarlas"}}, "fr": {"stringUnit": {"state": "translated", "value": "Les abandonner"}}, "it": {"stringUnit": {"state": "translated", "value": "Scartale"}}, "pl": {"stringUnit": {"state": "translated", "value": "Odrzuć"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Descartá-las"}}, "ru": {"stringUnit": {"state": "translated", "value": "Отбросить"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "放弃"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "放棄"}}
     } },
     "Completing saves them with the grey numbers shown. Discarding leaves them out of the session.": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Menyelesaikan akan menyimpannya dengan angka abu-abu yang tampil. Membuang akan menghapusnya dari sesi."}},
       "de": {"stringUnit": {"state": "translated", "value": "Abschließen speichert sie mit den grau angezeigten Werten. Verwerfen lässt sie aus der Einheit weg."}}, "en": {"stringUnit": {"state": "translated", "value": "Completing saves them with the grey numbers shown. Discarding leaves them out of the session."}}, "es": {"stringUnit": {"state": "translated", "value": "Completarlas las guarda con los números en gris. Descartarlas las deja fuera de la sesión."}}, "fr": {"stringUnit": {"state": "translated", "value": "Les compléter les enregistre avec les chiffres affichés en gris. Les abandonner les retire de la séance."}}, "it": {"stringUnit": {"state": "translated", "value": "Completarle le salva con i numeri in grigio. Scartarle le lascia fuori dalla sessione."}}, "pl": {"stringUnit": {"state": "translated", "value": "Uzupełnienie zapisze je z liczbami pokazanymi na szaro. Odrzucenie pominie je w sesji."}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Completá-las guarda-as com os números a cinzento. Descartá-las deixa-as fora da sessão."}}, "ru": {"stringUnit": {"state": "translated", "value": "Если завершить, они сохранятся с серыми числами. Если отбросить, в сессию они не попадут."}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "补全会用灰色显示的数字保存它们；放弃则不计入本次训练。"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "補全會用灰色顯示的數字儲存它們；放棄則不計入本次訓練。"}}
     } },
     "You changed the number of sets. Keep the new counts in the program for next time?": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Kamu mengubah jumlah set. Simpan jumlah baru di program untuk lain kali?"}},
       "de": {"stringUnit": {"state": "translated", "value": "Du hast die Anzahl der Sätze geändert. Die neuen Zahlen fürs nächste Mal ins Programm übernehmen?"}}, "en": {"stringUnit": {"state": "translated", "value": "You changed the number of sets. Keep the new counts in the program for next time?"}}, "es": {"stringUnit": {"state": "translated", "value": "Has cambiado el número de series. ¿Guardar las nuevas cifras en el programa para la próxima vez?"}}, "fr": {"stringUnit": {"state": "translated", "value": "Tu as modifié le nombre de séries. Garder les nouveaux nombres dans le programme pour la prochaine fois ?"}}, "it": {"stringUnit": {"state": "translated", "value": "Hai cambiato il numero di serie. Tenere i nuovi numeri nel programma per la prossima volta?"}}, "pl": {"stringUnit": {"state": "translated", "value": "Zmieniono liczbę serii. Zachować nowe liczby w programie na następny raz?"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Alteraste o número de séries. Guardar os novos números no programa para a próxima vez?"}}, "ru": {"stringUnit": {"state": "translated", "value": "Количество подходов изменено. Сохранить новые значения в программе на следующий раз?"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "你更改了组数。要把新的组数保存到计划里，下次使用吗？"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "你更改了組數。要把新的組數儲存到計畫裡，下次使用嗎？"}}
     } },
     "%@: %lld → %lld sets": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "%@: %lld → %lld set"}},
       "de": {"stringUnit": {"state": "translated", "value": "%1$@: %2$lld → %3$lld Sätze"}}, "en": {"stringUnit": {"state": "translated", "value": "%@: %lld → %lld sets"}}, "es": {"stringUnit": {"state": "translated", "value": "%1$@: %2$lld → %3$lld series"}}, "fr": {"stringUnit": {"state": "translated", "value": "%1$@ : %2$lld → %3$lld séries"}}, "it": {"stringUnit": {"state": "translated", "value": "%1$@: %2$lld → %3$lld serie"}}, "pl": {"stringUnit": {"state": "translated", "value": "%1$@: %2$lld → %3$lld serii"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "%1$@: %2$lld → %3$lld séries"}}, "ru": {"stringUnit": {"state": "translated", "value": "%1$@: %2$lld → %3$lld подх."}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "%1$@：%2$lld → %3$lld 组"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "%1$@：%2$lld → %3$lld 組"}}
     } },
     "Update program": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Perbarui program"}},
       "de": {"stringUnit": {"state": "translated", "value": "Programm aktualisieren"}}, "en": {"stringUnit": {"state": "translated", "value": "Update program"}}, "es": {"stringUnit": {"state": "translated", "value": "Actualizar programa"}}, "fr": {"stringUnit": {"state": "translated", "value": "Mettre à jour"}}, "it": {"stringUnit": {"state": "translated", "value": "Aggiorna programma"}}, "pl": {"stringUnit": {"state": "translated", "value": "Zaktualizuj program"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Atualizar programa"}}, "ru": {"stringUnit": {"state": "translated", "value": "Обновить программу"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "更新计划"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "更新計畫"}}
     } },
     "Keep as it was": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Biarkan seperti semula"}},
       "de": {"stringUnit": {"state": "translated", "value": "Unverändert lassen"}}, "en": {"stringUnit": {"state": "translated", "value": "Keep as it was"}}, "es": {"stringUnit": {"state": "translated", "value": "Dejar como estaba"}}, "fr": {"stringUnit": {"state": "translated", "value": "Laisser tel quel"}}, "it": {"stringUnit": {"state": "translated", "value": "Lascia com'era"}}, "pl": {"stringUnit": {"state": "translated", "value": "Zostaw bez zmian"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Deixar como estava"}}, "ru": {"stringUnit": {"state": "translated", "value": "Оставить как было"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "保持不变"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "保持不變"}}
     } },
     "Choose an option above to save.": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Pilih salah satu opsi di atas untuk menyimpan."}},
       "de": {"stringUnit": {"state": "translated", "value": "Wähle oben eine Option, um zu speichern."}}, "en": {"stringUnit": {"state": "translated", "value": "Choose an option above to save."}}, "es": {"stringUnit": {"state": "translated", "value": "Elige una opción arriba para guardar."}}, "fr": {"stringUnit": {"state": "translated", "value": "Choisis une option ci-dessus pour enregistrer."}}, "it": {"stringUnit": {"state": "translated", "value": "Scegli un'opzione qui sopra per salvare."}}, "pl": {"stringUnit": {"state": "translated", "value": "Wybierz opcję powyżej, aby zapisać."}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Escolhe uma opção acima para guardar."}}, "ru": {"stringUnit": {"state": "translated", "value": "Чтобы сохранить, выбери вариант выше."}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "请先在上方选择一项再保存。"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "請先在上方選擇一項再儲存。"}}
     } },
     "Edit sets": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Ubah set"}},
       "de": {"stringUnit": {"state": "translated", "value": "Sätze bearbeiten"}}, "en": {"stringUnit": {"state": "translated", "value": "Edit sets"}}, "es": {"stringUnit": {"state": "translated", "value": "Editar series"}}, "fr": {"stringUnit": {"state": "translated", "value": "Modifier les séries"}}, "it": {"stringUnit": {"state": "translated", "value": "Modifica serie"}}, "pl": {"stringUnit": {"state": "translated", "value": "Edytuj serie"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Editar séries"}}, "ru": {"stringUnit": {"state": "translated", "value": "Изменить подходы"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "编辑各组"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "編輯各組"}}
     } },
     "Fix a number you missed or mistyped. The session's figures follow when you save.": { "localizations": {
@@ -4835,33 +5047,41 @@
       "de": {"stringUnit": {"state": "translated", "value": "%1$@: %2$@ Sätze, unter dem Wochen-Minimum von %3$@"}}, "en": {"stringUnit": {"state": "translated", "value": "%1$@: %2$@ sets, below the weekly floor of %3$@"}}, "es": {"stringUnit": {"state": "translated", "value": "%1$@: %2$@ series, por debajo del mínimo semanal de %3$@"}}, "fr": {"stringUnit": {"state": "translated", "value": "%1$@ : %2$@ séries, en dessous du seuil hebdomadaire de %3$@"}}, "it": {"stringUnit": {"state": "translated", "value": "%1$@: %2$@ serie, sotto il minimo settimanale di %3$@"}}, "pl": {"stringUnit": {"state": "translated", "value": "%1$@: serie %2$@, poniżej tygodniowego minimum %3$@"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "%1$@: %2$@ séries, abaixo do mínimo semanal de %3$@"}}, "ru": {"stringUnit": {"state": "translated", "value": "%1$@: подходов %2$@, ниже недельного минимума %3$@"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "%1$@：%2$@ 组，低于每周下限 %3$@"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "%1$@：%2$@ 組，低於每週下限 %3$@"}}
     } },
     "Discard session": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Buang sesi"}},
       "de": {"stringUnit": {"state": "translated", "value": "Einheit verwerfen"}}, "en": {"stringUnit": {"state": "translated", "value": "Discard session"}}, "es": {"stringUnit": {"state": "translated", "value": "Descartar sesión"}}, "fr": {"stringUnit": {"state": "translated", "value": "Abandonner la séance"}}, "it": {"stringUnit": {"state": "translated", "value": "Scarta la sessione"}}, "pl": {"stringUnit": {"state": "translated", "value": "Odrzuć sesję"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Descartar sessão"}}, "ru": {"stringUnit": {"state": "translated", "value": "Отменить сессию"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "放弃本次训练"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "放棄本次訓練"}}
     } },
     "Discard this session?": { "localizations": {
       "de": {"stringUnit": {"state": "translated", "value": "Diese Einheit verwerfen?"}}, "en": {"stringUnit": {"state": "translated", "value": "Discard this session?"}}, "es": {"stringUnit": {"state": "translated", "value": "¿Descartar esta sesión?"}}, "fr": {"stringUnit": {"state": "translated", "value": "Abandonner cette séance ?"}}, "it": {"stringUnit": {"state": "translated", "value": "Scartare questa sessione?"}}, "pl": {"stringUnit": {"state": "translated", "value": "Odrzucić tę sesję?"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Descartar esta sessão?"}}, "ru": {"stringUnit": {"state": "translated", "value": "Отменить эту сессию?"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "放弃本次训练？"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "放棄本次訓練？"}}
     } },
     "Keep going": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Lanjutkan"}},
       "de": {"stringUnit": {"state": "translated", "value": "Weitermachen"}}, "en": {"stringUnit": {"state": "translated", "value": "Keep going"}}, "es": {"stringUnit": {"state": "translated", "value": "Seguir"}}, "fr": {"stringUnit": {"state": "translated", "value": "Continuer"}}, "it": {"stringUnit": {"state": "translated", "value": "Continua"}}, "pl": {"stringUnit": {"state": "translated", "value": "Kontynuuj"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Continuar"}}, "ru": {"stringUnit": {"state": "translated", "value": "Продолжить"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "继续"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "繼續"}}
     } },
     "%lld recorded sets will be thrown away. Nothing is saved and no workout is created.": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "%lld set tercatat akan dibuang. Tidak ada yang disimpan dan tidak ada latihan dibuat."}},
       "de": {"stringUnit": {"state": "translated", "value": "%lld aufgezeichnete Sätze werden verworfen. Nichts wird gespeichert und kein Workout angelegt."}}, "en": {"stringUnit": {"state": "translated", "value": "%lld recorded sets will be thrown away. Nothing is saved and no workout is created."}}, "es": {"stringUnit": {"state": "translated", "value": "Se descartarán %lld series registradas. No se guarda nada ni se crea ningún entrenamiento."}}, "fr": {"stringUnit": {"state": "translated", "value": "%lld séries enregistrées seront supprimées. Rien n'est sauvegardé et aucun entraînement n'est créé."}}, "it": {"stringUnit": {"state": "translated", "value": "%lld serie registrate verranno eliminate. Non viene salvato nulla e non viene creato alcun allenamento."}}, "pl": {"stringUnit": {"state": "translated", "value": "Zapisane serie (%lld) zostaną odrzucone. Nic nie zostanie zapisane i nie powstanie żaden trening."}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "%lld séries registadas serão descartadas. Nada é guardado e nenhum treino é criado."}}, "ru": {"stringUnit": {"state": "translated", "value": "Записанных подходов будет удалено: %lld. Ничего не сохранится и тренировка не создастся."}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "将丢弃已记录的 %lld 组。不会保存任何内容，也不会创建训练记录。"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "將丟棄已記錄的 %lld 組。不會儲存任何內容，也不會建立訓練記錄。"}}
     } },
     "%lld recorded sets will be removed, and so will the workout this session created. This cannot be undone.": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "%lld set tercatat akan dihapus, begitu juga latihan yang dibuat sesi ini. Ini tidak bisa dibatalkan."}},
       "de": {"stringUnit": {"state": "translated", "value": "%lld aufgezeichnete Sätze werden entfernt, ebenso das von dieser Einheit erstellte Workout. Das lässt sich nicht rückgängig machen."}}, "en": {"stringUnit": {"state": "translated", "value": "%lld recorded sets will be removed, and so will the workout this session created. This cannot be undone."}}, "es": {"stringUnit": {"state": "translated", "value": "Se eliminarán %lld series registradas, y también el entrenamiento que creó esta sesión. Esto no se puede deshacer."}}, "fr": {"stringUnit": {"state": "translated", "value": "%lld séries enregistrées seront supprimées, ainsi que l'entraînement créé par cette séance. C'est irréversible."}}, "it": {"stringUnit": {"state": "translated", "value": "Verranno rimosse %lld serie registrate e anche l'allenamento creato da questa sessione. L'operazione non è reversibile."}}, "pl": {"stringUnit": {"state": "translated", "value": "Zapisane serie (%lld) zostaną usunięte, podobnie jak trening utworzony przez tę sesję. Tej operacji nie można cofnąć."}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "%lld séries registadas serão removidas, tal como o treino que esta sessão criou. Isto não pode ser anulado."}}, "ru": {"stringUnit": {"state": "translated", "value": "Записанных подходов будет удалено: %lld, вместе с тренировкой, созданной этой сессией. Отменить это нельзя."}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "将移除已记录的 %lld 组，以及本次训练创建的锻炼记录。此操作无法撤销。"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "將移除已記錄的 %lld 組，以及本次訓練建立的鍛鍊記錄。此操作無法復原。"}}
     } },
     "That file is too big to be a program sheet.": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "File itu terlalu besar untuk lembar program."}},
       "de": {"stringUnit": {"state": "translated", "value": "Diese Datei ist zu groß für ein Programmblatt."}}, "en": {"stringUnit": {"state": "translated", "value": "That file is too big to be a program sheet."}}, "es": {"stringUnit": {"state": "translated", "value": "Ese archivo es demasiado grande para una hoja de programa."}}, "fr": {"stringUnit": {"state": "translated", "value": "Ce fichier est trop volumineux pour une feuille de programme."}}, "it": {"stringUnit": {"state": "translated", "value": "Quel file è troppo grande per un foglio di programma."}}, "pl": {"stringUnit": {"state": "translated", "value": "Ten plik jest za duży jak na arkusz programu."}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Esse ficheiro é demasiado grande para uma folha de programa."}}, "ru": {"stringUnit": {"state": "translated", "value": "Этот файл слишком велик для таблицы программы."}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "该文件太大，不像是计划表格。"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "該檔案太大，不像是計畫表格。"}}
     } },
     "Worth checking": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Perlu dicek"}},
       "de": {"stringUnit": {"state": "translated", "value": "Zum Prüfen"}}, "en": {"stringUnit": {"state": "translated", "value": "Worth checking"}}, "es": {"stringUnit": {"state": "translated", "value": "Conviene revisar"}}, "fr": {"stringUnit": {"state": "translated", "value": "À vérifier"}}, "it": {"stringUnit": {"state": "translated", "value": "Da controllare"}}, "pl": {"stringUnit": {"state": "translated", "value": "Warto sprawdzić"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "A verificar"}}, "ru": {"stringUnit": {"state": "translated", "value": "Стоит проверить"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "需要检查"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "需要檢查"}}
     } },
     "%lld exercises": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "%lld latihan"}},
       "de": {"variations": {"plural": {"one": {"stringUnit": {"state": "translated", "value": "%lld Übung"}}, "other": {"stringUnit": {"state": "translated", "value": "%lld Übungen"}}}}}, "en": {"variations": {"plural": {"one": {"stringUnit": {"state": "translated", "value": "%lld exercise"}}, "other": {"stringUnit": {"state": "translated", "value": "%lld exercises"}}}}}, "es": {"variations": {"plural": {"one": {"stringUnit": {"state": "translated", "value": "%lld ejercicio"}}, "other": {"stringUnit": {"state": "translated", "value": "%lld ejercicios"}}}}}, "fr": {"variations": {"plural": {"one": {"stringUnit": {"state": "translated", "value": "%lld exercice"}}, "other": {"stringUnit": {"state": "translated", "value": "%lld exercices"}}}}}, "it": {"variations": {"plural": {"one": {"stringUnit": {"state": "translated", "value": "%lld esercizio"}}, "other": {"stringUnit": {"state": "translated", "value": "%lld esercizi"}}}}}, "pl": {"stringUnit": {"state": "translated", "value": "Ćwiczenia: %lld"}}, "pt-PT": {"variations": {"plural": {"one": {"stringUnit": {"state": "translated", "value": "%lld exercício"}}, "other": {"stringUnit": {"state": "translated", "value": "%lld exercícios"}}}}}, "ru": {"stringUnit": {"state": "translated", "value": "Упражнений: %lld"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "%lld 个动作"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "%lld 個動作"}}
     } },
     "Import a program": { "localizations": {
       "de": {"stringUnit": {"state": "translated", "value": "Programm importieren"}}, "en": {"stringUnit": {"state": "translated", "value": "Import a program"}}, "es": {"stringUnit": {"state": "translated", "value": "Importar un programa"}}, "fr": {"stringUnit": {"state": "translated", "value": "Importer un programme"}}, "it": {"stringUnit": {"state": "translated", "value": "Importa un programma"}}, "pl": {"stringUnit": {"state": "translated", "value": "Importuj program"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Importar um programa"}}, "ru": {"stringUnit": {"state": "translated", "value": "Импорт программы"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "导入计划"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "匯入計畫"}}
     } },
     "Fill it in on a computer": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Isi di komputer"}},
       "de": {"stringUnit": {"state": "translated", "value": "Am Computer ausfüllen"}}, "en": {"stringUnit": {"state": "translated", "value": "Fill it in on a computer"}}, "es": {"stringUnit": {"state": "translated", "value": "Rellénalo en un ordenador"}}, "fr": {"stringUnit": {"state": "translated", "value": "Remplis-le sur un ordinateur"}}, "it": {"stringUnit": {"state": "translated", "value": "Compilalo al computer"}}, "pl": {"stringUnit": {"state": "translated", "value": "Wypełnij go na komputerze"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Preenche-o num computador"}}, "ru": {"stringUnit": {"state": "translated", "value": "Заполни на компьютере"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "在电脑上填写"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "在電腦上填寫"}}
     } },
     "Download the template from the NOOP repository, fill in one row per exercise, then bring the file here. Excel, Numbers, Google Sheets and LibreOffice all work — .xlsx or .csv.": { "localizations": {
@@ -4874,24 +5094,30 @@
       "de": {"stringUnit": {"state": "translated", "value": "Datei auswählen"}}, "en": {"stringUnit": {"state": "translated", "value": "Choose a file"}}, "es": {"stringUnit": {"state": "translated", "value": "Elegir un archivo"}}, "fr": {"stringUnit": {"state": "translated", "value": "Choisir un fichier"}}, "it": {"stringUnit": {"state": "translated", "value": "Scegli un file"}}, "pl": {"stringUnit": {"state": "translated", "value": "Wybierz plik"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Escolher um ficheiro"}}, "ru": {"stringUnit": {"state": "translated", "value": "Выбрать файл"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "选择文件"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "選擇檔案"}}
     } },
     "Choose a different file": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Pilih file lain"}},
       "de": {"stringUnit": {"state": "translated", "value": "Andere Datei auswählen"}}, "en": {"stringUnit": {"state": "translated", "value": "Choose a different file"}}, "es": {"stringUnit": {"state": "translated", "value": "Elegir otro archivo"}}, "fr": {"stringUnit": {"state": "translated", "value": "Choisir un autre fichier"}}, "it": {"stringUnit": {"state": "translated", "value": "Scegli un altro file"}}, "pl": {"stringUnit": {"state": "translated", "value": "Wybierz inny plik"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Escolher outro ficheiro"}}, "ru": {"stringUnit": {"state": "translated", "value": "Выбрать другой файл"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "选择其他文件"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "選擇其他檔案"}}
     } },
     "These lines still import — anything unclassified can be set in the app.": { "localizations": {
       "de": {"stringUnit": {"state": "translated", "value": "Diese Zeilen werden trotzdem importiert – alles ohne Zuordnung kannst du in der App setzen."}}, "en": {"stringUnit": {"state": "translated", "value": "These lines still import — anything unclassified can be set in the app."}}, "es": {"stringUnit": {"state": "translated", "value": "Estas líneas se importan igualmente: lo que quede sin clasificar puedes ajustarlo en la app."}}, "fr": {"stringUnit": {"state": "translated", "value": "Ces lignes sont quand même importées — ce qui n'est pas classé peut être réglé dans l'app."}}, "it": {"stringUnit": {"state": "translated", "value": "Queste righe vengono comunque importate: ciò che resta non classificato si imposta nell'app."}}, "pl": {"stringUnit": {"state": "translated", "value": "Te wiersze i tak zostaną zaimportowane — to, co nieprzypisane, ustawisz w aplikacji."}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Estas linhas são importadas na mesma — o que ficar por classificar podes definir na app."}}, "ru": {"stringUnit": {"state": "translated", "value": "Эти строки всё равно импортируются — всё неразмеченное можно задать в приложении."}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "这些行仍会导入 — 未归类的部分可以在 App 里设置。"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "這些列仍會匯入 — 未歸類的部分可以在 App 裡設定。"}}
     } },
     "That file could not be read.": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "File itu tidak bisa dibaca."}},
       "de": {"stringUnit": {"state": "translated", "value": "Diese Datei konnte nicht gelesen werden."}}, "en": {"stringUnit": {"state": "translated", "value": "That file could not be read."}}, "es": {"stringUnit": {"state": "translated", "value": "No se ha podido leer ese archivo."}}, "fr": {"stringUnit": {"state": "translated", "value": "Ce fichier n'a pas pu être lu."}}, "it": {"stringUnit": {"state": "translated", "value": "Non è stato possibile leggere quel file."}}, "pl": {"stringUnit": {"state": "translated", "value": "Nie udało się odczytać tego pliku."}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Não foi possível ler esse ficheiro."}}, "ru": {"stringUnit": {"state": "translated", "value": "Не удалось прочитать этот файл."}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "无法读取该文件。"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "無法讀取該檔案。"}}
     } },
     "That does not look like a spreadsheet. Use the template, saved as .xlsx or .csv.": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Itu tidak tampak seperti spreadsheet. Pakai templat, simpan sebagai .xlsx atau .csv."}},
       "de": {"stringUnit": {"state": "translated", "value": "Das sieht nicht nach einer Tabelle aus. Nutze die Vorlage, gespeichert als .xlsx oder .csv."}}, "en": {"stringUnit": {"state": "translated", "value": "That does not look like a spreadsheet. Use the template, saved as .xlsx or .csv."}}, "es": {"stringUnit": {"state": "translated", "value": "Eso no parece una hoja de cálculo. Usa la plantilla, guardada como .xlsx o .csv."}}, "fr": {"stringUnit": {"state": "translated", "value": "Cela ne ressemble pas à un tableur. Utilise le modèle, enregistré en .xlsx ou .csv."}}, "it": {"stringUnit": {"state": "translated", "value": "Non sembra un foglio di calcolo. Usa il modello, salvato come .xlsx o .csv."}}, "pl": {"stringUnit": {"state": "translated", "value": "To nie wygląda na arkusz kalkulacyjny. Użyj szablonu zapisanego jako .xlsx lub .csv."}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Isso não parece uma folha de cálculo. Usa o modelo, guardado como .xlsx ou .csv."}}, "ru": {"stringUnit": {"state": "translated", "value": "Это не похоже на таблицу. Используй шаблон, сохранённый как .xlsx или .csv."}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "这看起来不是电子表格。请使用模板，另存为 .xlsx 或 .csv。"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "這看起來不是試算表。請使用範本，另存為 .xlsx 或 .csv。"}}
     } },
     "That sheet has no Exercise column. Use the template — the import matches on the header names.": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Lembar itu tidak punya kolom Exercise. Pakai templat — impor mencocokkan nama header."}},
       "de": {"stringUnit": {"state": "translated", "value": "Dieser Tabelle fehlt die Spalte „Exercise“. Nutze die Vorlage – der Import geht nach den Spaltennamen."}}, "en": {"stringUnit": {"state": "translated", "value": "That sheet has no Exercise column. Use the template — the import matches on the header names."}}, "es": {"stringUnit": {"state": "translated", "value": "Esa hoja no tiene columna «Exercise». Usa la plantilla: la importación se basa en los nombres de las cabeceras."}}, "fr": {"stringUnit": {"state": "translated", "value": "Cette feuille n'a pas de colonne « Exercise ». Utilise le modèle — l'import se base sur les noms d'en-tête."}}, "it": {"stringUnit": {"state": "translated", "value": "In quel foglio manca la colonna «Exercise». Usa il modello: l'importazione si basa sui nomi delle intestazioni."}}, "pl": {"stringUnit": {"state": "translated", "value": "Ten arkusz nie ma kolumny „Exercise”. Użyj szablonu — import dopasowuje się po nazwach nagłówków."}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Essa folha não tem coluna «Exercise». Usa o modelo — a importação baseia-se nos nomes dos cabeçalhos."}}, "ru": {"stringUnit": {"state": "translated", "value": "В этой таблице нет столбца «Exercise». Используй шаблон — импорт ориентируется на названия заголовков."}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "该表格没有 Exercise 列。请使用模板 — 导入是按表头名称匹配的。"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "該表格沒有 Exercise 欄。請使用範本 — 匯入是按標題名稱比對的。"}}
     } },
     "That sheet has no exercises in it yet.": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Lembar itu belum berisi latihan."}},
       "de": {"stringUnit": {"state": "translated", "value": "In dieser Tabelle stehen noch keine Übungen."}}, "en": {"stringUnit": {"state": "translated", "value": "That sheet has no exercises in it yet."}}, "es": {"stringUnit": {"state": "translated", "value": "Esa hoja todavía no tiene ejercicios."}}, "fr": {"stringUnit": {"state": "translated", "value": "Cette feuille ne contient encore aucun exercice."}}, "it": {"stringUnit": {"state": "translated", "value": "Quel foglio non contiene ancora esercizi."}}, "pl": {"stringUnit": {"state": "translated", "value": "Ten arkusz nie zawiera jeszcze ćwiczeń."}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Essa folha ainda não tem exercícios."}}, "ru": {"stringUnit": {"state": "translated", "value": "В этой таблице пока нет упражнений."}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "该表格里还没有动作。"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "該表格裡還沒有動作。"}}
     } },
     "Set %lld": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Set %lld"}},
       "de": {"stringUnit": {"state": "translated", "value": "Satz %lld"}}, "en": {"stringUnit": {"state": "translated", "value": "Set %lld"}}, "es": {"stringUnit": {"state": "translated", "value": "Serie %lld"}}, "fr": {"stringUnit": {"state": "translated", "value": "Série %lld"}}, "it": {"stringUnit": {"state": "translated", "value": "Serie %lld"}}, "pl": {"stringUnit": {"state": "translated", "value": "Seria %lld"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Série %lld"}}, "ru": {"stringUnit": {"state": "translated", "value": "Подход %lld"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "第 %lld 组"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "第 %lld 組"}}
     } },
     "Heart rate %lld": { "localizations": {
@@ -4904,36 +5130,46 @@
       "de": {"stringUnit": {"state": "translated", "value": "Ein Programm ist ein Name und eine geordnete Liste von Übungen mit deinen Zielen – Arbeitssätze, Wiederholungen, Gewicht, Pause und deine eigene Technik-Notiz."}}, "en": {"stringUnit": {"state": "translated", "value": "A program is a name and an ordered list of exercises with your targets — working sets, reps, weight, rest and your own technique note."}}, "es": {"stringUnit": {"state": "translated", "value": "Un programa es un nombre y una lista ordenada de ejercicios con tus objetivos: series efectivas, repeticiones, peso, descanso y tu propia nota de técnica."}}, "fr": {"stringUnit": {"state": "translated", "value": "Un programme, c'est un nom et une liste ordonnée d'exercices avec tes objectifs : séries de travail, répétitions, charge, repos et ta propre note de technique."}}, "it": {"stringUnit": {"state": "translated", "value": "Un programma è un nome e un elenco ordinato di esercizi con i tuoi obiettivi: serie di lavoro, ripetizioni, carico, recupero e la tua nota sulla tecnica."}}, "pl": {"stringUnit": {"state": "translated", "value": "Program to nazwa i uporządkowana lista ćwiczeń z Twoimi celami – serie robocze, powtórzenia, ciężar, przerwa i Twoja własna notatka o technice."}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Um programa é um nome e uma lista ordenada de exercícios com os teus objetivos: séries de trabalho, repetições, peso, descanso e a tua própria nota de técnica."}}, "ru": {"stringUnit": {"state": "translated", "value": "Программа — это название и упорядоченный список упражнений с твоими целями: рабочие подходы, повторения, вес, отдых и твоя заметка о технике."}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "一个计划就是一个名称加上一份有序的动作列表，附带你的目标：正式组、次数、重量、休息时间，以及你自己的技术笔记。"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "一個計畫就是一個名稱加上一份有序的動作列表，附帶你的目標：正式組、次數、重量、休息時間，以及你自己的技術筆記。"}}
     } },
     "Set %lld — tap to mark it a warm-up": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Set %lld — ketuk untuk menandainya sebagai pemanasan"}},
       "de": { "stringUnit": { "state": "translated", "value": "Satz %lld – tippen, um ihn als Aufwärmsatz zu markieren" } }, "en": { "stringUnit": { "state": "translated", "value": "Set %lld — tap to mark it a warm-up" } }, "es": { "stringUnit": { "state": "translated", "value": "Serie %lld: toca para marcarla como calentamiento" } }, "fr": { "stringUnit": { "state": "translated", "value": "Série %lld — touche pour la marquer comme échauffement" } }, "it": { "stringUnit": { "state": "translated", "value": "Serie %lld — tocca per segnarla come riscaldamento" } }, "pl": { "stringUnit": { "state": "translated", "value": "Seria %lld – dotknij, aby oznaczyć jako rozgrzewkową" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Série %lld — toca para marcar como aquecimento" } }, "ru": { "stringUnit": { "state": "translated", "value": "Подход %lld — нажми, чтобы отметить как разминочный" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "第 %lld 组——点按标记为热身组" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "第 %lld 組——點按標記為熱身組" } }
     } },
     "Warm-up set — tap to make it a working set": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Set pemanasan — ketuk untuk menjadikannya set kerja"}},
       "de": { "stringUnit": { "state": "translated", "value": "Aufwärmsatz – tippen, um ihn zum Arbeitssatz zu machen" } }, "en": { "stringUnit": { "state": "translated", "value": "Warm-up set — tap to make it a working set" } }, "es": { "stringUnit": { "state": "translated", "value": "Serie de calentamiento: toca para convertirla en serie efectiva" } }, "fr": { "stringUnit": { "state": "translated", "value": "Série d'échauffement — touche pour en faire une série de travail" } }, "it": { "stringUnit": { "state": "translated", "value": "Serie di riscaldamento — tocca per renderla una serie di lavoro" } }, "pl": { "stringUnit": { "state": "translated", "value": "Seria rozgrzewkowa – dotknij, aby zmienić na roboczą" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Série de aquecimento — toca para a tornar série de trabalho" } }, "ru": { "stringUnit": { "state": "translated", "value": "Разминочный подход — нажми, чтобы сделать рабочим" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "热身组——点按改为正式组" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "熱身組——點按改為正式組" } }
     } },
     "Forget": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Lupakan"}},
       "de": { "stringUnit": { "state": "translated", "value": "Vergessen" } }, "en": { "stringUnit": { "state": "translated", "value": "Forget" } }, "es": { "stringUnit": { "state": "translated", "value": "Olvidar" } }, "fr": { "stringUnit": { "state": "translated", "value": "Oublier" } }, "it": { "stringUnit": { "state": "translated", "value": "Dimentica" } }, "pl": { "stringUnit": { "state": "translated", "value": "Zapomnij" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Esquecer" } }, "ru": { "stringUnit": { "state": "translated", "value": "Забыть" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "忘记" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "忘記" } }
     } },
     "Forget this exercise": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Lupakan latihan ini"}},
       "de": { "stringUnit": { "state": "translated", "value": "Diese Übung vergessen" } }, "en": { "stringUnit": { "state": "translated", "value": "Forget this exercise" } }, "es": { "stringUnit": { "state": "translated", "value": "Olvidar este ejercicio" } }, "fr": { "stringUnit": { "state": "translated", "value": "Oublier cet exercice" } }, "it": { "stringUnit": { "state": "translated", "value": "Dimentica questo esercizio" } }, "pl": { "stringUnit": { "state": "translated", "value": "Zapomnij to ćwiczenie" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Esquecer este exercício" } }, "ru": { "stringUnit": { "state": "translated", "value": "Забыть это упражнение" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "忘记这个动作" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "忘記這個動作" } }
     } },
     "Forget %@?": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Lupakan %@?"}},
       "de": { "stringUnit": { "state": "translated", "value": "%@ vergessen?" } }, "en": { "stringUnit": { "state": "translated", "value": "Forget %@?" } }, "es": { "stringUnit": { "state": "translated", "value": "¿Olvidar %@?" } }, "fr": { "stringUnit": { "state": "translated", "value": "Oublier %@ ?" } }, "it": { "stringUnit": { "state": "translated", "value": "Dimenticare %@?" } }, "pl": { "stringUnit": { "state": "translated", "value": "Zapomnieć %@?" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Esquecer %@?" } }, "ru": { "stringUnit": { "state": "translated", "value": "Забыть %@?" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "忘记「%@」？" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "忘記「%@」？" } }
     } },
     "It stops being offered here. Sessions you already logged with it are kept exactly as they are.": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Latihan ini tidak ditawarkan lagi di sini. Sesi yang sudah dicatat dengannya tetap utuh."}},
       "de": { "stringUnit": { "state": "translated", "value": "Sie wird hier nicht mehr vorgeschlagen. Bereits damit aufgezeichnete Sitzungen bleiben unverändert." } }, "en": { "stringUnit": { "state": "translated", "value": "It stops being offered here. Sessions you already logged with it are kept exactly as they are." } }, "es": { "stringUnit": { "state": "translated", "value": "Deja de ofrecerse aquí. Las sesiones que ya registraste con él se mantienen tal cual." } }, "fr": { "stringUnit": { "state": "translated", "value": "Il cesse d'être proposé ici. Les séances déjà enregistrées avec lui restent intactes." } }, "it": { "stringUnit": { "state": "translated", "value": "Smette di essere proposto qui. Le sessioni già registrate con esso restano identiche." } }, "pl": { "stringUnit": { "state": "translated", "value": "Przestaje być proponowane tutaj. Zapisane już z nim sesje pozostają bez zmian." } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Deixa de ser sugerido aqui. As sessões que já registaste com ele mantêm-se tal como estão." } }, "ru": { "stringUnit": { "state": "translated", "value": "Оно перестанет предлагаться здесь. Уже записанные с ним сессии останутся без изменений." } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "它不会再出现在建议里。你已经用它记录的训练完全不受影响。" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "它不會再出現在建議裡。你已經用它記錄的訓練完全不受影響。" } }
     } },
     "You've saved the most exercises NOOP remembers": { "localizations": {
       "de": { "stringUnit": { "state": "translated", "value": "Du hast so viele Übungen gespeichert, wie NOOP sich merkt" } }, "en": { "stringUnit": { "state": "translated", "value": "You've saved the most exercises NOOP remembers" } }, "es": { "stringUnit": { "state": "translated", "value": "Has guardado el máximo de ejercicios que NOOP recuerda" } }, "fr": { "stringUnit": { "state": "translated", "value": "Tu as enregistré le maximum d'exercices que NOOP retient" } }, "it": { "stringUnit": { "state": "translated", "value": "Hai salvato il massimo di esercizi che NOOP ricorda" } }, "pl": { "stringUnit": { "state": "translated", "value": "Zapisałeś maksymalną liczbę ćwiczeń, jaką NOOP pamięta" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Guardaste o máximo de exercícios que o NOOP memoriza" } }, "ru": { "stringUnit": { "state": "translated", "value": "Ты сохранил столько упражнений, сколько NOOP запоминает" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "你保存的动作已达 NOOP 记忆上限" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "你儲存的動作已達 NOOP 記憶上限" } }
     } },
     "Forget one you no longer use and this one will save. Your logged sessions are never affected.": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Lupakan satu yang tidak lagi kamu pakai, lalu ini akan tersimpan. Sesi yang sudah dicatat tidak terpengaruh."}},
       "de": { "stringUnit": { "state": "translated", "value": "Vergiss eine, die du nicht mehr nutzt, dann lässt sich diese speichern. Deine aufgezeichneten Sitzungen sind nie betroffen." } }, "en": { "stringUnit": { "state": "translated", "value": "Forget one you no longer use and this one will save. Your logged sessions are never affected." } }, "es": { "stringUnit": { "state": "translated", "value": "Olvida uno que ya no uses y este se guardará. Tus sesiones registradas nunca se ven afectadas." } }, "fr": { "stringUnit": { "state": "translated", "value": "Oublie-en un que tu n'utilises plus et celui-ci sera enregistré. Tes séances enregistrées ne sont jamais touchées." } }, "it": { "stringUnit": { "state": "translated", "value": "Dimenticane uno che non usi più e questo verrà salvato. Le tue sessioni registrate non vengono mai toccate." } }, "pl": { "stringUnit": { "state": "translated", "value": "Zapomnij jedno, którego już nie używasz, a to się zapisze. Twoje zapisane sesje nigdy nie są naruszane." } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Esquece um que já não uses e este será guardado. As tuas sessões registadas nunca são afetadas." } }, "ru": { "stringUnit": { "state": "translated", "value": "Забудь то, которым больше не пользуешься, и это сохранится. Записанные сессии никогда не затрагиваются." } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "忘记一个你不再用的，这个就能保存。你已记录的训练不会受任何影响。" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "忘記一個你不再用的，這個就能儲存。你已記錄的訓練不會受任何影響。" } }
     } },
     "Set": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Set"}},
       "de": { "stringUnit": { "state": "translated", "value": "Satz" } }, "en": { "stringUnit": { "state": "translated", "value": "Set" } }, "es": { "stringUnit": { "state": "translated", "value": "Serie" } }, "fr": { "stringUnit": { "state": "translated", "value": "Série" } }, "it": { "stringUnit": { "state": "translated", "value": "Serie" } }, "pl": { "stringUnit": { "state": "translated", "value": "Seria" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Série" } }, "ru": { "stringUnit": { "state": "translated", "value": "Подход" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "组" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "組" } }
     } },
     "Reps": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Ulangan"}},
       "de": { "stringUnit": { "state": "translated", "value": "Wdh." } }, "en": { "stringUnit": { "state": "translated", "value": "Reps" } }, "es": { "stringUnit": { "state": "translated", "value": "Reps" } }, "fr": { "stringUnit": { "state": "translated", "value": "Réps" } }, "it": { "stringUnit": { "state": "translated", "value": "Rip." } }, "pl": { "stringUnit": { "state": "translated", "value": "Powt." } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Reps" } }, "ru": { "stringUnit": { "state": "translated", "value": "Повт." } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "次数" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "次數" } }
     } },
     "RPE": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "RPE"}},
       "de": { "stringUnit": { "state": "translated", "value": "RPE" } }, "en": { "stringUnit": { "state": "translated", "value": "RPE" } }, "es": { "stringUnit": { "state": "translated", "value": "RPE" } }, "fr": { "stringUnit": { "state": "translated", "value": "RPE" } }, "it": { "stringUnit": { "state": "translated", "value": "RPE" } }, "pl": { "stringUnit": { "state": "translated", "value": "RPE" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "RPE" } }, "ru": { "stringUnit": { "state": "translated", "value": "RPE" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "RPE" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "RPE" } }
     } },
     "Kg": { "localizations": {
@@ -4943,18 +5179,22 @@
       "de": { "stringUnit": { "state": "translated", "value": "lb" } }, "en": { "stringUnit": { "state": "translated", "value": "Lb" } }, "es": { "stringUnit": { "state": "translated", "value": "lb" } }, "fr": { "stringUnit": { "state": "translated", "value": "lb" } }, "it": { "stringUnit": { "state": "translated", "value": "lb" } }, "pl": { "stringUnit": { "state": "translated", "value": "lb" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "lb" } }, "ru": { "stringUnit": { "state": "translated", "value": "фунты" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "磅" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "磅" } }
     } },
     "Start this set": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Mulai set ini"}},
       "de": { "stringUnit": { "state": "translated", "value": "Diesen Satz starten" } }, "en": { "stringUnit": { "state": "translated", "value": "Start this set" } }, "es": { "stringUnit": { "state": "translated", "value": "Empezar esta serie" } }, "fr": { "stringUnit": { "state": "translated", "value": "Démarrer cette série" } }, "it": { "stringUnit": { "state": "translated", "value": "Avvia questa serie" } }, "pl": { "stringUnit": { "state": "translated", "value": "Rozpocznij tę serię" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Iniciar esta série" } }, "ru": { "stringUnit": { "state": "translated", "value": "Начать этот подход" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "开始这一组" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "開始這一組" } }
     } },
     "Redo this set": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Ulangi set ini"}},
       "de": { "stringUnit": { "state": "translated", "value": "Diesen Satz wiederholen" } }, "en": { "stringUnit": { "state": "translated", "value": "Redo this set" } }, "es": { "stringUnit": { "state": "translated", "value": "Rehacer esta serie" } }, "fr": { "stringUnit": { "state": "translated", "value": "Refaire cette série" } }, "it": { "stringUnit": { "state": "translated", "value": "Rifai questa serie" } }, "pl": { "stringUnit": { "state": "translated", "value": "Powtórz tę serię" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Refazer esta série" } }, "ru": { "stringUnit": { "state": "translated", "value": "Переделать подход" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "重做这一组" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "重做這一組" } }
     } },
     "Open the running session": { "localizations": {
       "de": { "stringUnit": { "state": "translated", "value": "Laufende Sitzung öffnen" } }, "en": { "stringUnit": { "state": "translated", "value": "Open the running session" } }, "es": { "stringUnit": { "state": "translated", "value": "Abrir la sesión en curso" } }, "fr": { "stringUnit": { "state": "translated", "value": "Ouvrir la séance en cours" } }, "it": { "stringUnit": { "state": "translated", "value": "Apri la sessione in corso" } }, "pl": { "stringUnit": { "state": "translated", "value": "Otwórz trwającą sesję" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Abrir a sessão em curso" } }, "ru": { "stringUnit": { "state": "translated", "value": "Открыть текущую сессию" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "打开进行中的训练" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "打開進行中的訓練" } }
     } },
     "How hard was the whole session? (1–10)": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Seberapa berat seluruh sesi? (1–10)"}},
       "de": { "stringUnit": { "state": "translated", "value": "Wie schwer war die ganze Sitzung? (1–10)" } }, "en": { "stringUnit": { "state": "translated", "value": "How hard was the whole session? (1–10)" } }, "es": { "stringUnit": { "state": "translated", "value": "¿Cómo de dura fue toda la sesión? (1–10)" } }, "fr": { "stringUnit": { "state": "translated", "value": "Quelle a été la difficulté de la séance ? (1–10)" } }, "it": { "stringUnit": { "state": "translated", "value": "Quanto è stata dura l'intera sessione? (1–10)" } }, "pl": { "stringUnit": { "state": "translated", "value": "Jak ciężka była cała sesja? (1–10)" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Quão difícil foi toda a sessão? (1–10)" } }, "ru": { "stringUnit": { "state": "translated", "value": "Насколько тяжёлой была вся сессия? (1–10)" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "整场训练有多吃力？（1–10）" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "整場訓練有多吃力？（1–10）" } }
     } },
     "%lld of %lld sets done": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "%lld dari %lld set selesai"}},
       "de": { "stringUnit": { "state": "translated", "value": "%1$lld von %2$lld Sätzen erledigt" } }, "en": { "stringUnit": { "state": "translated", "value": "%lld of %lld sets done" } }, "es": { "stringUnit": { "state": "translated", "value": "%1$lld de %2$lld series hechas" } }, "fr": { "stringUnit": { "state": "translated", "value": "%1$lld sur %2$lld séries faites" } }, "it": { "stringUnit": { "state": "translated", "value": "%1$lld di %2$lld serie fatte" } }, "pl": { "stringUnit": { "state": "translated", "value": "%1$lld z %2$lld serii zrobione" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "%1$lld de %2$lld séries feitas" } }, "ru": { "stringUnit": { "state": "translated", "value": "%1$lld из %2$lld подходов сделано" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "已完成 %1$lld / %2$lld 组" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "已完成 %1$lld / %2$lld 組" } }
     } },
     "Set %lld — working": { "localizations": {
@@ -4967,12 +5207,15 @@
       "de": { "stringUnit": { "state": "translated", "value": "Bereit für den nächsten Satz" } }, "en": { "stringUnit": { "state": "translated", "value": "Ready for the next set" } }, "es": { "stringUnit": { "state": "translated", "value": "Listo para la siguiente serie" } }, "fr": { "stringUnit": { "state": "translated", "value": "Prêt pour la série suivante" } }, "it": { "stringUnit": { "state": "translated", "value": "Pronto per la serie successiva" } }, "pl": { "stringUnit": { "state": "translated", "value": "Gotowe na następną serię" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Pronto para a próxima série" } }, "ru": { "stringUnit": { "state": "translated", "value": "Готов к следующему подходу" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "可以开始下一组" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "可以開始下一組" } }
     } },
     "No session running": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tidak ada sesi berjalan"}},
       "de": { "stringUnit": { "state": "translated", "value": "Keine Sitzung aktiv" } }, "en": { "stringUnit": { "state": "translated", "value": "No session running" } }, "es": { "stringUnit": { "state": "translated", "value": "No hay sesión en curso" } }, "fr": { "stringUnit": { "state": "translated", "value": "Aucune séance en cours" } }, "it": { "stringUnit": { "state": "translated", "value": "Nessuna sessione in corso" } }, "pl": { "stringUnit": { "state": "translated", "value": "Brak trwającej sesji" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Nenhuma sessão em curso" } }, "ru": { "stringUnit": { "state": "translated", "value": "Нет активной сессии" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "没有进行中的训练" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "沒有進行中的訓練" } }
     } },
     "All sets done": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Semua set selesai"}},
       "de": { "stringUnit": { "state": "translated", "value": "Alle Sätze erledigt" } }, "en": { "stringUnit": { "state": "translated", "value": "All sets done" } }, "es": { "stringUnit": { "state": "translated", "value": "Todas las series hechas" } }, "fr": { "stringUnit": { "state": "translated", "value": "Toutes les séries faites" } }, "it": { "stringUnit": { "state": "translated", "value": "Tutte le serie fatte" } }, "pl": { "stringUnit": { "state": "translated", "value": "Wszystkie serie zrobione" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Todas as séries feitas" } }, "ru": { "stringUnit": { "state": "translated", "value": "Все подходы сделаны" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "所有组已完成" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "所有組已完成" } }
     } },
     "This set": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Set ini"}},
       "de": { "stringUnit": { "state": "translated", "value": "Dieser Satz" } }, "en": { "stringUnit": { "state": "translated", "value": "This set" } }, "es": { "stringUnit": { "state": "translated", "value": "Esta serie" } }, "fr": { "stringUnit": { "state": "translated", "value": "Cette série" } }, "it": { "stringUnit": { "state": "translated", "value": "Questa serie" } }, "pl": { "stringUnit": { "state": "translated", "value": "Ta seria" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Esta série" } }, "ru": { "stringUnit": { "state": "translated", "value": "Этот подход" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "本组" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "本組" } }
     } },
     "RPE %@ × %@ min": { "localizations": {
@@ -4988,6 +5231,7 @@
       "de": { "stringUnit": { "state": "translated", "value": "Wie schwer es sich anfühlte" } }, "en": { "stringUnit": { "state": "translated", "value": "How hard it felt" } }, "es": { "stringUnit": { "state": "translated", "value": "Lo duro que se sintió" } }, "fr": { "stringUnit": { "state": "translated", "value": "À quel point c'était dur" } }, "it": { "stringUnit": { "state": "translated", "value": "Quanto è sembrato duro" } }, "pl": { "stringUnit": { "state": "translated", "value": "Jak ciężko było" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Quão difícil pareceu" } }, "ru": { "stringUnit": { "state": "translated", "value": "Насколько было тяжело" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "感觉有多吃力" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "感覺有多吃力" } }
     } },
     "Sets per muscle": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Set per otot"}},
       "de": { "stringUnit": { "state": "translated", "value": "Sätze pro Muskel" } }, "en": { "stringUnit": { "state": "translated", "value": "Sets per muscle" } }, "es": { "stringUnit": { "state": "translated", "value": "Series por músculo" } }, "fr": { "stringUnit": { "state": "translated", "value": "Séries par muscle" } }, "it": { "stringUnit": { "state": "translated", "value": "Serie per muscolo" } }, "pl": { "stringUnit": { "state": "translated", "value": "Serie na mięsień" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Séries por músculo" } }, "ru": { "stringUnit": { "state": "translated", "value": "Подходы на мышцу" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "每个肌群的组数" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "每個肌群的組數" } }
     } },
     "Session load": { "localizations": {
@@ -5096,9 +5340,11 @@
       "de": { "stringUnit": { "state": "translated", "value": "Vorausgefüllt mit dem, was du letztes Mal gemacht hast. Ändere alles, was heute anders ist." } }, "en": { "stringUnit": { "state": "translated", "value": "Pre-filled with what you did last time. Change anything that's different today." } }, "es": { "stringUnit": { "state": "translated", "value": "Rellenado con lo que hiciste la última vez. Cambia lo que hoy sea distinto." } }, "fr": { "stringUnit": { "state": "translated", "value": "Pré-rempli avec ce que tu as fait la dernière fois. Modifie ce qui change aujourd'hui." } }, "it": { "stringUnit": { "state": "translated", "value": "Precompilato con quello che hai fatto l'ultima volta. Cambia ciò che oggi è diverso." } }, "pl": { "stringUnit": { "state": "translated", "value": "Wypełnione tym, co robiłeś ostatnio. Zmień to, co dziś jest inne." } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Preenchido com o que fizeste da última vez. Muda o que hoje for diferente." } }, "ru": { "stringUnit": { "state": "translated", "value": "Заполнено тем, что ты делал в прошлый раз. Измени всё, что сегодня иначе." } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "已填入你上次的数据。今天有变化的地方改一下就行。" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "已填入你上次的資料。今天有變化的地方改一下就行。" } }
     } },
     "This is session RPE. Multiplied by the session's length it gives session load — the one figure that compares across completely different training.": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Ini RPE sesi. Dikalikan lama sesi, hasilnya beban sesi — satu angka yang bisa membandingkan latihan yang sangat berbeda."}},
       "de": { "stringUnit": { "state": "translated", "value": "Das ist der Sitzungs-RPE. Mal der Dauer der Sitzung ergibt er die Sitzungsbelastung – die eine Zahl, die sich über völlig verschiedene Trainingsarten hinweg vergleichen lässt." } }, "en": { "stringUnit": { "state": "translated", "value": "This is session RPE. Multiplied by the session's length it gives session load — the one figure that compares across completely different training." } }, "es": { "stringUnit": { "state": "translated", "value": "Esto es el RPE de sesión. Multiplicado por la duración da la carga de sesión: la única cifra comparable entre entrenamientos completamente distintos." } }, "fr": { "stringUnit": { "state": "translated", "value": "C'est le RPE de séance. Multiplié par la durée, il donne la charge de séance — le seul chiffre comparable entre des entraînements totalement différents." } }, "it": { "stringUnit": { "state": "translated", "value": "Questo è l'RPE della sessione. Moltiplicato per la durata dà il carico della sessione: l'unico numero confrontabile fra allenamenti completamente diversi." } }, "pl": { "stringUnit": { "state": "translated", "value": "To jest RPE sesji. Pomnożone przez czas trwania daje obciążenie sesji – jedyną liczbę porównywalną między zupełnie różnymi treningami." } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Isto é o RPE da sessão. Multiplicado pela duração dá a carga da sessão — o único número comparável entre treinos completamente diferentes." } }, "ru": { "stringUnit": { "state": "translated", "value": "Это RPE сессии. Умноженный на её длительность, он даёт нагрузку сессии — единственную величину, сравнимую между совершенно разными тренировками." } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "这是整场 RPE。乘以训练时长就得到训练负荷——唯一能在完全不同的训练之间比较的数字。" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "這是整場 RPE。乘以訓練時長就得到訓練負荷——唯一能在完全不同的訓練之間比較的數字。" } }
     } },
     "Discard": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Buang"}},
       "de": { "stringUnit": { "state": "translated", "value": "Verwerfen" } }, "en": { "stringUnit": { "state": "translated", "value": "Discard" } }, "es": { "stringUnit": { "state": "translated", "value": "Descartar" } }, "fr": { "stringUnit": { "state": "translated", "value": "Abandonner" } }, "it": { "stringUnit": { "state": "translated", "value": "Scarta" } }, "pl": { "stringUnit": { "state": "translated", "value": "Odrzuć" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Descartar" } }, "ru": { "stringUnit": { "state": "translated", "value": "Отбросить" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "放弃" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "放棄" } }
     } },
     "Next": { "localizations": {
@@ -5108,6 +5354,7 @@
       "de": { "stringUnit": { "state": "translated", "value": "Überspringen" } }, "en": { "stringUnit": { "state": "translated", "value": "Skip" } }, "es": { "stringUnit": { "state": "translated", "value": "Omitir" } }, "fr": { "stringUnit": { "state": "translated", "value": "Passer" } }, "it": { "stringUnit": { "state": "translated", "value": "Salta" } }, "pl": { "stringUnit": { "state": "translated", "value": "Pomiń" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Ignorar" } }, "ru": { "stringUnit": { "state": "translated", "value": "Пропустить" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "跳过" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "跳過" } }
     } },
     "Rest period": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Waktu istirahat"}},
       "de": { "stringUnit": { "state": "translated", "value": "Pause" } }, "en": { "stringUnit": { "state": "translated", "value": "Rest period" } }, "es": { "stringUnit": { "state": "translated", "value": "Descanso entre series" } }, "fr": { "stringUnit": { "state": "translated", "value": "Temps de repos" } }, "it": { "stringUnit": { "state": "translated", "value": "Recupero" } }, "pl": { "stringUnit": { "state": "translated", "value": "Przerwa" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Descanso entre séries" } }, "ru": { "stringUnit": { "state": "translated", "value": "Отдых между подходами" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "组间休息" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "組間休息" } }
     } },
     "Resting": { "localizations": {
@@ -5132,27 +5379,32 @@
       "de": { "stringUnit": { "state": "translated", "value": "Tippe zweimal auf dein Band, um einen Satz zu speichern, ohne zum Telefon zu greifen." } }, "en": { "stringUnit": { "state": "translated", "value": "Double-tap your strap to log a set without picking the phone up." } }, "es": { "stringUnit": { "state": "translated", "value": "Toca dos veces tu banda para registrar una serie sin coger el teléfono." } }, "fr": { "stringUnit": { "state": "translated", "value": "Tape deux fois sur ton bracelet pour enregistrer une série sans toucher au téléphone." } }, "it": { "stringUnit": { "state": "translated", "value": "Tocca due volte la fascia per registrare una serie senza prendere il telefono." } }, "pl": { "stringUnit": { "state": "translated", "value": "Stuknij dwukrotnie w opaskę, aby zapisać serię bez sięgania po telefon." } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Toca duas vezes na tua banda para registar uma série sem pegar no telemóvel." } }, "ru": { "stringUnit": { "state": "translated", "value": "Дважды коснись браслета, чтобы записать подход, не беря телефон в руки." } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "双击手环即可记录一组，不用拿起手机。" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "輕點兩下手環即可記錄一組，不用拿起手機。" } }
     } },
     "Session in progress": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Sesi sedang berjalan"}},
       "de": { "stringUnit": { "state": "translated", "value": "Sitzung läuft" } }, "en": { "stringUnit": { "state": "translated", "value": "Session in progress" } }, "es": { "stringUnit": { "state": "translated", "value": "Sesión en curso" } }, "fr": { "stringUnit": { "state": "translated", "value": "Séance en cours" } }, "it": { "stringUnit": { "state": "translated", "value": "Sessione in corso" } }, "pl": { "stringUnit": { "state": "translated", "value": "Sesja w toku" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Sessão em curso" } }, "ru": { "stringUnit": { "state": "translated", "value": "Сессия идёт" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "训练进行中" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "訓練進行中" } }
     } },
     "You left a session running. Nothing was lost — pick it up where you stopped.": { "localizations": {
       "de": { "stringUnit": { "state": "translated", "value": "Du hast eine Sitzung laufen lassen. Nichts ist verloren – mach da weiter, wo du aufgehört hast." } }, "en": { "stringUnit": { "state": "translated", "value": "You left a session running. Nothing was lost — pick it up where you stopped." } }, "es": { "stringUnit": { "state": "translated", "value": "Dejaste una sesión en marcha. No se ha perdido nada: retómala donde la dejaste." } }, "fr": { "stringUnit": { "state": "translated", "value": "Tu as laissé une séance en cours. Rien n'est perdu : reprends là où tu t'es arrêté." } }, "it": { "stringUnit": { "state": "translated", "value": "Hai lasciato una sessione in corso. Non è andato perso nulla: riprendi da dove eri." } }, "pl": { "stringUnit": { "state": "translated", "value": "Zostawiłeś rozpoczętą sesję. Nic nie przepadło – wróć tam, gdzie skończyłeś." } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Deixaste uma sessão a decorrer. Não se perdeu nada: retoma onde paraste." } }, "ru": { "stringUnit": { "state": "translated", "value": "У тебя осталась незавершённая сессия. Ничего не потеряно — продолжи с того места, где остановился." } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "你有一次训练还没结束。什么都没丢——从停下的地方继续吧。" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "你有一次訓練還沒結束。什麼都沒丟——從停下的地方繼續吧。" } }
     } },
     "Save session": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Simpan sesi"}},
       "de": { "stringUnit": { "state": "translated", "value": "Sitzung sichern" } }, "en": { "stringUnit": { "state": "translated", "value": "Save session" } }, "es": { "stringUnit": { "state": "translated", "value": "Guardar sesión" } }, "fr": { "stringUnit": { "state": "translated", "value": "Enregistrer la séance" } }, "it": { "stringUnit": { "state": "translated", "value": "Salva sessione" } }, "pl": { "stringUnit": { "state": "translated", "value": "Zapisz sesję" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Guardar sessão" } }, "ru": { "stringUnit": { "state": "translated", "value": "Сохранить сессию" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "保存训练" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "儲存訓練" } }
     } },
     "Start this program": { "localizations": {
       "de": { "stringUnit": { "state": "translated", "value": "Dieses Programm starten" } }, "en": { "stringUnit": { "state": "translated", "value": "Start this program" } }, "es": { "stringUnit": { "state": "translated", "value": "Empezar este programa" } }, "fr": { "stringUnit": { "state": "translated", "value": "Démarrer ce programme" } }, "it": { "stringUnit": { "state": "translated", "value": "Avvia questo programma" } }, "pl": { "stringUnit": { "state": "translated", "value": "Rozpocznij ten program" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Iniciar este programa" } }, "ru": { "stringUnit": { "state": "translated", "value": "Начать эту программу" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "开始这个计划" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "開始這個計畫" } }
     } },
     "Tap to edit": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Ketuk untuk ubah"}},
       "de": { "stringUnit": { "state": "translated", "value": "Zum Bearbeiten tippen" } }, "en": { "stringUnit": { "state": "translated", "value": "Tap to edit" } }, "es": { "stringUnit": { "state": "translated", "value": "Toca para editar" } }, "fr": { "stringUnit": { "state": "translated", "value": "Touche pour modifier" } }, "it": { "stringUnit": { "state": "translated", "value": "Tocca per modificare" } }, "pl": { "stringUnit": { "state": "translated", "value": "Dotknij, aby edytować" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Toca para editar" } }, "ru": { "stringUnit": { "state": "translated", "value": "Нажми, чтобы изменить" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "点按编辑" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "點按編輯" } }
     } },
     "Sets": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Set"}},
       "de": { "stringUnit": { "state": "translated", "value": "Sätze" } }, "en": { "stringUnit": { "state": "translated", "value": "Sets" } }, "es": { "stringUnit": { "state": "translated", "value": "Series" } }, "fr": { "stringUnit": { "state": "translated", "value": "Séries" } }, "it": { "stringUnit": { "state": "translated", "value": "Serie" } }, "pl": { "stringUnit": { "state": "translated", "value": "Serie" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Séries" } }, "ru": { "stringUnit": { "state": "translated", "value": "Подходы" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "组数" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "組數" } }
     } },
     "Elapsed": { "localizations": {
       "de": { "stringUnit": { "state": "translated", "value": "Vergangen" } }, "en": { "stringUnit": { "state": "translated", "value": "Elapsed" } }, "es": { "stringUnit": { "state": "translated", "value": "Transcurrido" } }, "fr": { "stringUnit": { "state": "translated", "value": "Écoulé" } }, "it": { "stringUnit": { "state": "translated", "value": "Trascorso" } }, "pl": { "stringUnit": { "state": "translated", "value": "Upłynęło" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Decorrido" } }, "ru": { "stringUnit": { "state": "translated", "value": "Прошло" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "已用时" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "已用時" } }
     } },
     "Volume": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Volume"}},
       "de": { "stringUnit": { "state": "translated", "value": "Volumen" } }, "en": { "stringUnit": { "state": "translated", "value": "Volume" } }, "es": { "stringUnit": { "state": "translated", "value": "Volumen" } }, "fr": { "stringUnit": { "state": "translated", "value": "Volume" } }, "it": { "stringUnit": { "state": "translated", "value": "Volume" } }, "pl": { "stringUnit": { "state": "translated", "value": "Objętość" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Volume" } }, "ru": { "stringUnit": { "state": "translated", "value": "Объём" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "容量" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "容量" } }
     } },
     "Set %lld of %lld": { "localizations": {
@@ -5162,9 +5414,11 @@
       "de": { "stringUnit": { "state": "translated", "value": "Sitzungs-RPE %@" } }, "en": { "stringUnit": { "state": "translated", "value": "session RPE %@" } }, "es": { "stringUnit": { "state": "translated", "value": "RPE de sesión %@" } }, "fr": { "stringUnit": { "state": "translated", "value": "RPE de séance %@" } }, "it": { "stringUnit": { "state": "translated", "value": "RPE della sessione %@" } }, "pl": { "stringUnit": { "state": "translated", "value": "RPE sesji %@" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "RPE da sessão %@" } }, "ru": { "stringUnit": { "state": "translated", "value": "RPE сессии %@" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "整场 RPE %@" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "整場 RPE %@" } }
     } },
     "Weight (kg)": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Beban (kg)"}},
       "de": { "stringUnit": { "state": "translated", "value": "Gewicht (kg)" } }, "en": { "stringUnit": { "state": "translated", "value": "Weight (kg)" } }, "es": { "stringUnit": { "state": "translated", "value": "Peso (kg)" } }, "fr": { "stringUnit": { "state": "translated", "value": "Poids (kg)" } }, "it": { "stringUnit": { "state": "translated", "value": "Peso (kg)" } }, "pl": { "stringUnit": { "state": "translated", "value": "Ciężar (kg)" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Peso (kg)" } }, "ru": { "stringUnit": { "state": "translated", "value": "Вес (кг)" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "重量（公斤）" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "重量（公斤）" } }
     } },
     "Weight (lb)": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Beban (lb)"}},
       "de": { "stringUnit": { "state": "translated", "value": "Gewicht (lb)" } }, "en": { "stringUnit": { "state": "translated", "value": "Weight (lb)" } }, "es": { "stringUnit": { "state": "translated", "value": "Peso (lb)" } }, "fr": { "stringUnit": { "state": "translated", "value": "Poids (lb)" } }, "it": { "stringUnit": { "state": "translated", "value": "Peso (lb)" } }, "pl": { "stringUnit": { "state": "translated", "value": "Ciężar (lb)" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Peso (lb)" } }, "ru": { "stringUnit": { "state": "translated", "value": "Вес (фунты)" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "重量（磅）" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "重量（磅）" } }
     } },
     "Heart rate, no reading": { "localizations": {
@@ -5246,63 +5500,79 @@
       "de": { "stringUnit": { "state": "translated", "value": "Krafttraining ergänzt Volumen und Satzzahlen. Deine Belastung ändert es nie – die wird weiterhin aus der Herzfrequenz gemessen." } }, "en": { "stringUnit": { "state": "translated", "value": "Lifting adds volume and set counts. It never changes your Effort, which stays measured from heart rate." } }, "es": { "stringUnit": { "state": "translated", "value": "Las pesas añaden volumen y recuento de series. Nunca cambian tu Esfuerzo, que se sigue midiendo por la frecuencia cardíaca." } }, "fr": { "stringUnit": { "state": "translated", "value": "La musculation ajoute du volume et un décompte de séries. Elle ne change jamais ton Effort, toujours mesuré à partir de la fréquence cardiaque." } }, "it": { "stringUnit": { "state": "translated", "value": "I pesi aggiungono volume e conteggio delle serie. Non cambiano mai il tuo Sforzo, che resta misurato dalla frequenza cardiaca." } }, "pl": { "stringUnit": { "state": "translated", "value": "Trening siłowy dodaje objętość i liczbę serii. Nigdy nie zmienia Twojego Wysiłku, który nadal jest mierzony tętnem." } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Os pesos acrescentam volume e contagem de séries. Nunca alteram o teu Esforço, que continua medido pela frequência cardíaca." } }, "ru": { "stringUnit": { "state": "translated", "value": "Силовые добавляют объём и число подходов. Они никогда не меняют твоё Усилие — оно по-прежнему измеряется по пульсу." } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "力量训练会增加容量和组数统计，但绝不会改变你的消耗——消耗始终由心率测得。" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "力量訓練會增加容量和組數統計，但絕不會改變你的消耗——消耗始終由心率測得。" } }
     } },
     "Programs": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Program"}},
       "de": { "stringUnit": { "state": "translated", "value": "Programme" } }, "en": { "stringUnit": { "state": "translated", "value": "Programs" } }, "es": { "stringUnit": { "state": "translated", "value": "Programas" } }, "fr": { "stringUnit": { "state": "translated", "value": "Programmes" } }, "it": { "stringUnit": { "state": "translated", "value": "Programmi" } }, "pl": { "stringUnit": { "state": "translated", "value": "Programy" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Programas" } }, "ru": { "stringUnit": { "state": "translated", "value": "Программы" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "计划" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "計畫" } }
     } },
     "New program": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Program baru"}},
       "de": { "stringUnit": { "state": "translated", "value": "Neues Programm" } }, "en": { "stringUnit": { "state": "translated", "value": "New program" } }, "es": { "stringUnit": { "state": "translated", "value": "Nuevo programa" } }, "fr": { "stringUnit": { "state": "translated", "value": "Nouveau programme" } }, "it": { "stringUnit": { "state": "translated", "value": "Nuovo programma" } }, "pl": { "stringUnit": { "state": "translated", "value": "Nowy program" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Novo programa" } }, "ru": { "stringUnit": { "state": "translated", "value": "Новая программа" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "新建计划" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "新增計畫" } }
     } },
     "No programs yet": { "localizations": {
       "de": { "stringUnit": { "state": "translated", "value": "Noch keine Programme" } }, "en": { "stringUnit": { "state": "translated", "value": "No programs yet" } }, "es": { "stringUnit": { "state": "translated", "value": "Aún no hay programas" } }, "fr": { "stringUnit": { "state": "translated", "value": "Aucun programme pour l'instant" } }, "it": { "stringUnit": { "state": "translated", "value": "Ancora nessun programma" } }, "pl": { "stringUnit": { "state": "translated", "value": "Brak programów" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Ainda sem programas" } }, "ru": { "stringUnit": { "state": "translated", "value": "Программ пока нет" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "还没有计划" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "還沒有計畫" } }
     } },
     "Program": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Program"}},
       "de": { "stringUnit": { "state": "translated", "value": "Programm" } }, "en": { "stringUnit": { "state": "translated", "value": "Program" } }, "es": { "stringUnit": { "state": "translated", "value": "Programa" } }, "fr": { "stringUnit": { "state": "translated", "value": "Programme" } }, "it": { "stringUnit": { "state": "translated", "value": "Programma" } }, "pl": { "stringUnit": { "state": "translated", "value": "Program" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Programa" } }, "ru": { "stringUnit": { "state": "translated", "value": "Программа" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "计划" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "計畫" } }
     } },
     "Exercises": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Latihan"}},
       "de": { "stringUnit": { "state": "translated", "value": "Übungen" } }, "en": { "stringUnit": { "state": "translated", "value": "Exercises" } }, "es": { "stringUnit": { "state": "translated", "value": "Ejercicios" } }, "fr": { "stringUnit": { "state": "translated", "value": "Exercices" } }, "it": { "stringUnit": { "state": "translated", "value": "Esercizi" } }, "pl": { "stringUnit": { "state": "translated", "value": "Ćwiczenia" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Exercícios" } }, "ru": { "stringUnit": { "state": "translated", "value": "Упражнения" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "动作" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "動作" } }
     } },
     "No exercises yet. Add the first one below — you can type any name you like; NOOP remembers it for next time.": { "localizations": {
       "de": { "stringUnit": { "state": "translated", "value": "Noch keine Übungen. Füge unten die erste hinzu – du kannst jeden Namen eingeben, NOOP merkt ihn sich fürs nächste Mal." } }, "en": { "stringUnit": { "state": "translated", "value": "No exercises yet. Add the first one below — you can type any name you like; NOOP remembers it for next time." } }, "es": { "stringUnit": { "state": "translated", "value": "Aún no hay ejercicios. Añade el primero abajo: puedes escribir el nombre que quieras y NOOP lo recordará para la próxima vez." } }, "fr": { "stringUnit": { "state": "translated", "value": "Aucun exercice pour l'instant. Ajoute le premier ci-dessous : tu peux saisir le nom que tu veux, NOOP le retient pour la prochaine fois." } }, "it": { "stringUnit": { "state": "translated", "value": "Ancora nessun esercizio. Aggiungi il primo qui sotto: puoi scrivere il nome che preferisci e NOOP lo ricorda per la prossima volta." } }, "pl": { "stringUnit": { "state": "translated", "value": "Brak ćwiczeń. Dodaj pierwsze poniżej – możesz wpisać dowolną nazwę, a NOOP zapamięta ją na następny raz." } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Ainda sem exercícios. Adiciona o primeiro abaixo: podes escrever o nome que quiseres e o NOOP guarda-o para a próxima vez." } }, "ru": { "stringUnit": { "state": "translated", "value": "Упражнений пока нет. Добавь первое ниже — можешь ввести любое название, NOOP запомнит его на следующий раз." } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "还没有动作。在下面添加第一个——名称随你怎么写，NOOP 会记住它，下次直接用。" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "還沒有動作。在下面新增第一個——名稱隨你怎麼寫，NOOP 會記住它，下次直接用。" } }
     } },
     "Add exercise": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tambah latihan"}},
       "de": { "stringUnit": { "state": "translated", "value": "Übung hinzufügen" } }, "en": { "stringUnit": { "state": "translated", "value": "Add exercise" } }, "es": { "stringUnit": { "state": "translated", "value": "Añadir ejercicio" } }, "fr": { "stringUnit": { "state": "translated", "value": "Ajouter un exercice" } }, "it": { "stringUnit": { "state": "translated", "value": "Aggiungi esercizio" } }, "pl": { "stringUnit": { "state": "translated", "value": "Dodaj ćwiczenie" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Adicionar exercício" } }, "ru": { "stringUnit": { "state": "translated", "value": "Добавить упражнение" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "添加动作" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "新增動作" } }
     } },
     "Move up": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Naik"}},
       "de": { "stringUnit": { "state": "translated", "value": "Nach oben" } }, "en": { "stringUnit": { "state": "translated", "value": "Move up" } }, "es": { "stringUnit": { "state": "translated", "value": "Subir" } }, "fr": { "stringUnit": { "state": "translated", "value": "Monter" } }, "it": { "stringUnit": { "state": "translated", "value": "Sposta su" } }, "pl": { "stringUnit": { "state": "translated", "value": "W górę" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Mover para cima" } }, "ru": { "stringUnit": { "state": "translated", "value": "Вверх" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "上移" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "上移" } }
     } },
     "Move down": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Turun"}},
       "de": { "stringUnit": { "state": "translated", "value": "Nach unten" } }, "en": { "stringUnit": { "state": "translated", "value": "Move down" } }, "es": { "stringUnit": { "state": "translated", "value": "Bajar" } }, "fr": { "stringUnit": { "state": "translated", "value": "Descendre" } }, "it": { "stringUnit": { "state": "translated", "value": "Sposta giù" } }, "pl": { "stringUnit": { "state": "translated", "value": "W dół" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Mover para baixo" } }, "ru": { "stringUnit": { "state": "translated", "value": "Вниз" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "下移" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "下移" } }
     } },
     "Remove exercise": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Hapus latihan"}},
       "de": { "stringUnit": { "state": "translated", "value": "Übung entfernen" } }, "en": { "stringUnit": { "state": "translated", "value": "Remove exercise" } }, "es": { "stringUnit": { "state": "translated", "value": "Quitar ejercicio" } }, "fr": { "stringUnit": { "state": "translated", "value": "Retirer l'exercice" } }, "it": { "stringUnit": { "state": "translated", "value": "Rimuovi esercizio" } }, "pl": { "stringUnit": { "state": "translated", "value": "Usuń ćwiczenie" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Remover exercício" } }, "ru": { "stringUnit": { "state": "translated", "value": "Убрать упражнение" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "移除动作" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "移除動作" } }
     } },
     "Delete program": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Hapus program"}},
       "de": { "stringUnit": { "state": "translated", "value": "Programm löschen" } }, "en": { "stringUnit": { "state": "translated", "value": "Delete program" } }, "es": { "stringUnit": { "state": "translated", "value": "Eliminar programa" } }, "fr": { "stringUnit": { "state": "translated", "value": "Supprimer le programme" } }, "it": { "stringUnit": { "state": "translated", "value": "Elimina programma" } }, "pl": { "stringUnit": { "state": "translated", "value": "Usuń program" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Eliminar programa" } }, "ru": { "stringUnit": { "state": "translated", "value": "Удалить программу" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "删除计划" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "刪除計畫" } }
     } },
     "Delete this program?": { "localizations": {
       "de": { "stringUnit": { "state": "translated", "value": "Dieses Programm löschen?" } }, "en": { "stringUnit": { "state": "translated", "value": "Delete this program?" } }, "es": { "stringUnit": { "state": "translated", "value": "¿Eliminar este programa?" } }, "fr": { "stringUnit": { "state": "translated", "value": "Supprimer ce programme ?" } }, "it": { "stringUnit": { "state": "translated", "value": "Eliminare questo programma?" } }, "pl": { "stringUnit": { "state": "translated", "value": "Usunąć ten program?" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Eliminar este programa?" } }, "ru": { "stringUnit": { "state": "translated", "value": "Удалить эту программу?" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "删除这个计划？" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "刪除這個計畫？" } }
     } },
     "Sessions you already logged from it are kept.": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Sesi yang sudah kamu catat dari program ini tetap tersimpan."}},
       "de": { "stringUnit": { "state": "translated", "value": "Bereits damit aufgezeichnete Sitzungen bleiben erhalten." } }, "en": { "stringUnit": { "state": "translated", "value": "Sessions you already logged from it are kept." } }, "es": { "stringUnit": { "state": "translated", "value": "Las sesiones que ya registraste con él se conservan." } }, "fr": { "stringUnit": { "state": "translated", "value": "Les séances déjà enregistrées avec lui sont conservées." } }, "it": { "stringUnit": { "state": "translated", "value": "Le sessioni già registrate con esso vengono mantenute." } }, "pl": { "stringUnit": { "state": "translated", "value": "Zapisane już sesje pozostaną." } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "As sessões que já registaste com ele são mantidas." } }, "ru": { "stringUnit": { "state": "translated", "value": "Уже записанные по ней сессии сохранятся." } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "已经用它记录的训练会保留。" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "已經用它記錄的訓練會保留。" } }
     } },
     "Save program": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Simpan program"}},
       "de": { "stringUnit": { "state": "translated", "value": "Programm sichern" } }, "en": { "stringUnit": { "state": "translated", "value": "Save program" } }, "es": { "stringUnit": { "state": "translated", "value": "Guardar programa" } }, "fr": { "stringUnit": { "state": "translated", "value": "Enregistrer le programme" } }, "it": { "stringUnit": { "state": "translated", "value": "Salva programma" } }, "pl": { "stringUnit": { "state": "translated", "value": "Zapisz program" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Guardar programa" } }, "ru": { "stringUnit": { "state": "translated", "value": "Сохранить программу" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "保存计划" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "儲存計畫" } }
     } },
     "Exercise": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Latihan"}},
       "de": { "stringUnit": { "state": "translated", "value": "Übung" } }, "en": { "stringUnit": { "state": "translated", "value": "Exercise" } }, "es": { "stringUnit": { "state": "translated", "value": "Ejercicio" } }, "fr": { "stringUnit": { "state": "translated", "value": "Exercice" } }, "it": { "stringUnit": { "state": "translated", "value": "Esercizio" } }, "pl": { "stringUnit": { "state": "translated", "value": "Ćwiczenie" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Exercício" } }, "ru": { "stringUnit": { "state": "translated", "value": "Упражнение" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "动作" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "動作" } }
     } },
     "Used before": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Pernah dipakai"}},
       "de": { "stringUnit": { "state": "translated", "value": "Schon verwendet" } }, "en": { "stringUnit": { "state": "translated", "value": "Used before" } }, "es": { "stringUnit": { "state": "translated", "value": "Ya usados" } }, "fr": { "stringUnit": { "state": "translated", "value": "Déjà utilisés" } }, "it": { "stringUnit": { "state": "translated", "value": "Già usati" } }, "pl": { "stringUnit": { "state": "translated", "value": "Już używane" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Já usados" } }, "ru": { "stringUnit": { "state": "translated", "value": "Уже использованные" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "用过的" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "用過的" } }
     } },
     "Muscles": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Otot"}},
       "de": { "stringUnit": { "state": "translated", "value": "Muskeln" } }, "en": { "stringUnit": { "state": "translated", "value": "Muscles" } }, "es": { "stringUnit": { "state": "translated", "value": "Músculos" } }, "fr": { "stringUnit": { "state": "translated", "value": "Muscles" } }, "it": { "stringUnit": { "state": "translated", "value": "Muscoli" } }, "pl": { "stringUnit": { "state": "translated", "value": "Mięśnie" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Músculos" } }, "ru": { "stringUnit": { "state": "translated", "value": "Мышцы" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "肌群" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "肌群" } }
     } },
     "Primary": { "localizations": {
       "de": { "stringUnit": { "state": "translated", "value": "Primär" } }, "en": { "stringUnit": { "state": "translated", "value": "Primary" } }, "es": { "stringUnit": { "state": "translated", "value": "Principal" } }, "fr": { "stringUnit": { "state": "translated", "value": "Principal" } }, "it": { "stringUnit": { "state": "translated", "value": "Primario" } }, "pl": { "stringUnit": { "state": "translated", "value": "Główny" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Principal" } }, "ru": { "stringUnit": { "state": "translated", "value": "Основная" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "主要" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "主要" } }
     } },
     "Not classified": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Belum dikelompokkan"}},
       "de": { "stringUnit": { "state": "translated", "value": "Nicht zugeordnet" } }, "en": { "stringUnit": { "state": "translated", "value": "Not classified" } }, "es": { "stringUnit": { "state": "translated", "value": "Sin clasificar" } }, "fr": { "stringUnit": { "state": "translated", "value": "Non classé" } }, "it": { "stringUnit": { "state": "translated", "value": "Non classificato" } }, "pl": { "stringUnit": { "state": "translated", "value": "Bez przypisania" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Sem classificação" } }, "ru": { "stringUnit": { "state": "translated", "value": "Без категории" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "未分类" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "未分類" } }
     } },
     "Primary muscle": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Otot utama"}},
       "de": { "stringUnit": { "state": "translated", "value": "Primärer Muskel" } }, "en": { "stringUnit": { "state": "translated", "value": "Primary muscle" } }, "es": { "stringUnit": { "state": "translated", "value": "Músculo principal" } }, "fr": { "stringUnit": { "state": "translated", "value": "Muscle principal" } }, "it": { "stringUnit": { "state": "translated", "value": "Muscolo primario" } }, "pl": { "stringUnit": { "state": "translated", "value": "Główny mięsień" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Músculo principal" } }, "ru": { "stringUnit": { "state": "translated", "value": "Основная мышца" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "主要肌群" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "主要肌群" } }
     } },
     "Also works (counted as half a set)": { "localizations": {
@@ -5318,6 +5588,7 @@
       "de": { "stringUnit": { "state": "translated", "value": "Jedes Ziel ist optional – trag ein, wonach du dich tatsächlich richtest." } }, "en": { "stringUnit": { "state": "translated", "value": "Every target is optional — fill in what you actually plan against." } }, "es": { "stringUnit": { "state": "translated", "value": "Todos los objetivos son opcionales: rellena solo aquello con lo que de verdad planificas." } }, "fr": { "stringUnit": { "state": "translated", "value": "Chaque objectif est facultatif : remplis seulement ce sur quoi tu te bases vraiment." } }, "it": { "stringUnit": { "state": "translated", "value": "Ogni obiettivo è facoltativo: compila solo ciò su cui pianifichi davvero." } }, "pl": { "stringUnit": { "state": "translated", "value": "Każdy cel jest opcjonalny – wpisz to, według czego naprawdę planujesz." } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Todos os objetivos são opcionais: preenche apenas aquilo com que planeias de facto." } }, "ru": { "stringUnit": { "state": "translated", "value": "Любая цель необязательна — заполняй то, на что действительно ориентируешься." } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "所有目标都是可选的——只填你真正会照着做的那些。" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "所有目標都是可選的——只填你真正會照著做的那些。" } }
     } },
     "Technique note": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Catatan teknik"}},
       "de": { "stringUnit": { "state": "translated", "value": "Technik-Notiz" } }, "en": { "stringUnit": { "state": "translated", "value": "Technique note" } }, "es": { "stringUnit": { "state": "translated", "value": "Nota de técnica" } }, "fr": { "stringUnit": { "state": "translated", "value": "Note de technique" } }, "it": { "stringUnit": { "state": "translated", "value": "Nota sulla tecnica" } }, "pl": { "stringUnit": { "state": "translated", "value": "Notatka o technice" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Nota de técnica" } }, "ru": { "stringUnit": { "state": "translated", "value": "Заметка о технике" } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "技术笔记" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "技術筆記" } }
     } },
     "RHR +%lld": { "localizations": {
@@ -32429,6 +32700,7 @@
     },
     "All": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Semua"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -38170,6 +38442,7 @@
     },
     "Back": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Punggung"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -66506,6 +66779,7 @@
     },
     "Duration": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Durasi"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -75206,6 +75480,7 @@
     },
     "Finish": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Selesai"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -109389,6 +109664,7 @@
     },
     "Name": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Nama"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -121128,6 +121404,7 @@
     },
     "Open": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Buka"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -145155,6 +145432,7 @@
     },
     "Saving…": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Menyimpan…"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -148919,6 +149197,7 @@
     },
     "Show fewer": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Lebih sedikit"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -173531,6 +173810,7 @@
     },
     "Undo": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Urungkan"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -175753,6 +176033,7 @@
     },
     "W": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "P"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -195111,6 +195392,7 @@
     },
     "min": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "mnt"}},
         "de": {
           "stringUnit": {
             "state": "translated",

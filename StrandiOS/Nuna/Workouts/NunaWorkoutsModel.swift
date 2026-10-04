@@ -17,6 +17,10 @@ enum NunaWorkoutRoute: Hashable {
     case history, calendar
     case load, loadCardio, loadMuscle
     case autoDetect
+    case gym
+    case program(String)
+    case programImport
+    case gymSession(String)
 }
 
 enum NunaWorkoutKind {

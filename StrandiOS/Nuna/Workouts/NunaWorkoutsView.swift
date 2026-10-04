@@ -16,6 +16,10 @@ extension View {
             case .loadCardio: NunaTrainingLoadView(tab: 1)
             case .loadMuscle: NunaTrainingLoadView(tab: 2)
             case .autoDetect: NunaAutoDetectView()
+            case .gym: NunaGymView()
+            case .program(let id): NunaProgramEditor(programId: id)
+            case .programImport: NunaProgramImportView()
+            case .gymSession(let id): NunaGymSessionView(sessionId: id)
             }
         }
     }
@@ -337,7 +341,7 @@ struct NunaWorkoutsView: View {
     private func sportGrid(_ items: [(String, String)], localized: Bool = false) -> some View {
         LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 4), spacing: 10) {
             ForEach(items, id: \.0) { sport, title in
-                NavigationLink(value: NunaWorkoutRoute.start(sport)) {
+                NavigationLink(value: sport == "Strength" ? NunaWorkoutRoute.gym : NunaWorkoutRoute.start(sport)) {
                     VStack(spacing: 8) {
                         Image(systemName: NunaWorkoutKind.isStrengthName(sport) ? "dumbbell" : sportSymbol(sport)).font(.system(size: 20, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).frame(height: 26)
                         Group { if localized { Text(LocalizedStringKey(title)) } else { Text(verbatim: title) } }

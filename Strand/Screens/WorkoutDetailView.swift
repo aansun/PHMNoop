@@ -655,12 +655,18 @@ typealias RouteMapRepresentable = NSViewRepresentable
 #if canImport(MapKit)
 struct WorkoutRouteMap: RouteMapRepresentable {
     let points: [RouteMath.LatLng]
+    /// Overrides the stroke colour (the Nuna look uses its own accent); nil keeps the Effort amber.
+    #if canImport(UIKit)
+    var stroke: UIColor? = nil
+    #else
+    var stroke: NSColor? = nil
+    #endif
 
     private var coordinates: [CLLocationCoordinate2D] {
         points.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
     }
 
-    func makeCoordinator() -> Coordinator { Coordinator() }
+    func makeCoordinator() -> Coordinator { Coordinator(stroke: stroke) }
 
     private func makeMap(context: Context) -> MKMapView {
         let map = MKMapView()
@@ -693,12 +699,19 @@ struct WorkoutRouteMap: RouteMapRepresentable {
     }
 
     final class Coordinator: NSObject, MKMapViewDelegate {
+        #if canImport(UIKit)
+        let stroke: UIColor?
+        init(stroke: UIColor?) { self.stroke = stroke }
+        #else
+        let stroke: NSColor?
+        init(stroke: NSColor?) { self.stroke = stroke }
+        #endif
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
             guard let line = overlay as? MKPolyline else { return MKOverlayRenderer(overlay: overlay) }
             let r = MKPolylineRenderer(polyline: line)
             // Effort-amber world, matching the rest of the workout detail. A platform colour (the
             // renderer needs a UIColor/NSColor, not a SwiftUI Color); kept close to the Effort accent.
-            r.strokeColor = RoutePlatformColor.effort
+            r.strokeColor = stroke ?? RoutePlatformColor.effort
             r.lineWidth = 4
             r.lineJoin = .round
             r.lineCap = .round

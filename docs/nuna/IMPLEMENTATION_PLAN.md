@@ -133,11 +133,16 @@ Built in `StrandiOS/Nuna/Workouts/`. The Workouts destination (Today's "All work
 - [x] Auto-detect (WorkoutAutoDetect / Off): the switch, the fixed rules read from `AutoWorkoutDetector`, the latest suggestion.
 - [x] Pure helpers with tests: `TrendInsights.loadRatio`, `loadBand`, `formState`.
 
-Not built, and why:
-- Lock-screen Live Activity and Dynamic Island for a running session, voice coach, Strava push, GPS and non-GPS live templates (LiveWalk, LiveCycle, LiveHIIT, LiveIndoor, LiveIsland, LiveZone): the Default live activity, Strava and voice code stay as they are. The Nuna live screen does not yet drive them.
-- Gym programs, import and "save as program" (WorkoutGym, WorkoutProgram, WorkoutProgramImport, WorkoutProgramItem, WorkoutSaveProgram, WorkoutLift, WorkoutSummaryGym) are reached through the existing Lift Log; their Nuna redesign is the next slice.
-- A map under the route trace (only the line is drawn), per-kilometre splits, and the Write-to-Health and Strava switches on the summary (the sync handles Health; Strava is not wired here).
-- Dummy data: the 90-day dummy now has four lifting sessions with sets so Strength can be checked; its run and walk rows have no GPS route, so the route trace and splits could not be seen.
+- [x] Workouts is split into two tabs: Workout (a Start card with search over every sport and a More button, the auto-detected suggestion when there is one, then history) and Insight (Last 7 days, Anya, Training load, the current-week calendar, and the auto-detect switch).
+- [x] Gym (WorkoutGym, WorkoutProgram, WorkoutProgramImport, WorkoutProgramItem, WorkoutSaveProgram, WorkoutLift, WorkoutSummaryGym) in `NunaGym*.swift` and `NunaLiftSession.swift`: programs with Start / edit / new / import, empty session from chosen exercises, sets per muscle group this week, last sessions; program editor and exercise screen (primary and also-works muscles, targets, forget); spreadsheet import with the same parser and checks; the running session (rest ring with -15 / +15 s, steppers on the working set, per-muscle volume, finish with session RPE, unfinished sets and program set counts, discard); the finished-session summary with records and "Save as program". It reads and writes the same Lift Log tables as the Default screens, so programs and sessions are shared. `NunaRootView` now hosts the session sheet, the minimised bar and the resume of an interrupted session.
+- [x] Summary shows a MapKit map of a recorded route (start and end pins, dark style, route in the Cardio blue).
+
+Still open:
+- The Dynamic Island and Lock Screen layouts (LiveIsland, LiveActivities) keep the Default widget design: the activity controllers live at the app root and are driven by the same workout and lift state, so they run for Nuna sessions, but their widget views are not restyled.
+- Voice coach and the Strava upload run from app-level coordinators, so they also work for Nuna sessions. Their settings screens belong to Phase 7 (Me).
+- Per-kilometre splits: the stored route has no per-point time, so a split would be invented. Not built until the recorder keeps timestamps.
+- Pause in the gym session (the engine has no paused state) and adding an exercise in the middle of a session (the plan is a snapshot taken at start).
+- Dummy data: the 90-day dummy has no GPS routes, so the route map was checked with a route injected into the simulator only.
 
 ## Phase 5: Anya everywhere (M)
 

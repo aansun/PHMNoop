@@ -27,7 +27,9 @@ struct NunaWorkoutSummaryView: View {
 
     var body: some View {
         Group {
-            if let r = m.row(key) {
+            if let ls = m.liftSessions.first(where: { $0.startTs == key.startTs }), m.row(key).map(NunaWorkoutKind.isStrength) ?? false {
+                NunaGymSessionView(sessionId: ls.id)
+            } else if let r = m.row(key) {
                 NunaDetailScreen(LocalizedStringKey(WorkoutSource.displaySport(r.sport))) { content(r) }
             } else {
                 NunaDetailScreen("Workout") {
@@ -83,7 +85,9 @@ struct NunaWorkoutSummaryView: View {
         return NunaCard {
             VStack(alignment: .leading, spacing: 14) {
                 if route.count >= 2 {
-                    NunaRouteTrace(points: route).frame(height: 120)
+                    // A map of the captured route with start and end markers (tiles are cached by MapKit; the route itself
+                    // never leaves the phone). The plain line below stays as the fallback when MapKit has nothing to show.
+                    WorkoutRouteMap(points: route, stroke: UIColor(NunaPalette.effort)).environment(\.colorScheme, .dark).frame(height: 200).clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
                 HStack {
                     if let dist { big("Distance", dist) }
