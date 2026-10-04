@@ -1,6 +1,72 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "Beat-to-beat view": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Gambaran waktu antar detak"}}
+        } },
+        "A picture of your beat-to-beat timing, not a verdict.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Gambaran waktu antar detak jantungmu, bukan vonis."}}
+        } },
+        "RR now (ms) →": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "RR sekarang (ms) →"}}
+        } },
+        "↑ next RR": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "↑ RR berikutnya"}}
+        } },
+        "Some variation": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sedikit variasi"}}
+        } },
+        "More varied": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lebih bervariasi"}}
+        } },
+        "No clear reading": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Belum ada bacaan yang jelas"}}
+        } },
+        "Beat-to-beat variation": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Variasi antar detak"}}
+        } },
+        "Extra or skipped beats": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Detak tambahan atau terlewat"}}
+        } },
+        "Beat-to-beat scatter": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sebaran detak ke detak"}}
+        } },
+        "Reading windows": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Jendela bacaan"}}
+        } },
+        "%lld min · %lld beats read": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld mnt · %lld denyut terbaca"}}
+        } },
+        "Short axis": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sumbu pendek"}}
+        } },
+        "Long axis": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sumbu panjang"}}
+        } },
+        "Cloud shape": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bentuk awan"}}
+        } },
+        "Extra / skipped": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tambahan / terlewat"}}
+        } },
+        "Beats read": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Denyut terbaca"}}
+        } },
+        "A neutral CSV of the numbers, never a verdict": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "CSV netral berisi angka, bukan vonis"}}
+        } },
+        "Rhythm on": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ritme aktif"}}
+        } },
+        "Computed on this phone, never leaves your iPhone": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dihitung di perangkat, tidak keluar dari iPhone"}}
+        } },
+        "Read the consent again": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Baca ulang persetujuan"}}
+        } },
+        "Accepted version %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Versi disetujui %@"}}
+        } },
         "Read only, from your scale": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Hanya baca, dari timbanganmu"}}
         } },
