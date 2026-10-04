@@ -206,6 +206,7 @@ Second pass (Me audit against the Design Canvas and the Default screens):
 - Strava (`NunaStrava`): off, setup (credentials in the Keychain, callback URI), connected, and the upload queue, over `StravaExperiment`.
 - Test Centre (`NunaTestCentre`): the test modes and diagnostics. The bug-report bundle and the probes that write to the strap stay on the Default Test Centre screen, opened from here, so their confirmation gates are unchanged.
 - About: What's new, How the app works and How scores are worked out are new Nuna screens (`NunaAbout`) reading the same copy as the Default ones (`AppChangelog`, `HowNoopWorksView.Section`, `ScoreSection`). The release notes themselves are English only.
+- Trends charts now share the app's chart style: `NunaTrendChart` (Swift Charts) draws the combined and multi-line charts and the small sparklines with the same smoothed 2.5 pt round line, a dot per reading, hairline grid with a left scale and dates underneath as `TrendChart`, and rounded bars like the other bar charts. `NunaComboChart`, `NunaMultiLineChart` and `NunaSpark` keep their call sites.
 - Persona has the profile photo; the Live Activity switch was added to Optional features.
 - Indonesian: about 520 strings were added so the Me area, Appearance, About and the dynamic strings in the other Nuna screens follow the app language (checked against the compiler's `.stringsdata` so format specifiers match).
 

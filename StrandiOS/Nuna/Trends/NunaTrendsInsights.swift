@@ -322,7 +322,6 @@ struct NunaCompareView: View {
                     ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 140)
                 } else {
                     NunaMultiLineChart(start: start, days: range, lines: lines, height: 160)
-                    NunaDayAxis(first: start, last: today)
                 }
                 HStack(spacing: 14) {
                     ForEach(Array(picked.enumerated()), id: \.offset) { i, id in
