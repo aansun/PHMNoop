@@ -21,6 +21,8 @@ struct NunaWorkoutStartView: View {
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
+    @EnvironmentObject private var router: NavRouter
+    @State private var planned: NavRouter.PlannedSession?
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
     @AppStorage("nuna.workout.zoneBuzz") private var zoneBuzz = true
     @State private var chosen: String = "Running"
@@ -35,6 +37,21 @@ struct NunaWorkoutStartView: View {
 
     var body: some View {
         NunaDetailScreen(LocalizedStringKey(chosen)) {
+            if let planned {
+                NunaCard(small: true, highlight: true) {
+                    HStack(spacing: 12) {
+                        NunaIconTile("sparkles")
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("From Anya's plan").font(.nuna(size: 11.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: planned.title).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer(minLength: 6)
+                        Button { withAnimation { self.planned = nil; goal = NunaWorkoutGoal() } } label: {
+                            Text("Clear").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 34).background(NunaPalette.glassStrong, in: Capsule())
+                        }.buttonStyle(.plain)
+                    }
+                }
+            }
             readiness
             NunaSegmented([(value: NunaWorkoutGoal.Mode.free, title: "Free"), (value: .time, title: "Time"), (value: .distance, title: "Distance"), (value: .zone, title: "Zone")], selection: $goal.mode)
             goalCard
@@ -55,7 +72,13 @@ struct NunaWorkoutStartView: View {
                 .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: Capsule())
             }.buttonStyle(.plain)
         }
-        .onAppear { if let sport { chosen = sport } else if let a = model.activeWorkout { chosen = a.sport } }
+        .onAppear {
+            // A session suggested by the day plan: hold its main zone, and keep its length for the Time goal.
+            if let p = router.plannedSession {
+                router.plannedSession = nil
+                planned = p; goal.mode = .zone; goal.zone = min(max(p.zone, 1), 5); goal.minutes = max(5, min(p.minutes, 300))
+            }
+            if let sport { chosen = sport } else if let a = model.activeWorkout { chosen = a.sport } }
         .sheet(isPresented: $showPicker) { sportPicker }
         .fullScreenCover(isPresented: $live) { NunaLiveWorkoutView(goal: goal, zoneBuzz: zoneBuzz, onClose: { live = false }) }
         .overlay { if let c = countdown { countdownView(c) } }
