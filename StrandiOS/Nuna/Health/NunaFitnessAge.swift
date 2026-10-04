@@ -19,7 +19,7 @@ struct NunaFitnessAgeView: View {
     @State private var showWaist = false
 
     private func cap(_ t: LocalizedStringKey) -> some View {
-        Text(t).font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+        Text(t).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
     }
 
     private func date(_ day: String) -> Date? { Self.dayParser.date(from: day) }
@@ -53,9 +53,9 @@ struct NunaFitnessAgeView: View {
             } else {
                 NunaCard {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(loaded ? "Not ready yet" : " ").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(loaded ? "Not ready yet" : " ").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         Text("Fitness age needs your age, your sex and resting heart rate from at least 4 nights. It updates once a week.")
-                            .font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -64,7 +64,7 @@ struct NunaFitnessAgeView: View {
                 HStack(alignment: .top, spacing: 12) {
                     Image(systemName: "info.circle").foregroundStyle(NunaPalette.textMuted)
                     Text("This is a fitness comparison in years, not a biological age or a medical assessment. The model uses no exercise test, so watch the direction rather than the exact number.")
-                        .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }
             }
             NunaExpandRow(title: "How it's calculated", subtitle: "Non-exercise model (Nes 2011, HUNT), updated every Saturday", systemImage: "sparkles",
@@ -87,7 +87,7 @@ struct NunaFitnessAgeView: View {
         return NunaCard {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text(verbatim: updated).font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1)
+                    Text(verbatim: updated).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1)
                     Spacer()
                     if let diff, diff != 0 {
                         NunaChip(diff > 0 ? LocalizedStringKey("\(diff) years younger") : LocalizedStringKey("\(-diff) years older"),
@@ -96,13 +96,13 @@ struct NunaFitnessAgeView: View {
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(verbatim: String(format: "%.0f", locale: AppLanguage.activeLocale, latest.value))
-                        .font(.system(size: 96, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("years").font(.system(size: 24, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 96, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("years").font(.nuna(size: 24, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 if let diff {
                     Text(verbatim: diff == 0 ? String(localized: "Your heart and lung fitness is about the same as your age.")
                          : String(localized: "Your heart and lung fitness matches someone aged \(Int(latest.value.rounded())), while you are \(profile.age)."))
-                        .font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                     NunaAgeSlider(fitness: latest.value, age: age)
                     HStack(spacing: 16) {
                         legend(Capsule().fill(NunaPalette.charge.opacity(0.3)).frame(width: 14, height: 10), "Range ±5 yr")
@@ -114,7 +114,7 @@ struct NunaFitnessAgeView: View {
     }
 
     private func legend<S: View>(_ mark: S, _ text: LocalizedStringKey) -> some View {
-        HStack(spacing: 6) { mark; Text(text).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+        HStack(spacing: 6) { mark; Text(text).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
     }
 
     private var trendCard: some View {
@@ -128,14 +128,14 @@ struct NunaFitnessAgeView: View {
                     Spacer()
                     if let delta, abs(delta) >= 1 {
                         Text(verbatim: (delta < 0 ? "▼ " : "▲ ") + String(localized: "\(Int(abs(delta))) yr"))
-                            .font(.system(size: 14, weight: .heavy)).foregroundStyle(delta < 0 ? NunaPalette.charge : NunaPalette.warning)
+                            .font(.nuna(size: 14, weight: .heavy)).foregroundStyle(delta < 0 ? NunaPalette.charge : NunaPalette.warning)
                     }
                 }
                 if let delta {
                     Text(delta <= -1 ? "You are getting fitter. Look at the direction over several weeks, not one number."
                          : (delta >= 1 ? "Fitness slipped a little. Look at the direction over several weeks, not one number."
                             : "Steady. Look at the direction over several weeks, not one number."))
-                        .font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }
                 NunaLine2Chart(points: pts, color: NunaPalette.charge, decimals: 0, height: 130)
             }
@@ -150,17 +150,17 @@ struct NunaFitnessAgeView: View {
                 HStack(spacing: 12) {
                     NunaIconTile(icon)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(title).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: reference).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: reference).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     Spacer()
                     VStack(alignment: .trailing, spacing: 2) {
                         HStack(alignment: .firstTextBaseline, spacing: 3) {
-                            Text(verbatim: value).font(.system(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            Text(verbatim: unit).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: value).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                         Text(verbatim: n == 0 ? "±0" : ((younger ? "−" : "+") + String(localized: "\(n) yr")))
-                            .font(.system(size: 13, weight: .heavy)).foregroundStyle(n == 0 ? NunaPalette.textSecondary : (younger ? NunaPalette.charge : NunaPalette.warning))
+                            .font(.nuna(size: 13, weight: .heavy)).foregroundStyle(n == 0 ? NunaPalette.textSecondary : (younger ? NunaPalette.charge : NunaPalette.warning))
                     }
                 }
                 GeometryReader { geo in
@@ -177,7 +177,7 @@ struct NunaFitnessAgeView: View {
                 HStack {
                     Text("Younger"); Spacer(); Text("Reference"); Spacer(); Text("Older")
                 }
-                .font(.system(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                .font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }
         }
     }
@@ -189,7 +189,7 @@ struct NunaFitnessAgeView: View {
             let paYears = FitnessAgeEngine.fitnessAge(age: age, sex: profile.sex, restingHR: FitnessAgeEngine.restingHRReference, paIndex: paIndex) - age
             NunaTitleRow(title: "What shapes it") { EmptyView() }
             Text("Two signals compared with an average person of your age. Median of 7 days.")
-                .font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading)
+                .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading)
             componentRow(icon: "heart", title: "Resting HR",
                          reference: String(localized: "Reference \(Int(FitnessAgeEngine.restingHRReference)) bpm"),
                          value: String(format: "%.0f", rhr), unit: "bpm", years: rhrYears)
@@ -219,9 +219,9 @@ struct NunaFitnessAgeView: View {
                     ForEach(Array(rows.enumerated()), id: \.offset) { i, r in
                         if i > 0 { NunaDivider() }
                         HStack(spacing: 12) {
-                            Text(verbatim: short(r.day)).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 56, alignment: .leading)
+                            Text(verbatim: short(r.day)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 56, alignment: .leading)
                             NunaProgressBar(fraction: min(max(1 - (r.value - 20) / 60, 0.05), 1), color: i == 0 ? NunaPalette.charge : NunaPalette.rest)
-                            Text(verbatim: String(format: "%.0f", r.value)).font(.system(size: 17, weight: .bold, design: NunaType.design))
+                            Text(verbatim: String(format: "%.0f", r.value)).font(.nuna(size: 17, weight: .bold, design: NunaType.design))
                                 .foregroundStyle(NunaPalette.textPrimary).frame(width: 40, alignment: .trailing)
                         }
                         .frame(minHeight: 50)
@@ -240,8 +240,8 @@ struct NunaFitnessAgeView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
-                            Text(verbatim: String(format: "%.0f", vo2)).font(.system(size: 40, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            Text("ml/kg/min").font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: String(format: "%.0f", vo2)).font(.nuna(size: 40, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            Text("ml/kg/min").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                         Spacer()
                         NunaChip(profile.waistCm > 0 ? "Waist-based" : "Estimated")
@@ -249,7 +249,7 @@ struct NunaFitnessAgeView: View {
                     Text(verbatim: profile.waistCm > 0
                          ? String(localized: "Range ±\(String(format: "%.1f", locale: AppLanguage.activeLocale, see)). Unlocked because your waist, \(Int(profile.waistCm)) cm, is set.")
                          : String(localized: "A rougher estimate from heart rate. Add your waist for the sharper one."))
-                        .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                     ZStack(alignment: .leading) {
                         NunaProportionBar(parts: [(2, NunaPalette.zoneBase), (2, NunaPalette.zoneBase), (2, NunaPalette.rest), (2, NunaPalette.charge), (2, NunaPalette.charge)], height: 12)
                         GeometryReader { geo in
@@ -260,7 +260,7 @@ struct NunaFitnessAgeView: View {
                         .frame(height: 12)
                     }
                     HStack { Text("Fair"); Spacer(); Text("Superior") }
-                        .font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
             }
             Button { showWaist = true } label: {

@@ -129,13 +129,13 @@ struct NunaTodayView: View {
         }
         .sheet(isPresented: $showAddCard) {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Add a card").font(.system(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).padding(.top, 22)
+                Text("Add a card").font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).padding(.top, 22)
                 NunaCard(small: true) {
                     VStack(spacing: 0) {
                         ForEach(Array(hiddenSections.enumerated()), id: \.element.id) { idx, sec in
                             if idx > 0 { NunaDivider() }
                             Button { add(sec, after: addAfter); showAddCard = false } label: {
-                                NunaListRow(nunaTitle(sec), systemImage: "plus") { Text("Add").font(.system(size: 14, weight: .heavy)).foregroundStyle(NunaPalette.charge) }
+                                NunaListRow(nunaTitle(sec), systemImage: "plus") { Text("Add").font(.nuna(size: 14, weight: .heavy)).foregroundStyle(NunaPalette.charge) }
                             }.buttonStyle(.plain)
                         }
                     }
@@ -163,7 +163,7 @@ struct NunaTodayView: View {
     private var header: some View {
         HStack(alignment: .top, spacing: 8) {
             Text("Today")
-                .font(.system(size: NunaTypeSize.h1, weight: .heavy, design: NunaType.design))
+                .font(.nuna(size: NunaTypeSize.h1, weight: .heavy, design: NunaType.design))
                 .foregroundStyle(NunaPalette.textPrimary)
             Spacer(minLength: 8)
             Button { router.openDevices() } label: {
@@ -173,7 +173,7 @@ struct NunaTodayView: View {
             .accessibilityLabel(Text("WHOOP strap"))
             Button { showInbox = true } label: {
                 Image(systemName: "bell")
-                    .font(.system(size: 17, weight: .bold))
+                    .font(.nuna(size: 17, weight: .bold))
                     .foregroundStyle(NunaPalette.textPrimary)
                     .frame(width: 44, height: 44)
                     .background(NunaPalette.glassStrong, in: Circle())
@@ -195,9 +195,9 @@ struct NunaTodayView: View {
         HStack {
             Button { showDate = true } label: {
                 HStack(spacing: 8) {
-                    Image(systemName: "calendar").font(.system(size: 14, weight: .bold))
-                    Text(verbatim: dateTitle).font(.system(size: 14, weight: .heavy))
-                    Image(systemName: "chevron.down").font(.system(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    Image(systemName: "calendar").font(.nuna(size: 14, weight: .bold))
+                    Text(verbatim: dateTitle).font(.nuna(size: 14, weight: .heavy))
+                    Image(systemName: "chevron.down").font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 .foregroundStyle(NunaPalette.textPrimary)
                 .padding(.horizontal, 14).frame(height: 38)
@@ -221,7 +221,7 @@ struct NunaTodayView: View {
             HStack(spacing: 12) {
                 Image(systemName: "lock.fill").foregroundStyle(NunaPalette.textSecondary)
                 Text("Viewing a past day. Read only.")
-                    .font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 Spacer()
                 Button("Today") { model.dayOffset = 0 }.buttonStyle(.nuna(.ghost, height: 36))
             }
@@ -255,9 +255,9 @@ struct NunaTodayView: View {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Edit mode").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
+                        Text("Edit mode").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
                             .foregroundStyle(NunaPalette.textSecondary)
-                        Text("Arrange cards").font(.system(size: NunaTypeSize.h1, weight: .heavy, design: NunaType.design))
+                        Text("Arrange cards").font(.nuna(size: NunaTypeSize.h1, weight: .heavy, design: NunaType.design))
                             .foregroundStyle(NunaPalette.textPrimary)
                     }
                     Spacer()
@@ -265,7 +265,7 @@ struct NunaTodayView: View {
                         .buttonStyle(.nuna(.primary, height: 44)).fixedSize()
                 }
                 Text("Hold the grip, then drag to reorder. Tap X to hide a card.")
-                    .font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }
             let visible = effectiveOrder.filter { !effectiveHidden.contains($0) }
             ForEach(Array(visible.enumerated()), id: \.element.id) { idx, section in
@@ -292,12 +292,12 @@ struct NunaTodayView: View {
     private func editFrame(_ section: TodaySection) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 10) {
-                Image(systemName: "line.3.horizontal").font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                Image(systemName: "line.3.horizontal").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     .frame(width: 22)
-                Text(nunaTitle(section)).font(.system(size: 15.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+                Text(nunaTitle(section)).font(.nuna(size: 15.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
                 Spacer()
                 Button { withAnimation { toggleHidden(section) } } label: {
-                    Image(systemName: "xmark").font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Image(systemName: "xmark").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         .frame(width: 34, height: 34).background(NunaPalette.glassStrong, in: Circle())
                 }
                 .accessibilityLabel(Text("Hide"))
@@ -336,8 +336,8 @@ struct NunaTodayView: View {
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
                 ForEach(metricTiles.prefix(4)) { t in
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(t.label).font(.system(size: 10.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                        Text(verbatim: t.value).font(.system(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(t.label).font(.nuna(size: 10.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: t.value).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     }
                     .padding(12).frame(maxWidth: .infinity, alignment: .leading).background(inner)
                 }
@@ -363,8 +363,8 @@ struct NunaTodayView: View {
         HStack(spacing: 12) {
             NunaIconTile(icon, tint: tint)
             VStack(alignment: .leading, spacing: 2) {
-                Text(verbatim: title).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2)
-                Text(sub).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: title).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2)
+                Text(sub).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }
             Spacer(minLength: 0)
         }
@@ -372,17 +372,17 @@ struct NunaTodayView: View {
     }
 
     private func miniChip(_ title: LocalizedStringKey) -> some View {
-        Text(title).font(.system(size: 12.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+        Text(title).font(.nuna(size: 12.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
             .padding(.horizontal, 12).frame(height: 32).background(NunaPalette.glassStrong, in: Capsule())
     }
 
     private func miniRing(_ value: Double?, _ label: LocalizedStringKey, _ color: Color, _ unit: String, fraction: Double? = nil) -> some View {
         VStack(spacing: 6) {
             NunaRingGauge(fraction: fraction ?? ((value ?? 0) / 100), color: color, size: 56, lineWidth: 6) {
-                Text(verbatim: value.map { String(format: "%.0f", $0) + unit } ?? "–").font(.system(size: 13, weight: .bold, design: NunaType.design))
+                Text(verbatim: value.map { String(format: "%.0f", $0) + unit } ?? "–").font(.nuna(size: 13, weight: .bold, design: NunaType.design))
                     .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6)
             }
-            Text(label).font(.system(size: 10.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
         }
         .frame(maxWidth: .infinity)
     }
@@ -468,7 +468,7 @@ struct NunaTodayView: View {
                             }
                         } label: {
                             Image(systemName: metricsLayout == .cards ? "list.bullet" : "square.grid.2x2")
-                                .font(.system(size: 14, weight: .bold))
+                                .font(.nuna(size: 14, weight: .bold))
                         }
                         .accessibilityLabel(Text(metricsLayout == .cards ? "Show as list" : "Show as cards"))
                         Button { customizeDestination = .keyMetrics; showCustomize = true } label: {
@@ -493,7 +493,7 @@ struct NunaTodayView: View {
                 NavigationLink(value: TabRoute.fullDayChart) {
                     NunaCard(small: true) {
                         NunaListRow("Heart Rate", systemImage: "heart.fill", tint: NunaPalette.alertText, showsChevron: true) {
-                            Text(verbatim: "\(hr) bpm").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: "\(hr) bpm").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         }
                     }
                 }

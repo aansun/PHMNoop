@@ -58,7 +58,7 @@ struct NunaMeView: View {
                     row(.about, "About and help", "Version, how it works, credits", "info.circle.fill")
                 }
                 Text("PHMNOOP · a fork of NOOP. Not a medical device.")
-                    .font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).frame(maxWidth: .infinity).multilineTextAlignment(.center)
+                    .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).frame(maxWidth: .infinity).multilineTextAlignment(.center)
             }
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 14).padding(.bottom, 24)
         }
@@ -79,7 +79,9 @@ struct NunaMeView: View {
     private var appearanceSubtitle: String {
         let exp = ExperienceMode(rawValue: experienceRaw)?.displayName ?? ""
         let u = (UnitSystem(rawValue: unitSystem) ?? .metric) == .imperial ? String(localized: "Imperial") : String(localized: "Metric")
-        return "\(exp) · \(u) · " + (UnitPrefs.resolveEffortScale(effortScale) == .whoop ? "0–21" : "0–100")
+        let code = AppLanguage.activeLocale.identifier.split(whereSeparator: { $0 == "_" || $0 == "-" }).first.map(String.init) ?? "en"
+        let lang = (Locale(identifier: code).localizedString(forLanguageCode: code) ?? code).capitalized
+        return "\(exp) · \(lang) · \(u)"
     }
     private var notificationsSubtitle: String {
         let n = [brief, behavior.illnessWatch, behavior.batteryAlerts, behavior.strainTargetNudge].filter { $0 }.count
@@ -99,11 +101,11 @@ struct NunaMeView: View {
                     HStack(spacing: 16) {
                         ProfileAvatarView(imageData: profile.avatarImageData, size: 64)
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Profile").font(.system(size: NunaTypeSize.h2 - 1, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
-                            Text(verbatim: "\(profile.age) · \(Int(profile.heightCm.rounded())) cm · \(String(format: "%.1f", locale: AppLanguage.activeLocale, profile.weightKg)) kg").font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text("Profile").font(.nuna(size: NunaTypeSize.h2 - 1, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: "\(profile.age) · \(Int(profile.heightCm.rounded())) cm · \(String(format: "%.1f", locale: AppLanguage.activeLocale, profile.weightKg)) kg").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                         Spacer(minLength: 8)
-                        Image(systemName: "chevron.right").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                        Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                     }
                     NunaDivider()
                     HStack {
@@ -117,8 +119,8 @@ struct NunaMeView: View {
 
     private func stat(_ l: LocalizedStringKey, _ v: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(l).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: v).font(.system(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(verbatim: v).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -152,8 +154,8 @@ extension View {
             case .devices: NunaDevicesView()
             case .anya: NunaAnyaSettingsView()
             case .appearance: NunaAppearanceView()
-            case .theme: NunaThemeView()
-            case .widgets: SettingsView()
+            case .theme: NunaAppearanceView()
+            case .widgets: NunaWidgetSettingsView()
             case .units: NunaUnitsView()
             case .language: NunaLanguageView()
             case .features: NunaFeaturesView()
@@ -168,12 +170,12 @@ extension View {
             case .alarm: NunaSmartAlarmView()
             case .data: NunaDataHubView()
             case .backup: NunaBackupView()
-            case .imports: DataSourcesView()
+            case .imports: NunaImportView()
             case .appleHealth: NunaAppleHealthView()
-            case .strava: StravaSettingsView()
+            case .strava: NunaStravaView()
             case .advanced: NunaAdvancedView()
             case .experiments: NunaExperimentsView()
-            case .testCentre: TestCentreView()
+            case .testCentre: NunaTestCentreView()
             case .about: NunaAboutView()
             }
         }

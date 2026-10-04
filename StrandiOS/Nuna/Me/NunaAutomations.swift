@@ -21,7 +21,7 @@ struct NunaAutomationsView: View {
 
     var body: some View {
         NunaDetailScreen("Strap automations") {
-            Text("Let the strap act: a tap does something, a vibration coaches you, and it tells you things without opening the phone.").font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+            Text("Let the strap act: a tap does something, a vibration coaches you, and it tells you things without opening the phone.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
             NunaCard(highlight: wrist) {
                 NunaToggleRow("Wrist alerts", subtitle: "The master switch for all vibrations. Off means the strap stays silent", systemImage: "bell.badge", isOn: $wrist).padding(.vertical, 8)
             }
@@ -73,8 +73,8 @@ struct NunaDoubleTapView: View {
                 HStack(spacing: 12) {
                     NunaIconTile("hand.tap")
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("Tap the strap twice").font(.system(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("Then it does what you choose below.").font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Tap the strap twice").font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("Then it does what you choose below.").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     Spacer()
                     NunaChip(live.bonded ? "Connected" : "Not connected", color: live.bonded ? NunaPalette.charge : nil)
@@ -86,9 +86,9 @@ struct NunaDoubleTapView: View {
                     Button { behavior.doubleTapAction = o } label: {
                         HStack(spacing: 12) {
                             NunaIconTile(o.symbol)
-                            Text(verbatim: o.label).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: o.label).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             Spacer()
-                            Image(systemName: behavior.doubleTapAction == o ? "checkmark.circle.fill" : "circle").font(.system(size: 21)).foregroundStyle(behavior.doubleTapAction == o ? NunaPalette.textPrimary : NunaPalette.textMuted)
+                            Image(systemName: behavior.doubleTapAction == o ? "checkmark.circle.fill" : "circle").font(.nuna(size: 21)).foregroundStyle(behavior.doubleTapAction == o ? NunaPalette.textPrimary : NunaPalette.textMuted)
                         }.padding(.vertical, 10).contentShape(Rectangle())
                     }.buttonStyle(.plain)
                 }
@@ -97,7 +97,7 @@ struct NunaDoubleTapView: View {
                 NunaFormField("Shortcut name") { TextField("", text: $behavior.doubleTapShortcut, prompt: Text("The name of your Shortcut").foregroundStyle(NunaPalette.textMuted)).textInputAutocapitalization(.never).autocorrectionDisabled() }
             }
             Button { model.runMacAction(behavior.doubleTapAction, shortcut: behavior.doubleTapShortcut) } label: {
-                Text("Try the action").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
+                Text("Try the action").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
             }.buttonStyle(.plain).disabled(behavior.doubleTapAction == .none).opacity(behavior.doubleTapAction == .none ? 0.4 : 1)
             if !model.moments.isEmpty {
                 NunaSettingsGroup("Latest moments") {
@@ -107,7 +107,7 @@ struct NunaDoubleTapView: View {
                     }
                 }
                 Button { model.moments.removeAll(); UserDefaults.standard.removeObject(forKey: "moments") } label: {
-                    Text("Clear").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 46).background(NunaPalette.glassStrong, in: Capsule())
+                    Text("Clear").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 46).background(NunaPalette.glassStrong, in: Capsule())
                 }.buttonStyle(.plain)
             }
             nunaFootnote("A tap that arrives late during a sync is kept in the strap log but does not run the action.")
@@ -137,7 +137,7 @@ struct NunaSessionCuesView: View {
     @AppStorage(HapticPrefs.workout) private var workout = true
     var body: some View {
         NunaDetailScreen("Session cues") {
-            Text("Choose which cues vibrate the strap during a session you start.").font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text("Choose which cues vibrate the strap during a session you start.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             NunaSettingsGroup {
                 NunaToggleRow("Breathing pacer", subtitle: "Each breath in and out", systemImage: "wind", isOn: $breathing).padding(.vertical, 8)
                 NunaDivider()
@@ -167,8 +167,8 @@ struct NunaSedentaryView: View {
                 if !wrist {
                     NunaCard(small: true) {
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("Needs the master switch").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.warning)
-                            Text("It cannot vibrate while Wrist alerts is off. Turn it on in Strap automations.").font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text("Needs the master switch").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.warning)
+                            Text("It cannot vibrate while Wrist alerts is off. Turn it on in Strap automations.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         }.frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
@@ -187,10 +187,10 @@ struct NunaSedentaryView: View {
                     if p.activeHoursEnabled {
                         NunaDivider()
                         HStack {
-                            Text("From").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            Text("From").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             DatePicker("", selection: bind($p.activeStartMinutes), displayedComponents: .hourAndMinute).labelsHidden().colorScheme(.dark)
                             Spacer()
-                            Text("Until").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            Text("Until").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             DatePicker("", selection: bind($p.activeEndMinutes), displayedComponents: .hourAndMinute).labelsHidden().colorScheme(.dark)
                         }.padding(.vertical, 10)
                     }
@@ -210,7 +210,7 @@ struct NunaSedentaryView: View {
 struct NunaShortcutsView: View {
     var body: some View {
         NunaDetailScreen("Siri and Shortcuts") {
-            Text("Run NOOP actions by voice or from the Shortcuts app. Good for Focus, Sleep mode or the Action button.").font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+            Text("Run NOOP actions by voice or from the Shortcuts app. Good for Focus, Sleep mode or the Action button.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
             NunaSettingsGroup {
                 NunaListRow("Sync Strap", subtitle: "Pulls the history from the strap", systemImage: "arrow.triangle.2.circlepath")
                 NunaDivider()

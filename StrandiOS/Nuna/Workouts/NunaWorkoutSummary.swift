@@ -33,7 +33,7 @@ struct NunaWorkoutSummaryView: View {
                 NunaDetailScreen(LocalizedStringKey(WorkoutSource.displaySport(r.sport))) { content(r) }
             } else {
                 NunaDetailScreen("Workout") {
-                    NunaCard { Text(m.loaded ? "This session is no longer saved." : " ").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading) }
+                    NunaCard { Text(m.loaded ? "This session is no longer saved." : " ").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading) }
                 }
             }
         }
@@ -50,7 +50,7 @@ struct NunaWorkoutSummaryView: View {
     @ViewBuilder private func content(_ r: WorkoutRow) -> some View {
         let secs = r.durationS ?? Double(r.endTs - r.startTs)
         HStack {
-            Text(verbatim: NunaWorkoutFormat.day(r.startTs) + " · " + NunaWorkoutFormat.clock(r.startTs)).font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text(verbatim: NunaWorkoutFormat.day(r.startTs) + " · " + NunaWorkoutFormat.clock(r.startTs)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             Spacer()
             NunaChip(sourceName(r), systemImage: "checkmark")
         }
@@ -63,7 +63,7 @@ struct NunaWorkoutSummaryView: View {
             NunaListRow("Apple Health", subtitle: "Workouts, energy and distance are written by the sync. Manage it in Me", systemImage: "heart.text.square")
         }
         Button(role: .destructive) { confirmDelete = true } label: {
-            Text("Delete").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText)
+            Text("Delete").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText)
                 .frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
         }.buttonStyle(.plain)
     }
@@ -110,15 +110,15 @@ struct NunaWorkoutSummaryView: View {
 
     private func big(_ l: LocalizedStringKey, _ v: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(l).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: v).font(.system(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.7).lineLimit(1)
+            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(verbatim: v).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.7).lineLimit(1)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func small(_ l: LocalizedStringKey, _ v: String) -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text(l).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: v).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(verbatim: v).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -127,12 +127,12 @@ struct NunaWorkoutSummaryView: View {
         return NunaCard {
             HStack(spacing: 16) {
                 NunaRingGauge(fraction: UnitFormatter.effortValue(dayEffort ?? s, scale: scale) / max, color: NunaPalette.effortText, size: 84, lineWidth: 8) {
-                    Text(verbatim: "+" + UnitFormatter.effortDisplay(s, scale: scale)).font(.system(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: "+" + UnitFormatter.effortDisplay(s, scale: scale)).font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 }
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Effort added").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("Effort added").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     if let d = dayEffort {
-                        Text(verbatim: String(localized: "That day reached \(UnitFormatter.effortDisplay(d, scale: scale)) of \(UnitFormatter.effortScaleMax(scale))")).font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: String(localized: "That day reached \(UnitFormatter.effortDisplay(d, scale: scale)) of \(UnitFormatter.effortScaleMax(scale))")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                 }
                 Spacer(minLength: 0)
@@ -153,7 +153,7 @@ struct NunaWorkoutSummaryView: View {
                 HStack {
                     nunaTrendsCap("Heart rate zones")
                     Spacer()
-                    if let a = r.avgHr, let mx = r.maxHr { Text(verbatim: String(localized: "Average \(a) · max \(mx)")).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                    if let a = r.avgHr, let mx = r.maxHr { Text(verbatim: String(localized: "Average \(a) · max \(mx)")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                 }
                 if let mins, mins.contains(where: { $0 > 0 }) {
                     NunaProportionBar(parts: mins.enumerated().map { ($1, colors[$0]) })
@@ -161,14 +161,14 @@ struct NunaWorkoutSummaryView: View {
                         if mins[i] >= 0.5 {
                             HStack(spacing: 10) {
                                 Circle().fill(colors[i]).frame(width: 9, height: 9)
-                                Text(verbatim: String(localized: "Zone \(i + 1)")).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                Text(verbatim: String(localized: "Zone \(i + 1)")).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                                 Spacer()
-                                Text(verbatim: String(localized: "\(Int(mins[i].rounded())) min · \(Int((mins[i] / total * 100).rounded()))%")).font(.system(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                                Text(verbatim: String(localized: "\(Int(mins[i].rounded())) min · \(Int((mins[i] / total * 100).rounded()))%")).font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                             }
                         }
                     }
                 } else {
-                    Text("No heart-rate readings were recorded for this session.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("No heart-rate readings were recorded for this session.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
             }
         }
@@ -181,7 +181,7 @@ struct NunaWorkoutSummaryView: View {
                 if hr.count >= 2 {
                     NunaWorkoutHRCurve(buckets: hr, start: r.startTs, end: r.endTs)
                 } else {
-                    Text("No heart-rate readings were recorded for this session.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("No heart-rate readings were recorded for this session.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
             }
         }
@@ -216,7 +216,7 @@ struct NunaWorkoutHRCurve: View {
         VStack(spacing: 6) {
             HStack(alignment: .top, spacing: 6) {
                 VStack { Text(verbatim: "\(Int(hi))"); Spacer(); Text(verbatim: "\(Int(lo))") }
-                    .font(.system(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 26, height: 150)
+                    .font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 26, height: 150)
                 Canvas { ctx, size in
                     var grid = Path()
                     for i in 0...2 { let y = size.height * CGFloat(i) / 2; grid.move(to: CGPoint(x: 0, y: y)); grid.addLine(to: CGPoint(x: size.width, y: y)) }
@@ -234,7 +234,7 @@ struct NunaWorkoutHRCurve: View {
                 Spacer().frame(width: 32)
                 Text("0"); Spacer(); Text(verbatim: "\(Int(span / 120))"); Spacer(); Text(verbatim: String(localized: "\(Int(span / 60)) min"))
             }
-            .font(.system(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            .font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
         }
         .accessibilityHidden(true)
     }

@@ -54,7 +54,7 @@ struct NunaMoodView: View {
             energyCard
             TextField("", text: $extras.note, prompt: Text("Note (optional)").foregroundStyle(NunaPalette.textMuted), axis: .vertical)
                 .lineLimit(2...4)
-                .font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                 .padding(.horizontal, 18).padding(.vertical, 14)
                 .background(NunaPalette.shade.opacity(0.28), in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
@@ -65,7 +65,7 @@ struct NunaMoodView: View {
                 }
             }
             Button { Task { await save() } } label: {
-                Text(savedFlash ? "Saved" : "Save").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
+                Text(savedFlash ? "Saved" : "Save").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
                     .frame(maxWidth: .infinity).frame(height: 56)
                     .background(NunaPalette.accent.opacity(mood == nil ? 0.35 : 1), in: Capsule())
             }
@@ -73,7 +73,7 @@ struct NunaMoodView: View {
             weekCard
             if !lines.isEmpty { insightsCard }
             Text("Self-tracking, not a clinical assessment. If low mood persists, talk to a professional. You deserve support.")
-                .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).frame(maxWidth: .infinity, alignment: .leading)
+                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).frame(maxWidth: .infinity, alignment: .leading)
         }
         .task(id: repo.refreshSeq) { await load() }
     }
@@ -81,18 +81,18 @@ struct NunaMoodView: View {
     private var askCard: some View {
         NunaCard {
             VStack(alignment: .leading, spacing: 18) {
-                Text(verbatim: Self.stamp.string(from: Date())).font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                Text("How are you feeling right now?").font(.system(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: Self.stamp.string(from: Date())).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text("How are you feeling right now?").font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 HStack(alignment: .top, spacing: 4) {
                     ForEach(Array(MoodStore.scale), id: \.self) { v in
                         let on = mood == v
                         Button { mood = v } label: {
                             VStack(spacing: 8) {
-                                Text(verbatim: MoodStore.face(for: v)).font(.system(size: 26))
+                                Text(verbatim: MoodStore.face(for: v)).font(.nuna(size: 26))
                                     .frame(width: 52, height: 52)
                                     .background(on ? NunaPalette.accent : NunaPalette.ink.opacity(0.07), in: Circle())
                                     .overlay(Circle().strokeBorder(NunaPalette.hairline, lineWidth: on ? 0 : 1))
-                                Text(verbatim: MoodStore.label(for: v)).font(.system(size: 11, weight: .bold))
+                                Text(verbatim: MoodStore.label(for: v)).font(.nuna(size: 11, weight: .bold))
                                     .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                                     .multilineTextAlignment(.center).lineLimit(2)
                             }
@@ -110,13 +110,13 @@ struct NunaMoodView: View {
     private var factorsCard: some View {
         NunaCard {
             VStack(alignment: .leading, spacing: 12) {
-                Text("What affects it").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text("What affects it").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 NunaFlowChips(items: factorKeys.map { $0.id }) { id in
                     let on = extras.factors.contains(id)
                     Button {
                         if on { extras.factors.removeAll { $0 == id } } else { extras.factors.append(id) }
                     } label: {
-                        Text(factorKeys.first { $0.id == id }!.title).font(.system(size: 13.5, weight: .bold))
+                        Text(factorKeys.first { $0.id == id }!.title).font(.nuna(size: 13.5, weight: .bold))
                             .foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary)
                             .padding(.horizontal, 14).frame(height: 38)
                             .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
@@ -131,14 +131,14 @@ struct NunaMoodView: View {
         NunaCard {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text("Energy").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Energy").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     Text(extras.energy < 0.34 ? "Low" : (extras.energy < 0.67 ? "Medium" : "High"))
-                        .font(.system(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        .font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 }
                 Slider(value: $extras.energy, in: 0...1).tint(NunaPalette.charge)
                 HStack { Text("Tired"); Spacer(); Text("Energetic") }
-                    .font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }
         }
     }
@@ -153,10 +153,10 @@ struct NunaMoodView: View {
                         VStack(spacing: 8) {
                             ZStack {
                                 Circle().fill(d.value == nil ? NunaPalette.ink.opacity(0.12) : NunaPalette.ink.opacity(0.14 + 0.16 * Double(d.value ?? 0)))
-                                if let v = d.value { Text(verbatim: MoodStore.face(for: v)).font(.system(size: 14)) }
+                                if let v = d.value { Text(verbatim: MoodStore.face(for: v)).font(.nuna(size: 14)) }
                             }
                             .frame(width: 30, height: 30)
-                            Text(verbatim: Self.weekday.string(from: d.date)).font(.system(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: Self.weekday.string(from: d.date)).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                         .frame(maxWidth: .infinity)
                     }
@@ -171,8 +171,8 @@ struct NunaMoodView: View {
             ForEach(0..<lines.count, id: \.self) { i in
                 NunaCard(small: true) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(verbatim: lines[i].text).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
-                        Text(verbatim: lines[i].caption).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: lines[i].text).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                        Text(verbatim: lines[i].caption).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }

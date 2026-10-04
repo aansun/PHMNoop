@@ -16,7 +16,7 @@ struct NunaAdvancedView: View {
 
     var body: some View {
         NunaDetailScreen("Advanced") {
-            Text("For fine tuning. Daily settings are on the Me page.").font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text("For fine tuning. Daily settings are on the Me page.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             NunaSettingsGroup("Recovery") {
                 NavigationLink(value: NunaMeRoute.persona) { NunaListRow("Restart the baseline", subtitle: "Under Persona. History stays", systemImage: "arrow.triangle.2.circlepath", showsChevron: true) }.buttonStyle(.plain)
             }
@@ -28,10 +28,10 @@ struct NunaAdvancedView: View {
                 }
                 NunaDivider()
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("HRV window").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("HRV window").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     NunaSegmented([(value: HrvWindow.whole.rawValue, title: "Whole night"), (value: HrvWindow.deep.rawValue, title: "Deep sleep")], selection: $window)
                         .onChange(of: window) { _, _ in rescore(model) }
-                    Text("Deep sleep pools HRV over slow-wave sleep only. It reads lower and re-scores your history.").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Deep sleep pools HRV over slow-wave sleep only. It reads lower and re-scores your history.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }.padding(.vertical, 12)
             }
             NunaSettingsGroup("Effort") {
@@ -73,8 +73,8 @@ struct NunaExperimentsView: View {
         NunaDetailScreen("Experiments") {
             NunaCard(small: true) {
                 VStack(alignment: .leading, spacing: 6) {
-                    HStack { Text("Still being tested").font(.system(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary); Spacer(); NunaChip(verbatim: String(localized: "\(on) on")) }
-                    Text("These can change or be less accurate, and none is medical. Turn one off to go back to the standard behaviour.").font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    HStack { Text("Still being tested").font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary); Spacer(); NunaChip(verbatim: String(localized: "\(on) on")) }
+                    Text("These can change or be less accurate, and none is medical. Turn one off to go back to the standard behaviour.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }
             }
             NunaSettingsGroup("Daily features") {
@@ -103,7 +103,6 @@ struct NunaExperimentsView: View {
 // MARK: - About and help (About.dc)
 
 struct NunaAboutView: View {
-    @State private var showWhatsNew = false
     private var version: String { UpdateWatch.installedVersion }
     private var build: String { (Bundle.main.infoDictionary?["CFBundleVersion"] as? String).flatMap { $0.isEmpty ? nil : $0 } ?? "–" }
 
@@ -113,17 +112,17 @@ struct NunaAboutView: View {
                 HStack(spacing: 14) {
                     NunaIconTile("waveform.path.ecg")
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("PHMNOOP").font(.system(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: "v\(version) · build \(build)").font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("PHMNOOP").font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: "v\(version) · build \(build)").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     Spacer()
-                    Button { showWhatsNew = true } label: { Text("What's new").font(.system(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 36).background(NunaPalette.glassStrong, in: Capsule()) }.buttonStyle(.plain)
+                    NavigationLink { NunaWhatsNewView() } label: { Text("What's new").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 36).background(NunaPalette.glassStrong, in: Capsule()) }.buttonStyle(.plain)
                 }
             }
             NunaSettingsGroup("How it works") {
-                NavigationLink { HowNoopWorksView(onClose: {}) } label: { NunaListRow("How the app works", subtitle: "Sleep detection, scores, recording and where numbers come from", systemImage: "questionmark.circle", showsChevron: true) }.buttonStyle(.plain)
+                NavigationLink { NunaHowItWorksView() } label: { NunaListRow("How the app works", subtitle: "Sleep detection, scores, recording and where numbers come from", systemImage: "questionmark.circle", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
-                NavigationLink { ScoringGuideView(onClose: {}) } label: { NunaListRow("How scores are worked out", subtitle: "Charge, Effort and Rest", systemImage: "chart.bar.doc.horizontal", showsChevron: true) }.buttonStyle(.plain)
+                NavigationLink { NunaScoringGuideView() } label: { NunaListRow("How scores are worked out", subtitle: "Charge, Effort and Rest", systemImage: "chart.bar.doc.horizontal", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
                 NavigationLink(value: NunaDeviceRoute.models) { NunaListRow("Models and support", subtitle: "WHOOP 4.0, 5.0 and MG", systemImage: "square.stack.3d.up", showsChevron: true) }.buttonStyle(.plain)
             }
@@ -137,12 +136,11 @@ struct NunaAboutView: View {
             NunaCard(small: true) {
                 VStack(alignment: .leading, spacing: 8) {
                     nunaTrendsCap("Credits")
-                    Text("PHMNOOP is an internal fork of NOOP by ryanbr, with an iOS layer, Apple Health integration and on-device Anya. The Nes 2011 (HUNT) non-exercise model is used for fitness age.").font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    Text("PHMNOOP is an internal fork of NOOP by ryanbr, with an iOS layer, Apple Health integration and on-device Anya. The Nes 2011 (HUNT) non-exercise model is used for fitness age.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
             nunaFootnote("Not a medical device. It does not diagnose or detect disease and does not replace a professional. Not affiliated with WHOOP, Inc.")
         }
-        .sheet(isPresented: $showWhatsNew) { WhatsNewView(onClose: { showWhatsNew = false }) }
     }
 }
 #endif

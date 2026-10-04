@@ -199,12 +199,23 @@ Built in `StrandiOS/Nuna/Me/` and `NunaMeView.swift`. Every Me row now opens a N
 
 Appearance follow-up: Theme, accent and typography have their own screen (`NunaThemeView`) with a live preview. Theme is Automatic / Light / Dark (the Nuna palette is now adaptive: `NunaPalette` tokens carry a light and a dark value, and the UIKit windows are set too so pushed pages follow); the accent (white, green, blue, steel, yellow) colours buttons, selections and the FAB through `NunaPalette.accent`, while data colours stay fixed; typography is Bold (rounded), Geometric (expanded width) or System. Language no longer has its own screen: the row opens iOS Settings. Units is a full screen (body, distance, temperature, skin temperature, Effort scale, preview). Light mode was only checked on a few screens; the many white-on-black details drawn inside charts follow the adaptive ink, but each screen has not been reviewed one by one.
 
+Second pass (Me audit against the Design Canvas and the Default screens):
+- Appearance was rewritten to match Appearance.dc: Experience (Nuna or Default), Language (opens iOS Settings), Units, a live Preview, Theme, Accent, Typography, Text size (Small to Extra large, applied through `Font.nuna`) and Density (Roomy, Standard, Compact, applied through `NunaSpacing`), and App icon (Default, Navy, PHMNOOP, through `UIApplication.setAlternateIconName`). The Today layout, Haptics, Live Activity and Morning brief are not repeated here: Haptics live under Strap automations, the Live Activity (new switch) under Optional features, and the morning brief under Anya.
+- Widgets and Lock Screen (`NunaWidgetSettings`): freshness of the shared widget snapshot, refresh now, the widgets that exist and how to add one.
+- Import (`NunaImport`): WHOOP export, Apple Health export, nutrition CSV, Hevy and Liftosaur, GPX/TCX/FIT, and removing imported Apple Health data, over the same importers as the Default screen.
+- Strava (`NunaStrava`): off, setup (credentials in the Keychain, callback URI), connected, and the upload queue, over `StravaExperiment`.
+- Test Centre (`NunaTestCentre`): the test modes and diagnostics. The bug-report bundle and the probes that write to the strap stay on the Default Test Centre screen, opened from here, so their confirmation gates are unchanged.
+- About: What's new, How the app works and How scores are worked out are new Nuna screens (`NunaAbout`) reading the same copy as the Default ones (`AppChangelog`, `HowNoopWorksView.Section`, `ScoreSection`). The release notes themselves are English only.
+- Persona has the profile photo; the Live Activity switch was added to Optional features.
+- Indonesian: about 520 strings were added so the Me area, Appearance, About and the dynamic strings in the other Nuna screens follow the app language (checked against the compiler's `.stringsdata` so format specifiers match).
+
 Not built, and why:
-- Mockups for AutoAlerts, AutoCoaching, Widgets, WidgetsLock, WidgetSettings, WidgetVital*, Strava (Setup, Connected), TestCentre and the Connected step. Widgets are Phase 8; Strava and Test Centre keep their existing screens (reached from the new Data hub and Advanced); the heart-rate zone vibration coaching and the finer per-cue alert switches have no separate store beyond the switches already on the Automations screen.
-- The photo and name edit on Persona (the profile has no name field; the avatar stays on the Default Profile screen).
+- Add a device wizard (`AddDeviceWizard`, Devices > Add a device and Repair) still uses the Default design. It drives Bluetooth pairing, so a re-skin needs a strap to test and was left alone.
+- The launch What's New sheet shown once after an update still uses the Default view.
+- Mockups for AutoAlerts, AutoCoaching, Widgets, WidgetsLock, WidgetVital* and the Connected step. Widgets are Phase 8; the heart-rate zone vibration coaching and the finer per-cue alert switches have no separate store beyond the switches already on the Automations screen.
 - Quiet hours for notifications, the bedtime and journal reminder times, and the per-notification schedule rows from Notifications.dc: the app has no such stores; the screen shows what exists and does not draw switches that would do nothing.
-- Language preview and the app-restart behaviour were not exercised.
-- Importing files from the Data hub and restoring a backup were not run (they replace data).
+- Importing files from the Data hub and restoring a backup were not run (they replace data). Strava connecting and uploading were not run against Strava.
+- Release notes and a few shared labels (units such as 30D, bpm) are not translated.
 
 ## Phase 8: Widgets (M)
 

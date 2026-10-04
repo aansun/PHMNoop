@@ -60,8 +60,8 @@ struct NunaUnitsView: View {
         NunaCard {
             VStack(alignment: .leading, spacing: 12) {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(title).font(.system(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(note).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(title).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(note).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 c()
             }
@@ -69,8 +69,8 @@ struct NunaUnitsView: View {
     }
     private func preview(_ l: LocalizedStringKey, _ v: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(l).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: v).font(.system(size: 19, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(verbatim: v).font(.nuna(size: 19, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 }
@@ -84,7 +84,7 @@ struct NunaLanguageView: View {
 
     var body: some View {
         NunaDetailScreen("Language") {
-            Text("The app is available in Indonesian, English and more. Dates and numbers follow the language.").font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+            Text("The app is available in Indonesian, English and more. Dates and numbers follow the language.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
                     ForEach(Array(AppLanguage.allCases.enumerated()), id: \.element.id) { i, l in
@@ -92,11 +92,11 @@ struct NunaLanguageView: View {
                         Button { raw = l.rawValue; AppLanguage.apply(l.rawValue) } label: {
                             HStack {
                                 VStack(alignment: .leading, spacing: 3) {
-                                    Text(verbatim: l == .system ? String(localized: "Follow iPhone") : l.autonym).font(.system(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                    if l == .system { Text("Uses the iPhone's language when the app has it, otherwise English").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                                    Text(verbatim: l == .system ? String(localized: "Follow iPhone") : l.autonym).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                    if l == .system { Text("Uses the iPhone's language when the app has it, otherwise English").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                                 }
                                 Spacer()
-                                Image(systemName: current == l ? "checkmark.circle.fill" : "circle").font(.system(size: 21)).foregroundStyle(current == l ? NunaPalette.textPrimary : NunaPalette.textMuted)
+                                Image(systemName: current == l ? "checkmark.circle.fill" : "circle").font(.nuna(size: 21)).foregroundStyle(current == l ? NunaPalette.textPrimary : NunaPalette.textMuted)
                             }.padding(.vertical, 14).contentShape(Rectangle())
                         }.buttonStyle(.plain)
                     }
@@ -108,7 +108,7 @@ struct NunaLanguageView: View {
                 }.buttonStyle(.plain)
             }
             Button { openIOSSettings() } label: {
-                Text("Open language in iOS Settings").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.glassStrong, in: Capsule())
+                Text("Open language in iOS Settings").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.glassStrong, in: Capsule())
             }.buttonStyle(.plain)
             nunaFootnote("Changing the language reloads the app for a moment. Units are set separately.")
         }
@@ -123,13 +123,14 @@ struct NunaFeaturesView: View {
     @AppStorage(PuffinExperiment.journalReminderKey) private var journal = true
     @AppStorage("workoutKeepScreenOn") private var keepOn = false
     @AppStorage(ScreenIdle.strapSyncKeepAwakeKey) private var syncKeepOn = false
+    @AppStorage(UnitPrefs.liveActivityKey) private var liveActivity = true
     @AppStorage(AppModel.cycleAwarenessKey) private var cycle = false
     @AppStorage(AppModel.cycleAwarenessHiddenKey) private var cycleHidden = false
     @EnvironmentObject private var profile: ProfileStore
 
     var body: some View {
         NunaDetailScreen("Optional features") {
-            Text("Turn on what you use. What is off does not appear in Today.").font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text("Turn on what you use. What is off does not appear in Today.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             NunaSettingsGroup {
                 NunaToggleRow("Water tracker", subtitle: "A drink log with a daily target", systemImage: "drop", isOn: $hydration).padding(.vertical, 8)
                 NunaDivider()
@@ -138,6 +139,8 @@ struct NunaFeaturesView: View {
                 NunaToggleRow("Journal reminder", subtitle: "A reminder card in Today", systemImage: "book", isOn: $journal).padding(.vertical, 8)
                 NunaDivider()
                 NunaToggleRow("Screen on during workouts", subtitle: "Heart rate stays visible while recording", systemImage: "sun.max", isOn: $keepOn).padding(.vertical, 8)
+                NunaDivider()
+                NunaToggleRow("Live Activity", subtitle: "Heart rate and your session on the Lock Screen and Dynamic Island", systemImage: "iphone.gen3", isOn: $liveActivity).padding(.vertical, 8)
                 NunaDivider()
                 NunaToggleRow("Screen on while syncing", subtitle: "So a long sync finishes without locking", systemImage: "arrow.triangle.2.circlepath", isOn: $syncKeepOn).padding(.vertical, 8)
                 if profile.cycleAwarenessApplies {
@@ -166,13 +169,13 @@ struct NunaNotificationsView: View {
         NunaDetailScreen("Notifications") {
             NunaCard(small: true) {
                 HStack(spacing: 12) {
-                    Image(systemName: status == .authorized || status == .provisional ? "checkmark.circle.fill" : "bell.slash").font(.system(size: 20)).foregroundStyle(status == .authorized ? NunaPalette.charge : NunaPalette.textSecondary)
+                    Image(systemName: status == .authorized || status == .provisional ? "checkmark.circle.fill" : "bell.slash").font(.nuna(size: 20)).foregroundStyle(status == .authorized ? NunaPalette.charge : NunaPalette.textSecondary)
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(status == .authorized || status == .provisional ? "iOS permission is on" : (status == .denied ? "iOS permission is off" : "iOS has not been asked yet")).font(.system(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("Every notification is made on this iPhone, with no server.").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(status == .authorized || status == .provisional ? "iOS permission is on" : (status == .denied ? "iOS permission is off" : "iOS has not been asked yet")).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("Every notification is made on this iPhone, with no server.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     Spacer()
-                    if status == .denied { Button("Open") { openIOSSettings() }.font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary) }
+                    if status == .denied { Button("Open") { openIOSSettings() }.font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary) }
                 }
             }
             NunaSettingsGroup("Recovery and sleep") {
@@ -214,9 +217,9 @@ struct NunaPrivacyView: View {
         NunaDetailScreen("Privacy") {
             NunaCard(highlight: true) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Image(systemName: "lock.shield").font(.system(size: 22, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("Your data stays on this iPhone").font(.system(size: 20, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("There is no account and no server. Scores are computed on the device from the strap and Apple Health.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    Image(systemName: "lock.shield").font(.nuna(size: 22, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("Your data stays on this iPhone").font(.nuna(size: 20, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("There is no account and no server. Scores are computed on the device from the strap and Apple Health.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
             NunaSettingsGroup("iOS permissions") {

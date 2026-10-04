@@ -98,6 +98,25 @@ public enum NunaThemePrefs {
         public var design: Font.Design { self == .bold ? .rounded : .default }
     }
 
+    public static let textSizeKey = "nuna.textSize"
+    public static let densityKey = "nuna.density"
+
+    /// Text size steps. The factor multiplies every Nuna font size.
+    public enum TextSize: String, CaseIterable, Identifiable {
+        case small, standard, large, xlarge
+        public var id: String { rawValue }
+        public var factor: CGFloat { switch self { case .small: return 0.92; case .standard: return 1; case .large: return 1.08; case .xlarge: return 1.18 } }
+    }
+
+    public enum Density: String, CaseIterable, Identifiable {
+        case roomy, standard, compact
+        public var id: String { rawValue }
+        public var factor: CGFloat { switch self { case .roomy: return 1.15; case .standard: return 1; case .compact: return 0.85 } }
+    }
+
+    public static var textSize: TextSize { TextSize(rawValue: UserDefaults.standard.string(forKey: textSizeKey) ?? "") ?? .standard }
+    public static var density: Density { Density(rawValue: UserDefaults.standard.string(forKey: densityKey) ?? "") ?? .standard }
+
     public static var accent: Accent { Accent(rawValue: UserDefaults.standard.string(forKey: accentKey) ?? "") ?? .ink }
     public static var typography: Typography { Typography(rawValue: UserDefaults.standard.string(forKey: typographyKey) ?? "") ?? .bold }
 }
@@ -112,6 +131,13 @@ public enum NunaTheme {
     }
     public static var mode: Mode { Mode(rawValue: UserDefaults.standard.string(forKey: storageKey) ?? "") ?? .dark }
     public static var colorScheme: ColorScheme? { mode.scheme }
+}
+
+public extension Font {
+    /// The Nuna system font at a design size, multiplied by the wearer's text size choice.
+    static func nuna(size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> Font {
+        .system(size: (size * NunaThemePrefs.textSize.factor * 2).rounded() / 2, weight: weight, design: design)
+    }
 }
 
 /// The font design the Nuna screens use for numerals and headings.
@@ -131,10 +157,11 @@ public enum NunaRadius {
 }
 
 public enum NunaSpacing {
+    // Section and card spacing follow the density choice (Roomy / Standard / Compact).
     public static let screenH: CGFloat = 20
-    public static let section: CGFloat = 16
-    public static let cardInner: CGFloat = 18
-    public static let cardInnerSmall: CGFloat = 14
+    public static var section: CGFloat { (16 * NunaThemePrefs.density.factor).rounded() }
+    public static var cardInner: CGFloat { (18 * NunaThemePrefs.density.factor).rounded() }
+    public static var cardInnerSmall: CGFloat { (14 * NunaThemePrefs.density.factor).rounded() }
     public static let tabBarBottom: CGFloat = 24
 }
 

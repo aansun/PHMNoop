@@ -16,19 +16,19 @@ struct NunaDetailHeader: View {
     var body: some View {
         HStack(spacing: 10) {
             Button { dismiss() } label: {
-                Image(systemName: "chevron.left").font(.system(size: 16, weight: .bold))
+                Image(systemName: "chevron.left").font(.nuna(size: 16, weight: .bold))
                     .foregroundStyle(NunaPalette.textPrimary)
                     .frame(width: 44, height: 44)
                     .background(NunaPalette.glassStrong, in: Circle())
                     .overlay(Circle().strokeBorder(NunaPalette.hairline, lineWidth: 1))
             }
             .accessibilityLabel(Text("Back"))
-            Text(title).font(.system(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+            Text(title).font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             Spacer(minLength: 8)
             if let trailing { trailing }
             if let onAnya {
                 Button(action: onAnya) {
-                    Image(systemName: "sparkles").font(.system(size: 17, weight: .bold))
+                    Image(systemName: "sparkles").font(.nuna(size: 17, weight: .bold))
                         .foregroundStyle(NunaPalette.onAccent)
                         .frame(width: 44, height: 44).background(NunaPalette.accent, in: Circle())
                 }
@@ -85,21 +85,21 @@ struct NunaHeroCard<Footer: View>: View {
         NunaCard(padding: EdgeInsets(top: 22, leading: 22, bottom: 22, trailing: 22)) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text(caption).font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
+                    Text(caption).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     if let chip { NunaChip(chip, color: chipColor) }
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(verbatim: number)
-                        .font(.system(size: 72, weight: .bold, design: NunaType.design))
+                        .font(.nuna(size: 72, weight: .bold, design: NunaType.design))
                         .foregroundStyle(color)
                         .minimumScaleFactor(0.5).lineLimit(1)
                     if !unit.isEmpty {
-                        Text(verbatim: unit).font(.system(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: unit).font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     if !suffix.isEmpty {
-                        Text(verbatim: suffix).font(.system(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: suffix).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                 }
                 footer
@@ -141,7 +141,7 @@ struct NunaGaugeHeroCard<Note: View>: View {
         NunaCard(padding: EdgeInsets(top: 22, leading: 22, bottom: 22, trailing: 22)) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
-                    Text(caption).font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
+                    Text(caption).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     if let chip { NunaChip(chip, color: chipColor) }
@@ -150,14 +150,14 @@ struct NunaGaugeHeroCard<Note: View>: View {
                     NunaRingGauge(fraction: fraction, color: color, size: 128, lineWidth: 12) {
                         VStack(spacing: 0) {
                             HStack(alignment: .firstTextBaseline, spacing: 1) {
-                                Text(verbatim: number).font(.system(size: 34, weight: .bold, design: NunaType.design))
+                                Text(verbatim: number).font(.nuna(size: 34, weight: .bold, design: NunaType.design))
                                     .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
                                 if !unit.isEmpty && number != "–" {
-                                    Text(verbatim: unit).font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                                    Text(verbatim: unit).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                                 }
                             }
                             if !suffix.isEmpty {
-                                Text(verbatim: suffix).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                                Text(verbatim: suffix).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                             }
                         }
                     }
@@ -185,17 +185,17 @@ struct NunaExpandRow: View {
                     HStack(spacing: 12) {
                         NunaIconTile(systemImage)
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(title).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            Text(subtitle).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(subtitle).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                         Spacer(minLength: 8)
-                        Image(systemName: "chevron.down").font(.system(size: 13, weight: .bold))
+                        Image(systemName: "chevron.down").font(.nuna(size: 13, weight: .bold))
                             .foregroundStyle(NunaPalette.textMuted).rotationEffect(.degrees(open ? 180 : 0))
                     }
                 }
                 .buttonStyle(.plain)
                 if open {
-                    Text(text).font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(text).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -227,7 +227,7 @@ struct NunaDateAxis: View {
                 if dates.count > 4 { Text(verbatim: nunaAxisDate(dates[dates.count / 2])); Spacer() }
                 Text(verbatim: nunaAxisDate(last))
             }
-            .font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
         }
     }
 }
@@ -259,7 +259,7 @@ struct NunaColorBars: View {
                     ForEach(values.indices, id: \.self) { i in
                         VStack(spacing: 2) {
                             if let v = values[i], !dense || i == topIdx || i == lastIdx {
-                                Text(verbatim: format(v)).font(.system(size: 9.5, weight: .bold)).monospacedDigit()
+                                Text(verbatim: format(v)).font(.nuna(size: 9.5, weight: .bold)).monospacedDigit()
                                     .foregroundStyle(NunaPalette.textSecondary).fixedSize().frame(width: w)
                                     // keep the last label inside the card
                                     .offset(x: (dense && i >= values.count - 2) ? -8 : 0)
@@ -278,7 +278,7 @@ struct NunaColorBars: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
                 .overlay {
                     if present.isEmpty {
-                        Text("No data in this period").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("No data in this period").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                 }
             }
@@ -286,7 +286,7 @@ struct NunaColorBars: View {
             if values.count <= 7, dates.count == values.count {
                 HStack(spacing: 0) {
                     ForEach(dates.indices, id: \.self) { i in
-                        Text(verbatim: nunaAxisDate(dates[i])).font(.system(size: 10, weight: .semibold))
+                        Text(verbatim: nunaAxisDate(dates[i])).font(.nuna(size: 10, weight: .semibold))
                             .foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.7).frame(maxWidth: .infinity)
                     }
                 }
@@ -313,7 +313,7 @@ struct NunaColumns: View {
         HStack(alignment: .bottom, spacing: 4) {
             ForEach(items) { item in
                 VStack(spacing: 6) {
-                    Text(verbatim: item.valueText ?? "–").font(.system(size: 10.5, weight: .bold)).monospacedDigit()
+                    Text(verbatim: item.valueText ?? "–").font(.nuna(size: 10.5, weight: .bold)).monospacedDigit()
                         .foregroundStyle(item.highlight ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                         .lineLimit(1).minimumScaleFactor(0.6)
                     ZStack(alignment: .bottom) {
@@ -323,9 +323,9 @@ struct NunaColumns: View {
                             .opacity(item.fraction == nil ? 0 : 1)
                     }
                     VStack(spacing: 1) {
-                        Text(verbatim: item.weekday).font(.system(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textPrimary.opacity(item.highlight ? 1 : 0.8))
+                        Text(verbatim: item.weekday).font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textPrimary.opacity(item.highlight ? 1 : 0.8))
                         if showsDates {
-                            Text(verbatim: nunaAxisDate(item.date)).font(.system(size: 9.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: nunaAxisDate(item.date)).font(.nuna(size: 9.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                                 .lineLimit(1).minimumScaleFactor(0.7)
                         }
                     }
@@ -366,7 +366,7 @@ struct NunaLine2Chart: View {
             .pointValueStride(max(1, Int((Double(vals.count) / 12).rounded(.up))))
         } else {
             Text(vals.count == 1 ? "Not enough data yet" : "No data in this period")
-                .font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 .frame(maxWidth: .infinity, minHeight: 120)
         }
     }

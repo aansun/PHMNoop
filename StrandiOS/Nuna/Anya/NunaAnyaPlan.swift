@@ -32,12 +32,12 @@ struct NunaAnyaPlanView: View {
             } else if loaded {
                 NunaCard {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("No plan yet").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("Anya needs today's Charge to suggest a session. Wear the strap overnight and sync, then come back.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("No plan yet").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("Anya needs today's Charge to suggest a session. Wear the strap overnight and sync, then come back.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-            Text("A suggestion from your own numbers, not a prescription. Listen to how you feel and stop if something hurts.").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+            Text("A suggestion from your own numbers, not a prescription. Listen to how you feel and stop if something hurts.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
         }
         .task(id: repo.refreshSeq) { await load() }
     }
@@ -52,8 +52,8 @@ struct NunaAnyaPlanView: View {
                     Spacer()
                     NunaChip(verbatim: String(localized: "Charge \(charge)%"))
                 }
-                Text(verbatim: title(plan)).font(.system(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
-                Text(verbatim: blurb(plan.kind)).font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                Text(verbatim: title(plan)).font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                Text(verbatim: blurb(plan.kind)).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 NunaDivider()
                 HStack {
                     tile("Duration", String(format: "%d:00", plan.totalMinutes), nil)
@@ -66,9 +66,9 @@ struct NunaAnyaPlanView: View {
 
     private func tile(_ l: LocalizedStringKey, _ v: String, _ note: String?) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(l).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: v).font(.system(size: 21, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
-            if let note { Text(verbatim: note).font(.system(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) }
+            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(verbatim: v).font(.nuna(size: 21, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
+            if let note { Text(verbatim: note).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) }
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -80,11 +80,11 @@ struct NunaAnyaPlanView: View {
                     ForEach(Array(plan.steps.enumerated()), id: \.offset) { i, s in
                         if i > 0 { NunaDivider() }
                         HStack(alignment: .top, spacing: 14) {
-                            Text(verbatim: "\(i + 1)").font(.system(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 30, height: 30).background(NunaPalette.glassStrong, in: Circle())
+                            Text(verbatim: "\(i + 1)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 30, height: 30).background(NunaPalette.glassStrong, in: Circle())
                             VStack(alignment: .leading, spacing: 4) {
-                                HStack { Text(phaseName(s.phase)).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary); Spacer()
-                                    Text(verbatim: String(localized: "\(s.minutes) min")).font(.system(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary) }
-                                Text(verbatim: instruction(s, plan.kind)).font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                                HStack { Text(phaseName(s.phase)).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary); Spacer()
+                                    Text(verbatim: String(localized: "\(s.minutes) min")).font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary) }
+                                Text(verbatim: instruction(s, plan.kind)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                             }
                         }.padding(.vertical, 14)
                     }
@@ -96,17 +96,17 @@ struct NunaAnyaPlanView: View {
     private func zonesCard(_ plan: DayPlan.Plan) -> some View {
         NunaCard {
             VStack(alignment: .leading, spacing: 12) {
-                HStack { nunaTrendsCap("Heart-rate zones"); Spacer(); Text(verbatim: String(localized: "Max \(Int(zones.maxHR)) bpm")).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                HStack { nunaTrendsCap("Heart-rate zones"); Spacer(); Text(verbatim: String(localized: "Max \(Int(zones.maxHR)) bpm")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                 HStack(spacing: 4) {
                     ForEach(zones.zones, id: \.number) { z in
                         RoundedRectangle(cornerRadius: 6).fill(z.number == plan.mainZone ? NunaPalette.accent : NunaPalette.ink.opacity(0.12)).frame(height: 14)
                     }
                 }
                 HStack { ForEach(zones.zones, id: \.number) { z in
-                    Text(verbatim: "Z\(z.number)").font(.system(size: 11.5, weight: .bold)).foregroundStyle(z.number == plan.mainZone ? NunaPalette.textPrimary : NunaPalette.textSecondary).frame(maxWidth: .infinity)
+                    Text(verbatim: "Z\(z.number)").font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(z.number == plan.mainZone ? NunaPalette.textPrimary : NunaPalette.textSecondary).frame(maxWidth: .infinity)
                 } }
                 if let z = zones.zones.first(where: { $0.number == plan.mainZone }) {
-                    Text(verbatim: String(localized: "Zone \(plan.mainZone): \(Int(z.lower.rounded()))–\(Int(z.upper.rounded())) bpm")).font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: String(localized: "Zone \(plan.mainZone): \(Int(z.lower.rounded()))–\(Int(z.upper.rounded())) bpm")).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 }
             }
         }
@@ -116,10 +116,10 @@ struct NunaAnyaPlanView: View {
         NunaCard(small: true) {
             VStack(alignment: .leading, spacing: 10) {
                 nunaTrendsCap("Why this")
-                Text(verbatim: reasons(plan, charge).joined(separator: " ")).font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                Text(verbatim: reasons(plan, charge).joined(separator: " ")).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                 HStack(spacing: 6) {
-                    Text("Read:").font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                    ForEach(readNames, id: \.self) { Text(verbatim: $0).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                    Text("Read:").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    ForEach(readNames, id: \.self) { Text(verbatim: $0).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                 }
             }.frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -136,14 +136,14 @@ struct NunaAnyaPlanView: View {
     private func actions(_ plan: DayPlan.Plan, _ charge: Int) -> some View {
         VStack(spacing: 12) {
             Button { router.requestedDestination = .activeWorkout } label: {
-                Text("Start session").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: Capsule())
+                Text("Start session").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: Capsule())
             }.buttonStyle(.plain)
             if coach.isConfigured {
                 Button {
                     coach.pendingPrompt = "Here is the session you suggested for today: \(title(plan)), main zone \(plan.mainZone). My Charge is \(charge)%. Adjust it to fit my day and explain the change."
                     router.requestedDestination = .coach
                 } label: {
-                    Text("Ask Anya to change it").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
+                    Text("Ask Anya to change it").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
                 }.buttonStyle(.plain)
             }
         }

@@ -22,7 +22,7 @@ struct NunaQuickSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             Text("Quick actions")
-                .font(.system(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design))
+                .font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design))
                 .foregroundStyle(NunaPalette.textPrimary)
                 .padding(.top, 22)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 14) {
@@ -37,14 +37,14 @@ struct NunaQuickSheet: View {
                 Button { go(.coach) } label: {
                     NunaCard(small: true, padding: EdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 14)) {
                         HStack(spacing: 12) {
-                            Image(systemName: "sparkles").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
+                            Image(systemName: "sparkles").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
                                 .frame(width: 40, height: 40).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Ask Anya").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                Text("About today, by voice or text").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                Text("Ask Anya").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                Text("About today, by voice or text").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                             }
                             Spacer(minLength: 4)
-                            Image(systemName: "chevron.right").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                            Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                         }
                     }
                 }
@@ -78,13 +78,13 @@ struct NunaQuickSheet: View {
             HStack(spacing: 12) {
                 NunaIconTile("drop", tint: NunaPalette.effortText)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Water today").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("Water today").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Text(verbatim: String(localized: "\(liters(waterML)) of \(liters(goalML)) L"))
-                        .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 Spacer(minLength: 4)
                 Button { Task { await undoWater() } } label: {
-                    Image(systemName: "minus").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Image(systemName: "minus").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: Circle())
                 }
                 .buttonStyle(.plain).accessibilityLabel(Text("Remove last drink"))
@@ -126,11 +126,11 @@ struct NunaQuickSheet: View {
     private func tile(_ title: LocalizedStringKey, _ icon: String, _ tint: Color?, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: 8) {
-                Image(systemName: icon).font(.system(size: 22, weight: .semibold))
+                Image(systemName: icon).font(.nuna(size: 22, weight: .semibold))
                     .foregroundStyle(NunaPalette.textPrimary)
                     .frame(width: 60, height: 60)
                     .background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-                Text(title).font(.system(size: 12.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+                Text(title).font(.nuna(size: 12.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
                     .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.8)
             }
             .frame(maxWidth: .infinity)

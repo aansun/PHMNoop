@@ -96,22 +96,22 @@ struct NunaTrendsMetricView: View {
                 HStack(alignment: .top, spacing: 18) {
                     NunaRingGauge(fraction: frac, color: color, size: 112, lineWidth: 10) {
                         HStack(alignment: .firstTextBaseline, spacing: 1) {
-                            Text(verbatim: NunaTrendsFormat.num(now, decimals)).font(.system(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            if !unit.isEmpty { Text(verbatim: unit).font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+                            Text(verbatim: NunaTrendsFormat.num(now, decimals)).font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                         }
                     }
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(verbatim: String(localized: "\(range)-day average")).font(.system(size: 11.5, weight: .heavy)).tracking(1.1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: String(localized: "\(range)-day average")).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         if let now { NunaChip(level(now), color: color) }
                         if let d, abs(d) >= (kind == .effort ? 0.05 : 0.5) {
                             Text(verbatim: (d > 0 ? "▲ " : "▼ ") + String(format: "%.\(kind == .effort ? 1 : 1)f", locale: AppLanguage.activeLocale, abs(d)) + (kind == .effort ? "" : " " + String(localized: "points")))
-                                .font(.system(size: 14, weight: .heavy)).foregroundStyle(kind == .effort ? NunaPalette.textSecondary : ((d > 0) ? NunaPalette.charge : NunaPalette.warning))
+                                .font(.nuna(size: 14, weight: .heavy)).foregroundStyle(kind == .effort ? NunaPalette.textSecondary : ((d > 0) ? NunaPalette.charge : NunaPalette.warning))
                         }
-                        if let before { Text(verbatim: String(localized: "Previous period \(NunaTrendsFormat.num(before, decimals))\(unit)")).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                        if let before { Text(verbatim: String(localized: "Previous period \(NunaTrendsFormat.num(before, decimals))\(unit)")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                     }
                     Spacer(minLength: 0)
                 }
-                Text(verbatim: heroSentence(d)).font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                Text(verbatim: heroSentence(d)).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
             }
         }
     }
@@ -161,7 +161,7 @@ struct NunaTrendsMetricView: View {
                         mini("Days", "\(vals.count)")
                     }
                 } else {
-                    Text("No data in this period").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("No data in this period").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
             }
         }
@@ -169,8 +169,8 @@ struct NunaTrendsMetricView: View {
 
     private func mini(_ l: LocalizedStringKey, _ v: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(l).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: v).font(.system(size: 19, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(verbatim: v).font(.nuna(size: 19, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -185,9 +185,9 @@ struct NunaTrendsMetricView: View {
                         let ci = kind == .effort ? i : (zoneNames.count - 1 - i)
                         HStack(spacing: 10) {
                             Circle().fill(zoneColors[ci]).frame(width: 9, height: 9)
-                            Text(zoneNames[ci]).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(zoneNames[ci]).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             Spacer()
-                            Text(verbatim: String(localized: "\(counts[ci]) days")).font(.system(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: String(localized: "\(counts[ci]) days")).font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         }
                     }
                     NunaProportionBar(parts: (0..<counts.count).map { (Double(counts[$0]), zoneColors[$0]) }, height: 10)
@@ -206,7 +206,7 @@ struct NunaTrendsMetricView: View {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
                     if t.isEmpty {
-                        Text("No data in this period").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("No data in this period").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     } else {
                         NunaColumns(items: t.enumerated().map { i, w in
                             NunaColumns.Item(weekday: "W\(i + 1)", date: m.date(w.endDay) ?? Date(), fraction: w.total / top,
@@ -215,7 +215,7 @@ struct NunaTrendsMetricView: View {
                         if let last = t.last {
                             let avg = t.map(\.total).reduce(0, +) / Double(t.count)
                             Text(verbatim: String(localized: "Total Effort for every 7 days. This week \(NunaTrendsFormat.num(disp(last.total), 0)), average \(NunaTrendsFormat.num(disp(avg), 0))."))
-                                .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                     }
                 }
@@ -252,7 +252,7 @@ struct NunaTrendsMetricView: View {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
                     if means.count < 3 {
-                        Text("Not enough days yet to show a pattern.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Not enough days yet to show a pattern.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     } else {
                         NunaColumns(items: order.map { wd in
                             let v = means[wd]
@@ -261,7 +261,7 @@ struct NunaTrendsMetricView: View {
                         }, color: bar, highlightColor: color, showsDates: false)
                         if let hi, let lo, hi.key != lo.key {
                             Text(verbatim: String(localized: "Highest on \(longDay(hi.key)), lowest on \(longDay(lo.key))."))
-                                .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                     }
                 }
@@ -293,10 +293,10 @@ struct NunaTrendsMetricView: View {
             VStack(alignment: .leading, spacing: 10) {
                 nunaTrendsCap("Against the previous period")
                 HStack {
-                    Text(title).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(title).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Spacer()
-                    Text(verbatim: NunaTrendsFormat.num(now, kind == .effort ? 1 : 1) + unit).font(.system(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(verbatim: "vs " + NunaTrendsFormat.num(before, 1)).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: NunaTrendsFormat.num(now, kind == .effort ? 1 : 1) + unit).font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: "vs " + NunaTrendsFormat.num(before, 1)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 NunaProgressBar(fraction: (now ?? 0) / top, color: bar)
                 NunaProgressBar(fraction: (before ?? 0) / top, color: NunaPalette.ink.opacity(0.3)).frame(height: 5)

@@ -24,7 +24,7 @@ struct HowNoopWorksView: View {
 
     /// The four primer sections, in the order the spec lists them. The icon + tint give
     /// each card its own glance-able identity, echoing the colour worlds used elsewhere.
-    private enum Section: CaseIterable, Identifiable {
+    enum Section: CaseIterable, Identifiable {
         case sleepSorting
         case scores
         case recording
@@ -219,7 +219,7 @@ struct HowNoopWorksView: View {
     /// The four scores, each named with the PUBLISHED method family it follows. Honest about the
     /// approach without faking precision: it cites the method, not a proprietary-identical claim. Order
     /// mirrors the app's score order (Charge, Effort, Rest, Fitness Age); the tint matches each domain.
-    private enum ScoreMethod: CaseIterable, Identifiable {
+    enum ScoreMethod: CaseIterable, Identifiable {
         case charge, effort, rest, fitnessAge
         var id: Self { self }
 

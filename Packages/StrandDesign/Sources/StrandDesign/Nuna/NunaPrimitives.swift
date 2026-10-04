@@ -20,7 +20,7 @@ public struct NunaButtonStyle: ButtonStyle {
 
     public func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 15, weight: .heavy))
+            .font(.nuna(size: 15, weight: .heavy))
             .foregroundStyle(foreground)
             .padding(.horizontal, 22)
             .frame(maxWidth: fullWidth ? .infinity : nil)
@@ -73,7 +73,7 @@ public struct NunaIconButton: View {
     public var body: some View {
         Button(action: action) {
             Image(systemName: systemImage)
-                .font(.system(size: 16, weight: .bold))
+                .font(.nuna(size: 16, weight: .bold))
                 .foregroundStyle(filled ? NunaPalette.onAccent : NunaPalette.textPrimary)
                 .frame(width: 44, height: 44)
                 .background(filled ? NunaPalette.accent : NunaPalette.glassStrong, in: Circle())
@@ -94,7 +94,7 @@ public struct NunaFAB: View {
     public var body: some View {
         Button(action: action) {
             Image(systemName: "plus")
-                .font(.system(size: 24, weight: .bold))
+                .font(.nuna(size: 24, weight: .bold))
                 .foregroundStyle(NunaPalette.onAccent)
                 .frame(width: 58, height: 58)
                 .background(NunaPalette.accent, in: Circle())
@@ -123,7 +123,7 @@ public struct NunaHeader<Trailing: View>: View {
                 NunaIconButton("chevron.left", label: "Back", action: onBack)
             }
             Text(title)
-                .font(.system(size: onBack == nil ? NunaTypeSize.h1 : 24, weight: .heavy))
+                .font(.nuna(size: onBack == nil ? NunaTypeSize.h1 : 24, weight: .heavy))
                 .foregroundStyle(NunaPalette.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.7)
@@ -146,7 +146,7 @@ public struct NunaSectionHeader: View {
     public init(_ title: LocalizedStringKey) { self.title = title }
     public var body: some View {
         Text(title)
-            .font(.system(size: NunaTypeSize.caption, weight: .heavy))
+            .font(.nuna(size: NunaTypeSize.caption, weight: .heavy))
             .tracking(1.15)
             .textCase(.uppercase)
             .foregroundStyle(NunaPalette.textSecondary)
@@ -166,7 +166,7 @@ public struct NunaIconTile: View {
     }
     public var body: some View {
         Image(systemName: systemImage)
-            .font(.system(size: 17, weight: .bold))
+            .font(.nuna(size: 17, weight: .bold))
             // Icons are neutral by design: colour is kept for scores and status, never for symbols.
             .foregroundStyle(NunaPalette.textPrimary)
             .frame(width: 40, height: 40)
@@ -197,11 +197,11 @@ public struct NunaListRow<Trailing: View>: View {
             if let systemImage { NunaIconTile(systemImage, tint: tint) }
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.system(size: NunaTypeSize.h3 - 1, weight: .bold))
+                    .font(.nuna(size: NunaTypeSize.h3 - 1, weight: .bold))
                     .foregroundStyle(NunaPalette.textPrimary)
                 if let subtitle {
                     Text(subtitle)
-                        .font(.system(size: 12.5, weight: .semibold))
+                        .font(.nuna(size: 12.5, weight: .semibold))
                         .foregroundStyle(NunaPalette.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -210,7 +210,7 @@ public struct NunaListRow<Trailing: View>: View {
             trailing
             if showsChevron {
                 Image(systemName: "chevron.right")
-                    .font(.system(size: 13, weight: .bold))
+                    .font(.nuna(size: 13, weight: .bold))
                     .foregroundStyle(NunaPalette.textMuted)
                     .accessibilityHidden(true)
             }
@@ -275,7 +275,7 @@ public struct NunaSegmented<Value: Hashable>: View {
                 let selected = option.value == selection
                 Button { selection = option.value } label: {
                     Text(option.title)
-                        .font(.system(size: 13, weight: .bold))
+                        .font(.nuna(size: 13, weight: .bold))
                         .foregroundStyle(selected ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 36)
@@ -303,8 +303,8 @@ public struct NunaAddCard: View {
     public var body: some View {
         Button(action: action) {
             HStack(spacing: 10) {
-                Image(systemName: "plus").font(.system(size: 17, weight: .bold))
-                Text(title).font(.system(size: 15, weight: .heavy))
+                Image(systemName: "plus").font(.nuna(size: 17, weight: .bold))
+                Text(title).font(.nuna(size: 15, weight: .heavy))
             }
             .foregroundStyle(NunaPalette.textPrimary)
             .frame(maxWidth: .infinity, minHeight: 58)
@@ -346,8 +346,8 @@ public struct NunaTabBar: View {
                     if on { onReselect(item.id) } else { selection = item.id }
                 } label: {
                     VStack(spacing: 3) {
-                        Image(systemName: item.systemImage).font(.system(size: 18, weight: .semibold))
-                        Text(item.title).font(.system(size: 11, weight: .bold)).lineLimit(1)
+                        Image(systemName: item.systemImage).font(.nuna(size: 18, weight: .semibold))
+                        Text(item.title).font(.nuna(size: 11, weight: .bold)).lineLimit(1)
                     }
                     .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                     .frame(minWidth: 58, minHeight: 58)

@@ -49,9 +49,9 @@ struct NunaHealthView: View {
         ScrollView {
             VStack(spacing: NunaSpacing.section) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Health").font(.system(size: NunaTypeSize.h1, weight: .bold, design: NunaType.design))
+                    Text("Health").font(.nuna(size: NunaTypeSize.h1, weight: .bold, design: NunaType.design))
                         .foregroundStyle(NunaPalette.textPrimary)
-                    Text(verbatim: "WHOOP · Apple Health").font(.system(size: 13, weight: .semibold))
+                    Text(verbatim: "WHOOP · Apple Health").font(.nuna(size: 13, weight: .semibold))
                         .foregroundStyle(NunaPalette.textSecondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -140,7 +140,7 @@ struct NunaHealthView: View {
         return NunaCard {
             VStack(alignment: .leading, spacing: 16) {
                 HStack {
-                    Text("Your normal range").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
+                    Text("Your normal range").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     NunaChip(verbatim: statusText, color: statusText == String(localized: "All within your range") ? NunaPalette.charge : nil)
@@ -156,10 +156,10 @@ struct NunaHealthView: View {
                           _ band: (mean: Double, sd: Double, lo: Double, hi: Double)?) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .firstTextBaseline) {
-                Text(label).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                Text(label).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 Spacer()
-                Text(verbatim: fmt(value)).font(.system(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                Text(verbatim: unit).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: fmt(value)).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
             }
             if let band {
                 NunaRangeBar(value: value, lo: band.lo, hi: band.hi, mean: band.mean)
@@ -168,7 +168,7 @@ struct NunaHealthView: View {
                     Text(verbatim: String(localized: "30-day average: \(fmt(band.mean))")); Spacer()
                     Text(verbatim: fmt(band.hi))
                 }
-                .font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }
         }
     }
@@ -212,13 +212,13 @@ struct NunaHealthView: View {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
-                        Text("Weight").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Weight").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         Spacer()
-                        Text("30D").font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("30D").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Text(verbatim: fmt(latest, 1)).font(.system(size: 48, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("kg").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: fmt(latest, 1)).font(.nuna(size: 48, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("kg").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         Spacer()
                         if let delta {
                             NunaChip(verbatim: (delta <= 0 ? "−" : "+") + String(format: "%.1f", locale: AppLanguage.activeLocale, abs(delta)) + " kg")
@@ -258,20 +258,20 @@ struct NunaHealthView: View {
                 HStack(spacing: 12) {
                     NunaIconTile("applewatch")
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("WHOOP strap").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(live.connected ? "Connected" : "Not connected").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("WHOOP strap").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(live.connected ? "Connected" : "Not connected").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     Spacer()
                     VStack(alignment: .trailing, spacing: 2) {
                         if let b = live.batteryPct {
-                            Text(verbatim: "\(Int(b.rounded()))%").font(.system(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: "\(Int(b.rounded()))%").font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         }
                         if let t = live.lastSyncedAt {
                             Text(verbatim: String(localized: "Synced \(NunaSleepFormat.clock(Date(timeIntervalSince1970: t)))"))
-                                .font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                     }
-                    Image(systemName: "chevron.right").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                    Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                 }
             }
         }.buttonStyle(.plain)
@@ -315,8 +315,8 @@ struct NunaHealthView: View {
                         }
                     }
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Text(verbatim: fmt(day.restingHr)).font(.system(size: 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("bpm").font(.system(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: fmt(day.restingHr)).font(.nuna(size: 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("bpm").font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     NunaLine2Chart(points: pts, color: NunaPalette.ink, decimals: 0, baseline: rhrS.band?.mean, height: 120)
                 }
@@ -363,7 +363,7 @@ struct NunaHealthView: View {
         return NunaCard {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text("HRV · average last night").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Text("HRV · average last night").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     if let v = day.hrv, let b {
                         let inRange = abs(v - b.mean) <= max(b.sd, 1)
@@ -371,8 +371,8 @@ struct NunaHealthView: View {
                     }
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(verbatim: fmt(day.hrv)).font(.system(size: 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("ms").font(.system(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: fmt(day.hrv)).font(.nuna(size: 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("ms").font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     if let d = day.hrvDelta, abs(d.rounded()) >= 1 {
                         NunaChip(verbatim: (d > 0 ? "+" : "−") + "\(Int(abs(d).rounded()))" + String(localized: " vs yesterday"),
@@ -392,14 +392,14 @@ struct NunaHealthView: View {
 
     private func miniStat(_ label: LocalizedStringKey, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(label).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: value).font(.system(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(verbatim: value).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func cardTitle(_ t: LocalizedStringKey) -> some View {
-        Text(t).font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+        Text(t).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
     }
 
     private var stressCard: some View {
@@ -418,26 +418,26 @@ struct NunaHealthView: View {
                             .frame(height: 112)
                             .overlay(alignment: .bottom) {
                                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                                    Text(verbatim: fmt(score, 1)).font(.system(size: 40, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                                    Text(verbatim: "/ 3").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                                    Text(verbatim: fmt(score, 1)).font(.nuna(size: 40, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                                    Text(verbatim: "/ 3").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                                 }
                             }
                         Text("Calculated from heart rate and HRV through the day, against your own baseline.")
-                            .font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                            .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                     }
                 }.buttonStyle(.plain)
                 HStack(spacing: 10) {
                     Button { legacy = .breathing } label: {
                         HStack(spacing: 8) {
-                            Image(systemName: "wind").font(.system(size: 14, weight: .bold))
-                            Text("Breathe 5 min").font(.system(size: 15, weight: .bold))
+                            Image(systemName: "wind").font(.nuna(size: 14, weight: .bold))
+                            Text("Breathe 5 min").font(.nuna(size: 15, weight: .bold))
                         }
                         .foregroundStyle(NunaPalette.onAccent)
                         .frame(maxWidth: .infinity).frame(height: 48)
                         .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
                     }.buttonStyle(.plain)
                     NavigationLink(value: NunaTodayRoute.mood) {
-                        Image(systemName: "face.smiling").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Image(systemName: "face.smiling").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             .frame(width: 48, height: 48).background(NunaPalette.glassStrong, in: Circle())
                     }
                     .buttonStyle(.plain).accessibilityLabel(Text("Mood check-in"))
@@ -459,8 +459,8 @@ struct NunaHealthView: View {
                         NunaChip("Estimate ±5 years")
                     }
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(verbatim: fmt(fit)).font(.system(size: 52, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("years").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: fmt(fit)).font(.nuna(size: 52, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("years").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         Spacer()
                         if let diff, diff != 0 {
                             NunaChip(diff > 0 ? LocalizedStringKey("\(diff) years younger") : LocalizedStringKey("\(-diff) years older"),
@@ -468,11 +468,11 @@ struct NunaHealthView: View {
                         }
                     }
                     if age > 0 {
-                        Text(verbatim: String(localized: "Actual age \(age)")).font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: String(localized: "Actual age \(age)")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     if let fit, age > 0 { NunaAgeSlider(fitness: fit, age: Double(age)) }
                     if let note = fitnessFooter {
-                        Text(verbatim: note).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                        Text(verbatim: note).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
                     }
                 }
             }
@@ -508,20 +508,20 @@ struct NunaHealthView: View {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(spacing: 10) {
-                        Image(systemName: raised ? "exclamationmark.triangle" : "checkmark.shield").font(.system(size: 18, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                        Image(systemName: raised ? "exclamationmark.triangle" : "checkmark.shield").font(.nuna(size: 18, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                         cardTitle("Early warning")
                         Spacer()
                         NunaChip(raised ? "Signals are up" : "Safe", color: raised ? NunaPalette.warning : NunaPalette.charge)
                     }
                     Text(raised ? "Some signals are away from your range. Take it easy and watch how you feel."
                                 : "No signs of strain. It takes two signals away from your range to raise a warning.")
-                        .font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                     LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
                         ForEach(0..<signals.count, id: \.self) { i in
                             HStack(spacing: 8) {
                                 Image(systemName: signals[i].1 ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
-                                    .font(.system(size: 15)).foregroundStyle(signals[i].1 ? NunaPalette.warning : NunaPalette.textSecondary)
-                                Text(signals[i].0).font(.system(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
+                                    .font(.nuna(size: 15)).foregroundStyle(signals[i].1 ? NunaPalette.warning : NunaPalette.textSecondary)
+                                Text(signals[i].0).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
                                 Spacer(minLength: 0)
                             }
                             .padding(.horizontal, 12).frame(height: 40)
@@ -567,15 +567,15 @@ struct NunaHealthView: View {
             VStack(alignment: .leading, spacing: 12) {
                 NavigationLink(value: NunaTodayRoute.weight) {
                     HStack {
-                        Text("Weight").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Weight").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         Spacer()
-                        Text("Details").font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                        Image(systemName: "chevron.right").font(.system(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                        Text("Details").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        Image(systemName: "chevron.right").font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                     }
                 }.buttonStyle(.plain)
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(verbatim: fmt(latest, 1)).font(.system(size: 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("kg").font(.system(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: fmt(latest, 1)).font(.nuna(size: 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("kg").font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     if let delta {
                         NunaChip(verbatim: (delta <= 0 ? "−" : "+") + String(format: "%.1f", locale: AppLanguage.activeLocale, abs(delta)) + " kg")
@@ -584,7 +584,7 @@ struct NunaHealthView: View {
                 NunaSegmented([(value: 30, title: "30D"), (value: 90, title: "90D"), (value: 365, title: "1Y")], selection: $weightRange)
                 NunaLine2Chart(points: pts, color: NunaPalette.ink, decimals: 1, height: 170)
                 Text("Read from Apple Health, or typed in under Details.")
-                    .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }
         }
     }
@@ -604,7 +604,7 @@ struct NunaHealthView: View {
                         Text(verbatim: String(localized: "Fat \(Int(fat.rounded()))%")); Spacer()
                         Text(verbatim: String(localized: "Lean mass \(Int(lean.rounded())) kg"))
                     }
-                    .font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 HStack(spacing: 10) {
                     miniTile("Body fat", fat.map { fmt($0, 1) } ?? "–", fat == nil ? "" : "%")
@@ -617,10 +617,10 @@ struct NunaHealthView: View {
 
     private func miniTile(_ label: LocalizedStringKey, _ value: String, _ unit: String) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(label).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
+            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
             HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text(verbatim: value).font(.system(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
-                if !unit.isEmpty { Text(verbatim: unit).font(.system(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+                Text(verbatim: value).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
+                if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
             }
         }
         .padding(12).frame(maxWidth: .infinity, alignment: .leading)
@@ -637,20 +637,20 @@ struct NunaHealthView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             cardTitle("Waist")
                             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                                Text(verbatim: profile.waistCm > 0 ? fmt(profile.waistCm) : "–").font(.system(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                                if profile.waistCm > 0 { Text("cm").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+                                Text(verbatim: profile.waistCm > 0 ? fmt(profile.waistCm) : "–").font(.nuna(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                                if profile.waistCm > 0 { Text("cm").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                             }
                         }
                         Spacer()
-                        Image(systemName: "chevron.right").font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                        Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                     }
                 }.buttonStyle(.plain)
                 Text("Reads the latest value from Apple Health and fills your profile for the VO₂max estimate.")
-                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 Button { showWaist = true } label: {
                     HStack(spacing: 8) {
-                        Image(systemName: "plus").font(.system(size: 13, weight: .bold))
-                        Text("Add a manual measurement").font(.system(size: 15, weight: .bold))
+                        Image(systemName: "plus").font(.nuna(size: 13, weight: .bold))
+                        Text("Add a manual measurement").font(.nuna(size: 15, weight: .bold))
                     }
                     .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 46)
                     .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
@@ -676,10 +676,10 @@ struct NunaHealthView: View {
                     }
                     if let kcalIn {
                         HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            Text(verbatim: fmt(kcalIn.value)).font(.system(size: 40, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            Text("kcal in").font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: fmt(kcalIn.value)).font(.nuna(size: 40, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            Text("kcal in").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                             Spacer()
-                            if let out = day.calories { Text(verbatim: String(localized: "Out \(fmt(out))")).font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                            if let out = day.calories { Text(verbatim: String(localized: "Out \(fmt(out))")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                         }
                         if let out = day.calories, out > 0 { NunaProgressBar(fraction: min(kcalIn.value / out, 1), color: NunaPalette.warning) }
                         VStack(spacing: 12) {
@@ -687,19 +687,19 @@ struct NunaHealthView: View {
                                 if let g = macros[i].1 {
                                     VStack(spacing: 6) {
                                         HStack {
-                                            Text(macros[i].0).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                            Text(macros[i].0).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                                             Spacer()
-                                            Text(verbatim: "\(fmt(g)) g").font(.system(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                                            Text(verbatim: "\(fmt(g)) g").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                                         }
                                         NunaProgressBar(fraction: kcalIn.value > 0 ? g * macros[i].2 / kcalIn.value : 0, color: macros[i].3)
                                     }
                                 }
                             }
                         }
-                        Text(verbatim: kcalIn.day + " · " + String(localized: "Bars show each macro's share of calories")).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: kcalIn.day + " · " + String(localized: "Bars show each macro's share of calories")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     } else {
                         Text("No nutrition imported yet. Import a CSV from Cronometer or MacroFactor, processed on this phone.")
-                            .font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                            .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                     }
                 }
             }
@@ -710,12 +710,12 @@ struct NunaHealthView: View {
         let goal = repo.hydrationGoalML(profileSex: profile.sex)
         return NunaCard {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Water").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text("Water").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(verbatim: String(format: "%.1f", locale: AppLanguage.activeLocale, Double(waterML) / 1000))
-                        .font(.system(size: NunaTypeSize.numberL, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        .font(.nuna(size: NunaTypeSize.numberL, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text(verbatim: "/ " + String(format: "%.1f", locale: AppLanguage.activeLocale, Double(goal) / 1000) + " L")
-                        .font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 NunaProgressBar(fraction: Double(waterML) / Double(max(goal, 1)), color: NunaPalette.effort)
                 HStack(spacing: 10) {
@@ -777,7 +777,7 @@ struct NunaHealthView: View {
         return NunaCard {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
-                    Text("Last 7 nights").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Last 7 nights").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     if let avgRest { NunaChip(verbatim: String(localized: "Average Rest \(Int(avgRest.rounded()))%"), color: NunaPalette.restText) }
                 }
@@ -802,7 +802,7 @@ struct NunaHealthView: View {
         return NunaCard {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text("Need vs actual").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Need vs actual").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     if debt >= 1 { NunaChip(verbatim: String(localized: "Sleep debt \(Int(debt.rounded())) min"), color: NunaPalette.warning) }
                 }
@@ -848,7 +848,7 @@ struct NunaHealthView: View {
                 HStack(alignment: .top, spacing: 10) {
                     VStack(spacing: 0) {
                         ForEach(nights.indices, id: \.self) { i in
-                            Text(verbatim: weekday(nights[i].wakeDate)).font(.system(size: 12, weight: .semibold))
+                            Text(verbatim: weekday(nights[i].wakeDate)).font(.nuna(size: 12, weight: .semibold))
                                 .foregroundStyle(NunaPalette.textSecondary).frame(width: 30, height: 34, alignment: .leading)
                         }
                     }
@@ -875,7 +875,7 @@ struct NunaHealthView: View {
                     GeometryReader { geo in
                         ForEach(0..<ticks.count, id: \.self) { t in
                             let label = tickLabel(ticks[t])
-                            Text(verbatim: label).font(.system(size: 11, weight: .semibold)).monospacedDigit()
+                            Text(verbatim: label).font(.nuna(size: 11, weight: .semibold)).monospacedDigit()
                                 .foregroundStyle(NunaPalette.textSecondary).fixedSize()
                                 .position(x: min(max(geo.size.width * CGFloat(t) / 4, 18), geo.size.width - 18), y: 8)
                         }
@@ -894,9 +894,9 @@ struct NunaHealthView: View {
         return NunaCard {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
-                    Text("Average stages").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Average stages").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
-                    Text("Marker = your usual").font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Marker = your usual").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 stageLine(.deep, avg.deep, typ?.deep, avg.total)
                 stageLine(.rem, avg.rem, typ?.rem, avg.total)
@@ -910,9 +910,9 @@ struct NunaHealthView: View {
     private func stageLine(_ stage: SleepStage, _ minutes: Double, _ typical: Double?, _ total: Double) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text(stage.nunaName).font(.system(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                Text(stage.nunaName).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 Spacer()
-                Text(verbatim: NunaSleepFormat.duration(minutes)).font(.system(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: NunaSleepFormat.duration(minutes)).font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             }
             NunaRangeBar(value: minutes, lo: 0, hi: max(total / 2, 1), mean: typical, color: stage.nunaColor, showsMarkerDot: false)
         }
@@ -923,13 +923,13 @@ struct NunaHealthView: View {
         return NunaCard(small: true, padding: EdgeInsets(top: 14, leading: 18, bottom: 6, trailing: 18)) {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
-                    Text("Naps").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Naps").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
-                    Text(verbatim: String(localized: "This week · \(naps.count)")).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: String(localized: "This week · \(naps.count)")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 .padding(.bottom, 6)
                 if naps.isEmpty {
-                    Text("No naps this week").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).padding(.vertical, 12)
+                    Text("No naps this week").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).padding(.vertical, 12)
                 }
                 ForEach(Array(naps.enumerated()), id: \.offset) { idx, nap in
                     if idx > 0 { NunaDivider() }

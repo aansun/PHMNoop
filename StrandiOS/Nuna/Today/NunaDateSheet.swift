@@ -27,7 +27,7 @@ struct NunaDateSheet: View {
                 jumps
                 summary
                 Text("Past days are view-only. The journal can still be edited.")
-                    .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     .multilineTextAlignment(.center)
             }
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 14).padding(.bottom, 40)
@@ -50,15 +50,15 @@ struct NunaDateSheet: View {
     private var header: some View {
         HStack {
             Button { dismiss() } label: {
-                Image(systemName: "xmark").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                Image(systemName: "xmark").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: Circle())
                     .overlay(Circle().strokeBorder(NunaPalette.hairline, lineWidth: 1))
             }
             .accessibilityLabel(Text("Close"))
             Spacer()
-            Text("Choose date").font(.system(size: 17, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+            Text("Choose date").font(.nuna(size: 17, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
             Spacer()
-            Button { pick(today) } label: { Text("Today").font(.system(size: 13.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+            Button { pick(today) } label: { Text("Today").font(.nuna(size: 13.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
                 .padding(.horizontal, 14).frame(height: 34).background(NunaPalette.glassStrong, in: Capsule())
                 .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1)) }
         }
@@ -73,8 +73,8 @@ struct NunaDateSheet: View {
                     arrow("chevron.left", enabled: true) { shiftMonth(-1) }
                     Spacer()
                     VStack(spacing: 2) {
-                        Text(verbatim: monthTitle).font(.system(size: 17, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: String(localized: "\(recordedCount) days recorded")).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: monthTitle).font(.nuna(size: 17, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: String(localized: "\(recordedCount) days recorded")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     Spacer()
                     arrow("chevron.right", enabled: !isCurrentMonth) { shiftMonth(1) }
@@ -82,7 +82,7 @@ struct NunaDateSheet: View {
                 let symbols = weekdaySymbols
                 HStack(spacing: 0) {
                     ForEach(symbols.indices, id: \.self) { i in
-                        Text(verbatim: symbols[i]).font(.system(size: 11.5, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: symbols[i]).font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                             .frame(maxWidth: .infinity)
                     }
                 }
@@ -102,7 +102,7 @@ struct NunaDateSheet: View {
 
     private func arrow(_ symbol: String, enabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: symbol).font(.system(size: 14, weight: .bold))
+            Image(systemName: symbol).font(.nuna(size: 14, weight: .bold))
                 .foregroundStyle(enabled ? NunaPalette.textPrimary : NunaPalette.textMuted.opacity(0.4))
                 .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: Circle())
         }
@@ -117,7 +117,7 @@ struct NunaDateSheet: View {
             Button { if !isFuture { picked = date } } label: {
                 VStack(spacing: 3) {
                     Text(verbatim: "\(cal.component(.day, from: date))")
-                        .font(.system(size: 15, weight: row != nil ? .heavy : .semibold, design: NunaType.design))
+                        .font(.nuna(size: 15, weight: row != nil ? .heavy : .semibold, design: NunaType.design))
                         .foregroundStyle(isPicked ? NunaPalette.onAccent : (isFuture ? NunaPalette.textMuted.opacity(0.5) : (row != nil ? NunaPalette.textPrimary : NunaPalette.textSecondary)))
                     Circle().fill(dot(row, isPicked)).frame(width: 6, height: 6)
                 }
@@ -139,7 +139,7 @@ struct NunaDateSheet: View {
     private func legend(_ color: Color, _ text: LocalizedStringKey) -> some View {
         HStack(spacing: 6) {
             Circle().fill(color).frame(width: 8, height: 8)
-            Text(text).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text(text).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
         }
     }
 
@@ -159,7 +159,7 @@ struct NunaDateSheet: View {
 
     private func jump(_ title: LocalizedStringKey, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(title).font(.system(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            Text(title).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 .padding(.horizontal, 16).frame(height: 40)
                 .background(NunaPalette.glassStrong, in: Capsule()).overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
         }
@@ -173,7 +173,7 @@ struct NunaDateSheet: View {
         return NunaCard(highlight: false) {
             VStack(spacing: 16) {
                 HStack {
-                    Text("Selected").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Selected").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     NunaChip(verbatim: longDate(picked))
                 }
@@ -190,8 +190,8 @@ struct NunaDateSheet: View {
 
     private func score(_ label: LocalizedStringKey, _ value: String?, _ color: Color) -> some View {
         VStack(spacing: 4) {
-            Text(verbatim: value ?? "–").font(.system(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(value == nil ? NunaPalette.textMuted : color)
-            Text(label).font(.system(size: 11.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(verbatim: value ?? "–").font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(value == nil ? NunaPalette.textMuted : color)
+            Text(label).font(.nuna(size: 11.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
         }
         .frame(maxWidth: .infinity)
     }

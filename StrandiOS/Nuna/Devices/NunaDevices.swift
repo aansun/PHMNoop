@@ -50,7 +50,7 @@ struct NunaDevicesView: View {
     @EnvironmentObject private var model: AppModel
     var body: some View {
         if let registry = model.deviceRegistry { NunaDevicesContent(registry: registry) }
-        else { NunaDetailScreen("Devices") { NunaCard(small: true) { Text("Opening your on-device data. Your paired bands appear here in a moment.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) } } }
+        else { NunaDetailScreen("Devices") { NunaCard(small: true) { Text("Opening your on-device data. Your paired bands appear here in a moment.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) } } }
     }
 }
 
@@ -82,13 +82,13 @@ private struct NunaDevicesContent: View {
                             HStack(spacing: 12) {
                                 NavigationLink(value: NunaDeviceRoute.detail(d.id)) {
                                     VStack(alignment: .leading, spacing: 3) {
-                                        Text(verbatim: d.displayName).font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                        Text(verbatim: NunaDeviceFormat.family(d) + " · " + String(localized: "history kept")).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                        Text(verbatim: d.displayName).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                        Text(verbatim: NunaDeviceFormat.family(d) + " · " + String(localized: "history kept")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                                     }.frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
                                 }.buttonStyle(.plain)
                                 if !d.isImportSource {
                                     Button { switchTarget = d } label: {
-                                        Text("Make active").font(.system(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 36).background(NunaPalette.glassStrong, in: Capsule())
+                                        Text("Make active").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 36).background(NunaPalette.glassStrong, in: Capsule())
                                     }.buttonStyle(.plain)
                                 }
                             }.padding(.vertical, 12)
@@ -97,7 +97,7 @@ private struct NunaDevicesContent: View {
                 }
             }
             Button { showAdd = true } label: {
-                HStack(spacing: 8) { Image(systemName: "plus").font(.system(size: 14, weight: .bold)); Text("Add a device").font(.system(size: 15, weight: .bold)) }
+                HStack(spacing: 8) { Image(systemName: "plus").font(.nuna(size: 14, weight: .bold)); Text("Add a device").font(.nuna(size: 15, weight: .bold)) }
                     .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 54)
                     .background(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(NunaPalette.hairline, style: StrokeStyle(lineWidth: 1, dash: [5, 5])))
             }.buttonStyle(.plain)
@@ -143,11 +143,11 @@ private struct NunaDevicesContent: View {
                     HStack(alignment: .top, spacing: 14) {
                         NunaIconTile("applewatch")
                         VStack(alignment: .leading, spacing: 3) {
-                            Text(verbatim: d.displayName).font(.system(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            Text(verbatim: NunaDeviceFormat.family(d)).font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: d.displayName).font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: NunaDeviceFormat.family(d)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                         Spacer()
-                        Image(systemName: "chevron.right").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                        Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                     }
                     NunaDivider()
                     HStack {
@@ -162,21 +162,21 @@ private struct NunaDevicesContent: View {
 
     private func batteryTile(_ pct: Double?, _ est: BatteryEstimator.Estimate?) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text("Battery").font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text("Battery").font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text(verbatim: pct.map { "\(Int($0.rounded()))" } ?? "–").font(.system(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                if pct != nil { Text("%").font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+                Text(verbatim: pct.map { "\(Int($0.rounded()))" } ?? "–").font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                if pct != nil { Text("%").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
             }
-            if live.charging == true { Text("Charging").font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.charge) }
-            else if let est { Text(verbatim: "~" + NunaDeviceFormat.remaining(est.remainingHours)).font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(2) }
+            if live.charging == true { Text("Charging").font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.charge) }
+            else if let est { Text(verbatim: "~" + NunaDeviceFormat.remaining(est.remainingHours)).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(2) }
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func stat(_ l: LocalizedStringKey, _ v: String, _ note: String?) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(l).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: v).font(.system(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
-            if let note { Text(verbatim: note).font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(verbatim: v).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+            if let note { Text(verbatim: note).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -184,9 +184,9 @@ private struct NunaDevicesContent: View {
         NunaCard {
             VStack(alignment: .leading, spacing: 12) {
                 NunaIconTile("applewatch")
-                Text("No strap yet").font(.system(size: 20, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                Text("No strap yet").font(.nuna(size: 20, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 Text("Add your WHOOP to record heart rate, sleep and workouts. NOOP connects directly over Bluetooth, without the WHOOP app or any cloud.")
-                    .font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
             }.frame(maxWidth: .infinity, alignment: .leading)
         }
     }
@@ -197,16 +197,16 @@ private struct NunaDevicesContent: View {
                 HStack(spacing: 12) {
                     NunaIconTile(live.backfilling ? "arrow.triangle.2.circlepath" : "checkmark.circle")
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(live.backfilling ? "Syncing history…" : "Strap history pulled").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(live.backfilling ? "Syncing history…" : "Strap history pulled").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         Text(verbatim: live.backfilling ? String(localized: "\(live.syncChunksThisSession) packets so far")
-                                                         : (live.lastSyncedAt.map { String(localized: "Last at \(NunaDeviceFormat.clock($0))") } ?? "")).font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                                         : (live.lastSyncedAt.map { String(localized: "Last at \(NunaDeviceFormat.clock($0))") } ?? "")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     Spacer()
                     if live.connected && !live.backfilling {
                         Button { model.ble.syncNow() } label: {
-                            Text("Sync now").font(.system(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 16).frame(height: 36).background(NunaPalette.accent, in: Capsule())
+                            Text("Sync now").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 16).frame(height: 36).background(NunaPalette.accent, in: Capsule())
                         }.buttonStyle(.plain)
-                    } else { Image(systemName: "chevron.right").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted) }
+                    } else { Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted) }
                 }
             }
         }.buttonStyle(.plain)
@@ -218,11 +218,11 @@ private struct NunaDevicesContent: View {
                 HStack(alignment: .top, spacing: 12) {
                     Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(NunaPalette.warning)
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Can't connect: the strap's pairing was reset").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("See how to pair it again").font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Can't connect: the strap's pairing was reset").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("See how to pair it again").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     Spacer()
-                    Image(systemName: "chevron.right").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                    Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                 }
             }
         }.buttonStyle(.plain)
@@ -275,7 +275,7 @@ struct NunaDeviceDetailView: View {
                 if isActive && isWhoop { actions(d) }
                 manage(d)
             } else {
-                NunaCard(small: true) { Text("This device is no longer in the list.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                NunaCard(small: true) { Text("This device is no longer in the list.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
             }
         }
         .alert("Rename device", isPresented: $renaming) {
@@ -311,8 +311,8 @@ struct NunaDeviceDetailView: View {
                 HStack {
                     NunaIconTile("applewatch")
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(verbatim: d.displayName).font(.system(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: NunaDeviceFormat.family(d)).font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: d.displayName).font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: NunaDeviceFormat.family(d)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     Spacer()
                     NunaChip(d.status == .archived ? "Removed" : (linked ? "Connected" : (isActive ? "Not connected" : "Paired")), color: linked ? NunaPalette.charge : nil)
@@ -322,12 +322,12 @@ struct NunaDeviceDetailView: View {
                     NavigationLink(value: NunaDeviceRoute.battery) {
                         HStack {
                             VStack(alignment: .leading, spacing: 3) {
-                                Text(verbatim: String(localized: "Battery \(Int(pct.rounded()))%")).font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                Text(verbatim: String(localized: "Battery \(Int(pct.rounded()))%")).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                                 Text(verbatim: live.charging == true ? String(localized: "Charging") : (live.batteryEstimate.map { String(localized: "Not charging · about \(NunaDeviceFormat.remaining($0.remainingHours))") } ?? String(localized: "Not charging")))
-                                    .font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                    .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                             }
                             Spacer()
-                            Image(systemName: "chevron.right").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                            Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                         }.contentShape(Rectangle())
                     }.buttonStyle(.plain)
                 }
@@ -353,10 +353,10 @@ struct NunaDeviceDetailView: View {
 
     @ViewBuilder private func row(_ l: LocalizedStringKey, _ v: String, action: (() -> Void)? = nil) -> some View {
         let content = HStack {
-            Text(l).font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text(l).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             Spacer(minLength: 12)
-            Text(verbatim: v).font(.system(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
-            if action != nil { Image(systemName: "pencil").font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted) }
+            Text(verbatim: v).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
+            if action != nil { Image(systemName: "pencil").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted) }
         }.padding(.vertical, 14).contentShape(Rectangle())
         if let action { Button(action: action) { content }.buttonStyle(.plain) } else { content }
     }

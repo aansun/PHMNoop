@@ -25,13 +25,13 @@ struct NunaDeviceBatteryView: View {
                 VStack(alignment: .leading, spacing: 14) {
                     HStack { nunaTrendsCap("Now"); Spacer(); NunaChip(live.charging == true ? "Charging" : (live.connected ? "Not charging" : "Not connected"), color: live.charging == true ? NunaPalette.charge : nil) }
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(verbatim: pct.map { "\(Int($0.rounded()))" } ?? "–").font(.system(size: 64, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        if pct != nil { Text("%").font(.system(size: 22, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+                        Text(verbatim: pct.map { "\(Int($0.rounded()))" } ?? "–").font(.nuna(size: 64, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        if pct != nil { Text("%").font(.nuna(size: 22, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                     }
                     if let est, live.charging != true {
-                        Text(verbatim: String(localized: "About \(NunaDeviceFormat.remaining(est.remainingHours)) left.")).font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: String(localized: "About \(NunaDeviceFormat.remaining(est.remainingHours)) left.")).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     } else if pct == nil {
-                        Text("Connect the strap to read its battery.").font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Connect the strap to read its battery.").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     if let mv = live.batteryMv {
                         NunaDivider()
@@ -42,11 +42,11 @@ struct NunaDeviceBatteryView: View {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack { nunaTrendsCap("This session"); Spacer()
-                        if let a = samples.first, let b = samples.last, samples.count >= 2 { Text(verbatim: "\(NunaDeviceFormat.clock(TimeInterval(a.ts))) – \(NunaDeviceFormat.clock(TimeInterval(b.ts)))").font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) } }
+                        if let a = samples.first, let b = samples.last, samples.count >= 2 { Text(verbatim: "\(NunaDeviceFormat.clock(TimeInterval(a.ts))) – \(NunaDeviceFormat.clock(TimeInterval(b.ts)))").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) } }
                     if samples.count >= 2 {
                         NunaLine2Chart(points: samples.map { (Date(timeIntervalSince1970: TimeInterval($0.ts)), $0.soc) }, decimals: 0, height: 150)
                     } else {
-                        Text("Readings appear here as the strap reports them. Keep it connected for a while to see the trend.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        Text("Readings appear here as the strap reports them. Keep it connected for a while to see the trend.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                     }
                 }
             }
@@ -62,14 +62,14 @@ struct NunaDeviceBatteryView: View {
                     }
                 }
             }
-            Text("The percentage is read from the strap. The time left is estimated from the readings of this session only and gets better the longer the strap stays connected.").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+            Text("The percentage is read from the strap. The time left is estimated from the readings of this session only and gets better the longer the strap stays connected.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
         }
     }
 
     private func stat(_ l: LocalizedStringKey, _ v: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(l).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: v).font(.system(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(verbatim: v).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }
     }
 }
@@ -89,23 +89,23 @@ struct NunaDeviceSyncView: View {
                         NunaChip(live.backfilling ? "Syncing" : (live.lastSyncError == nil ? "Up to date" : "Failed"), color: live.backfilling || live.lastSyncError != nil ? nil : NunaPalette.charge) }
                     if live.backfilling {
                         HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            Text(verbatim: "\(live.syncChunksThisSession)").font(.system(size: 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            Text("packets so far").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: "\(live.syncChunksThisSession)").font(.nuna(size: 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            Text("packets so far").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                         if let behind = live.pagesBehindAtConnect, behind > 0 {
-                            Text(verbatim: String(localized: "\(behind) pages were waiting on the strap when it connected.")).font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: String(localized: "\(behind) pages were waiting on the strap when it connected.")).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                         Button { model.ble.abortBackfill() } label: {
-                            Text("Stop sync").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 20).frame(height: 42).background(NunaPalette.glassStrong, in: Capsule())
+                            Text("Stop sync").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 20).frame(height: 42).background(NunaPalette.glassStrong, in: Capsule())
                         }.buttonStyle(.plain)
                     } else {
-                        Text(verbatim: live.lastSyncedAt.map { NunaDeviceFormat.clock($0) } ?? "–").font(.system(size: 52, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: live.lastSyncedAt.map { NunaDeviceFormat.clock($0) } ?? "–").font(.nuna(size: 52, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         Text(verbatim: live.lastSyncError ?? (live.lastSyncedAt != nil ? String(localized: "All the history on the strap has been pulled. The next sync runs on its own when the strap is nearby.") : String(localized: "No sync has run since the app opened.")))
-                            .font(.system(size: 14, weight: .semibold)).foregroundStyle(live.lastSyncError == nil ? NunaPalette.textSecondary : NunaPalette.alertText).fixedSize(horizontal: false, vertical: true)
+                            .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(live.lastSyncError == nil ? NunaPalette.textSecondary : NunaPalette.alertText).fixedSize(horizontal: false, vertical: true)
                     }
                     if !live.backfilling {
                         Button { model.ble.syncNow() } label: {
-                            Text("Sync now").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54).background(NunaPalette.accent, in: Capsule())
+                            Text("Sync now").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54).background(NunaPalette.accent, in: Capsule())
                         }.buttonStyle(.plain).disabled(!live.connected).opacity(live.connected ? 1 : 0.4)
                     }
                 }
@@ -125,7 +125,7 @@ struct NunaDeviceSyncView: View {
                     NunaToggleRow("Progress in the Dynamic Island", subtitle: "And on the Lock Screen while a sync runs", systemImage: "iphone.gen3", isOn: $island).padding(.vertical, 8)
                 }
             }
-            Text("The strap keeps its history until it is pulled. If a sync is delayed for a long time, today's scores wait for the data to arrive.").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+            Text("The strap keeps its history until it is pulled. If a sync is delayed for a long time, today's scores wait for the data to arrive.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
         }
     }
 }
@@ -139,7 +139,7 @@ struct NunaDeviceHelpView: View {
 
     var body: some View {
         NunaDetailScreen("Strap not found?") {
-            Text("Try these one by one, from the top. It is usually solved by step 3.").font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text("Try these one by one, from the top. It is usually solved by step 3.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             step(1, "Bring the strap close", "Within 1 metre and nothing blocking it.")
             step(2, "Check Bluetooth on the iPhone", "Turn it off and on again if needed.") { button("Open Settings", openSettings) }
             step(3, "Scan again", "Disconnect, then scan once more.") { button("Scan again") { model.disconnect(); model.ble.connect() } }
@@ -177,10 +177,10 @@ struct NunaDeviceHelpView: View {
     @ViewBuilder private func step<C: View>(_ n: Int, _ title: LocalizedStringKey, _ detail: LocalizedStringKey, @ViewBuilder _ action: () -> C = { EmptyView() }) -> some View {
         NunaCard(small: true) {
             HStack(alignment: .top, spacing: 14) {
-                Text(verbatim: "\(n)").font(.system(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 32, height: 32).background(NunaPalette.glassStrong, in: Circle())
+                Text(verbatim: "\(n)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 32, height: 32).background(NunaPalette.glassStrong, in: Circle())
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(title).font(.system(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(detail).font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    Text(title).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(detail).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                     action().padding(.top, 2)
                 }
                 Spacer(minLength: 0)
@@ -189,7 +189,7 @@ struct NunaDeviceHelpView: View {
     }
     private func button(_ t: LocalizedStringKey, _ run: @escaping () -> Void) -> some View { Button(action: run) { pill(t) }.buttonStyle(.plain) }
     private func pill(_ t: LocalizedStringKey) -> some View {
-        Text(t).font(.system(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 36).background(NunaPalette.glassStrong, in: Capsule())
+        Text(t).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 36).background(NunaPalette.glassStrong, in: Capsule())
     }
 }
 
@@ -206,15 +206,15 @@ struct NunaDeviceRepairView: View {
         NunaDetailScreen("Pair again") {
             NunaCard(highlight: true) {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text("Can't connect").font(.system(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("The strap's pairing with this iPhone seems to have been reset.").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
-                    Text("This happens when the strap was paired to another phone or app. iOS still keeps the old pairing, so it has to be forgotten first.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    Text("Can't connect").font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("The strap's pairing with this iPhone seems to have been reset.").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                    Text("This happens when the strap was paired to another phone or app. iOS still keeps the old pairing, so it has to be forgotten first.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
             step(1, "Forget the strap in iOS", "Settings, Bluetooth, tap the i next to WHOOP, then Forget This Device.", "Open Settings", openSettings)
             step(2, "Remove it from NOOP's list", "Data already recorded stays.", "Remove from the list") { confirmRemove = true }
             step(3, "Add it again", "Turn the strap on and follow the pairing steps.", "Add WHOOP") { showAdd = true }
-            Text("The last 14 days are pulled from the strap again if they are still on it.").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+            Text("The last 14 days are pulled from the strap again if they are still on it.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
         }
         .sheet(isPresented: $showAdd) { AddDeviceWizard(live: live) { showAdd = false }.environmentObject(model).environmentObject(live) }
         .alert("Remove this device?", isPresented: $confirmRemove) {
@@ -226,11 +226,11 @@ struct NunaDeviceRepairView: View {
     private func step(_ n: Int, _ title: LocalizedStringKey, _ detail: LocalizedStringKey, _ button: LocalizedStringKey, _ run: @escaping () -> Void) -> some View {
         NunaCard(small: true) {
             HStack(alignment: .top, spacing: 14) {
-                Text(verbatim: "\(n)").font(.system(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 32, height: 32).background(NunaPalette.glassStrong, in: Circle())
+                Text(verbatim: "\(n)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 32, height: 32).background(NunaPalette.glassStrong, in: Circle())
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(title).font(.system(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(detail).font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
-                    Button(action: run) { Text(button).font(.system(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 36).background(NunaPalette.glassStrong, in: Capsule()) }.buttonStyle(.plain).padding(.top, 2)
+                    Text(title).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(detail).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    Button(action: run) { Text(button).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 36).background(NunaPalette.glassStrong, in: Capsule()) }.buttonStyle(.plain).padding(.top, 2)
                 }
                 Spacer(minLength: 0)
             }
@@ -250,24 +250,24 @@ struct NunaDeviceLogView: View {
 
     var body: some View {
         NunaDetailScreen("Strap log") {
-            Text("Take this when reporting a problem. It holds what the app sees from the strap.").font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+            Text("Take this when reporting a problem. It holds what the app sees from the strap.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
             NunaCard(small: true) {
                 if lines.isEmpty {
-                    Text("Nothing logged yet.").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading)
+                    Text("Nothing logged yet.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading)
                 } else {
                     VStack(alignment: .leading, spacing: 8) {
                         ForEach(Array(lines.enumerated()), id: \.offset) { _, l in
-                            Text(verbatim: l).font(.system(size: 12, weight: .medium, design: .monospaced)).foregroundStyle(NunaPalette.textPrimary).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
+                            Text(verbatim: l).font(.nuna(size: 12, weight: .medium, design: .monospaced)).foregroundStyle(NunaPalette.textPrimary).textSelection(.enabled).frame(maxWidth: .infinity, alignment: .leading)
                         }
                     }
                 }
             }
             HStack(spacing: 10) {
                 Button { UIPasteboard.general.string = live.log.joined(separator: "\n"); copied = true; DispatchQueue.main.asyncAfter(deadline: .now() + 2) { copied = false } } label: {
-                    Text(copied ? "Copied" : "Copy").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.accent, in: Capsule())
+                    Text(copied ? "Copied" : "Copy").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.accent, in: Capsule())
                 }.buttonStyle(.plain).disabled(lines.isEmpty)
                 ShareLink(item: live.log.joined(separator: "\n")) {
-                    Text("Share").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
+                    Text("Share").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
                 }
             }
             VStack(alignment: .leading, spacing: 10) {
@@ -278,7 +278,7 @@ struct NunaDeviceLogView: View {
                     }.buttonStyle(.plain).disabled(!(live.connected && live.bonded)).opacity(live.connected && live.bonded ? 1 : 0.4)
                 }
             }
-            Text("The log only holds connection and sync events. No health data is in it.").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+            Text("The log only holds connection and sync events. No health data is in it.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
         }
     }
 }
@@ -296,7 +296,7 @@ struct NunaDeviceModelsView: View {
 
     var body: some View {
         NunaDetailScreen("Models and support") {
-            Text("WHOOP 4.0 is the fully supported path. The deeper metrics on 5.0 and MG are still being researched.").font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+            Text("WHOOP 4.0 is the fully supported path. The deeper metrics on 5.0 and MG are still being researched.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
             HStack(spacing: 12) {
                 badge("WHOOP 4.0", "Fully supported"); badge("5.0 and MG", "Experimental")
             }
@@ -305,25 +305,25 @@ struct NunaDeviceModelsView: View {
                     HStack {
                         Text("").frame(maxWidth: .infinity, alignment: .leading)
                         Text("4.0").frame(width: 80); Text("5.0 / MG").frame(width: 90)
-                    }.font(.system(size: 11.5, weight: .heavy)).foregroundStyle(NunaPalette.textSecondary).padding(.vertical, 8)
+                    }.font(.nuna(size: 11.5, weight: .heavy)).foregroundStyle(NunaPalette.textSecondary).padding(.vertical, 8)
                     ForEach(rows) { r in
                         NunaDivider()
                         HStack {
-                            Text(r.feature).font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity, alignment: .leading)
+                            Text(r.feature).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity, alignment: .leading)
                             Text(LocalizedStringKey(r.four)).frame(width: 80); Text(LocalizedStringKey(r.five)).frame(width: 90)
-                        }.font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).padding(.vertical, 12)
+                        }.font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).padding(.vertical, 12)
                     }
                 }
             }
-            Text("Support for 5.0 and MG grows as their protocol is mapped. Research features are under Experiments.").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+            Text("Support for 5.0 and MG grows as their protocol is mapped. Research features are under Experiments.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
         }
     }
 
     private func badge(_ t: String, _ s: LocalizedStringKey) -> some View {
         NunaCard(small: true) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(verbatim: t).font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                Text(s).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: t).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                Text(s).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }.frame(maxWidth: .infinity, alignment: .leading)
         }
     }

@@ -36,7 +36,7 @@ struct NunaAnyaSheet: View {
                     if let read { questions(read) }
                     composer
                     Button { openFull() } label: {
-                        Text("Open full conversation").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("Open full conversation").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             .frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.glassStrong, in: Capsule())
                     }.buttonStyle(.plain)
                 }
@@ -61,11 +61,11 @@ struct NunaAnyaSheet: View {
         HStack(spacing: 10) {
             NunaIconTile("sparkles")
             VStack(alignment: .leading, spacing: 2) {
-                Text("Anya").font(.system(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                Text("Anya sees").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text("Anya").font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                Text("Anya sees").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }
             Spacer()
-            Text(module.title).font(.system(size: 11.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(module.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 .padding(.horizontal, 12).frame(height: 30).background(NunaPalette.glassStrong, in: Capsule())
         }
     }
@@ -73,22 +73,22 @@ struct NunaAnyaSheet: View {
     private func card(_ r: NunaAnyaRead) -> some View {
         NunaCard(highlight: true) {
             VStack(alignment: .leading, spacing: 12) {
-                Text(verbatim: r.headline).font(.system(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
-                if let d = r.detail { Text(verbatim: d).font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true) }
+                Text(verbatim: r.headline).font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                if let d = r.detail { Text(verbatim: d).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true) }
                 if explaining {
-                    HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                    HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                 } else if let explanation {
                     NunaDivider()
-                    Text(verbatim: explanation).font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                    Text(verbatim: explanation).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                 }
                 HStack(spacing: 6) {
-                    Text("Read:").font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                    ForEach(r.read, id: \.self) { Text(verbatim: $0).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                    Text("Read:").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    ForEach(r.read, id: \.self) { Text(verbatim: $0).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                 }
                 if coach.isConfigured, coach.dataConsent, explanation == nil, !explaining {
                     Button { Task { await explain() } } label: {
-                        HStack(spacing: 6) { Image(systemName: "sparkles").font(.system(size: 12, weight: .bold)); Text("Explain with \(coach.provider.nunaIsOnDevice ? String(localized: "Apple Intelligence") : coach.provider.displayName)") }
-                            .font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 40).background(NunaPalette.glassStrong, in: Capsule())
+                        HStack(spacing: 6) { Image(systemName: "sparkles").font(.nuna(size: 12, weight: .bold)); Text("Explain with \(coach.provider.nunaIsOnDevice ? String(localized: "Apple Intelligence") : coach.provider.displayName)") }
+                            .font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 40).background(NunaPalette.glassStrong, in: Capsule())
                     }.buttonStyle(.plain)
                 }
             }
@@ -98,8 +98,8 @@ struct NunaAnyaSheet: View {
     private var empty: some View {
         NunaCard(small: true) {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Nothing to read yet").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                Text("Anya shows a line only when it has figures to cite. Wear the strap and sync, then ask again.").font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text("Nothing to read yet").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                Text("Anya shows a line only when it has figures to cite. Wear the strap and sync, then ask again.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }.frame(maxWidth: .infinity, alignment: .leading)
         }
     }
@@ -124,9 +124,9 @@ struct NunaAnyaSheet: View {
                     if q.kind == .plan { path.append(NunaAnyaRoute.plan) } else { Task { await ask(q.prompt, shown: q.title) } }
                 } label: {
                     HStack {
-                        Text(verbatim: q.title).font(.system(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: q.title).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         Spacer()
-                        Image(systemName: q.kind == .plan ? "chevron.right" : "arrow.up.right").font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                        Image(systemName: q.kind == .plan ? "chevron.right" : "arrow.up.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                     }
                     .padding(.horizontal, 18).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
                 }.buttonStyle(.plain).disabled(sending || (q.kind == .ask && !(coach.isConfigured)))
@@ -140,22 +140,22 @@ struct NunaAnyaSheet: View {
             ForEach(turns) { t in
                 if t.role == .user {
                     HStack { Spacer(minLength: 40)
-                        Text(verbatim: t.text).font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 14).padding(.vertical, 9).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: 18, style: .continuous)) }
+                        Text(verbatim: t.text).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 14).padding(.vertical, 9).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: 18, style: .continuous)) }
                 } else {
-                    NunaCard(small: true) { Text(verbatim: t.text).font(.system(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading) }
+                    NunaCard(small: true) { Text(verbatim: t.text).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading) }
                 }
             }
-            if sending { HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(.system(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) } }
+            if sending { HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) } }
         }
     }
 
     private var composer: some View {
         HStack(spacing: 8) {
             TextField("", text: $draft, prompt: Text(coach.isConfigured ? "Ask a follow-up" : "Connect Anya to ask").foregroundStyle(NunaPalette.textMuted), axis: .vertical)
-                .font(.system(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1...3).focused($focused)
+                .font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1...3).focused($focused)
                 .padding(.leading, 16).padding(.vertical, 12).disabled(!coach.isConfigured).onSubmit { submit() }
             Button { submit() } label: {
-                Image(systemName: "arrow.up").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(width: 38, height: 38).background(NunaPalette.accent, in: Circle())
+                Image(systemName: "arrow.up").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(width: 38, height: 38).background(NunaPalette.accent, in: Circle())
             }.buttonStyle(.plain).disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty || sending || !coach.isConfigured)
                 .opacity(draft.trimmingCharacters(in: .whitespaces).isEmpty ? 0.4 : 1).padding(.trailing, 5)
         }
