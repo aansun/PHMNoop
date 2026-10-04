@@ -1,6 +1,243 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "Zones today": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Zona hari ini"}}
+        } },
+        "Zone 1 · easy": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Zona 1 · mudah"}}
+        } },
+        "Zone 2 · light": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Zona 2 · ringan"}}
+        } },
+        "Zone 3 · aerobic": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Zona 3 · aerobik"}}
+        } },
+        "Zone 4 · threshold": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Zona 4 · ambang"}}
+        } },
+        "Zone 5 · maximum": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Zona 5 · maksimal"}}
+        } },
+        "Resting · below zone 1": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Istirahat · di bawah zona 1"}}
+        } },
+        "Total %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Total %@"}}
+        } },
+        "No heart-rate readings yet today": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Belum ada bacaan detak jantung hari ini"}}
+        } },
+        "Show on the Dynamic Island": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tampilkan di Dynamic Island"}}
+        } },
+        "Live heart rate while the strap is connected": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Detak langsung saat strap terhubung"}}
+        } },
+        "Broadcast to other apps": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Siarkan ke aplikasi lain"}}
+        } },
+        "The strap shows up as a Bluetooth heart-rate sensor. Experimental, WHOOP 5/MG.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Strap tampil sebagai sensor detak Bluetooth. Eksperimental, WHOOP 5/MG."}}
+        } },
+        "Start a session with heart rate": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Mulai sesi dengan detak"}}
+        } },
+        "Strap %lld%%": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Strap %lld%%"}}
+        } },
+        "Updated every second": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Diperbarui tiap detik"}}
+        } },
+        "Earlier today": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tadi"}}
+        } },
+        "Last reading %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bacaan terakhir %@"}}
+        } },
+        "Oxygen and breathing": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Oksigen dan napas"}}
+        } },
+        "SpO₂ last night": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "SpO₂ semalam"}}
+        } },
+        "7-night average: %@%%": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rata-rata 7 malam: %@%%"}}
+        } },
+        "Healthy range 95–100%": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rentang sehat 95–100%"}}
+        } },
+        "No SpO₂ readings yet": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Belum ada bacaan SpO₂"}}
+        } },
+        "Breathing rate": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Laju napas"}}
+        } },
+        "Your personal range %@ – %@. Spikes in breathing often appear before illness.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rentang pribadimu %@ – %@. Lonjakan napas sering muncul sebelum sakit."}}
+        } },
+        "Part of the early warning": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bagian dari peringatan dini"}}
+        } },
+        "Breathing and SpO₂ are watched too": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Napas dan SpO₂ ikut dipantau"}}
+        } },
+        "How it's measured": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Cara mengukur"}}
+        } },
+        "Optical strap sensor, estimated during sleep": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sensor optik strap, estimasi saat tidur"}}
+        } },
+        "The strap's optical sensor estimates blood oxygen and breathing rate while you sleep. Values are wellness estimates, not medical readings. Your range comes from your own last 30 nights.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sensor optik strap memperkirakan oksigen darah dan laju napas saat kamu tidur. Nilainya estimasi kebugaran, bukan bacaan medis. Rentangmu berasal dari 30 malam terakhirmu sendiri."}}
+        } },
+        "Compared with your personal baseline": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dibanding baseline pribadimu"}}
+        } },
+        "14 nights": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "14 malam"}}
+        } },
+        "Centre line = baseline": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Garis tengah = baseline"}}
+        } },
+        "Room temperature": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Suhu kamar"}}
+        } },
+        "A warm room can raise it a little": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kamar hangat bisa menaikkannya sedikit"}}
+        } },
+        "Log it in your journal to see the link": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Catat di jurnal untuk melihat kaitannya"}}
+        } },
+        "Cycle phase": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Fase siklus"}}
+        } },
+        "The luteal phase can raise your baseline": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Fase luteal dapat menaikkan baseline-mu"}}
+        } },
+        "It takes two signals away from your range": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Butuh dua sinyal menyimpang dari rentangmu"}}
+        } },
+        "A deviation, not core body temperature": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Deviasi, bukan suhu tubuh inti"}}
+        } },
+        "The strap measures skin temperature at the wrist while you sleep and compares it with your own recent nights. The figure is a deviation from your baseline, not your core body temperature.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Strap mengukur suhu kulit di pergelangan saat kamu tidur dan membandingkannya dengan malam-malam terakhirmu. Angkanya deviasi dari baseline, bukan suhu tubuh inti."}}
+        } },
+        "Your heart and lung fitness is about the same as your age.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kebugaran jantung dan parumu setara dengan usiamu."}}
+        } },
+        "Your heart and lung fitness matches someone aged %lld, while you are %lld.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kebugaran jantung dan parumu setara orang berusia %lld, padahal usiamu %lld."}}
+        } },
+        "Range ±5 yr": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rentang ±5 thn"}}
+        } },
+        "Actual age": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Usia sebenarnya"}}
+        } },
+        "4-week direction": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Arah 4 minggu"}}
+        } },
+        "You are getting fitter. Look at the direction over several weeks, not one number.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kamu makin bugar. Lihat arah beberapa minggu, bukan satu angka."}}
+        } },
+        "Fitness slipped a little. Look at the direction over several weeks, not one number.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kebugaran sedikit turun. Lihat arah beberapa minggu, bukan satu angka."}}
+        } },
+        "Steady. Look at the direction over several weeks, not one number.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Stabil. Lihat arah beberapa minggu, bukan satu angka."}}
+        } },
+        "What shapes it": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Yang membentuknya"}}
+        } },
+        "Two signals compared with an average person of your age. Median of 7 days.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dua sinyal dibandingkan dengan orang rata-rata seusia. Median 7 hari."}}
+        } },
+        "Reference %lld bpm": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Referensi %lld bpm"}}
+        } },
+        "Reference %@ · from your training": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Referensi %@ · dari latihanmu"}}
+        } },
+        "Physical activity": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Aktivitas fisik"}}
+        } },
+        "Younger": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lebih muda"}}
+        } },
+        "Reference": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Referensi"}}
+        } },
+        "Older": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lebih tua"}}
+        } },
+        "Enough data": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Data cukup"}}
+        } },
+        "%lld of 7 nights read. Minimum %lld.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "%lld dari 7 malam terbaca. Minimal %lld."}}
+        } },
+        "Waiting": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Menunggu"}}
+        } },
+        "Weekly history": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Riwayat mingguan"}}
+        } },
+        "VO₂max estimate": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Estimasi VO₂max"}}
+        } },
+        "Waist-based": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Berbasis pinggang"}}
+        } },
+        "Estimated": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Perkiraan"}}
+        } },
+        "Range ±%@. Unlocked because your waist, %lld cm, is set.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rentang ±%@. Terbuka karena lingkar pinggangmu, %lld cm, sudah diisi."}}
+        } },
+        "A rougher estimate from heart rate. Add your waist for the sharper one.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Estimasi kasar dari detak jantung. Isi lingkar pinggang untuk yang lebih tajam."}}
+        } },
+        "Superior": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Prima"}}
+        } },
+        "Unlock VO₂max": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Membuka VO₂max"}}
+        } },
+        "Weight, height and waist. Does not change the fitness age.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Berat, tinggi, dan pinggang. Tidak mengubah usia kebugaran."}}
+        } },
+        "How to lower it": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Cara menurunkannya"}}
+        } },
+        "Zone 2 runs": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lari zona 2"}}
+        } },
+        "3× per week, 30 minutes": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "3× per minggu, 30 menit"}}
+        } },
+        "Short intervals": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Interval singkat"}}
+        } },
+        "1× per week, 4 × 4 minutes": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "1× per minggu, 4 × 4 menit"}}
+        } },
+        "Enough sleep": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidur cukup"}}
+        } },
+        "Resting heart rate falls when Rest is high": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Detak istirahat turun saat Rest tinggi"}}
+        } },
+        "This is a fitness comparison in years, not a biological age or a medical assessment. The model uses no exercise test, so watch the direction rather than the exact number.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ini perbandingan kebugaran dalam tahun, bukan usia biologis atau penilaian medis. Modelnya tidak memakai uji latih, jadi lihat arahnya, bukan angka pastinya."}}
+        } },
+        "Non-exercise model (Nes 2011, HUNT), updated every Saturday": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Model non-latihan Nes 2011 (HUNT), diperbarui tiap Sabtu"}}
+        } },
+        "Your age, sex, the median resting heart rate of the last 7 days and a physical activity index built from your recent training are compared with an average person of your age. The gap is turned into years.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Usia, jenis kelamin, median detak istirahat 7 hari terakhir, dan indeks aktivitas fisik dari latihanmu dibandingkan dengan orang rata-rata seusia. Selisihnya diubah menjadi tahun."}}
+        } },
         "SpO₂": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "SpO₂"}}
         } },

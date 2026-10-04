@@ -588,13 +588,7 @@ struct NunaHealthView: View {
                 cardTitle("Body composition")
                 if let fat, let lean, let w, w > 0 {
                     let fatShare = max(0, min(100, fat)), leanShare = max(0, min(100 - fatShare, lean / w * 100))
-                    HStack(spacing: 3) {
-                        Capsule().fill(NunaPalette.warning).frame(maxWidth: .infinity).layoutPriority(fatShare)
-                        Capsule().fill(NunaPalette.charge).frame(maxWidth: .infinity).layoutPriority(leanShare)
-                        Capsule().fill(NunaPalette.zoneBase).frame(maxWidth: .infinity).layoutPriority(max(0.5, 100 - fatShare - leanShare))
-                    }
-                    .frame(height: 16)
-                    .accessibilityHidden(true)
+                    NunaProportionBar(parts: [(fatShare, NunaPalette.warning), (leanShare, NunaPalette.charge), (max(0, 100 - fatShare - leanShare), NunaPalette.zoneBase)], height: 16)
                     HStack {
                         Text(verbatim: String(localized: "Fat \(Int(fat.rounded()))%")); Spacer()
                         Text(verbatim: String(localized: "Lean mass \(Int(lean.rounded())) kg"))
@@ -955,96 +949,6 @@ struct NunaHealthView: View {
 
     private func fmt(_ v: Double?, _ digits: Int = 0) -> String {
         v.map { String(format: "%.\(digits)f", locale: AppLanguage.activeLocale, $0) } ?? "–"
-    }
-}
-
-// MARK: - Fitness age
-
-/// Weekly fitness comparison (docs/FITNESS_AGE.md): a number with a plus or minus 5 year band, against
-/// the real age. It is a comparison, not a biological age. Reads the stored weekly series only.
-struct NunaFitnessAgeView: View {
-    private static let dayParser: DateFormatter = {
-        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; f.locale = Locale(identifier: "en_US_POSIX"); return f
-    }()
-
-    @EnvironmentObject private var repo: Repository
-    @EnvironmentObject private var profile: ProfileStore
-    @State private var series: [(day: String, value: Double)] = []
-    @State private var vo2: Double?
-    @State private var loaded = false
-
-    var body: some View {
-        NunaScreen("Fitness age") {
-            if let latest = series.last {
-                let age = Double(profile.age)
-                let diff = age > 0 ? age - latest.value : nil
-                NunaCard {
-                    VStack(alignment: .leading, spacing: 14) {
-                        HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            Text(verbatim: String(format: "%.0f", locale: AppLanguage.activeLocale, latest.value))
-                                .font(.system(size: 64, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
-                            Text("years").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                            Spacer()
-                            NunaChip("Estimate ±5 years")
-                        }
-                        if let diff {
-                            let r = Int(abs(diff).rounded())
-                            Text(verbatim: r == 0 ? String(localized: "About the same as your age")
-                                 : (diff > 0 ? String(localized: "\(r) years younger than your age")
-                                    : String(localized: "\(r) years older than your age")))
-                                .font(.system(size: 16, weight: .bold))
-                                .foregroundStyle(diff >= 0 ? NunaPalette.charge : NunaPalette.warning)
-                            band(latest.value, age)
-                        }
-                        Text(verbatim: String(localized: "Updated \(latest.day)")).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                    }
-                }
-                if let vo2 {
-                    NunaStatTile(label: "VO₂ max (estimated)", value: String(format: "%.1f", locale: AppLanguage.activeLocale, vo2), unit: "ml/kg/min")
-                }
-                if series.count > 1 {
-                    NunaCard {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Last weeks").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                            NunaLine2Chart(points: series.suffix(12).compactMap { r in Self.dayParser.date(from: r.day).map { ($0, r.value) } }, color: .white, decimals: 0, height: 170)
-                        }
-                    }
-                }
-            } else {
-                NunaCard {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(loaded ? "Not ready yet" : " ").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("Fitness age needs your age, your sex and resting heart rate from at least 4 nights. It updates once a week.")
-                            .font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-            Text("This is a fitness comparison, not your biological age. It has no medical meaning.")
-                .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
-        }
-        .task(id: repo.refreshSeq) {
-            series = await repo.exploreSeries(key: "fitness_age", source: "my-whoop", days: 120)
-            vo2 = await repo.exploreSeries(key: "vo2max_est", source: "my-whoop", days: 60).last?.value
-            loaded = true
-        }
-    }
-
-    /// Plus or minus 5 years around the estimate, with the real age marked.
-    private func band(_ fitness: Double, _ age: Double) -> some View {
-        let lo = min(fitness - 5, age) - 3, hi = max(fitness + 5, age) + 3
-        let span = max(hi - lo, 1)
-        return GeometryReader { geo in
-            let x: (Double) -> CGFloat = { CGFloat(($0 - lo) / span) * geo.size.width }
-            ZStack(alignment: .leading) {
-                Capsule().fill(Color.white.opacity(0.09)).frame(height: 10)
-                Capsule().fill(NunaPalette.charge.opacity(0.55)).frame(width: x(fitness + 5) - x(fitness - 5), height: 10)
-                    .offset(x: x(fitness - 5))
-                Circle().fill(.white).frame(width: 16, height: 16).offset(x: x(age) - 8)
-            }
-        }
-        .frame(height: 16)
-        .accessibilityHidden(true)
     }
 }
 #endif
