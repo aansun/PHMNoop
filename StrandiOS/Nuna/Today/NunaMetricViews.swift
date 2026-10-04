@@ -18,6 +18,7 @@ enum NunaTodayRoute: Hashable {
     case bodyClock
     case bodyClockPlan
     case deepTimeline
+    case liveHeart
     case smartAlarm
     case windDown
 }
@@ -32,6 +33,10 @@ extension View {
                 case ("strain", _): NunaEffortDetailView()
                 case ("stress", "my-whoop"): NunaStressDetailView()
                 case ("sleep_performance", _): NunaSleepView()
+                case ("spo2", _): NunaOxygenView()
+                case ("resp_rate", _): NunaOxygenView(startOnBreathing: true)
+                case ("skin_temp", _): NunaSkinTempView()
+                case ("fitness_age", _): NunaFitnessAgeView()
                 default: NunaMetricDetailView(metric: m)
                 }
             case .allMetrics: NunaAllMetricsView()
@@ -45,6 +50,7 @@ extension View {
             case .bodyClock: NunaBodyClockView()
             case .bodyClockPlan: NunaBodyClockPlanView()
             case .deepTimeline: NunaDeepTimelineView()
+            case .liveHeart: NunaLiveHeartView()
             case .smartAlarm: NunaSmartAlarmView()
             case .windDown: NunaWindDownView()
             }

@@ -148,4 +148,26 @@ struct NunaWaistSheet: View {
         }.buttonStyle(.plain)
     }
 }
+
+/// A row of rounded segments sized by share (weights need not add up to 1). Zero-weight parts are left out.
+struct NunaProportionBar: View {
+    let parts: [(weight: Double, color: Color)]
+    var height: CGFloat = 14
+    var body: some View {
+        GeometryReader { geo in
+            let total0 = max(parts.reduce(0) { $0 + max($1.weight, 0) }, 0.0001)
+            let live = parts.filter { $0.weight / total0 >= 0.004 }
+            let total = max(live.reduce(0) { $0 + $1.weight }, 0.0001)
+            let gaps = CGFloat(max(live.count - 1, 0)) * 3
+            HStack(spacing: 3) {
+                ForEach(live.indices, id: \.self) { i in
+                    Capsule().fill(live[i].color)
+                        .frame(width: max(0, (geo.size.width - gaps) * CGFloat(live[i].weight / total)))
+                }
+            }
+        }
+        .frame(height: height)
+        .accessibilityHidden(true)
+    }
+}
 #endif

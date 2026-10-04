@@ -29,7 +29,7 @@ struct NunaLiveHRCard: View {
     }
 
     var body: some View {
-        NavigationLink(value: NunaTodayRoute.deepTimeline) {
+        NavigationLink(value: NunaTodayRoute.liveHeart) {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
