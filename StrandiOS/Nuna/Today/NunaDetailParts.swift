@@ -415,9 +415,14 @@ final class NunaSeriesModel: ObservableObject {
     @Published private(set) var byDay: [String: Double] = [:]
     @Published private(set) var loaded = false
 
-    func load(repo: Repository, key: String, source: String, days: Int = 130) async {
+    /// `also` is a second source merged on top (a value typed in by hand wins over the imported one for that day).
+    func load(repo: Repository, key: String, source: String, days: Int = 130, also: String? = nil) async {
         let s = await repo.exploreSeries(key: key, source: source, days: days)
-        byDay = Dictionary(s.map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l })
+        var map = Dictionary(s.map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l })
+        if let also {
+            for r in await repo.exploreSeries(key: key, source: also, days: days) { map[r.day] = r.value }
+        }
+        byDay = map
         loaded = true
     }
 

@@ -81,7 +81,7 @@ struct NunaHealthView: View {
             await spo2S.load(repo: repo, key: "spo2", source: "my-whoop")
             await respS.load(repo: repo, key: "resp_rate", source: "my-whoop")
             await skinS.load(repo: repo, key: "skin_temp", source: "my-whoop")
-            await weightS.load(repo: repo, key: "weight", source: "apple-health", days: 400)
+            await weightS.load(repo: repo, key: "weight", source: "apple-health", days: 400, also: nunaManualSource)
             await fatS.load(repo: repo, key: "body_fat", source: "apple-health", days: 400)
             await leanS.load(repo: repo, key: "lean_mass", source: "apple-health", days: 400)
             await kcalInS.load(repo: repo, key: "calories_in", source: "nutrition-csv", days: 30)
@@ -230,9 +230,7 @@ struct NunaHealthView: View {
         }.buttonStyle(.plain)
     }
 
-    private var weightRoute: NunaTodayRoute {
-        MetricCatalog.metric(key: "weight", source: "apple-health").map { .metric($0) } ?? .allMetrics
-    }
+    private var weightRoute: NunaTodayRoute { .weight }
 
     /// Waist and BMI side by side under the weight card.
     private var bodyPair: some View {
@@ -434,7 +432,7 @@ struct NunaHealthView: View {
                         .frame(maxWidth: .infinity).frame(height: 48)
                         .background(NunaPalette.textPrimary, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
                     }.buttonStyle(.plain)
-                    Button { legacy = .mood } label: {
+                    NavigationLink(value: NunaTodayRoute.mood) {
                         Image(systemName: "face.smiling").font(.system(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             .frame(width: 48, height: 48).background(NunaPalette.glassStrong, in: Circle())
                     }
@@ -544,10 +542,12 @@ struct NunaHealthView: View {
             if hydrationEnabled { waterCard }
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
-                    row("Lab Book", "Your records", "cross.vial.fill") { router.requestedDestination = .labBook }
+                    link(.labBook, "Lab Book", "Your records", "cross.vial.fill")
+                    NunaDivider()
+                    link(.mood, "Mood check-in", "How are you feeling", "face.smiling")
                     if appModel.cyclePhase != nil {
                         NunaDivider()
-                        row("Menstrual cycle", "Cycle awareness", "drop.fill") { legacy = .cycle }
+                        link(.cycle, "Menstrual cycle", "Cycle awareness", "drop.fill")
                     }
                 }
             }
@@ -561,7 +561,14 @@ struct NunaHealthView: View {
         let delta: Double? = (pts.count >= 2) ? (pts.last!.value - pts.first!.value) : nil
         return NunaCard {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Weight").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                NavigationLink(value: NunaTodayRoute.weight) {
+                    HStack {
+                        Text("Weight").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Spacer()
+                        Text("Details").font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        Image(systemName: "chevron.right").font(.system(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                    }
+                }.buttonStyle(.plain)
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(verbatim: fmt(latest, 1)).font(.system(size: 56, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
                     Text("kg").font(.system(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
@@ -572,7 +579,7 @@ struct NunaHealthView: View {
                 }
                 NunaSegmented([(value: 30, title: "30D"), (value: 90, title: "90D"), (value: 365, title: "1Y")], selection: $weightRange)
                 NunaLine2Chart(points: pts, color: .white, decimals: 1, height: 170)
-                Text("Read from Apple Health. Add a measurement there and it shows up here.")
+                Text("Read from Apple Health, or typed in under Details.")
                     .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }
         }
@@ -620,17 +627,20 @@ struct NunaHealthView: View {
     private var waistCard: some View {
         NunaCard {
             VStack(alignment: .leading, spacing: 12) {
-                HStack(spacing: 12) {
-                    NunaIconTile("ruler")
-                    VStack(alignment: .leading, spacing: 2) {
-                        cardTitle("Waist")
-                        HStack(alignment: .firstTextBaseline, spacing: 4) {
-                            Text(verbatim: profile.waistCm > 0 ? fmt(profile.waistCm) : "–").font(.system(size: 28, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
-                            if profile.waistCm > 0 { Text("cm").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+                NavigationLink(value: NunaTodayRoute.waist) {
+                    HStack(spacing: 12) {
+                        NunaIconTile("ruler")
+                        VStack(alignment: .leading, spacing: 2) {
+                            cardTitle("Waist")
+                            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                                Text(verbatim: profile.waistCm > 0 ? fmt(profile.waistCm) : "–").font(.system(size: 28, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                                if profile.waistCm > 0 { Text("cm").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+                            }
                         }
+                        Spacer()
+                        Image(systemName: "chevron.right").font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                     }
-                    Spacer()
-                }
+                }.buttonStyle(.plain)
                 Text("Reads the latest value from Apple Health and fills your profile for the VO₂max estimate.")
                     .font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 Button { showWaist = true } label: {
@@ -652,7 +662,7 @@ struct NunaHealthView: View {
             ("Carbs", carbsS.latest?.value, 4, NunaPalette.effort),
             ("Fat", fatGS.latest?.value, 9, NunaPalette.warning),
         ]
-        return NavigationLink(value: TabRoute.dataSources) {
+        return NavigationLink(value: NunaTodayRoute.nutrition) {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
@@ -939,6 +949,10 @@ struct NunaHealthView: View {
         if let m = MetricCatalog.metric(key: key, source: source) {
             NavigationLink(value: NunaTodayRoute.metric(m)) { t }.buttonStyle(.plain)
         } else { t }
+    }
+
+    private func link(_ route: NunaTodayRoute, _ title: LocalizedStringKey, _ subtitle: LocalizedStringKey, _ icon: String) -> some View {
+        NavigationLink(value: route) { NunaListRow(title, subtitle: subtitle, systemImage: icon, showsChevron: true) }.buttonStyle(.plain)
     }
 
     private func row(_ title: LocalizedStringKey, _ subtitle: LocalizedStringKey, _ icon: String,
