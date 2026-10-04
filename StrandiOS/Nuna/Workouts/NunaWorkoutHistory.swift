@@ -80,7 +80,6 @@ struct NunaWorkoutHistoryView: View {
             }
             overview(list)
             calendarCard(list)
-            rhythm(list)
             sessions(shown)
             NunaAnyaCard(verbatim: anyaLine(NunaWorkoutStats(model: m, days: rangeDays, filter: matchesFilter).streak)) { showCoach = true }
         }
@@ -302,20 +301,6 @@ struct NunaWorkoutHistoryView: View {
         }
     }
 
-    /// Active and rest days, the streak, the longest gap and the weekday pattern over the chosen range.
-    @ViewBuilder private func rhythm(_ list: [WorkoutRow]) -> some View {
-        let stats = NunaWorkoutStats(model: m, days: rangeDays, filter: matchesFilter)
-        HStack(spacing: 12) {
-            NunaStatTile(label: "Active days", value: "\(stats.active)", unit: "/ \(rangeDays)")
-            NunaStatTile(label: "Rest days", value: "\(stats.rest)")
-        }
-        HStack(spacing: 12) {
-            NunaStatTile(label: "Current streak", value: "\(stats.streak)", unit: String(localized: "days"))
-            NunaStatTile(label: "Longest gap", value: "\(stats.longestGap)", unit: String(localized: "days"))
-        }
-        weekdayPattern(list)
-    }
-
     // MARK: Sessions, grouped by week (3 and 6 months) or by month (a year, five years)
 
     @ViewBuilder private func sessions(_ list: [WorkoutRow]) -> some View {
@@ -371,42 +356,6 @@ struct NunaWorkoutHistoryView: View {
         let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("MMMM yyyy")
         return f.string(from: start)
     }
-
-    private func weekdayPattern(_ list: [WorkoutRow]) -> some View {
-        let counts = Dictionary(grouping: list, by: { TrendInsights.weekday(m.dayKey($0.startTs)) ?? 0 }).mapValues { Set($0.map { m.dayKey($0.startTs) }).count }
-        let order = [2, 3, 4, 5, 6, 7, 1]
-        let top = max(counts.values.max() ?? 1, 1)
-        let lowest = order.min(by: { (counts[$0] ?? 0) < (counts[$1] ?? 0) })
-        return VStack(alignment: .leading, spacing: 12) {
-            NunaTitleRow(title: "Weekly pattern") { EmptyView() }
-            NunaCard {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack(alignment: .bottom, spacing: 8) {
-                        ForEach(order, id: \.self) { wd in
-                            let c = counts[wd] ?? 0
-                            VStack(spacing: 6) {
-                                Text(verbatim: "\(c)").font(.system(size: 12, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
-                                ZStack(alignment: .bottom) {
-                                    Color.clear
-                                    RoundedRectangle(cornerRadius: 8, style: .continuous).fill(NunaPalette.effort.opacity(wd == lowest ? 0.45 : 1))
-                                        .frame(height: max(8, 64 * CGFloat(c) / CGFloat(top)))
-                                }.frame(height: 64)
-                                Text(verbatim: NunaTrendsFormat.weekdayShort(wd)).font(.system(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                            }
-                            .frame(maxWidth: .infinity)
-                        }
-                    }
-                    if let lowest, !list.isEmpty {
-                        Text(verbatim: String(localized: "Days with a session in this range. \(longDay(lowest)) is the one most often empty. A good day for full rest."))
-                            .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-            }
-        }
-    }
-
-    private func longDay(_ w: Int) -> String { let f = DateFormatter(); f.locale = AppLanguage.activeLocale; return f.weekdaySymbols[(w - 1) % 7] }
-
 
     private func anyaLine(_ streak: Int) -> String {
         streak >= 3 ? String(localized: "You have been active \(streak) days in a row. Make tomorrow an easy day.")
