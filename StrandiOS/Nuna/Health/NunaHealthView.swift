@@ -18,6 +18,19 @@ struct NunaHealthView: View {
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @StateObject private var day = NunaTodayModel()
     @StateObject private var sleep = NunaSleepModel()
+    @StateObject private var hrvS = NunaSeriesModel()
+    @StateObject private var rhrS = NunaSeriesModel()
+    @StateObject private var spo2S = NunaSeriesModel()
+    @StateObject private var respS = NunaSeriesModel()
+    @StateObject private var skinS = NunaSeriesModel()
+    @StateObject private var weightS = NunaSeriesModel()
+    @StateObject private var fatS = NunaSeriesModel()
+    @StateObject private var leanS = NunaSeriesModel()
+    @StateObject private var kcalInS = NunaSeriesModel()
+    @AppStorage(HydrationStore.enabledKey) private var hydrationEnabled = false
+    @State private var waterML = 0
+    @State private var weightRange = 30
+    @State private var hrvRange = 14
 
     @State private var tab = 0
     @State private var legacy: Legacy?
@@ -43,7 +56,6 @@ struct NunaHealthView: View {
                 case 3: sleepTab
                 default: allTab
                 }
-                if coachEnabled { NunaAnyaCard(title: "Are my vitals normal today?") { showCoach = true } }
             }
             .padding(.horizontal, NunaSpacing.screenH)
             .padding(.top, 8)
@@ -57,6 +69,16 @@ struct NunaHealthView: View {
         .task(id: repo.refreshSeq) {
             await day.load(repo: repo, profile: profile)
             await sleep.load(repo: repo)
+            await hrvS.load(repo: repo, key: "hrv", source: "my-whoop")
+            await rhrS.load(repo: repo, key: "rhr", source: "my-whoop")
+            await spo2S.load(repo: repo, key: "spo2", source: "my-whoop")
+            await respS.load(repo: repo, key: "resp_rate", source: "my-whoop")
+            await skinS.load(repo: repo, key: "skin_temp", source: "my-whoop")
+            await weightS.load(repo: repo, key: "weight", source: "apple-health", days: 400)
+            await fatS.load(repo: repo, key: "body_fat", source: "apple-health", days: 400)
+            await leanS.load(repo: repo, key: "lean_mass", source: "apple-health", days: 400)
+            await kcalInS.load(repo: repo, key: "calories_in", source: "nutrition-csv", days: 30)
+            await reloadWater()
         }
         .sheet(item: $legacy) { which in
             NavigationStack {
@@ -77,134 +99,294 @@ struct NunaHealthView: View {
     }
 
     // MARK: Tabs
+    // MARK: All
 
     private var allTab: some View {
         VStack(spacing: NunaSpacing.section) {
             rangeCard
+            if coachEnabled { NunaAnyaCard(title: "Are my vitals normal today?") { showCoach = true } }
             vitalGrid
-            NunaSectionHeader("Body")
+            NunaTitleRow(title: "Body") { EmptyView() }
             bodyGrid
             appleHealthCard
             strapCard
         }
     }
 
+    /// "Your normal range": HRV and resting heart rate against the last 30 days, with the position on a bar.
+    private var rangeCard: some View {
+        let statusText: String = {
+            guard let hb = hrvS.band, let rb = rhrS.band, let h = day.hrv, let r = day.restingHr else {
+                return String(localized: "Still learning your range")
+            }
+            let inH = abs(h - hb.mean) <= max(hb.sd, 1), inR = abs(r - rb.mean) <= max(rb.sd, 1)
+            return inH && inR ? String(localized: "All within your range") : String(localized: "Some signals are up")
+        }()
+        return NunaCard {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Text("Your normal range").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
+                        .foregroundStyle(NunaPalette.textSecondary)
+                    Spacer()
+                    NunaChip(verbatim: statusText, color: statusText == String(localized: "All within your range") ? NunaPalette.charge : nil)
+                }
+                rangeRow("HRV", day.hrv, "ms", hrvS.band)
+                Rectangle().fill(NunaPalette.hairline).frame(height: 1)
+                rangeRow("Resting HR", day.restingHr, "bpm", rhrS.band)
+            }
+        }
+    }
+
+    private func rangeRow(_ label: LocalizedStringKey, _ value: Double?, _ unit: String,
+                          _ band: (mean: Double, sd: Double, lo: Double, hi: Double)?) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(label).font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                Spacer()
+                Text(verbatim: fmt(value)).font(.system(size: 22, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: unit).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+            }
+            if let band {
+                NunaRangeBar(value: value, lo: band.lo, hi: band.hi, mean: band.mean)
+                HStack {
+                    Text(verbatim: fmt(band.lo)); Spacer()
+                    Text(verbatim: String(localized: "30-day average: \(fmt(band.mean))")); Spacer()
+                    Text(verbatim: fmt(band.hi))
+                }
+                .font(.system(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            }
+        }
+    }
+
+    private var vitalGrid: some View {
+        let rhrDelta = day.restingHrDelta
+        return LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+            tile("HRV", "hrv", fmt(day.hrv), "ms", caption: "Average last night")
+            tile("Resting HR", "rhr", fmt(day.restingHr), "bpm",
+                 caption: rhrDelta.map { abs($0.rounded()) < 1 ? LocalizedStringKey("Same as yesterday")
+                                         : ($0 < 0 ? LocalizedStringKey("Down \(Int(abs($0).rounded())) from yesterday") : LocalizedStringKey("Up \(Int($0.rounded())) from yesterday")) })
+            tile("Blood Oxygen", "spo2", fmt(day.spo2), "%", caption: day.spo2.map { $0 >= 95 ? "Normal" : "Low" })
+            tile("Respiratory", "resp_rate", fmt(day.respiratory, 1), "/min", caption: bandCaption(day.respiratory, respS))
+        }
+    }
+
+    /// "Stable" when the value sits inside the person's own recent range, otherwise up or down.
+    private func bandCaption(_ v: Double?, _ s: NunaSeriesModel) -> LocalizedStringKey? {
+        guard let v, let b = s.band else { return nil }
+        let tol = max(b.sd, 0.3)
+        return abs(v - b.mean) <= tol ? "Stable" : (v > b.mean ? "Above range" : "Below range")
+    }
+
+    private var bodyGrid: some View {
+        let w = weightS.latest?.value ?? (profile.weightKg > 0 ? profile.weightKg : nil)
+        let h = profile.heightCm
+        let bmi: Double? = (w != nil && h > 0) ? w! / pow(h / 100, 2) : nil
+        return LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+            tile("Weight", "weight", fmt(w, 1), "kg", source: "apple-health", caption: weightDeltaCaption)
+            NunaStatTile(label: "Waist", value: profile.waistCm > 0 ? fmt(profile.waistCm) : "–", unit: profile.waistCm > 0 ? "cm" : "")
+            NunaStatTile(label: "BMI", value: fmt(bmi, 1))
+        }
+    }
+
+    /// Change in weight over the last 30 days, from stored readings only.
+    private var weightDeltaCaption: LocalizedStringKey? {
+        let r = weightS.readings(30)
+        guard let first = r.first?.value, let last = r.last?.value, r.count >= 2 else { return nil }
+        let d = last - first
+        let t = String(format: "%.1f", locale: AppLanguage.activeLocale, abs(d))
+        return d <= 0 ? LocalizedStringKey("Down \(t) kg in 30 days") : LocalizedStringKey("Up \(t) kg in 30 days")
+    }
+
+    private var appleHealthCard: some View {
+        NunaCard(small: true, padding: EdgeInsets(top: 14, leading: 18, bottom: 6, trailing: 18)) {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    Text("Apple Health").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Spacer()
+                    if let t = live.lastSyncedAt {
+                        Text(verbatim: String(localized: "Last sync \(NunaSleepFormat.clock(Date(timeIntervalSince1970: t)))"))
+                            .font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    }
+                }
+                .padding(.bottom, 6)
+                healthRow("Steps", "Read from iPhone, write the strap estimate", "Read + write")
+                NunaDivider()
+                healthRow("Weight", "Read only", "Read")
+                NunaDivider()
+                healthRow("Waist", "Fills your profile for the VO₂max estimate", "Read")
+                NunaDivider()
+                Button { legacy = .appleHealth } label: { NunaListRow("Manage permissions", systemImage: "heart.text.square", showsChevron: true) }
+                    .buttonStyle(.plain)
+            }
+        }
+    }
+
+    private func healthRow(_ title: LocalizedStringKey, _ sub: LocalizedStringKey, _ chip: LocalizedStringKey) -> some View {
+        NunaListRow(title, subtitle: sub) { NunaChip(chip) }
+    }
+
+    private var strapCard: some View {
+        Button { router.openDevices() } label: {
+            NunaCard(small: true) {
+                HStack(spacing: 12) {
+                    NunaIconTile("applewatch")
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("WHOOP strap").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(live.connected ? "Connected" : "Not connected").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    }
+                    Spacer()
+                    VStack(alignment: .trailing, spacing: 2) {
+                        if let b = live.batteryPct {
+                            Text(verbatim: "\(Int(b.rounded()))%").font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                        }
+                        if let t = live.lastSyncedAt {
+                            Text(verbatim: String(localized: "Synced \(NunaSleepFormat.clock(Date(timeIntervalSince1970: t)))"))
+                                .font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        }
+                    }
+                    Image(systemName: "chevron.right").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                }
+            }
+        }.buttonStyle(.plain)
+    }
+
+    // MARK: Vital
+
     private var vitalTab: some View {
         VStack(spacing: NunaSpacing.section) {
             liveCard
-            vitalGrid
-            NavigationLink(value: stressRoute) {
-                NunaCard(small: true) {
-                    NunaListRow("Stress monitor", subtitle: "Autonomic load, 0 to 3", systemImage: "wind", tint: NunaPalette.charge, showsChevron: true) {
-                        Text(verbatim: fmt(day.stress, 1)).font(.system(size: 17, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+            hrvHero
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                tile("Resting HR", "rhr", fmt(day.restingHr), "bpm", caption: day.restingHrDelta.map { abs($0.rounded()) < 1 ? LocalizedStringKey("Same as yesterday") : ($0 < 0 ? LocalizedStringKey("Down \(Int(abs($0).rounded())) from yesterday") : LocalizedStringKey("Up \(Int($0.rounded())) from yesterday")) })
+                tile("Blood Oxygen", "spo2", fmt(day.spo2), "%", caption: day.spo2.map { $0 >= 95 ? "Normal" : "Low" })
+                tile("Respiratory", "resp_rate", fmt(day.respiratory, 1), "/min", caption: bandCaption(day.respiratory, respS))
+                tile("Skin Temp", "skin_temp", fmt(day.extras["skin_temp"], 1), "°C", caption: skinCaption)
+            }
+            stressCard
+            fitnessCard
+            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
+                VStack(spacing: 0) {
+                    row("Rhythm", "Beat-to-beat view. Experimental", "waveform.path.ecg.rectangle") { router.requestedDestination = .rhythm }
+                }
+            }
+            earlyWarningCard
+        }
+    }
+
+    private var skinCaption: LocalizedStringKey? {
+        guard let v = day.extras["skin_temp"] else { return nil }
+        return abs(v) < 0.5 ? "Small deviation" : "Larger deviation"
+    }
+
+    private var hrvHero: some View {
+        let pts = hrvS.readings(hrvRange)
+        let b = hrvS.band
+        return NunaCard {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text("HRV · average last night").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Spacer()
+                    if let v = day.hrv, let b {
+                        let inRange = abs(v - b.mean) <= max(b.sd, 1)
+                        NunaChip(inRange ? "In range" : (v > b.mean ? "Above range" : "Below range"), color: inRange ? NunaPalette.charge : NunaPalette.warning)
                     }
                 }
-            }.buttonStyle(.plain)
-            NavigationLink(value: NunaTodayRoute.fitnessAge) {
-                NunaCard(small: true) {
-                    NunaListRow("Fitness age", subtitle: "Estimate, plus or minus 5 years", systemImage: "figure.run", showsChevron: true) {
-                        Text(verbatim: fmt(day.extras["fitness_age"])).font(.system(size: 17, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(verbatim: fmt(day.hrv)).font(.system(size: 56, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("ms").font(.system(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    Spacer()
+                    if let d = day.hrvDelta, abs(d.rounded()) >= 1 {
+                        Text(verbatim: (d > 0 ? "+" : "−") + "\(Int(abs(d).rounded()))" + String(localized: " vs yesterday"))
+                            .font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                 }
-            }.buttonStyle(.plain)
-            card {
-                row("Rhythm", "Beat-to-beat view. Experimental", "waveform.path.ecg.rectangle") { router.requestedDestination = .rhythm }
-                NunaDivider()
-                if let warn = appModel.illnessSignal, warn.level != .quiet {
-                    NavigationLink(value: NunaTodayRoute.earlyWarning) {
-                        NunaListRow("Early warning", subtitle: "Signals are up", systemImage: "exclamationmark.triangle.fill", tint: NunaPalette.warning, showsChevron: true)
-                    }.buttonStyle(.plain)
-                } else {
-                    NavigationLink(value: NunaTodayRoute.earlyWarning) {
-                        NunaListRow("Early warning", subtitle: "Nothing unusual", systemImage: "checkmark.shield.fill", tint: NunaPalette.charge, showsChevron: true)
-                    }.buttonStyle(.plain)
-                }
-            }
-        }
-    }
-
-    private var bodyTab: some View {
-        VStack(spacing: NunaSpacing.section) {
-            bodyGrid
-            card {
-                row("Mood check-in", "How are you feeling", "face.smiling") { legacy = .mood }
-                NunaDivider()
-                NavigationLink(value: TabRoute.dataSources) {
-                    NunaListRow("Nutrition", subtitle: "Calories in, from an import", systemImage: "fork.knife", showsChevron: true)
-                }.buttonStyle(.plain)
-                NunaDivider()
-                row("Lab Book", "Your records", "cross.vial.fill") { router.requestedDestination = .labBook }
-                if appModel.cyclePhase != nil {
-                    NunaDivider()
-                    row("Menstrual cycle", "Cycle awareness", "drop.fill") { legacy = .cycle }
-                }
-                NunaDivider()
-                row("Apple Health permissions", "What PHMNOOP reads and writes", "heart.text.square.fill") { legacy = .appleHealth }
-            }
-        }
-    }
-
-    private var sleepTab: some View {
-        VStack(spacing: NunaSpacing.section) {
-            if let night = sleep.night {
-                NavigationLink(value: NunaTodayRoute.sleep(0)) {
-                    NunaCard {
-                        VStack(alignment: .leading, spacing: 14) {
-                            HStack {
-                                Text("Last night").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
-                                    .foregroundStyle(NunaPalette.textSecondary)
-                                Spacer()
-                                Image(systemName: "chevron.right").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                            }
-                            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                                Text(verbatim: NunaSleepFormat.duration(night.asleepMin))
-                                    .font(.system(size: NunaTypeSize.numberL, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
-                                if let r = sleep.value("sleep_performance") {
-                                    NunaChip(verbatim: "Rest \(Int(r.rounded()))%", color: NunaPalette.restText)
-                                }
-                            }
-                            if night.intervals.isEmpty { NunaStageSplitBar(stages: night.stages) }
-                            else { NunaHypnogramStrip(intervals: night.intervals, height: 72) }
-                        }
+                NunaSegmented([(value: 14, title: "14D"), (value: 30, title: "30D"), (value: 90, title: "90D")], selection: $hrvRange)
+                NunaLine2Chart(points: pts, color: .white, decimals: 0, baseline: b?.mean, height: 170)
+                if let b {
+                    HStack(spacing: 12) {
+                        miniStat("Average", fmt(b.mean)); miniStat("Lowest", fmt(b.lo)); miniStat("Highest", fmt(b.hi))
                     }
-                }.buttonStyle(.plain)
-                card {
-                    NavigationLink(value: NunaTodayRoute.sleepStages(0)) { NunaListRow("Sleep stages", systemImage: "chart.bar.fill", tint: NunaPalette.restText, showsChevron: true) }.buttonStyle(.plain)
-                    NunaDivider()
-                    NavigationLink(value: NunaTodayRoute.sleepVitals(0)) { NunaListRow("Overnight vitals", systemImage: "waveform.path.ecg", tint: NunaPalette.restText, showsChevron: true) }.buttonStyle(.plain)
-                    NunaDivider()
-                    NavigationLink(value: NunaTodayRoute.sleepPerformance(0)) { NunaListRow("Need and debt", systemImage: "gauge.medium", tint: NunaPalette.restText, showsChevron: true) }.buttonStyle(.plain)
-                    NunaDivider()
-                    NavigationLink(value: NunaTodayRoute.sleepNaps(0)) { NunaListRow("Naps", systemImage: "zzz", tint: NunaPalette.restText, showsChevron: true) }.buttonStyle(.plain)
-                    NunaDivider()
-                    NavigationLink(value: NunaTodayRoute.bodyClock) { NunaListRow("Body clock", systemImage: "timer", tint: NunaPalette.restText, showsChevron: true) }.buttonStyle(.plain)
                 }
-            } else {
-                NavigationLink(value: NunaTodayRoute.sleep(0)) {
-                    NunaCard { NunaListRow("Sleep", subtitle: "No night recorded yet", systemImage: "moon.zzz.fill", tint: NunaPalette.restText, showsChevron: true) }
-                }.buttonStyle(.plain)
             }
         }
     }
 
-    // MARK: Pieces
-
-    private var stressRoute: NunaTodayRoute {
-        MetricCatalog.metric(key: "stress", source: "my-whoop").map { .metric($0) } ?? .allMetrics
+    private func miniStat(_ label: LocalizedStringKey, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label).font(.system(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(verbatim: value).font(.system(size: 20, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var rangeCard: some View {
-        NunaCard(small: true, highlight: true) {
-            HStack(spacing: 12) {
-                NunaIconTile("checkmark.seal.fill", tint: NunaPalette.charge)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Your normal range").font(.system(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                    Text(verbatim: appModel.illnessSignal.map { $0.level == .quiet ? String(localized: "All within your range") : String(localized: "Some signals are up") } ?? String(localized: "Still learning your range"))
-                        .font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+    private var stressCard: some View {
+        let score = day.stress
+        let level: (LocalizedStringKey, Color)? = score.map { $0 < 1 ? ("Low", NunaPalette.charge) : ($0 < 2 ? ("Medium", NunaPalette.warning) : ("High", NunaPalette.alert)) }
+        return NavigationLink(value: stressRoute) {
+            NunaCard {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Text("Stress monitor").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Spacer()
+                        if let level { NunaChip(level.0, color: level.1) }
+                    }
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(verbatim: fmt(score, 1)).font(.system(size: NunaTypeSize.numberL, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: "/ 3").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    }
+                    Text("Calculated from heart rate and HRV through the day, against your own baseline.")
+                        .font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }
-                Spacer()
             }
-        }
+        }.buttonStyle(.plain)
+    }
+
+    private var fitnessCard: some View {
+        let fit = day.extras["fitness_age"]
+        let age = profile.age
+        let diff: Int? = (fit != nil && age > 0) ? Int((Double(age) - fit!).rounded()) : nil
+        return NavigationLink(value: NunaTodayRoute.fitnessAge) {
+            NunaCard {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Text("Fitness age").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Spacer()
+                        NunaChip("Estimate ±5 years")
+                    }
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text(verbatim: fmt(fit)).font(.system(size: NunaTypeSize.numberL, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("years").font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    }
+                    if let diff {
+                        Text(verbatim: diff == 0 ? String(localized: "About the same as your age")
+                             : (diff > 0 ? String(localized: "\(diff) years younger than your age") : String(localized: "\(-diff) years older than your age")))
+                            .font(.system(size: 14, weight: .bold)).foregroundStyle(diff >= 0 ? NunaPalette.charge : NunaPalette.warning)
+                        Text(verbatim: String(localized: "Your age \(age)")).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    }
+                }
+            }
+        }.buttonStyle(.plain)
+    }
+
+    private var earlyWarningCard: some View {
+        let raised = appModel.illnessSignal.map { $0.level != .quiet } ?? false
+        return NavigationLink(value: NunaTodayRoute.earlyWarning) {
+            NunaCard {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Text("Early warning").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Spacer()
+                        NunaChip(raised ? "Signals are up" : "Safe", color: raised ? NunaPalette.warning : NunaPalette.charge)
+                    }
+                    Text(raised ? "Some signals are away from your range. Take it easy and watch how you feel."
+                                : "No signs of strain. It takes two signals away from your range to raise a warning.")
+                        .font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    HStack(spacing: 8) {
+                        NunaChip("Resting HR"); NunaChip("HRV"); NunaChip("Skin Temp"); NunaChip("Respiratory")
+                    }
+                }
+            }
+        }.buttonStyle(.plain)
     }
 
     private var liveCard: some View {
@@ -227,53 +409,309 @@ struct NunaHealthView: View {
         }.buttonStyle(.plain)
     }
 
-    private var vitalGrid: some View {
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-            tile("HRV", "hrv", fmt(day.hrv), "ms")
-            tile("Resting HR", "rhr", fmt(day.restingHr), "bpm")
-            tile("Blood Oxygen", "spo2", fmt(day.spo2), "%")
-            tile("Respiratory", "resp_rate", fmt(day.respiratory, 1), "/min")
-            tile("Skin Temp", "skin_temp", fmt(day.extras["skin_temp"], 1), "°C")
+    // MARK: Body
+
+    private var bodyTab: some View {
+        VStack(spacing: NunaSpacing.section) {
+            weightHero
+            compositionCard
+            nutritionCard
+            if hydrationEnabled { waterCard }
+            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
+                VStack(spacing: 0) {
+                    row("Lab Book", "Your records", "cross.vial.fill") { router.requestedDestination = .labBook }
+                    if appModel.cyclePhase != nil {
+                        NunaDivider()
+                        row("Menstrual cycle", "Cycle awareness", "drop.fill") { legacy = .cycle }
+                    }
+                    NunaDivider()
+                    row("Mood check-in", "How are you feeling", "face.smiling") { legacy = .mood }
+                    NunaDivider()
+                    row("Apple Health permissions", "What PHMNOOP reads and writes", "heart.text.square.fill") { legacy = .appleHealth }
+                }
+            }
         }
     }
 
-    private var bodyGrid: some View {
+    private var weightHero: some View {
+        let pts = weightS.readings(weightRange)
+        let latest = weightS.latest?.value
+        let delta: Double? = (pts.count >= 2) ? (pts.last!.value - pts.first!.value) : nil
+        return NunaCard {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Weight").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(verbatim: fmt(latest, 1)).font(.system(size: 56, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("kg").font(.system(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    Spacer()
+                    if let delta {
+                        NunaChip(verbatim: (delta <= 0 ? "−" : "+") + String(format: "%.1f", locale: AppLanguage.activeLocale, abs(delta)) + " kg")
+                    }
+                }
+                NunaSegmented([(value: 30, title: "30D"), (value: 90, title: "90D"), (value: 365, title: "1Y")], selection: $weightRange)
+                NunaLine2Chart(points: pts, color: .white, decimals: 1, height: 170)
+                Text("Read from Apple Health. Add a measurement there and it shows up here.")
+                    .font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            }
+        }
+    }
+
+    private var compositionCard: some View {
+        let w = weightS.latest?.value ?? (profile.weightKg > 0 ? profile.weightKg : nil)
         let h = profile.heightCm
-        let w = day.extras["weight"] ?? (profile.weightKg > 0 ? profile.weightKg : nil)
         let bmi: Double? = (w != nil && h > 0) ? w! / pow(h / 100, 2) : nil
-        return LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-            tile("Weight", "weight", fmt(w, 1), "kg", source: "apple-health")
-            NunaStatTile(label: "Waist", value: profile.waistCm > 0 ? fmt(profile.waistCm) : "–", unit: "cm")
-            NunaStatTile(label: "BMI", value: fmt(bmi, 1))
+        return VStack(alignment: .leading, spacing: 12) {
+            NunaTitleRow(title: "Body composition") { EmptyView() }
+            LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+                if let f = fatS.latest?.value { NunaStatTile(label: "Body fat", value: fmt(f, 1), unit: "%") }
+                if let l = leanS.latest?.value { NunaStatTile(label: "Lean mass", value: fmt(l, 1), unit: "kg") }
+                NunaStatTile(label: "BMI", value: fmt(bmi, 1))
+                NunaStatTile(label: "Waist", value: profile.waistCm > 0 ? fmt(profile.waistCm) : "–", unit: profile.waistCm > 0 ? "cm" : "")
+            }
         }
     }
 
-    private var appleHealthCard: some View {
-        card {
-            row("Apple Health", "Steps, weight and waist", "heart.text.square.fill", NunaPalette.alertText) { legacy = .appleHealth }
-        }
-    }
-
-    private var strapCard: some View {
-        Button { router.openDevices() } label: {
-            NunaCard(small: true) {
-                NunaListRow("WHOOP strap", subtitle: live.connected ? "Connected" : "Not connected", systemImage: "applewatch", showsChevron: true) {
-                    if let b = live.batteryPct { Text(verbatim: "\(Int(b.rounded()))%").font(.system(size: 17, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary) }
+    private var nutritionCard: some View {
+        let kcalIn = kcalInS.latest
+        return NavigationLink(value: TabRoute.dataSources) {
+            NunaCard {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Text("Nutrition").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Spacer()
+                        NunaChip("Import CSV")
+                    }
+                    if let kcalIn {
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            Text(verbatim: fmt(kcalIn.value)).font(.system(size: NunaTypeSize.numberL, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                            Text("kcal in").font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                            Spacer()
+                            if let out = day.calories { Text(verbatim: String(localized: "Out \(fmt(out))")).font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                        }
+                        Text(verbatim: kcalIn.day).font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    } else {
+                        Text("No nutrition imported yet. Import a CSV from Cronometer or MacroFactor, processed on this phone.")
+                            .font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
         }.buttonStyle(.plain)
     }
 
+    private var waterCard: some View {
+        let goal = repo.hydrationGoalML(profileSex: profile.sex)
+        return NunaCard {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Water").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(verbatim: String(format: "%.1f", locale: AppLanguage.activeLocale, Double(waterML) / 1000))
+                        .font(.system(size: NunaTypeSize.numberL, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: "/ " + String(format: "%.1f", locale: AppLanguage.activeLocale, Double(goal) / 1000) + " L")
+                        .font(.system(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                }
+                NunaProgressBar(fraction: Double(waterML) / Double(max(goal, 1)), color: NunaPalette.effort)
+                HStack(spacing: 10) {
+                    Button("+250") { Task { await addWater(250) } }.buttonStyle(.nuna(.ghost, height: 44, fullWidth: true))
+                    Button("+500") { Task { await addWater(500) } }.buttonStyle(.nuna(.ghost, height: 44, fullWidth: true))
+                }
+            }
+        }
+    }
+
+    private func reloadWater() async {
+        guard hydrationEnabled else { return }
+        waterML = Int(await repo.hydrationTotal(day: Repository.localDayKey(Date())))
+    }
+
+    private func addWater(_ ml: Int) async {
+        _ = await repo.logHydration(amountMl: ml)
+        repo.noteHydrationChanged()
+        await reloadWater()
+    }
+
+    // MARK: Sleep
+
+    private var sleepTab: some View {
+        let recent = Array(sleep.nights.prefix(7).reversed())
+        return VStack(spacing: NunaSpacing.section) {
+            if recent.isEmpty {
+                NavigationLink(value: NunaTodayRoute.sleep(0)) {
+                    NunaCard { NunaListRow("Sleep", subtitle: "No night recorded yet", systemImage: "moon.zzz.fill", showsChevron: true) }
+                }.buttonStyle(.plain)
+            } else {
+                weekCard(recent)
+                needCard(recent)
+                bedtimeCard(recent)
+                stagesAverageCard(recent)
+                napsWeekCard(recent)
+                NavigationLink(value: NunaTodayRoute.sleep(0)) {
+                    NunaCard(small: true) { NunaListRow("See last night in detail", systemImage: "moon.zzz.fill", showsChevron: true) }
+                }.buttonStyle(.plain)
+            }
+        }
+    }
+
+    private func weekday(_ d: Date) -> String {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE")
+        return f.string(from: d)
+    }
+
+    private func weekCard(_ nights: [NunaNight]) -> some View {
+        let rest = nights.compactMap { sleep.value("sleep_performance", $0) }
+        let avgRest = rest.isEmpty ? nil : rest.reduce(0, +) / Double(rest.count)
+        let avgSleep = nights.map(\.asleepMin).reduce(0, +) / Double(nights.count)
+        let effs = nights.compactMap { sleep.efficiency($0) }
+        let avgEff = effs.isEmpty ? nil : effs.reduce(0, +) / Double(effs.count)
+        let wakes = nights.compactMap { $0.daily?.disturbances }.map(Double.init)
+        let avgWakes = wakes.isEmpty ? nil : wakes.reduce(0, +) / Double(wakes.count)
+        let top = max(nights.map(\.asleepMin).max() ?? 1, 1)
+        return NunaCard {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack {
+                    Text("Last 7 nights").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Spacer()
+                    if let avgRest { NunaChip(verbatim: String(localized: "Average Rest \(Int(avgRest.rounded()))%"), color: NunaPalette.restText) }
+                }
+                NunaColumns(items: nights.map { n in
+                    NunaColumns.Item(weekday: weekday(n.wakeDate), date: n.wakeDate, fraction: n.asleepMin / top,
+                                     valueText: NunaSleepFormat.duration(n.asleepMin), highlight: n.id == nights.last?.id)
+                }, color: NunaPalette.rest, highlightColor: NunaPalette.restText)
+                HStack(spacing: 0) {
+                    miniStat("Duration", NunaSleepFormat.duration(avgSleep))
+                    miniStat("Efficiency", avgEff.map { "\(Int($0.rounded()))%" } ?? "–")
+                    miniStat("Wake-ups", avgWakes.map { String(format: "%.1f×", locale: AppLanguage.activeLocale, $0) } ?? "–")
+                }
+                .padding(.top, 4)
+            }
+        }
+    }
+
+    private func needCard(_ nights: [NunaNight]) -> some View {
+        let avg = nights.map(\.asleepMin).reduce(0, +) / Double(nights.count)
+        let need = nights.last.map { sleep.need($0) } ?? 480
+        let debt = max(0, need - avg)
+        return NunaCard {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text("Need vs actual").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Spacer()
+                    if debt >= 1 { NunaChip(verbatim: String(localized: "Sleep debt \(Int(debt.rounded())) min"), color: NunaPalette.warning) }
+                }
+                HStack(spacing: 0) {
+                    miniStat("Need", NunaSleepFormat.duration(need)); miniStat("Average", NunaSleepFormat.duration(avg))
+                }
+                NunaProgressBar(fraction: avg / max(need, 1), color: NunaPalette.rest)
+            }
+        }
+    }
+
+    /// Bedtime for each of the 7 nights and how far they spread.
+    private func bedtimeCard(_ nights: [NunaNight]) -> some View {
+        let cal = Calendar.current
+        let hours: [Double] = nights.map { n in
+            let c = cal.dateComponents([.hour, .minute], from: n.onset)
+            let h = Double(c.hour ?? 0) + Double(c.minute ?? 0) / 60
+            return h < 12 ? h + 24 : h
+        }
+        let mean = hours.reduce(0, +) / Double(max(hours.count, 1))
+        let sd = (hours.map { ($0 - mean) * ($0 - mean) }.reduce(0, +) / Double(max(hours.count, 1))).squareRoot()
+        let lo = (hours.min() ?? mean) - 0.5, hi = (hours.max() ?? mean) + 0.5
+        return NunaCard {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    Text("Bedtime consistency").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Spacer()
+                    NunaChip(verbatim: String(localized: "Spread \(Int((sd * 60).rounded())) min"))
+                }
+                GeometryReader { geo in
+                    ZStack(alignment: .topLeading) {
+                        ForEach(nights.indices, id: \.self) { i in
+                            let x = geo.size.width * (CGFloat(i) + 0.5) / CGFloat(nights.count)
+                            let y = geo.size.height * CGFloat((hours[i] - lo) / max(hi - lo, 0.01))
+                            Circle().fill(.white).frame(width: 10, height: 10).position(x: x, y: y)
+                            Text(verbatim: NunaSleepFormat.clock(nights[i].onset)).font(.system(size: 10, weight: .semibold)).monospacedDigit()
+                                .foregroundStyle(NunaPalette.textSecondary).position(x: x, y: min(geo.size.height, y + 16))
+                        }
+                    }
+                }
+                .frame(height: 110)
+                HStack(spacing: 0) {
+                    ForEach(nights) { n in
+                        Text(verbatim: weekday(n.wakeDate)).frame(maxWidth: .infinity)
+                    }
+                }
+                .font(.system(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            }
+        }
+    }
+
+    private func stagesAverageCard(_ nights: [NunaNight]) -> some View {
+        let n = Double(nights.count)
+        let avg = Stages(awake: nights.map { $0.stages.awake }.reduce(0, +) / n, light: nights.map { $0.stages.light }.reduce(0, +) / n,
+                         deep: nights.map { $0.stages.deep }.reduce(0, +) / n, rem: nights.map { $0.stages.rem }.reduce(0, +) / n)
+        let typ = sleep.typical()
+        return NunaCard {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack {
+                    Text("Average stages").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Spacer()
+                    Text("Marker = your usual").font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                }
+                stageLine(.deep, avg.deep, typ?.deep, avg.total)
+                stageLine(.rem, avg.rem, typ?.rem, avg.total)
+                stageLine(.light, avg.light, typ?.light, avg.total)
+            }
+        }
+    }
+
+    private func napTitle(_ nap: NunaNap) -> String { weekday(nap.start) + " " + NunaSleepFormat.clock(nap.start) }
+
+    private func stageLine(_ stage: SleepStage, _ minutes: Double, _ typical: Double?, _ total: Double) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text(stage.nunaName).font(.system(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                Spacer()
+                Text(verbatim: NunaSleepFormat.duration(minutes)).font(.system(size: 16, weight: .bold, design: .rounded)).foregroundStyle(NunaPalette.textPrimary)
+            }
+            NunaRangeBar(value: minutes, lo: 0, hi: max(total / 2, 1), mean: typical, color: stage.nunaColor, showsMarkerDot: false)
+        }
+    }
+
+    private func napsWeekCard(_ nights: [NunaNight]) -> some View {
+        let naps = nights.flatMap(\.naps)
+        return NunaCard(small: true, padding: EdgeInsets(top: 14, leading: 18, bottom: 6, trailing: 18)) {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack {
+                    Text("Naps").font(.system(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Spacer()
+                    Text(verbatim: String(localized: "This week · \(naps.count)")).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                }
+                .padding(.bottom, 6)
+                if naps.isEmpty {
+                    Text("No naps this week").font(.system(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).padding(.vertical, 12)
+                }
+                ForEach(Array(naps.enumerated()), id: \.offset) { idx, nap in
+                    if idx > 0 { NunaDivider() }
+                    NunaListRow(LocalizedStringKey(napTitle(nap)), subtitle: LocalizedStringKey(NunaSleepFormat.duration(nap.asleepMin))) {
+                        NunaChip(nap.manual ? "Manual" : "Auto")
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: Pieces
+
+    private var stressRoute: NunaTodayRoute {
+        MetricCatalog.metric(key: "stress", source: "my-whoop").map { .metric($0) } ?? .allMetrics
+    }
+
     @ViewBuilder private func tile(_ label: LocalizedStringKey, _ key: String, _ value: String, _ unit: String,
-                                   source: String = "my-whoop") -> some View {
-        let t = NunaStatTile(label: label, value: value, unit: value == "–" ? "" : unit)
+                                   source: String = "my-whoop", caption: LocalizedStringKey? = nil) -> some View {
+        let t = NunaStatTile(label: label, value: value, unit: value == "–" ? "" : unit, caption: caption)
         if let m = MetricCatalog.metric(key: key, source: source) {
             NavigationLink(value: NunaTodayRoute.metric(m)) { t }.buttonStyle(.plain)
         } else { t }
-    }
-
-    private func card<C: View>(@ViewBuilder _ content: () -> C) -> some View {
-        NunaCard(small: true) { VStack(spacing: 0) { content() } }
     }
 
     private func row(_ title: LocalizedStringKey, _ subtitle: LocalizedStringKey, _ icon: String,

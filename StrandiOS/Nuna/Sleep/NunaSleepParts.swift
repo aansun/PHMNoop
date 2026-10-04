@@ -190,12 +190,42 @@ struct NunaProgressBar: View {
     }
 }
 
+/// A bar from `lo` to `hi` with a marker for the current value and a tick for the average. Everything on it
+/// is a stored reading or an average of stored readings.
+struct NunaRangeBar: View {
+    let value: Double?
+    let lo: Double
+    let hi: Double
+    var mean: Double?
+    var color: Color = NunaPalette.rest
+    var showsMarkerDot = true
+
+    var body: some View {
+        GeometryReader { geo in
+            let span = max(hi - lo, 0.0001)
+            let x: (Double) -> CGFloat = { geo.size.width * CGFloat(min(max(($0 - lo) / span, 0), 1)) }
+            ZStack(alignment: .leading) {
+                Capsule().fill(Color.white.opacity(0.09))
+                if let value, !showsMarkerDot { Capsule().fill(color).frame(width: max(6, x(value))) }
+                if let mean { Rectangle().fill(Color.white.opacity(0.7)).frame(width: 2, height: 16).offset(x: x(mean) - 1) }
+                if let value, showsMarkerDot {
+                    Circle().fill(.white).frame(width: 14, height: 14).offset(x: min(max(x(value) - 7, 0), geo.size.width - 14))
+                }
+            }
+            .frame(height: 16)
+        }
+        .frame(height: 16)
+        .accessibilityHidden(true)
+    }
+}
+
 struct NunaStatTile: View {
     let label: LocalizedStringKey
     let value: String
     var unit: String = ""
     var fraction: Double?
     var color: Color = NunaPalette.rest
+    var caption: LocalizedStringKey?
     var body: some View {
         NunaCard(small: true) {
             VStack(alignment: .leading, spacing: 8) {
@@ -209,6 +239,10 @@ struct NunaStatTile: View {
                     }
                 }
                 if let fraction { NunaProgressBar(fraction: fraction, color: color) }
+                if let caption {
+                    Text(caption).font(.system(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
