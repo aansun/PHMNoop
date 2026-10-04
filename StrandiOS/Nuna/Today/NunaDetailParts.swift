@@ -303,6 +303,7 @@ struct NunaColumns: View {
     let items: [Item]
     let color: Color
     var highlightColor: Color?
+    var showsDates = true
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 4) {
@@ -319,8 +320,10 @@ struct NunaColumns: View {
                     }
                     VStack(spacing: 1) {
                         Text(verbatim: item.weekday).font(.system(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textPrimary.opacity(item.highlight ? 1 : 0.8))
-                        Text(verbatim: nunaAxisDate(item.date)).font(.system(size: 9.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                            .lineLimit(1).minimumScaleFactor(0.7)
+                        if showsDates {
+                            Text(verbatim: nunaAxisDate(item.date)).font(.system(size: 9.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                .lineLimit(1).minimumScaleFactor(0.7)
+                        }
                     }
                 }
                 .frame(maxWidth: .infinity)
