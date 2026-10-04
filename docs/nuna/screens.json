@@ -1333,7 +1333,7 @@
     "title": "Tidur · Ringkasan",
     "group": "5. Tidur: ringkasan dan detail",
     "w": 390,
-    "h": 2260,
+    "h": 2400,
     "interactive": true,
     "links": [
       "Anya",
@@ -1342,6 +1342,7 @@
       "HealthSleep",
       "Main",
       "Personalize",
+      "SleepBodyClock",
       "SleepNap",
       "SleepPerformance",
       "SleepStages",
@@ -1425,6 +1426,45 @@
     ],
     "existing": "NEW",
     "file": "mockups/SleepNap.dc.html"
+  },
+  {
+    "id": "SleepBodyClock",
+    "title": "Jam tubuh",
+    "group": "5. Tidur: ringkasan dan detail",
+    "w": 390,
+    "h": 1900,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaSheetSleep",
+      "Health",
+      "Main",
+      "Personalize",
+      "Sleep",
+      "SleepBodyClockPlan",
+      "Trends"
+    ],
+    "existing": "BodyClockCard, BodyClockDialCard, BodyClockDialSection (CircadianEngine)",
+    "file": "mockups/SleepBodyClock.dc.html"
+  },
+  {
+    "id": "SleepBodyClockPlan",
+    "title": "Rencana jam tubuh",
+    "group": "5. Tidur: ringkasan dan detail",
+    "w": 390,
+    "h": 1760,
+    "interactive": true,
+    "links": [
+      "Anya",
+      "AnyaSheetSleep",
+      "Health",
+      "Main",
+      "Personalize",
+      "SleepBodyClock",
+      "Trends"
+    ],
+    "existing": "NEW (CircadianEngine.planShift)",
+    "file": "mockups/SleepBodyClockPlan.dc.html"
   },
   {
     "id": "Anya",

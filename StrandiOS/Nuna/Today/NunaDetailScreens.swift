@@ -223,7 +223,8 @@ struct NunaMetricDetailView: View {
         switch metric.category {
         case "Effort": return NunaPalette.effortText
         case "Rest": return NunaPalette.restText
-        default: return NunaPalette.charge
+        case "Charge": return NunaPalette.charge
+        default: return NunaPalette.textPrimary   // body and nutrition metrics carry no score meaning
         }
     }
     private var overnight: Bool { ["hrv", "rhr", "spo2", "resp_rate", "skin_temp"].contains(metric.key) }

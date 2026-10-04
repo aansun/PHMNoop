@@ -15,6 +15,8 @@ enum NunaTodayRoute: Hashable {
     case sleepPerformance(Int)
     case sleepNaps(Int)
     case fitnessAge
+    case bodyClock
+    case bodyClockPlan
 }
 
 extension View {
@@ -37,6 +39,8 @@ extension View {
             case .sleepPerformance(let i): NunaSleepPerformanceView(startIndex: i)
             case .sleepNaps(let i): NunaNapView(startIndex: i)
             case .fitnessAge: NunaFitnessAgeView()
+            case .bodyClock: NunaBodyClockView()
+            case .bodyClockPlan: NunaBodyClockPlanView()
             }
         }
     }

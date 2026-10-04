@@ -28,6 +28,7 @@ The floating "+" on Today opens the **Quick actions** sheet. The contextual Anya
 | Latihan | Saya | 13 |
 | Anya | Hari ini | 12 |
 | Tren | Anya | 11 |
+| Tidur | Anya | 11 |
 | Latihan | Kesehatan | 11 |
 | Latihan | Tren | 11 |
 | Saya | Perangkat | 10 |
@@ -36,18 +37,17 @@ The floating "+" on Today opens the **Quick actions** sheet. The contextual Anya
 | Anya | Kesehatan | 10 |
 | Anya | Tren | 9 |
 | Hari ini | Latihan | 8 |
+| Tidur | Kesehatan | 8 |
+| Tidur | Hari ini | 8 |
 | Anya | Saya | 8 |
 | Perangkat | Anya | 8 |
 | Perangkat | Hari ini | 8 |
 | Perangkat | Saya | 8 |
-| Tidur | Anya | 7 |
+| Tidur | Saya | 7 |
+| Tidur | Tren | 7 |
 | Perangkat | Kesehatan | 7 |
 | Perangkat | Tren | 7 |
 | Hari ini | Tidur | 6 |
-| Tidur | Kesehatan | 6 |
-| Tidur | Hari ini | 6 |
-| Tidur | Saya | 5 |
-| Tidur | Tren | 5 |
 | Saya | Latihan | 4 |
 | Hari ini | Perangkat | 2 |
 | Tren | Tidur | 2 |

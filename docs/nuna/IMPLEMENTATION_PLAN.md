@@ -79,6 +79,8 @@ Sleep summary with movement strip and naps; stage, vitals, performance and nap s
 
 Needs: nightly movement summary and nap detection (see `DATA_REQUIREMENTS.md`). Fitness age follows `docs/FITNESS_AGE.md`: weekly, ±5-year band, "comparison, not biological age".
 
+Body clock (added after the first design pass): two new mockups, `SleepBodyClock` (lowest point, 24 h dial of last night against the ideal window, lowest / peak / schedule tiles, 24 h rhythm curve, confidence, how it is calculated) and `SleepBodyClockPlan` (trip or shift planner with the daily light and sleep plan). `Sleep` links to it with a Body clock card, and Health, Sleep tab lists it. Implemented in `StrandiOS/Nuna/Sleep/NunaBodyClock.swift` on the existing `CircadianEngine` (estimate, chronotype, ideal window, `planShift`); nothing is computed differently from Default. It needs at least 7 days of heart-rate data, otherwise it shows the honest "hard to read" state with the planner still available.
+
 Status (built and checked in the iOS simulator with a restored backup):
 - `StrandiOS/Nuna/Sleep/`: `NunaSleepModel` (night picker over the same session grouping, main-night and nap rules as `SleepView`; stage timeline and split; need, hours-vs-needed, restorative, consistency and debt use the same rules as `SleepModel`), `NunaSleepParts` (hypnogram strip, stage split bar, legend, stat tile, night picker), `NunaSleepScreens` (summary, stages, overnight vitals, performance with need and debt, naps).
 - `StrandiOS/Nuna/Health/NunaHealthView.swift`: Health hub with All / Vital / Body / Sleep tabs and the fitness age screen (weekly value, plus or minus 5 year band against the real age, "comparison, not biological age"). It replaces the Health tab root in `NunaRootView`.

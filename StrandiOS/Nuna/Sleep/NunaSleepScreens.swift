@@ -65,10 +65,37 @@ struct NunaSleepView: View {
                         NunaListRow("Woke up \(d) times", subtitle: "Brief awakenings during the night", systemImage: "moon.fill", tint: NunaPalette.restText)
                     }
                 }
+                bodyClockCard
                 if coachEnabled { NunaAnyaCard(title: "How can I sleep better tonight?") { showCoach = true } }
             }
         }
         .sheet(isPresented: $showCoach) { CoachLauncherSheet(context: "sleep") }
+    }
+
+    @EnvironmentObject private var appModel: AppModel
+
+    /// Body clock: the lowest point and whether last night sat in the ideal window.
+    @ViewBuilder private var bodyClockCard: some View {
+        NavigationLink(value: NunaTodayRoute.bodyClock) {
+            NunaCard(small: true) {
+                HStack(spacing: 12) {
+                    NunaIconTile("timer", tint: NunaPalette.restText)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Body clock").font(.system(size: 10.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        if let est = appModel.circadianPhase, est.confidence != .unreadable {
+                            Text(verbatim: String(localized: "Lowest point \(NunaClockHour.text(est.tempMinHour))"))
+                                .font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        } else {
+                            Text("Still learning").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            Text("Needs about a week of heart-rate data").font(.system(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        }
+                    }
+                    Spacer(minLength: 8)
+                    Image(systemName: "chevron.right").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                }
+            }
+        }
+        .buttonStyle(.plain)
     }
 
     private func hero(_ model: NunaSleepModel, _ night: NunaNight) -> some View {

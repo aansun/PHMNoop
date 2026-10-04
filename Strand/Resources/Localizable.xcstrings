@@ -1,6 +1,162 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "Your body clock estimate": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Perkiraan jam tubuhmu"}}
+        } },
+        "Wide range": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rentang lebar"}}
+        } },
+        "lowest point": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "titik terendah"}}
+        } },
+        "You are sleepiest around this time. Good sleep ends about 2.5 hours after it.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kamu paling mengantuk sekitar jam ini. Tidur yang baik berakhir sekitar 2,5 jam setelahnya."}}
+        } },
+        "Sleep and ideal window": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidur dan jendela ideal"}}
+        } },
+        "Aligned": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Selaras"}}
+        } },
+        "Difference": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Selisih"}}
+        } },
+        "earlier": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "lebih awal"}}
+        } },
+        "later": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "lebih lambat"}}
+        } },
+        "Ideal window": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Jendela ideal"}}
+        } },
+        "Lowest point": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Titik terendah"}}
+        } },
+        "Your sleep was %lld minutes %@ than the ideal window (%@ to %@). The night has the same length, so this is about timing, not duration.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidurmu %lld menit %@ dari jendela ideal (%@ sampai %@). Panjang malam sama, jadi ini soal waktu, bukan durasi."}}
+        } },
+        "Schedule": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Jadwalmu"}}
+        } },
+        "24-hour rhythm": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ritme 24 jam"}}
+        } },
+        "Estimated shape": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Perkiraan bentuk"}}
+        } },
+        "From the last 14 days": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dari 14 hari terakhir"}}
+        } },
+        "Hard to read": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sulit dibaca"}}
+        } },
+        "It needs at least 7 days of data for a first estimate. More days narrow the range.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Butuh minimal 7 hari data untuk perkiraan pertama. Makin banyak hari, makin sempit rentangnya."}}
+        } },
+        "Shift your clock with light and sleep timing": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Geser jam tubuh dengan cahaya dan waktu tidur"}}
+        } },
+        "Is my sleep timing right for my body clock?": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Apakah waktu tidurku pas dengan jam tubuhku?"}}
+        } },
+        "From 14 days of heart-rate rhythm, not a temperature reading": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Dari ritme detak jantung 14 hari, bukan suhu langsung"}}
+        } },
+        "Your heart rate rises and falls over the day. NOOP fits one smooth daily cycle to the last 14 days, finds its lowest and highest points, and places your body-clock low about when your heart-rate rhythm bottoms out. It is an on-device estimate, not a medical measurement or a body temperature reading.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Detak jantungmu naik dan turun sepanjang hari. NOOP mencocokkan satu siklus harian yang mulus ke 14 hari terakhir, mencari titik terendah dan tertingginya, lalu menempatkan titik rendah jam tubuhmu di sekitar saat ritme detak jantung paling rendah. Ini perkiraan di perangkat, bukan pengukuran medis atau suhu tubuh."}}
+        } },
+        "Your body clock is hard to read right now": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Jam tubuhmu sulit dibaca saat ini"}}
+        } },
+        "It needs at least 7 days of heart-rate data with a clear day and night pattern. Wear your strap day and night and check back.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Butuh minimal 7 hari data detak jantung dengan pola siang dan malam yang jelas. Pakai strap siang dan malam lalu cek lagi."}}
+        } },
+        "Still learning": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Masih mempelajari"}}
+        } },
+        "Needs about a week of heart-rate data": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Butuh sekitar seminggu data detak jantung"}}
+        } },
+        "Lowest point %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Titik terendah %@"}}
+        } },
+        "Body clock plan": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rencana jam tubuh"}}
+        } },
+        "Trip": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Perjalanan"}}
+        } },
+        "Shift work": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Shift kerja"}}
+        } },
+        "Travel direction": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Arah perjalanan"}}
+        } },
+        "Shift direction": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Arah pergeseran"}}
+        } },
+        "East (earlier)": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ke timur (maju)"}}
+        } },
+        "West (later)": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ke barat (mundur)"}}
+        } },
+        "Earlier": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lebih awal"}}
+        } },
+        "Time zone difference": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Selisih zona waktu"}}
+        } },
+        "Shift by": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Geser sebesar"}}
+        } },
+        "hours": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "jam"}}
+        } },
+        "Your sleep window now": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Jadwal tidurmu sekarang"}}
+        } },
+        "Light and sleep timing only": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hanya cahaya dan waktu tidur"}}
+        } },
+        "days": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "hari"}}
+        } },
+        "Move your body clock %lld hours earlier, about 1 hour a day.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Majukan jam tubuh %lld jam, sekitar 1 jam per hari."}}
+        } },
+        "Move your body clock %lld hours later, about 1 hour a day.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Mundurkan jam tubuh %lld jam, sekitar 1 jam per hari."}}
+        } },
+        "Daily plan": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rencana harian"}}
+        } },
+        "Sleep %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tidur %@"}}
+        } },
+        "Bright light": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Cahaya terang"}}
+        } },
+        "Dim the lights": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Redupkan lampu"}}
+        } },
+        "From %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Mulai %@"}}
+        } },
+        "Sleep window": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Jendela tidur"}}
+        } },
+        "Get bright light soon after waking and keep the evening dim. This moves your clock earlier.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Cahaya terang sejam setelah bangun dan redupkan malam. Ini menggeser jam tubuhmu lebih awal."}}
+        } },
+        "Get bright light in the evening and go easy on bright morning light. This moves your clock later.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Cahaya terang di malam hari dan kurangi cahaya terang pagi. Ini menggeser jam tubuhmu lebih lambat."}}
+        } },
+        "Light and sleep timing guidance only. Not medical advice.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Panduan cahaya dan jam tidur saja. Bukan saran medis."}}
+        } },
         "Show as list": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Tampilkan sebagai daftar"}}
         } },

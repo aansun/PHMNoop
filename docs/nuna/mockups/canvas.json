@@ -1,2177 +1,2197 @@
 {
-  "v": 3,
-  "attachments": {},
-  "boards": {
-    "Anya.dc.html": {
-      "h": 1700,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Anya",
-      "w": 390,
-      "x": 0,
-      "y": 45080
-    },
-    "AnyaAttach.dc.html": {
-      "h": 900,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Tambah lampiran",
-      "w": 390,
-      "x": 940,
-      "y": 45080
-    },
-    "AnyaBrief.dc.html": {
-      "h": 1560,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Ringkasan pagi",
-      "w": 390,
-      "x": 2350,
-      "y": 45080
-    },
-    "AnyaChatGPT.dc.html": {
-      "h": 1180,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Masuk ChatGPT",
-      "w": 390,
-      "x": 940,
-      "y": 47360
-    },
-    "AnyaConnect.dc.html": {
-      "h": 1560,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Hubungkan Anya",
-      "w": 390,
-      "x": 0,
-      "y": 47360
-    },
-    "AnyaCustom.dc.html": {
-      "h": 1400,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Server sendiri",
-      "w": 390,
-      "x": 1410,
-      "y": 47360
-    },
-    "AnyaHistory.dc.html": {
-      "h": 1420,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Riwayat",
-      "w": 390,
-      "x": 470,
-      "y": 49940
-    },
-    "AnyaInstructions.dc.html": {
-      "h": 1260,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Instruksi Anya",
-      "w": 390,
-      "x": 2350,
-      "y": 47360
-    },
-    "AnyaKey.dc.html": {
-      "h": 1360,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Kunci API",
-      "w": 390,
-      "x": 470,
-      "y": 47360
-    },
-    "AnyaMap.dc.html": {
-      "h": 1340,
-      "radius": 24,
-      "title": "Peta Anya di setiap modul",
-      "w": 1330,
-      "x": 0,
-      "y": 52120
-    },
-    "AnyaMemory.dc.html": {
-      "h": 1560,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Memory",
-      "w": 390,
-      "x": 0,
-      "y": 49940
-    },
-    "AnyaPlan.dc.html": {
-      "h": 1860,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Rencana hari ini",
-      "w": 390,
-      "x": 1880,
-      "y": 45080
-    },
-    "AnyaSettings.dc.html": {
-      "h": 2160,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Pengaturan Anya",
-      "w": 390,
-      "x": 1880,
-      "y": 47360
-    },
-    "AnyaSheetSleep.dc.html": {
-      "h": 1100,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Anya di Tidur",
-      "w": 390,
-      "x": 1410,
-      "y": 52120
-    },
-    "AnyaSheetTrends.dc.html": {
-      "h": 1100,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Anya di Tren",
-      "w": 390,
-      "x": 1880,
-      "y": 52120
-    },
-    "AnyaSheetWorkout.dc.html": {
-      "h": 1100,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Anya di Latihan",
-      "w": 390,
-      "x": 2350,
-      "y": 52120
-    },
-    "AnyaStart.dc.html": {
-      "h": 1560,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Anya · mulai",
-      "w": 390,
-      "x": 470,
-      "y": 45080
-    },
-    "AnyaVoice.dc.html": {
-      "h": 900,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Masukan suara",
-      "w": 390,
-      "x": 1410,
-      "y": 45080
-    },
-    "AnyaVoiceCoach.dc.html": {
-      "h": 1760,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Pelatih suara",
-      "w": 390,
-      "x": 940,
-      "y": 49940
-    },
-    "Connected.dc.html": {
-      "x": 1410,
-      "y": 82300,
-      "w": 390,
-      "h": 1250,
-      "title": "Terhubung",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "Devices.dc.html": {
-      "x": 0,
-      "y": 79640,
-      "w": 390,
-      "h": 2240,
-      "title": "Perangkat",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "Experiments.dc.html": {
-      "x": 0,
-      "y": 108730,
-      "w": 390,
-      "h": 1960,
-      "title": "Eksperimen",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "Health.dc.html": {
-      "h": 1980,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Kesehatan",
-      "w": 390,
-      "x": 0,
-      "y": 22470
-    },
-    "HealthBody.dc.html": {
-      "h": 2090,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Kesehatan · Tubuh",
-      "w": 390,
-      "x": 940,
-      "y": 22470
-    },
-    "HealthCycle.dc.html": {
-      "h": 1620,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Siklus menstruasi",
-      "w": 390,
-      "x": 1880,
-      "y": 28110
-    },
-    "HealthLab.dc.html": {
-      "h": 1900,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Lab Book",
-      "w": 390,
-      "x": 1410,
-      "y": 28110
-    },
-    "HealthLive.dc.html": {
-      "h": 1400,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Detak langsung",
-      "w": 390,
-      "x": 0,
-      "y": 25390
-    },
-    "HealthMind.dc.html": {
-      "h": 1400,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Cek suasana hati",
-      "w": 390,
-      "x": 1880,
-      "y": 25390
-    },
-    "HealthNutrition.dc.html": {
-      "h": 1960,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Nutrisi",
-      "w": 390,
-      "x": 940,
-      "y": 28110
-    },
-    "HealthOxygen.dc.html": {
-      "h": 1560,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Oksigen dan napas",
-      "w": 390,
-      "x": 470,
-      "y": 25390
-    },
-    "HealthPermissions.dc.html": {
-      "h": 1600,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Izin Apple Health",
-      "w": 390,
-      "x": 2350,
-      "y": 28110
-    },
-    "HealthRhythm.dc.html": {
-      "h": 2050,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Ritme · hasil",
-      "w": 390,
-      "x": 470,
-      "y": 30490
-    },
-    "HealthRhythmConsent.dc.html": {
-      "h": 1500,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Ritme · persetujuan",
-      "w": 390,
-      "x": 0,
-      "y": 30490
-    },
-    "HealthRhythmEmpty.dc.html": {
-      "h": 1000,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Ritme · belum ada bacaan",
-      "w": 390,
-      "x": 940,
-      "y": 30490
-    },
-    "HealthRhythmUnsupported.dc.html": {
-      "h": 1000,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Ritme · perangkat tak didukung",
-      "w": 390,
-      "x": 1410,
-      "y": 30490
-    },
-    "HealthSkin.dc.html": {
-      "h": 1300,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Suhu kulit",
-      "w": 390,
-      "x": 940,
-      "y": 25390
-    },
-    "HealthSleep.dc.html": {
-      "h": 2060,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Kesehatan · Tidur",
-      "w": 390,
-      "x": 1410,
-      "y": 22470
-    },
-    "HealthVO2.dc.html": {
-      "h": 2300,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Kebugaran (VO₂max)",
-      "w": 390,
-      "x": 1410,
-      "y": 25390
-    },
-    "HealthVital.dc.html": {
-      "h": 2500,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Kesehatan · Vital",
-      "w": 390,
-      "x": 470,
-      "y": 22470
-    },
-    "HealthWaist.dc.html": {
-      "h": 1360,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Lingkar pinggang",
-      "w": 390,
-      "x": 470,
-      "y": 28110
-    },
-    "HealthWeight.dc.html": {
-      "h": 1620,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Berat badan",
-      "w": 390,
-      "x": 0,
-      "y": 28110
-    },
-    "Live.dc.html": {
-      "x": 0,
-      "y": 69220,
-      "w": 390,
-      "h": 940,
-      "title": "Sesi langsung · Lari",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "LiveActivities.dc.html": {
-      "x": 1410,
-      "y": 69220,
-      "w": 1410,
-      "h": 1180,
-      "title": "Layar kunci · GPS",
-      "radius": 44
-    },
-    "LiveCycle.dc.html": {
-      "x": 940,
-      "y": 69220,
-      "w": 390,
-      "h": 940,
-      "title": "Sesi langsung · Sepeda",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "LiveWalk.dc.html": {
-      "x": 470,
-      "y": 69220,
-      "w": 390,
-      "h": 940,
-      "title": "Sesi langsung · Jalan",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "Main.dc.html": {
-      "h": 1480,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Hari ini",
-      "w": 390,
-      "x": 0,
-      "y": 9890
-    },
-    "MapA.dc.html": {
-      "h": 1540,
-      "radius": 24,
-      "title": "Peta fitur · Bagian 1",
-      "w": 1230,
-      "x": 0,
-      "y": 1650
-    },
-    "MapB.dc.html": {
-      "h": 1290,
-      "radius": 24,
-      "title": "Peta fitur · Bagian 2",
-      "w": 1230,
-      "x": 1310,
-      "y": 1650
-    },
-    "MapC.dc.html": {
-      "h": 1640,
-      "radius": 24,
-      "title": "Peta fitur · Bagian 3",
-      "w": 1230,
-      "x": 0,
-      "y": 3610
-    },
-    "MapD.dc.html": {
-      "h": 1140,
-      "radius": 24,
-      "title": "Peta fitur · Bagian 4",
-      "w": 1230,
-      "x": 1310,
-      "y": 3610
-    },
-    "MapOverview.dc.html": {
-      "h": 1230,
-      "radius": 24,
-      "title": "Peta fitur · Ringkasan",
-      "w": 1180,
-      "x": 0,
-      "y": 0
-    },
-    "ObAnya.dc.html": {
-      "h": 1000,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Siapkan Anya",
-      "w": 390,
-      "x": 470,
-      "y": 8470
-    },
-    "ObBluetooth.dc.html": {
-      "h": 900,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Izin Bluetooth",
-      "w": 390,
-      "x": 0,
-      "y": 7050
-    },
-    "ObDevice.dc.html": {
-      "h": 960,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Pilih perangkat",
-      "w": 390,
-      "x": 3290,
-      "y": 5670
-    },
-    "ObDone.dc.html": {
-      "h": 960,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Selesai",
-      "w": 390,
-      "x": 1410,
-      "y": 8470
-    },
-    "ObHealth.dc.html": {
-      "h": 1000,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Apple Health",
-      "w": 390,
-      "x": 2350,
-      "y": 7050
-    },
-    "ObImport.dc.html": {
-      "h": 900,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Impor data",
-      "w": 390,
-      "x": 0,
-      "y": 8470
-    },
-    "ObPrefs.dc.html": {
-      "h": 960,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Preferensi",
-      "w": 390,
-      "x": 940,
-      "y": 8470
-    },
-    "ObPrivacy.dc.html": {
-      "h": 900,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Privasi",
-      "w": 390,
-      "x": 470,
-      "y": 5670
-    },
-    "ObProfile.dc.html": {
-      "h": 960,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Profil",
-      "w": 390,
-      "x": 1410,
-      "y": 7050
-    },
-    "ObProfilePicker.dc.html": {
-      "h": 960,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Pilih berat badan",
-      "w": 390,
-      "x": 1880,
-      "y": 7050
-    },
-    "ObScanHelp.dc.html": {
-      "h": 900,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Strap belum ketemu",
-      "w": 390,
-      "x": 940,
-      "y": 7050
-    },
-    "ObTerms.dc.html": {
-      "h": 900,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Syarat dan penafian",
-      "w": 390,
-      "x": 940,
-      "y": 5670
-    },
-    "ObTermsSheet.dc.html": {
-      "h": 900,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Penafian lengkap",
-      "w": 390,
-      "x": 1410,
-      "y": 5670
-    },
-    "ObValue1.dc.html": {
-      "h": 900,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Nilai 1 · Energi",
-      "w": 390,
-      "x": 1880,
-      "y": 5670
-    },
-    "ObValue2.dc.html": {
-      "h": 900,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Nilai 2 · Detak langsung",
-      "w": 390,
-      "x": 2350,
-      "y": 5670
-    },
-    "ObValue3.dc.html": {
-      "h": 900,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Nilai 3 · Milikmu",
-      "w": 390,
-      "x": 2820,
-      "y": 5670
-    },
-    "ObWear.dc.html": {
-      "h": 900,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Pasang strap",
-      "w": 390,
-      "x": 470,
-      "y": 7050
-    },
-    "ObWelcome.dc.html": {
-      "h": 844,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Selamat datang",
-      "w": 390,
-      "x": 0,
-      "y": 5670
-    },
-    "ObWhatsNew.dc.html": {
-      "h": 960,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Apa yang baru",
-      "w": 390,
-      "x": 1880,
-      "y": 8470
-    },
-    "Pairing.dc.html": {
-      "x": 940,
-      "y": 82300,
-      "w": 390,
-      "h": 1200,
-      "title": "Menyambungkan",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "Personalize.dc.html": {
-      "x": 0,
-      "y": 93160,
-      "w": 390,
-      "h": 1960,
-      "title": "Saya",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "Scan.dc.html": {
-      "x": 470,
-      "y": 82300,
-      "w": 390,
-      "h": 1250,
-      "title": "Cari strap",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "Sleep.dc.html": {
-      "h": 2260,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Tidur · Ringkasan",
-      "w": 390,
-      "x": 0,
-      "y": 42400
-    },
-    "SleepNap.dc.html": {
-      "h": 1700,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Tidur siang",
-      "w": 390,
-      "x": 1880,
-      "y": 42400
-    },
-    "SleepPerformance.dc.html": {
-      "h": 1520,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Kinerja tidur",
-      "w": 390,
-      "x": 1410,
-      "y": 42400
-    },
-    "SleepStages.dc.html": {
-      "h": 1740,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Fase tidur",
-      "w": 390,
-      "x": 470,
-      "y": 42400
-    },
-    "SleepVitals.dc.html": {
-      "h": 1460,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Vital semalam",
-      "w": 390,
-      "x": 940,
-      "y": 42400
-    },
-    "TestCentre.dc.html": {
-      "x": 470,
-      "y": 108730,
-      "w": 390,
-      "h": 1700,
-      "title": "Test Centre",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "TodayAddActivity.dc.html": {
-      "h": 1700,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Tambah aktivitas",
-      "w": 390,
-      "x": 470,
-      "y": 20350
-    },
-    "TodayAllMetrics.dc.html": {
-      "h": 1000,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Semua metrik",
-      "w": 390,
-      "x": 1410,
-      "y": 11790
-    },
-    "TodayBreathe.dc.html": {
-      "h": 1000,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Latihan napas",
-      "w": 390,
-      "x": 940,
-      "y": 20350
-    },
-    "TodayBreatheRhythm.dc.html": {
-      "h": 1380,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Ritme napas",
-      "w": 390,
-      "x": 1880,
-      "y": 20350
-    },
-    "TodayCharge.dc.html": {
-      "h": 1100,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Detail Charge",
-      "w": 390,
-      "x": 470,
-      "y": 9890
-    },
-    "TodayCustomize.dc.html": {
-      "h": 2100,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Atur kartu Hari ini",
-      "w": 390,
-      "x": 470,
-      "y": 17830
-    },
-    "TodayDate.dc.html": {
-      "h": 1180,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Pilih tanggal",
-      "w": 390,
-      "x": 0,
-      "y": 15970
-    },
-    "TodayEdit.dc.html": {
-      "h": 1860,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Atur kartu (mode atur)",
-      "w": 390,
-      "x": 0,
-      "y": 17830
-    },
-    "TodayEffort.dc.html": {
-      "h": 1060,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Detail Effort",
-      "w": 390,
-      "x": 940,
-      "y": 9890
-    },
-    "TodayHRV.dc.html": {
-      "h": 1040,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Detail HRV",
-      "w": 390,
-      "x": 0,
-      "y": 11790
-    },
-    "TodayHeartRate.dc.html": {
-      "h": 980,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Detak hari ini",
-      "w": 390,
-      "x": 1410,
-      "y": 9890
-    },
-    "TodayJournal.dc.html": {
-      "h": 1160,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Jurnal hari ini",
-      "w": 390,
-      "x": 470,
-      "y": 13910
-    },
-    "TodayMetrics.dc.html": {
-      "h": 1700,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Pilih metrik utama",
-      "w": 390,
-      "x": 1880,
-      "y": 11790
-    },
-    "TodayNotifs.dc.html": {
-      "h": 820,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Notifikasi",
-      "w": 390,
-      "x": 1410,
-      "y": 13910
-    },
-    "TodayPast.dc.html": {
-      "h": 1440,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Hari lampau (hanya lihat)",
-      "w": 390,
-      "x": 470,
-      "y": 15970
-    },
-    "TodayQuick.dc.html": {
-      "h": 900,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Aksi cepat (tombol +)",
-      "w": 390,
-      "x": 0,
-      "y": 20350
-    },
-    "TodayRHR.dc.html": {
-      "h": 1040,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Detail detak istirahat",
-      "w": 390,
-      "x": 470,
-      "y": 11790
-    },
-    "TodaySteps.dc.html": {
-      "h": 1060,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Detail langkah",
-      "w": 390,
-      "x": 940,
-      "y": 11790
-    },
-    "TodayStress.dc.html": {
-      "h": 1640,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Pemantauan stres",
-      "w": 390,
-      "x": 0,
-      "y": 13910
-    },
-    "TodayWarning.dc.html": {
-      "h": 860,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Peringatan dini",
-      "w": 390,
-      "x": 940,
-      "y": 13910
-    },
-    "TodayWater.dc.html": {
-      "h": 1180,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Catat air",
-      "w": 390,
-      "x": 1410,
-      "y": 20350
-    },
-    "TrainingLoad.dc.html": {
-      "h": 2200,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Beban latihan",
-      "w": 390,
-      "x": 0,
-      "y": 61480
-    },
-    "TrainingLoadCardio.dc.html": {
-      "h": 2420,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Beban kardio",
-      "w": 390,
-      "x": 470,
-      "y": 61480
-    },
-    "TrainingLoadMuscle.dc.html": {
-      "h": 2300,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Beban otot",
-      "w": 390,
-      "x": 940,
-      "y": 61480
-    },
-    "Trends.dc.html": {
-      "h": 3560,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Tren",
-      "w": 390,
-      "x": 0,
-      "y": 32960
-    },
-    "TrendsCharge.dc.html": {
-      "h": 2420,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Tren Charge",
-      "w": 390,
-      "x": 0,
-      "y": 36940
-    },
-    "TrendsChargeEffort.dc.html": {
-      "h": 2140,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Charge dan Effort",
-      "w": 390,
-      "x": 0,
-      "y": 39780
-    },
-    "TrendsChargeRest.dc.html": {
-      "h": 2060,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Charge dan Rest",
-      "w": 390,
-      "x": 470,
-      "y": 39780
-    },
-    "TrendsCompare.dc.html": {
-      "h": 1740,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Bandingkan",
-      "w": 390,
-      "x": 1880,
-      "y": 39780
-    },
-    "TrendsEffort.dc.html": {
-      "h": 2380,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Tren Effort",
-      "w": 390,
-      "x": 470,
-      "y": 36940
-    },
-    "TrendsExplore.dc.html": {
-      "h": 2100,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Explore",
-      "w": 390,
-      "x": 2350,
-      "y": 39780
-    },
-    "TrendsHeatmap.dc.html": {
-      "h": 1740,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Peta panas Charge",
-      "w": 390,
-      "x": 940,
-      "y": 39780
-    },
-    "TrendsInsights.dc.html": {
-      "h": 2200,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Insights",
-      "w": 390,
-      "x": 1410,
-      "y": 39780
-    },
-    "TrendsRest.dc.html": {
-      "h": 2400,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Tren Rest",
-      "w": 390,
-      "x": 940,
-      "y": 36940
-    },
-    "Widgets.dc.html": {
-      "x": 0,
-      "y": 87880,
-      "w": 1410,
-      "h": 1760,
-      "title": "Widget layar utama",
-      "radius": 24
-    },
-    "WorkoutAutoDetect.dc.html": {
-      "h": 1760,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Deteksi otomatis · aktif",
-      "w": 390,
-      "x": 0,
-      "y": 67040
-    },
-    "WorkoutAutoDetectOff.dc.html": {
-      "h": 1500,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Deteksi otomatis · mati",
-      "w": 390,
-      "x": 470,
-      "y": 67040
-    },
-    "WorkoutCalendar.dc.html": {
-      "h": 2060,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Kalender latihan",
-      "w": 390,
-      "x": 0,
-      "y": 64320
-    },
-    "WorkoutGym.dc.html": {
-      "h": 2220,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Gym dan program",
-      "w": 390,
-      "x": 0,
-      "y": 58680
-    },
-    "WorkoutHistory.dc.html": {
-      "h": 2300,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Semua sesi",
-      "w": 390,
-      "x": 470,
-      "y": 64320
-    },
-    "WorkoutLift.dc.html": {
-      "h": 1400,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Lift Log",
-      "w": 390,
-      "x": 1410,
-      "y": 55680
-    },
-    "WorkoutProgram.dc.html": {
-      "h": 2100,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Ubah program",
-      "w": 390,
-      "x": 470,
-      "y": 58680
-    },
-    "WorkoutProgramImport.dc.html": {
-      "h": 1700,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Impor program",
-      "w": 390,
-      "x": 1410,
-      "y": 58680
-    },
-    "WorkoutProgramItem.dc.html": {
-      "h": 1880,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Latihan program",
-      "w": 390,
-      "x": 940,
-      "y": 58680
-    },
-    "WorkoutStart.dc.html": {
-      "h": 980,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Mulai latihan",
-      "w": 390,
-      "x": 470,
-      "y": 55680
-    },
-    "WorkoutSummary.dc.html": {
-      "h": 1900,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Ringkasan latihan",
-      "w": 390,
-      "x": 940,
-      "y": 55680
-    },
-    "Workouts.dc.html": {
-      "h": 2580,
-      "is_interactive": true,
-      "radius": 44,
-      "title": "Workout",
-      "w": 390,
-      "x": 0,
-      "y": 55680
-    },
-    "WorkoutSummaryGym.dc.html": {
-      "x": 1880,
-      "y": 58680,
-      "w": 390,
-      "h": 2380,
-      "title": "Ringkasan sesi gym",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "WorkoutSaveProgram.dc.html": {
-      "x": 2350,
-      "y": 58680,
-      "w": 390,
-      "h": 1240,
-      "title": "Simpan sebagai program",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "WorkoutStartHiit.dc.html": {
-      "x": 0,
-      "y": 70820,
-      "w": 390,
-      "h": 1160,
-      "title": "Mulai HIIT",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "LiveHIIT.dc.html": {
-      "x": 470,
-      "y": 70820,
-      "w": 390,
-      "h": 980,
-      "title": "Sesi langsung · HIIT",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "LiveIndoor.dc.html": {
-      "x": 940,
-      "y": 70820,
-      "w": 390,
-      "h": 940,
-      "title": "Sesi langsung · Yoga",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "LiveActivitiesNoGps.dc.html": {
-      "x": 1410,
-      "y": 70820,
-      "w": 1410,
-      "h": 1180,
-      "title": "Layar kunci · tanpa GPS",
-      "radius": 24
-    },
-    "LiveIsland.dc.html": {
-      "x": 0,
-      "y": 72420,
-      "w": 1410,
-      "h": 3900,
-      "title": "Dynamic Island saat workout",
-      "radius": 24
-    },
-    "LiveZone.dc.html": {
-      "x": 0,
-      "y": 76740,
-      "w": 1410,
-      "h": 2480,
-      "title": "Zona kuning dan merah",
-      "radius": 24
-    },
-    "DeviceDetail.dc.html": {
-      "x": 470,
-      "y": 79640,
-      "w": 390,
-      "h": 2000,
-      "title": "Detail strap",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "DeviceBattery.dc.html": {
-      "x": 940,
-      "y": 79640,
-      "w": 390,
-      "h": 1560,
-      "title": "Baterai strap",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "DeviceSync.dc.html": {
-      "x": 1410,
-      "y": 79640,
-      "w": 390,
-      "h": 2000,
-      "title": "Sinkron riwayat",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "DeviceModel.dc.html": {
-      "x": 0,
-      "y": 82300,
-      "w": 390,
-      "h": 1260,
-      "title": "Tambah WHOOP",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "DeviceHelp.dc.html": {
-      "x": 0,
-      "y": 83980,
-      "w": 390,
-      "h": 1900,
-      "title": "Bantuan koneksi",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "DeviceRepair.dc.html": {
-      "x": 470,
-      "y": 83980,
-      "w": 390,
-      "h": 1500,
-      "title": "Pasang ulang",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "DeviceModels.dc.html": {
-      "x": 940,
-      "y": 83980,
-      "w": 390,
-      "h": 1760,
-      "title": "Model dan dukungan",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "DeviceLog.dc.html": {
-      "x": 1410,
-      "y": 83980,
-      "w": 390,
-      "h": 1480,
-      "title": "Log strap",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "DeviceRestart.dc.html": {
-      "x": 1880,
-      "y": 83980,
-      "w": 390,
-      "h": 900,
-      "title": "Mulai ulang strap",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "DeviceSyncIsland.dc.html": {
-      "x": 0,
-      "y": 86300,
-      "w": 1410,
-      "h": 1160,
-      "title": "Sinkron di Dynamic Island",
-      "radius": 24
-    },
-    "Persona.dc.html": {
-      "x": 470,
-      "y": 93160,
-      "w": 390,
-      "h": 2160,
-      "title": "Persona",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "PersonaZones.dc.html": {
-      "x": 940,
-      "y": 93160,
-      "w": 390,
-      "h": 1560,
-      "title": "Zona detak",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "PersonaGoals.dc.html": {
-      "x": 1410,
-      "y": 93160,
-      "w": 390,
-      "h": 1500,
-      "title": "Target",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "Appearance.dc.html": {
-      "x": 0,
-      "y": 95740,
-      "w": 390,
-      "h": 2480,
-      "title": "Tampilan",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "Units.dc.html": {
-      "x": 1880,
-      "y": 95740,
-      "w": 390,
-      "h": 1440,
-      "title": "Satuan",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "Notifications.dc.html": {
-      "x": 0,
-      "y": 98640,
-      "w": 390,
-      "h": 1900,
-      "title": "Notifikasi",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "Features.dc.html": {
-      "x": 470,
-      "y": 98640,
-      "w": 390,
-      "h": 1380,
-      "title": "Fitur opsional",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "Advanced.dc.html": {
-      "x": 470,
-      "y": 106410,
-      "w": 390,
-      "h": 1700,
-      "title": "Lanjutan",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "DataHub.dc.html": {
-      "x": 0,
-      "y": 103880,
-      "w": 390,
-      "h": 2110,
-      "title": "Data dan integrasi",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "Backup.dc.html": {
-      "x": 470,
-      "y": 103880,
-      "w": 390,
-      "h": 1860,
-      "title": "Cadangan",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "Privacy.dc.html": {
-      "x": 0,
-      "y": 106410,
-      "w": 390,
-      "h": 1900,
-      "title": "Privasi",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "About.dc.html": {
-      "x": 940,
-      "y": 106410,
-      "w": 390,
-      "h": 1900,
-      "title": "Tentang",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "Strava.dc.html": {
-      "x": 940,
-      "y": 103880,
-      "w": 390,
-      "h": 1280,
-      "title": "Strava · mati",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "StravaSetup.dc.html": {
-      "x": 1410,
-      "y": 103880,
-      "w": 390,
-      "h": 1900,
-      "title": "Strava · penyiapan",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "StravaConnected.dc.html": {
-      "x": 1880,
-      "y": 103880,
-      "w": 390,
-      "h": 1900,
-      "title": "Strava · tersambung",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "Language.dc.html": {
-      "x": 1410,
-      "y": 95740,
-      "w": 390,
-      "h": 1700,
-      "title": "Bahasa",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "AnyaPattern.dc.html": {
-      "x": 0,
-      "y": 53880,
-      "w": 1410,
-      "h": 1380,
-      "title": "Pola Anya di setiap modul",
-      "radius": 24
-    },
-    "AnyaSheetToday.dc.html": {
-      "x": 1490,
-      "y": 53880,
-      "w": 390,
-      "h": 1100,
-      "title": "Anya di Hari ini",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "AnyaSheetHealth.dc.html": {
-      "x": 1960,
-      "y": 53880,
-      "w": 390,
-      "h": 1100,
-      "title": "Anya di Kesehatan",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "AnyaSheetNutrition.dc.html": {
-      "x": 2430,
-      "y": 53880,
-      "w": 390,
-      "h": 1100,
-      "title": "Anya di Nutrisi",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "AnyaSheetDevice.dc.html": {
-      "x": 2900,
-      "y": 53880,
-      "w": 390,
-      "h": 1100,
-      "title": "Anya di Perangkat",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "WidgetVital.dc.html": {
-      "x": 0,
-      "y": 90060,
-      "w": 1410,
-      "h": 1180,
-      "title": "Widget Vital sign",
-      "radius": 24
-    },
-    "WidgetsLock.dc.html": {
-      "x": 0,
-      "y": 91660,
-      "w": 1410,
-      "h": 1080,
-      "title": "Widget layar kunci",
-      "radius": 24
-    },
-    "WidgetSettings.dc.html": {
-      "x": 940,
-      "y": 98640,
-      "w": 390,
-      "h": 2200,
-      "title": "Pengaturan widget",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "WidgetVitalConfig.dc.html": {
-      "x": 1410,
-      "y": 98640,
-      "w": 390,
-      "h": 1560,
-      "title": "Atur widget Vital",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "Experience.dc.html": {
-      "x": 470,
-      "y": 95740,
-      "w": 390,
-      "h": 1760,
-      "title": "Experience",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "ExperienceConfirm.dc.html": {
-      "x": 940,
-      "y": 95740,
-      "w": 390,
-      "h": 1000,
-      "title": "Ganti Experience",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "Automations.dc.html": {
-      "x": 0,
-      "y": 101260,
-      "w": 390,
-      "h": 2140,
-      "title": "Otomasi strap",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "AutoDoubleTap.dc.html": {
-      "x": 470,
-      "y": 101260,
-      "w": 390,
-      "h": 1880,
-      "title": "Ketuk dua kali",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "AutoPresence.dc.html": {
-      "x": 940,
-      "y": 101260,
-      "w": 390,
-      "h": 1700,
-      "title": "Pakai dan lepas strap",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "AutoCoaching.dc.html": {
-      "x": 1410,
-      "y": 101260,
-      "w": 390,
-      "h": 2200,
-      "title": "Getar saat beraktivitas",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "AutoSedentary.dc.html": {
-      "x": 1880,
-      "y": 101260,
-      "w": 390,
-      "h": 1600,
-      "title": "Duduk terlalu lama",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "AutoAlerts.dc.html": {
-      "x": 2350,
-      "y": 101260,
-      "w": 390,
-      "h": 1900,
-      "title": "Peringatan dan laporan",
-      "radius": 44,
-      "is_interactive": true
-    },
-    "AutoShortcuts.dc.html": {
-      "x": 2820,
-      "y": 101260,
-      "w": 390,
-      "h": 1700,
-      "title": "Siri dan Pintasan",
-      "radius": 44,
-      "is_interactive": true
-    }
+ "v": 3,
+ "attachments": {},
+ "boards": {
+  "Anya.dc.html": {
+   "h": 1700,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Anya",
+   "w": 390,
+   "x": 0,
+   "y": 45080
   },
-  "createdOnFiles": {
-    "at": "2026-10-03T09:00:00Z",
-    "v": 1
+  "AnyaAttach.dc.html": {
+   "h": 900,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Tambah lampiran",
+   "w": 390,
+   "x": 940,
+   "y": 45080
   },
-  "designSystems": [],
-  "launch": {
-    "view": "canvas"
+  "AnyaBrief.dc.html": {
+   "h": 1560,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Ringkasan pagi",
+   "w": 390,
+   "x": 2350,
+   "y": 45080
   },
-  "notes": {
-    "t0": {
-      "kind": "title1",
-      "maxW": 2540,
-      "text": "PHMNOOP UI baru",
-      "w": 240,
-      "x": 0,
-      "y": -720
-    },
-    "t1": {
-      "kind": "title1",
-      "maxW": 1180,
-      "text": "Peta fitur PHMNOOP",
-      "w": 240,
-      "x": 0,
-      "y": -300
-    },
-    "t10": {
-      "kind": "title1",
-      "maxW": 390,
-      "text": "4. Tren: ringkasan dan perbandingan",
-      "w": 240,
-      "x": 0,
-      "y": 32660
-    },
-    "t11": {
-      "kind": "title1",
-      "maxW": 2270,
-      "text": "5. Tidur: ringkasan dan detail",
-      "w": 240,
-      "x": 0,
-      "y": 42100
-    },
-    "t2": {
-      "kind": "title1",
-      "maxW": 2540,
-      "text": "Peta fitur: rincian 1 dan 2",
-      "w": 240,
-      "x": 0,
-      "y": 1350
-    },
-    "t3": {
-      "kind": "title1",
-      "maxW": 2540,
-      "text": "Peta fitur: rincian 3 dan 4",
-      "w": 240,
-      "x": 0,
-      "y": 3310
-    },
-    "t4": {
-      "kind": "title1",
-      "maxW": 3680,
-      "text": "1. Onboarding: mulai dan nilai",
-      "w": 240,
-      "x": 0,
-      "y": 5370
-    },
-    "t5": {
-      "kind": "title1",
-      "maxW": 2740,
-      "text": "1. Onboarding: koneksi dan profil",
-      "w": 240,
-      "x": 0,
-      "y": 6750
-    },
-    "t6": {
-      "kind": "title1",
-      "maxW": 2270,
-      "text": "1. Onboarding: akhir",
-      "w": 240,
-      "x": 0,
-      "y": 8170
-    },
-    "t9": {
-      "kind": "title1",
-      "maxW": 1800,
-      "text": "3. Kesehatan: tab Semua, Vital, Tubuh, Tidur",
-      "w": 240,
-      "x": 0,
-      "y": 22170
-    },
-    "ta0": {
-      "kind": "title1",
-      "maxW": 2740,
-      "text": "6. Anya: percakapan",
-      "w": 240,
-      "x": 0,
-      "y": 44780
-    },
-    "ta1": {
-      "kind": "title1",
-      "maxW": 2740,
-      "text": "6. Anya: penyedia dan pengaturan",
-      "w": 240,
-      "x": 0,
-      "y": 47060
-    },
-    "ta2": {
-      "kind": "title1",
-      "maxW": 1330,
-      "text": "6. Anya: memori, riwayat, dan pelatih suara",
-      "w": 240,
-      "x": 0,
-      "y": 49640
-    },
-    "ta3": {
-      "kind": "title1",
-      "maxW": 2740,
-      "text": "6. Anya di setiap modul",
-      "w": 240,
-      "x": 0,
-      "y": 51820
-    },
-    "td1": {
-      "kind": "title1",
-      "maxW": 1800,
-      "text": "2. Hari ini: layar utama dan skor",
-      "w": 240,
-      "x": 0,
-      "y": 9590
-    },
-    "td2": {
-      "kind": "title1",
-      "maxW": 2270,
-      "text": "2. Hari ini: metrik harian",
-      "w": 240,
-      "x": 0,
-      "y": 11490
-    },
-    "td3": {
-      "kind": "title1",
-      "maxW": 1800,
-      "text": "2. Hari ini: stres, jurnal, dan peringatan",
-      "w": 240,
-      "x": 0,
-      "y": 13610
-    },
-    "td4": {
-      "kind": "title1",
-      "maxW": 860,
-      "text": "2. Hari ini: pilih tanggal dan hari lampau",
-      "w": 240,
-      "x": 0,
-      "y": 15670
-    },
-    "td5": {
-      "kind": "title1",
-      "maxW": 860,
-      "text": "2. Hari ini: atur kartu",
-      "w": 240,
-      "x": 0,
-      "y": 17530
-    },
-    "td6": {
-      "kind": "title1",
-      "maxW": 2270,
-      "text": "2. Hari ini: aksi cepat (tombol +)",
-      "w": 240,
-      "x": 0,
-      "y": 20050
-    },
-    "th1": {
-      "kind": "title1",
-      "maxW": 2270,
-      "text": "3. Kesehatan: detail vital",
-      "w": 240,
-      "x": 0,
-      "y": 25090
-    },
-    "th2": {
-      "kind": "title1",
-      "maxW": 2740,
-      "text": "3. Kesehatan: detail tubuh dan data",
-      "w": 240,
-      "x": 0,
-      "y": 27810
-    },
-    "th3": {
-      "kind": "title1",
-      "maxW": 1800,
-      "text": "3. Kesehatan: Ritme (fitur eksperimental)",
-      "w": 240,
-      "x": 0,
-      "y": 30190
-    },
-    "tt1": {
-      "kind": "title1",
-      "maxW": 1330,
-      "text": "4. Tren: detail Charge, Effort, dan Rest",
-      "w": 240,
-      "x": 0,
-      "y": 36640
-    },
-    "tt2": {
-      "kind": "title1",
-      "maxW": 2740,
-      "text": "4. Tren: detail perbandingan, insight, dan jelajah",
-      "w": 240,
-      "x": 0,
-      "y": 39480
-    },
-    "tw20": {
-      "kind": "title1",
-      "maxW": 1800,
-      "text": "7.1 Latihan: hub, mulai latihan, ringkasan, dan Lift Log",
-      "x": 0,
-      "y": 55380,
-      "w": 240
-    },
-    "tw21": {
-      "kind": "title1",
-      "maxW": 2740,
-      "text": "7.2 Gym: program (template), impor, dan ringkasan sesi",
-      "x": 0,
-      "y": 58380,
-      "w": 240
-    },
-    "tw22": {
-      "kind": "title1",
-      "maxW": 1330,
-      "text": "7.3 Beban latihan: kardio dan otot",
-      "x": 0,
-      "y": 61180,
-      "w": 240
-    },
-    "tw23": {
-      "kind": "title1",
-      "maxW": 860,
-      "text": "7.4 Kalender latihan dan semua sesi",
-      "x": 0,
-      "y": 64020,
-      "w": 240
-    },
-    "tw24": {
-      "kind": "title1",
-      "maxW": 860,
-      "text": "7.5 Deteksi latihan otomatis: aktif dan mati",
-      "x": 0,
-      "y": 66740,
-      "w": 240
-    },
-    "tw25": {
-      "kind": "title1",
-      "maxW": 2820,
-      "text": "7.6 Sesi langsung: olahraga GPS (lari, jalan, sepeda)",
-      "x": 0,
-      "y": 68920,
-      "w": 240
-    },
-    "tw26": {
-      "kind": "title1",
-      "maxW": 2820,
-      "text": "7.7 Sesi langsung: olahraga tanpa GPS (HIIT, yoga)",
-      "x": 0,
-      "y": 70520,
-      "w": 240
-    },
-    "tw27": {
-      "kind": "title1",
-      "maxW": 1410,
-      "text": "7.8 Dynamic Island saat workout",
-      "x": 0,
-      "y": 72120,
-      "w": 240
-    },
-    "tw28": {
-      "kind": "title1",
-      "maxW": 1410,
-      "text": "7.9 Zona detak kuning dan merah",
-      "x": 0,
-      "y": 76440,
-      "w": 240
-    },
-    "td30": {
-      "kind": "title1",
-      "maxW": 1800,
-      "text": "8.1 Perangkat: strap, baterai, dan sinkron",
-      "x": 0,
-      "y": 79340,
-      "w": 240
-    },
-    "td31": {
-      "kind": "title1",
-      "maxW": 1800,
-      "text": "8.2 Tambah WHOOP: model, cari, sambung",
-      "x": 0,
-      "y": 82000,
-      "w": 240
-    },
-    "td32": {
-      "kind": "title1",
-      "maxW": 2270,
-      "text": "8.3 Bantuan koneksi, model, dan log",
-      "x": 0,
-      "y": 83680,
-      "w": 240
-    },
-    "td33": {
-      "kind": "title1",
-      "maxW": 1410,
-      "text": "8.4 Sinkron di Dynamic Island",
-      "x": 0,
-      "y": 86000,
-      "w": 240
-    },
-    "ta9": {
-      "kind": "title1",
-      "maxW": 3290,
-      "text": "6. Anya di setiap modul: pola kemunculan dan sheet lanjutan",
-      "x": 0,
-      "y": 53580,
-      "w": 240
-    },
-    "tv0": {
-      "kind": "title1",
-      "maxW": 1410,
-      "text": "11.1 Widget layar utama: skor, detak, stres, Anya, langkah",
-      "x": 0,
-      "y": 87580,
-      "w": 240
-    },
-    "tv1": {
-      "kind": "title1",
-      "maxW": 1410,
-      "text": "11.2 Widget Vital sign (baru)",
-      "x": 0,
-      "y": 89760,
-      "w": 240
-    },
-    "tv2": {
-      "kind": "title1",
-      "maxW": 1410,
-      "text": "11.3 Widget layar kunci",
-      "x": 0,
-      "y": 91360,
-      "w": 240
-    },
-    "tz0": {
-      "kind": "title1",
-      "maxW": 1800,
-      "text": "12.1 Saya: hub dan persona",
-      "x": 0,
-      "y": 92860,
-      "w": 240
-    },
-    "tz1": {
-      "kind": "title1",
-      "maxW": 2270,
-      "text": "12.2 Tampilan: Experience, bahasa, dan satuan",
-      "x": 0,
-      "y": 95440,
-      "w": 240
-    },
-    "tz2": {
-      "kind": "title1",
-      "maxW": 1800,
-      "text": "12.3 Notifikasi, fitur opsional, dan widget",
-      "x": 0,
-      "y": 98340,
-      "w": 240
-    },
-    "tz3": {
-      "kind": "title1",
-      "maxW": 3210,
-      "text": "12.4 Otomasi strap",
-      "x": 0,
-      "y": 100960,
-      "w": 240
-    },
-    "tz4": {
-      "kind": "title1",
-      "maxW": 2270,
-      "text": "12.5 Data, cadangan, dan Strava",
-      "x": 0,
-      "y": 103580,
-      "w": 240
-    },
-    "tz5": {
-      "kind": "title1",
-      "maxW": 1330,
-      "text": "12.6 Privasi, lanjutan, dan tentang",
-      "x": 0,
-      "y": 106110,
-      "w": 240
-    },
-    "tz6": {
-      "kind": "title1",
-      "maxW": 860,
-      "text": "12.7 Eksperimen dan Test Centre",
-      "x": 0,
-      "y": 108430,
-      "w": 240
-    }
+  "AnyaChatGPT.dc.html": {
+   "h": 1180,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Masuk ChatGPT",
+   "w": 390,
+   "x": 940,
+   "y": 47360
   },
-  "order": [
-    "MapOverview.dc.html",
-    "MapA.dc.html",
-    "MapB.dc.html",
-    "MapC.dc.html",
-    "MapD.dc.html",
-    "ObWelcome.dc.html",
-    "ObPrivacy.dc.html",
-    "ObTerms.dc.html",
-    "ObTermsSheet.dc.html",
-    "ObValue1.dc.html",
-    "ObValue2.dc.html",
-    "ObValue3.dc.html",
-    "ObDevice.dc.html",
-    "ObBluetooth.dc.html",
-    "ObWear.dc.html",
-    "ObScanHelp.dc.html",
-    "ObProfile.dc.html",
-    "ObProfilePicker.dc.html",
-    "ObHealth.dc.html",
-    "ObImport.dc.html",
-    "ObAnya.dc.html",
-    "ObPrefs.dc.html",
-    "ObDone.dc.html",
-    "ObWhatsNew.dc.html",
-    "Main.dc.html",
-    "TodayCharge.dc.html",
-    "TodayEffort.dc.html",
-    "TodayHeartRate.dc.html",
-    "TodayHRV.dc.html",
-    "TodayRHR.dc.html",
-    "TodaySteps.dc.html",
-    "TodayAllMetrics.dc.html",
-    "TodayMetrics.dc.html",
-    "TodayStress.dc.html",
-    "TodayJournal.dc.html",
-    "TodayWarning.dc.html",
-    "TodayNotifs.dc.html",
-    "TodayDate.dc.html",
-    "TodayPast.dc.html",
-    "TodayEdit.dc.html",
-    "TodayCustomize.dc.html",
-    "TodayQuick.dc.html",
-    "TodayAddActivity.dc.html",
-    "TodayBreathe.dc.html",
-    "TodayWater.dc.html",
-    "TodayBreatheRhythm.dc.html",
-    "Health.dc.html",
-    "HealthVital.dc.html",
-    "HealthBody.dc.html",
-    "HealthSleep.dc.html",
-    "HealthLive.dc.html",
-    "HealthOxygen.dc.html",
-    "HealthSkin.dc.html",
-    "HealthVO2.dc.html",
-    "HealthMind.dc.html",
-    "HealthWeight.dc.html",
-    "HealthWaist.dc.html",
-    "HealthNutrition.dc.html",
-    "HealthLab.dc.html",
-    "HealthCycle.dc.html",
-    "HealthPermissions.dc.html",
-    "HealthRhythmConsent.dc.html",
-    "HealthRhythm.dc.html",
-    "HealthRhythmEmpty.dc.html",
-    "HealthRhythmUnsupported.dc.html",
-    "Trends.dc.html",
-    "TrendsCharge.dc.html",
-    "TrendsEffort.dc.html",
-    "TrendsRest.dc.html",
-    "TrendsChargeEffort.dc.html",
-    "TrendsChargeRest.dc.html",
-    "TrendsHeatmap.dc.html",
-    "TrendsInsights.dc.html",
-    "TrendsCompare.dc.html",
-    "TrendsExplore.dc.html",
-    "Sleep.dc.html",
-    "SleepStages.dc.html",
-    "SleepVitals.dc.html",
-    "SleepPerformance.dc.html",
-    "SleepNap.dc.html",
-    "Anya.dc.html",
-    "AnyaStart.dc.html",
-    "AnyaAttach.dc.html",
-    "AnyaVoice.dc.html",
-    "AnyaPlan.dc.html",
-    "AnyaBrief.dc.html",
-    "AnyaConnect.dc.html",
-    "AnyaKey.dc.html",
-    "AnyaChatGPT.dc.html",
-    "AnyaCustom.dc.html",
-    "AnyaSettings.dc.html",
-    "AnyaInstructions.dc.html",
-    "AnyaMemory.dc.html",
-    "AnyaHistory.dc.html",
-    "AnyaVoiceCoach.dc.html",
-    "AnyaMap.dc.html",
-    "AnyaSheetSleep.dc.html",
-    "AnyaSheetTrends.dc.html",
-    "AnyaSheetWorkout.dc.html",
-    "AnyaPattern.dc.html",
-    "AnyaSheetToday.dc.html",
-    "AnyaSheetHealth.dc.html",
-    "AnyaSheetNutrition.dc.html",
-    "AnyaSheetDevice.dc.html",
-    "Workouts.dc.html",
-    "WorkoutStart.dc.html",
-    "WorkoutSummary.dc.html",
-    "WorkoutLift.dc.html",
-    "WorkoutGym.dc.html",
-    "WorkoutProgram.dc.html",
-    "WorkoutProgramItem.dc.html",
-    "WorkoutProgramImport.dc.html",
-    "WorkoutSummaryGym.dc.html",
-    "WorkoutSaveProgram.dc.html",
-    "TrainingLoad.dc.html",
-    "TrainingLoadCardio.dc.html",
-    "TrainingLoadMuscle.dc.html",
-    "WorkoutCalendar.dc.html",
-    "WorkoutHistory.dc.html",
-    "WorkoutAutoDetect.dc.html",
-    "WorkoutAutoDetectOff.dc.html",
-    "Live.dc.html",
-    "LiveWalk.dc.html",
-    "LiveCycle.dc.html",
-    "LiveActivities.dc.html",
-    "WorkoutStartHiit.dc.html",
-    "LiveHIIT.dc.html",
-    "LiveIndoor.dc.html",
-    "LiveActivitiesNoGps.dc.html",
-    "LiveIsland.dc.html",
-    "LiveZone.dc.html",
-    "Devices.dc.html",
-    "DeviceDetail.dc.html",
-    "DeviceBattery.dc.html",
-    "DeviceSync.dc.html",
-    "DeviceModel.dc.html",
-    "Scan.dc.html",
-    "Pairing.dc.html",
-    "Connected.dc.html",
-    "DeviceHelp.dc.html",
-    "DeviceRepair.dc.html",
-    "DeviceModels.dc.html",
-    "DeviceLog.dc.html",
-    "DeviceRestart.dc.html",
-    "DeviceSyncIsland.dc.html",
-    "Widgets.dc.html",
-    "WidgetVital.dc.html",
-    "WidgetsLock.dc.html",
-    "Personalize.dc.html",
-    "Persona.dc.html",
-    "PersonaZones.dc.html",
-    "PersonaGoals.dc.html",
-    "Appearance.dc.html",
-    "Experience.dc.html",
-    "ExperienceConfirm.dc.html",
-    "Language.dc.html",
-    "Units.dc.html",
-    "Notifications.dc.html",
-    "Features.dc.html",
-    "WidgetSettings.dc.html",
-    "WidgetVitalConfig.dc.html",
-    "Automations.dc.html",
-    "AutoDoubleTap.dc.html",
-    "AutoPresence.dc.html",
-    "AutoCoaching.dc.html",
-    "AutoSedentary.dc.html",
-    "AutoAlerts.dc.html",
-    "AutoShortcuts.dc.html",
-    "DataHub.dc.html",
-    "Backup.dc.html",
-    "Strava.dc.html",
-    "StravaSetup.dc.html",
-    "StravaConnected.dc.html",
-    "Privacy.dc.html",
-    "Advanced.dc.html",
-    "About.dc.html",
-    "Experiments.dc.html",
-    "TestCentre.dc.html"
-  ],
-  "pages": [],
-  "title": "PHMNOOP UI Baru"
+  "AnyaConnect.dc.html": {
+   "h": 1560,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Hubungkan Anya",
+   "w": 390,
+   "x": 0,
+   "y": 47360
+  },
+  "AnyaCustom.dc.html": {
+   "h": 1400,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Server sendiri",
+   "w": 390,
+   "x": 1410,
+   "y": 47360
+  },
+  "AnyaHistory.dc.html": {
+   "h": 1420,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Riwayat",
+   "w": 390,
+   "x": 470,
+   "y": 49940
+  },
+  "AnyaInstructions.dc.html": {
+   "h": 1260,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Instruksi Anya",
+   "w": 390,
+   "x": 2350,
+   "y": 47360
+  },
+  "AnyaKey.dc.html": {
+   "h": 1360,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Kunci API",
+   "w": 390,
+   "x": 470,
+   "y": 47360
+  },
+  "AnyaMap.dc.html": {
+   "h": 1340,
+   "radius": 24,
+   "title": "Peta Anya di setiap modul",
+   "w": 1330,
+   "x": 0,
+   "y": 52120
+  },
+  "AnyaMemory.dc.html": {
+   "h": 1560,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Memory",
+   "w": 390,
+   "x": 0,
+   "y": 49940
+  },
+  "AnyaPlan.dc.html": {
+   "h": 1860,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Rencana hari ini",
+   "w": 390,
+   "x": 1880,
+   "y": 45080
+  },
+  "AnyaSettings.dc.html": {
+   "h": 2160,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Pengaturan Anya",
+   "w": 390,
+   "x": 1880,
+   "y": 47360
+  },
+  "AnyaSheetSleep.dc.html": {
+   "h": 1100,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Anya di Tidur",
+   "w": 390,
+   "x": 1410,
+   "y": 52120
+  },
+  "AnyaSheetTrends.dc.html": {
+   "h": 1100,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Anya di Tren",
+   "w": 390,
+   "x": 1880,
+   "y": 52120
+  },
+  "AnyaSheetWorkout.dc.html": {
+   "h": 1100,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Anya di Latihan",
+   "w": 390,
+   "x": 2350,
+   "y": 52120
+  },
+  "AnyaStart.dc.html": {
+   "h": 1560,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Anya · mulai",
+   "w": 390,
+   "x": 470,
+   "y": 45080
+  },
+  "AnyaVoice.dc.html": {
+   "h": 900,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Masukan suara",
+   "w": 390,
+   "x": 1410,
+   "y": 45080
+  },
+  "AnyaVoiceCoach.dc.html": {
+   "h": 1760,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Pelatih suara",
+   "w": 390,
+   "x": 940,
+   "y": 49940
+  },
+  "Connected.dc.html": {
+   "x": 1410,
+   "y": 82300,
+   "w": 390,
+   "h": 1250,
+   "title": "Terhubung",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "Devices.dc.html": {
+   "x": 0,
+   "y": 79640,
+   "w": 390,
+   "h": 2240,
+   "title": "Perangkat",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "Experiments.dc.html": {
+   "x": 0,
+   "y": 108730,
+   "w": 390,
+   "h": 1960,
+   "title": "Eksperimen",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "Health.dc.html": {
+   "h": 1980,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Kesehatan",
+   "w": 390,
+   "x": 0,
+   "y": 22470
+  },
+  "HealthBody.dc.html": {
+   "h": 2090,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Kesehatan · Tubuh",
+   "w": 390,
+   "x": 940,
+   "y": 22470
+  },
+  "HealthCycle.dc.html": {
+   "h": 1620,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Siklus menstruasi",
+   "w": 390,
+   "x": 1880,
+   "y": 28110
+  },
+  "HealthLab.dc.html": {
+   "h": 1900,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Lab Book",
+   "w": 390,
+   "x": 1410,
+   "y": 28110
+  },
+  "HealthLive.dc.html": {
+   "h": 1400,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Detak langsung",
+   "w": 390,
+   "x": 0,
+   "y": 25390
+  },
+  "HealthMind.dc.html": {
+   "h": 1400,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Cek suasana hati",
+   "w": 390,
+   "x": 1880,
+   "y": 25390
+  },
+  "HealthNutrition.dc.html": {
+   "h": 1960,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Nutrisi",
+   "w": 390,
+   "x": 940,
+   "y": 28110
+  },
+  "HealthOxygen.dc.html": {
+   "h": 1560,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Oksigen dan napas",
+   "w": 390,
+   "x": 470,
+   "y": 25390
+  },
+  "HealthPermissions.dc.html": {
+   "h": 1600,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Izin Apple Health",
+   "w": 390,
+   "x": 2350,
+   "y": 28110
+  },
+  "HealthRhythm.dc.html": {
+   "h": 2050,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Ritme · hasil",
+   "w": 390,
+   "x": 470,
+   "y": 30490
+  },
+  "HealthRhythmConsent.dc.html": {
+   "h": 1500,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Ritme · persetujuan",
+   "w": 390,
+   "x": 0,
+   "y": 30490
+  },
+  "HealthRhythmEmpty.dc.html": {
+   "h": 1000,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Ritme · belum ada bacaan",
+   "w": 390,
+   "x": 940,
+   "y": 30490
+  },
+  "HealthRhythmUnsupported.dc.html": {
+   "h": 1000,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Ritme · perangkat tak didukung",
+   "w": 390,
+   "x": 1410,
+   "y": 30490
+  },
+  "HealthSkin.dc.html": {
+   "h": 1300,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Suhu kulit",
+   "w": 390,
+   "x": 940,
+   "y": 25390
+  },
+  "HealthSleep.dc.html": {
+   "h": 2060,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Kesehatan · Tidur",
+   "w": 390,
+   "x": 1410,
+   "y": 22470
+  },
+  "HealthVO2.dc.html": {
+   "h": 2300,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Kebugaran (VO₂max)",
+   "w": 390,
+   "x": 1410,
+   "y": 25390
+  },
+  "HealthVital.dc.html": {
+   "h": 2500,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Kesehatan · Vital",
+   "w": 390,
+   "x": 470,
+   "y": 22470
+  },
+  "HealthWaist.dc.html": {
+   "h": 1360,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Lingkar pinggang",
+   "w": 390,
+   "x": 470,
+   "y": 28110
+  },
+  "HealthWeight.dc.html": {
+   "h": 1620,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Berat badan",
+   "w": 390,
+   "x": 0,
+   "y": 28110
+  },
+  "Live.dc.html": {
+   "x": 0,
+   "y": 69220,
+   "w": 390,
+   "h": 940,
+   "title": "Sesi langsung · Lari",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "LiveActivities.dc.html": {
+   "x": 1410,
+   "y": 69220,
+   "w": 1410,
+   "h": 1180,
+   "title": "Layar kunci · GPS",
+   "radius": 44
+  },
+  "LiveCycle.dc.html": {
+   "x": 940,
+   "y": 69220,
+   "w": 390,
+   "h": 940,
+   "title": "Sesi langsung · Sepeda",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "LiveWalk.dc.html": {
+   "x": 470,
+   "y": 69220,
+   "w": 390,
+   "h": 940,
+   "title": "Sesi langsung · Jalan",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "Main.dc.html": {
+   "h": 1480,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Hari ini",
+   "w": 390,
+   "x": 0,
+   "y": 9890
+  },
+  "MapA.dc.html": {
+   "h": 1540,
+   "radius": 24,
+   "title": "Peta fitur · Bagian 1",
+   "w": 1230,
+   "x": 0,
+   "y": 1650
+  },
+  "MapB.dc.html": {
+   "h": 1290,
+   "radius": 24,
+   "title": "Peta fitur · Bagian 2",
+   "w": 1230,
+   "x": 1310,
+   "y": 1650
+  },
+  "MapC.dc.html": {
+   "h": 1640,
+   "radius": 24,
+   "title": "Peta fitur · Bagian 3",
+   "w": 1230,
+   "x": 0,
+   "y": 3610
+  },
+  "MapD.dc.html": {
+   "h": 1140,
+   "radius": 24,
+   "title": "Peta fitur · Bagian 4",
+   "w": 1230,
+   "x": 1310,
+   "y": 3610
+  },
+  "MapOverview.dc.html": {
+   "h": 1230,
+   "radius": 24,
+   "title": "Peta fitur · Ringkasan",
+   "w": 1180,
+   "x": 0,
+   "y": 0
+  },
+  "ObAnya.dc.html": {
+   "h": 1000,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Siapkan Anya",
+   "w": 390,
+   "x": 470,
+   "y": 8470
+  },
+  "ObBluetooth.dc.html": {
+   "h": 900,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Izin Bluetooth",
+   "w": 390,
+   "x": 0,
+   "y": 7050
+  },
+  "ObDevice.dc.html": {
+   "h": 960,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Pilih perangkat",
+   "w": 390,
+   "x": 3290,
+   "y": 5670
+  },
+  "ObDone.dc.html": {
+   "h": 960,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Selesai",
+   "w": 390,
+   "x": 1410,
+   "y": 8470
+  },
+  "ObHealth.dc.html": {
+   "h": 1000,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Apple Health",
+   "w": 390,
+   "x": 2350,
+   "y": 7050
+  },
+  "ObImport.dc.html": {
+   "h": 900,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Impor data",
+   "w": 390,
+   "x": 0,
+   "y": 8470
+  },
+  "ObPrefs.dc.html": {
+   "h": 960,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Preferensi",
+   "w": 390,
+   "x": 940,
+   "y": 8470
+  },
+  "ObPrivacy.dc.html": {
+   "h": 900,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Privasi",
+   "w": 390,
+   "x": 470,
+   "y": 5670
+  },
+  "ObProfile.dc.html": {
+   "h": 960,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Profil",
+   "w": 390,
+   "x": 1410,
+   "y": 7050
+  },
+  "ObProfilePicker.dc.html": {
+   "h": 960,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Pilih berat badan",
+   "w": 390,
+   "x": 1880,
+   "y": 7050
+  },
+  "ObScanHelp.dc.html": {
+   "h": 900,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Strap belum ketemu",
+   "w": 390,
+   "x": 940,
+   "y": 7050
+  },
+  "ObTerms.dc.html": {
+   "h": 900,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Syarat dan penafian",
+   "w": 390,
+   "x": 940,
+   "y": 5670
+  },
+  "ObTermsSheet.dc.html": {
+   "h": 900,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Penafian lengkap",
+   "w": 390,
+   "x": 1410,
+   "y": 5670
+  },
+  "ObValue1.dc.html": {
+   "h": 900,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Nilai 1 · Energi",
+   "w": 390,
+   "x": 1880,
+   "y": 5670
+  },
+  "ObValue2.dc.html": {
+   "h": 900,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Nilai 2 · Detak langsung",
+   "w": 390,
+   "x": 2350,
+   "y": 5670
+  },
+  "ObValue3.dc.html": {
+   "h": 900,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Nilai 3 · Milikmu",
+   "w": 390,
+   "x": 2820,
+   "y": 5670
+  },
+  "ObWear.dc.html": {
+   "h": 900,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Pasang strap",
+   "w": 390,
+   "x": 470,
+   "y": 7050
+  },
+  "ObWelcome.dc.html": {
+   "h": 844,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Selamat datang",
+   "w": 390,
+   "x": 0,
+   "y": 5670
+  },
+  "ObWhatsNew.dc.html": {
+   "h": 960,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Apa yang baru",
+   "w": 390,
+   "x": 1880,
+   "y": 8470
+  },
+  "Pairing.dc.html": {
+   "x": 940,
+   "y": 82300,
+   "w": 390,
+   "h": 1200,
+   "title": "Menyambungkan",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "Personalize.dc.html": {
+   "x": 0,
+   "y": 93160,
+   "w": 390,
+   "h": 1960,
+   "title": "Saya",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "Scan.dc.html": {
+   "x": 470,
+   "y": 82300,
+   "w": 390,
+   "h": 1250,
+   "title": "Cari strap",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "Sleep.dc.html": {
+   "h": 2400,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Tidur · Ringkasan",
+   "w": 390,
+   "x": 0,
+   "y": 42400
+  },
+  "SleepNap.dc.html": {
+   "h": 1700,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Tidur siang",
+   "w": 390,
+   "x": 1880,
+   "y": 42400
+  },
+  "SleepPerformance.dc.html": {
+   "h": 1520,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Kinerja tidur",
+   "w": 390,
+   "x": 1410,
+   "y": 42400
+  },
+  "SleepStages.dc.html": {
+   "h": 1740,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Fase tidur",
+   "w": 390,
+   "x": 470,
+   "y": 42400
+  },
+  "SleepVitals.dc.html": {
+   "h": 1460,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Vital semalam",
+   "w": 390,
+   "x": 940,
+   "y": 42400
+  },
+  "TestCentre.dc.html": {
+   "x": 470,
+   "y": 108730,
+   "w": 390,
+   "h": 1700,
+   "title": "Test Centre",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "TodayAddActivity.dc.html": {
+   "h": 1700,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Tambah aktivitas",
+   "w": 390,
+   "x": 470,
+   "y": 20350
+  },
+  "TodayAllMetrics.dc.html": {
+   "h": 1000,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Semua metrik",
+   "w": 390,
+   "x": 1410,
+   "y": 11790
+  },
+  "TodayBreathe.dc.html": {
+   "h": 1000,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Latihan napas",
+   "w": 390,
+   "x": 940,
+   "y": 20350
+  },
+  "TodayBreatheRhythm.dc.html": {
+   "h": 1380,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Ritme napas",
+   "w": 390,
+   "x": 1880,
+   "y": 20350
+  },
+  "TodayCharge.dc.html": {
+   "h": 1100,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Detail Charge",
+   "w": 390,
+   "x": 470,
+   "y": 9890
+  },
+  "TodayCustomize.dc.html": {
+   "h": 2100,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Atur kartu Hari ini",
+   "w": 390,
+   "x": 470,
+   "y": 17830
+  },
+  "TodayDate.dc.html": {
+   "h": 1180,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Pilih tanggal",
+   "w": 390,
+   "x": 0,
+   "y": 15970
+  },
+  "TodayEdit.dc.html": {
+   "h": 1860,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Atur kartu (mode atur)",
+   "w": 390,
+   "x": 0,
+   "y": 17830
+  },
+  "TodayEffort.dc.html": {
+   "h": 1060,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Detail Effort",
+   "w": 390,
+   "x": 940,
+   "y": 9890
+  },
+  "TodayHRV.dc.html": {
+   "h": 1040,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Detail HRV",
+   "w": 390,
+   "x": 0,
+   "y": 11790
+  },
+  "TodayHeartRate.dc.html": {
+   "h": 980,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Detak hari ini",
+   "w": 390,
+   "x": 1410,
+   "y": 9890
+  },
+  "TodayJournal.dc.html": {
+   "h": 1160,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Jurnal hari ini",
+   "w": 390,
+   "x": 470,
+   "y": 13910
+  },
+  "TodayMetrics.dc.html": {
+   "h": 1700,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Pilih metrik utama",
+   "w": 390,
+   "x": 1880,
+   "y": 11790
+  },
+  "TodayNotifs.dc.html": {
+   "h": 820,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Notifikasi",
+   "w": 390,
+   "x": 1410,
+   "y": 13910
+  },
+  "TodayPast.dc.html": {
+   "h": 1440,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Hari lampau (hanya lihat)",
+   "w": 390,
+   "x": 470,
+   "y": 15970
+  },
+  "TodayQuick.dc.html": {
+   "h": 900,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Aksi cepat (tombol +)",
+   "w": 390,
+   "x": 0,
+   "y": 20350
+  },
+  "TodayRHR.dc.html": {
+   "h": 1040,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Detail detak istirahat",
+   "w": 390,
+   "x": 470,
+   "y": 11790
+  },
+  "TodaySteps.dc.html": {
+   "h": 1060,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Detail langkah",
+   "w": 390,
+   "x": 940,
+   "y": 11790
+  },
+  "TodayStress.dc.html": {
+   "h": 1640,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Pemantauan stres",
+   "w": 390,
+   "x": 0,
+   "y": 13910
+  },
+  "TodayWarning.dc.html": {
+   "h": 860,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Peringatan dini",
+   "w": 390,
+   "x": 940,
+   "y": 13910
+  },
+  "TodayWater.dc.html": {
+   "h": 1180,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Catat air",
+   "w": 390,
+   "x": 1410,
+   "y": 20350
+  },
+  "TrainingLoad.dc.html": {
+   "h": 2200,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Beban latihan",
+   "w": 390,
+   "x": 0,
+   "y": 61480
+  },
+  "TrainingLoadCardio.dc.html": {
+   "h": 2420,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Beban kardio",
+   "w": 390,
+   "x": 470,
+   "y": 61480
+  },
+  "TrainingLoadMuscle.dc.html": {
+   "h": 2300,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Beban otot",
+   "w": 390,
+   "x": 940,
+   "y": 61480
+  },
+  "Trends.dc.html": {
+   "h": 3560,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Tren",
+   "w": 390,
+   "x": 0,
+   "y": 32960
+  },
+  "TrendsCharge.dc.html": {
+   "h": 2420,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Tren Charge",
+   "w": 390,
+   "x": 0,
+   "y": 36940
+  },
+  "TrendsChargeEffort.dc.html": {
+   "h": 2140,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Charge dan Effort",
+   "w": 390,
+   "x": 0,
+   "y": 39780
+  },
+  "TrendsChargeRest.dc.html": {
+   "h": 2060,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Charge dan Rest",
+   "w": 390,
+   "x": 470,
+   "y": 39780
+  },
+  "TrendsCompare.dc.html": {
+   "h": 1740,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Bandingkan",
+   "w": 390,
+   "x": 1880,
+   "y": 39780
+  },
+  "TrendsEffort.dc.html": {
+   "h": 2380,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Tren Effort",
+   "w": 390,
+   "x": 470,
+   "y": 36940
+  },
+  "TrendsExplore.dc.html": {
+   "h": 2100,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Explore",
+   "w": 390,
+   "x": 2350,
+   "y": 39780
+  },
+  "TrendsHeatmap.dc.html": {
+   "h": 1740,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Peta panas Charge",
+   "w": 390,
+   "x": 940,
+   "y": 39780
+  },
+  "TrendsInsights.dc.html": {
+   "h": 2200,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Insights",
+   "w": 390,
+   "x": 1410,
+   "y": 39780
+  },
+  "TrendsRest.dc.html": {
+   "h": 2400,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Tren Rest",
+   "w": 390,
+   "x": 940,
+   "y": 36940
+  },
+  "Widgets.dc.html": {
+   "x": 0,
+   "y": 87880,
+   "w": 1410,
+   "h": 1760,
+   "title": "Widget layar utama",
+   "radius": 24
+  },
+  "WorkoutAutoDetect.dc.html": {
+   "h": 1760,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Deteksi otomatis · aktif",
+   "w": 390,
+   "x": 0,
+   "y": 67040
+  },
+  "WorkoutAutoDetectOff.dc.html": {
+   "h": 1500,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Deteksi otomatis · mati",
+   "w": 390,
+   "x": 470,
+   "y": 67040
+  },
+  "WorkoutCalendar.dc.html": {
+   "h": 2060,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Kalender latihan",
+   "w": 390,
+   "x": 0,
+   "y": 64320
+  },
+  "WorkoutGym.dc.html": {
+   "h": 2220,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Gym dan program",
+   "w": 390,
+   "x": 0,
+   "y": 58680
+  },
+  "WorkoutHistory.dc.html": {
+   "h": 2300,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Semua sesi",
+   "w": 390,
+   "x": 470,
+   "y": 64320
+  },
+  "WorkoutLift.dc.html": {
+   "h": 1400,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Lift Log",
+   "w": 390,
+   "x": 1410,
+   "y": 55680
+  },
+  "WorkoutProgram.dc.html": {
+   "h": 2100,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Ubah program",
+   "w": 390,
+   "x": 470,
+   "y": 58680
+  },
+  "WorkoutProgramImport.dc.html": {
+   "h": 1700,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Impor program",
+   "w": 390,
+   "x": 1410,
+   "y": 58680
+  },
+  "WorkoutProgramItem.dc.html": {
+   "h": 1880,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Latihan program",
+   "w": 390,
+   "x": 940,
+   "y": 58680
+  },
+  "WorkoutStart.dc.html": {
+   "h": 980,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Mulai latihan",
+   "w": 390,
+   "x": 470,
+   "y": 55680
+  },
+  "WorkoutSummary.dc.html": {
+   "h": 1900,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Ringkasan latihan",
+   "w": 390,
+   "x": 940,
+   "y": 55680
+  },
+  "Workouts.dc.html": {
+   "h": 2580,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Workout",
+   "w": 390,
+   "x": 0,
+   "y": 55680
+  },
+  "WorkoutSummaryGym.dc.html": {
+   "x": 1880,
+   "y": 58680,
+   "w": 390,
+   "h": 2380,
+   "title": "Ringkasan sesi gym",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "WorkoutSaveProgram.dc.html": {
+   "x": 2350,
+   "y": 58680,
+   "w": 390,
+   "h": 1240,
+   "title": "Simpan sebagai program",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "WorkoutStartHiit.dc.html": {
+   "x": 0,
+   "y": 70820,
+   "w": 390,
+   "h": 1160,
+   "title": "Mulai HIIT",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "LiveHIIT.dc.html": {
+   "x": 470,
+   "y": 70820,
+   "w": 390,
+   "h": 980,
+   "title": "Sesi langsung · HIIT",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "LiveIndoor.dc.html": {
+   "x": 940,
+   "y": 70820,
+   "w": 390,
+   "h": 940,
+   "title": "Sesi langsung · Yoga",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "LiveActivitiesNoGps.dc.html": {
+   "x": 1410,
+   "y": 70820,
+   "w": 1410,
+   "h": 1180,
+   "title": "Layar kunci · tanpa GPS",
+   "radius": 24
+  },
+  "LiveIsland.dc.html": {
+   "x": 0,
+   "y": 72420,
+   "w": 1410,
+   "h": 3900,
+   "title": "Dynamic Island saat workout",
+   "radius": 24
+  },
+  "LiveZone.dc.html": {
+   "x": 0,
+   "y": 76740,
+   "w": 1410,
+   "h": 2480,
+   "title": "Zona kuning dan merah",
+   "radius": 24
+  },
+  "DeviceDetail.dc.html": {
+   "x": 470,
+   "y": 79640,
+   "w": 390,
+   "h": 2000,
+   "title": "Detail strap",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "DeviceBattery.dc.html": {
+   "x": 940,
+   "y": 79640,
+   "w": 390,
+   "h": 1560,
+   "title": "Baterai strap",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "DeviceSync.dc.html": {
+   "x": 1410,
+   "y": 79640,
+   "w": 390,
+   "h": 2000,
+   "title": "Sinkron riwayat",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "DeviceModel.dc.html": {
+   "x": 0,
+   "y": 82300,
+   "w": 390,
+   "h": 1260,
+   "title": "Tambah WHOOP",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "DeviceHelp.dc.html": {
+   "x": 0,
+   "y": 83980,
+   "w": 390,
+   "h": 1900,
+   "title": "Bantuan koneksi",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "DeviceRepair.dc.html": {
+   "x": 470,
+   "y": 83980,
+   "w": 390,
+   "h": 1500,
+   "title": "Pasang ulang",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "DeviceModels.dc.html": {
+   "x": 940,
+   "y": 83980,
+   "w": 390,
+   "h": 1760,
+   "title": "Model dan dukungan",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "DeviceLog.dc.html": {
+   "x": 1410,
+   "y": 83980,
+   "w": 390,
+   "h": 1480,
+   "title": "Log strap",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "DeviceRestart.dc.html": {
+   "x": 1880,
+   "y": 83980,
+   "w": 390,
+   "h": 900,
+   "title": "Mulai ulang strap",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "DeviceSyncIsland.dc.html": {
+   "x": 0,
+   "y": 86300,
+   "w": 1410,
+   "h": 1160,
+   "title": "Sinkron di Dynamic Island",
+   "radius": 24
+  },
+  "Persona.dc.html": {
+   "x": 470,
+   "y": 93160,
+   "w": 390,
+   "h": 2160,
+   "title": "Persona",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "PersonaZones.dc.html": {
+   "x": 940,
+   "y": 93160,
+   "w": 390,
+   "h": 1560,
+   "title": "Zona detak",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "PersonaGoals.dc.html": {
+   "x": 1410,
+   "y": 93160,
+   "w": 390,
+   "h": 1500,
+   "title": "Target",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "Appearance.dc.html": {
+   "x": 0,
+   "y": 95740,
+   "w": 390,
+   "h": 2480,
+   "title": "Tampilan",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "Units.dc.html": {
+   "x": 1880,
+   "y": 95740,
+   "w": 390,
+   "h": 1440,
+   "title": "Satuan",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "Notifications.dc.html": {
+   "x": 0,
+   "y": 98640,
+   "w": 390,
+   "h": 1900,
+   "title": "Notifikasi",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "Features.dc.html": {
+   "x": 470,
+   "y": 98640,
+   "w": 390,
+   "h": 1380,
+   "title": "Fitur opsional",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "Advanced.dc.html": {
+   "x": 470,
+   "y": 106410,
+   "w": 390,
+   "h": 1700,
+   "title": "Lanjutan",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "DataHub.dc.html": {
+   "x": 0,
+   "y": 103880,
+   "w": 390,
+   "h": 2110,
+   "title": "Data dan integrasi",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "Backup.dc.html": {
+   "x": 470,
+   "y": 103880,
+   "w": 390,
+   "h": 1860,
+   "title": "Cadangan",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "Privacy.dc.html": {
+   "x": 0,
+   "y": 106410,
+   "w": 390,
+   "h": 1900,
+   "title": "Privasi",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "About.dc.html": {
+   "x": 940,
+   "y": 106410,
+   "w": 390,
+   "h": 1900,
+   "title": "Tentang",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "Strava.dc.html": {
+   "x": 940,
+   "y": 103880,
+   "w": 390,
+   "h": 1280,
+   "title": "Strava · mati",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "StravaSetup.dc.html": {
+   "x": 1410,
+   "y": 103880,
+   "w": 390,
+   "h": 1900,
+   "title": "Strava · penyiapan",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "StravaConnected.dc.html": {
+   "x": 1880,
+   "y": 103880,
+   "w": 390,
+   "h": 1900,
+   "title": "Strava · tersambung",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "Language.dc.html": {
+   "x": 1410,
+   "y": 95740,
+   "w": 390,
+   "h": 1700,
+   "title": "Bahasa",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "AnyaPattern.dc.html": {
+   "x": 0,
+   "y": 53880,
+   "w": 1410,
+   "h": 1380,
+   "title": "Pola Anya di setiap modul",
+   "radius": 24
+  },
+  "AnyaSheetToday.dc.html": {
+   "x": 1490,
+   "y": 53880,
+   "w": 390,
+   "h": 1100,
+   "title": "Anya di Hari ini",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "AnyaSheetHealth.dc.html": {
+   "x": 1960,
+   "y": 53880,
+   "w": 390,
+   "h": 1100,
+   "title": "Anya di Kesehatan",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "AnyaSheetNutrition.dc.html": {
+   "x": 2430,
+   "y": 53880,
+   "w": 390,
+   "h": 1100,
+   "title": "Anya di Nutrisi",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "AnyaSheetDevice.dc.html": {
+   "x": 2900,
+   "y": 53880,
+   "w": 390,
+   "h": 1100,
+   "title": "Anya di Perangkat",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "WidgetVital.dc.html": {
+   "x": 0,
+   "y": 90060,
+   "w": 1410,
+   "h": 1180,
+   "title": "Widget Vital sign",
+   "radius": 24
+  },
+  "WidgetsLock.dc.html": {
+   "x": 0,
+   "y": 91660,
+   "w": 1410,
+   "h": 1080,
+   "title": "Widget layar kunci",
+   "radius": 24
+  },
+  "WidgetSettings.dc.html": {
+   "x": 940,
+   "y": 98640,
+   "w": 390,
+   "h": 2200,
+   "title": "Pengaturan widget",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "WidgetVitalConfig.dc.html": {
+   "x": 1410,
+   "y": 98640,
+   "w": 390,
+   "h": 1560,
+   "title": "Atur widget Vital",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "Experience.dc.html": {
+   "x": 470,
+   "y": 95740,
+   "w": 390,
+   "h": 1760,
+   "title": "Experience",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "ExperienceConfirm.dc.html": {
+   "x": 940,
+   "y": 95740,
+   "w": 390,
+   "h": 1000,
+   "title": "Ganti Experience",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "Automations.dc.html": {
+   "x": 0,
+   "y": 101260,
+   "w": 390,
+   "h": 2140,
+   "title": "Otomasi strap",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "AutoDoubleTap.dc.html": {
+   "x": 470,
+   "y": 101260,
+   "w": 390,
+   "h": 1880,
+   "title": "Ketuk dua kali",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "AutoPresence.dc.html": {
+   "x": 940,
+   "y": 101260,
+   "w": 390,
+   "h": 1700,
+   "title": "Pakai dan lepas strap",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "AutoCoaching.dc.html": {
+   "x": 1410,
+   "y": 101260,
+   "w": 390,
+   "h": 2200,
+   "title": "Getar saat beraktivitas",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "AutoSedentary.dc.html": {
+   "x": 1880,
+   "y": 101260,
+   "w": 390,
+   "h": 1600,
+   "title": "Duduk terlalu lama",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "AutoAlerts.dc.html": {
+   "x": 2350,
+   "y": 101260,
+   "w": 390,
+   "h": 1900,
+   "title": "Peringatan dan laporan",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "AutoShortcuts.dc.html": {
+   "x": 2820,
+   "y": 101260,
+   "w": 390,
+   "h": 1700,
+   "title": "Siri dan Pintasan",
+   "radius": 44,
+   "is_interactive": true
+  },
+  "SleepBodyClock.dc.html": {
+   "h": 1900,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Jam tubuh",
+   "w": 390,
+   "x": 2350,
+   "y": 42400
+  },
+  "SleepBodyClockPlan.dc.html": {
+   "h": 1760,
+   "is_interactive": true,
+   "radius": 44,
+   "title": "Rencana jam tubuh",
+   "w": 390,
+   "x": 2820,
+   "y": 42400
+  }
+ },
+ "createdOnFiles": {
+  "at": "2026-10-03T09:00:00Z",
+  "v": 1
+ },
+ "designSystems": [],
+ "launch": {
+  "view": "canvas"
+ },
+ "notes": {
+  "t0": {
+   "kind": "title1",
+   "maxW": 2540,
+   "text": "PHMNOOP UI baru",
+   "w": 240,
+   "x": 0,
+   "y": -720
+  },
+  "t1": {
+   "kind": "title1",
+   "maxW": 1180,
+   "text": "Peta fitur PHMNOOP",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "t10": {
+   "kind": "title1",
+   "maxW": 390,
+   "text": "4. Tren: ringkasan dan perbandingan",
+   "w": 240,
+   "x": 0,
+   "y": 32660
+  },
+  "t11": {
+   "kind": "title1",
+   "maxW": 3210,
+   "text": "5. Tidur: ringkasan dan detail",
+   "w": 240,
+   "x": 0,
+   "y": 42100
+  },
+  "t2": {
+   "kind": "title1",
+   "maxW": 2540,
+   "text": "Peta fitur: rincian 1 dan 2",
+   "w": 240,
+   "x": 0,
+   "y": 1350
+  },
+  "t3": {
+   "kind": "title1",
+   "maxW": 2540,
+   "text": "Peta fitur: rincian 3 dan 4",
+   "w": 240,
+   "x": 0,
+   "y": 3310
+  },
+  "t4": {
+   "kind": "title1",
+   "maxW": 3680,
+   "text": "1. Onboarding: mulai dan nilai",
+   "w": 240,
+   "x": 0,
+   "y": 5370
+  },
+  "t5": {
+   "kind": "title1",
+   "maxW": 2740,
+   "text": "1. Onboarding: koneksi dan profil",
+   "w": 240,
+   "x": 0,
+   "y": 6750
+  },
+  "t6": {
+   "kind": "title1",
+   "maxW": 2270,
+   "text": "1. Onboarding: akhir",
+   "w": 240,
+   "x": 0,
+   "y": 8170
+  },
+  "t9": {
+   "kind": "title1",
+   "maxW": 1800,
+   "text": "3. Kesehatan: tab Semua, Vital, Tubuh, Tidur",
+   "w": 240,
+   "x": 0,
+   "y": 22170
+  },
+  "ta0": {
+   "kind": "title1",
+   "maxW": 2740,
+   "text": "6. Anya: percakapan",
+   "w": 240,
+   "x": 0,
+   "y": 44780
+  },
+  "ta1": {
+   "kind": "title1",
+   "maxW": 2740,
+   "text": "6. Anya: penyedia dan pengaturan",
+   "w": 240,
+   "x": 0,
+   "y": 47060
+  },
+  "ta2": {
+   "kind": "title1",
+   "maxW": 1330,
+   "text": "6. Anya: memori, riwayat, dan pelatih suara",
+   "w": 240,
+   "x": 0,
+   "y": 49640
+  },
+  "ta3": {
+   "kind": "title1",
+   "maxW": 2740,
+   "text": "6. Anya di setiap modul",
+   "w": 240,
+   "x": 0,
+   "y": 51820
+  },
+  "td1": {
+   "kind": "title1",
+   "maxW": 1800,
+   "text": "2. Hari ini: layar utama dan skor",
+   "w": 240,
+   "x": 0,
+   "y": 9590
+  },
+  "td2": {
+   "kind": "title1",
+   "maxW": 2270,
+   "text": "2. Hari ini: metrik harian",
+   "w": 240,
+   "x": 0,
+   "y": 11490
+  },
+  "td3": {
+   "kind": "title1",
+   "maxW": 1800,
+   "text": "2. Hari ini: stres, jurnal, dan peringatan",
+   "w": 240,
+   "x": 0,
+   "y": 13610
+  },
+  "td4": {
+   "kind": "title1",
+   "maxW": 860,
+   "text": "2. Hari ini: pilih tanggal dan hari lampau",
+   "w": 240,
+   "x": 0,
+   "y": 15670
+  },
+  "td5": {
+   "kind": "title1",
+   "maxW": 860,
+   "text": "2. Hari ini: atur kartu",
+   "w": 240,
+   "x": 0,
+   "y": 17530
+  },
+  "td6": {
+   "kind": "title1",
+   "maxW": 2270,
+   "text": "2. Hari ini: aksi cepat (tombol +)",
+   "w": 240,
+   "x": 0,
+   "y": 20050
+  },
+  "th1": {
+   "kind": "title1",
+   "maxW": 2270,
+   "text": "3. Kesehatan: detail vital",
+   "w": 240,
+   "x": 0,
+   "y": 25090
+  },
+  "th2": {
+   "kind": "title1",
+   "maxW": 2740,
+   "text": "3. Kesehatan: detail tubuh dan data",
+   "w": 240,
+   "x": 0,
+   "y": 27810
+  },
+  "th3": {
+   "kind": "title1",
+   "maxW": 1800,
+   "text": "3. Kesehatan: Ritme (fitur eksperimental)",
+   "w": 240,
+   "x": 0,
+   "y": 30190
+  },
+  "tt1": {
+   "kind": "title1",
+   "maxW": 1330,
+   "text": "4. Tren: detail Charge, Effort, dan Rest",
+   "w": 240,
+   "x": 0,
+   "y": 36640
+  },
+  "tt2": {
+   "kind": "title1",
+   "maxW": 2740,
+   "text": "4. Tren: detail perbandingan, insight, dan jelajah",
+   "w": 240,
+   "x": 0,
+   "y": 39480
+  },
+  "tw20": {
+   "kind": "title1",
+   "maxW": 1800,
+   "text": "7.1 Latihan: hub, mulai latihan, ringkasan, dan Lift Log",
+   "x": 0,
+   "y": 55380,
+   "w": 240
+  },
+  "tw21": {
+   "kind": "title1",
+   "maxW": 2740,
+   "text": "7.2 Gym: program (template), impor, dan ringkasan sesi",
+   "x": 0,
+   "y": 58380,
+   "w": 240
+  },
+  "tw22": {
+   "kind": "title1",
+   "maxW": 1330,
+   "text": "7.3 Beban latihan: kardio dan otot",
+   "x": 0,
+   "y": 61180,
+   "w": 240
+  },
+  "tw23": {
+   "kind": "title1",
+   "maxW": 860,
+   "text": "7.4 Kalender latihan dan semua sesi",
+   "x": 0,
+   "y": 64020,
+   "w": 240
+  },
+  "tw24": {
+   "kind": "title1",
+   "maxW": 860,
+   "text": "7.5 Deteksi latihan otomatis: aktif dan mati",
+   "x": 0,
+   "y": 66740,
+   "w": 240
+  },
+  "tw25": {
+   "kind": "title1",
+   "maxW": 2820,
+   "text": "7.6 Sesi langsung: olahraga GPS (lari, jalan, sepeda)",
+   "x": 0,
+   "y": 68920,
+   "w": 240
+  },
+  "tw26": {
+   "kind": "title1",
+   "maxW": 2820,
+   "text": "7.7 Sesi langsung: olahraga tanpa GPS (HIIT, yoga)",
+   "x": 0,
+   "y": 70520,
+   "w": 240
+  },
+  "tw27": {
+   "kind": "title1",
+   "maxW": 1410,
+   "text": "7.8 Dynamic Island saat workout",
+   "x": 0,
+   "y": 72120,
+   "w": 240
+  },
+  "tw28": {
+   "kind": "title1",
+   "maxW": 1410,
+   "text": "7.9 Zona detak kuning dan merah",
+   "x": 0,
+   "y": 76440,
+   "w": 240
+  },
+  "td30": {
+   "kind": "title1",
+   "maxW": 1800,
+   "text": "8.1 Perangkat: strap, baterai, dan sinkron",
+   "x": 0,
+   "y": 79340,
+   "w": 240
+  },
+  "td31": {
+   "kind": "title1",
+   "maxW": 1800,
+   "text": "8.2 Tambah WHOOP: model, cari, sambung",
+   "x": 0,
+   "y": 82000,
+   "w": 240
+  },
+  "td32": {
+   "kind": "title1",
+   "maxW": 2270,
+   "text": "8.3 Bantuan koneksi, model, dan log",
+   "x": 0,
+   "y": 83680,
+   "w": 240
+  },
+  "td33": {
+   "kind": "title1",
+   "maxW": 1410,
+   "text": "8.4 Sinkron di Dynamic Island",
+   "x": 0,
+   "y": 86000,
+   "w": 240
+  },
+  "ta9": {
+   "kind": "title1",
+   "maxW": 3290,
+   "text": "6. Anya di setiap modul: pola kemunculan dan sheet lanjutan",
+   "x": 0,
+   "y": 53580,
+   "w": 240
+  },
+  "tv0": {
+   "kind": "title1",
+   "maxW": 1410,
+   "text": "11.1 Widget layar utama: skor, detak, stres, Anya, langkah",
+   "x": 0,
+   "y": 87580,
+   "w": 240
+  },
+  "tv1": {
+   "kind": "title1",
+   "maxW": 1410,
+   "text": "11.2 Widget Vital sign (baru)",
+   "x": 0,
+   "y": 89760,
+   "w": 240
+  },
+  "tv2": {
+   "kind": "title1",
+   "maxW": 1410,
+   "text": "11.3 Widget layar kunci",
+   "x": 0,
+   "y": 91360,
+   "w": 240
+  },
+  "tz0": {
+   "kind": "title1",
+   "maxW": 1800,
+   "text": "12.1 Saya: hub dan persona",
+   "x": 0,
+   "y": 92860,
+   "w": 240
+  },
+  "tz1": {
+   "kind": "title1",
+   "maxW": 2270,
+   "text": "12.2 Tampilan: Experience, bahasa, dan satuan",
+   "x": 0,
+   "y": 95440,
+   "w": 240
+  },
+  "tz2": {
+   "kind": "title1",
+   "maxW": 1800,
+   "text": "12.3 Notifikasi, fitur opsional, dan widget",
+   "x": 0,
+   "y": 98340,
+   "w": 240
+  },
+  "tz3": {
+   "kind": "title1",
+   "maxW": 3210,
+   "text": "12.4 Otomasi strap",
+   "x": 0,
+   "y": 100960,
+   "w": 240
+  },
+  "tz4": {
+   "kind": "title1",
+   "maxW": 2270,
+   "text": "12.5 Data, cadangan, dan Strava",
+   "x": 0,
+   "y": 103580,
+   "w": 240
+  },
+  "tz5": {
+   "kind": "title1",
+   "maxW": 1330,
+   "text": "12.6 Privasi, lanjutan, dan tentang",
+   "x": 0,
+   "y": 106110,
+   "w": 240
+  },
+  "tz6": {
+   "kind": "title1",
+   "maxW": 860,
+   "text": "12.7 Eksperimen dan Test Centre",
+   "x": 0,
+   "y": 108430,
+   "w": 240
+  }
+ },
+ "order": [
+  "MapOverview.dc.html",
+  "MapA.dc.html",
+  "MapB.dc.html",
+  "MapC.dc.html",
+  "MapD.dc.html",
+  "ObWelcome.dc.html",
+  "ObPrivacy.dc.html",
+  "ObTerms.dc.html",
+  "ObTermsSheet.dc.html",
+  "ObValue1.dc.html",
+  "ObValue2.dc.html",
+  "ObValue3.dc.html",
+  "ObDevice.dc.html",
+  "ObBluetooth.dc.html",
+  "ObWear.dc.html",
+  "ObScanHelp.dc.html",
+  "ObProfile.dc.html",
+  "ObProfilePicker.dc.html",
+  "ObHealth.dc.html",
+  "ObImport.dc.html",
+  "ObAnya.dc.html",
+  "ObPrefs.dc.html",
+  "ObDone.dc.html",
+  "ObWhatsNew.dc.html",
+  "Main.dc.html",
+  "TodayCharge.dc.html",
+  "TodayEffort.dc.html",
+  "TodayHeartRate.dc.html",
+  "TodayHRV.dc.html",
+  "TodayRHR.dc.html",
+  "TodaySteps.dc.html",
+  "TodayAllMetrics.dc.html",
+  "TodayMetrics.dc.html",
+  "TodayStress.dc.html",
+  "TodayJournal.dc.html",
+  "TodayWarning.dc.html",
+  "TodayNotifs.dc.html",
+  "TodayDate.dc.html",
+  "TodayPast.dc.html",
+  "TodayEdit.dc.html",
+  "TodayCustomize.dc.html",
+  "TodayQuick.dc.html",
+  "TodayAddActivity.dc.html",
+  "TodayBreathe.dc.html",
+  "TodayWater.dc.html",
+  "TodayBreatheRhythm.dc.html",
+  "Health.dc.html",
+  "HealthVital.dc.html",
+  "HealthBody.dc.html",
+  "HealthSleep.dc.html",
+  "HealthLive.dc.html",
+  "HealthOxygen.dc.html",
+  "HealthSkin.dc.html",
+  "HealthVO2.dc.html",
+  "HealthMind.dc.html",
+  "HealthWeight.dc.html",
+  "HealthWaist.dc.html",
+  "HealthNutrition.dc.html",
+  "HealthLab.dc.html",
+  "HealthCycle.dc.html",
+  "HealthPermissions.dc.html",
+  "HealthRhythmConsent.dc.html",
+  "HealthRhythm.dc.html",
+  "HealthRhythmEmpty.dc.html",
+  "HealthRhythmUnsupported.dc.html",
+  "Trends.dc.html",
+  "TrendsCharge.dc.html",
+  "TrendsEffort.dc.html",
+  "TrendsRest.dc.html",
+  "TrendsChargeEffort.dc.html",
+  "TrendsChargeRest.dc.html",
+  "TrendsHeatmap.dc.html",
+  "TrendsInsights.dc.html",
+  "TrendsCompare.dc.html",
+  "TrendsExplore.dc.html",
+  "Sleep.dc.html",
+  "SleepStages.dc.html",
+  "SleepVitals.dc.html",
+  "SleepPerformance.dc.html",
+  "SleepNap.dc.html",
+  "SleepBodyClock.dc.html",
+  "SleepBodyClockPlan.dc.html",
+  "Anya.dc.html",
+  "AnyaStart.dc.html",
+  "AnyaAttach.dc.html",
+  "AnyaVoice.dc.html",
+  "AnyaPlan.dc.html",
+  "AnyaBrief.dc.html",
+  "AnyaConnect.dc.html",
+  "AnyaKey.dc.html",
+  "AnyaChatGPT.dc.html",
+  "AnyaCustom.dc.html",
+  "AnyaSettings.dc.html",
+  "AnyaInstructions.dc.html",
+  "AnyaMemory.dc.html",
+  "AnyaHistory.dc.html",
+  "AnyaVoiceCoach.dc.html",
+  "AnyaMap.dc.html",
+  "AnyaSheetSleep.dc.html",
+  "AnyaSheetTrends.dc.html",
+  "AnyaSheetWorkout.dc.html",
+  "AnyaPattern.dc.html",
+  "AnyaSheetToday.dc.html",
+  "AnyaSheetHealth.dc.html",
+  "AnyaSheetNutrition.dc.html",
+  "AnyaSheetDevice.dc.html",
+  "Workouts.dc.html",
+  "WorkoutStart.dc.html",
+  "WorkoutSummary.dc.html",
+  "WorkoutLift.dc.html",
+  "WorkoutGym.dc.html",
+  "WorkoutProgram.dc.html",
+  "WorkoutProgramItem.dc.html",
+  "WorkoutProgramImport.dc.html",
+  "WorkoutSummaryGym.dc.html",
+  "WorkoutSaveProgram.dc.html",
+  "TrainingLoad.dc.html",
+  "TrainingLoadCardio.dc.html",
+  "TrainingLoadMuscle.dc.html",
+  "WorkoutCalendar.dc.html",
+  "WorkoutHistory.dc.html",
+  "WorkoutAutoDetect.dc.html",
+  "WorkoutAutoDetectOff.dc.html",
+  "Live.dc.html",
+  "LiveWalk.dc.html",
+  "LiveCycle.dc.html",
+  "LiveActivities.dc.html",
+  "WorkoutStartHiit.dc.html",
+  "LiveHIIT.dc.html",
+  "LiveIndoor.dc.html",
+  "LiveActivitiesNoGps.dc.html",
+  "LiveIsland.dc.html",
+  "LiveZone.dc.html",
+  "Devices.dc.html",
+  "DeviceDetail.dc.html",
+  "DeviceBattery.dc.html",
+  "DeviceSync.dc.html",
+  "DeviceModel.dc.html",
+  "Scan.dc.html",
+  "Pairing.dc.html",
+  "Connected.dc.html",
+  "DeviceHelp.dc.html",
+  "DeviceRepair.dc.html",
+  "DeviceModels.dc.html",
+  "DeviceLog.dc.html",
+  "DeviceRestart.dc.html",
+  "DeviceSyncIsland.dc.html",
+  "Widgets.dc.html",
+  "WidgetVital.dc.html",
+  "WidgetsLock.dc.html",
+  "Personalize.dc.html",
+  "Persona.dc.html",
+  "PersonaZones.dc.html",
+  "PersonaGoals.dc.html",
+  "Appearance.dc.html",
+  "Experience.dc.html",
+  "ExperienceConfirm.dc.html",
+  "Language.dc.html",
+  "Units.dc.html",
+  "Notifications.dc.html",
+  "Features.dc.html",
+  "WidgetSettings.dc.html",
+  "WidgetVitalConfig.dc.html",
+  "Automations.dc.html",
+  "AutoDoubleTap.dc.html",
+  "AutoPresence.dc.html",
+  "AutoCoaching.dc.html",
+  "AutoSedentary.dc.html",
+  "AutoAlerts.dc.html",
+  "AutoShortcuts.dc.html",
+  "DataHub.dc.html",
+  "Backup.dc.html",
+  "Strava.dc.html",
+  "StravaSetup.dc.html",
+  "StravaConnected.dc.html",
+  "Privacy.dc.html",
+  "Advanced.dc.html",
+  "About.dc.html",
+  "Experiments.dc.html",
+  "TestCentre.dc.html"
+ ],
+ "pages": [],
+ "title": "PHMNOOP UI Baru"
 }
