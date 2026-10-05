@@ -63,6 +63,16 @@ enum NunaAnyaReader {
         }
     }
 
+    /// Writes this module's note for the day and adds what moved since the last day it noted to the read's detail.
+    private static func remembering(_ read: NunaAnyaRead, values: [String: Double]) -> NunaAnyaRead {
+        var r = read
+        let note = r.headline + (r.detail.map { " " + $0 } ?? "")
+        if let moved = NunaAnyaMemory.snapshot(r.module, headline: note, values: values) {
+            r.detail = [r.detail, moved].compactMap { $0 }.joined(separator: " ")
+        }
+        return r
+    }
+
     // MARK: Today
 
     private static func today(_ module: NunaAnyaModule, repo: Repository, profile: ProfileStore, scale: EffortScale) async -> NunaAnyaRead? {
@@ -92,9 +102,14 @@ enum NunaAnyaReader {
         if m.hrv != nil { read.append("HRV") }
         if let e = m.effort { read.append("Effort"); bits.append(String(localized: "Effort so far \(UnitFormatter.effortDisplay(e, scale: scale))")) }
         if m.rest != nil { read.append("Rest") }
-        return NunaAnyaRead(headline: String(localized: "Charge \(c)%, \(tail)"),
-                            detail: bits.isEmpty ? nil : bits.joined(separator: ". ") + ".",
-                            read: read, module: module, questions: questions(.today))
+        var vals: [String: Double] = ["charge": charge]
+        if let v = m.effort { vals["effort"] = Double(UnitFormatter.effortDisplay(v, scale: scale)) ?? v }
+        if let v = m.rest { vals["rest"] = v }
+        if let v = m.hrv { vals["hrv"] = v }
+        if let v = m.restingHr { vals["rhr"] = v }
+        return remembering(NunaAnyaRead(headline: String(localized: "Charge \(c)%, \(tail)"),
+                                        detail: bits.isEmpty ? nil : bits.joined(separator: ". ") + ".",
+                                        read: read, module: module, questions: questions(.today)), values: vals)
     }
 
     // MARK: Sleep
@@ -110,8 +125,12 @@ enum NunaAnyaReader {
         if let n = m.day?.disturbances { bits.append(String(localized: "\(n) wake-ups")) }
         var read = ["Rest"]; if hours != nil { read.append("Sleep duration") }
         let head = hours.map { String(localized: "Rest \(Int(rest.rounded()))% after \($0) of sleep") } ?? String(localized: "Rest \(Int(rest.rounded()))%")
-        return NunaAnyaRead(headline: head, detail: bits.isEmpty ? nil : bits.joined(separator: ". ") + ".",
-                            read: read, module: .sleep, questions: questions(.sleep))
+        var vals: [String: Double] = ["rest": rest]
+        if let v = m.sleepMinutes { vals["sleepMin"] = v }
+        if let v = m.day?.efficiency { vals["efficiency"] = v }
+        if let v = m.day?.deepMin, v > 0 { vals["deepMin"] = v }
+        return remembering(NunaAnyaRead(headline: head, detail: bits.isEmpty ? nil : bits.joined(separator: ". ") + ".",
+                                        read: read, module: .sleep, questions: questions(.sleep)), values: vals)
     }
 
     // MARK: Health
@@ -127,8 +146,13 @@ enum NunaAnyaReader {
         if let v = m.spo2 { more.append("SpO₂ \(Int(v.rounded()))%"); read.append("Blood Oxygen") }
         if let v = m.respiratory { more.append(String(localized: "breathing \(String(format: "%.1f", locale: AppLanguage.activeLocale, v)) per minute")); read.append("Respiratory") }
         let head = parts.joined(separator: ", ")
-        return NunaAnyaRead(headline: String(head.prefix(1)).uppercased() + String(head.dropFirst()), detail: more.isEmpty ? nil : more.joined(separator: ", ") + ".",
-                            read: read, module: .health, questions: questions(.health))
+        var vals: [String: Double] = [:]
+        if let v = m.hrv { vals["hrv"] = v }
+        if let v = m.restingHr { vals["rhr"] = v }
+        if let v = m.spo2 { vals["spo2"] = v }
+        if let v = m.respiratory { vals["resp"] = v }
+        return remembering(NunaAnyaRead(headline: String(head.prefix(1)).uppercased() + String(head.dropFirst()), detail: more.isEmpty ? nil : more.joined(separator: ", ") + ".",
+                                        read: read, module: .health, questions: questions(.health)), values: vals)
     }
 
     // MARK: Trends
@@ -141,9 +165,9 @@ enum NunaAnyaReader {
         let a = last7.reduce(0, +) / Double(last7.count), b = prior.reduce(0, +) / Double(prior.count)
         let diff = Int((a - b).rounded())
         let word = diff == 0 ? String(localized: "level with") : (diff > 0 ? String(localized: "\(diff) points above") : String(localized: "\(-diff) points below"))
-        return NunaAnyaRead(headline: String(localized: "Charge averaged \(Int(a.rounded()))% this week, \(word) the month before"),
-                            detail: String(localized: "Compared with \(prior.count) earlier days (\(Int(b.rounded()))% on average)."),
-                            read: ["Charge", "30 days"], module: .trends, questions: questions(.trends))
+        return remembering(NunaAnyaRead(headline: String(localized: "Charge averaged \(Int(a.rounded()))% this week, \(word) the month before"),
+                                        detail: String(localized: "Compared with \(prior.count) earlier days (\(Int(b.rounded()))% on average)."),
+                                        read: ["Charge", "30 days"], module: .trends, questions: questions(.trends)), values: ["week": a, "before": b])
     }
 
     // MARK: Breathing
@@ -168,9 +192,10 @@ enum NunaAnyaReader {
         guard !week.isEmpty else { return nil }
         let effort = week.compactMap(\.strain).reduce(0, +)
         let minutes = Int(week.reduce(0.0) { $0 + ($1.durationS ?? Double($1.endTs - $1.startTs)) } / 60)
-        return NunaAnyaRead(headline: String(localized: "\(week.count) sessions this week, Effort \(UnitFormatter.effortDisplay(effort, scale: scale))"),
-                            detail: String(localized: "\(minutes) minutes of training in the last 7 days."),
-                            read: ["Workouts 7 days", "Effort"], module: .workouts, questions: questions(.workouts))
+        return remembering(NunaAnyaRead(headline: String(localized: "\(week.count) sessions this week, Effort \(UnitFormatter.effortDisplay(effort, scale: scale))"),
+                                        detail: String(localized: "\(minutes) minutes of training in the last 7 days."),
+                                        read: ["Workouts 7 days", "Effort"], module: .workouts, questions: questions(.workouts)),
+                           values: ["sessions": Double(week.count), "minutes": Double(minutes), "weekEffort": Double(UnitFormatter.effortDisplay(effort, scale: scale)) ?? effort])
     }
 
     // MARK: Questions per module (AnyaSheet*.dc.html)

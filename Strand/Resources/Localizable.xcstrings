@@ -1,6 +1,33 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Compared with my note %@: ": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Dibanding catatanku %@: "}}
+    } },
+    "was": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "sebelumnya"}}
+    } },
+    "yesterday": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "kemarin"}}
+    } },
+    "Sleep efficiency": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Efisiensi tidur"}}
+    } },
+    "Charge this week": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Charge minggu ini"}}
+    } },
+    "Charge before that": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Charge sebelumnya"}}
+    } },
+    "Sessions in 7 days": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sesi dalam 7 hari"}}
+    } },
+    "Training minutes": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Menit latihan"}}
+    } },
+    "Effort this week": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Effort minggu ini"}}
+    } },
     "%lld s": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "%lld dtk"}}
     } },
