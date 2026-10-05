@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreText
 
 // MARK: - Nuna design tokens
 //
@@ -118,25 +119,47 @@ public enum NunaTheme {
 public extension Font {
     /// The Nuna system font (SF Pro) at a design size.
     static func nuna(size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> Font {
-        // WHP follows the WHOOP typography cheat sheet by role, read from the size: big figures are a condensed bold (DIN's role),
-        // main headers bold, card headers semibold, body and descriptions regular, captions and menu labels medium. Sizes stay at the
-        // sheet's values, so nothing is set larger than it asks.
-        if NunaThemePrefs.skin == .whp {
-            switch size {
-            case 32...: return .system(size: size, weight: .bold, design: design).width(.condensed)
-            case 24..<32: return .system(size: size, weight: .bold, design: design)
-            case 16..<24: return .system(size: (size * 0.92).rounded(), weight: weight == .regular ? .regular : .semibold, design: design)
-            case 13..<16: return .system(size: size, weight: weight == .heavy || weight == .black || weight == .bold ? .semibold : .regular, design: design)
-            default: return .system(size: size, weight: weight == .regular ? .regular : .medium, design: design)
-            }
-        }
+        // WHP follows the WHOOP typography cheat sheet by role. Figures (the call sites that ask for `NunaType.design`) are D-DIN-PRO,
+        // the DIN role of the sheet; words are Proxima Nova: main headers (24 to 31) bold, card headers (16 to 23) semibold, body (13 to 15)
+        // regular, captions and menu labels medium. When a font file is not in the app the system font stands in with the same weights.
+        if NunaThemePrefs.skin == .whp { return NunaWHPFont.font(size: size, weight: weight, design: design) }
         return .system(size: size, weight: weight, design: design)
     }
 }
 
 /// The font design the Nuna screens use for numerals and headings: SF Pro, as the typography guide recommends.
 public enum NunaType {
-    public static var design: Font.Design { .default }
+    /// The design every figure and heading asks for. In WHP it is a marker (`.rounded`) that `Font.nuna` turns into D-DIN-PRO.
+    public static var design: Font.Design { NunaThemePrefs.skin == .whp ? .rounded : .default }
+}
+
+/// The WHP style's fonts: D-DIN-PRO for figures, Proxima Nova for words, with the system font as the fallback.
+enum NunaWHPFont {
+    private static func available(_ name: String) -> Bool {
+        CTFontCopyPostScriptName(CTFontCreateWithName(name as CFString, 12, nil)) as String == name
+    }
+    private static let din: [Font.Weight: String] = [.regular: "D-DIN-PRO-Regular", .medium: "D-DIN-PRO-Medium", .semibold: "D-DIN-PRO-SemiBold", .bold: "D-DIN-PRO-Bold"]
+    private static let proxima: [Font.Weight: String] = [.regular: "ProximaNova-Regular", .medium: "ProximaNova-Medium",
+                                                          .semibold: "ProximaNova-Semibold", .bold: "ProximaNova-Bold"]
+    private static let dinOK = din.values.allSatisfy(available)
+    private static let proximaOK = proxima.values.allSatisfy(available)
+
+    static func font(size: CGFloat, weight: Font.Weight, design: Font.Design) -> Font {
+        if design == .rounded {
+            // Figures: bold when large, semibold in lists, regular for small units.
+            let w: Font.Weight = size >= 24 ? .bold : (size >= 15 ? .semibold : (weight == .regular ? .regular : .medium))
+            return dinOK ? .custom(din[w] ?? "D-DIN-PRO-Bold", size: size) : .system(size: size, weight: w, design: .default).width(.condensed)
+        }
+        let w: Font.Weight
+        var pt = size
+        switch size {
+        case 24...: w = .bold
+        case 16..<24: w = weight == .regular ? .regular : .semibold; pt = (size * 0.92).rounded()
+        case 13..<16: w = (weight == .heavy || weight == .black || weight == .bold) ? .semibold : .regular
+        default: w = weight == .regular ? .regular : .medium
+        }
+        return proximaOK ? .custom(proxima[w] ?? "ProximaNova-Regular", size: pt) : .system(size: pt, weight: w, design: .default)
+    }
 }
 
 public enum NunaRadius {

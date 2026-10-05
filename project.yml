@@ -267,6 +267,17 @@ targets:
               CFBundleIconFiles: []
               UIPrerenderedIcon: false
         NSSupportsLiveActivities: true
+        # Fonts for the WHP style: D-DIN-PRO (SIL OFL) for figures and Proxima Nova (a licensed copy placed locally, not committed) for words.
+        # A file that is not present is ignored, and the style then falls back to the system font.
+        UIAppFonts:
+          - D-DIN-PRO-400-Regular.otf
+          - D-DIN-PRO-500-Medium.otf
+          - D-DIN-PRO-600-SemiBold.otf
+          - D-DIN-PRO-700-Bold.otf
+          - ProximaNova-Regular.otf
+          - ProximaNova-Medium.otf
+          - ProximaNova-Semibold.otf
+          - ProximaNova-Bold.otf
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         UISupportedInterfaceOrientations~ipad:

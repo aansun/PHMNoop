@@ -118,3 +118,7 @@ tools/linux-capture/*.db
 tools/linux-capture/*.db-wal
 tools/linux-capture/*.db-shm
 tools/linux-capture/captures/
+
+# Proxima Nova is a commercial font: licensed copies may sit here for local builds, but are never committed.
+# Without them the WHP style falls back to the system font for words.
+StrandiOS/Resources/Fonts/ProximaNova/
