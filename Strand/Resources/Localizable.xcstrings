@@ -1,6 +1,15 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Every minute": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tiap menit"}}
+    } },
+    "Time and heart-rate zone": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Waktu dan zona detak jantung"}}
+    } },
+    "Check-in every minute": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Laporan tiap menit"}}
+    } },
     "Orbit": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Orbit"}}
     } },

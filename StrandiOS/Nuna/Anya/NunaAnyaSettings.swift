@@ -420,6 +420,7 @@ struct NunaAnyaVoiceCoachView: View {
     @AppStorage(AudioCoachingPreferences.heartRateKey) private var heartRate = true
     @AppStorage(AudioCoachingPreferences.distanceKey) private var distance = true
     @AppStorage(AudioCoachingPreferences.coachingKey) private var coaching = false
+    @AppStorage(AudioCoachingPreferences.checkInKey) private var checkIn = false
     @AppStorage(AudioCoachingPreferences.aiWordingKey) private var aiWording = false
     @AppStorage(AudioCoachingPreferences.distanceMilestoneKilometersKey) private var every = 1
     @AppStorage(AudioCoachingPreferences.targetZoneKey) private var targetZone = 3
@@ -451,6 +452,8 @@ struct NunaAnyaVoiceCoachView: View {
                             NunaToggleRow("Out of the target zone", subtitle: "When your heart rate leaves the zone", systemImage: "heart", isOn: $heartRate).padding(.vertical, 8)
                             NunaDivider()
                             NunaToggleRow("Every kilometre", subtitle: "Distance, time and heart rate", systemImage: "figure.run", isOn: $distance).padding(.vertical, 8)
+                            NunaDivider()
+                            NunaToggleRow("Every minute", subtitle: "Time and heart-rate zone", systemImage: "timer", isOn: $checkIn).padding(.vertical, 8)
                             NunaDivider()
                             NunaToggleRow("Smart cues", subtitle: "Experimental: a short cue when a trend is reliable", systemImage: "sparkles", isOn: $coaching).padding(.vertical, 8)
                         }

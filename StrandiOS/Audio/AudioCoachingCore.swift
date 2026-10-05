@@ -176,6 +176,8 @@ struct AudioPromptPolicy: Equatable, Sendable {
     var heartRatePrompts: Bool
     var distancePrompts: Bool
     var coachingPrompts: Bool
+    /// The spoken status every minute (time and zone). Its own switch: it used to ride on the start/pause/finish one.
+    var checkInPrompts: Bool
     var frequency: AudioPromptFrequency
     var coachingFrequency: AudioPromptFrequency
     var distanceIncludesDistance: Bool
@@ -187,7 +189,8 @@ struct AudioPromptPolicy: Equatable, Sendable {
          frequency: AudioPromptFrequency, coachingPrompts: Bool = false,
          coachingFrequency: AudioPromptFrequency = .normal, distanceIncludesDistance: Bool = true,
          distanceIncludesDuration: Bool = true, distanceIncludesHeartRate: Bool = true,
-         distanceMilestoneKilometers: Int = 1) {
+         distanceMilestoneKilometers: Int = 1, checkInPrompts: Bool = false) {
+        self.checkInPrompts = checkInPrompts
         self.enabled = enabled
         self.lifecyclePrompts = lifecyclePrompts
         self.heartRatePrompts = heartRatePrompts
@@ -415,13 +418,13 @@ enum AudioCoachingCopy {
     static func distance(_ meters: Double) -> String {
         if meters < 1_000 {
             return isIndonesian
-                ? "Distance \(Int(meters.rounded())) meter."
+                ? "Jarak \(Int(meters.rounded())) meter."
                 : "Distance \(Int(meters.rounded())) meters."
         }
         let km = meters / 1_000
         let formatted = km.rounded() == km ? String(Int(km)) : String(format: "%.1f", km)
         return isIndonesian
-            ? "Distance \(formatted) kilometer."
+            ? "Jarak \(formatted.replacingOccurrences(of: ".", with: ",")) kilometer."
             : "Distance \(formatted) kilometers."
     }
 
@@ -481,8 +484,10 @@ final class AudioPromptEngine {
 
     private func categoryEnabled(for event: AudioActivityEvent, policy: AudioPromptPolicy) -> Bool {
         switch event {
-        case .activityStarted, .activityPaused, .activityResumed, .activityEnded, .workoutCheckIn:
+        case .activityStarted, .activityPaused, .activityResumed, .activityEnded:
             return policy.lifecyclePrompts
+        case .workoutCheckIn:
+            return policy.checkInPrompts
         case .heartRateAboveTarget, .heartRateBelowTarget, .heartRateReturnedToTarget:
             return policy.heartRatePrompts
         case .distanceMilestone(let meters):
@@ -524,23 +529,23 @@ final class AudioPromptEngine {
         let expires: TimeInterval
         switch event {
         case .activityStarted:
-            template = "activity.started"; text = AudioCoachingCopy.isIndonesian ? "Workout dimulai." : "Workout started."; expires = 8
+            template = "activity.started"; text = AudioCoachingCopy.isIndonesian ? "Latihan dimulai." : "Workout started."; expires = 8
         case .activityPaused:
-            template = "activity.paused"; text = AudioCoachingCopy.isIndonesian ? "Workout dijeda." : "Workout paused."; expires = 8
+            template = "activity.paused"; text = AudioCoachingCopy.isIndonesian ? "Latihan dijeda." : "Workout paused."; expires = 8
         case .activityResumed:
-            template = "activity.resumed"; text = AudioCoachingCopy.isIndonesian ? "Workout dilanjutkan." : "Workout resumed."; expires = 8
+            template = "activity.resumed"; text = AudioCoachingCopy.isIndonesian ? "Latihan dilanjutkan." : "Workout resumed."; expires = 8
         case .activityEnded:
-            template = "activity.ended"; text = AudioCoachingCopy.isIndonesian ? "Workout selesai." : "Workout complete."; expires = 12
+            template = "activity.ended"; text = AudioCoachingCopy.isIndonesian ? "Latihan selesai." : "Workout complete."; expires = 12
         case .workoutCheckIn:
             template = "activity.check_in"
             let zoneText: String
             if let zone = context.heartRateZone {
                 zoneText = AudioCoachingCopy.isIndonesian
-                    ? "Heart Rate zone \(zone)."
+                    ? "Detak jantung zona \(zone)."
                     : "Heart rate zone \(zone)."
             } else {
                 zoneText = AudioCoachingCopy.isIndonesian
-                    ? "Heart Rate belum tersedia."
+                    ? "Detak jantung belum tersedia."
                     : "Heart rate unavailable."
             }
             text = "\(durationText(context.duration)) \(zoneText)"
@@ -552,27 +557,27 @@ final class AudioPromptEngine {
         case .heartRateAboveTarget(let current, let targetMax):
             template = "hr.above_target"
             text = AudioCoachingCopy.isIndonesian
-                ? "Heart Rate \(current). Kurangi effort sedikit."
+                ? "Detak jantung \(current). Pelankan sedikit."
                 : "Heart rate \(current). Ease your effort slightly."
             _ = targetMax
             expires = 10
         case .heartRateBelowTarget(let current, let targetMin):
             template = "hr.below_target"
             text = AudioCoachingCopy.isIndonesian
-                ? "Heart Rate \(current). Tingkatkan effort menuju target."
+                ? "Detak jantung \(current). Naikkan sedikit menuju target."
                 : "Heart rate \(current). Increase your effort toward target."
             _ = targetMin
             expires = 10
         case .heartRateReturnedToTarget:
             template = "hr.returned_to_target"
-            text = AudioCoachingCopy.isIndonesian ? "Heart Rate kembali ke target." : "Heart rate back in target."
+            text = AudioCoachingCopy.isIndonesian ? "Detak jantung kembali ke target." : "Heart rate back in target."
             expires = 12
         case .coachingIntent(let intent):
             template = "coaching.\(intent.rawValue)"
             switch intent {
             case .easeOff:
                 text = AudioCoachingCopy.isIndonesian
-                    ? "Heart Rate mulai naik. Kurangi effort sedikit."
+                    ? "Detak jantung mulai naik. Pelankan sedikit."
                     : "Heart rate is drifting up. Ease your effort slightly."
             case .stabilizePace:
                 text = AudioCoachingCopy.isIndonesian
@@ -580,7 +585,7 @@ final class AudioPromptEngine {
                     : "Your pace is slowing. Settle into a steady pace."
             case .maintainRhythm:
                 text = AudioCoachingCopy.isIndonesian
-                    ? "Cadence menurun. Jaga ritme tetap stabil."
+                    ? "Kadens menurun. Jaga ritme tetap stabil."
                     : "Your cadence is dropping. Keep your rhythm steady."
             }
             expires = 12
@@ -603,14 +608,14 @@ final class AudioPromptEngine {
         if policy.distanceIncludesHeartRate {
             if let heartRate = context.heartRate, let zone = context.heartRateZone {
                 parts.append(AudioCoachingCopy.isIndonesian
-                             ? "Heart Rate zone \(zone), \(heartRate) BPM."
+                             ? "Detak jantung zona \(zone), \(heartRate) bpm."
                              : "Heart rate zone \(zone), \(heartRate) BPM.")
             } else if let zone = context.heartRateZone {
                 parts.append(AudioCoachingCopy.isIndonesian
-                             ? "Heart Rate zone \(zone)."
+                             ? "Detak jantung zona \(zone)."
                              : "Heart rate zone \(zone).")
             } else {
-                parts.append(AudioCoachingCopy.isIndonesian ? "Heart Rate tidak tersedia." : "Heart rate unavailable.")
+                parts.append(AudioCoachingCopy.isIndonesian ? "Detak jantung tidak tersedia." : "Heart rate unavailable.")
             }
         }
         if policy.distanceIncludesDuration {
@@ -648,6 +653,7 @@ enum AudioCoachingPreferences {
     static let heartRateKey = "noop.audioCoaching.heartRate"
     static let distanceKey = "noop.audioCoaching.distance"
     static let coachingKey = "noop.audioCoaching.coaching"
+    static let checkInKey = "noop.audioCoaching.checkIn"
     static let aiWordingKey = "noop.audioCoaching.aiWording"
     static let distanceIncludesDistanceKey = "noop.audioCoaching.distanceIncludesDistance"
     static let distanceIncludesDurationKey = "noop.audioCoaching.distanceIncludesDuration"
@@ -673,7 +679,8 @@ enum AudioCoachingPreferences {
             distanceIncludesDistance: defaults.object(forKey: distanceIncludesDistanceKey) as? Bool ?? true,
             distanceIncludesDuration: defaults.object(forKey: distanceIncludesDurationKey) as? Bool ?? true,
             distanceIncludesHeartRate: defaults.object(forKey: distanceIncludesHeartRateKey) as? Bool ?? true,
-            distanceMilestoneKilometers: min(max(milestoneKilometers, 1), 10))
+            distanceMilestoneKilometers: min(max(milestoneKilometers, 1), 10),
+            checkInPrompts: defaults.object(forKey: checkInKey) as? Bool ?? false)
     }
 
     static var targetZone: Int {

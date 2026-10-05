@@ -163,4 +163,16 @@ final class AudioCoachingCoreTests: XCTestCase {
                                     policy: enabled, now: Date(timeIntervalSince1970: 10_021)).first
         XCTAssertEqual(prompt?.text, "Heart rate is drifting up. Ease your effort slightly.")
     }
+
+    func testCheckInNeedsItsOwnSwitch() {
+        let engine = AudioPromptEngine()
+        let context = AudioWorkoutContext(sport: "Run", state: .active, duration: 60, targetHeartRate: nil, heartRate: 140, heartRateZone: 3)
+        let off = AudioPromptPolicy(enabled: true, lifecyclePrompts: true, heartRatePrompts: true, distancePrompts: true, frequency: .normal)
+        XCTAssertTrue(engine.prompts(for: [.workoutCheckIn], context: context, policy: off, now: Date(timeIntervalSince1970: 20_000)).isEmpty,
+                      "start, pause and finish alone must not speak a minute check-in")
+        let on = AudioPromptPolicy(enabled: true, lifecyclePrompts: false, heartRatePrompts: true, distancePrompts: true, frequency: .normal, checkInPrompts: true)
+        XCTAssertEqual(engine.prompts(for: [.workoutCheckIn], context: context, policy: on, now: Date(timeIntervalSince1970: 20_001)).count, 1)
+        XCTAssertTrue(engine.prompts(for: [.activityStarted], context: context, policy: on, now: Date(timeIntervalSince1970: 20_002)).isEmpty,
+                      "lifecycle off silences start")
+    }
 }
