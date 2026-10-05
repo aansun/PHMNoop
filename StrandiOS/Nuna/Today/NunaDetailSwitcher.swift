@@ -27,6 +27,8 @@ extension EnvironmentValues {
 
 struct NunaDetailSwitcher: View {
     @Environment(\.nunaDetailSwitch) private var sw
+    /// In the screen header, between the back button and Anya: the same height as they are.
+    var inHeader = false
 
     var body: some View {
         if let sw, let cur = sw.items.first(where: { $0.key == sw.current }) {
@@ -44,7 +46,7 @@ struct NunaDetailSwitcher: View {
                     Spacer(minLength: 8)
                     Image(systemName: "chevron.down").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 }
-                .padding(.horizontal, 16).frame(height: 54)
+                .padding(.horizontal, inHeader ? 12 : 16).frame(height: inHeader ? 44 : 54)
                 .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous).strokeBorder(NunaPalette.hairlineSoft, lineWidth: 1))
             }
