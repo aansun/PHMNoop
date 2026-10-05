@@ -23,6 +23,12 @@ struct NunaAnyaSheet: View {
     @FocusState private var focused: Bool
     @State private var path = NavigationPath()
 
+    /// Provider replies use light markdown (bold, lists); show it formatted and keep line breaks.
+    static func markdown(_ s: String) -> AttributedString {
+        let opts = AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)
+        return (try? AttributedString(markdown: s, options: opts)) ?? AttributedString(s)
+    }
+
     private var module: NunaAnyaModule { NunaAnyaModule(context: context) }
 
     /// What the provider is told about this page: the local read and the notes Anya kept in this module (and only this one).
@@ -84,7 +90,7 @@ struct NunaAnyaSheet: View {
                     HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                 } else if let explanation {
                     NunaDivider()
-                    Text(verbatim: explanation).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                    Text(Self.markdown(explanation)).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                 }
                 HStack(spacing: 6) {
                     Text("Read:").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
@@ -147,7 +153,7 @@ struct NunaAnyaSheet: View {
                     HStack { Spacer(minLength: 40)
                         Text(verbatim: t.text).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 14).padding(.vertical, 9).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: 12, style: .continuous)) }
                 } else {
-                    NunaCard(small: true) { Text(verbatim: t.text).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading) }
+                    NunaCard(small: true) { Text(Self.markdown(t.text)).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading) }
                 }
             }
             if sending { HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) } }
