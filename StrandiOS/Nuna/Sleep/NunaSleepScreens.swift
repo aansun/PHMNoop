@@ -57,7 +57,7 @@ struct NunaSleepView: View {
                 NunaSleepStageSection(model: model, night: night)
                 if !night.naps.isEmpty { napCard(night) }
                 tiles(model, night)
-                NunaOvernightVitals(night: night)
+                NunaOvernightVitals(model: model, night: night)
                 needCard(model, night)
                 if let d = night.daily?.disturbances, d > 0 {
                     NunaCard(small: true) {

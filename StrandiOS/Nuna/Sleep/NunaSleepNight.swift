@@ -288,6 +288,7 @@ struct NunaSleepStageSection: View {
 /// SpO₂ and breathing are only drawn for a ring, whose readings are real percentages and rates; a strap's raw optical and
 /// respiration signals are not, so they are not charted here.
 struct NunaOvernightVitals: View {
+    let model: NunaSleepModel
     let night: NunaNight
     @EnvironmentObject private var repo: Repository
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
@@ -312,35 +313,97 @@ struct NunaOvernightVitals: View {
         .task(id: "\(night.dayKey)-\(temperatureRaw)-\(unitSystemRaw)") { await load() }
     }
 
-    // MARK: Summary
+    // MARK: List
+
+    private struct Row: Identifiable {
+        let id: String; let title: LocalizedStringKey; let icon: String; let unit: String; let decimals: Int
+        let value: Double; let prior: [Double]; let upIsGood: Bool?; let key: String
+    }
+
+    private var rows: [Row] {
+        let d = night.daily
+        let before = model.nights.dropFirst(model.index + 1).prefix(14).compactMap(\.daily)
+        var out: [Row] = []
+        if let v = d?.avgHrv { out.append(Row(id: "hrv", title: "HRV", icon: "waveform.path.ecg", unit: "ms", decimals: 0, value: v, prior: before.compactMap(\.avgHrv), upIsGood: true, key: "hrv")) }
+        if let v = d?.restingHr { out.append(Row(id: "rhr", title: "RHR", icon: "heart", unit: "bpm", decimals: 0, value: Double(v), prior: before.compactMap { $0.restingHr.map(Double.init) }, upIsGood: false, key: "rhr")) }
+        if let v = d?.spo2Pct { out.append(Row(id: "spo2", title: "SpO₂", icon: "drop", unit: "%", decimals: 0, value: v, prior: before.compactMap(\.spo2Pct), upIsGood: true, key: "spo2")) }
+        if let v = d?.respRateBpm { out.append(Row(id: "resp", title: "Breathing", icon: "lungs", unit: "/min", decimals: 1, value: v, prior: before.compactMap(\.respRateBpm), upIsGood: nil, key: "resp_rate")) }
+        if let v = d?.skinTempDevC {
+            let f = temperatureUnit == .fahrenheit
+            out.append(Row(id: "skin", title: "Skin temp vs baseline", icon: "thermometer.medium", unit: UnitFormatter.temperatureUnit(temperatureUnit), decimals: 1,
+                           value: f ? v * 1.8 : v, prior: before.compactMap(\.skinTempDevC).map { f ? $0 * 1.8 : $0 }, upIsGood: nil, key: "skin_temp"))
+        }
+        return out
+    }
 
     @ViewBuilder private var summary: some View {
-        let items: [(LocalizedStringKey, String)] = [
-            ("HRV", night.daily?.avgHrv.map { String(format: "%.0f", locale: AppLanguage.activeLocale, $0) }),
-            ("Resting HR", night.daily?.restingHr.map { "\($0)" }),
-            ("SpO₂", night.daily?.spo2Pct.map { "\(Int($0.rounded()))%" }),
-            ("Breathing", night.daily?.respRateBpm.map { String(format: "%.1f", locale: AppLanguage.activeLocale, $0) }),
-        ].compactMap { l, v in v.map { (l, $0) } }
-        if !items.isEmpty {
-            NavigationLink(value: NunaTodayRoute.sleepVitals(0)) {
-                NunaCard {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            nunaTrendsCap("Overnight vitals")
-                            Spacer()
-                            Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                        }
-                        HStack(alignment: .top) {
-                            ForEach(Array(items.enumerated()), id: \.offset) { _, it in
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(it.0).font(.nuna(size: 11, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.7)
-                                    Text(verbatim: it.1).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                                }.frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                        }
+        let list = rows
+        if !list.isEmpty {
+            NunaCard(padding: EdgeInsets(top: 16, leading: 18, bottom: 6, trailing: 18)) {
+                VStack(alignment: .leading, spacing: 0) {
+                    HStack {
+                        nunaTrendsCap("Overnight vitals")
+                        Spacer()
+                        Text("vs last 14 nights").font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                    }
+                    .padding(.bottom, 6)
+                    ForEach(Array(list.enumerated()), id: \.element.id) { i, r in
+                        if i > 0 { NunaDivider() }
+                        row(r)
                     }
                 }
-            }.buttonStyle(.plain)
+            }
+        }
+    }
+
+    private func row(_ r: Row) -> some View {
+        func f(_ x: Double) -> String { String(format: "%.\(r.decimals)f", locale: AppLanguage.activeLocale, x) }
+        let avg = r.prior.isEmpty ? nil : r.prior.reduce(0, +) / Double(r.prior.count)
+        let content = HStack(spacing: 12) {
+            NunaIconTile(r.icon)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(r.title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+                if let avg, let lo = r.prior.min(), let hi = r.prior.max() {
+                    Text(verbatim: String(localized: "Average \(f(avg)) · range \(f(lo))–\(f(hi))")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
+                } else {
+                    Text("Not enough nights to compare").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                }
+            }
+            Spacer(minLength: 8)
+            VStack(alignment: .trailing, spacing: 4) {
+                HStack(alignment: .firstTextBaseline, spacing: 3) {
+                    Text(verbatim: f(r.value)).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: r.unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                }
+                if let avg { delta(r, avg: avg, f: f) }
+            }
+            if MetricCatalog.metric(key: r.key, source: "my-whoop") != nil {
+                Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+            }
+        }
+        .padding(.vertical, 12)
+        .contentShape(Rectangle())
+        return Group {
+            if let m = MetricCatalog.metric(key: r.key, source: "my-whoop") {
+                NavigationLink(value: NunaTodayRoute.metric(m)) { content }.buttonStyle(.plain)
+            } else {
+                content
+            }
+        }
+    }
+
+    /// "▲ 4" against the average of the earlier nights, green when the move is the good way, amber when it is not.
+    private func delta(_ r: Row, avg: Double, f: (Double) -> String) -> some View {
+        let d = r.value - avg
+        let step = r.decimals == 0 ? 0.5 : 0.05
+        let good: Bool? = r.upIsGood.map { (d > 0) == $0 }
+        let tint: Color = good.map { $0 ? NunaPalette.charge : NunaPalette.warning } ?? NunaPalette.textSecondary
+        return Group {
+            if abs(d) >= step {
+                Text(verbatim: (d > 0 ? "▲ " : "▼ ") + f(abs(d))).font(.nuna(size: 12.5, weight: .heavy)).foregroundStyle(tint)
+            } else {
+                Text("Like usual").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            }
         }
     }
 
