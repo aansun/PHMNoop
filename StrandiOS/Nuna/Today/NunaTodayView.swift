@@ -535,8 +535,8 @@ struct NunaTodayView: View {
             // The rings themselves are pinned at the top; what belongs with them stays here.
             VStack(spacing: NunaSpacing.section) {
                 if readyLine != nil || model.charge.pct != nil || (model.isToday && live.heartRate != nil) {
-                    // The chips sit on one line when they fit and wrap onto the next when they do not.
-                    NunaFlowLayout(spacing: 8, lineSpacing: 8) { synthesisChips; heartRatePill }
+                    // Readiness, Charge state and heart rate: three chips of one shape on one line.
+                    HStack(spacing: 8) { synthesisChips; heartRatePill; Spacer(minLength: 0) }
                 }
                 if model.isToday, let warn = appModel.illnessSignal, warn.level != .quiet {
                     NunaEarlyWarningCard(result: warn)
@@ -643,18 +643,31 @@ struct NunaTodayView: View {
     /// What the Default Today synthesis shows beside its greeting, minus the greeting: the readiness chip with its word (Push, Maintain,
     /// Rest) and the Charge state (Solid, Last night, Calibrating, No data), from the same engine and display state.
     @ViewBuilder private var synthesisChips: some View {
-        if let readyLine { NunaChip(readyLine, systemImage: "bolt.fill", color: NunaPalette.charge).fixedSize() }
         if model.isToday, let level = model.readiness?.level, let word = Self.readinessWord(level) {
-            NunaChip(verbatim: word, color: level == .primed ? NunaPalette.charge : (level == .balanced ? NunaPalette.effortText : NunaPalette.warning))
+            let tone = level == .primed ? NunaPalette.charge : (level == .balanced ? NunaPalette.effortText : NunaPalette.warning)
+            todayChip(icon: .symbol("bolt.fill"), text: Text(verbatim: word), tint: tone)
         }
         if model.charge != .noData {
-            HStack(spacing: 5) {
-                Circle().fill(NunaPalette.charge).frame(width: 6, height: 6)
-                Text(verbatim: model.charge.stateLabel).font(.nuna(size: 12, weight: .bold))
-            }
-            .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 10).frame(height: 30)
-            .overlay(RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+            todayChip(icon: .dot(NunaPalette.charge), text: Text(verbatim: model.charge.stateLabel), tint: nil)
         }
+    }
+
+    private enum ChipIcon { case symbol(String), dot(Color) }
+
+    /// One chip shape for the whole row: the same height, radius, type and padding. A tint colours the readiness chip; the others are neutral.
+    private func todayChip(icon: ChipIcon, text: Text, tint: Color?) -> some View {
+        HStack(spacing: 6) {
+            switch icon {
+            case .symbol(let name): Image(systemName: name).font(.nuna(size: 11.5, weight: .bold))
+            case .dot(let c): Circle().fill(c).frame(width: 7, height: 7)
+            }
+            text.font(.nuna(size: 12.5, weight: .bold)).lineLimit(1).minimumScaleFactor(0.8)
+        }
+        .foregroundStyle(tint ?? NunaPalette.textPrimary)
+        .padding(.horizontal, 12).frame(height: 30)
+        .background(tint.map { NunaPalette.tint($0) } ?? NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous).strokeBorder(tint?.opacity(0.35) ?? NunaPalette.hairline, lineWidth: 1))
+        .fixedSize()
     }
 
     private static func readinessWord(_ level: ReadinessEngine.Level) -> String? {
@@ -669,13 +682,7 @@ struct NunaTodayView: View {
     @ViewBuilder private var heartRatePill: some View {
         if model.isToday, let hr = live.heartRate {
             NavigationLink(value: TabRoute.fullDayChart) {
-                HStack(spacing: 6) {
-                    Image(systemName: "heart").font(.nuna(size: 12, weight: .bold))
-                    Text(verbatim: "\(hr) bpm").font(.nuna(size: 12.5, weight: .bold))
-                }
-                .foregroundStyle(NunaPalette.textPrimary)
-                .padding(.horizontal, 12).frame(height: 30)
-                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
+                todayChip(icon: .symbol("heart.fill"), text: Text(verbatim: "\(hr) bpm"), tint: nil)
             }
             .buttonStyle(.plain)
         }
