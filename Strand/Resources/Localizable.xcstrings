@@ -1,6 +1,18 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Your average over this period was %@.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Rata-rata kamu pada periode ini adalah %@."}}
+    } },
+    "Your average over this period (%@) matched the period before (%@).": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Rata-rata kamu pada periode ini (%@) sama dengan periode sebelumnya (%@)."}}
+    } },
+    "Your average over this period (%@) was %lld%% above the period before (%@).": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Rata-rata kamu pada periode ini (%@) %lld%% di atas periode sebelumnya (%@)."}}
+    } },
+    "Your average over this period (%@) was %lld%% below the period before (%@).": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Rata-rata kamu pada periode ini (%@) %lld%% di bawah periode sebelumnya (%@)."}}
+    } },
     "WHP is a night look only, so light and automatic are off while it is on.": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "WHP hanya tampilan malam, jadi mode terang dan otomatis nonaktif selama WHP dipakai."}}
     } },
