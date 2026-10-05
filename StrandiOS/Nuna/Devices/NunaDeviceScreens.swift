@@ -25,7 +25,7 @@ struct NunaDeviceBatteryView: View {
                 VStack(alignment: .leading, spacing: 14) {
                     HStack { nunaTrendsCap("Now"); Spacer(); NunaChip(live.charging == true ? "Charging" : (live.connected ? "Not charging" : "Not connected"), color: live.charging == true ? NunaPalette.charge : nil) }
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(verbatim: pct.map { "\(Int($0.rounded()))" } ?? "–").font(.nuna(size: 64, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: pct.map { "\(Int($0.rounded()))" } ?? "–").font(.nuna(size: 64, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(64)).foregroundStyle(NunaPalette.textPrimary)
                         if pct != nil { Text("%").font(.nuna(size: 22, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                     }
                     if let est, live.charging != true {
@@ -68,7 +68,7 @@ struct NunaDeviceBatteryView: View {
 
     private func stat(_ l: LocalizedStringKey, _ v: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             Text(verbatim: v).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }
     }
@@ -89,7 +89,7 @@ struct NunaDeviceSyncView: View {
                         NunaChip(live.backfilling ? "Syncing" : (live.lastSyncError == nil ? "Up to date" : "Failed"), color: live.backfilling || live.lastSyncError != nil ? nil : NunaPalette.charge) }
                     if live.backfilling {
                         HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            Text(verbatim: "\(live.syncChunksThisSession)").font(.nuna(size: 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: "\(live.syncChunksThisSession)").font(.nuna(size: 56, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(56)).foregroundStyle(NunaPalette.textPrimary)
                             Text("packets so far").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                         if let behind = live.pagesBehindAtConnect, behind > 0 {
@@ -99,7 +99,7 @@ struct NunaDeviceSyncView: View {
                             Text("Stop sync").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 20).frame(height: 42).background(NunaPalette.glassStrong, in: Capsule())
                         }.buttonStyle(.plain)
                     } else {
-                        Text(verbatim: live.lastSyncedAt.map { NunaDeviceFormat.clock($0) } ?? "–").font(.nuna(size: 52, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: live.lastSyncedAt.map { NunaDeviceFormat.clock($0) } ?? "–").font(.nuna(size: 52, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(52)).foregroundStyle(NunaPalette.textPrimary)
                         Text(verbatim: live.lastSyncError ?? (live.lastSyncedAt != nil ? String(localized: "All the history on the strap has been pulled. The next sync runs on its own when the strap is nearby.") : String(localized: "No sync has run since the app opened.")))
                             .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(live.lastSyncError == nil ? NunaPalette.textSecondary : NunaPalette.alertText).fixedSize(horizontal: false, vertical: true)
                     }

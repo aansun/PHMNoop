@@ -136,7 +136,7 @@ struct NunaWorkoutsView: View {
                     if let usual, usual > 0 { NunaChip(verbatim: String(localized: "\(Int((total / usual * 100).rounded()))% of your usual"), color: NunaPalette.effortText) }
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(verbatim: UnitFormatter.effortDisplay(total, scale: scale)).font(.nuna(size: 44, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: UnitFormatter.effortDisplay(total, scale: scale)).font(.nuna(size: 44, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(44)).foregroundStyle(NunaPalette.textPrimary)
                     if let usual { Text(verbatim: "/ " + UnitFormatter.effortDisplay(usual, scale: scale)).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                     Text("Effort").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
@@ -159,7 +159,7 @@ struct NunaWorkoutsView: View {
 
     private func stat(_ l: LocalizedStringKey, _ v: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             Text(verbatim: v).font(.nuna(size: 19, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -219,7 +219,7 @@ struct NunaWorkoutsView: View {
                     if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                 }
             }
-            Text(title).font(.nuna(size: 11.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             if let band { Text(bandName(band)).font(.nuna(size: 13, weight: .heavy)).foregroundStyle(bandColor) }
         }.frame(maxWidth: .infinity)
     }

@@ -101,7 +101,7 @@ struct NunaTrendsMetricView: View {
                         }
                     }
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(verbatim: String(localized: "\(range)-day average")).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: String(localized: "\(range)-day average")).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         if let now { NunaChip(level(now), color: color) }
                         if let d, abs(d) >= (kind == .effort ? 0.05 : 0.5) {
                             Text(verbatim: (d > 0 ? "▲ " : "▼ ") + String(format: "%.\(kind == .effort ? 1 : 1)f", locale: AppLanguage.activeLocale, abs(d)) + (kind == .effort ? "" : " " + String(localized: "points")))
@@ -169,7 +169,7 @@ struct NunaTrendsMetricView: View {
 
     private func mini(_ l: LocalizedStringKey, _ v: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             Text(verbatim: v).font(.nuna(size: 19, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }

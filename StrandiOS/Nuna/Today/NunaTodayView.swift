@@ -244,7 +244,7 @@ struct NunaTodayView: View {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Edit mode").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
+                        Text("Edit mode").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                             .foregroundStyle(NunaPalette.textSecondary)
                         Text("Arrange cards").font(.nuna(size: NunaTypeSize.h1, weight: .heavy, design: NunaType.design))
                             .foregroundStyle(NunaPalette.textPrimary)
@@ -338,7 +338,7 @@ struct NunaTodayView: View {
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
                 ForEach(metricTiles.prefix(4)) { t in
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(t.label).font(.nuna(size: 10.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Text(t.label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         Text(verbatim: t.value).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     }
                     .padding(12).frame(maxWidth: .infinity, alignment: .leading).background(inner)
@@ -384,7 +384,7 @@ struct NunaTodayView: View {
                 Text(verbatim: value.map { String(format: "%.0f", $0) + unit } ?? "–").font(.nuna(size: 13, weight: .bold, design: NunaType.design))
                     .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6)
             }
-            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
         }
         .frame(maxWidth: .infinity)
     }

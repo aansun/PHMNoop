@@ -120,7 +120,7 @@ struct NunaTrainingLoadView: View {
                     if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                 }
             }
-            Text(title).font(.nuna(size: 11.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             if let band { Text(bandName(band)).font(.nuna(size: 13, weight: .heavy)).foregroundStyle(bandColor) }
         }.frame(maxWidth: .infinity)
     }
@@ -194,17 +194,17 @@ struct NunaTrainingLoadView: View {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(alignment: .top) {
-                        Text("Form (fitness minus fatigue)").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        Text("Form (fitness minus fatigue)").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                         Spacer(minLength: 8)
                         if let form { NunaChip(formName(TrendInsights.formState(form)), color: formColor(TrendInsights.formState(form))) }
                     }
                     if let last, let form {
-                        Text(verbatim: NunaTrendsFormat.signed(eff(form), 1)).font(.nuna(size: 64, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: NunaTrendsFormat.signed(eff(form), 1)).font(.nuna(size: 64, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(64)).foregroundStyle(NunaPalette.textPrimary)
                         Text(verbatim: formSentence(TrendInsights.formState(form))).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                         NunaDivider()
                         HStack {
-                            VStack(alignment: .leading, spacing: 4) { Text("Fitness · CTL").font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary); Text(verbatim: NunaTrendsFormat.num(eff(last.ctl), 1)).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(ctlColor) }.frame(maxWidth: .infinity, alignment: .leading)
-                            VStack(alignment: .leading, spacing: 4) { Text("Fatigue · ATL").font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary); Text(verbatim: NunaTrendsFormat.num(eff(last.atl), 1)).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.effortText) }.frame(maxWidth: .infinity, alignment: .leading)
+                            VStack(alignment: .leading, spacing: 4) { Text("Fitness · CTL").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary); Text(verbatim: NunaTrendsFormat.num(eff(last.ctl), 1)).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(ctlColor) }.frame(maxWidth: .infinity, alignment: .leading)
+                            VStack(alignment: .leading, spacing: 4) { Text("Fatigue · ATL").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary); Text(verbatim: NunaTrendsFormat.num(eff(last.atl), 1)).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.effortText) }.frame(maxWidth: .infinity, alignment: .leading)
                         }
                     } else {
                         Text("The model needs at least 14 days in a row with Effort before it draws anything.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
@@ -379,7 +379,7 @@ struct NunaTrainingLoadView: View {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack { nunaTrendsCap("Volume, 7 days"); Spacer(); if let band { NunaChip(bandName(band), color: band == .optimal ? NunaPalette.charge : NunaPalette.warning) } }
                         HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            Text(verbatim: String(format: "%.1f", locale: AppLanguage.activeLocale, (vol.last ?? 0) / 1000)).font(.nuna(size: 64, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: String(format: "%.1f", locale: AppLanguage.activeLocale, (vol.last ?? 0) / 1000)).font(.nuna(size: 64, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(64)).foregroundStyle(NunaPalette.textPrimary)
                             Text("tonnes").font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                         if let change {
@@ -435,7 +435,7 @@ struct NunaTrainingLoadView: View {
 
     private func tileSmall(_ l: LocalizedStringKey, _ v: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             Text(verbatim: v).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }.frame(maxWidth: .infinity, alignment: .leading)
     }

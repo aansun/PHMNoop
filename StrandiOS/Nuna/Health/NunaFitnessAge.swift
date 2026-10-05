@@ -19,7 +19,7 @@ struct NunaFitnessAgeView: View {
     @State private var showWaist = false
 
     private func cap(_ t: LocalizedStringKey) -> some View {
-        Text(t).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+        Text(t).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
     }
 
     private func date(_ day: String) -> Date? { Self.dayParser.date(from: day) }
@@ -90,12 +90,12 @@ struct NunaFitnessAgeView: View {
         let weekly: Int? = series.count >= 2 ? Int((series[series.count - 1].value - series[series.count - 2].value).rounded()) : nil
         return NunaCard(padding: EdgeInsets(top: 22, leading: 18, bottom: 22, trailing: 18)) {
             VStack(spacing: 18) {
-                Text("Health").font(.nuna(size: 13, weight: .heavy)).tracking(2).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                Text("Health").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 NunaFitnessOrb(tint: tint) {
                     VStack(spacing: 6) {
                         Text(verbatim: String(format: "%.0f", locale: AppLanguage.activeLocale, latest.value))
-                            .font(.nuna(size: 64, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("Fitness age").font(.nuna(size: 13, weight: .heavy)).tracking(1.6).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                            .font(.nuna(size: 64, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(64)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("Fitness age").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                         if let diff, diff != 0 {
                             Text(diff > 0 ? LocalizedStringKey("\(diff) years younger") : LocalizedStringKey("\(-diff) years older"))
                                 .font(.nuna(size: 15, weight: .bold)).foregroundStyle(tint)
@@ -116,7 +116,7 @@ struct NunaFitnessAgeView: View {
                 } else if weekly == 0 {
                     Text("Steady since last week").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
-                Text(verbatim: updated).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textMuted)
+                Text(verbatim: updated).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textMuted)
                 if let diff {
                     Text(verbatim: diff == 0 ? String(localized: "Your heart and lung fitness is about the same as your age.")
                          : String(localized: "Your heart and lung fitness matches someone aged \(Int(latest.value.rounded())), while you are \(profile.age)."))
@@ -163,7 +163,7 @@ struct NunaFitnessAgeView: View {
                 if let now {
                     HStack(alignment: .firstTextBaseline) {
                         Text(verbatim: String(format: "%.1fx", locale: AppLanguage.activeLocale, now.pace))
-                            .font(.nuna(size: 40, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            .font(.nuna(size: 40, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(40)).foregroundStyle(NunaPalette.textPrimary)
                         Spacer()
                         NunaChip(now.band == .slow ? "Slow" : (now.band == .fast ? "Fast" : "Normal"),
                                  color: now.band == .slow ? NunaPalette.charge : (now.band == .fast ? NunaPalette.warning : nil))
@@ -320,7 +320,7 @@ struct NunaFitnessAgeView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
-                            Text(verbatim: String(format: "%.0f", vo2)).font(.nuna(size: 40, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: String(format: "%.0f", vo2)).font(.nuna(size: 40, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(40)).foregroundStyle(NunaPalette.textPrimary)
                             Text("ml/kg/min").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                         Spacer()

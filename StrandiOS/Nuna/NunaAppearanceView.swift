@@ -2,16 +2,13 @@
 import SwiftUI
 import StrandDesign
 
-/// Appearance (Appearance.dc): Experience, Language and Units, a live preview, theme, accent, typography, text size,
-/// density and the app icon. Haptics, Live Activity and the morning brief live with the feature they belong to
+/// Appearance (Appearance.dc): Experience, Language and Units, a live preview, theme, density and the app icon. Colour, font
+/// and text size are fixed to the design guides and are not offered here. Haptics, Live Activity and the morning brief live with the feature they belong to
 /// (strap automations, History sync, Anya) and are not repeated here; the arrangement of Today is under Optional features.
 struct NunaAppearanceView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage(ExperienceMode.storageKey) private var experienceRaw = ExperienceMode.standard.rawValue
     @AppStorage(NunaTheme.storageKey) private var themeRaw = NunaTheme.Mode.dark.rawValue
-    @AppStorage(NunaThemePrefs.accentKey) private var accentRaw = NunaThemePrefs.Accent.ink.rawValue
-    @AppStorage(NunaThemePrefs.typographyKey) private var typoRaw = NunaThemePrefs.Typography.bold.rawValue
-    @AppStorage(NunaThemePrefs.textSizeKey) private var sizeRaw = NunaThemePrefs.TextSize.standard.rawValue
     @AppStorage(NunaThemePrefs.densityKey) private var densityRaw = NunaThemePrefs.Density.standard.rawValue
     @AppStorage("appIcon.name") private var iconName = ""
     @AppStorage(UnitPrefs.systemKey) private var unitSystem = UnitSystem.metric.rawValue
@@ -20,14 +17,12 @@ struct NunaAppearanceView: View {
     @State private var iconError: String?
 
     private var experience: ExperienceMode { ExperienceMode(rawValue: experienceRaw) ?? .standard }
-    private var accent: NunaThemePrefs.Accent { NunaThemePrefs.Accent(rawValue: accentRaw) ?? .ink }
-    private var size: NunaThemePrefs.TextSize { NunaThemePrefs.TextSize(rawValue: sizeRaw) ?? .standard }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: NunaSpacing.section) {
                 NunaHeader("Appearance", onBack: { dismiss() })
-                Text("Set the look to suit you. Changes show straight away in the preview.")
+                Text("Choose light or dark, spacing and the app icon. Colour and type follow the app's design guide.")
                     .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 experienceCard
                 NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
@@ -41,9 +36,6 @@ struct NunaAppearanceView: View {
                 }
                 preview
                 themeSection
-                accentCard
-                typographyCard
-                sizeCard
                 densityCard
                 #if os(iOS)
                 iconCard
@@ -102,7 +94,6 @@ struct NunaAppearanceView: View {
                         }
                     }
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(verbatim: String(localized: "Accent \(NunaAppearanceView.accentName(accent).lowercased())")).font(.nuna(size: 11.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         Text("Ready for a moderate load").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                         Text("Start workout").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 18).frame(height: 38).background(NunaPalette.accent, in: Capsule())
                     }
@@ -127,64 +118,6 @@ struct NunaAppearanceView: View {
                         .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(themeRaw == m.rawValue ? NunaPalette.accent : NunaPalette.hairlineSoft, lineWidth: themeRaw == m.rawValue ? 2 : 1))
                     }.buttonStyle(.plain)
                 }
-            }
-        }
-    }
-
-    private var accentCard: some View {
-        NunaCard {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack { nunaTrendsCap("Accent colour"); Spacer(); Text(verbatim: NunaAppearanceView.accentName(accent)).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
-                HStack(spacing: 0) {
-                    ForEach(NunaThemePrefs.Accent.allCases) { a in
-                        Button { accentRaw = a.rawValue } label: {
-                            Circle().fill(a.swatch).frame(width: 44, height: 44)
-                                .overlay(Circle().strokeBorder(NunaPalette.hairline, lineWidth: 1))
-                                .overlay { if accentRaw == a.rawValue { Image(systemName: "checkmark").font(.system(size: 15, weight: .black)).foregroundStyle(.black) } }
-                                .padding(3).overlay(Circle().strokeBorder(accentRaw == a.rawValue ? NunaPalette.textPrimary : .clear, lineWidth: 2))
-                        }.buttonStyle(.plain).accessibilityLabel(Text(verbatim: NunaAppearanceView.accentName(a)))
-                        if a != NunaThemePrefs.Accent.allCases.last { Spacer(minLength: 0) }
-                    }
-                }
-                Text("The accent only colours buttons and selections. Data colours stay the same: green for Charge, blue for Effort, steel for Rest.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
-            }
-        }
-    }
-
-    private var typographyCard: some View {
-        NunaSettingsGroup("Typography") {
-            ForEach(Array(NunaThemePrefs.Typography.allCases.enumerated()), id: \.element.id) { i, t in
-                if i > 0 { NunaDivider() }
-                Button { typoRaw = t.rawValue } label: {
-                    HStack(spacing: 14) {
-                        Text("Aa").font(.system(size: 20, weight: .heavy, design: t.design)).fontWidth(t == .geometric ? .expanded : nil)
-                            .foregroundStyle(typoRaw == t.rawValue ? NunaPalette.charge : NunaPalette.textPrimary).frame(width: 46, height: 46)
-                            .background(typoRaw == t.rawValue ? NunaPalette.charge.opacity(0.16) : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(typoName(t)).font(.system(size: 16.5, weight: .bold, design: t.design)).fontWidth(t == .geometric ? .expanded : nil).foregroundStyle(NunaPalette.textPrimary)
-                            Text(typoBlurb(t)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                        }
-                        Spacer()
-                        if typoRaw == t.rawValue { Image(systemName: "checkmark.circle.fill").font(.system(size: 21)).foregroundStyle(NunaPalette.accent) }
-                    }.padding(.vertical, 10).contentShape(Rectangle())
-                }.buttonStyle(.plain)
-            }
-        }
-    }
-
-    private var sizeCard: some View {
-        let all = NunaThemePrefs.TextSize.allCases
-        let idx = Double(all.firstIndex(of: size) ?? 1)
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack { nunaTrendsCap("Text size"); Spacer(); NunaChip(sizeName(size)) }
-                HStack(spacing: 14) {
-                    Text("A").font(.system(size: 14, weight: .heavy)).foregroundStyle(NunaPalette.textSecondary)
-                    Slider(value: Binding(get: { idx }, set: { sizeRaw = all[min(max(Int($0.rounded()), 0), all.count - 1)].rawValue }), in: 0...Double(all.count - 1), step: 1)
-                        .tint(NunaPalette.accent)
-                    Text("A").font(.system(size: 24, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
-                }
-                Text("Sample text at the size you pick.").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }
         }
     }
@@ -233,24 +166,15 @@ struct NunaAppearanceView: View {
     private func themeThumb(_ m: NunaTheme.Mode) -> some View {
         let dark = m == .dark, light = m == .light
         return ZStack {
-            if m == .auto { HStack(spacing: 0) { Color(hex: "#F2F4F6"); Color(hex: "#0A0D10") } }
-            else { Color(hex: light ? "#F2F4F6" : "#0A0D10") }
+            if m == .auto { HStack(spacing: 0) { Color(hex: "#F2F4F6"); Color(hex: "#000000") } }
+            else { Color(hex: light ? "#F2F4F6" : "#000000") }
             VStack(alignment: .leading, spacing: 6) {
-                RoundedRectangle(cornerRadius: 5).fill(Color(hex: dark ? "#14181D" : "#FFFFFF")).frame(height: 26).opacity(m == .auto ? 0.85 : 1)
-                HStack(spacing: 6) { Capsule().fill(Color(hex: dark ? "#FFFFFF" : "#0A0D10")).frame(width: 28, height: 8); Capsule().fill(Color(hex: "#16EC06")).frame(width: 14, height: 8) }
+                RoundedRectangle(cornerRadius: 5).fill(Color(hex: dark ? "#121214" : "#FFFFFF")).frame(height: 26).opacity(m == .auto ? 0.85 : 1)
+                HStack(spacing: 6) { Capsule().fill(Color(hex: dark ? "#FFFFFF" : "#0A0D10")).frame(width: 28, height: 8); Capsule().fill(Color(hex: "#00FF66")).frame(width: 14, height: 8) }
             }.padding(9)
         }.clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
     private func themeTitle(_ m: NunaTheme.Mode) -> LocalizedStringKey { switch m { case .auto: return "Automatic"; case .light: return "Light"; case .dark: return "Dark" } }
-    private func typoName(_ t: NunaThemePrefs.Typography) -> LocalizedStringKey { switch t { case .bold: return "Bold"; case .geometric: return "Geometric"; case .system: return "System" } }
-    private func typoBlurb(_ t: NunaThemePrefs.Typography) -> LocalizedStringKey {
-        switch t { case .bold: return "Rounded and compact. The original Nuna look."; case .geometric: return "Wider letters and numbers."; case .system: return "The plain iPhone font. Most neutral." }
-    }
-    private func sizeName(_ s: NunaThemePrefs.TextSize) -> LocalizedStringKey { switch s { case .small: return "Small"; case .standard: return "Standard"; case .large: return "Large"; case .xlarge: return "Extra large" } }
-
-    static func accentName(_ a: NunaThemePrefs.Accent) -> String {
-        switch a { case .ink: return String(localized: "White"); case .green: return String(localized: "Green"); case .blue: return String(localized: "Blue"); case .steel: return String(localized: "Steel"); case .yellow: return String(localized: "Yellow") }
-    }
 }
 #endif

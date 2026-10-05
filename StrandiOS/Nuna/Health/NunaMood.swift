@@ -81,7 +81,7 @@ struct NunaMoodView: View {
     private var askCard: some View {
         NunaCard {
             VStack(alignment: .leading, spacing: 18) {
-                Text(verbatim: Self.stamp.string(from: Date())).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: Self.stamp.string(from: Date())).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 Text("How are you feeling right now?").font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 HStack(alignment: .top, spacing: 4) {
                     ForEach(Array(MoodStore.scale), id: \.self) { v in
@@ -110,7 +110,7 @@ struct NunaMoodView: View {
     private var factorsCard: some View {
         NunaCard {
             VStack(alignment: .leading, spacing: 12) {
-                Text("What affects it").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text("What affects it").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 NunaFlowChips(items: factorKeys.map { $0.id }) { id in
                     let on = extras.factors.contains(id)
                     Button {
@@ -131,7 +131,7 @@ struct NunaMoodView: View {
         NunaCard {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text("Energy").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Energy").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     Text(extras.energy < 0.34 ? "Low" : (extras.energy < 0.67 ? "Medium" : "High"))
                         .font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)

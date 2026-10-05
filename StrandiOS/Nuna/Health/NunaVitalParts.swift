@@ -91,7 +91,7 @@ struct NunaVitalTile: View {
                 HStack(spacing: 8) {
                     Image(systemName: icon).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         .frame(width: 34, height: 34).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    Text(label).font(.nuna(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase)
+                    Text(label).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 3) {
@@ -120,7 +120,7 @@ struct NunaWaistSheet: View {
         VStack(spacing: 24) {
             Text("Waist").font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(verbatim: String(format: "%.0f", cm)).font(.nuna(size: 64, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: String(format: "%.0f", cm)).font(.nuna(size: 64, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(64)).foregroundStyle(NunaPalette.textPrimary)
                 Text("cm").font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
             }
             HStack(spacing: 16) {
@@ -350,8 +350,8 @@ struct NunaStressGauge: View {
                             }
                             VStack(spacing: 8) {
                                 Text(verbatim: value.map { String(format: "%.1f", locale: AppLanguage.activeLocale, $0) } ?? "–")
-                                    .font(.nuna(size: 92, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                                if let level { Text(level).font(.nuna(size: 20, weight: .heavy)).tracking(1.5).textCase(.uppercase).foregroundStyle(levelColor) }
+                                    .font(.nuna(size: 92, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(92)).foregroundStyle(NunaPalette.textPrimary)
+                                if let level { Text(level).font(.nuna(size: 20, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(levelColor) }
                                 if let time { Text(verbatim: time).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                             }
                             .position(x: c.x, y: c.y - 6)

@@ -360,7 +360,7 @@ public struct NunaTabBar: View {
         }
         .padding(.horizontal, 8)
         .frame(height: 72)
-        .background(Color(hex: "#14181D"), in: Capsule())
+        .background(NunaPalette.card, in: Capsule())
         .shadow(color: NunaPalette.shade.opacity(0.45), radius: 12, y: 4)
         .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
         .padding(.horizontal, 14)
@@ -393,7 +393,7 @@ struct NunaSheetChrome: ViewModifier {
                 .presentationDetents(detents)
                 .presentationDragIndicator(.visible)
                 .presentationCornerRadius(NunaRadius.sheet)
-                .presentationBackground(Color(hex: "#14181D"))
+                .presentationBackground(NunaPalette.card)
         } else {
             content
                 .presentationDetents(detents)

@@ -17,96 +17,58 @@ public enum NunaPalette {
     // Every surface and text token is adaptive: the first hex is the light value, the second the dark one. The dark
     // values are the Nuna originals; the light ones keep the same hierarchy on a white-grey canvas.
 
-    // Surfaces
-    public static let canvas        = Color(light: "#F2F4F6", dark: "#0A0D10")
-    public static let card          = Color(light: "#FFFFFF", dark: "#14181D")
-    public static let cardHighlight = Color(light: "#E9EEF2", dark: "#191F25")
+    // Surfaces. Dark values follow the "Rekomendasi Palet Warna Health App Dark Mode" guide: pure black canvas, #121214 cards.
+    public static let canvas        = Color(light: "#F2F4F6", dark: "#000000")
+    public static let card          = Color(light: "#FFFFFF", dark: "#121214")
+    public static let cardHighlight = Color(light: "#E9EEF2", dark: "#1B1B1F")
     public static let glass         = Color(light: "#0A0D100D", dark: "#FFFFFF0D")
     public static let glassStrong   = Color(light: "#0A0D1014", dark: "#FFFFFF17")
-    public static let hairline      = Color(light: "#0A0D1020", dark: "#FFFFFF1A")
-    public static let hairlineSoft  = Color(light: "#0A0D1016", dark: "#FFFFFF14")
+    public static let hairline      = Color(light: "#0A0D1020", dark: "#71717A40")
+    public static let hairlineSoft  = Color(light: "#0A0D1016", dark: "#71717A2E")
 
     /// The foreground ink of the theme (white on dark, near-black on light) and the matching shade for wells.
     /// Use `.opacity` on them wherever a translucent overlay of the text colour is wanted.
     public static let ink   = Color(light: "#0A0D10", dark: "#FFFFFF")
     public static let shade = Color(light: "#0A0D10", dark: "#000000")
 
-    // Text
+    // Text. The guide's #71717A (grid lines and chart labels) is `textMuted`; running secondary text uses #A1A1AA, which keeps
+    // its contrast on the #121214 cards where #71717A alone would not.
     public static let textPrimary   = Color(light: "#0A0D10", dark: "#FFFFFF")
-    public static let textSecondary = Color(light: "#4C565E", dark: "#9AA4AC")
-    public static let textMuted     = Color(light: "#7A848C", dark: "#6B7177")
+    public static let textSecondary = Color(light: "#4C565E", dark: "#A1A1AA")
+    public static let textMuted     = Color(light: "#7A848C", dark: "#71717A")
 
-    // Meaning colours (fills) and their readable text variants
-    public static let charge        = Color(light: "#0CB300", dark: "#16EC06")   // ok, Charge, active toggles
-    public static let effort        = Color(light: "#0084D1", dark: "#0093E7")
-    public static let effortText    = Color(light: "#0070B5", dark: "#38AEF5")
-    public static let rest          = Color(light: "#5F8AA6", dark: "#7BA1BB")
-    public static let restText      = Color(light: "#43698A", dark: "#9DBBD0")
-    public static let restLight     = Color(light: "#8FA9C4", dark: "#B8CCE0")   // REM
-    public static let restDeep      = Color(light: "#3C5F7D", dark: "#4A7090")   // deep sleep
-    public static let warning       = Color(light: "#C99A00", dark: "#FFDE00")
-    public static let alert         = Color(light: "#E0001F", dark: "#FF0026")
-    public static let alertText     = Color(light: "#D0102C", dark: "#FF5468")
-    public static let zoneBase      = Color(light: "#C3C9D6", dark: "#3B4258")   // zone 1 / awake track
+    // Meaning colours (fills) and their readable text variants. Each area has its own neon: Sleep / Rest cyan, Health / Charge
+    // green, Trend / Effort yellow; alert is the guide's #FF3366. Light values stay readable on white.
+    public static let charge        = Color(light: "#0CB300", dark: "#00FF66")   // ok, Charge, Health, active toggles
+    public static let effort        = Color(light: "#8FA000", dark: "#DFFF00")   // Effort, Trend
+    public static let effortText    = Color(light: "#6B7A00", dark: "#DFFF00")
+    public static let rest          = Color(light: "#00A3BA", dark: "#00E5FF")   // Rest, Sleep
+    public static let restText      = Color(light: "#007C90", dark: "#5CEFFF")
+    public static let restLight     = Color(light: "#4FC3D6", dark: "#9BF4FF")   // REM
+    public static let restDeep      = Color(light: "#00697A", dark: "#0093A8")   // deep sleep
+    public static let warning       = Color(light: "#C98A00", dark: "#FFB020")
+    public static let alert         = Color(light: "#E0003C", dark: "#FF3366")
+    public static let alertText     = Color(light: "#D0103C", dark: "#FF6B8E")
+    public static let zoneBase      = Color(light: "#C3C9D6", dark: "#3F3F46")   // zone 1 / awake track
 
-    // Primary action. White (the theme ink) by default; the wearer can pick a colour in Me > Appearance.
-    public static var accent: Color { NunaThemePrefs.accent.fill }
-    public static var onAccent: Color { NunaThemePrefs.accent.label }
+    // Primary action: white (the theme ink) on dark.
+    public static var accent: Color { NunaThemePrefs.Accent.fill }
+    public static var onAccent: Color { NunaThemePrefs.Accent.label }
 
     // Tinted chip backgrounds
     public static func tint(_ c: Color) -> Color { c.opacity(0.14) }
 }
 
-/// The wearer's theme choices, kept in UserDefaults so the palette can read them from anywhere.
+/// The look the app ships with. Colour, font and text size are fixed defaults (the palette and type scale of the design guides);
+/// only light or dark, spacing density and the app icon are the wearer's choice.
 public enum NunaThemePrefs {
-    public static let accentKey = "nuna.accent"
-    public static let typographyKey = "nuna.typography"
-
-    public enum Accent: String, CaseIterable, Identifiable {
-        case ink, green, blue, steel, yellow
-        public var id: String { rawValue }
-        public var fill: Color {
-            switch self {
-            case .ink:    return Color(light: "#0A0D10", dark: "#FFFFFF")
-            case .green:  return Color(light: "#0CB300", dark: "#16EC06")
-            case .blue:   return Color(light: "#0084D1", dark: "#0093E7")
-            case .steel:  return Color(light: "#5F8AA6", dark: "#7BA1BB")
-            case .yellow: return Color(light: "#C99A00", dark: "#FFDE00")
-            }
-        }
-        /// The colour of text and icons drawn on top of `fill`.
-        public var label: Color {
-            self == .yellow ? Color(hex: "#000000") : Color(light: "#FFFFFF", dark: "#000000")
-        }
-        /// The swatch shown in the picker, the same in both themes so it reads as a colour name.
-        public var swatch: Color {
-            switch self {
-            case .ink: return Color(hex: "#FFFFFF"); case .green: return Color(hex: "#16EC06"); case .blue: return Color(hex: "#0093E7")
-            case .steel: return Color(hex: "#7BA1BB"); case .yellow: return Color(hex: "#FFDE00")
-            }
-        }
+    /// Primary action: the theme ink (white on dark). Not configurable.
+    public enum Accent {
+        public static var fill: Color { Color(light: "#0A0D10", dark: "#FFFFFF") }
+        public static var label: Color { Color(light: "#FFFFFF", dark: "#000000") }
     }
 
-    public enum Typography: String, CaseIterable, Identifiable {
-        /// Rounded system face: heavy, compact numbers (the original Nuna look).
-        case bold
-        /// System face with expanded width: wider numerals.
-        case geometric
-        /// Plain system face.
-        case system
-        public var id: String { rawValue }
-        public var design: Font.Design { self == .bold ? .rounded : .default }
-    }
-
-    public static let textSizeKey = "nuna.textSize"
     public static let densityKey = "nuna.density"
-
-    /// Text size steps. The factor multiplies every Nuna font size.
-    public enum TextSize: String, CaseIterable, Identifiable {
-        case small, standard, large, xlarge
-        public var id: String { rawValue }
-        public var factor: CGFloat { switch self { case .small: return 0.92; case .standard: return 1; case .large: return 1.08; case .xlarge: return 1.18 } }
-    }
 
     public enum Density: String, CaseIterable, Identifiable {
         case roomy, standard, compact
@@ -114,11 +76,8 @@ public enum NunaThemePrefs {
         public var factor: CGFloat { switch self { case .roomy: return 1.15; case .standard: return 1; case .compact: return 0.85 } }
     }
 
-    public static var textSize: TextSize { TextSize(rawValue: UserDefaults.standard.string(forKey: textSizeKey) ?? "") ?? .standard }
     public static var density: Density { Density(rawValue: UserDefaults.standard.string(forKey: densityKey) ?? "") ?? .standard }
-
-    public static var accent: Accent { Accent(rawValue: UserDefaults.standard.string(forKey: accentKey) ?? "") ?? .ink }
-    public static var typography: Typography { Typography(rawValue: UserDefaults.standard.string(forKey: typographyKey) ?? "") ?? .bold }
+    public static var accent: Accent.Type { Accent.self }
 }
 
 /// Light, dark or follow the iPhone. Nuna is dark until the wearer chooses otherwise.
@@ -134,15 +93,15 @@ public enum NunaTheme {
 }
 
 public extension Font {
-    /// The Nuna system font at a design size, multiplied by the wearer's text size choice.
+    /// The Nuna system font (SF Pro) at a design size.
     static func nuna(size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> Font {
-        .system(size: (size * NunaThemePrefs.textSize.factor * 2).rounded() / 2, weight: weight, design: design)
+        .system(size: size, weight: weight, design: design)
     }
 }
 
-/// The font design the Nuna screens use for numerals and headings.
+/// The font design the Nuna screens use for numerals and headings: SF Pro, as the typography guide recommends.
 public enum NunaType {
-    public static var design: Font.Design { NunaThemePrefs.typography.design }
+    public static var design: Font.Design { .default }
 }
 
 public enum NunaRadius {
@@ -158,26 +117,33 @@ public enum NunaRadius {
 
 public enum NunaSpacing {
     // Section and card spacing follow the density choice (Roomy / Standard / Compact).
-    public static let screenH: CGFloat = 20
+    public static let screenH: CGFloat = 16
     public static var section: CGFloat { (16 * NunaThemePrefs.density.factor).rounded() }
-    public static var cardInner: CGFloat { (18 * NunaThemePrefs.density.factor).rounded() }
-    public static var cardInnerSmall: CGFloat { (14 * NunaThemePrefs.density.factor).rounded() }
+    public static var cardInner: CGFloat { (16 * NunaThemePrefs.density.factor).rounded() }
+    public static var cardInnerSmall: CGFloat { (12 * NunaThemePrefs.density.factor).rounded() }
     public static let tabBarBottom: CGFloat = 24
 }
 
 public enum NunaTypeSize {
-    // Text sizes (pt). Weights: h1/h2 800, h3 700, body/sub 600, caption 800 uppercase.
-    public static let h1: CGFloat = 34
-    public static let h2: CGFloat = 22
+    // Text sizes (pt), from the "Panduan Tipografi dan Jarak UI" guide:
+    //   main stat / score 44-48 bold  ·  page header 24-28 bold  ·  card title 16-18 semibold
+    //   body and detail numbers 14    ·  chart labels and helper text 11-12
+    // Large numbers use -1 to -2% tracking, small uppercase labels +1 to +2% (see `nunaTrackingNumber`, `nunaTrackingLabel`).
+    public static let h1: CGFloat = 28
+    public static let h2: CGFloat = 20
     public static let h3: CGFloat = 17
     public static let sub: CGFloat = 14
-    public static let caption: CGFloat = 11.5   // uppercase, tracking 0.1em
+    public static let caption: CGFloat = 11.5
     // Numerals
-    public static let numberXL: CGFloat = 68
+    public static let numberXL: CGFloat = 56
     public static let numberL: CGFloat = 44
     public static let numberM: CGFloat = 30
     public static let numberS: CGFloat = 21
 }
+
+/// Letter spacing in points for a number of `size` (-1.5%) and for small labels.
+public func nunaTrackingNumber(_ size: CGFloat) -> CGFloat { -size * 0.015 }
+public let nunaTrackingLabel: CGFloat = 0.4
 
 /// Which look the whole app uses. Stored in `@AppStorage(ExperienceMode.storageKey)`.
 public enum ExperienceMode: String, CaseIterable, Identifiable {

@@ -239,7 +239,7 @@ struct NunaTodayCustomizeSheet: View {
     }
 
     private func cap(_ t: LocalizedStringKey) -> some View {
-        Text(t).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+        Text(t).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
     }
 }
 
@@ -336,7 +336,7 @@ struct NunaLayoutList<Item: Identifiable & Equatable, Extra: View>: View {
     }
 
     private func cap(_ t: LocalizedStringKey) -> some View {
-        Text(t).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+        Text(t).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
     }
 }
 

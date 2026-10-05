@@ -61,6 +61,16 @@ struct NunaTrendChart: View {
                 }
                 ForEach(series) { s in
                     if !s.bars {
+                        // Fade-out fill under a lone line: the line colour at 35% down to nothing.
+                        if series.filter({ !$0.bars }).count == 1, series.allSatisfy({ !$0.bars }) {
+                            ForEach(s.points, id: \.day) { p in
+                                if let d = date(p.day) {
+                                    AreaMark(x: .value("Day", d), y: .value("Value", scaled(p.value, s)), series: .value("Fill", s.id.uuidString))
+                                        .interpolationMethod(.catmullRom)
+                                        .foregroundStyle(LinearGradient(colors: [s.color.opacity(0.35), s.color.opacity(0)], startPoint: .top, endPoint: .bottom))
+                                }
+                            }
+                        }
                         ForEach(s.points, id: \.day) { p in
                             if let d = date(p.day) {
                                 LineMark(x: .value("Day", d), y: .value("Value", scaled(p.value, s)), series: .value("Series", s.id.uuidString))
@@ -242,7 +252,7 @@ struct NunaLegendItem: View {
 
 /// Small caption used above cards.
 func nunaTrendsCap(_ t: LocalizedStringKey) -> some View {
-    Text(t).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+    Text(t).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
 }
 
 /// Charge zone colour (green 67+, yellow 34 to 66, red below).

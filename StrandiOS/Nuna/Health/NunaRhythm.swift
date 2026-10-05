@@ -191,7 +191,7 @@ struct NunaRhythmView: View {
         }
         NunaCard {
             VStack(alignment: .leading, spacing: 8) {
-                Text("How this is measured").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text("How this is measured").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 Text("During quiet, still, resting windows, NOOP looks at the timing between your heartbeats (R-R intervals) and draws their Poincaré scatter. From the cloud it computes its short and long axes (SD1, SD2) and a few plain regularity numbers. Movement and noisy windows are skipped, not shown. These are transparent, published descriptive statistics: a picture of your timing, never a clinical measurement.")
                     .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
             }
@@ -277,7 +277,7 @@ struct NunaRhythmView: View {
         return NunaCard {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text("Last night").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Last night").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     NunaChip(confidence, systemImage: "checkmark", color: NunaPalette.restText)
                 }
@@ -297,7 +297,7 @@ struct NunaRhythmView: View {
     private func bar(_ title: LocalizedStringKey, _ v: Double?, _ color: Color) -> some View {
         VStack(spacing: 6) {
             HStack {
-                Text(title).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text(title).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 Spacer()
                 Text(verbatim: pct(v)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }
@@ -308,7 +308,7 @@ struct NunaRhythmView: View {
     private var plotCard: some View {
         NunaCard {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Beat-to-beat scatter").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text("Beat-to-beat scatter").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 NunaPoincarePlot(points: allPoints, sd1: headline?.sd1, sd2: headline?.sd2)
                 Text("Each dot pairs one heartbeat interval with the next. A tight line along the diagonal means a steady beat; a rounder, more spread-out cloud means the timing varied more.")
                     .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)

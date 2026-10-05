@@ -82,6 +82,12 @@ struct NunaNightLineChart: View {
                 RuleMark(y: .value("Average", average)).lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4])).foregroundStyle(NunaPalette.textMuted.opacity(0.6))
             }
             ForEach(Array(segments.enumerated()), id: \.offset) { i, seg in
+                // Fade-out fill: the line colour at 35% down to nothing.
+                ForEach(Array(seg.enumerated()), id: \.offset) { _, p in
+                    AreaMark(x: .value("Time", p.date), yStart: .value("Floor", domain.lowerBound), yEnd: .value("Value", p.value), series: .value("Fill", i))
+                        .interpolationMethod(.catmullRom)
+                        .foregroundStyle(LinearGradient(colors: [color.opacity(0.35), color.opacity(0)], startPoint: .top, endPoint: .bottom))
+                }
                 ForEach(Array(seg.enumerated()), id: \.offset) { _, p in
                     LineMark(x: .value("Time", p.date), y: .value("Value", p.value), series: .value("Segment", i))
                         .interpolationMethod(.catmullRom)
@@ -188,12 +194,12 @@ struct NunaSleepStageSection: View {
         return HStack(alignment: .top, spacing: 22) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: NunaSleepFormat.duration(night.asleepMin)).font(.nuna(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                Text("Hours of sleep").font(.nuna(size: 10.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text("Hours of sleep").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 if let tAsleep { Text(verbatim: String(localized: "typically \(NunaSleepFormat.duration(tAsleep.mean))")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) }
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: NunaSleepFormat.duration(restorative)).font(.nuna(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(SleepStage.rem.nunaColor)
-                Text("Restorative sleep").font(.nuna(size: 10.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text("Restorative sleep").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 if let tRest { Text(verbatim: String(localized: "typically \(NunaSleepFormat.duration(tRest.mean))")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) }
             }
             Spacer(minLength: 0)
@@ -230,7 +236,7 @@ struct NunaSleepStageSection: View {
                 smoothed.filter { $0.stage == s }.map { (night.onset.addingTimeInterval($0.start), night.onset.addingTimeInterval($0.end)) }
             } ?? []
             VStack(alignment: .leading, spacing: 8) {
-                Text(m.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text(m.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 NunaNightLineChart(start: windowStart, end: windowEnd, points: pts,
                                    color: selected == nil ? m.color : NunaPalette.textMuted.opacity(0.7), decimals: m.decimals,
                                    height: 124, gap: m.id == "hr" ? 600 : 1800, lineWidth: m.id == "hr" ? 1.6 : 2,
@@ -331,7 +337,7 @@ struct NunaSleepStageSection: View {
 
     private func hrFigure(_ label: LocalizedStringKey, _ v: Double, _ m: Metric) -> some View {
         VStack(alignment: .leading, spacing: 3) {
-            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.7)
+            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.7)
             HStack(alignment: .firstTextBaseline, spacing: 3) {
                 Text(verbatim: String(format: "%.\(m.decimals)f", locale: AppLanguage.activeLocale, v)).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 Text(verbatim: m.unit).font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
@@ -355,7 +361,7 @@ struct NunaSleepStageSection: View {
         let color = dimmed ? NunaPalette.textMuted.opacity(0.55) : stage.nunaColor
         return VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 8) {
-                Text(stage.nunaName).font(.nuna(size: 11.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                Text(stage.nunaName).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 Text(verbatim: "\(share(stage))%").font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(dimmed ? NunaPalette.textMuted : stage.nunaColor)
                 Spacer()
                 Text(verbatim: NunaSleepFormat.duration(minutes(stage))).font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)

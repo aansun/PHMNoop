@@ -145,7 +145,7 @@ struct NunaScoreCard: View {
                 }
                 Text(v.label)
                     .font(.nuna(size: NunaTypeSize.caption, weight: .heavy))
-                    .tracking(1.15).textCase(.uppercase)
+                    .tracking(nunaTrackingLabel).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textSecondary)
                 Text(v.state)
                     .font(.nuna(size: 13, weight: .heavy))
@@ -224,7 +224,7 @@ struct NunaAnyaCard: View {
                         NunaIconTile("sparkles")
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Anya")
-                                .font(.nuna(size: 10.5, weight: .heavy)).tracking(1).textCase(.uppercase)
+                                .font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                                 .foregroundStyle(NunaPalette.textSecondary)
                             title
                                 .font(.nuna(size: 16, weight: .bold))
@@ -268,7 +268,7 @@ struct NunaStressCard: View {
                     HStack {
                         HStack(spacing: 10) {
                             NunaIconTile("wind", tint: NunaPalette.charge)
-                            Text("Stress monitor").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15)
+                            Text("Stress monitor").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel)
                                 .textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         }
                         Spacer(minLength: 8)
@@ -277,7 +277,7 @@ struct NunaStressCard: View {
                     HStack(alignment: .lastTextBaseline) {
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
                             Text(verbatim: headline.map { format($0) } ?? "–")
-                                .font(.nuna(size: NunaTypeSize.numberL, weight: .bold, design: NunaType.design))
+                                .font(.nuna(size: NunaTypeSize.numberL, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(NunaTypeSize.numberL))
                                 .foregroundStyle(NunaPalette.textPrimary)
                             Text(verbatim: "/ 3").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         }
@@ -427,7 +427,7 @@ struct NunaMetricsGrid: View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .center) {
                     Text(tile.label)
-                        .font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
+                        .font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textSecondary)
                         .lineLimit(2).fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 4)

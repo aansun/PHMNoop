@@ -59,7 +59,7 @@ struct NunaChargeDetailView: View {
                                              highlight: Calendar.current.isDateInToday(s.date), color: s.value.map(nunaChargeColor))
                         }, color: NunaPalette.charge)
                     } else {
-                        NunaLine2Chart(points: series.readings(range), color: NunaPalette.ink, decimals: 0, baseline: series.baseline)
+                        NunaLine2Chart(points: series.readings(range), color: NunaPalette.charge, decimals: 0, baseline: series.baseline)
                     }
                 }
             }
@@ -133,7 +133,7 @@ struct NunaEffortDetailView: View {
                     }, color: NunaPalette.effort, highlightColor: NunaPalette.effortText)
                 } else {
                     NunaLine2Chart(points: series.readings(range).map { ($0.date, UnitFormatter.effortValue($0.value, scale: scale)) },
-                                   color: NunaPalette.ink, decimals: 1, baseline: series.baseline.map { UnitFormatter.effortValue($0, scale: scale) })
+                                   color: NunaPalette.effort, decimals: 1, baseline: series.baseline.map { UnitFormatter.effortValue($0, scale: scale) })
                 }
             }
             NunaExpandRow(title: "How it's calculated", subtitle: "Cardio load across the day",
@@ -252,6 +252,13 @@ struct NunaMetricDetailView: View {
         default: return NunaPalette.textPrimary   // body and nutrition metrics carry no score meaning
         }
     }
+    /// Chart colour by area: overnight vitals are Health (green), Rest is cyan, Effort is yellow, Charge green, the rest white.
+    private var lineColor: Color {
+        if ["Effort"].contains(metric.category) { return NunaPalette.effort }
+        if ["Rest"].contains(metric.category) { return NunaPalette.rest }
+        if ["Charge"].contains(metric.category) || overnight { return NunaPalette.charge }
+        return NunaPalette.ink
+    }
     private var overnight: Bool { ["hrv", "rhr", "spo2", "resp_rate", "skin_temp"].contains(metric.key) }
 
     private func fmt(_ v: Double) -> String {
@@ -290,7 +297,7 @@ struct NunaMetricDetailView: View {
                                              valueText: s.value.map { fmtShort($0) }, highlight: Calendar.current.isDateInToday(s.date))
                         }, color: NunaPalette.restText.opacity(0.85), highlightColor: NunaPalette.textPrimary)
                     } else {
-                        NunaLine2Chart(points: series.readings(range), color: NunaPalette.ink, decimals: metric.decimals, baseline: series.baseline)
+                        NunaLine2Chart(points: series.readings(range), color: lineColor, decimals: metric.decimals, baseline: series.baseline)
                     }
                 }
             }
@@ -337,7 +344,7 @@ struct NunaMetricDetailView: View {
     private func stat(_ label: LocalizedStringKey, _ value: String) -> some View {
         NunaCard(small: true) {
             VStack(alignment: .leading, spacing: 6) {
-                Text(label).font(.nuna(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text(label).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 Text(verbatim: value).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     .minimumScaleFactor(0.6).lineLimit(1)
             }
@@ -395,7 +402,7 @@ struct NunaStressDetailView: View {
         let tint: Color = score.map(color) ?? NunaPalette.textPrimary
         NunaDetailScreen("Stress monitor") {
             VStack(spacing: 10) {
-                Text(day.isToday ? "Day average" : "Day average").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
+                Text(day.isToday ? "Day average" : "Day average").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading)
                 NunaStressGauge(value: score, level: score.map { $0 < 1 ? "Low" : ($0 < 2 ? "Medium" : "High") },
                                 levelColor: tint, time: gaugeTime, onInfo: { withAnimation { showInfo.toggle() } })
@@ -483,7 +490,7 @@ struct NunaStressDetailView: View {
             VStack(alignment: .leading, spacing: 12) {
                 if range == 1 {
                     HStack {
-                        Text("All day").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Text("All day").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         Spacer()
                         Text("By time of day").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
@@ -511,7 +518,7 @@ struct NunaStressDetailView: View {
                             .frame(maxWidth: .infinity, minHeight: 110)
                     }
                 } else {
-                    NunaLine2Chart(points: series.readings(range), color: NunaPalette.ink, decimals: 1, baseline: series.baseline)
+                    NunaLine2Chart(points: series.readings(range), color: NunaPalette.charge, decimals: 1, baseline: series.baseline)
                 }
                 HStack(spacing: 14) {
                     legend(NunaPalette.charge, "Low"); legend(NunaPalette.warning, "Medium"); legend(NunaPalette.alert, "High")

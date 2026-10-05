@@ -6,7 +6,7 @@ import WhoopProtocol
 import WhoopStore
 
 private func nunaCap(_ t: LocalizedStringKey) -> some View {
-    Text(t).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+    Text(t).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
 }
 
 private func nunaFmt(_ v: Double?, _ digits: Int = 0) -> String {
@@ -99,7 +99,7 @@ struct NunaLiveHeartView: View {
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     Image(systemName: "heart.fill").font(.nuna(size: 26)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(verbatim: currentBpm.map(String.init) ?? "–").font(.nuna(size: 76, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: currentBpm.map(String.init) ?? "–").font(.nuna(size: 76, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(76)).foregroundStyle(NunaPalette.textPrimary)
                     Text("bpm").font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 HStack {
@@ -256,7 +256,7 @@ struct NunaOxygenView: View {
                     if let latest { NunaChip(latest >= 95 ? "Normal" : "Low", color: latest >= 95 ? NunaPalette.charge : NunaPalette.warning) }
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(verbatim: nunaFmt(latest)).font(.nuna(size: 68, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: nunaFmt(latest)).font(.nuna(size: 68, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(68)).foregroundStyle(NunaPalette.textPrimary)
                     Text("%").font(.nuna(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 if vals.count >= 2 {
@@ -307,10 +307,10 @@ struct NunaOxygenView: View {
                     if let chip { NunaChip(chip.0, color: chip.1) }
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(verbatim: nunaFmt(latest, 1)).font(.nuna(size: 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: nunaFmt(latest, 1)).font(.nuna(size: 56, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(56)).foregroundStyle(NunaPalette.textPrimary)
                     Text("/min").font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
-                NunaLine2Chart(points: respS.readings(14), color: NunaPalette.ink, decimals: 1, baseline: b?.mean, height: 150)
+                NunaLine2Chart(points: respS.readings(14), color: NunaPalette.charge, decimals: 1, baseline: b?.mean, height: 150)
                 if let b {
                     Text(verbatim: String(localized: "Your personal range \(nunaFmt(b.lo, 1)) – \(nunaFmt(b.hi, 1)). Spikes in breathing often appear before illness."))
                         .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
@@ -339,7 +339,7 @@ struct NunaSkinTempView: View {
                         if let latest { NunaChip(abs(latest) < 0.5 ? "Small deviation" : "Larger deviation", color: abs(latest) < 0.5 ? NunaPalette.charge : NunaPalette.warning) }
                     }
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(verbatim: latest.map { nunaSigned($0) } ?? "–").font(.nuna(size: 68, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: latest.map { nunaSigned($0) } ?? "–").font(.nuna(size: 68, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(68)).foregroundStyle(NunaPalette.textPrimary)
                         if latest != nil { Text("°C").font(.nuna(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                     }
                     Text("Compared with your personal baseline").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)

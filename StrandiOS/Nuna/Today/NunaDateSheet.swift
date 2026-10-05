@@ -173,7 +173,7 @@ struct NunaDateSheet: View {
         return NunaCard(highlight: false) {
             VStack(spacing: 16) {
                 HStack {
-                    Text("Selected").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Selected").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     NunaChip(verbatim: longDate(picked))
                 }
@@ -191,7 +191,7 @@ struct NunaDateSheet: View {
     private func score(_ label: LocalizedStringKey, _ value: String?, _ color: Color) -> some View {
         VStack(spacing: 4) {
             Text(verbatim: value ?? "–").font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(value == nil ? NunaPalette.textMuted : color)
-            Text(label).font(.nuna(size: 11.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(label).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
         }
         .frame(maxWidth: .infinity)
     }

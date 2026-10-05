@@ -227,7 +227,7 @@ struct NunaAnyaView: View {
             if let reading {
                 NunaCard(small: true) {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("Your day, without a provider").font(.nuna(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Your day, without a provider").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         Text(verbatim: reading.headline).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         if let d = reading.detail { Text(verbatim: d).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                     }.frame(maxWidth: .infinity, alignment: .leading)
