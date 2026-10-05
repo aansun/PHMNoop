@@ -175,9 +175,8 @@ struct NunaAppearanceView: View {
             VStack(alignment: .leading, spacing: 14) {
                 nunaTrendsCap("App icon")
                 HStack(spacing: 12) {
-                    iconChoice("", "Default", AnyView(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(LinearGradient(colors: [Color(hex: "#16EC06").opacity(0.9), Color(hex: "#0A0D10")], startPoint: .topLeading, endPoint: .bottomTrailing))))
-                    iconChoice("AppIcon-Navy", "Navy", AnyView(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(LinearGradient(colors: [Color(hex: "#1B2D52"), Color(hex: "#0B1224")], startPoint: .top, endPoint: .bottom))))
-                    iconChoice("AppIcon-PHM", "PHMNOOP", AnyView(ZStack { RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color(hex: "#0A0D10")); Text("⌥").font(.system(size: 28, weight: .heavy)).foregroundStyle(.white) }))
+                    iconChoice("", "Orbit", AnyView(Image("IconOrbit").resizable().scaledToFit().clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))))
+                    iconChoice("AppIcon-Butterfly", "Butterfly", AnyView(Image("IconButterfly").resizable().scaledToFit().clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))))
                 }
             }
         }

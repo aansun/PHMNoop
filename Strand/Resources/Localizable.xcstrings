@@ -1,6 +1,12 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Orbit": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Orbit"}}
+    } },
+    "Butterfly": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kupu-kupu"}}
+    } },
     "Vital sign": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Vital sign"}}
     } },
