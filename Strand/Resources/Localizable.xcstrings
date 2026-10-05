@@ -105343,6 +105343,7 @@
     },
     "Maintain": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Pertahankan"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -133293,6 +133294,7 @@
     },
     "Push": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Dorong"}},
         "de": {
           "stringUnit": {
             "state": "translated",

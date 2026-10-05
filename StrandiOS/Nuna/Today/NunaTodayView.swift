@@ -534,23 +534,9 @@ struct NunaTodayView: View {
         case .hero:
             // The rings themselves are pinned at the top; what belongs with them stays here.
             VStack(spacing: NunaSpacing.section) {
-                if readyLine != nil || (model.isToday && live.heartRate != nil) {
-                    HStack {
-                        if let readyLine { NunaChip(readyLine, systemImage: "bolt.fill", color: NunaPalette.charge) }
-                        Spacer(minLength: 8)
-                        if model.isToday, let hr = live.heartRate {
-                            NavigationLink(value: TabRoute.fullDayChart) {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "heart").font(.nuna(size: 12, weight: .bold))
-                                    Text(verbatim: "\(hr) bpm").font(.nuna(size: 12.5, weight: .bold))
-                                }
-                                .foregroundStyle(NunaPalette.textPrimary)
-                                .padding(.horizontal, 12).frame(height: 30)
-                                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
+                if readyLine != nil || model.charge.pct != nil || (model.isToday && live.heartRate != nil) {
+                    // The chips sit on one line when they fit and wrap onto the next when they do not.
+                    NunaFlowLayout(spacing: 8, lineSpacing: 8) { synthesisChips; heartRatePill }
                 }
                 if model.isToday, let warn = appModel.illnessSignal, warn.level != .quiet {
                     NunaEarlyWarningCard(result: warn)
@@ -654,6 +640,47 @@ struct NunaTodayView: View {
 
     private var metricsLayout: NunaMetricsLayout { NunaMetricsLayout(rawValue: metricsLayoutRaw) ?? .cards }
 
+    /// What the Default Today synthesis shows beside its greeting, minus the greeting: the readiness chip with its word (Push, Maintain,
+    /// Rest) and the Charge state (Solid, Last night, Calibrating, No data), from the same engine and display state.
+    @ViewBuilder private var synthesisChips: some View {
+        if let readyLine { NunaChip(readyLine, systemImage: "bolt.fill", color: NunaPalette.charge).fixedSize() }
+        if model.isToday, let level = model.readiness?.level, let word = Self.readinessWord(level) {
+            NunaChip(verbatim: word, color: level == .primed ? NunaPalette.charge : (level == .balanced ? NunaPalette.effortText : NunaPalette.warning))
+        }
+        if model.charge != .noData {
+            HStack(spacing: 5) {
+                Circle().fill(NunaPalette.charge).frame(width: 6, height: 6)
+                Text(verbatim: model.charge.stateLabel).font(.nuna(size: 12, weight: .bold))
+            }
+            .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 10).frame(height: 30)
+            .overlay(RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+        }
+    }
+
+    private static func readinessWord(_ level: ReadinessEngine.Level) -> String? {
+        switch level {
+        case .primed: return String(localized: "Push")
+        case .balanced: return String(localized: "Maintain")
+        case .strained, .rundown: return String(localized: "Rest")
+        case .insufficient: return nil
+        }
+    }
+
+    @ViewBuilder private var heartRatePill: some View {
+        if model.isToday, let hr = live.heartRate {
+            NavigationLink(value: TabRoute.fullDayChart) {
+                HStack(spacing: 6) {
+                    Image(systemName: "heart").font(.nuna(size: 12, weight: .bold))
+                    Text(verbatim: "\(hr) bpm").font(.nuna(size: 12.5, weight: .bold))
+                }
+                .foregroundStyle(NunaPalette.textPrimary)
+                .padding(.horizontal, 12).frame(height: 30)
+                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
     private var readyLine: LocalizedStringKey? {
         guard model.isToday, let level = model.readiness?.level else { return nil }
         switch level {
@@ -751,6 +778,33 @@ struct NunaScrollOffsetReader: UIViewRepresentable {
                     self?.onChange?(max(0, sv.contentOffset.y + sv.adjustedContentInset.top))
                 }
             }
+        }
+    }
+}
+
+/// Lays its children out left to right and wraps to a new line when the next one does not fit. Each child keeps its natural width.
+struct NunaFlowLayout: Layout {
+    var spacing: CGFloat = 8
+    var lineSpacing: CGFloat = 8
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let w = proposal.width ?? .infinity
+        var x: CGFloat = 0, y: CGFloat = 0, lineH: CGFloat = 0, maxX: CGFloat = 0
+        for v in subviews {
+            let s = v.sizeThatFits(.unspecified)
+            if x > 0, x + s.width > w { y += lineH + lineSpacing; x = 0; lineH = 0 }
+            x += s.width + spacing; lineH = max(lineH, s.height); maxX = max(maxX, x - spacing)
+        }
+        return CGSize(width: proposal.width ?? maxX, height: y + lineH)
+    }
+
+    func placeSubviews(in b: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var x = b.minX, y = b.minY, lineH: CGFloat = 0
+        for v in subviews {
+            let s = v.sizeThatFits(.unspecified)
+            if x > b.minX, x + s.width > b.maxX { y += lineH + lineSpacing; x = b.minX; lineH = 0 }
+            v.place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(s))
+            x += s.width + spacing; lineH = max(lineH, s.height)
         }
     }
 }
