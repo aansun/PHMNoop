@@ -83,7 +83,7 @@ struct NunaPoincarePlot: View {
         Canvas { ctx, size in
             let s = min(size.width, size.height), inset: CGFloat = 12, plot = s - inset * 2
             func map(_ v: Double) -> CGFloat { inset + CGFloat((min(max(v, lo), hi) - lo) / (hi - lo)) * plot }
-            ctx.fill(Path(roundedRect: CGRect(x: 0, y: 0, width: s, height: s), cornerRadius: 10), with: .color(NunaPalette.shade.opacity(0.28)))
+            ctx.fill(Path(roundedRect: CGRect(x: 0, y: 0, width: s, height: s), cornerRadius: 10), with: .color(NunaPalette.field))
             var grid = Path()
             for i in 1...3 {
                 let p = inset + plot * CGFloat(i) / 4

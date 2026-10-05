@@ -202,7 +202,7 @@ struct NunaWorkoutsView: View {
                             Text(verbatim: String(localized: "Acute-to-chronic load ratio \(String(format: "%.2f", locale: AppLanguage.activeLocale, ratio)). \(bandSentence(band))"))
                                 .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                         }
-                        .padding(12).background(NunaPalette.shade.opacity(0.22), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .padding(12).background(NunaPalette.field, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                     } else {
                         Text("Needs at least three weeks with workouts to read your balance.").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }

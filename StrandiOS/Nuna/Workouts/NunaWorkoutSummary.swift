@@ -258,7 +258,7 @@ struct NunaRouteTrace: View {
             }
             ctx.stroke(p, with: .color(NunaPalette.ink), style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
         }
-        .background(NunaPalette.shade.opacity(0.28), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         .accessibilityHidden(true)
     }
 }

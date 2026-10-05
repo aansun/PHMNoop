@@ -56,7 +56,7 @@ struct NunaMoodView: View {
                 .lineLimit(2...4)
                 .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                 .padding(.horizontal, 18).padding(.vertical, 14)
-                .background(NunaPalette.shade.opacity(0.28), in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
+                .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
             if let stress {
                 NunaCard(small: true) {

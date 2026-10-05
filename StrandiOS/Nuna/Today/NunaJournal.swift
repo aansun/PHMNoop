@@ -239,7 +239,7 @@ struct NunaJournalView: View {
                     TextField("", text: $customDraft, prompt: Text("Add a custom item…").foregroundStyle(NunaPalette.textMuted))
                         .font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                         .padding(.horizontal, 16).frame(height: 48)
-                        .background(NunaPalette.shade.opacity(0.28), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
                     NunaSegmented<Bool>([(value: false, title: "Yes/No"), (value: true, title: "Number")], selection: $customNumeric)
                     HStack {

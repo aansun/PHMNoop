@@ -143,7 +143,7 @@ struct NunaTrendDetailCard: View {
             }
         }
         .padding(3)
-        .background(NunaPalette.shade.opacity(0.28), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+        .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
     }
 
     private var dateStepper: some View {
