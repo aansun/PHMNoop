@@ -44,6 +44,7 @@ struct NunaFitnessAgeView: View {
         NunaDetailScreen("Fitness age") {
             if let latest = series.last {
                 hero(latest)
+                paceCard
                 trendCard
                 components
                 dataCard
@@ -71,7 +72,7 @@ struct NunaFitnessAgeView: View {
                           text: "Your age, sex, the median resting heart rate of the last 7 days and a physical activity index built from your recent training are compared with an average person of your age. The gap is turned into years.")
         }
         .task(id: repo.refreshSeq) {
-            series = await repo.exploreSeries(key: "fitness_age", source: "my-whoop", days: 120)
+            series = await repo.exploreSeries(key: "fitness_age", source: "my-whoop", days: 200)
             vo2 = await repo.exploreSeries(key: "vo2max_est", source: "my-whoop", days: 60).last?.value
             loaded = true
         }
@@ -81,28 +82,46 @@ struct NunaFitnessAgeView: View {
     private func hero(_ latest: (day: String, value: Double)) -> some View {
         let age = Double(profile.age)
         let diff = age > 0 ? Int((age - latest.value).rounded()) : nil
+        let tint: Color = (diff ?? 0) > 0 ? NunaPalette.charge : ((diff ?? 0) < 0 ? NunaPalette.warning : NunaPalette.textSecondary)
         let updated: String = date(latest.day).map {
             let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEEE d MMMM"); return f.string(from: $0)
         } ?? latest.day
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Text(verbatim: updated).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1)
-                    Spacer()
-                    if let diff, diff != 0 {
-                        NunaChip(diff > 0 ? LocalizedStringKey("\(diff) years younger") : LocalizedStringKey("\(-diff) years older"),
-                                 systemImage: diff > 0 ? "checkmark" : nil, color: diff > 0 ? NunaPalette.charge : NunaPalette.warning)
+        // The change since the previous weekly reading, from the stored series.
+        let weekly: Int? = series.count >= 2 ? Int((series[series.count - 1].value - series[series.count - 2].value).rounded()) : nil
+        return NunaCard(padding: EdgeInsets(top: 22, leading: 18, bottom: 22, trailing: 18)) {
+            VStack(spacing: 18) {
+                Text("Health").font(.nuna(size: 13, weight: .heavy)).tracking(2).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                NunaFitnessOrb(tint: tint) {
+                    VStack(spacing: 6) {
+                        Text(verbatim: String(format: "%.0f", locale: AppLanguage.activeLocale, latest.value))
+                            .font(.nuna(size: 64, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("Fitness age").font(.nuna(size: 13, weight: .heavy)).tracking(1.6).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                        if let diff, diff != 0 {
+                            Text(diff > 0 ? LocalizedStringKey("\(diff) years younger") : LocalizedStringKey("\(-diff) years older"))
+                                .font(.nuna(size: 15, weight: .bold)).foregroundStyle(tint)
+                        } else if diff == 0 {
+                            Text("About your age").font(.nuna(size: 15, weight: .bold)).foregroundStyle(tint)
+                        }
                     }
                 }
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(verbatim: String(format: "%.0f", locale: AppLanguage.activeLocale, latest.value))
-                        .font(.nuna(size: 96, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("years").font(.nuna(size: 24, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                if let weekly, weekly != 0 {
+                    HStack(spacing: 6) {
+                        Image(systemName: weekly < 0 ? "arrowtriangle.down.fill" : "arrowtriangle.up.fill").font(.nuna(size: 10))
+                        Text(verbatim: weekly < 0 ? String(localized: "\(-weekly) yr younger than last week") : String(localized: "\(weekly) yr older than last week"))
+                            .font(.nuna(size: 13, weight: .bold))
+                    }
+                    .foregroundStyle(weekly < 0 ? NunaPalette.charge : NunaPalette.warning)
+                    .padding(.horizontal, 14).frame(height: 32)
+                    .background((weekly < 0 ? NunaPalette.charge : NunaPalette.warning).opacity(0.16), in: Capsule())
+                } else if weekly == 0 {
+                    Text("Steady since last week").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
+                Text(verbatim: updated).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textMuted)
                 if let diff {
                     Text(verbatim: diff == 0 ? String(localized: "Your heart and lung fitness is about the same as your age.")
                          : String(localized: "Your heart and lung fitness matches someone aged \(Int(latest.value.rounded())), while you are \(profile.age)."))
                         .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        .multilineTextAlignment(.center)
                     NunaAgeSlider(fitness: latest.value, age: age)
                     HStack(spacing: 16) {
                         legend(Capsule().fill(NunaPalette.charge.opacity(0.3)).frame(width: 14, height: 10), "Range ±5 yr")
@@ -110,6 +129,67 @@ struct NunaFitnessAgeView: View {
                     }
                 }
             }
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    // MARK: Pace of aging
+
+    private var paceReadings: [PaceOfAging.Reading] {
+        series.compactMap { r in date(r.day).map { PaceOfAging.Reading(time: $0.timeIntervalSince1970, fitnessAge: r.value) } }
+    }
+
+    /// Pace of aging from the stored weekly series (`PaceOfAging`), against the same pace one week earlier.
+    private var paceCard: some View {
+        let all = paceReadings
+        let now = PaceOfAging.compute(all)
+        let before = PaceOfAging.compute(Array(all.dropLast()))
+        let move: Double? = now.flatMap { n in before.map { n.pace - $0.pace } }
+        return NunaCard {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack {
+                    cap("Pace of aging")
+                    Spacer()
+                    if let move, abs(move) >= 0.05 {
+                        HStack(spacing: 5) {
+                            Image(systemName: move < 0 ? "arrowtriangle.down.fill" : "arrowtriangle.up.fill").font(.nuna(size: 9))
+                            Text(move < 0 ? "slower vs last week" : "faster vs last week").font(.nuna(size: 12, weight: .bold))
+                        }
+                        .foregroundStyle(move < 0 ? NunaPalette.charge : NunaPalette.warning)
+                        .padding(.horizontal, 10).frame(height: 28)
+                        .background((move < 0 ? NunaPalette.charge : NunaPalette.warning).opacity(0.16), in: Capsule())
+                    }
+                }
+                if let now {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(verbatim: String(format: "%.1fx", locale: AppLanguage.activeLocale, now.pace))
+                            .font(.nuna(size: 40, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Spacer()
+                        NunaChip(now.band == .slow ? "Slow" : (now.band == .fast ? "Fast" : "Normal"),
+                                 color: now.band == .slow ? NunaPalette.charge : (now.band == .fast ? NunaPalette.warning : nil))
+                    }
+                    NunaPaceDial(value: now.pace)
+                    Text(paceText(now)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    Text(now.confidence == .solid ? "Based on about six months of weekly readings."
+                         : (now.confidence == .building ? "Still building: the pace firms up as weeks of readings add up."
+                            : "Early estimate: too few weeks to move far from 1.0x yet."))
+                        .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+                } else {
+                    let weeks = all.count
+                    Text(verbatim: weeks == 0 ? String(localized: "Pace of aging appears after 6 weekly readings.")
+                         : String(localized: "Pace of aging appears after 6 weekly readings. You have \(weeks) so far."))
+                        .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    NunaPaceDial(value: nil)
+                }
+            }
+        }
+    }
+
+    private func paceText(_ r: PaceOfAging.Result) -> LocalizedStringKey {
+        switch r.band {
+        case .slow: return "Your fitness age is rising slower than the calendar, so you are ageing more slowly than time passes."
+        case .fast: return "Your fitness age is rising faster than the calendar. Better sleep, activity and resting heart rate can bring it back."
+        case .normal: return "1.0x means your fitness age moves at the same speed as the calendar. 0.0x means it holds still, and below that you are getting fitter."
         }
     }
 

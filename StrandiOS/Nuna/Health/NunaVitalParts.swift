@@ -1,6 +1,7 @@
 #if os(iOS)
 import SwiftUI
 import StrandDesign
+import StrandAnalytics
 
 /// A 180-degree arc gauge (0...maxValue) with a dot marking the value.
 struct NunaHalfGauge: View {
@@ -168,6 +169,143 @@ struct NunaProportionBar: View {
         }
         .frame(height: height)
         .accessibilityHidden(true)
+    }
+}
+#endif
+
+#if os(iOS)
+private enum NunaOrbField {
+    /// Deterministic particle field so it does not flicker between redraws.
+    static let particles: [(a: Double, r: Double, s: Double, o: Double)] = {
+        var g = SplitMix(seed: 7)
+        return (0..<90).map { _ in (g.next() * 2 * .pi, 0.18 + 0.8 * g.next().squareRoot(), 1 + 3.2 * g.next() * g.next(), 0.35 + 0.65 * g.next()) }
+    }()
+
+    struct SplitMix {
+        var state: UInt64
+        init(seed: UInt64) { state = seed }
+        mutating func next() -> Double {
+            state &+= 0x9E3779B97F4A7C15
+            var z = state
+            z = (z ^ (z >> 30)) &* 0xBF58476D1CE4E5B9
+            z = (z ^ (z >> 27)) &* 0x94D049BB133111EB
+            z ^= z >> 31
+            return Double(z >> 11) / Double(1 << 53)
+        }
+    }
+
+
+}
+
+/// The fitness-age orb: an organic blob with a soft glow and a field of small particles, the number in its middle. The colour
+/// says which way the comparison goes (green younger, amber older, neutral about the same). The shape drifts slowly and stands
+/// still when Reduce Motion is on. Pure decoration around one stored number.
+struct NunaFitnessOrb<Center: View>: View {
+    let tint: Color
+    var size: CGFloat = 270
+    @ViewBuilder var center: () -> Center
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    /// Closed smooth blob: a circle whose radius is nudged by a few low harmonics.
+    private static func blob(in rect: CGRect, phase: Double, grow: Double = 1) -> Path {
+        let c = CGPoint(x: rect.midX, y: rect.midY)
+        let base = min(rect.width, rect.height) / 2 * 0.74 * grow
+        let steps = 120
+        var p = Path()
+        for i in 0...steps {
+            let t = Double(i) / Double(steps) * 2 * .pi
+            let wob = 0.055 * sin(2 * t + phase) + 0.04 * sin(3 * t - phase * 1.3) + 0.025 * sin(5 * t + phase * 0.7)
+            let r = base * (1 + wob)
+            let pt = CGPoint(x: c.x + CGFloat(cos(t) * r), y: c.y + CGFloat(sin(t) * r))
+            if i == 0 { p.move(to: pt) } else { p.addLine(to: pt) }
+        }
+        p.closeSubpath()
+        return p
+    }
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 24, paused: reduceMotion)) { tl in
+            let phase = reduceMotion ? 0.6 : tl.date.timeIntervalSinceReferenceDate * 0.35
+            ZStack {
+                Canvas { ctx, sz in
+                    let rect = CGRect(origin: .zero, size: sz)
+                    // Outer glow
+                    ctx.drawLayer { l in
+                        l.addFilter(.blur(radius: 18))
+                        l.fill(Self.blob(in: rect, phase: phase, grow: 1.02), with: .color(tint.opacity(0.38)))
+                    }
+                    let shape = Self.blob(in: rect, phase: phase)
+                    // Dark core with a bright rim
+                    ctx.fill(shape, with: .radialGradient(Gradient(stops: [
+                        .init(color: Color.black.opacity(0.92), location: 0.0),
+                        .init(color: Color.black.opacity(0.85), location: 0.45),
+                        .init(color: tint.opacity(0.55), location: 0.9),
+                        .init(color: tint.opacity(0.85), location: 1.0)]),
+                        center: CGPoint(x: rect.midX, y: rect.midY), startRadius: 0, endRadius: min(sz.width, sz.height) / 2 * 0.9))
+                    ctx.stroke(shape, with: .color(tint.opacity(0.9)), lineWidth: 1.6)
+                    // Particles, drifting a little
+                    let rad = min(sz.width, sz.height) / 2 * 0.68
+                    for p in NunaOrbField.particles {
+                        let a = p.a + phase * 0.12 * (p.r > 0.6 ? 1 : -1)
+                        let r = rad * p.r
+                        let pt = CGPoint(x: rect.midX + CGFloat(cos(a) * r), y: rect.midY + CGFloat(sin(a) * r))
+                        // brighter near the rim
+                        let alpha = p.o * (0.35 + 0.65 * p.r)
+                        ctx.fill(Path(ellipseIn: CGRect(x: pt.x - p.s / 2, y: pt.y - p.s / 2, width: p.s, height: p.s)), with: .color(tint.opacity(alpha)))
+                    }
+                }
+                center()
+            }
+        }
+        .frame(width: size, height: size)
+        .accessibilityElement(children: .combine)
+    }
+}
+#endif
+
+#if os(iOS)
+/// The pace dial: a ruler from -1.0x to 3.0x with the reading marked, Slow on the left and Fast on the right, 1.0x labelled
+/// in the middle of the useful range. With no reading it shows the empty ruler.
+struct NunaPaceDial: View {
+    let value: Double?
+    private let lo = PaceOfAging.range.lowerBound, hi = PaceOfAging.range.upperBound
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack {
+                Text("Slow").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Spacer()
+                Text("Fast").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            }
+            GeometryReader { geo in
+                let w = geo.size.width
+                let x: (Double) -> CGFloat = { CGFloat(($0 - lo) / (hi - lo)) * w }
+                ZStack(alignment: .topLeading) {
+                    Canvas { ctx, size in
+                        let ticks = 80
+                        for i in 0...ticks {
+                            let v = lo + (hi - lo) * Double(i) / Double(ticks)
+                            let major = i % 20 == 0
+                            let h: CGFloat = major ? 34 : (i % 5 == 0 ? 26 : 20)
+                            let px = x(v)
+                            var p = Path(); p.move(to: CGPoint(x: px, y: size.height / 2 - h / 2)); p.addLine(to: CGPoint(x: px, y: size.height / 2 + h / 2))
+                            ctx.stroke(p, with: .color(NunaPalette.ink.opacity(major ? 0.55 : 0.28)), lineWidth: major ? 2 : 1.2)
+                        }
+                    }
+                    if let value {
+                        let px = min(max(x(value), 2), w - 2)
+                        RoundedRectangle(cornerRadius: 2).fill(NunaPalette.textPrimary).frame(width: 4, height: 46).position(x: px, y: 22)
+                    }
+                }
+            }
+            .frame(height: 44)
+            HStack {
+                Text(verbatim: "-1.0x"); Spacer(); Text(verbatim: "1.0x"); Spacer(); Text(verbatim: "3.0x")
+            }
+            .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(verbatim: value.map { String(format: "%.1fx", $0) } ?? "–"))
     }
 }
 #endif
