@@ -98,7 +98,7 @@ struct NunaAnyaSheet: View {
                 }
                 if coach.isConfigured, coach.dataConsent, explanation == nil, !explaining {
                     Button { Task { await explain() } } label: {
-                        HStack(spacing: 6) { Image(systemName: "sparkles").font(.nuna(size: 12, weight: .bold)); Text("Explain with \(coach.provider.nunaIsOnDevice ? String(localized: "Apple Intelligence") : coach.provider.displayName)") }
+                        HStack(spacing: 6) { Image(systemName: "sparkles").font(.nuna(size: 12, weight: .bold)); Text("Ask Anya to explain") }
                             .font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 40).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain)
                 }

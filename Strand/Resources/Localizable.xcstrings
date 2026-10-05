@@ -1,6 +1,15 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Ask Anya to explain": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Jelaskan dunk, Anya"}}
+    } },
+    "On this iPhone": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Di iPhone ini"}}
+    } },
+    "On, only when you ask": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Aktif, hanya saat kamu bertanya"}}
+    } },
     "Typed": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Diketik"}}
     } },

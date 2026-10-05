@@ -324,7 +324,7 @@ struct NunaPrivacyView: View {
             }
             NunaSettingsGroup("What can leave the iPhone") {
                 NavigationLink(value: NunaAnyaRoute.settings) {
-                    NunaListRow("Text summary to an AI provider", subtitle: LocalizedStringKey(coach.isConfigured && coach.dataConsent ? String(localized: "On, to \(coach.provider.displayName)") : String(localized: "Off. Only after you allow Anya and ask")), systemImage: "sparkles", showsChevron: true)
+                    NunaListRow("Text summary to an AI provider", subtitle: LocalizedStringKey(coach.isConfigured && coach.dataConsent ? String(localized: "On, only when you ask") : String(localized: "Off. Only after you allow Anya and ask")), systemImage: "sparkles", showsChevron: true)
                 }.buttonStyle(.plain)
                 NunaDivider()
                 NavigationLink(value: NunaMeRoute.backup) { NunaListRow("Export and backup", subtitle: "Only when you ask for it", systemImage: "square.and.arrow.up", showsChevron: true) }.buttonStyle(.plain)
