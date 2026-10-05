@@ -318,10 +318,11 @@ public struct NunaAddCard: View {
 
 public struct NunaTabItem: Identifiable, Hashable {
     public let id: Int
-    public let title: LocalizedStringKey
+    /// The tab's name, always in English, so the tabs keep one width and the icons one size in every language.
+    public let title: String
     public let systemImage: String
     public let usesAssetImage: Bool
-    public init(id: Int, title: LocalizedStringKey, systemImage: String, usesAssetImage: Bool = false) {
+    public init(id: Int, title: String, systemImage: String, usesAssetImage: Bool = false) {
         self.id = id; self.title = title; self.systemImage = systemImage; self.usesAssetImage = usesAssetImage
     }
     public static func == (l: NunaTabItem, r: NunaTabItem) -> Bool { l.id == r.id }
@@ -345,17 +346,20 @@ public struct NunaTabBar: View {
                 Button {
                     if on { onReselect(item.id) } else { selection = item.id }
                 } label: {
-                    VStack(spacing: 3) {
-                        if item.systemImage == NunaGlyph.anya {
-                            NunaGlyph(NunaGlyph.anya, pointSize: 17)
-                        } else if item.usesAssetImage {
-                            Image(item.systemImage)
-                                .resizable().scaledToFit().frame(width: 22, height: 22)
-                        } else {
-                            Image(systemName: item.systemImage).font(.nuna(size: 18, weight: .semibold))
+                    VStack(spacing: 4) {
+                        // Every icon sits in the same box, so they line up whatever they are drawn with.
+                        Group {
+                            if item.systemImage == NunaGlyph.anya {
+                                NunaGlyph(NunaGlyph.anya, pointSize: 20)
+                            } else if item.usesAssetImage {
+                                Image(item.systemImage).resizable().scaledToFit().frame(width: 26, height: 26)
+                            } else {
+                                Image(systemName: item.systemImage).font(.nuna(size: 22, weight: .semibold))
+                            }
                         }
+                        .frame(width: 32, height: 28)
                         // WHP sets the label in capitals, so it is a size smaller and never wider than its tab: the icon always stays.
-                        Text(item.title).font(.nuna(size: NunaThemePrefs.skin == .whp ? 9.5 : 11, weight: .bold)).lineLimit(1)
+                        Text(verbatim: item.title).font(.nuna(size: NunaThemePrefs.skin == .whp ? 9.5 : 11, weight: .bold)).lineLimit(1)
                             .minimumScaleFactor(0.6).tracking(NunaThemePrefs.skin == .whp ? -0.2 : 0).allowsTightening(true)
                     }
                     .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)

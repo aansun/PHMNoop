@@ -48,13 +48,9 @@ struct NunaHealthView: View {
     var body: some View {
         ScrollView {
             VStack(spacing: NunaSpacing.section) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Health").font(.nuna(size: NunaTypeSize.h1, weight: .bold, design: NunaType.design))
-                        .foregroundStyle(NunaPalette.textPrimary)
-                    Text(verbatim: "WHOOP · Apple Health").font(.nuna(size: 13, weight: .semibold))
-                        .foregroundStyle(NunaPalette.textSecondary)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                Text("Health").font(.nuna(size: NunaTypeSize.h1, weight: .bold, design: NunaType.design))
+                    .foregroundStyle(NunaPalette.textPrimary)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 NunaSegmented([(value: 0, title: "All"), (value: 1, title: "Vital"), (value: 2, title: "Body"), (value: 3, title: "Sleep")],
                               selection: $tab)
                 switch tab {
