@@ -16,6 +16,7 @@ extension View {
             case .loadCardio: NunaTrainingLoadView(tab: 1)
             case .loadMuscle: NunaTrainingLoadView(tab: 2)
             case .autoDetect: NunaAutoDetectView()
+            case .settings: NunaWorkoutSettingsView()
             case .gym: NunaGymView()
             case .program(let id): NunaProgramEditor(programId: id)
             case .programImport: NunaProgramImportView()
@@ -71,7 +72,6 @@ struct NunaWorkoutsView: View {
                     anyaCard
                     loadCard
                     calendarCard
-                    autoDetectRow
                 }
             }
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 60)
@@ -101,6 +101,7 @@ struct NunaWorkoutsView: View {
             Text("Workouts").font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             Spacer()
             roundLink(.history, "line.3.horizontal.decrease", "All sessions")
+            roundLink(.settings, "slider.horizontal.3", "Workout settings")
         }
     }
 
@@ -280,16 +281,6 @@ struct NunaWorkoutsView: View {
                 }
             }
         }
-    }
-
-    private var autoDetectRow: some View {
-        NavigationLink(value: NunaWorkoutRoute.autoDetect) {
-            NunaCard(small: true) {
-                NunaListRow("Auto-detect", subtitle: "Suggests when your heart rate stays up", systemImage: "sparkles") {
-                    NunaChip(autoDetect ? "On" : "Off", color: autoDetect ? NunaPalette.charge : nil)
-                }
-            }
-        }.buttonStyle(.plain)
     }
 
     // MARK: Start

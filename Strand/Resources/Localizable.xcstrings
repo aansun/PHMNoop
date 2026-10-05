@@ -1,6 +1,21 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Workout settings": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pengaturan latihan"}}
+    } },
+    "Detection": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Deteksi"}}
+    } },
+    "How detection works": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Cara kerja deteksi"}}
+    } },
+    "Rules, thresholds and the latest suggestion": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Aturan, ambang batas, dan saran terbaru"}}
+    } },
+    "These are the same settings as in Me. Detection only suggests a workout; you decide whether to save it.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ini pengaturan yang sama dengan di Saya. Deteksi hanya menyarankan latihan; kamu yang memutuskan menyimpannya."}}
+    } },
     "Light sleep": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Ringan"}}
     } },

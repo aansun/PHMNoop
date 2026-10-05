@@ -17,6 +17,7 @@ enum NunaWorkoutRoute: Hashable {
     case history, calendar
     case load, loadCardio, loadMuscle
     case autoDetect
+    case settings
     case gym
     case program(String)
     case programImport
