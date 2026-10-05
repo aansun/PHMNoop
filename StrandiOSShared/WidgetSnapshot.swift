@@ -227,20 +227,9 @@ public struct WidgetSnapshot: Codable, Equatable {
                "App Group '\(suiteName)' not provisioned on this target — check the entitlement.")
     }
 
-    public static var placeholder: WidgetSnapshot {
-        // Gallery / pre-publish stand-in: realistic Charge · Effort · Rest on the 0–100 axis so the
-        // three-ring Home Screen layouts (and the large grid) preview with filled arcs, not dashes.
-        WidgetSnapshot(recovery: 72, bpm: 58, batteryPct: 84, bonded: true, updated: Date(),
-                       effort: 38, rest: 81, hrv: 64, restingHr: 52,
-                       effortDisplay: "38", effortWhoop: false, steps: 7_412,
-                       caloriesKcal: 1_086, workoutsToday: 2,
-                       vitals: [WidgetVital(key: "hrv", value: 64, delta: 4, deltaBasis: "average", position: 0.58),
-                                WidgetVital(key: "rhr", value: 52, delta: -2, deltaBasis: "previous", position: 0.45),
-                                WidgetVital(key: "spo2", value: 97, position: 0.62),
-                                WidgetVital(key: "resp", value: 14.8, position: 0.5),
-                                WidgetVital(key: "skin", value: 0.2, position: 0.55)],
-                       stepGoal: 10_000)
-    }
+    /// What the widget gallery and the loading state draw: the numbers the app last published, or an empty snapshot before the first
+    /// publish. Never sample figures, so a widget on the Home Screen cannot show a value that is not the wearer's.
+    public static var placeholder: WidgetSnapshot { load() ?? unavailable }
 
     /// Honest runtime state when the app has not published a readable snapshot yet. Unlike
     /// `placeholder`, this is user-visible and must never imply that sample data is real.

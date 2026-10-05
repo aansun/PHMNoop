@@ -22,9 +22,10 @@ struct NunaAnyaProvider: TimelineProvider {
     }
 
     func placeholder(in context: Context) -> NunaAnyaEntry {
-        NunaAnyaEntry(date: Date(), text: "Charge 78%. A light 30 minute run suits today.", written: Date())
+        let d = UserDefaults(suiteName: WidgetSnapshot.suiteName)
+        return NunaAnyaEntry(date: Date(), text: d?.string(forKey: Self.textKey), written: d?.object(forKey: Self.dateKey) as? Date)
     }
-    func getSnapshot(in context: Context, completion: @escaping (NunaAnyaEntry) -> Void) { completion(context.isPreview ? placeholder(in: context) : load()) }
+    func getSnapshot(in context: Context, completion: @escaping (NunaAnyaEntry) -> Void) { completion(load()) }
     func getTimeline(in context: Context, completion: @escaping (Timeline<NunaAnyaEntry>) -> Void) {
         completion(Timeline(entries: [load()], policy: .after(Date().addingTimeInterval(1800))))
     }
