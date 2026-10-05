@@ -1519,7 +1519,7 @@ private struct BXSegmented<T: Hashable>: View {
                 }
             }
             .padding(3)
-            .background(NunaPalette.shade.opacity(0.28), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+            .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
         } else {
             SegmentedPillControl(items, selection: $selection, label: label)

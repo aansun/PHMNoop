@@ -97,7 +97,7 @@ public struct NunaFAB: View {
                 .foregroundStyle(NunaPalette.onAccent)
                 .frame(width: 44, height: 44)
                 .background(NunaPalette.accent.opacity(0.82), in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
-                .shadow(color: NunaPalette.shade.opacity(0.28), radius: 8, y: 4)
+                .shadow(color: NunaPalette.field, radius: 8, y: 4)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)

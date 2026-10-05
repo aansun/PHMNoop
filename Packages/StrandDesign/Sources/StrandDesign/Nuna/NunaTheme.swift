@@ -26,6 +26,9 @@ public enum NunaPalette {
     public static var canvas: Color { skinned(light: "#E9ECEF", dark: "#000000", whp: "#0F1519") }
     public static var card: Color { skinned(light: "#FFFFFF", dark: "#121214", whp: "#1B242B") }
     public static var cardHighlight: Color { skinned(light: "#E9EEF2", dark: "#1B1B1F", whp: "#25313A") }
+    /// The well of a text field or a segmented control: a dark inset on the dark themes, a soft light grey on the light one (a dark
+    /// inset on a light card would make the text in it hard to read).
+    public static var field: Color { skinned(light: "#F1F3F5", dark: "#00000047", whp: "#0000004D") }
     public static var glass: Color { skinned(light: "#0A0D100D", dark: "#FFFFFF0D", whp: "#FFFFFF0D") }
     public static var glassStrong: Color { skinned(light: "#0A0D1014", dark: "#FFFFFF17", whp: "#FFFFFF17") }
     // Lines are opaque tones a step off the card colour, so a card edge reads as part of the card instead of a drawn outline.

@@ -69,7 +69,7 @@ struct NunaSportPicker: View {
                     }
                 }
                 .padding(.horizontal, 16).frame(height: 48)
-                .background(NunaPalette.shade.opacity(0.28), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
                 if showCustom {
                     Button { pick(trimmed) } label: {

@@ -431,7 +431,7 @@ struct NunaAnyaView: View {
                         }.buttonStyle(.plain).accessibilityLabel(Text("Send")).padding(.trailing, 5)
                     }
                 }
-                .frame(minHeight: 48).background(NunaPalette.shade.opacity(0.28), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)).overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                .frame(minHeight: 48).background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)).overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
             }
         }
         .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8)

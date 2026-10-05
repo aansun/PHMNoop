@@ -139,7 +139,7 @@ struct NunaWorkoutStartView: View {
                             ForEach(1...5, id: \.self) { n in
                                 Button { withAnimation(.easeOut(duration: 0.18)) { goal.zone = n } } label: {
                                     RoundedRectangle(cornerRadius: n == 1 || n == 5 ? 12 : 4, style: .continuous)
-                                        .fill(Self.zoneColors[n - 1].opacity(n == z ? 1 : 0.45)).frame(height: 26)
+                                        .fill(Self.zoneColors[n - 1].opacity(n == z ? 1 : 0.6)).frame(height: 26)
                                         .padding(.vertical, 6).contentShape(Rectangle())
                                 }
                                 .buttonStyle(.plain).frame(width: seg)
