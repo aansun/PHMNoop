@@ -240,6 +240,7 @@ struct NunaSegmentedChart: View {
                 )
                 .typicalRange(band)
                 .withoutPoints()
+                .axisLine()
                 .line(width: 1.2, opacity: 0.6)
                 .segmentAverages(segments(bs))
                 .perReadingAxis(bs.map(\.start))

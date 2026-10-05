@@ -119,6 +119,9 @@ public struct TrendChart: View {
     public var xAxisDates: [Date]?
     /// Leaves out the per-reading dots (the average marks carry the reading instead).
     public var hidesPoints = false
+    /// Draws a solid line along the bottom of the plot, with a small tick under each labelled date, so the chart area is
+    /// plainly bounded above the x-axis labels.
+    public var showsAxisLine = false
     public var lineWidth: CGFloat = 2.5
     public var lineOpacity: Double = 1
     /// Horizontal average marks over consecutive stretches of a long window, each labelled with its value and the move
@@ -360,6 +363,9 @@ public struct TrendChart: View {
     @AxisMarkBuilder
     private func xAxisMark(_ value: AxisValue) -> some AxisMark {
         AxisGridLine().foregroundStyle(StrandPalette.hairline.opacity(0.4))
+        if showsAxisLine {
+            AxisTick(length: 5, stroke: StrokeStyle(lineWidth: 1)).foregroundStyle(StrandPalette.hairline)
+        }
         if let xAxisDateFormat, let date = value.as(Date.self) {
             AxisValueLabel(centered: false, anchor: .top, collisionResolution: xAxisDates != nil ? .disabled : .greedy) {
                 Text(xAxisDateFormat(date))
@@ -395,6 +401,11 @@ public struct TrendChart: View {
             .foregroundStyle(StrandPalette.textPrimary)
         }
         Chart {
+            if showsAxisLine {
+                RuleMark(y: .value("Axis", plotYDomain.lowerBound))
+                    .lineStyle(StrokeStyle(lineWidth: 2))
+                    .foregroundStyle(StrandPalette.hairline)
+            }
             if let band = typicalRange {
                 RectangleMark(yStart: .value("Typical low", band.lowerBound), yEnd: .value("Typical high", band.upperBound))
                     .foregroundStyle(StrandPalette.textSecondary.opacity(0.14))
@@ -870,6 +881,12 @@ public extension TrendChart {
     func withoutPoints(_ on: Bool = true) -> TrendChart {
         var copy = self
         copy.hidesPoints = on
+        return copy
+    }
+
+    func axisLine(_ on: Bool = true) -> TrendChart {
+        var copy = self
+        copy.showsAxisLine = on
         return copy
     }
 }
