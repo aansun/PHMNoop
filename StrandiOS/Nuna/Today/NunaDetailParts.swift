@@ -463,6 +463,7 @@ struct NunaLine2Chart: View {
                 xAxisDateFormat: { TrendChart.line2AxisDateString($0) }
             )
             .pointValueStride(max(1, Int((Double(vals.count) / 12).rounded(.up))))
+            .reservingAxisBand()
         } else {
             Text(vals.count == 1 ? "Not enough data yet" : "No data in this period")
                 .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)

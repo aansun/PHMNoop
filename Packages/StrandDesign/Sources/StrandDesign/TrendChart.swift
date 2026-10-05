@@ -89,6 +89,8 @@ public struct TrendChart: View {
     public var showsPointValues: Bool
     /// Label every Nth point (the newest is always labelled) so dense Line2 charts stay readable. 1 = every point.
     public var pointValueStride: Int = 1
+    /// Keeps the date labels in a band of their own under the plot, so a filled area cannot run behind them.
+    public var reservesAxisBand: Bool = false
     public var yAxisStep: Double?
     /// Use compact suffixes for large axis values, e.g. 5K and 1.2M.
     public var usesCompactYAxis: Bool
@@ -442,7 +444,7 @@ public struct TrendChart: View {
             // Steps-specific because the same collision appears in every historical chart.
             // Line charts get their lower separation from plotYDomain; only bars need an
             // inset here because their truthful baseline remains at zero.
-            let axisBottomPadding: CGFloat = xAxisDateFormat == nil ? 8 : (showsBars ? 28 : 0)
+            let axisBottomPadding: CGFloat = xAxisDateFormat == nil ? 8 : ((showsBars || reservesAxisBand) ? 28 : 0)
             if showsBarValues {
                 plotArea.padding(.top, 18).padding(.bottom, axisBottomPadding).clipped()
             } else if showsPointValues {
@@ -742,6 +744,12 @@ private func sampleTrend(days: Int, base: Double, swing: Double) -> [TrendPoint]
 
 public extension TrendChart {
     /// Label only every Nth point on a Line2 chart (see `pointValueStride`).
+    func reservingAxisBand(_ on: Bool = true) -> TrendChart {
+        var copy = self
+        copy.reservesAxisBand = on
+        return copy
+    }
+
     func pointValueStride(_ stride: Int) -> TrendChart {
         var copy = self
         copy.pointValueStride = stride
