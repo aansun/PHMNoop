@@ -6,30 +6,63 @@ import StrandDesign
 /// stepper at the top right, a sentence about the period, the chart, and the average, lowest and highest as plain text.
 /// Every figure is computed from the stored readings of the window the wearer is looking at.
 struct NunaTrendDetailCard: View {
-    let title: String
     let caption: LocalizedStringKey
-    let valueText: String
+    /// The big figure. Nil with `averageHero` shows the average of the window instead (the Trends screens).
+    var valueText: String?
     var unit = ""
     var chip: (text: LocalizedStringKey, color: Color)?
     var note: String?
-    @ObservedObject var series: NunaSeriesModel
+    /// Readings of `days` days ending `endingDaysAgo` days before today, oldest first.
+    let readings: (_ days: Int, _ endingDaysAgo: Int) -> [(date: Date, value: Double)]
+    /// Whether anything older than this date is stored, so the back arrow knows when to stop.
+    let hasOlder: (_ windowStart: Date) -> Bool
+    var loaded = true
+    var band: ClosedRange<Double>?
+    var reference: Double?
     var lineColor: Color = NunaPalette.charge
     var decimals = 0
     var higherIsBetter = true
-
-    @State private var range = 7
-    @State private var page = 0
+    var directional = true
+    var averageHero = false
+    var levelChip: ((Double) -> (text: LocalizedStringKey, color: Color)?)?
+    /// Replaces the generic sentence about the period (average and the average before it).
+    var sentence: ((_ avg: Double?, _ prev: Double?) -> String?)?
+    @Binding var range: Int
+    @Binding var page: Int
 
     private static let ranges: [(value: Int, title: String)] = [(7, "W"), (30, "M"), (180, "6M")]
+
+    /// The card for a single stored series (`NunaSeriesModel`).
+    init(caption: LocalizedStringKey, valueText: String?, unit: String = "", chip: (text: LocalizedStringKey, color: Color)? = nil, note: String? = nil,
+         series: NunaSeriesModel, showsBand: Bool = true, reference: Double? = nil, lineColor: Color = NunaPalette.charge, decimals: Int = 0,
+         higherIsBetter: Bool = true, directional: Bool = true, range: Binding<Int>, page: Binding<Int>) {
+        self.caption = caption; self.valueText = valueText; self.unit = unit; self.chip = chip; self.note = note
+        self.readings = { series.readings($0, endingDaysAgo: $1) }
+        self.hasOlder = { start in series.byDay.keys.min().map { Repository.localDayKey(start) > $0 } ?? false }
+        self.loaded = series.loaded
+        self.band = showsBand ? series.band.map { $0.lo...$0.hi } : nil
+        self.reference = reference; self.lineColor = lineColor; self.decimals = decimals
+        self.higherIsBetter = higherIsBetter; self.directional = directional
+        self._range = range; self._page = page
+    }
+
+    /// The card for the Trends screens, which hold their own daily series.
+    init(caption: LocalizedStringKey, unit: String = "", readings: @escaping (Int, Int) -> [(date: Date, value: Double)],
+         hasOlder: @escaping (Date) -> Bool, lineColor: Color, decimals: Int, directional: Bool,
+         levelChip: ((Double) -> (text: LocalizedStringKey, color: Color)?)?, sentence: ((Double?, Double?) -> String?)?,
+         range: Binding<Int>, page: Binding<Int>) {
+        self.caption = caption; self.valueText = nil; self.unit = unit
+        self.readings = readings; self.hasOlder = hasOlder
+        self.lineColor = lineColor; self.decimals = decimals; self.directional = directional
+        self.averageHero = true; self.levelChip = levelChip; self.sentence = sentence
+        self._range = range; self._page = page
+    }
 
     private func fmt(_ v: Double) -> String { String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, v) }
 
     private var windowEnd: Date { Calendar.current.date(byAdding: .day, value: -page * range, to: Date()) ?? Date() }
     private var windowStart: Date { Calendar.current.date(byAdding: .day, value: -(range - 1), to: windowEnd) ?? windowEnd }
-    private var canGoBack: Bool {
-        guard let first = series.byDay.keys.min() else { return false }
-        return Repository.localDayKey(windowStart) > first
-    }
+    private var canGoBack: Bool { hasOlder(windowStart) }
 
     private var dateLabel: String {
         let a = DateFormatter(); a.locale = AppLanguage.activeLocale; a.setLocalizedDateFormatFromTemplate("d MMM")
@@ -40,24 +73,25 @@ struct NunaTrendDetailCard: View {
     private func average(_ v: [Double]) -> Double? { v.isEmpty ? nil : v.reduce(0, +) / Double(v.count) }
 
     var body: some View {
-        let pts = series.readings(range, endingDaysAgo: page * range)
+        let pts = readings(range, page * range)
         let vals = pts.map(\.value)
-        let prev = average(series.readings(range, endingDaysAgo: (page + 1) * range).map(\.value))
+        let avg = average(vals)
+        let prev = average(readings(range, (page + 1) * range).map(\.value))
         NunaCard {
             VStack(alignment: .leading, spacing: 14) {
-                header
-                if let s = summary(avg: average(vals), prev: prev) {
+                header(avg: avg, prev: prev)
+                if let s = (sentence?(avg, prev)) ?? summary(avg: avg, prev: prev) {
                     Text(verbatim: s).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 if pts.isEmpty {
-                    Text(series.loaded ? "No data in this period" : " ").font(.nuna(size: 14, weight: .semibold))
+                    Text(loaded ? "No data in this period" : " ").font(.nuna(size: 14, weight: .semibold))
                         .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 160)
                 } else {
-                    NunaSegmentedChart(points: pts, color: lineColor, decimals: decimals,
-                                       band: series.band.map { $0.lo...$0.hi }, higherIsBetter: higherIsBetter)
+                    NunaSegmentedChart(points: pts, color: lineColor, decimals: decimals, band: band, reference: reference,
+                                       higherIsBetter: higherIsBetter, directional: directional)
                 }
-                if let avg = average(vals), let lo = vals.min(), let hi = vals.max() {
+                if let avg, let lo = vals.min(), let hi = vals.max() {
                     NunaDivider()
                     HStack(alignment: .top, spacing: 0) {
                         stat("Average", fmt(avg)); stat("Lowest", fmt(lo)); stat("Highest", fmt(hi))
@@ -67,21 +101,24 @@ struct NunaTrendDetailCard: View {
         }
     }
 
-    private var header: some View {
-        HStack(alignment: .top, spacing: 12) {
+    private func header(avg: Double?, prev: Double?) -> some View {
+        let shownValue: String = averageHero ? (avg.map(fmt) ?? "–") : (valueText ?? "–")
+        let shownChip: (text: LocalizedStringKey, color: Color)? = averageHero ? avg.flatMap { levelChip?($0) } : chip
+        let shownNote: String? = averageHero ? prev.map { String(localized: "Previous period \(fmt($0))\(unit)") } : note
+        return HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
                 Text(caption).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textSecondary)
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(verbatim: valueText).font(.nuna(size: 44, weight: .bold, design: NunaType.design))
+                    Text(verbatim: shownValue).font(.nuna(size: 44, weight: .bold, design: NunaType.design))
                         .tracking(nunaTrackingNumber(44)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
                     if !unit.isEmpty {
                         Text(verbatim: unit).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                 }
-                if let chip { NunaChip(chip.text, color: chip.color) }
-                if let note {
-                    Text(verbatim: note).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                if let shownChip { NunaChip(shownChip.text, color: shownChip.color) }
+                if let shownNote {
+                    Text(verbatim: shownNote).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -153,6 +190,8 @@ struct NunaSegmentedChart: View {
     var color: Color = NunaPalette.charge
     var decimals = 0
     var band: ClosedRange<Double>?
+    /// A dashed reference line (a weight target).
+    var reference: Double?
     var higherIsBetter = true
     /// Colour the moves green or amber by which way is better; false draws them in the plain text colour (Effort).
     var directional = true
@@ -177,12 +216,15 @@ struct NunaSegmentedChart: View {
         }
         let groups: [[(date: Date, value: Double)]]
         let minCount: Int
+        // A series with fewer than a reading every other day (weight) keeps every stretch that has a reading; a dense one
+        // leaves out a stretch with only a few days in it, which would be a cramped mark at the edge.
+        let sparse = Double(points.count) < max(days, 1) / 2
         if days <= 40 {
-            minCount = 3
+            minCount = sparse ? 1 : 3
             let byWeek = Dictionary(grouping: points) { Int((last.timeIntervalSince($0.date) / 86400 / 7).rounded(.down)) }
             groups = byWeek.keys.sorted(by: >).map { byWeek[$0]!.sorted { $0.date < $1.date } }
         } else {
-            minCount = 7
+            minCount = sparse ? 1 : 7
             let byMonth = Dictionary(grouping: points) { cal.dateComponents([.year, .month], from: $0.date) }
             groups = byMonth.values.map { $0.sorted { $0.date < $1.date } }.sorted { ($0.first?.date ?? .distantPast) < ($1.first?.date ?? .distantPast) }
         }
@@ -202,7 +244,7 @@ struct NunaSegmentedChart: View {
             // With many stretches (a year) the percentages would run into each other, so only the averages are written.
             if buckets.count <= 8, let p = prev, p != 0 {
                 let pct = (avg - p) / abs(p) * 100
-                delta = String(format: "%+.0f%%", locale: AppLanguage.activeLocale, pct)
+                delta = pct.rounded() == 0 ? "0%" : String(format: "%+.0f%%", locale: AppLanguage.activeLocale, pct)
                 if directional { deltaColor = (pct >= 0) == higherIsBetter ? NunaPalette.charge : NunaPalette.warning }
             }
             // A single-day stretch is drawn as a short mark centred on its day.
@@ -233,9 +275,10 @@ struct NunaSegmentedChart: View {
                 TrendChart(
                     points: points.map { TrendPoint(date: $0.date, value: $0.value) },
                     gradient: Gradient(colors: [color, color]),
-                    valueRange: (floor - pad * 0.6)...(ceil + pad * 1.6),
+                    valueRange: (min(floor, reference ?? floor) - pad * 0.6)...(max(ceil, reference ?? ceil) + pad * 1.6),
                     showsArea: false,
                     showsPointValues: false,
+                    baselineValue: reference,
                     height: height,
                     valueFormat: { format($0) },
                     dateFormat: { TrendChart.defaultDateString($0) },

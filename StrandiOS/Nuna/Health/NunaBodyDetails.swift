@@ -92,42 +92,32 @@ struct NunaWeightView: View {
     @StateObject private var fatS = NunaSeriesModel()
     @StateObject private var leanS = NunaSeriesModel()
     @AppStorage("nuna.weightTarget") private var target = 0.0
-    @State private var range = 90
+    @State private var range = 30
+    @State private var page = 0
     @State private var showAdd = false
     @State private var showTarget = false
 
     private var latest: Double? { weightS.latest?.value ?? (profile.weightKg > 0 ? profile.weightKg : nil) }
 
+    /// "Target 70,0 kg · 5,9 kg to go".
+    private var targetNote: String? {
+        guard target > 0, let latest else { return nil }
+        let left = abs(latest - target)
+        return left < 0.05 ? String(localized: "Target \(nbFmt(target, 1)) kg · reached")
+            : String(localized: "Target \(nbFmt(target, 1)) kg · \(nbFmt(left, 1)) kg to go")
+    }
+
     var body: some View {
-        let pts = weightS.readings(range)
+        let pts = weightS.readings(range, endingDaysAgo: page * range)
         let delta: Double? = pts.count >= 2 ? pts.last!.value - pts.first!.value : nil
         let bmi: Double? = (latest != nil && profile.heightCm > 0) ? latest! / pow(profile.heightCm / 100, 2) : nil
         NunaDetailScreen("Weight") {
-            NunaCard {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        nunaCap("Latest")
-                        Spacer()
-                        if let delta {
-                            NunaChip(verbatim: (delta <= 0 ? "−" : "+") + nbFmt(abs(delta), 1) + " kg / " + String(localized: "\(range) days"))
-                        }
-                    }
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(verbatim: nbFmt(latest, 1)).font(.nuna(size: 68, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(68)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("kg").font(.nuna(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                    }
-                    if target > 0, let latest {
-                        let left = abs(latest - target)
-                        Text(verbatim: left < 0.05 ? String(localized: "Target \(nbFmt(target, 1)) kg · reached")
-                             : String(localized: "Target \(nbFmt(target, 1)) kg · \(nbFmt(left, 1)) kg to go"))
-                            .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                    }
-                }
-            }
-            NunaSegmented([(value: 30, title: "30D"), (value: 90, title: "90D"), (value: 365, title: "1Y")], selection: $range)
-            NunaCard {
-                NunaLine2Chart(points: pts, color: NunaPalette.charge, decimals: 1, baseline: target > 0 ? target : nil, height: 190)
-            }
+            NunaTrendDetailCard(
+                caption: "Latest", valueText: nbFmt(latest, 1), unit: "kg",
+                chip: delta.map { d in (text: LocalizedStringKey((d <= 0 ? "−" : "+") + nbFmt(abs(d), 1) + " kg"), color: NunaPalette.textPrimary) },
+                note: targetNote,
+                series: weightS, showsBand: false, reference: target > 0 ? target : nil, lineColor: NunaPalette.charge, decimals: 1,
+                directional: false, range: $range, page: $page)
             HStack(spacing: 10) {
                 NunaStatTile(label: "Body fat", value: nbFmt(fatS.latest?.value, 1), unit: fatS.latest == nil ? "" : "%")
                 NunaStatTile(label: "Lean mass", value: nbFmt(leanS.latest?.value, 1), unit: leanS.latest == nil ? "" : "kg")
