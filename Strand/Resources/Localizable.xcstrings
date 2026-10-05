@@ -1,6 +1,75 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Live heart rate": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Detak jantung"}}
+    } },
+    "Searching GPS": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mencari sinyal GPS"}}
+    } },
+    "GPS on": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "GPS aktif"}}
+    } },
+    "No GPS": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tanpa GPS"}}
+    } },
+    "zone buzz on": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "getar zona aktif"}}
+    } },
+    "silent session": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "sesi senyap"}}
+    } },
+    "session time": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "waktu sesi"}}
+    } },
+    "of target %@": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "dari target %@"}}
+    } },
+    "Hide bpm": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sembunyikan bpm"}}
+    } },
+    "Show bpm": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tampilkan bpm"}}
+    } },
+    "Time in zone": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Waktu per zona"}}
+    } },
+    "Speed": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kecepatan"}}
+    } },
+    "Elevation": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Elevasi"}}
+    } },
+    "kcal": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "kkal"}}
+    } },
+    "spm": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "spm"}}
+    } },
+    "Hold steady. You are in Zone %lld, %lld – %lld bpm.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pertahankan. Kamu di Zona %1$lld, %2$lld – %3$lld bpm."}}
+    } },
+    "Pick up the pace a little. Target Zone %lld, %lld – %lld bpm.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Naikkan sedikit. Target Zona %1$lld, %2$lld – %3$lld bpm."}}
+    } },
+    "Ease off a little. Target Zone %lld, %lld – %lld bpm.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pelankan sedikit. Target Zona %1$lld, %2$lld – %3$lld bpm."}}
+    } },
+    "Slow down now. %lld bpm is too high.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Turunkan tempo sekarang. Detak %lld terlalu tinggi."}}
+    } },
+    "Strap: no buzz. Silence means on target.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Strap: tidak ada getar. Diam berarti sesuai target."}}
+    } },
+    "1 short buzz on the strap, repeats every 45 s until you are back.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "1 getar pendek di strap, ulang tiap 45 dtk bila belum turun."}}
+    } },
+    "Last buzz %@ ago · Session Effort %@": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Getar terakhir %1$@ lalu · Effort sesi %2$@"}}
+    } },
+    "Session Effort %@": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Effort sesi %@"}}
+    } },
     "Endurance": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Daya tahan"}}
     } },
@@ -68861,7 +68930,7 @@
           }
         }
       ,
-          "id": {"stringUnit": {"state": "translated", "value": "Distance"}}}
+          "id": {"stringUnit": {"state": "translated", "value": "Jarak"}}}
     },
     "Distance must be 0–1,000 km.": {
       "localizations": {
@@ -129276,6 +129345,7 @@
     },
     "Pause": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Jeda"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -223685,8 +223755,7 @@
           "de": {"stringUnit": {"state": "translated", "value": "keine eigene Zeit"}}, "es": {"stringUnit": {"state": "translated", "value": "sin hora propia"}}, "fr": {"stringUnit": {"state": "translated", "value": "pas d'heure propre"}}, "it": {"stringUnit": {"state": "translated", "value": "nessun orario proprio"}}, "pl": {"stringUnit": {"state": "translated", "value": "brak własnej godziny"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "sem hora própria"}}, "ru": {"stringUnit": {"state": "translated", "value": "без своего времени"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "没有单独时间"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "沒有單獨時間"}}
         } }
   ,
-    "Cadence": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Cadence"}}}},
-    "Pause": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pause"}}}},
+    "Cadence": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kadens"}}}},
     "Memory": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Memory"}}}},
     "Activity prompts": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Prompt aktivitas"}}}},
     "Audio coaching": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Audio coaching"}}}},

@@ -243,6 +243,9 @@ struct NunaLiveWorkoutView: View {
     @EnvironmentObject private var model: AppModel
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
     @AppStorage("workoutKeepScreenOn") private var keepScreenOn = false
+    @AppStorage("nuna.live.hideBpm") private var hideBpm = false
+    @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
+    @AppStorage(UnitPrefs.distanceSystemKey) private var distanceSystemRaw = ""
     @State private var confirmEnd = false
     @State private var goalHit = false
     @State private var lastBuzz = Date.distantPast
@@ -278,91 +281,340 @@ struct NunaLiveWorkoutView: View {
         }
     }
 
+    private static let zoneColors: [Color] = [NunaPalette.zoneBase, NunaPalette.charge, NunaPalette.effort, NunaPalette.warning, NunaPalette.alert]
+    private var distanceSystem: UnitSystem { UnitPrefs.resolveDistance(system: UnitSystem(rawValue: unitSystemRaw) ?? .metric, override: distanceSystemRaw) }
+
+    private enum ZoneState { case none, inZone, below, above, farAbove }
+
     private func content(_ w: AppModel.ActiveWorkout, now: Date) -> some View {
         let elapsed = w.elapsed(at: now)
         let bpm = model.bpm
         let zone = bpm.map { zoneSet.zoneNumber(forBPM: Double($0)) } ?? 0
         let gps = model.gpsRecorder
-        let colors: [Color] = [NunaPalette.zoneBase, NunaPalette.rest, NunaPalette.charge, NunaPalette.warning, NunaPalette.alert]
+        let state = zoneState(bpm: bpm, zone: zone)
+        let tone = tone(zone: zone, state: state)
+        let shownZone = zone > 0 ? zone : (goal.mode == .zone ? goal.zone : 0)
         return ScrollView {
-            VStack(spacing: NunaSpacing.section) {
-                HStack {
-                    NunaChip(w.isPaused ? "Paused" : "Recording", color: w.isPaused ? NunaPalette.warning : NunaPalette.charge)
-                    Spacer()
-                    Text(verbatim: WorkoutSource.displaySport(w.sport)).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                }
-                NunaCard {
-                    VStack(spacing: 8) {
-                        Text(verbatim: clock(elapsed)).font(.nuna(size: 64, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(64)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
-                        HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            Image(systemName: "heart.fill").foregroundStyle(NunaPalette.textPrimary)
-                            Text(verbatim: bpm.map(String.init) ?? "–").font(.nuna(size: 48, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(48)).foregroundStyle(NunaPalette.textPrimary)
-                            Text("bpm").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                        }
-                        if zone > 0 {
-                            HStack(spacing: 8) { Circle().fill(colors[min(zone, 5) - 1]).frame(width: 10, height: 10); Text(verbatim: "Zone \(zone)").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary) }
-                        }
-                    }.frame(maxWidth: .infinity)
-                }
-                goalCard(elapsed: elapsed, zone: zone, bpm: bpm, distance: gps.distanceM)
-                HStack(spacing: 12) {
-                    NunaStatTile(label: "Effort", value: UnitFormatter.effortDisplay(w.liveStrain, scale: scale))
-                    NunaStatTile(label: "Avg HR", value: w.avgHr > 0 ? "\(w.avgHr)" : "–", unit: w.avgHr > 0 ? "bpm" : "")
-                    NunaStatTile(label: "Peak", value: w.peakHr > 0 ? "\(w.peakHr)" : "–", unit: w.peakHr > 0 ? "bpm" : "")
-                }
-                if gps.isRecording, gps.distanceM > 0 {
-                    HStack(spacing: 12) {
-                        NunaStatTile(label: "Distance", value: String(format: "%.2f", locale: AppLanguage.activeLocale, gps.distanceM / 1000), unit: "km")
-                        NunaStatTile(label: "Pace", value: gps.paceSecPerKm.map { String(format: "%d:%02d", Int($0) / 60, Int($0) % 60) } ?? "–", unit: "/km")
-                    }
-                }
-                HStack(spacing: 12) {
-                    Button { model.toggleWorkoutPause() } label: {
-                        Text(w.isPaused ? "Resume" : "Pause").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            .frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                    }.buttonStyle(.plain)
-                    Button { confirmEnd = true } label: {
-                        Text("End").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                            .frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.alertText, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                    }.buttonStyle(.plain)
-                }
-                Button(action: onClose) { Text("Minimise").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }.buttonStyle(.plain)
+            VStack(spacing: 14) {
+                header(w, shownZone: shownZone, color: zone > 0 ? Self.zoneColors[min(zone, 5) - 1] : NunaPalette.textSecondary)
+                ring(elapsed: elapsed, distance: gps.distanceM, state: state, zone: zone, color: tone)
+                heartCard(bpm: bpm, zone: zone, state: state, tone: tone)
+                if usesRoute(w) == false { zoneTimeCard(w) }
+                metricRow(w, elapsed: elapsed)
+                footnote(w, state: state, now: now)
+                controls(w)
             }
-            .padding(.horizontal, NunaSpacing.screenH).padding(.top, 20).padding(.bottom, 40)
+            .padding(.horizontal, NunaSpacing.screenH).padding(.top, 12).padding(.bottom, 32)
         }
         .scrollIndicators(.hidden)
         .onChange(of: Int(elapsed)) { _, _ in checkGoal(elapsed: elapsed, zone: zone, distance: gps.distanceM) }
     }
 
-    @ViewBuilder private func goalCard(elapsed: TimeInterval, zone: Int, bpm: Int?, distance: Double) -> some View {
+    // MARK: header + ring
+
+    private func header(_ w: AppModel.ActiveWorkout, shownZone: Int, color: Color) -> some View {
+        let gps = model.gpsRecorder
+        let gpsText = gps.isRecording ? (gps.pointCount == 0 ? String(localized: "Searching GPS") : String(localized: "GPS on")) : String(localized: "No GPS")
+        let buzzText = zoneBuzz ? String(localized: "zone buzz on") : String(localized: "silent session")
+        let title = String(localized: String.LocalizationValue(w.sport)) + (shownZone > 0 ? " · " + String(localized: "Zone \(shownZone)") : "")
+        return HStack(alignment: .center) {
+            Button(action: onClose) {
+                Image(systemName: "chevron.down").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+            }.buttonStyle(.plain).accessibilityLabel(Text("Minimise"))
+            Spacer(minLength: 8)
+            VStack(spacing: 2) {
+                Text(verbatim: title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(color).lineLimit(1)
+                Text(verbatim: gpsText + " · " + buzzText).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
+            }
+            Spacer(minLength: 8)
+            HStack(spacing: 6) {
+                Circle().fill(w.isPaused ? NunaPalette.warning : NunaPalette.alert).frame(width: 8, height: 8)
+                Text(w.isPaused ? "Paused" : "Recording").font(.nuna(size: 12.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            }
+            .padding(.horizontal, 12).frame(height: 30)
+            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+        }
+    }
+
+    private func ring(elapsed: TimeInterval, distance: Double, state: ZoneState, zone: Int, color: Color) -> some View {
+        var f = 1.0
+        var caption = String(localized: "session time")
         switch goal.mode {
-        case .free: EmptyView()
         case .time:
-            let f = elapsed / Double(goal.minutes * 60)
-            progress(String(localized: "Target \(goal.minutes) min"), f, String(localized: "\(max(0, goal.minutes - Int(elapsed / 60))) min left"))
+            f = elapsed / Double(max(goal.minutes, 1) * 60)
+            caption = String(localized: "of target \(String(format: "%d:00", goal.minutes))")
         case .distance:
-            progress(String(localized: "Target \(String(format: "%.1f", locale: AppLanguage.activeLocale, goal.km)) km"), distance / (goal.km * 1000),
-                     String(format: "%.2f km", locale: AppLanguage.activeLocale, distance / 1000))
-        case .zone:
-            NunaCard {
+            f = distance / (max(goal.km, 0.1) * 1000)
+            caption = String(localized: "of target \(String(format: "%.1f km", locale: AppLanguage.activeLocale, goal.km))")
+        default: break
+        }
+        f = min(max(f, 0), 1)
+        let chip: (String, Color)? = {
+            switch state {
+            case .inZone: return (String(localized: "In zone"), NunaPalette.charge)
+            case .below: return (String(localized: "Below zone"), NunaPalette.warning)
+            case .above, .farAbove: return (String(localized: "Above zone"), state == .farAbove ? NunaPalette.alert : NunaPalette.warning)
+            case .none: return zone > 0 ? (String(localized: "Zone \(zone)"), color) : nil
+            }
+        }()
+        return ZStack {
+            Circle().fill(color.opacity(0.10)).padding(16)
+            Circle().stroke(NunaPalette.glassStrong, lineWidth: 12)
+            Circle().trim(from: 0, to: max(f, 0.004)).stroke(color, style: StrokeStyle(lineWidth: 12, lineCap: .round)).rotationEffect(.degrees(-90))
+            VStack(spacing: 4) {
+                if let chip { NunaChip(verbatim: chip.0, color: chip.1) } else { Color.clear.frame(height: 30) }
+                Text(verbatim: clock(elapsed)).font(.nuna(size: 46, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(46)).monospacedDigit()
+                    .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.7).lineLimit(1)
+                Text(verbatim: caption).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            }.padding(.horizontal, 26)
+        }
+        .frame(width: 220, height: 220)
+        .animation(.easeOut(duration: 0.4), value: f)
+    }
+
+    // MARK: heart rate
+
+    private func heartCard(bpm: Int?, zone: Int, state: ZoneState, tone: Color) -> some View {
+        let zones = zoneSet.zones
+        let target = zone > 0 ? zone : (goal.mode == .zone ? goal.zone : 0)
+        let range = zones.first(where: { $0.number == target })
+        let lo = zones.first(where: { $0.number == 1 }).map { Int($0.lower.rounded()) }
+        let hi = zones.first(where: { $0.number == 5 }).map { Int($0.upper.rounded()) }
+        return NunaCard(padding: EdgeInsets(top: 14, leading: 18, bottom: 16, trailing: 18)) {
+            VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(verbatim: String(localized: "Target zone \(goal.zone)")).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        if let z = zoneSet.zones.first(where: { $0.number == goal.zone }) { Text(verbatim: "\(Int(z.lower.rounded()))–\(Int(z.upper.rounded())) bpm").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                    nunaTrendsCap("Live heart rate")
+                    Spacer()
+                    Button { withAnimation(.easeOut(duration: 0.15)) { hideBpm.toggle() } } label: {
+                        Text(hideBpm ? "Show bpm" : "Hide bpm").font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            .padding(.horizontal, 10).frame(height: 26)
+                            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
+                    }.buttonStyle(.plain)
+                }
+                HStack(alignment: .firstTextBaseline) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Image(systemName: "heart.fill").font(.system(size: 20, weight: .semibold)).foregroundStyle(NunaPalette.alert)
+                        Text(verbatim: hideBpm ? "•••" : (bpm.map(String.init) ?? "–")).font(.nuna(size: 44, weight: .bold, design: NunaType.design))
+                            .tracking(nunaTrackingNumber(44)).monospacedDigit().foregroundStyle(hideBpm ? NunaPalette.textPrimary : tone)
+                        Text("bpm").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     Spacer()
-                    NunaChip(zone == goal.zone ? "In zone" : (zone < goal.zone ? "Below zone" : "Above zone"), color: zone == goal.zone ? NunaPalette.charge : NunaPalette.warning)
+                    if zone > 0 { NunaChip(verbatim: String(localized: "Zone \(zone)"), color: Self.zoneColors[min(zone, 5) - 1]) }
+                }
+                zoneBar(bpm: bpm, zone: zone, tone: tone).padding(.top, 8)
+                ZStack {
+                    HStack {
+                        Text(verbatim: lo.map(String.init) ?? "").font(.nuna(size: 12, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary).monospacedDigit()
+                        Spacer()
+                        Text(verbatim: hi.map(String.init) ?? "").font(.nuna(size: 12, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary).monospacedDigit()
+                    }
+                    if target > 0 {
+                        Text(verbatim: String(localized: "Zone \(target)") + (range.map { " · \(Int($0.lower.rounded())) – \(Int($0.upper.rounded()))" } ?? ""))
+                            .font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).foregroundStyle(target == 1 ? NunaPalette.textPrimary : Self.zoneColors[min(target, 5) - 1]).monospacedDigit()
+                    }
+                }.padding(.top, 14)
+                if goal.mode == .zone, let line = guidance(bpm: bpm, state: state) {
+                    Text(verbatim: line).font(.nuna(size: 14, weight: .bold)).foregroundStyle(state == .inZone ? NunaPalette.textPrimary : tone)
+                        .fixedSize(horizontal: false, vertical: true).padding(.top, 6)
                 }
             }
         }
     }
 
-    private func progress(_ title: String, _ f: Double, _ detail: String) -> some View {
-        NunaCard {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack { Text(verbatim: title).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary); Spacer(); Text(verbatim: detail).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
-                NunaProgressBar(fraction: f, color: f >= 1 ? NunaPalette.charge : NunaPalette.effort)
+    /// Five slim zone segments with a pointer under the reading: its place inside the segment follows where the heart rate sits in that zone.
+    private func zoneBar(bpm: Int?, zone: Int, tone: Color) -> some View {
+        let zones = zoneSet.zones
+        var pos: CGFloat?   // 0...1 across the bar
+        if let bpm {
+            if zone >= 1, let z = zones.first(where: { $0.number == min(zone, 5) }), z.upper > z.lower {
+                let frac = min(max((Double(bpm) - z.lower) / (z.upper - z.lower), 0), 1)
+                pos = (CGFloat(zone - 1) + CGFloat(frac)) / 5
+            } else { pos = 0 }
+        }
+        return GeometryReader { geo in
+            let w = geo.size.width, gap: CGFloat = 3
+            let seg = (w - gap * 4) / 5
+            ZStack(alignment: .topLeading) {
+                HStack(spacing: gap) {
+                    ForEach(1...5, id: \.self) { n in
+                        RoundedRectangle(cornerRadius: n == 1 || n == 5 ? 6 : 3, style: .continuous)
+                            .fill(Self.zoneColors[n - 1].opacity(n == zone ? 1 : 0.55)).frame(width: seg, height: 12)
+                    }
+                }
+                if let pos {
+                    let x = pos * w
+                    Triangle().fill(NunaPalette.textPrimary).frame(width: 14, height: 9)
+                        .offset(x: min(max(x - 7, 0), w - 14), y: 17)
+                        .animation(.easeOut(duration: 0.25), value: pos)
+                }
             }
+        }
+        .frame(height: 28)
+    }
+
+    // MARK: metrics
+
+    private func usesRoute(_ w: AppModel.ActiveWorkout) -> Bool {
+        model.gpsRecorder.isRecording || (WorkoutCatalog.all.first(where: { $0.name == w.sport })?.isDistanceSport ?? false)
+    }
+
+    private func split(_ s: String) -> (String, String) {
+        guard let i = s.lastIndex(of: " ") else { return (s, "") }
+        return (String(s[..<i]), String(s[s.index(after: i)...]))
+    }
+
+    private func kcal(_ w: AppModel.ActiveWorkout) -> Int? {
+        guard w.samples.count >= 2 else { return nil }
+        let rhr = model.repo.today?.restingHr.map(Double.init) ?? StrainScorer.defaultRestingHR
+        let up = UserProfile(weightKg: model.profile.weightKg, heightCm: model.profile.heightCm, age: Double(model.profile.age), sex: model.profile.sex)
+        let v = Calories.estimateBoutCalories(w.samples, profile: up, hrmax: Double(model.profile.hrMax), restingHR: rhr).0
+        return v > 0 ? Int(v.rounded()) : nil
+    }
+
+    private func zoneSeconds(_ w: AppModel.ActiveWorkout) -> [Int] {
+        var out = [Double](repeating: 0, count: 5)
+        let s = w.samples
+        if s.count >= 2 {
+            for i in 0..<(s.count - 1) {
+                let dt = min(Double(s[i + 1].ts - s[i].ts), 10)
+                let z = zoneSet.zoneNumber(forBPM: Double(s[i].bpm))
+                if dt > 0, z >= 1 { out[min(z, 5) - 1] += dt }
+            }
+        }
+        return out.map { Int($0.rounded()) }
+    }
+
+    private typealias Tile = (label: LocalizedStringKey, value: String, unit: String)
+
+    private func metricRow(_ w: AppModel.ActiveWorkout, elapsed: TimeInterval) -> some View {
+        let gps = model.gpsRecorder
+        let sys = distanceSystem
+        let dash = "–"
+        let dist = gps.pointCount > 0 ? split(UnitFormatter.distanceFromMeters(gps.distanceM, system: sys)) : (dash, sys == .imperial ? "mi" : "km")
+        let pace = gps.paceSecPerKm != nil ? split(UnitFormatter.paceFromSecPerKm(gps.paceSecPerKm, system: sys)) : (dash, sys == .imperial ? "/mi" : "/km")
+        let kmh = gps.paceSecPerKm.map { 3600 / $0 } ?? model.live.sensorSpeedKmh
+        let speed = UnitFormatter.speedFromKilometersPerHour(kmh, system: sys).map(split) ?? (dash, sys == .imperial ? "mph" : "km/h")
+        let gain = sys == .imperial ? gps.elevationGainM * 3.28084 : gps.elevationGainM
+        let cal: Tile = ("Calories", kcal(w).map(String.init) ?? dash, kcal(w) == nil ? "" : String(localized: "kcal"))
+        let tiles: [Tile]
+        if usesRoute(w) {
+            if w.sport == "Cycling" {
+                tiles = [("Distance", dist.0, dist.1), ("Speed", speed.0, speed.1), ("Elevation", gps.pointCount > 0 ? "+\(Int(gain.rounded()))" : dash, sys == .imperial ? "ft" : "m"), cal]
+            } else {
+                let cad = model.live.sensorCadence.map { String(Int($0.rounded())) } ?? dash
+                tiles = [("Distance", dist.0, dist.1), ("Pace", pace.0, pace.1), cal, ("Cadence", cad, cad == dash ? "" : String(localized: "spm"))]
+            }
+        } else {
+            tiles = [cal, ("Avg HR", w.avgHr > 0 ? "\(w.avgHr)" : dash, w.avgHr > 0 ? "bpm" : ""), ("Peak", w.peakHr > 0 ? "\(w.peakHr)" : dash, w.peakHr > 0 ? "bpm" : ""),
+                     ("Effort", UnitFormatter.effortDisplay(w.liveStrain, scale: scale), "")]
+        }
+        return HStack(spacing: 8) {
+            ForEach(Array(tiles.enumerated()), id: \.offset) { _, t in
+                VStack(spacing: 6) {
+                    Text(t.label).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.6).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.7)
+                    Text(verbatim: t.value).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+                    Text(verbatim: t.unit.isEmpty ? " " : t.unit).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                }
+                .padding(.vertical, 10).padding(.horizontal, 6).frame(maxWidth: .infinity)
+                .background(NunaPalette.card, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous).strokeBorder(NunaPalette.hairlineSoft, lineWidth: 1))
+            }
+        }
+    }
+
+    private func zoneTimeCard(_ w: AppModel.ActiveWorkout) -> some View {
+        let secs = zoneSeconds(w)
+        let total = max(secs.reduce(0, +), 1)
+        return NunaCard(small: true) {
+            VStack(alignment: .leading, spacing: 10) {
+                nunaTrendsCap("Time in zone")
+                ForEach(0..<5, id: \.self) { i in
+                    HStack(spacing: 10) {
+                        Text(verbatim: String(localized: "Zone \(i + 1)")).font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 64, alignment: .leading)
+                        GeometryReader { geo in
+                            ZStack(alignment: .leading) {
+                                Capsule().fill(NunaPalette.glassStrong)
+                                Capsule().fill(Self.zoneColors[i]).frame(width: max(secs[i] > 0 ? 4 : 0, geo.size.width * CGFloat(secs[i]) / CGFloat(total)))
+                            }
+                        }.frame(height: 8)
+                        Text(verbatim: clock(TimeInterval(secs[i]))).font(.nuna(size: 13, weight: .semibold, design: NunaType.design)).monospacedDigit()
+                            .foregroundStyle(NunaPalette.textSecondary).frame(width: 52, alignment: .trailing)
+                    }
+                }
+            }
+        }
+    }
+
+    // MARK: footnote + controls
+
+    private func footnote(_ w: AppModel.ActiveWorkout, state: ZoneState, now: Date) -> some View {
+        let effort = UnitFormatter.effortDisplay(w.liveStrain, scale: scale)
+        let text: String
+        if goal.mode == .zone, zoneBuzz {
+            text = state == .inZone || state == .none ? String(localized: "Strap: no buzz. Silence means on target.")
+                : String(localized: "1 short buzz on the strap, repeats every 45 s until you are back.")
+        } else if lastBuzz != .distantPast {
+            text = String(localized: "Last buzz \(clock(now.timeIntervalSince(lastBuzz))) ago · Session Effort \(effort)")
+        } else {
+            text = String(localized: "Session Effort \(effort)")
+        }
+        return HStack(spacing: 8) {
+            Image(systemName: "applewatch.radiowaves.left.and.right").font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.charge)
+            Text(verbatim: text).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center)
+        }.frame(maxWidth: .infinity)
+    }
+
+    private func controls(_ w: AppModel.ActiveWorkout) -> some View {
+        HStack(spacing: 12) {
+            Button { model.toggleWorkoutPause() } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: w.isPaused ? "play.fill" : "pause.fill").font(.system(size: 14, weight: .bold))
+                    Text(w.isPaused ? "Resume" : "Pause").font(.nuna(size: 16, weight: .bold))
+                }
+                .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 60)
+                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 30, style: .continuous))
+            }.buttonStyle(.plain)
+            Button { confirmEnd = true } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "stop.fill").font(.system(size: 14, weight: .bold))
+                    Text("End").font(.nuna(size: 16, weight: .bold))
+                }
+                .foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 28).frame(height: 60)
+                .background(NunaPalette.alertText, in: RoundedRectangle(cornerRadius: 30, style: .continuous))
+            }.buttonStyle(.plain)
+        }
+    }
+
+    // MARK: zone guidance
+
+    private func zoneState(bpm: Int?, zone: Int) -> ZoneState {
+        guard goal.mode == .zone, bpm != nil, zone > 0 else { return .none }
+        if zone == goal.zone { return .inZone }
+        if zone < goal.zone { return .below }
+        return zone >= goal.zone + 2 || zone == 5 ? .farAbove : .above
+    }
+
+    /// Only the zone colour, the bpm and one sentence change when the heart rate leaves the target; time, distance and pace stay white.
+    private func tone(zone: Int, state: ZoneState) -> Color {
+        switch state {
+        case .above: return NunaPalette.warning
+        case .farAbove: return NunaPalette.alert
+        default:
+            if zone > 0 { return Self.zoneColors[min(zone, 5) - 1] }
+            return goal.mode == .zone ? Self.zoneColors[min(max(goal.zone, 1), 5) - 1] : NunaPalette.textMuted
+        }
+    }
+
+    private func guidance(bpm: Int?, state: ZoneState) -> String? {
+        guard let bpm, let z = zoneSet.zones.first(where: { $0.number == goal.zone }) else { return nil }
+        let lo = Int(z.lower.rounded()), hi = Int(z.upper.rounded())
+        switch state {
+        case .none: return nil
+        case .inZone: return String(localized: "Hold steady. You are in Zone \(goal.zone), \(lo) – \(hi) bpm.")
+        case .below: return String(localized: "Pick up the pace a little. Target Zone \(goal.zone), \(lo) – \(hi) bpm.")
+        case .above: return String(localized: "Ease off a little. Target Zone \(goal.zone), \(lo) – \(hi) bpm.")
+        case .farAbove: return String(localized: "Slow down now. \(bpm) bpm is too high.")
         }
     }
 
@@ -377,6 +629,7 @@ struct NunaLiveWorkoutView: View {
     }
 
     private func cue(loops: UInt8) {
+        lastBuzz = Date()
         model.buzz(loops: loops)
         UINotificationFeedbackGenerator().notificationOccurred(.success)
     }
