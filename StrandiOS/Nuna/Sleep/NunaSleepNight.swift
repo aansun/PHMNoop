@@ -414,6 +414,93 @@ struct NunaSleepStageSection: View {
     }
 }
 
+// MARK: - Stages against usual and against the usual healthy range
+
+/// Each stage of last night against two yardsticks: the person's own recent nights, and the range commonly quoted for healthy
+/// adults as a share of time in bed (deep 13 to 23%, REM 20 to 25%, light 45 to 55%, awake up to 10%). The range is a
+/// rule of thumb from sleep-lab studies, not a diagnosis, and strap staging is an estimate, so it is worded that way.
+struct NunaStageCompare: View {
+    let model: NunaSleepModel
+    let night: NunaNight
+
+    private struct Ref { let stage: SleepStage; let lo: Double; let hi: Double }
+    private let refs: [Ref] = [
+        Ref(stage: .awake, lo: 0, hi: 10), Ref(stage: .rem, lo: 20, hi: 25),
+        Ref(stage: .light, lo: 45, hi: 55), Ref(stage: .deep, lo: 13, hi: 23),
+    ]
+
+    private func minutes(_ s: SleepStage, _ st: Stages) -> Double {
+        switch s { case .awake: return st.awake; case .light: return st.light; case .deep: return st.deep; case .rem: return st.rem }
+    }
+
+    /// Mean minutes of the stage over the earlier nights (up to 14), nil under three nights.
+    private func usual(_ s: SleepStage) -> Double? {
+        let others = model.nights.dropFirst(model.index + 1).prefix(14).filter { $0.stages.total > 0 }
+        guard others.count >= 3 else { return nil }
+        return others.map { minutes(s, $0.stages) }.reduce(0, +) / Double(others.count)
+    }
+
+    var body: some View {
+        let total = night.stages.total
+        if total > 0 {
+            NunaCard {
+                VStack(alignment: .leading, spacing: 4) {
+                    nunaTrendsCap("Compared to usual")
+                    Text("Against your recent nights and the range healthy adults usually fall in.")
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).padding(.bottom, 6)
+                    ForEach(Array(refs.enumerated()), id: \.element.stage) { i, r in
+                        if i > 0 { NunaDivider() }
+                        row(r, total: total)
+                    }
+                    Text("The range is a rule of thumb for healthy adults, as a share of time in bed. Strap staging is an estimate, so read it as a guide, not a diagnosis.")
+                        .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).padding(.top, 10)
+                }
+            }
+        }
+    }
+
+    private func row(_ r: Ref, total: Double) -> some View {
+        let m = minutes(r.stage, night.stages)
+        // Whole percentages that add up to 100, the same apportionment the stage card above prints, so the two never disagree.
+        let st = night.stages
+        let parts = StagePercentages.wholePercentages([st.awake, st.light, st.deep, st.rem])
+        let pct: Double = parts.map { Double($0[r.stage == .awake ? 0 : (r.stage == .light ? 1 : (r.stage == .deep ? 2 : 3))]) } ?? m / total * 100
+        let status: (LocalizedStringKey, Color) = pct < r.lo ? ("Below the range", NunaPalette.warning)
+            : (pct > r.hi ? (r.stage == .awake ? "Above the range" : "Above the range", r.stage == .awake ? NunaPalette.warning : NunaPalette.restText)
+                          : ("Within the range", NunaPalette.charge))
+        let u = usual(r.stage)
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
+                Circle().fill(r.stage.nunaColor).frame(width: 10, height: 10)
+                Text(r.stage.nunaName).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                Spacer()
+                Text(verbatim: "\(NunaSleepFormat.duration(m)) · \(Int(pct.rounded()))%").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+            }
+            GeometryReader { geo in
+                let w = geo.size.width
+                let scale = 70.0   // bar shows 0 to 70% of time in bed
+                let x: (Double) -> CGFloat = { CGFloat(min(max($0, 0), scale) / scale) * w }
+                ZStack(alignment: .leading) {
+                    Capsule().fill(NunaPalette.ink.opacity(0.08))
+                    Capsule().fill(NunaPalette.charge.opacity(0.28)).frame(width: max(4, x(r.hi) - x(r.lo))).offset(x: x(r.lo))
+                    Capsule().fill(r.stage.nunaColor).frame(width: max(6, x(pct)))
+                    if let u { Rectangle().fill(NunaPalette.textPrimary.opacity(0.8)).frame(width: 2, height: 14).offset(x: x(u / total * 100) - 1) }
+                }
+            }
+            .frame(height: 10)
+            HStack {
+                Text(status.0).font(.nuna(size: 12.5, weight: .heavy)).foregroundStyle(status.1)
+                Spacer()
+                Text(verbatim: String(localized: "Range \(Int(r.lo))–\(Int(r.hi))%")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            }
+            if let u {
+                Text(verbatim: String(localized: "Usually \(NunaSleepFormat.duration(u))")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            }
+        }
+        .padding(.vertical, 12)
+    }
+}
+
 // MARK: - Overnight vitals
 
 /// Overnight vitals on the sleep clock. The summary row shows last night's figures (only those that exist). Below it, one card
@@ -452,7 +539,7 @@ struct NunaOvernightVitals: View {
         if let v = d?.respRateBpm { out.append(Row(id: "resp", title: "Breathing", icon: "lungs", unit: "/min", decimals: 1, value: v, prior: before.compactMap(\.respRateBpm), upIsGood: nil, key: "resp_rate")) }
         if let v = d?.skinTempDevC {
             let f = temperatureUnit == .fahrenheit
-            out.append(Row(id: "skin", title: "Skin temp vs baseline", icon: "thermometer.medium", unit: UnitFormatter.temperatureUnit(temperatureUnit), decimals: 1,
+            out.append(Row(id: "skin", title: "Skin temp", icon: "thermometer.medium", unit: UnitFormatter.temperatureUnit(temperatureUnit), decimals: 1,
                            value: f ? v * 1.8 : v, prior: before.compactMap(\.skinTempDevC).map { f ? $0 * 1.8 : $0 }, upIsGood: nil, key: "skin_temp"))
         }
         return out

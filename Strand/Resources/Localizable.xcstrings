@@ -1,6 +1,27 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Light sleep": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ringan"}}
+    } },
+    "Against your recent nights and the range healthy adults usually fall in.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Dibanding malam-malam terakhirmu dan kisaran yang umumnya dimiliki orang dewasa sehat."}}
+    } },
+    "The range is a rule of thumb for healthy adults, as a share of time in bed. Strap staging is an estimate, so read it as a guide, not a diagnosis.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kisaran ini pedoman umum untuk orang dewasa sehat, sebagai porsi waktu di tempat tidur. Pembagian fase oleh strap hanya perkiraan, jadi anggap sebagai panduan, bukan diagnosis."}}
+    } },
+    "Below the range": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Di bawah kisaran"}}
+    } },
+    "Above the range": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Di atas kisaran"}}
+    } },
+    "Within the range": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Dalam kisaran"}}
+    } },
+    "Range %lld–%lld%%": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kisaran %lld–%lld%%"}}
+    } },
     "Your body got the sleep it needed.": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Tubuhmu mendapat tidur yang dibutuhkan."}}
     } },

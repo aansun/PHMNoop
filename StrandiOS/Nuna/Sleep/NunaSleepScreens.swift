@@ -55,6 +55,7 @@ struct NunaSleepView: View {
                 NunaNightPicker(model: model)
                 hero(model, night)
                 NunaSleepStageSection(model: model, night: night)
+                NunaStageCompare(model: model, night: night)
                 if !night.naps.isEmpty { napCard(night) }
                 tiles(model, night)
                 NunaOvernightVitals(model: model, night: night)
@@ -454,7 +455,7 @@ private struct NunaNapContent: View {
                 if !nap.intervals.isEmpty {
                     HStack(alignment: .top, spacing: 10) {
                         VStack(alignment: .leading, spacing: 0) {
-                            ForEach(["Awake", "REM", "Light", "Deep"], id: \.self) { l in
+                            ForEach(["Awake", "REM", "Light sleep", "Deep"], id: \.self) { l in
                                 Text(LocalizedStringKey(l)).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                                     .frame(maxHeight: .infinity, alignment: .center)
                             }
@@ -484,7 +485,7 @@ private struct NunaNapContent: View {
     private func tiles(_ nap: NunaNap) -> some View {
         let moves = NunaMovementSummary(nap.motion, hours: max(nap.spanMin / 60, 0.05))?.movements
         return LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-            NunaStatTile(label: "Light", value: "\(Int(nap.minutes(.light).rounded()))", unit: "min")
+            NunaStatTile(label: "Light sleep", value: "\(Int(nap.minutes(.light).rounded()))", unit: "min")
             NunaStatTile(label: "Deep", value: "\(Int(nap.minutes(.deep).rounded()))", unit: "min")
             NunaStatTile(label: "REM", value: "\(Int(nap.minutes(.rem).rounded()))", unit: "min")
             NunaStatTile(label: "Movement", value: moves.map(String.init) ?? "–", unit: moves == nil ? "" : "×")
