@@ -370,6 +370,9 @@ struct StrandiOSApp: App {
         .onChange(of: scenePhase) { _, phase in
             audioCoaching.scenePhaseChanged(phase)
             if phase == .active {
+                // A banner swiped away from the Lock Screen (or ended by the system) while the app was in the background can only be
+                // started again from the foreground, so a running workout gets it back the moment the app is opened.
+                pushLiveActivity()
                 model.drainPendingIntents(router: router)
                 // End a "Connecting…" sync island whose sync never came, rather than leave it greyed.
                 SyncLiveActivityController.shared.reconcile(live: model.live)
