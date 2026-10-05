@@ -370,17 +370,47 @@ struct NunaMetricsGrid: View {
                 if let c = tile.caption { Text(c).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8) }
             }
             Spacer(minLength: 8)
-            HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text(verbatim: tile.value).font(.nuna(size: 18, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                if !tile.unit.isEmpty && tile.value != "–" {
-                    Text(verbatim: tile.unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+            // The figure on the right with its change as a small triangle (no unit), and what it was before underneath. The triangle's slot
+            // is always there, so the figures of every row end on the same line.
+            let trend = Self.trend(tile)
+            VStack(alignment: .trailing, spacing: 2) {
+                HStack(alignment: .center, spacing: 5) {
+                    Text(verbatim: tile.value).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                    Group {
+                        if let trend {
+                            Image(systemName: trend.up ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
+                                .font(.system(size: 8, weight: .bold)).foregroundStyle(trend.tint)
+                        } else { Color.clear }
+                    }
+                    .frame(width: 10, height: 10)
+                }
+                if let before = trend?.previous {
+                    Text(verbatim: before).font(.nuna(size: 12, weight: .semibold, design: NunaType.design))
+                        .foregroundStyle(NunaPalette.textSecondary).monospacedDigit().padding(.trailing, 15)
                 }
             }
-            if let delta = tile.delta { deltaChip(delta, good: tile.deltaGood) }
             Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
         }
         .frame(minHeight: 58)
         .contentShape(Rectangle())
+    }
+
+    /// Reads the "▲ 3" change: which way it went, its colour, and the value before it (this value minus the change). nil without a change.
+    private static func trend(_ tile: NunaMetricTile) -> (up: Bool, tint: Color, previous: String?)? {
+        guard let delta = tile.delta, let first = delta.first, first == "▲" || first == "▼" else { return nil }
+        let up = first == "▲"
+        let tint: Color = tile.deltaGood == nil ? NunaPalette.textSecondary : (tile.deltaGood! ? NunaPalette.charge : NunaPalette.warning)
+        func number(_ t: String) -> Double? {
+            Double(t.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: ",", with: ".").filter { "0123456789.-".contains($0) })
+        }
+        var previous: String?
+        if let now = number(tile.value), let change = number(String(delta.dropFirst())) {
+            let before = up ? now - change : now + change
+            let decimals = tile.value.contains(",") || tile.value.contains(".") ? 1 : 0
+            previous = String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, before)
+        }
+        return (up, tint, previous)
     }
 
     private func deltaChip(_ text: String, good: Bool?) -> some View {
