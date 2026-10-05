@@ -51,6 +51,7 @@ struct NunaDetailScreen<Content: View>: View {
         ScrollView {
             VStack(spacing: NunaSpacing.section) {
                 NunaDetailHeader(title: title, onAnya: onAnya, trailing: trailing)
+                NunaDetailSwitcher()
                 content
             }
             .padding(.horizontal, NunaSpacing.screenH)

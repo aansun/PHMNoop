@@ -102,10 +102,10 @@ enum NunaTrendsFormat {
 
 /// Which trailing window the Trends screens show.
 enum NunaTrendsRange: Int, CaseIterable, Identifiable {
-    case week = 7, month = 30, quarter = 90, year = 365
+    case week = 7, month = 30, halfYear = 180, year = 365
     var id: Int { rawValue }
     static var options: [(value: Int, title: LocalizedStringKey)] {
-        [(7, "7D"), (30, "30D"), (90, "90D"), (365, "1Y")]
+        [(7, "W\u{2060}"), (30, "M"), (180, "6M"), (365, "1Y")]
     }
 }
 #endif

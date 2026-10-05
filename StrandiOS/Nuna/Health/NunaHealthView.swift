@@ -33,8 +33,8 @@ struct NunaHealthView: View {
     @State private var showWaist = false
     @AppStorage(HydrationStore.enabledKey) private var hydrationEnabled = false
     @State private var waterML = 0
-    @State private var weightRange = 90
-    @State private var hrvRange = 14
+    @State private var weightRange = 30
+    @State private var hrvRange = 30
 
     @State private var tab = 0
     @State private var didSetTab = false
@@ -379,7 +379,7 @@ struct NunaHealthView: View {
                                  color: d > 0 ? NunaPalette.charge : NunaPalette.warning)
                     }
                 }
-                NunaSegmented([(value: 14, title: "14D"), (value: 30, title: "30D"), (value: 90, title: "90D")], selection: $hrvRange)
+                NunaSegmented([(value: 7, title: "W\u{2060}"), (value: 30, title: "M"), (value: 180, title: "6M")], selection: $hrvRange)
                 NunaLine2Chart(points: pts, color: NunaPalette.charge, decimals: 0, baseline: b?.mean, band: b.map { $0.lo...$0.hi }, height: 170)
                 if let b {
                     HStack(spacing: 12) {
@@ -581,7 +581,7 @@ struct NunaHealthView: View {
                         NunaChip(verbatim: (delta <= 0 ? "−" : "+") + String(format: "%.1f", locale: AppLanguage.activeLocale, abs(delta)) + " kg")
                     }
                 }
-                NunaSegmented([(value: 30, title: "30D"), (value: 90, title: "90D"), (value: 365, title: "1Y")], selection: $weightRange)
+                NunaSegmented([(value: 7, title: "W\u{2060}"), (value: 30, title: "M"), (value: 180, title: "6M")], selection: $weightRange)
                 NunaLine2Chart(points: pts, color: NunaPalette.charge, decimals: 1, height: 170)
                 Text("Read from Apple Health, or typed in under Details.")
                     .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)

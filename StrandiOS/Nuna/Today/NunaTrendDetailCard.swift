@@ -30,7 +30,7 @@ struct NunaTrendDetailCard: View {
     @Binding var range: Int
     @Binding var page: Int
 
-    private static let ranges: [(value: Int, title: String)] = [(7, "W"), (30, "M"), (180, "6M")]
+    private static let ranges: [(value: Int, title: String)] = [(7, "W\u{2060}"), (30, "M"), (180, "6M")]
 
     /// The card for a single stored series (`NunaSeriesModel`).
     init(caption: LocalizedStringKey, valueText: String?, unit: String = "", chip: (text: LocalizedStringKey, color: Color)? = nil, note: String? = nil,

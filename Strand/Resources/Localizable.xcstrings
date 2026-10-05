@@ -1,6 +1,12 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Switch metric": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ganti metrik"}}
+    } },
+    "Breathing, SpO₂, HRV and resting heart rate are watched too": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Napas, SpO₂, HRV, dan detak jantung istirahat juga dipantau"}}
+    } },
     "Hiking": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Mendaki"}}
     } },
