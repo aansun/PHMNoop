@@ -52,6 +52,21 @@ public func hrGapSegments(bucketTs: [Int], bucketSeconds: Int) -> [String] {
     }
 }
 
+/// One stretch of a long chart with its average: drawn as a short horizontal line with the value above it and the change
+/// against the previous stretch below.
+public struct TrendSegmentAverage: Identifiable {
+    public var id: Date { start }
+    public var start: Date
+    public var end: Date
+    public var value: Double
+    public var valueText: String
+    public var deltaText: String?
+    public var deltaColor: Color
+    public init(start: Date, end: Date, value: Double, valueText: String, deltaText: String? = nil, deltaColor: Color = .secondary) {
+        self.start = start; self.end = end; self.value = value; self.valueText = valueText; self.deltaText = deltaText; self.deltaColor = deltaColor
+    }
+}
+
 /// One point on a trend line.
 public struct TrendPoint: Identifiable, Sendable {
     public var date: Date
@@ -93,6 +108,20 @@ public struct TrendChart: View {
     public var hidesXAxisLabels: Bool = false
     /// Keeps the date labels in a band of their own under the plot, so a filled area cannot run behind them.
     public var reservesAxisBand: Bool = false
+    /// A shaded horizontal band for the wearer's typical range (the reference the readings are judged against).
+    public var typicalRange: ClosedRange<Double>?
+    /// When set, points are drawn as open rings filled with this colour (the card behind the chart) instead of solid dots.
+    public var hollowPointFill: Color?
+    /// Colour of the value above each labelled point; the secondary text colour when nil.
+    public var pointLabelColor: Color?
+    /// Stroke width of the line (2.5 by default) and its opacity; a long window draws the raw readings thin and faint.
+    /// One x-axis label per reading (a short window): the labels sit at exactly these dates instead of an automatic cadence.
+    public var xAxisDates: [Date]?
+    public var lineWidth: CGFloat = 2.5
+    public var lineOpacity: Double = 1
+    /// Horizontal average marks over consecutive stretches of a long window, each labelled with its value and the move
+    /// against the stretch before.
+    public var segmentAverages: [TrendSegmentAverage] = []
     public var yAxisStep: Double?
     /// Use compact suffixes for large axis values, e.g. 5K and 1.2M.
     public var usesCompactYAxis: Bool
@@ -319,25 +348,30 @@ public struct TrendChart: View {
             AxisMarks(values: .automatic(desiredCount: desiredCount)) { _ in
                 AxisGridLine().foregroundStyle(StrandPalette.hairline.opacity(0.4))
             }
+        } else if let dates = xAxisDates {
+            AxisMarks(values: dates) { value in xAxisMark(value) }
         } else {
-            AxisMarks(values: .automatic(desiredCount: desiredCount)) { value in
-                AxisGridLine().foregroundStyle(StrandPalette.hairline.opacity(0.4))
-                if let xAxisDateFormat, let date = value.as(Date.self) {
-                    AxisValueLabel(collisionResolution: .greedy) {
-                        Text(xAxisDateFormat(date))
-                            .multilineTextAlignment(.center)
-                            .lineLimit(2)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    .offset(y: 10)
-                    .foregroundStyle(StrandPalette.textTertiary)
-                    .font(StrandFont.footnote)
-                } else {
-                    AxisValueLabel(collisionResolution: .greedy)
-                        .foregroundStyle(StrandPalette.textTertiary)
-                        .font(StrandFont.footnote)
-                }
+            AxisMarks(values: .automatic(desiredCount: desiredCount)) { value in xAxisMark(value) }
+        }
+    }
+
+    @AxisMarkBuilder
+    private func xAxisMark(_ value: AxisValue) -> some AxisMark {
+        AxisGridLine().foregroundStyle(StrandPalette.hairline.opacity(0.4))
+        if let xAxisDateFormat, let date = value.as(Date.self) {
+            AxisValueLabel(centered: false, anchor: .top, collisionResolution: xAxisDates != nil ? .disabled : .greedy) {
+                Text(xAxisDateFormat(date))
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .fixedSize(horizontal: false, vertical: true)
             }
+            .offset(y: 10)
+            .foregroundStyle(StrandPalette.textTertiary)
+            .font(StrandFont.footnote)
+        } else {
+            AxisValueLabel(collisionResolution: .greedy)
+                .foregroundStyle(StrandPalette.textTertiary)
+                .font(StrandFont.footnote)
         }
     }
 
@@ -359,7 +393,11 @@ public struct TrendChart: View {
             .foregroundStyle(StrandPalette.textPrimary)
         }
         Chart {
-            if let baselineValue {
+            if let band = typicalRange {
+                RectangleMark(yStart: .value("Typical low", band.lowerBound), yEnd: .value("Typical high", band.upperBound))
+                    .foregroundStyle(StrandPalette.textSecondary.opacity(0.14))
+            }
+            if let baselineValue, typicalRange == nil {
                 RuleMark(y: .value("Baseline", baselineValue))
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
                     .foregroundStyle(.secondary.opacity(0.45))
@@ -420,8 +458,23 @@ public struct TrendChart: View {
                         series: .value("Segment", p.segment)
                     )
                     .interpolationMethod(.catmullRom)
-                    .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
+                    .lineStyle(StrokeStyle(lineWidth: lineWidth, lineCap: .round, lineJoin: .round))
                     .foregroundStyle(valueGradient)
+                    .opacity(lineOpacity)
+                }
+                ForEach(segmentAverages) { seg in
+                    RuleMark(xStart: .value("From", seg.start), xEnd: .value("To", seg.end), y: .value("Average", seg.value))
+                        .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                        .foregroundStyle(seg.deltaText == nil ? StrandPalette.textPrimary : seg.deltaColor)
+                        .annotation(position: .top, spacing: 2) {
+                            Text(seg.valueText).font(.system(size: 11, weight: .bold)).monospacedDigit()
+                                .foregroundStyle(StrandPalette.textPrimary).fixedSize()
+                        }
+                        .annotation(position: .bottom, spacing: 2) {
+                            if let d = seg.deltaText {
+                                Text(d).font(.system(size: 10, weight: .bold)).monospacedDigit().foregroundStyle(seg.deltaColor).fixedSize()
+                            }
+                        }
                 }
                 // 18pt dots are invisible on dense series (e.g. a 365-day year) but still cost the
                 // GPU a mark each — hide them past a threshold; the line carries the data there. The gate
@@ -446,9 +499,14 @@ public struct TrendChart: View {
                             if showsPointValues && labelled.contains(p.date) {
                                 Text(Self.line2ValueString(p.value, formattedValue: valueFormat(p.value)))
                                     .font(StrandFont.captionNumber)
-                                    .foregroundStyle(StrandPalette.textSecondary)
+                                    .foregroundStyle(pointLabelColor ?? StrandPalette.textSecondary)
                                     .fixedSize()
                             }
+                        }
+                        if let fill = hollowPointFill {
+                            PointMark(x: .value("Date", p.date), y: .value("Value", p.value))
+                                .symbolSize(showsPointValues ? (pointValueStride > 1 ? 14 : 40) : 4)
+                                .foregroundStyle(fill)
                         }
                     }
                 }
@@ -771,6 +829,39 @@ public extension TrendChart {
     func pointValueStride(_ stride: Int) -> TrendChart {
         var copy = self
         copy.pointValueStride = stride
+        return copy
+    }
+
+    func typicalRange(_ range: ClosedRange<Double>?) -> TrendChart {
+        var copy = self
+        copy.typicalRange = range
+        return copy
+    }
+
+    func hollowPoints(fill: Color?, labelColor: Color? = nil) -> TrendChart {
+        var copy = self
+        copy.hollowPointFill = fill
+        copy.pointLabelColor = labelColor
+        return copy
+    }
+
+    func line(width: CGFloat, opacity: Double = 1) -> TrendChart {
+        var copy = self
+        copy.lineWidth = width
+        copy.lineOpacity = opacity
+        return copy
+    }
+
+    func segmentAverages(_ segments: [TrendSegmentAverage]) -> TrendChart {
+        var copy = self
+        copy.segmentAverages = segments
+        return copy
+    }
+
+    /// Labels every reading on the x axis (weekday over day number for a week) and reserves a band for them under the plot.
+    func perReadingAxis(_ dates: [Date]) -> TrendChart {
+        var copy = self
+        copy.xAxisDates = dates
         return copy
     }
 }

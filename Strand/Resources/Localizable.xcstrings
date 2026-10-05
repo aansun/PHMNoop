@@ -1,6 +1,9 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "WHP is a night look only, so light and automatic are off while it is on.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "WHP hanya tampilan malam, jadi mode terang dan otomatis nonaktif selama WHP dipakai."}}
+    } },
     "My journal": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Jurnal saya"}}
     } },
@@ -177022,6 +177025,7 @@
     },
     "Typical range": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Rentang normal"}},
         "de": {
           "stringUnit": {
             "state": "translated",

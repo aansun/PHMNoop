@@ -205,6 +205,7 @@ struct NunaFitnessOrb<Center: View>: View {
     var size: CGFloat = 270
     @ViewBuilder var center: () -> Center
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @ObservedObject private var motion = NoopMotionState.shared
 
     /// Closed smooth blob: a circle whose radius is nudged by a few low harmonics.
     private static func blob(in rect: CGRect, phase: Double, grow: Double = 1) -> Path {
@@ -224,8 +225,8 @@ struct NunaFitnessOrb<Center: View>: View {
     }
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 24, paused: reduceMotion)) { tl in
-            let phase = reduceMotion ? 0.6 : tl.date.timeIntervalSinceReferenceDate * 0.35
+        TimelineView(.animation(minimumInterval: 1 / 24, paused: motion.poseStill(reduceMotion))) { tl in
+            let phase = motion.poseStill(reduceMotion) ? 0.6 : tl.date.timeIntervalSinceReferenceDate * 0.35
             ZStack {
                 Canvas { ctx, sz in
                     let rect = CGRect(origin: .zero, size: sz)
