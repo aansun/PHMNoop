@@ -1,6 +1,57 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Steady since last week": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Stabil sejak minggu lalu"}}
+    } },
+    "About your age": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sekitar usiamu"}}
+    } },
+    "%lld yr younger than last week": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%lld thn lebih muda dari minggu lalu"}}
+    } },
+    "%lld yr older than last week": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%lld thn lebih tua dari minggu lalu"}}
+    } },
+    "Pace of aging appears after 6 weekly readings.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Laju penuaan muncul setelah 6 pembacaan mingguan."}}
+    } },
+    "Pace of aging appears after 6 weekly readings. You have %lld so far.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Laju penuaan muncul setelah 6 pembacaan mingguan. Kamu baru punya %lld."}}
+    } },
+    "Based on about six months of weekly readings.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Berdasarkan sekitar enam bulan pembacaan mingguan."}}
+    } },
+    "Still building: the pace firms up as weeks of readings add up.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Masih terbentuk: laju makin mantap seiring bertambahnya pembacaan mingguan."}}
+    } },
+    "Early estimate: too few weeks to move far from 1.0x yet.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Perkiraan awal: minggunya masih terlalu sedikit untuk bergeser jauh dari 1.0x."}}
+    } },
+    "Pace of aging": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Laju penuaan"}}
+    } },
+    "slower vs last week": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "lebih lambat dari minggu lalu"}}
+    } },
+    "faster vs last week": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "lebih cepat dari minggu lalu"}}
+    } },
+    "Slow": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Lambat"}}
+    } },
+    "Fast": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Cepat"}}
+    } },
+    "Your fitness age is rising slower than the calendar, so you are ageing more slowly than time passes.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Usia kebugaranmu naik lebih lambat dari kalender, jadi kamu menua lebih lambat daripada waktu berjalan."}}
+    } },
+    "Your fitness age is rising faster than the calendar. Better sleep, activity and resting heart rate can bring it back.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Usia kebugaranmu naik lebih cepat dari kalender. Tidur, aktivitas, dan detak jantung istirahat yang lebih baik bisa menurunkannya."}}
+    } },
+    "1.0x means your fitness age moves at the same speed as the calendar. 0.0x means it holds still, and below that you are getting fitter.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "1.0x berarti usia kebugaranmu bergerak secepat kalender. 0.0x berarti diam di tempat, dan di bawahnya kamu makin bugar."}}
+    } },
     "Skin temperature through the night": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Suhu kulit sepanjang malam"}}
     } },
