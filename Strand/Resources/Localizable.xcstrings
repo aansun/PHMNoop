@@ -1,6 +1,12 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "0 to 3 against your own calm reference. Under 1 is low, 1 to 2 medium, above 2 high. Moments when you were moving are left out.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "0 sampai 3 dibanding acuan tenangmu sendiri. Di bawah 1 rendah, 1 sampai 2 sedang, di atas 2 tinggi. Saat kamu bergerak tidak dihitung."}}
+    } },
+    "About this score": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tentang skor ini"}}
+    } },
     "Each source gets its share of today's heart-rate load, so the parts add up to the day's Effort.": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Setiap sumber mendapat bagiannya dari beban detak jantung hari ini, jadi bagian-bagiannya berjumlah sama dengan Effort hari ini."}}
     } },

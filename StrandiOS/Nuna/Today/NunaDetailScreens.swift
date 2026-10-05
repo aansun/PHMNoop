@@ -364,8 +364,15 @@ struct NunaStressDetailView: View {
     @State private var range = 1
     @State private var showBreathing = false
     @State private var showCoach = false
+    @State private var showInfo = false
 
     private func color(_ v: Double) -> Color { NunaStressBars.color(v) }
+
+    /// Clock time of the latest reading on the curve, for today only.
+    private var gaugeTime: String? {
+        guard day.isToday, let ts = day.stressCurve?.hours.last(where: { $0.level != nil })?.startTs else { return nil }
+        return NunaSleepFormat.clock(Date(timeIntervalSince1970: TimeInterval(ts)))
+    }
 
     /// Whether the Stress card is shown on Today. The same switch as hiding it in Today's edit mode.
     private var cardShown: Binding<Bool> {
@@ -387,38 +394,21 @@ struct NunaStressDetailView: View {
         let score = day.stress
         let tint: Color = score.map(color) ?? NunaPalette.textPrimary
         NunaDetailScreen("Stress monitor") {
-            NunaCard(padding: EdgeInsets(top: 22, leading: 22, bottom: 22, trailing: 22)) {
-                VStack(alignment: .leading, spacing: 14) {
-                    HStack {
-                        Text("Day average").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
-                            .foregroundStyle(NunaPalette.textSecondary)
-                        Spacer()
-                        if let score { NunaChip(score < 1 ? "Low" : (score < 2 ? "Medium" : "High"), color: tint) }
-                    }
-                    HStack(spacing: 20) {
-                        NunaRingGauge(fraction: (score ?? 0) / 3, color: tint, size: 128, lineWidth: 12) {
-                            VStack(spacing: 0) {
-                                Text(verbatim: score.map { String(format: "%.1f", locale: AppLanguage.activeLocale, $0) } ?? "–")
-                                    .font(.nuna(size: 38, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                                Text(verbatim: "/ 3").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                            }
-                        }
-                        VStack(alignment: .leading, spacing: 8) {
-                            if let score, let base = series.baseline {
-                                let b = String(format: "%.1f", locale: AppLanguage.activeLocale, base)
-                                Text(verbatim: score < base - 0.05 ? String(localized: "Calmer than your baseline (\(b))")
-                                     : (score > base + 0.05 ? String(localized: "Tenser than your baseline (\(b))")
-                                        : String(localized: "About your usual baseline (\(b))")))
-                                    .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-                            if let latest = day.stressCurve?.hours.last(where: { $0.level != nil })?.level, day.isToday {
-                                Text(verbatim: String(localized: "Now \(String(format: "%.1f", locale: AppLanguage.activeLocale, latest))"))
-                                    .font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            }
-                        }
-                        Spacer(minLength: 0)
-                    }
+            VStack(spacing: 10) {
+                Text(day.isToday ? "Day average" : "Day average").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading)
+                NunaStressGauge(value: score, level: score.map { $0 < 1 ? "Low" : ($0 < 2 ? "Medium" : "High") },
+                                levelColor: tint, time: gaugeTime, onInfo: { withAnimation { showInfo.toggle() } })
+                if showInfo {
+                    Text("0 to 3 against your own calm reference. Under 1 is low, 1 to 2 medium, above 2 high. Moments when you were moving are left out.")
+                        .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                }
+                if let score, let base = series.baseline {
+                    let b = String(format: "%.1f", locale: AppLanguage.activeLocale, base)
+                    Text(verbatim: score < base - 0.05 ? String(localized: "Calmer than your baseline (\(b))")
+                         : (score > base + 0.05 ? String(localized: "Tenser than your baseline (\(b))")
+                            : String(localized: "About your usual baseline (\(b))")))
+                        .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center)
                 }
             }
             recoveryTiles
