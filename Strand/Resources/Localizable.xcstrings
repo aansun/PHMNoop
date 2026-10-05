@@ -1,6 +1,30 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Your body got the sleep it needed.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tubuhmu mendapat tidur yang dibutuhkan."}}
+    } },
+    "A solid night. You are well rested.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Malam yang bagus. Kamu cukup istirahat."}}
+    } },
+    "You slept less than you needed. Go easier on yourself today.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tidurmu kurang dari kebutuhan. Santai saja hari ini."}}
+    } },
+    "A short or broken night. Recovery will come first today.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Malam yang pendek atau terputus. Pemulihan didahulukan hari ini."}}
+    } },
+    "In line with your last 14 nights.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Setara dengan 14 malam terakhirmu."}}
+    } },
+    "%lld points above your last 14 nights.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%lld poin di atas 14 malam terakhirmu."}}
+    } },
+    "%lld points below your last 14 nights.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%lld poin di bawah 14 malam terakhirmu."}}
+    } },
+    "Excellent": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sangat baik"}}
+    } },
     "0 to 3 against your own calm reference. Under 1 is low, 1 to 2 medium, above 2 high. Moments when you were moving are left out.": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "0 sampai 3 dibanding acuan tenangmu sendiri. Di bawah 1 rendah, 1 sampai 2 sedang, di atas 2 tinggi. Saat kamu bergerak tidak dihitung."}}
     } },
