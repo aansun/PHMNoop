@@ -3,217 +3,142 @@ import SwiftUI
 import ActivityKit
 import StrandDesign
 
-/// Live Activity for an active live-HR session — shown on the Lock Screen and in the Dynamic Island.
+/// Live Activity for an active workout or live-HR session: the Lock Screen banner and the Dynamic Island, in the Nuna look.
+///
+/// A GPS sport leads with distance, time and pace; a sport without GPS with time, average and peak heart rate; plain live heart rate
+/// (no workout) shows the heart rate and Effort. The symbol and the colours follow the sport and the heart-rate zone, so the minimal
+/// Island is one ring in the zone's colour.
 struct NOOPLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: NOOPActivityAttributes.self) { context in
-            // Lock Screen / banner presentation.
-            VStack(spacing: 10) {
-                ZStack {
-                    HStack(alignment: .center, spacing: 0) {
-                        if let startedAt = context.state.activityStartedAt {
-                            Text(timerInterval: startedAt...startedAt.addingTimeInterval(86_400),
-                                 countsDown: false)
-                                .font(.system(size: 35, weight: .bold, design: .rounded))
-                                .monospacedDigit()
-                                .foregroundStyle(StrandPalette.textPrimary)
-                        } else {
-                            Text("—")
-                                .font(.system(size: 35, weight: .bold, design: .rounded))
-                                .foregroundStyle(StrandPalette.textPrimary)
-                        }
-                        Spacer(minLength: 12)
-                        HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            Image(systemName: "heart.fill")
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundStyle(StrandPalette.textSecondary)
-                            Text(context.state.bpm.map { "\($0)" } ?? "–")
-                                .font(.system(size: 35, weight: .bold, design: .rounded))
-                                .monospacedDigit()
-                                .foregroundStyle(StrandPalette.textPrimary)
-                            Text("bpm")
-                                .font(.system(size: 17, weight: .semibold))
-                                .foregroundStyle(StrandPalette.textSecondary)
-                        }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    NOOPBatteryRing(percent: context.state.batteryPct)
-                }
-                .frame(maxWidth: .infinity, minHeight: 50, alignment: .center)
-                Rectangle()
-                    .fill(StrandPalette.hairline)
-                    .frame(height: 1)
-                NOOPHeartRateZoneRail(zone: context.state.heartRateZone)
-                if context.state.distance != nil || context.state.pace != nil {
-                    Rectangle()
-                        .fill(StrandPalette.hairline)
-                        .frame(height: 1)
-                    NOOPWorkoutMetricsRow(distance: context.state.distance,
-                                          pace: context.state.pace,
-                                          effort: context.state.effort)
-                } else {
-                    HStack(spacing: 0) {
-                        NOOPLiveMetric(label: "EFFORT", value: context.state.effort.map(String.init) ?? "—")
-                    }
-                }
-            }
-            .padding()
-            .activityBackgroundTint(StrandPalette.surfaceBase)
-            .activitySystemActionForegroundColor(StrandPalette.textPrimary)
+            LockScreen(state: context.state, title: context.attributes.title)
+                .activityBackgroundTint(NunaPalette.card)
+                .activitySystemActionForegroundColor(NunaPalette.textPrimary)
         } dynamicIsland: { context in
-            DynamicIsland {
+            let s = context.state
+            let tint = NOOPLive.tint(zone: s.heartRateZone)
+            return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    if let startedAt = context.state.activityStartedAt {
-                        Text(timerInterval: startedAt...startedAt.addingTimeInterval(86_400),
-                             countsDown: false)
-                            .font(.system(size: 24, weight: .bold, design: .rounded))
-                            .monospacedDigit()
-                            .foregroundStyle(StrandPalette.textPrimary)
-                    } else {
-                        Text("—")
-                            .font(.system(size: 24, weight: .bold, design: .rounded))
-                            .foregroundStyle(StrandPalette.textPrimary)
+                    HStack(spacing: 8) {
+                        NOOPLiveGlyph(symbol: symbol(s), tint: tint, size: 30)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(verbatim: s.activityName ?? context.attributes.title).font(.nuna(size: 14, weight: .heavy)).lineLimit(1)
+                            if let e = s.effort { Text("Effort \(e)").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                        }
                     }
-                }
-                DynamicIslandExpandedRegion(.center) {
-                    NOOPBatteryRing(percent: context.state.batteryPct, size: 36)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Image(systemName: "heart.fill")
-                            .font(.system(size: 14, weight: .bold))
-                            .foregroundStyle(StrandPalette.textSecondary)
-                        Text(context.state.bpm.map(String.init) ?? "–")
-                            .font(.system(size: 24, weight: .bold, design: .rounded))
-                            .monospacedDigit()
-                            .foregroundStyle(StrandPalette.textPrimary)
-                        Text("bpm")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(StrandPalette.textSecondary)
+                    HStack(alignment: .firstTextBaseline, spacing: 3) {
+                        Image(systemName: "heart.fill").font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.alertText)
+                        Text(verbatim: s.bpm.map(String.init) ?? "–").font(.nuna(size: 26, weight: .bold, design: NunaType.design)).monospacedDigit()
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    VStack(spacing: 6) {
-                        NOOPHeartRateZoneRail(zone: context.state.heartRateZone)
-                        if context.state.distance != nil || context.state.pace != nil {
-                            NOOPWorkoutMetricsRow(distance: context.state.distance,
-                                                  pace: context.state.pace,
-                                                  effort: context.state.effort)
-                        } else {
-                            HStack(spacing: 0) {
-                                NOOPLiveMetric(label: "EFFORT", value: context.state.effort.map(String.init) ?? "—")
-                            }
-                        }
+                    VStack(spacing: 10) {
+                        Metrics(state: s)
+                        NOOPHeartRateZoneRail(zone: s.heartRateZone, compact: true)
                     }
+                    .padding(.top, 4)
                 }
             } compactLeading: {
-                if let startedAt = context.state.activityStartedAt {
-                    Text(timerInterval: startedAt...startedAt.addingTimeInterval(86_400), countsDown: false)
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .monospacedDigit()
-                } else {
-                    Text("—")
-                }
+                clock(s).font(.nuna(size: 13, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(tint).frame(maxWidth: 52)
             } compactTrailing: {
-                HStack(spacing: 3) {
-                    Image(systemName: "heart.fill")
-                        .foregroundStyle(StrandPalette.textSecondary)
-                    Text("\(context.state.bpm.map(String.init) ?? "–")")
-                        .monospacedDigit()
+                if let pace = s.pace {
+                    Text(verbatim: pace).font(.nuna(size: 13, weight: .bold, design: NunaType.design)).monospacedDigit().lineLimit(1)
+                } else {
+                    HStack(spacing: 3) {
+                        Image(systemName: "heart.fill").font(.system(size: 10, weight: .bold)).foregroundStyle(NunaPalette.alertText)
+                        Text(verbatim: s.bpm.map(String.init) ?? "–").font(.nuna(size: 13, weight: .bold, design: NunaType.design)).monospacedDigit()
+                    }
                 }
             } minimal: {
-                NOOPBatteryRing(percent: context.state.batteryPct, size: 24)
+                ZStack {
+                    Circle().stroke(tint, lineWidth: 2.5)
+                    Image(systemName: symbol(s)).font(.system(size: 10, weight: .bold)).foregroundStyle(tint)
+                }
             }
+            .keylineTint(tint)
         }
     }
 }
 
-/// One compact row for GPS workouts. Effort stays beside Distance and Pace so the three workout
-/// metrics are visible together instead of making the Lock Screen card grow with a second row.
-private struct NOOPWorkoutMetricsRow: View {
-    let distance: String?
-    let pace: String?
-    let effort: Int?
+private func symbol(_ s: NOOPActivityAttributes.ContentState) -> String {
+    s.activityName.map(ActivitySport.symbol(for:)) ?? "heart.fill"
+}
+
+@ViewBuilder private func clock(_ s: NOOPActivityAttributes.ContentState) -> some View {
+    if let start = s.activityStartedAt {
+        Text(timerInterval: start...start.addingTimeInterval(86_400), countsDown: false)
+    } else {
+        Text(verbatim: "–")
+    }
+}
+
+private struct LockScreen: View {
+    let state: NOOPActivityAttributes.ContentState
+    let title: String
+
+    var body: some View {
+        let tint = NOOPLive.tint(zone: state.heartRateZone)
+        VStack(spacing: 12) {
+            HStack(spacing: 12) {
+                NOOPLiveGlyph(symbol: symbol(state), tint: tint, size: 44)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(verbatim: state.activityName ?? title).font(.nuna(size: 18, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+                    HStack(spacing: 6) {
+                        if let e = state.effort { NOOPLiveChip(text: Text("Effort \(e)"), color: NunaPalette.effortText) }
+                        if let z = state.heartRateZone { NOOPLiveChip(text: Text("Zone \(z)"), color: tint) }
+                    }
+                }
+                Spacer(minLength: 8)
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(verbatim: state.bpm.map(String.init) ?? "–").font(.nuna(size: 38, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
+                    Text("bpm").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                }
+            }
+            NOOPHeartRateZoneRail(zone: state.heartRateZone)
+            Rectangle().fill(NunaPalette.hairline).frame(height: 1)
+            Metrics(state: state)
+        }
+        .padding(16)
+    }
+}
+
+/// Three figures. GPS: distance, time, pace. Without GPS: time, average and peak heart rate. Live heart rate alone: time, average, battery.
+private struct Metrics: View {
+    let state: NOOPActivityAttributes.ContentState
 
     var body: some View {
         HStack(spacing: 0) {
-            NOOPLiveMetric(label: "DISTANCE", value: distance ?? "—")
-            metricDivider
-            NOOPLiveMetric(label: "PACE", value: pace ?? "—")
-            metricDivider
-            NOOPLiveMetric(label: "EFFORT", value: effort.map(String.init) ?? "—")
+            if state.distance != nil || state.pace != nil {
+                NOOPLiveMetric(label: "DISTANCE", value: state.distance ?? "–")
+                NOOPLiveDivider()
+                timeMetric
+                NOOPLiveDivider()
+                NOOPLiveMetric(label: "PACE", value: state.pace ?? "–")
+            } else {
+                timeMetric
+                NOOPLiveDivider()
+                NOOPLiveMetric(label: "AVG", value: state.averageBPM.map(String.init) ?? "–")
+                NOOPLiveDivider()
+                if state.activityName != nil {
+                    NOOPLiveMetric(label: "PEAK", value: state.peakBPM.map(String.init) ?? "–")
+                } else {
+                    VStack(spacing: 2) {
+                        Text("Battery").font(.nuna(size: 10.5, weight: .heavy)).tracking(0.5).foregroundStyle(NunaPalette.textSecondary)
+                        NOOPBatteryRing(percent: state.batteryPct, size: 26)
+                    }.frame(maxWidth: .infinity)
+                }
+            }
         }
     }
 
-    private var metricDivider: some View {
-        Rectangle()
-            .fill(StrandPalette.hairline)
-            .frame(width: 1, height: 34)
-            .padding(.horizontal, 8)
-    }
-}
-
-/// Compact strap-battery ring used in the open centre of the Lock Screen banner.
-private struct NOOPBatteryRing: View {
-    let percent: Int?
-    var size: CGFloat = 48
-
-    // Keep the battery indicator present but subordinate to the workout timer and heart rate.
-    // The shared charge token remains the source of truth; only this Live Activity presentation is muted.
-    private let mutedChargeOpacity = 0.55
-
-    private var progress: CGFloat {
-        guard let percent else { return 0 }
-        return CGFloat(min(max(percent, 0), 100)) / 100
-    }
-
-    var body: some View {
-        ZStack {
-            Circle()
-                .stroke(StrandPalette.hairline, lineWidth: 2)
-            Circle()
-                .trim(from: 0, to: progress)
-                .stroke(
-                    StrandPalette.chargeColor.opacity(mutedChargeOpacity),
-                    style: StrokeStyle(lineWidth: 3, lineCap: .round))
-                .rotationEffect(.degrees(-90))
-            Text(percent.map { "\($0)%" } ?? "—")
-                .font(.system(size: 11, weight: .bold, design: .rounded))
-                .monospacedDigit()
-                .foregroundStyle(StrandPalette.chargeColor.opacity(mutedChargeOpacity))
+    private var timeMetric: some View {
+        VStack(alignment: .center, spacing: 2) {
+            Text("TIME").font(.nuna(size: 10.5, weight: .heavy)).tracking(0.5).foregroundStyle(NunaPalette.textSecondary)
+            clock(state).font(.nuna(size: 19, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
+                .multilineTextAlignment(.center).lineLimit(1).minimumScaleFactor(0.7).frame(width: 78, alignment: .center)
         }
-        .frame(width: size, height: size)
-        .accessibilityLabel(percent.map { "Battery \($0) percent" } ?? "Battery unavailable")
+        .frame(maxWidth: .infinity)
     }
-}
-
-/// Lock-Screen banner stat column (label over value). File-scope because the `ActivityConfiguration`
-/// content closure isn't a method of `NOOPLiveActivity`.
-///
-/// #759 - the label and value are CENTRE-aligned so each value sits directly under its own label. The
-/// old `.trailing` alignment right-pinned both to the column's edge: when the value was narrower than
-/// the label (e.g. "12" under "Effort") it drifted to the label's right edge instead of under it, which
-/// read as "the number doesn't line up with its label". `fixedSize` stops either line truncating so the
-/// pairing is never clipped at narrow widths.
-@ViewBuilder
-private func bannerStat(label: String, value: String) -> some View {
-    VStack(alignment: .center, spacing: 2) {
-        Text(label).font(.caption2).foregroundStyle(StrandPalette.textSecondary)
-        Text(value).font(.headline).foregroundStyle(StrandPalette.textPrimary)
-    }
-    .multilineTextAlignment(.center)
-    .fixedSize()
-}
-
-
-/// Dynamic Island expanded-region stat column (label over value). File-scope for the same reason as
-/// `bannerStat`. #759 - centre-aligned + `fixedSize` for the same value-under-its-label fix as the banner.
-@ViewBuilder
-private func statColumn(label: String, value: String) -> some View {
-    VStack(alignment: .center, spacing: 1) {
-        Text(label).font(.caption2).foregroundStyle(.secondary)
-        Text(value).font(.headline)
-    }
-    .multilineTextAlignment(.center)
-    .fixedSize()
 }

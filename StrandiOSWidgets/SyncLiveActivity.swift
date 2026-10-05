@@ -13,58 +13,55 @@ struct SyncLiveActivity: Widget {
         ActivityConfiguration(for: SyncActivityAttributes.self) { context in
             // Lock Screen / banner presentation.
             HStack(spacing: 14) {
-                syncGlyph(context.state.phase)
-                    .font(.title2)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(context.attributes.title)
-                        .font(.caption).foregroundStyle(StrandPalette.textSecondary)
-                    Text(context.state.status)
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
-                        .foregroundStyle(StrandPalette.textPrimary)
+                NOOPLiveGlyph(symbol: glyphName(context.state.phase), tint: glyphTint(context.state.phase), size: 44)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(verbatim: context.attributes.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(0.5).textCase(.uppercase)
+                        .foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: context.state.status).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     if let detail = context.state.detail {
-                        Text(detail).font(.caption2).foregroundStyle(StrandPalette.textSecondary)
+                        Text(verbatim: detail).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                 }
                 Spacer()
                 if isActive(context.state.phase) {
-                    elapsed(since: context.state.startedAt)
-                        .font(.system(.headline, design: .rounded).monospacedDigit())
-                        .foregroundStyle(StrandPalette.textPrimary)
+                    VStack(alignment: .trailing, spacing: 2) {
+                        elapsed(since: context.state.startedAt).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).monospacedDigit()
+                            .foregroundStyle(NunaPalette.textPrimary)
+                        if context.state.chunks > 0 {
+                            Text("Chunks \(context.state.chunks)").font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        }
+                    }
                 }
             }
-            .padding()
-            .activityBackgroundTint(StrandPalette.surfaceBase)
-            .activitySystemActionForegroundColor(StrandPalette.textPrimary)
+            .padding(16)
+            .activityBackgroundTint(NunaPalette.card)
+            .activitySystemActionForegroundColor(NunaPalette.textPrimary)
         } dynamicIsland: { context in
-            // ONE line, deliberately. iOS shows the expanded layout for a few seconds whenever an activity
-            // starts and offers no way to start compact, so the only lever on that flash is how tall the
-            // expanded layout is: no bottom or centre region, so it is a short pill rather than a card.
-            // The backlog detail and title live on the Lock Screen banner instead.
-            DynamicIsland {
+            // One line, deliberately: iOS shows the expanded layout for a few seconds whenever an activity starts and offers no way
+            // to start compact, so the only lever on that flash is how tall it is. The backlog detail lives on the Lock Screen banner.
+            let tint = glyphTint(context.state.phase)
+            return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    Label { Text(context.state.status) } icon: { syncGlyph(context.state.phase) }
-                        .font(.subheadline)
-                        .lineLimit(1)
+                    HStack(spacing: 8) {
+                        NOOPLiveGlyph(symbol: glyphName(context.state.phase), tint: tint, size: 28)
+                        Text(verbatim: context.state.status).font(.nuna(size: 14, weight: .heavy)).lineLimit(1)
+                    }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     if isActive(context.state.phase) {
-                        elapsed(since: context.state.startedAt)
-                            .font(.system(.subheadline, design: .rounded).monospacedDigit())
+                        elapsed(since: context.state.startedAt).font(.nuna(size: 15, weight: .bold, design: NunaType.design)).monospacedDigit()
                     }
                 }
             } compactLeading: {
-                // Same footprint as the live-HR island's heart: one symbol, no label, so the compact pill
-                // stays as narrow as that one does.
-                syncGlyph(context.state.phase)
+                Image(systemName: glyphName(context.state.phase)).foregroundStyle(tint)
             } compactTrailing: {
-                // "…" while connecting and until the first chunk lands; then the chunk count, the only
-                // live number a sync has. Never "0", so the island never claims progress the strap has
-                // not made.
-                Text(context.state.chunks > 0 ? "\(context.state.chunks)" : "…")
-                    .monospacedDigit()
+                // "…" while connecting and until the first chunk lands; then the chunk count, the only live number a sync has.
+                // Never "0", so the island never claims progress the strap has not made.
+                Text(verbatim: context.state.chunks > 0 ? "\(context.state.chunks)" : "…").font(.nuna(size: 13, weight: .bold)).monospacedDigit()
             } minimal: {
-                syncGlyph(context.state.phase)
+                Image(systemName: glyphName(context.state.phase)).foregroundStyle(tint)
             }
+            .keylineTint(tint)
         }
     }
 }
@@ -78,18 +75,16 @@ private func elapsed(since start: Date) -> some View {
     Text(timerInterval: start...Date.distantFuture, countsDown: false)
 }
 
-/// One glyph per phase. The sync arrows in the positive (green) colour for both active phases — the
-/// connecting/syncing distinction is carried by the trailing "…" vs count, not by swapping symbols, which
-/// kept the compact pill's width steady — then a tick once done, and the critical colour when the strap
-/// went quiet.
-@ViewBuilder
-private func syncGlyph(_ phase: SyncActivityAttributes.Phase) -> some View {
+private func glyphName(_ phase: SyncActivityAttributes.Phase) -> String {
     switch phase {
-    case .connecting, .syncing:
-        Image(systemName: "arrow.triangle.2.circlepath").foregroundStyle(StrandPalette.statusPositive)
-    case .done:
-        Image(systemName: "checkmark.circle.fill").foregroundStyle(StrandPalette.statusPositive)
-    case .interrupted:
-        Image(systemName: "exclamationmark.circle.fill").foregroundStyle(StrandPalette.statusCritical)
+    case .connecting, .syncing: return "arrow.triangle.2.circlepath"
+    case .done: return "checkmark.circle.fill"
+    case .interrupted: return "exclamationmark.circle.fill"
     }
+}
+
+/// Green for both active phases (the connecting and syncing difference is the trailing "…" against the count, so the compact pill's
+/// width stays steady), green again once done, and the alert colour when the strap went quiet.
+private func glyphTint(_ phase: SyncActivityAttributes.Phase) -> Color {
+    phase == .interrupted ? NunaPalette.alert : NunaPalette.charge
 }
