@@ -40,11 +40,33 @@ public struct LiftActivityAttributes: ActivityAttributes {
         public var stageStartedAt: Date
         /// When the running rest is due to end; the widget counts DOWN to it. Nil while working.
         public var restEndsAt: Date?
+        /// When the whole session began, for the session clock (the two dates above are per stage).
+        public var sessionStartedAt: Date?
+        /// Working sets finished, and planned, as numbers for the "Set 7 / 13" figure.
+        public var setsDone: Int?
+        public var setsPlanned: Int?
+        /// Lifted volume so far (weight x reps over the finished working sets), already unit-converted and formatted.
+        public var volume: String?
+        /// Effort built so far by the session's heart rate, on NOOP's 0-100 axis.
+        public var effort: Int?
+        /// Where the heart rate sits across the five-zone bar, 0 to 1.
+        public var zonePosition: Double?
+        /// Effort as the app shows it (the user's scale, one decimal). Takes the place of `effort` when present.
+        public var effortLabel: String?
 
         public init(isResting: Bool, exercise: String, status: String, detail: String?,
                     bpm: Int?, progress: String,
                     stageStartedAt: Date, restEndsAt: Date?, heartRateZone: Int? = nil,
-                    distance: String? = nil, speed: String? = nil) {
+                    distance: String? = nil, speed: String? = nil,
+                    sessionStartedAt: Date? = nil, setsDone: Int? = nil, setsPlanned: Int? = nil,
+                    volume: String? = nil, effort: Int? = nil, zonePosition: Double? = nil, effortLabel: String? = nil) {
+            self.effortLabel = effortLabel
+            self.sessionStartedAt = sessionStartedAt
+            self.setsDone = setsDone
+            self.setsPlanned = setsPlanned
+            self.volume = volume
+            self.effort = effort
+            self.zonePosition = zonePosition
             self.isResting = isResting
             self.exercise = exercise
             self.status = status

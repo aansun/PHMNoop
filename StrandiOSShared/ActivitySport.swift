@@ -17,5 +17,11 @@ enum ActivitySport {
         ]
         return table.first { n.contains($0.0) }?.1 ?? "figure.mixed.cardio"
     }
+
+    /// Sports that record a route, by the catalogue's own names (the ones that default GPS on), so a Live Activity can lead with
+    /// distance, time and pace before the first GPS fix arrives.
+    static func isRoute(_ name: String) -> Bool {
+        ["running", "walking", "hiking", "cycling", "open-water swim", "rowing", "skiing", "snowboarding"].contains(name.lowercased())
+    }
 }
 #endif

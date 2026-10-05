@@ -47,6 +47,8 @@ final class LiveActivityController {
                 activityStartedAt: Date? = nil,
                 averageBPM: Int? = nil, peakBPM: Int? = nil,
                 distance: String? = nil, pace: String? = nil, speed: String? = nil,
+                calories: Int? = nil, subtitle: String? = nil, progress: Double? = nil, targetZone: Int? = nil,
+                zonePosition: Double? = nil, zoneSeconds: Int? = nil, pausedAt: Date? = nil, effortLabel: String? = nil,
                 workoutActive: Bool = false) {
         guard activitiesEnabled else { return }
 
@@ -56,7 +58,10 @@ final class LiveActivityController {
         // — which made the #336 opt-out a no-op (#341: toggle off, heart stays) and risked spawning a
         // duplicate on the start path below. Done on the HR tick rather than in `init` because
         // `Activity.activities` isn't reliably hydrated at the instant of process launch.
-        if activity == nil { activity = Activity<NOOPActivityAttributes>.activities.first }
+        // Only an activity that is still showing counts: one that was just ended lingers in the list for a moment, and updating
+        // it does nothing, so a session started right after another was discarded would never get its own banner.
+        if let current = activity, current.activityState != .active { activity = nil }
+        if activity == nil { activity = Activity<NOOPActivityAttributes>.activities.first { $0.activityState == .active } }
 
         // A workout is a first-class Live Activity, not a variation of the optional live-HR setting.
         // Users may turn off the latter while still expecting a started workout to remain visible.
@@ -99,7 +104,15 @@ final class LiveActivityController {
             peakBPM: peakBPM,
             distance: distance,
             pace: pace,
-            speed: speed)
+            speed: speed,
+            calories: calories,
+            subtitle: subtitle,
+            progress: progress,
+            targetZone: targetZone,
+            zonePosition: zonePosition,
+            zoneSeconds: zoneSeconds,
+            pausedAt: pausedAt,
+            effortLabel: effortLabel)
         // A workout owns this activity until End/Discard. Do not let a temporary strap disconnect or
         // quiet GPS stream make the Lock Screen activity stale while the workout clock is still live.
         // Ordinary live-HR activity keeps the shorter freshness date as a safety net.

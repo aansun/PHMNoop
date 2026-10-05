@@ -139,7 +139,9 @@ final class SyncLiveActivityController {
     /// Re-adopt an activity that outlived a previous process — the shortcut's "connecting" island can
     /// easily be older than the process that finishes the sync.
     private func adoptExisting() {
-        if activity == nil { activity = Activity<SyncActivityAttributes>.activities.first }
+        // An activity that was just ended lingers in the list for a moment; only one still showing can be updated.
+        if let current = activity, current.activityState != .active { activity = nil }
+        if activity == nil { activity = Activity<SyncActivityAttributes>.activities.first { $0.activityState == .active } }
     }
 
     private func request(state: SyncActivityAttributes.ContentState) {

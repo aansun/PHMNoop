@@ -229,7 +229,9 @@ struct StrandiOSApp: App {
                 // sample arrives. This also makes the workout activity independent from the optional
                 // "Live HR in Dynamic Island" setting.
                 .onReceive(model.$activeWorkout) { _ in
-                    pushLiveActivity()
+                    // `$activeWorkout` publishes before the value is stored, so read it one turn later: otherwise a pause, an end
+                    // or a new session would show the previous state until the next heart-rate tick.
+                    DispatchQueue.main.async { pushLiveActivity() }
                 }
                 // Once a manual workout is saved, take the user straight to the Workouts log so the
                 // completed session and its detail are visible instead of leaving them on Today/Live.
@@ -452,6 +454,40 @@ struct StrandiOSApp: App {
         let workoutActive = workout != nil && !liftSession.isActive && !model.live.backfilling
         let effort = workout.map { Int($0.liveStrain.rounded()) }
             ?? day?.strain.map { Int($0.rounded()) }
+        let zoneSet = model.profile.hrZoneSet
+        let unitSystem = UnitSystem(rawValue: unitSystemRaw) ?? .metric
+        let distanceSystem = UnitPrefs.resolveDistance(system: unitSystem, override: distanceSystemRaw)
+        // The workout-only figures: calories, the line under the heart rate, progress to the target, and the zone bar pointer.
+        var calories: Int?
+        var subtitle: String?
+        var progress: Double?
+        var zoneSeconds: Int?
+        var speed = metrics.speed
+        if let w = workout {
+            calories = NunaLiveMetrics.kcal(w, model: model)
+            let elapsed = w.elapsed()
+            var parts: [String] = []
+            if let t = model.workoutTarget {
+                if let secs = t.seconds {
+                    progress = min(max(elapsed / Double(max(secs, 1)), 0), 1)
+                    parts.append(String(localized: "Target \(Self.clock(TimeInterval(secs)))"))
+                } else if let m = t.meters {
+                    progress = min(max(model.gpsRecorder.distanceM / max(m, 1), 0), 1)
+                    parts.append(String(localized: "Target \(UnitFormatter.distanceFromMeters(m, system: distanceSystem))"))
+                } else if let z = t.zone {
+                    parts.append(String(localized: "Target zone \(z)"))
+                }
+            }
+            if let c = calories { parts.append(String(localized: "\(c) kcal")) }
+            subtitle = parts.isEmpty ? nil : parts.joined(separator: " · ")
+            if let z = metrics.zone, z >= 1 { zoneSeconds = NunaLiveMetrics.zoneSeconds(w, zoneSet: zoneSet)[min(z, 5) - 1] }
+            // A bike shows speed where a runner shows pace.
+            if w.sport == "Cycling", let pace = model.gpsRecorder.paceSecPerKm, pace > 0 {
+                speed = UnitFormatter.speedFromKilometersPerHour(3600 / pace, system: distanceSystem) ?? speed
+            }
+        }
+        // While paused the clock must stand still, so the running clock starts later by the time already spent paused.
+        let clockStart = workout.map { $0.start.addingTimeInterval($0.pausedDuration) }
         liveActivity.update(
             bpm: bpm,
             recovery: day?.recovery.map { Int($0.rounded()) },
@@ -461,13 +497,26 @@ struct StrandiOSApp: App {
             effort: effort,
             heartRateZone: metrics.zone,
             activityName: workout?.sport,
-            activityStartedAt: workout?.start,
+            activityStartedAt: clockStart,
             averageBPM: workout.flatMap { $0.avgHr > 0 ? $0.avgHr : nil },
             peakBPM: workout.flatMap { $0.peakHr > 0 ? $0.peakHr : nil },
             distance: metrics.distance,
             pace: metrics.pace,
-            speed: nil,
+            speed: workout?.sport == "Cycling" ? speed : nil,
+            calories: calories,
+            subtitle: subtitle,
+            progress: progress,
+            targetZone: workout == nil ? nil : model.workoutTarget?.zone,
+            zonePosition: bpm.map { NunaLiveMetrics.barPosition(bpm: $0, zoneSet: zoneSet) },
+            zoneSeconds: zoneSeconds,
+            pausedAt: workout?.pausedAt,
+            effortLabel: workout.map { UnitFormatter.effortDisplay($0.liveStrain, scale: UnitPrefs.resolveEffortScale(UserDefaults.standard.string(forKey: UnitPrefs.effortScaleKey) ?? "")) },
             workoutActive: workoutActive)
+    }
+
+    private static func clock(_ s: TimeInterval) -> String {
+        let t = Int(s)
+        return t >= 3600 ? String(format: "%d:%02d:%02d", t / 3600, (t % 3600) / 60, t % 60) : String(format: "%d:%02d", t / 60, t % 60)
     }
 
     @MainActor
@@ -516,7 +565,26 @@ struct StrandiOSApp: App {
                 restEndsAt: p.restEndsAt,
                 heartRateZone: metrics.zone,
                 distance: metrics.distance,
-                speed: metrics.speed))
+                speed: metrics.speed,
+                sessionStartedAt: liftSession.engine.map { Date(timeIntervalSince1970: TimeInterval($0.startTs)) },
+                setsDone: p.setsDone,
+                setsPlanned: p.setsPlanned,
+                volume: liftVolume(system: system),
+                effort: model.activeWorkout.map { Int($0.liveStrain.rounded()) },
+                zonePosition: bpm.map { NunaLiveMetrics.barPosition(bpm: $0, zoneSet: model.profile.hrZoneSet) },
+                effortLabel: model.activeWorkout.map { UnitFormatter.effortDisplay($0.liveStrain, scale: UnitPrefs.resolveEffortScale(UserDefaults.standard.string(forKey: UnitPrefs.effortScaleKey) ?? "")) }))
+    }
+
+    /// Weight x reps over the working sets done so far, in the user's unit, e.g. "4,120 kg". nil until a set has both numbers.
+    @MainActor
+    private func liftVolume(system: UnitSystem) -> String? {
+        guard let engine = liftSession.engine else { return nil }
+        let kg = engine.sets.filter { !$0.isWarmup }.reduce(0.0) { $0 + ($1.weightKg ?? 0) * Double($1.reps ?? 0) }
+        guard kg > 0 else { return nil }
+        let f = NumberFormatter()
+        f.numberStyle = .decimal; f.maximumFractionDigits = 0; f.locale = AppLanguage.activeLocale
+        let shown = LiftFormat.display(fromKilograms: kg, system: system)
+        return (f.string(from: NSNumber(value: shown)) ?? String(Int(shown.rounded()))) + " " + LiftFormat.weightUnit(system)
     }
 }
 
