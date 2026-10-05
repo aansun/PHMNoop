@@ -309,3 +309,86 @@ struct NunaPaceDial: View {
     }
 }
 #endif
+
+#if os(iOS)
+/// The stress gauge: an open arc from 0.0 to 3.0 that runs blue, green, yellow and red, the current value as a white block on
+/// the arc with a short streak pointing inward, the number large in the middle, the level word under it and the time of the
+/// reading. The part of the arc past the value is dimmed.
+struct NunaStressGauge: View {
+    let value: Double?
+    let level: LocalizedStringKey?
+    let levelColor: Color
+    let time: String?
+    var onInfo: (() -> Void)?
+
+    private let start = 160.0, span = 220.0
+    private var stops: Gradient {
+        Gradient(colors: [NunaPalette.effort, NunaPalette.charge, NunaPalette.warning, NunaPalette.alert])
+    }
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            VStack(spacing: 0) {
+                ZStack {
+                    GeometryReader { geo in
+                        let lw: CGFloat = 16
+                        let side = min(geo.size.width, geo.size.height)
+                        let r = side / 2 - lw
+                        let c = CGPoint(x: geo.size.width / 2, y: geo.size.height / 2)
+                        let f = max(0, min(1, (value ?? 0) / 3))
+                        let a = Angle.degrees(start + span * f).radians
+                        let m = CGPoint(x: c.x + r * CGFloat(cos(a)), y: c.y + r * CGFloat(sin(a)))
+                        ZStack {
+                            arc(c, r, 1).stroke(AngularGradient(gradient: stops, center: .center, startAngle: .degrees(start), endAngle: .degrees(start + span)),
+                                                style: StrokeStyle(lineWidth: lw, lineCap: .round)).opacity(0.42)
+                            if value != nil {
+                                arc(c, r, f).stroke(AngularGradient(gradient: stops, center: .center, startAngle: .degrees(start), endAngle: .degrees(start + span)),
+                                                    style: StrokeStyle(lineWidth: lw, lineCap: .round))
+                                streak(from: m, toward: c, along: a, length: 50)
+                                RoundedRectangle(cornerRadius: 3, style: .continuous).fill(NunaPalette.textPrimary)
+                                    .frame(width: 14, height: 22).rotationEffect(.radians(a + .pi / 2)).position(m)
+                            }
+                            VStack(spacing: 8) {
+                                Text(verbatim: value.map { String(format: "%.1f", locale: AppLanguage.activeLocale, $0) } ?? "–")
+                                    .font(.nuna(size: 92, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                                if let level { Text(level).font(.nuna(size: 20, weight: .heavy)).tracking(1.5).textCase(.uppercase).foregroundStyle(levelColor) }
+                                if let time { Text(verbatim: time).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                            }
+                            .position(x: c.x, y: c.y - 6)
+                            ForEach([("0.0", start), ("3.0", start + span)], id: \.0) { label, deg in
+                                let rad = Angle.degrees(deg).radians
+                                Text(verbatim: label).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textMuted)
+                                    .position(x: c.x + r * CGFloat(cos(rad)), y: c.y + r * CGFloat(sin(rad)) + 36)
+                            }
+                        }
+                    }
+                }
+                .frame(height: 280)
+            }
+            if let onInfo {
+                Button(action: onInfo) {
+                    Image(systemName: "info").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        .frame(width: 34, height: 34).overlay(Circle().strokeBorder(NunaPalette.textSecondary, lineWidth: 1.6))
+                }.buttonStyle(.plain).accessibilityLabel(Text("About this score"))
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private func arc(_ c: CGPoint, _ r: CGFloat, _ f: Double) -> Path {
+        var p = Path()
+        p.addArc(center: c, radius: r, startAngle: .degrees(start), endAngle: .degrees(start + span * f), clockwise: false)
+        return p
+    }
+
+    /// A short motion streak behind the marker, drawn toward the centre of the gauge.
+    private func streak(from m: CGPoint, toward c: CGPoint, along a: Double, length: CGFloat) -> some View {
+        let end = CGPoint(x: m.x - length * CGFloat(cos(a)), y: m.y - length * CGFloat(sin(a)))
+        return Path { p in p.move(to: m); p.addLine(to: end) }
+            .stroke(LinearGradient(colors: [NunaPalette.textPrimary.opacity(0.85), NunaPalette.textPrimary.opacity(0)], startPoint: UnitPoint(x: 0.5, y: 0.5), endPoint: UnitPoint(x: 0.5, y: 0.5)),
+                    style: StrokeStyle(lineWidth: 6, lineCap: .round))
+            .mask(LinearGradient(colors: [.white, .clear], startPoint: UnitPoint(x: m.x / max(c.x * 2, 1), y: m.y / max(c.y * 2, 1)),
+                                 endPoint: UnitPoint(x: end.x / max(c.x * 2, 1), y: end.y / max(c.y * 2, 1))))
+    }
+}
+#endif
