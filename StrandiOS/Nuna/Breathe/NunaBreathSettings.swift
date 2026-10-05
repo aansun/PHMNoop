@@ -40,7 +40,7 @@ struct NunaBreathSettingsView: View {
                     Text("Template uses each exercise's own length. A fixed length applies to every template.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 NunaSettingsGroup("Anya") {
-                    NunaToggleRow("Suggest an exercise", subtitle: "Reads your heart rate, HRV, stress and Charge", systemImage: "sparkles", isOn: $anya).padding(.vertical, 8)
+                    NunaToggleRow("Suggest an exercise", subtitle: "Reads your heart rate, HRV, stress and Charge", systemImage: NunaGlyph.anya, isOn: $anya).padding(.vertical, 8)
                     NunaDivider()
                     Button { confirmForget = true } label: {
                         NunaListRow("Forget what Anya remembers here", subtitle: LocalizedStringKey(String(localized: "\(memoryCount) notes, kept only in Breathing")), systemImage: "brain", showsChevron: false)

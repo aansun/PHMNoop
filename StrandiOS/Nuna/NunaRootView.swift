@@ -35,7 +35,7 @@ struct NunaRootView: View {
             NunaTabItem(id: Tab.health.rawValue, title: "Health", systemImage: "heart.text.square.fill"),
             NunaTabItem(id: Tab.trends.rawValue, title: "Trends", systemImage: "chart.line.uptrend.xyaxis"),
         ]
-        if coachEnabled { out.append(NunaTabItem(id: Tab.anya.rawValue, title: "Anya", systemImage: "AnyaIcon", usesAssetImage: true)) }
+        if coachEnabled { out.append(NunaTabItem(id: Tab.anya.rawValue, title: "Anya", systemImage: NunaGlyph.anya)) }
         out.append(NunaTabItem(id: Tab.me.rawValue, title: "Me", systemImage: "person.fill"))
         return out
     }

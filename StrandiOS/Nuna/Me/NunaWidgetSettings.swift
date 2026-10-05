@@ -14,7 +14,7 @@ struct NunaWidgetSettingsView: View {
         Item(title: "Scores", note: "Charge, Effort and Rest", sizes: "S · M · L · Lock Screen", icon: "circle.dashed"),
         Item(title: "Heart rate", note: "Live heart rate and the last 3 hours", sizes: "M", icon: "heart"),
         Item(title: "Stress", note: "Stress curve by hour", sizes: "M", icon: "waveform.path.ecg"),
-        Item(title: "Anya brief", note: "The morning brief from Anya", sizes: "S · Lock Screen", icon: "sparkles"),
+        Item(title: "Anya brief", note: "The morning brief from Anya", sizes: "S · Lock Screen", icon: NunaGlyph.anya),
     ]
 
     private var age: TimeInterval? { snapshot.map { Date().timeIntervalSince($0.updated) } }

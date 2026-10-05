@@ -142,7 +142,7 @@ struct NunaLanguageView: View {
             NunaCard(small: true) {
                 VStack(spacing: 0) {
                     NavigationLink(value: NunaAnyaRoute.settings) {
-                        NunaListRow("Anya's reply language", subtitle: LocalizedStringKey(anyaLanguage == "id" ? String(localized: "Always Indonesian") : (anyaLanguage == "en" ? String(localized: "Always English") : String(localized: "Follows the app language"))), systemImage: "sparkles", showsChevron: true)
+                        NunaListRow("Anya's reply language", subtitle: LocalizedStringKey(anyaLanguage == "id" ? String(localized: "Always Indonesian") : (anyaLanguage == "en" ? String(localized: "Always English") : String(localized: "Follows the app language"))), systemImage: NunaGlyph.anya, showsChevron: true)
                     }.buttonStyle(.plain)
                     NunaDivider()
                     NavigationLink(value: NunaMeRoute.units) { NunaListRow("Units are set separately", subtitle: "Km or miles, kg or lb, °C or °F", systemImage: "ruler.fill", showsChevron: true) }.buttonStyle(.plain)
@@ -324,7 +324,7 @@ struct NunaPrivacyView: View {
             }
             NunaSettingsGroup("What can leave the iPhone") {
                 NavigationLink(value: NunaAnyaRoute.settings) {
-                    NunaListRow("Text summary to an AI provider", subtitle: LocalizedStringKey(coach.isConfigured && coach.dataConsent ? String(localized: "On, only when you ask") : String(localized: "Off. Only after you allow Anya and ask")), systemImage: "sparkles", showsChevron: true)
+                    NunaListRow("Text summary to an AI provider", subtitle: LocalizedStringKey(coach.isConfigured && coach.dataConsent ? String(localized: "On, only when you ask") : String(localized: "Off. Only after you allow Anya and ask")), systemImage: NunaGlyph.anya, showsChevron: true)
                 }.buttonStyle(.plain)
                 NunaDivider()
                 NavigationLink(value: NunaMeRoute.backup) { NunaListRow("Export and backup", subtitle: "Only when you ask for it", systemImage: "square.and.arrow.up", showsChevron: true) }.buttonStyle(.plain)

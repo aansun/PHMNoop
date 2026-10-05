@@ -85,7 +85,7 @@ extension NunaTodayView {
             case .coupled:     made = (nil, NunaRowTarget(kind: .tab(.coupled)), "square.split.2x1.fill", nil)
             case .coach:
                 guard coachEnabled else { return nil }
-                made = (nil, NunaRowTarget(kind: .coach), "sparkles", nil)
+                made = (nil, NunaRowTarget(kind: .coach), NunaGlyph.anya, nil)
             }
             guard let target = made.1 else { return nil }
             return NunaLinkRow(id: card.rawValue, title: card.title, subtitle: card.subtitle, value: made.0,

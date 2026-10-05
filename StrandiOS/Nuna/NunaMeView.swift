@@ -31,7 +31,7 @@ struct NunaMeView: View {
                     NunaDivider()
                     row(.devices, "Devices", LocalizedStringKey(deviceSubtitle), "applewatch")
                     NunaDivider()
-                    row(.anya, "Anya", LocalizedStringKey(anyaSubtitle), "sparkles")
+                    row(.anya, "Anya", LocalizedStringKey(anyaSubtitle), NunaGlyph.anya)
                 }
                 group("Appearance") {
                     row(.appearance, "Appearance", LocalizedStringKey(appearanceSubtitle), "slider.horizontal.3")

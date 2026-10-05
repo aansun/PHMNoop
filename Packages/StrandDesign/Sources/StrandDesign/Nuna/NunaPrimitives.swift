@@ -72,8 +72,7 @@ public struct NunaIconButton: View {
 
     public var body: some View {
         Button(action: action) {
-            Image(systemName: systemImage)
-                .font(.nuna(size: 16, weight: .bold))
+            NunaGlyph(systemImage, pointSize: 16)
                 .foregroundStyle(filled ? NunaPalette.onAccent : NunaPalette.textPrimary)
                 .frame(width: 44, height: 44)
                 .background(filled ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
@@ -165,8 +164,7 @@ public struct NunaIconTile: View {
         self.systemImage = systemImage; self.tint = tint
     }
     public var body: some View {
-        Image(systemName: systemImage)
-            .font(.nuna(size: 17, weight: .bold))
+        NunaGlyph(systemImage, pointSize: 17)
             // Icons are neutral by design: colour is kept for scores and status, never for symbols.
             .foregroundStyle(NunaPalette.textPrimary)
             .frame(width: 40, height: 40)
@@ -347,7 +345,9 @@ public struct NunaTabBar: View {
                     if on { onReselect(item.id) } else { selection = item.id }
                 } label: {
                     VStack(spacing: 3) {
-                        if item.usesAssetImage {
+                        if item.systemImage == NunaGlyph.anya {
+                            NunaAnyaLetters(size: 24)
+                        } else if item.usesAssetImage {
                             Image(item.systemImage)
                                 .resizable().scaledToFit().frame(width: 22, height: 22)
                         } else {
