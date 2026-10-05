@@ -201,7 +201,8 @@ public struct NunaListRow<Trailing: View>: View {
                     Text(subtitle)
                         .font(.nuna(size: 12.5, weight: .semibold))
                         .foregroundStyle(NunaPalette.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .fixedSize(horizontal: false, vertical: true).textCase(nil)
+                        .textCase(nil)
                 }
             }
             Spacer(minLength: 8)
@@ -353,7 +354,12 @@ public struct NunaTabBar: View {
                         } else {
                             Image(systemName: item.systemImage).font(.nuna(size: 18, weight: .semibold))
                         }
-                        Text(item.title).font(.nuna(size: 11, weight: .bold)).lineLimit(1)
+                        if item.systemImage == NunaGlyph.anya {
+                            // Anya's name is never set in capitals.
+                            Text(item.title).font(.nuna(size: 11, weight: .bold)).lineLimit(1).minimumScaleFactor(0.7).tracking(-0.3).textCase(nil)
+                        } else {
+                            Text(item.title).font(.nuna(size: 11, weight: .bold)).lineLimit(1).minimumScaleFactor(0.7).tracking(-0.3)
+                        }
                     }
                     .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                     .frame(minWidth: 58, minHeight: 58)

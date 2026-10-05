@@ -18,7 +18,7 @@ struct ExperienceView: View {
                 Text("Pick the look of the whole app. Your data, scores and settings stay the same.")
                     .font(.nuna(size: 13.5, weight: .semibold))
                     .foregroundStyle(NunaPalette.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .fixedSize(horizontal: false, vertical: true).textCase(nil)
 
                 option(.standard,
                        tag: "Original NOOP look",
@@ -37,7 +37,7 @@ struct ExperienceView: View {
                         Text("Switching reloads the app shell briefly. Widgets, Live Activities and Anya keep working with the same data.")
                             .font(.nuna(size: 12.5, weight: .semibold))
                             .foregroundStyle(NunaPalette.textSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
+                            .fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }
                 }
             }
@@ -177,7 +177,7 @@ private struct ExperienceConfirmSheet: View {
                     Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(NunaPalette.textSecondary)
                     Text("Features that exist only in Nuna, like customisable Today cards and Anya in every module, do not appear in Default.")
                         .font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.warning)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
                 .padding(12)
                 .background(NunaPalette.warning.opacity(0.1), in: RoundedRectangle(cornerRadius: 10, style: .continuous))

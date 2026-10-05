@@ -140,7 +140,7 @@ struct NunaJournalView: View {
                                 if i > 0 { NunaDivider() }
                                 itemRow(item)
                             }
-                            if list.isEmpty { Text("Nothing here yet").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).padding(.vertical, 14) }
+                            if list.isEmpty { Text("Nothing here yet").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).padding(.vertical, 14) }
                         }
                     }
                 }
@@ -186,7 +186,7 @@ struct NunaJournalView: View {
             step("minus") { save(q, max(0, (cur ?? 0) - 1)) }
             Text(verbatim: cur.map { $0 == $0.rounded() ? String(Int($0)) : String(format: "%.1f", locale: AppLanguage.activeLocale, $0) } ?? "–")
                 .font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(minWidth: 34)
-            if let unit = item.kind.unitLabel, !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+            if let unit = item.kind.unitLabel, !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
             step("plus") { save(q, (cur ?? 0) + 1) }
             if cur != nil {
                 Button { Task { await repo.clearJournalAnswer(day: dayKey, question: q); await load() } } label: {

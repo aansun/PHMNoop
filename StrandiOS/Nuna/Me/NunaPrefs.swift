@@ -61,7 +61,7 @@ struct NunaUnitsView: View {
             VStack(alignment: .leading, spacing: 12) {
                 VStack(alignment: .leading, spacing: 3) {
                     Text(title).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(note).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(note).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 c()
             }
@@ -124,14 +124,14 @@ struct NunaLanguageView: View {
 
     var body: some View {
         NunaDetailScreen("Language") {
-            Text("The app is available in \(choices.count) languages. Dates and numbers follow the language.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+            Text("The app is available in \(choices.count) languages. Dates and numbers follow the language.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             option(.system)
             ForEach(choices) { option($0) }
             if picked.effective != running {
                 NunaCard(small: true) {
                     HStack(alignment: .top, spacing: 12) {
                         Image(systemName: "arrow.clockwise").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.top, 2)
-                        Text("Fully quit and reopen NOOP to switch to \(picked.effective.autonym).").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        Text("Fully quit and reopen NOOP to switch to \(picked.effective.autonym).").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }
                 }
                 preview(running, title: String(localized: "Preview"))
@@ -185,7 +185,7 @@ struct NunaLanguageView: View {
                 HStack {
                     Text(verbatim: title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Spacer()
-                    Text(verbatim: l.effective.autonym).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                    Text(verbatim: l.effective.autonym).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                 }
                 row(l.say("Score"), "Charge 78% · \(l.say("Ready"))")
                 row(l.say("Button"), l.say("Start workout"))
@@ -197,7 +197,7 @@ struct NunaLanguageView: View {
 
     private func row(_ label: String, _ value: String) -> some View {
         HStack(alignment: .firstTextBaseline) {
-            Text(verbatim: label).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text(verbatim: label).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             Spacer(minLength: 12)
             Text(verbatim: value).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).multilineTextAlignment(.trailing)
         }
@@ -219,7 +219,7 @@ struct NunaFeaturesView: View {
 
     var body: some View {
         NunaDetailScreen("Optional features") {
-            Text("Turn on what you use. What is off does not appear in Today.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text("Turn on what you use. What is off does not appear in Today.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             NunaSettingsGroup {
                 NunaToggleRow("Water tracker", subtitle: "A drink log with a daily target", systemImage: "drop", isOn: $hydration).padding(.vertical, 8)
                 NunaDivider()
@@ -261,7 +261,7 @@ struct NunaNotificationsView: View {
                     Image(systemName: status == .authorized || status == .provisional ? "checkmark.circle.fill" : "bell.slash").font(.nuna(size: 20)).foregroundStyle(status == .authorized ? NunaPalette.charge : NunaPalette.textSecondary)
                     VStack(alignment: .leading, spacing: 3) {
                         Text(status == .authorized || status == .provisional ? "iOS permission is on" : (status == .denied ? "iOS permission is off" : "iOS has not been asked yet")).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("Every notification is made on this iPhone, with no server.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Every notification is made on this iPhone, with no server.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer()
                     if status == .denied { Button("Open") { openIOSSettings() }.font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary) }
@@ -308,7 +308,7 @@ struct NunaPrivacyView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Image(systemName: "lock.shield").font(.nuna(size: 22, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Text("Your data stays on this iPhone").font(.nuna(size: 20, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("There is no account and no server. Scores are computed on the device from the strap and Apple Health.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    Text("There is no account and no server. Scores are computed on the device from the strap and Apple Health.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
             NunaSettingsGroup("iOS permissions") {

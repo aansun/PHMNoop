@@ -156,7 +156,7 @@ struct NunaMoodView: View {
                                 if let v = d.value { Text(verbatim: MoodStore.face(for: v)).font(.nuna(size: 14)) }
                             }
                             .frame(width: 30, height: 30)
-                            Text(verbatim: Self.weekday.string(from: d.date)).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: Self.weekday.string(from: d.date)).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                         .frame(maxWidth: .infinity)
                     }
@@ -171,8 +171,8 @@ struct NunaMoodView: View {
             ForEach(0..<lines.count, id: \.self) { i in
                 NunaCard(small: true) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(verbatim: lines[i].text).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
-                        Text(verbatim: lines[i].caption).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: lines[i].text).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                        Text(verbatim: lines[i].caption).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }

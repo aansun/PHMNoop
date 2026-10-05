@@ -204,7 +204,7 @@ struct NunaWorkoutsView: View {
                         }
                         .padding(12).background(NunaPalette.field, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                     } else {
-                        Text("Needs at least three weeks with workouts to read your balance.").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Needs at least three weeks with workouts to read your balance.").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                 }
             }
@@ -242,7 +242,7 @@ struct NunaWorkoutsView: View {
         NavigationLink(value: NunaWorkoutRoute.calendar) {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
-                    HStack { nunaTrendsCap("Workout calendar"); Spacer(); Text("This week").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                    HStack { nunaTrendsCap("Workout calendar"); Spacer(); Text("This week").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                     NunaWorkoutMonthGrid(model: m, weeks: 1, selected: .constant(nil), interactive: false)
                     let stats = NunaWorkoutStats(model: m, days: 7)
                     HStack {
@@ -267,7 +267,7 @@ struct NunaWorkoutsView: View {
                     }
                     Text(verbatim: "\(NunaWorkoutFormat.clock(s.startSec)) · \(s.sport) · \(w.durationMin) min")
                         .font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(verbatim: String(localized: "Average heart rate \(w.avgBpm) bpm. Save it as a workout?")).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: String(localized: "Average heart rate \(w.avgBpm) bpm. Save it as a workout?")).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     HStack(spacing: 10) {
                         Button {
                             Task { _ = await repo.saveDetectedWorkout(s); suggestion = nil; await repo.refresh() }
@@ -302,7 +302,7 @@ struct NunaWorkoutsView: View {
                 .padding(.horizontal, 14).frame(height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 if !q.isEmpty {
                     if matches.isEmpty {
-                        Text("No workouts match").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("No workouts match").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     } else {
                         sportGrid(matches.map { ($0.name, $0.name) })
                     }
@@ -426,7 +426,7 @@ struct NunaWorkoutMonthGrid: View {
         let mf = DateFormatter()
         VStack(spacing: 10) {
             HStack {
-                ForEach(symbols(), id: \.self) { Text(verbatim: $0).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity) }
+                ForEach(symbols(), id: \.self) { Text(verbatim: $0).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity) }
             }
             ForEach(0..<weeks, id: \.self) { w in
                 HStack(spacing: 0) {
@@ -465,7 +465,7 @@ struct NunaWorkoutMonthGrid: View {
             }
             HStack(spacing: 16) {
                 legend(NunaPalette.effort, "Cardio"); legend(NunaPalette.textPrimary, "Strength")
-                HStack(spacing: 6) { RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.textMuted).frame(width: 9, height: 1.5); Text("Rest").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                HStack(spacing: 6) { RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.textMuted).frame(width: 9, height: 1.5); Text("Rest").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
             }
             .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 4)
         }
@@ -481,7 +481,7 @@ struct NunaWorkoutMonthGrid: View {
     }
 
     private func legend(_ c: Color, _ t: LocalizedStringKey) -> some View {
-        HStack(spacing: 6) { Circle().fill(c).frame(width: 7, height: 7); Text(t).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+        HStack(spacing: 6) { Circle().fill(c).frame(width: 7, height: 7); Text(t).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
     }
 }
 
@@ -497,7 +497,7 @@ struct NunaActiveWorkoutBanner: View {
                         Circle().fill(NunaPalette.charge).frame(width: 10, height: 10)
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Workout in progress").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            Text(verbatim: WorkoutSource.displaySport(w.sport)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: WorkoutSource.displaySport(w.sport)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                         Spacer()
                         Text("Open").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)

@@ -16,7 +16,7 @@ struct NunaAdvancedView: View {
 
     var body: some View {
         NunaDetailScreen("Advanced") {
-            Text("For fine tuning. Daily settings are on the Me page.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text("For fine tuning. Daily settings are on the Me page.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             NunaSettingsGroup("Recovery") {
                 NavigationLink(value: NunaMeRoute.persona) { NunaListRow("Restart the baseline", subtitle: "Under Persona. History stays", systemImage: "arrow.triangle.2.circlepath", showsChevron: true) }.buttonStyle(.plain)
             }
@@ -31,7 +31,7 @@ struct NunaAdvancedView: View {
                     Text("HRV window").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     NunaSegmented([(value: HrvWindow.whole.rawValue, title: "Whole night"), (value: HrvWindow.deep.rawValue, title: "Deep sleep")], selection: $window)
                         .onChange(of: window) { _, _ in rescore(model) }
-                    Text("Deep sleep pools HRV over slow-wave sleep only. It reads lower and re-scores your history.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Deep sleep pools HRV over slow-wave sleep only. It reads lower and re-scores your history.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }.padding(.vertical, 12)
             }
             NunaSettingsGroup("Effort") {
@@ -74,7 +74,7 @@ struct NunaExperimentsView: View {
             NunaCard(small: true) {
                 VStack(alignment: .leading, spacing: 6) {
                     HStack { Text("Still being tested").font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary); Spacer(); NunaChip(verbatim: String(localized: "\(on) on")) }
-                    Text("These can change or be less accurate, and none is medical. Turn one off to go back to the standard behaviour.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    Text("These can change or be less accurate, and none is medical. Turn one off to go back to the standard behaviour.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
             NunaSettingsGroup("Daily features") {
@@ -113,7 +113,7 @@ struct NunaAboutView: View {
                     NunaIconTile("waveform.path.ecg")
                     VStack(alignment: .leading, spacing: 3) {
                         Text("PHMNOOP").font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: "v\(version) · build \(build)").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: "v\(version) · build \(build)").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer()
                     NavigationLink { NunaWhatsNewView() } label: { Text("What's new").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 36).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)) }.buttonStyle(.plain)
@@ -136,7 +136,7 @@ struct NunaAboutView: View {
             NunaCard(small: true) {
                 VStack(alignment: .leading, spacing: 8) {
                     nunaTrendsCap("Credits")
-                    Text("PHMNOOP is an internal fork of NOOP by ryanbr, with an iOS layer, Apple Health integration and on-device Anya. The Nes 2011 (HUNT) non-exercise model is used for fitness age.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    Text("PHMNOOP is an internal fork of NOOP by ryanbr, with an iOS layer, Apple Health integration and on-device Anya. The Nes 2011 (HUNT) non-exercise model is used for fitness age.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
             nunaFootnote("Not a medical device. It does not diagnose or detect disease and does not replace a professional. Not affiliated with WHOOP, Inc.")

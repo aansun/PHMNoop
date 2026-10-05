@@ -32,7 +32,7 @@ struct SiriShortcutsSettingsView: View {
                 Text("Sync your strap, buzz it or mark a moment from Siri, Spotlight, the Shortcuts app, or a Back-Tap / automation. No setup needed.")
                     .font(StrandFont.caption)
                     .foregroundStyle(StrandPalette.textTertiary)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .fixedSize(horizontal: false, vertical: true).textCase(nil)
                 SiriTipView(intent: SyncStrapIntent(), isVisible: .constant(true))
                     .siriTipViewStyle(.dark)
                 SiriTipView(intent: BuzzStrapIntent(), isVisible: .constant(true))
@@ -57,7 +57,7 @@ struct SiriShortcutsSettingsView: View {
                 Text("Wire NOOP's actions into a Back-Tap, a focus automation, or a longer Shortcut. For example, double-tap the back of your iPhone to buzz the strap.")
                     .font(StrandFont.caption)
                     .foregroundStyle(StrandPalette.textTertiary)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .fixedSize(horizontal: false, vertical: true).textCase(nil)
                 ShortcutsLink()
             }
         }

@@ -82,7 +82,7 @@ struct NunaTrendDetailCard: View {
                 header(avg: avg, prev: prev)
                 if let s = (sentence?(avg, prev)) ?? summary(avg: avg, prev: prev) {
                     Text(verbatim: s).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
                 if pts.isEmpty {
                     Text(loaded ? "No data in this period" : " ").font(.nuna(size: 14, weight: .semibold))
@@ -118,8 +118,8 @@ struct NunaTrendDetailCard: View {
                 }
                 if let shownChip { NunaChip(shownChip.text, color: shownChip.color) }
                 if let shownNote {
-                    Text(verbatim: shownNote).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                    Text(verbatim: shownNote).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        .fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
             Spacer(minLength: 0)

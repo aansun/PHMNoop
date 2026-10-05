@@ -37,7 +37,7 @@ struct NunaBreathSettingsView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     nunaTrendsCap("Session length")
                     NunaSegmented([(value: 0, title: "Template"), (value: 5, title: "5 min"), (value: 10, title: "10 min"), (value: 15, title: "15 min")], selection: $length)
-                    Text("Template uses each exercise's own length. A fixed length applies to every template.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Template uses each exercise's own length. A fixed length applies to every template.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 NunaSettingsGroup("Anya") {
                     NunaToggleRow("Suggest an exercise", subtitle: "Reads your heart rate, HRV, stress and Charge", systemImage: NunaGlyph.anya, isOn: $anya).padding(.vertical, 8)

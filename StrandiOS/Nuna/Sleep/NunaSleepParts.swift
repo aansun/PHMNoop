@@ -143,13 +143,13 @@ struct NunaStageLegend: View {
             ForEach([SleepStage.awake, .rem, .light, .deep], id: \.self) { s in
                 HStack(spacing: 6) {
                     Circle().fill(s.nunaColor).frame(width: 9, height: 9)
-                    Text(s.nunaName).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(s.nunaName).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
             if showsMovement {
                 HStack(spacing: 6) {
                     RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.textSecondary).frame(width: 3, height: 12)
-                    Text("Movement").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Movement").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
             Spacer(minLength: 0)
@@ -240,7 +240,7 @@ struct NunaStatTile: View {
                 }
                 if let fraction { NunaProgressBar(fraction: fraction, color: color) }
                 if let caption {
-                    Text(caption).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(caption).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         .lineLimit(2).fixedSize(horizontal: false, vertical: true)
                 }
             }

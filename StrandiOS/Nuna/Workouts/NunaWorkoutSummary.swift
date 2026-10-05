@@ -33,7 +33,7 @@ struct NunaWorkoutSummaryView: View {
                 NunaDetailScreen(LocalizedStringKey(WorkoutSource.displaySport(r.sport))) { content(r) }
             } else {
                 NunaDetailScreen("Workout") {
-                    NunaCard { Text(m.loaded ? "This session is no longer saved." : " ").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading) }
+                    NunaCard { Text(m.loaded ? "This session is no longer saved." : " ").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) }
                 }
             }
         }
@@ -50,7 +50,7 @@ struct NunaWorkoutSummaryView: View {
     @ViewBuilder private func content(_ r: WorkoutRow) -> some View {
         let secs = r.durationS ?? Double(r.endTs - r.startTs)
         HStack {
-            Text(verbatim: NunaWorkoutFormat.day(r.startTs) + " · " + NunaWorkoutFormat.clock(r.startTs)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text(verbatim: NunaWorkoutFormat.day(r.startTs) + " · " + NunaWorkoutFormat.clock(r.startTs)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             Spacer()
             NunaChip(sourceName(r), systemImage: "checkmark")
         }
@@ -132,7 +132,7 @@ struct NunaWorkoutSummaryView: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Effort added").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     if let d = dayEffort {
-                        Text(verbatim: String(localized: "That day reached \(UnitFormatter.effortDisplay(d, scale: scale)) of \(UnitFormatter.effortScaleMax(scale))")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: String(localized: "That day reached \(UnitFormatter.effortDisplay(d, scale: scale)) of \(UnitFormatter.effortScaleMax(scale))")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                 }
                 Spacer(minLength: 0)
@@ -153,7 +153,7 @@ struct NunaWorkoutSummaryView: View {
                 HStack {
                     nunaTrendsCap("Heart rate zones")
                     Spacer()
-                    if let a = r.avgHr, let mx = r.maxHr { Text(verbatim: String(localized: "Average \(a) · max \(mx)")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                    if let a = r.avgHr, let mx = r.maxHr { Text(verbatim: String(localized: "Average \(a) · max \(mx)")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                 }
                 if let mins, mins.contains(where: { $0 > 0 }) {
                     NunaProportionBar(parts: mins.enumerated().map { ($1, colors[$0]) })
@@ -168,7 +168,7 @@ struct NunaWorkoutSummaryView: View {
                         }
                     }
                 } else {
-                    Text("No heart-rate readings were recorded for this session.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("No heart-rate readings were recorded for this session.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
         }
@@ -181,7 +181,7 @@ struct NunaWorkoutSummaryView: View {
                 if hr.count >= 2 {
                     NunaWorkoutHRCurve(buckets: hr, start: r.startTs, end: r.endTs)
                 } else {
-                    Text("No heart-rate readings were recorded for this session.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("No heart-rate readings were recorded for this session.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
         }

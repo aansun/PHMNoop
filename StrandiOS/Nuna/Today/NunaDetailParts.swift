@@ -285,7 +285,7 @@ struct NunaExpandRow: View {
                         NunaIconTile(systemImage)
                         VStack(alignment: .leading, spacing: 2) {
                             Text(title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            Text(subtitle).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(subtitle).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                         Spacer(minLength: 8)
                         Image(systemName: "chevron.down").font(.nuna(size: 13, weight: .bold))
@@ -294,8 +294,8 @@ struct NunaExpandRow: View {
                 }
                 .buttonStyle(.plain)
                 if open {
-                    Text(text).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                    Text(text).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        .fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
         }
@@ -377,7 +377,7 @@ struct NunaColorBars: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
                 .overlay {
                     if present.isEmpty {
-                        Text("No data in this period").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("No data in this period").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                 }
             }

@@ -109,7 +109,7 @@ struct NunaEarlyWarningView: View {
                             NunaChip(label(r.level), color: warnColor(r.level))
                             Text(verbatim: localizedIllnessCopy(r))
                                 .font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                                .fixedSize(horizontal: false, vertical: true)
+                                .fixedSize(horizontal: false, vertical: true).textCase(nil)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }

@@ -160,7 +160,7 @@ struct NunaTrendsMetricView: View {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
                     if t.isEmpty {
-                        Text("No data in this period").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("No data in this period").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     } else {
                         NunaColumns(items: t.enumerated().map { i, w in
                             NunaColumns.Item(weekday: "W\(i + 1)", date: m.date(w.endDay) ?? Date(), fraction: w.total / top,
@@ -206,7 +206,7 @@ struct NunaTrendsMetricView: View {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
                     if means.count < 3 {
-                        Text("Not enough days yet to show a pattern.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Not enough days yet to show a pattern.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     } else {
                         NunaColumns(items: order.map { wd in
                             let v = means[wd]
@@ -250,7 +250,7 @@ struct NunaTrendsMetricView: View {
                     Text(title).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Spacer()
                     Text(verbatim: NunaTrendsFormat.num(now, kind == .effort ? 1 : 1) + unit).font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(verbatim: "vs " + NunaTrendsFormat.num(before, 1)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: "vs " + NunaTrendsFormat.num(before, 1)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 NunaProgressBar(fraction: (now ?? 0) / top, color: bar)
                 NunaProgressBar(fraction: (before ?? 0) / top, color: NunaPalette.ink.opacity(0.3)).frame(height: 5)

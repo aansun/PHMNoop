@@ -87,7 +87,7 @@ struct NunaSleepView: View {
                                 .font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         } else {
                             Text("Still learning").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            Text("Needs about a week of heart-rate data").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text("Needs about a week of heart-rate data").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                     }
                     Spacer(minLength: 8)
@@ -126,8 +126,8 @@ struct NunaSleepView: View {
                           number: rest.map { "\(Int($0.rounded()))" } ?? "–", unit: "%", name: "Rest", color: NunaPalette.rest) {
                 VStack(spacing: 8) {
                     if let v {
-                        Text(verbatim: v.line).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
+                        Text(verbatim: v.line).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                            .fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }
                     HStack(spacing: 6) {
                         NunaChip(verbatim: "\(NunaSleepFormat.clock(night.onset)) – \(NunaSleepFormat.clock(night.wake))")
@@ -456,7 +456,7 @@ private struct NunaNapContent: View {
                     HStack(alignment: .top, spacing: 10) {
                         VStack(alignment: .leading, spacing: 0) {
                             ForEach(["Awake", "REM", "Light sleep", "Deep"], id: \.self) { l in
-                                Text(LocalizedStringKey(l)).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                Text(LocalizedStringKey(l)).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                                     .frame(maxHeight: .infinity, alignment: .center)
                             }
                         }
@@ -476,7 +476,7 @@ private struct NunaNapContent: View {
                     .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     NunaStageLegend(showsMovement: nap.motion.count >= 4)
                 } else {
-                    Text("The order of stages is not available for this nap.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("The order of stages is not available for this nap.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
         }

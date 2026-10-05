@@ -36,7 +36,7 @@ struct NunaImportView: View {
 
     var body: some View {
         NunaDetailScreen("Import data") {
-            Text("Everything stays on this iPhone. Bring your history in once, then it is yours.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+            Text("Everything stays on this iPhone. Bring your history in once, then it is yours.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             card("WHOOP export (.zip)", "doc.zipper", "Recovery, strain, sleep and workouts from the data export at app.whoop.com. Works for WHOOP 4.0, 5.0 and MG.",
                  button: model.isImporting(.whoop) ? "Importing…" : "Choose the export", working: model.isImporting(.whoop), target: .whoop,
                  result: model.whoopImportSummary, failed: model.whoopImportFailed, footer: String(localized: "\(repo.days.count) days · \(repo.sleeps.count) sleeps stored"))
@@ -71,13 +71,13 @@ struct NunaImportView: View {
                     NunaIconTile(icon)
                     Text(title).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 }
-                Text(blurb).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                Text(blurb).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 Button { presentImporter(target) } label: {
                     HStack(spacing: 8) { if working { ProgressView().controlSize(.small).tint(NunaPalette.onAccent) }; Text(button).font(.nuna(size: 15.5, weight: .bold)) }
                         .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain).disabled(busy).opacity(busy && !working ? 0.4 : 1)
-                if let result { Text(verbatim: result).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(failed ? NunaPalette.warning : NunaPalette.charge).fixedSize(horizontal: false, vertical: true) }
-                if let footer { Text(verbatim: footer).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) }
+                if let result { Text(verbatim: result).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(failed ? NunaPalette.warning : NunaPalette.charge).fixedSize(horizontal: false, vertical: true).textCase(nil) }
+                if let footer { Text(verbatim: footer).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil) }
                 extra()
             }
         }

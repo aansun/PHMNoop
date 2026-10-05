@@ -430,7 +430,7 @@ struct ChatGPTAuthCard: View {
                          : "Gunakan akun ChatGPT tanpa menempelkan API key.")
                         .font(StrandFont.footnote)
                         .foregroundStyle(StrandPalette.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
 
@@ -452,7 +452,7 @@ struct ChatGPTAuthCard: View {
                 Text("Masukkan kode di auth.openai.com/codex/device. NOOP akan menunggu persetujuan secara otomatis.")
                     .font(StrandFont.footnote)
                     .foregroundStyle(StrandPalette.textTertiary)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .fixedSize(horizontal: false, vertical: true).textCase(nil)
             } else {
                 Button("Sign in with ChatGPT") { auth.startLogin() }
                     .buttonStyle(NoopButtonStyle(.primary))
@@ -463,7 +463,7 @@ struct ChatGPTAuthCard: View {
                 Text(error)
                     .font(StrandFont.footnote)
                     .foregroundStyle(StrandPalette.statusCritical)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
         }
         .padding(compact ? 0 : 2)

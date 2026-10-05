@@ -29,7 +29,7 @@ struct NunaGymSessionView: View {
     var body: some View {
         NunaDetailScreen(LocalizedStringKey(session?.programName ?? String(localized: "Gym session")), onAnya: records.isEmpty ? nil : { showCoach = true }) {
             if let session { content(session) }
-            else if loaded { NunaCard { Text("This session is no longer saved.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading) } }
+            else if loaded { NunaCard { Text("This session is no longer saved.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) } }
         }
         .task(id: repo.refreshSeq) { await load() }
         .sheet(isPresented: $saveProgram) { if let session { NunaSaveProgramView(session: session, sets: sets) } }
@@ -58,7 +58,7 @@ struct NunaGymSessionView: View {
     @ViewBuilder private func content(_ s: LiftSessionRow) -> some View {
         let secs = max(0, (s.endTs ?? s.startTs) - s.startTs)
         HStack {
-            Text(verbatim: NunaWorkoutFormat.day(s.startTs) + " · " + NunaWorkoutFormat.clock(s.startTs)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text(verbatim: NunaWorkoutFormat.day(s.startTs) + " · " + NunaWorkoutFormat.clock(s.startTs)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             Spacer()
             NunaChip("Done", systemImage: "checkmark")
         }
@@ -130,7 +130,7 @@ struct NunaGymSessionView: View {
                 Text(verbatim: "+" + UnitFormatter.effortDisplay(e, scale: scale)).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.effortText)
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Effort added").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    if let day { Text(verbatim: String(localized: "That day reached \(UnitFormatter.effortDisplay(day, scale: scale)) of \(UnitFormatter.effortScaleMax(scale))")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                    if let day { Text(verbatim: String(localized: "That day reached \(UnitFormatter.effortDisplay(day, scale: scale)) of \(UnitFormatter.effortScaleMax(scale))")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                 }
                 Spacer()
             }
@@ -145,7 +145,7 @@ struct NunaGymSessionView: View {
                 HStack {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(verbatim: s.exercise).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: LiftMuscleSummary.line(primary: first?.primaryMuscle, secondaries: first?.secondaryMuscles ?? [])).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: LiftMuscleSummary.line(primary: first?.primaryMuscle, secondaries: first?.secondaryMuscles ?? [])).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer()
                     if records.contains(s.exercise) { NunaChip("PR") }
@@ -249,7 +249,7 @@ struct NunaSaveProgramView: View {
         NavigationStack {
             NunaDetailScreen("Save as program") {
                 HStack {
-                    Text(verbatim: NunaWorkoutFormat.day(session.startTs)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: NunaWorkoutFormat.day(session.startTs)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     Spacer()
                     Text(verbatim: session.programName ?? String(localized: "Gym")).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 }
@@ -263,7 +263,7 @@ struct NunaSaveProgramView: View {
                                 HStack(spacing: 12) {
                                     VStack(alignment: .leading, spacing: 3) {
                                         Text(verbatim: s.exercise).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                        Text(verbatim: line(s)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                        Text(verbatim: line(s)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                                     }
                                     Spacer()
                                     Image(systemName: excluded.contains(s.exercise) ? "circle" : "checkmark.circle.fill").font(.nuna(size: 22))
@@ -279,7 +279,7 @@ struct NunaSaveProgramView: View {
                 Button { Task { await save() } } label: {
                     Text("Save program").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain).disabled(!canSave).opacity(canSave ? 1 : 0.4)
-                Text("It shows up in Gym under Programs and can be edited any time.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                Text("It shows up in Gym under Programs and can be edited any time.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
             }
             .scrollDismissesKeyboard(.interactively)
             .toolbar(.hidden, for: .navigationBar)

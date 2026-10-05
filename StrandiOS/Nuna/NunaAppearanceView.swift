@@ -64,7 +64,7 @@ struct NunaAppearanceView: View {
                     VStack(alignment: .leading, spacing: 2) {
                         NunaSectionHeader("Experience")
                         Text(verbatim: experience.displayName).font(.nuna(size: NunaTypeSize.h2 - 2, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("Switch to Default to return to the original NOOP look").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Switch to Default to return to the original NOOP look").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer(minLength: 8)
                     Image(systemName: "chevron.right").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
@@ -96,7 +96,7 @@ struct NunaAppearanceView: View {
                         }
                     }
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Ready for a moderate load").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                        Text("Ready for a moderate load").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                         Text("Start workout").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 18).frame(height: 38).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }
                     Spacer(minLength: 0)
@@ -124,7 +124,7 @@ struct NunaAppearanceView: View {
                 }
             }
             if skinRaw == NunaThemePrefs.Skin.whp.rawValue {
-                Text("WHP is a night look only, so light and automatic are off while it is on.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                Text("WHP is a night look only, so light and automatic are off while it is on.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
         }
     }

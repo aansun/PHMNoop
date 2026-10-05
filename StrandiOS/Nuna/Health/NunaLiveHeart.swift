@@ -48,7 +48,7 @@ struct NunaLiveHRCard: View {
                             .font(.nuna(size: 52, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(52)).foregroundStyle(NunaPalette.textPrimary)
                         Text("bpm").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
-                    Text(subtitle).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(subtitle).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     if isLive || banked.count >= 2 {
                         NunaHRTrace(values: isLive ? samples : banked.map(\.bpm),
                                     segments: isLive ? nil : hrGapSegments(bucketTs: banked.map(\.ts), bucketSeconds: 300))
@@ -80,7 +80,7 @@ struct NunaLiveHRCard: View {
 
     private func stat(_ label: LocalizedStringKey, _ v: Double?) -> some View {
         HStack(spacing: 5) {
-            Text(label).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text(label).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             Text(verbatim: v.map { String(Int($0.rounded())) } ?? "–").font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }
     }
@@ -229,7 +229,7 @@ struct NunaDeepTimelineView: View {
                 HStack {
                     Text(verbatim: metric.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
-                    Text(verbatim: resolution).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: resolution).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 if let last = displayPoints.last {
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
@@ -243,7 +243,7 @@ struct NunaDeepTimelineView: View {
                     } else if series.points.isEmpty {
                         VStack(spacing: 8) {
                             Image(systemName: "waveform.slash").font(.nuna(size: 26, weight: .light)).foregroundStyle(NunaPalette.textMuted)
-                            Text("Nothing recorded for this window").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text("Nothing recorded for this window").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                         .frame(maxWidth: .infinity, minHeight: 260)
                     } else {

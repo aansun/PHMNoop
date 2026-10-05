@@ -21,7 +21,7 @@ struct NunaAutomationsView: View {
 
     var body: some View {
         NunaDetailScreen("Strap automations") {
-            Text("Let the strap act: a tap does something, a vibration coaches you, and it tells you things without opening the phone.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+            Text("Let the strap act: a tap does something, a vibration coaches you, and it tells you things without opening the phone.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             NunaCard(highlight: wrist) {
                 NunaToggleRow("Wrist alerts", subtitle: "The master switch for all vibrations. Off means the strap stays silent", systemImage: "bell.badge", isOn: $wrist).padding(.vertical, 8)
             }
@@ -74,7 +74,7 @@ struct NunaDoubleTapView: View {
                     NunaIconTile("hand.tap")
                     VStack(alignment: .leading, spacing: 3) {
                         Text("Tap the strap twice").font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("Then it does what you choose below.").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Then it does what you choose below.").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer()
                     NunaChip(live.bonded ? "Connected" : "Not connected", color: live.bonded ? NunaPalette.charge : nil)
@@ -137,7 +137,7 @@ struct NunaSessionCuesView: View {
     @AppStorage(HapticPrefs.workout) private var workout = true
     var body: some View {
         NunaDetailScreen("Session cues") {
-            Text("Choose which cues vibrate the strap during a session you start.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text("Choose which cues vibrate the strap during a session you start.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             NunaSettingsGroup {
                 NunaToggleRow("Breathing pacer", subtitle: "Each breath in and out", systemImage: "wind", isOn: $breathing).padding(.vertical, 8)
                 NunaDivider()
@@ -168,7 +168,7 @@ struct NunaSedentaryView: View {
                     NunaCard(small: true) {
                         VStack(alignment: .leading, spacing: 6) {
                             Text("Needs the master switch").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.warning)
-                            Text("It cannot vibrate while Wrist alerts is off. Turn it on in Strap automations.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text("It cannot vibrate while Wrist alerts is off. Turn it on in Strap automations.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }.frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
@@ -210,7 +210,7 @@ struct NunaSedentaryView: View {
 struct NunaShortcutsView: View {
     var body: some View {
         NunaDetailScreen("Siri and Shortcuts") {
-            Text("Run NOOP actions by voice or from the Shortcuts app. Good for Focus, Sleep mode or the Action button.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+            Text("Run NOOP actions by voice or from the Shortcuts app. Good for Focus, Sleep mode or the Action button.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             NunaSettingsGroup {
                 NunaListRow("Sync Strap", subtitle: "Pulls the history from the strap", systemImage: "arrow.triangle.2.circlepath")
                 NunaDivider()

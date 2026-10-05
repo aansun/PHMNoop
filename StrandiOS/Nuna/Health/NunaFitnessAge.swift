@@ -169,7 +169,7 @@ struct NunaFitnessAgeView: View {
                                  color: now.band == .slow ? NunaPalette.charge : (now.band == .fast ? NunaPalette.warning : nil))
                     }
                     NunaPaceDial(value: now.pace)
-                    Text(paceText(now)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    Text(paceText(now)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     Text(now.confidence == .solid ? "Based on about six months of weekly readings."
                          : (now.confidence == .building ? "Still building: the pace firms up as weeks of readings add up."
                             : "Early estimate: too few weeks to move far from 1.0x yet."))
@@ -194,7 +194,7 @@ struct NunaFitnessAgeView: View {
     }
 
     private func legend<S: View>(_ mark: S, _ text: LocalizedStringKey) -> some View {
-        HStack(spacing: 6) { mark; Text(text).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+        HStack(spacing: 6) { mark; Text(text).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
     }
 
     private var trendCard: some View {
@@ -231,7 +231,7 @@ struct NunaFitnessAgeView: View {
                     NunaIconTile(icon)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: reference).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: reference).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer()
                     VStack(alignment: .trailing, spacing: 2) {
@@ -299,7 +299,7 @@ struct NunaFitnessAgeView: View {
                     ForEach(Array(rows.enumerated()), id: \.offset) { i, r in
                         if i > 0 { NunaDivider() }
                         HStack(spacing: 12) {
-                            Text(verbatim: short(r.day)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 56, alignment: .leading)
+                            Text(verbatim: short(r.day)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(width: 56, alignment: .leading)
                             NunaProgressBar(fraction: min(max(1 - (r.value - 20) / 60, 0.05), 1), color: i == 0 ? NunaPalette.charge : NunaPalette.rest)
                             Text(verbatim: String(format: "%.0f", r.value)).font(.nuna(size: 17, weight: .bold, design: NunaType.design))
                                 .foregroundStyle(NunaPalette.textPrimary).frame(width: 40, alignment: .trailing)

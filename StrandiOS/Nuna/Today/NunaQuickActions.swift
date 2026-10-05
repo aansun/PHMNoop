@@ -138,7 +138,7 @@ struct NunaQuickActionsEditor: View {
                 }.font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             } footer: {
                 if full {
-                    Text("Six is the most. Remove one to add another.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Six is the most. Remove one to add another.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
             ForEach(Array(Dictionary(grouping: available, by: \.group).keys).sorted { groupOrder($0) < groupOrder($1) }, id: \.self) { group in

@@ -25,7 +25,7 @@ struct NunaTestCentreView: View {
                     HStack { nunaTrendsCap("For developers"); Spacer(); NunaChip(verbatim: activeCount == 0 ? String(localized: "Normal") : String(localized: "\(activeCount) on"), color: activeCount == 0 ? NunaPalette.charge : NunaPalette.warning) }
                     Text(activeCount == 0 ? "Normal state: no test mode is on." : "Test modes are on. They log extra detail while you use the strap.")
                         .font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
-                    Text("Each mode records more detail about one part of the app, then bundles it for a bug report. Turn them off when you are done.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    Text("Each mode records more detail about one part of the app, then bundles it for a bug report. Turn them off when you are done.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
             NunaSettingsGroup("Test modes") {
@@ -76,7 +76,7 @@ private struct NunaModeRow: View {
                 Text(verbatim: mode.title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 Text(verbatim: TestCentreLayout.statusText(for: mode, active: on, elapsedSeconds: TestCentre.startedAt(mode.domain).map { Date().timeIntervalSince($0) }, capturedUnits: nil))
                     .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                Text(verbatim: mode.blurb).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+                Text(verbatim: mode.blurb).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
             Spacer(minLength: 6)
             Toggle("", isOn: $on).labelsHidden().tint(NunaPalette.charge)

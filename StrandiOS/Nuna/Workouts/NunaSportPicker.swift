@@ -77,7 +77,7 @@ struct NunaSportPicker: View {
                     nunaTrendsCap("All activities")
                 }
                 if sports.isEmpty && !showCustom {
-                    Text("No sport matches").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("No sport matches").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         .frame(maxWidth: .infinity, minHeight: 80)
                 } else if !sports.isEmpty {
                     NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 14, bottom: 4, trailing: 14)) {
@@ -88,7 +88,7 @@ struct NunaSportPicker: View {
                             }
                         }
                     }
-                    Text("The location icon marks sports that record a route.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("The location icon marks sports that record a route.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 20).padding(.bottom, 32)

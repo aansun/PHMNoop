@@ -54,7 +54,7 @@ struct NunaQuickSheet: View {
                                 .frame(width: 40, height: 40).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Ask Anya").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                Text("About today, by voice or text").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                Text("About today, by voice or text").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                             }
                             Spacer(minLength: 4)
                             Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)

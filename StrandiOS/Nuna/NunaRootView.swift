@@ -58,6 +58,9 @@ struct NunaRootView: View {
             }
         }
         .nunaScreenBackground()
+        // WHP sets every label in capitals; sentences and Anya opt out with `.textCase(nil)` where they are drawn.
+        .textCase(skinRaw == NunaThemePrefs.Skin.whp.rawValue ? .uppercase : nil)
+        .tracking(skinRaw == NunaThemePrefs.Skin.whp.rawValue ? 0.6 : 0)
         .id("\(themeRaw)-\(densityRaw)-\(skinRaw)")
         // Nuna is dark-first. The Appearance setting is honoured again once Phase 7 lands the Nuna theme screen.
         .preferredColorScheme(NunaTheme.colorScheme)

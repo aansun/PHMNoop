@@ -214,7 +214,7 @@ struct NunaHealthView: View {
                     HStack {
                         Text("Weight").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         Spacer()
-                        Text("30D").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("30D").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
                         Text(verbatim: fmt(latest, 1)).font(.nuna(size: 48, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(48)).foregroundStyle(NunaPalette.textPrimary)
@@ -259,7 +259,7 @@ struct NunaHealthView: View {
                     NunaIconTile("applewatch")
                     VStack(alignment: .leading, spacing: 2) {
                         Text("WHOOP strap").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(live.connected ? "Connected" : "Not connected").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(live.connected ? "Connected" : "Not connected").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer()
                     VStack(alignment: .trailing, spacing: 2) {
@@ -468,11 +468,11 @@ struct NunaHealthView: View {
                         }
                     }
                     if age > 0 {
-                        Text(verbatim: String(localized: "Actual age \(age)")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: String(localized: "Actual age \(age)")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     if let fit, age > 0 { NunaAgeSlider(fitness: fit, age: Double(age)) }
                     if let note = fitnessFooter {
-                        Text(verbatim: note).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                        Text(verbatim: note).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                     }
                 }
             }
@@ -679,7 +679,7 @@ struct NunaHealthView: View {
                             Text(verbatim: fmt(kcalIn.value)).font(.nuna(size: 40, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(40)).foregroundStyle(NunaPalette.textPrimary)
                             Text("kcal in").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                             Spacer()
-                            if let out = day.calories { Text(verbatim: String(localized: "Out \(fmt(out))")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                            if let out = day.calories { Text(verbatim: String(localized: "Out \(fmt(out))")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                         }
                         if let out = day.calories, out > 0 { NunaProgressBar(fraction: min(kcalIn.value / out, 1), color: NunaPalette.warning) }
                         VStack(spacing: 12) {
@@ -696,7 +696,7 @@ struct NunaHealthView: View {
                                 }
                             }
                         }
-                        Text(verbatim: kcalIn.day + " · " + String(localized: "Bars show each macro's share of calories")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: kcalIn.day + " · " + String(localized: "Bars show each macro's share of calories")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     } else {
                         Text("No nutrition imported yet. Import a CSV from Cronometer or MacroFactor, processed on this phone.")
                             .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
@@ -896,7 +896,7 @@ struct NunaHealthView: View {
                 HStack {
                     Text("Average stages").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
-                    Text("Marker = your usual").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Marker = your usual").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 stageLine(.deep, avg.deep, typ?.deep, avg.total)
                 stageLine(.rem, avg.rem, typ?.rem, avg.total)
@@ -925,11 +925,11 @@ struct NunaHealthView: View {
                 HStack {
                     Text("Naps").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
-                    Text(verbatim: String(localized: "This week · \(naps.count)")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: String(localized: "This week · \(naps.count)")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 .padding(.bottom, 6)
                 if naps.isEmpty {
-                    Text("No naps this week").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).padding(.vertical, 12)
+                    Text("No naps this week").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).padding(.vertical, 12)
                 }
                 ForEach(Array(naps.enumerated()), id: \.offset) { idx, nap in
                     if idx > 0 { NunaDivider() }

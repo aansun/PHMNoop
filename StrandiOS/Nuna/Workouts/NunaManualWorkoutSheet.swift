@@ -103,10 +103,10 @@ struct NunaManualWorkoutSheet: View {
                         numberRow("Calories", text: $kcalText, unit: "kcal", field: .calories)
                     }
                 }
-                Text("Distance, Avg HR and Calories are optional.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text("Distance, Avg HR and Calories are optional.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
 
                 if let note = validationNote {
-                    Text(verbatim: note).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.warning).fixedSize(horizontal: false, vertical: true)
+                    Text(verbatim: note).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.warning).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
                 if avgHrEditedNote {
                     Text("Avg HR is shown as typed. The HR graph, zones and Effort stay from the recorded session.")
@@ -152,7 +152,7 @@ struct NunaManualWorkoutSheet: View {
                 .font(.nuna(size: 16, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 .multilineTextAlignment(.trailing).keyboardType(.decimalPad).focused($focus, equals: field)
                 .frame(maxWidth: 120)
-            Text(verbatim: unit).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(minWidth: 30, alignment: .leading)
+            Text(verbatim: unit).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(minWidth: 30, alignment: .leading)
         }
         .padding(.vertical, 12)
     }
