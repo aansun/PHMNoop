@@ -1,6 +1,42 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "The order of stages is not available for this night. The split comes from the daily totals.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Urutan fase tidak tersedia untuk malam ini. Pembagian diambil dari total harian."}}
+    } },
+    "Hours of sleep": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Jam tidur"}}
+    } },
+    "Restorative sleep": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tidur pemulihan"}}
+    } },
+    "Heart rate through the night": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Detak jantung sepanjang malam"}}
+    } },
+    "Tap a stage to compare it with your usual.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ketuk satu fase untuk membandingkannya dengan biasanya."}}
+    } },
+    "%@. Not enough history yet for a typical range.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%@. Riwayat belum cukup untuk rentang biasanya."}}
+    } },
+    "above your usual": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "di atas biasanya"}}
+    } },
+    "below your usual": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "di bawah biasanya"}}
+    } },
+    "about your usual": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "sekitar biasanya"}}
+    } },
+    "%@ · typically %@ to %@, %@.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%@ · biasanya %@ sampai %@, %@."}}
+    } },
+    "HRV through the night": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "HRV sepanjang malam"}}
+    } },
+    "average": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "rata-rata"}}
+    } },
     "From Anya's plan": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Dari rencana Anya"}}
     } },
@@ -44317,6 +44353,7 @@
     },
     "Blood oxygen": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Oksigen darah"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -115882,6 +115919,7 @@
     },
     "No heart-rate detail for this night": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tidak ada detail detak jantung untuk malam ini"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -203812,6 +203850,7 @@
     },
     "typically %@": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "biasanya %@"}},
         "de": {
           "stringUnit": {
             "state": "translated",
