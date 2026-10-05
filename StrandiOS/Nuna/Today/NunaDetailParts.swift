@@ -12,6 +12,8 @@ struct NunaDetailHeader: View {
     /// Extra control at the trailing edge (for example a "Today" chip), shown when there is no Anya button.
     var trailing: AnyView?
     @Environment(\.dismiss) private var dismiss
+    /// With the metric dropdown below, it already names the screen, so the title is left out rather than said twice.
+    @Environment(\.nunaDetailSwitch) private var switcher
 
     var body: some View {
         HStack(spacing: 10) {
@@ -23,8 +25,12 @@ struct NunaDetailHeader: View {
                     .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
             }
             .accessibilityLabel(Text("Back"))
-            Text(title).font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-            Spacer(minLength: 8)
+            if switcher == nil {
+                Text(title).font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                Spacer(minLength: 8)
+            } else {
+                NunaDetailSwitcher(inHeader: true)
+            }
             if let trailing { trailing }
             if let onAnya {
                 Button(action: onAnya) {
@@ -50,7 +56,6 @@ struct NunaDetailScreen<Content: View>: View {
         ScrollView {
             VStack(spacing: NunaSpacing.section) {
                 NunaDetailHeader(title: title, onAnya: onAnya, trailing: trailing)
-                NunaDetailSwitcher()
                 content
             }
             .padding(.horizontal, NunaSpacing.screenH)
