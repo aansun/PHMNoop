@@ -117,6 +117,8 @@ public struct TrendChart: View {
     /// Stroke width of the line (2.5 by default) and its opacity; a long window draws the raw readings thin and faint.
     /// One x-axis label per reading (a short window): the labels sit at exactly these dates instead of an automatic cadence.
     public var xAxisDates: [Date]?
+    /// Leaves out the per-reading dots (the average marks carry the reading instead).
+    public var hidesPoints = false
     public var lineWidth: CGFloat = 2.5
     public var lineOpacity: Double = 1
     /// Horizontal average marks over consecutive stretches of a long window, each labelled with its value and the move
@@ -479,7 +481,7 @@ public struct TrendChart: View {
                 // 18pt dots are invisible on dense series (e.g. a 365-day year) but still cost the
                 // GPU a mark each — hide them past a threshold; the line carries the data there. The gate
                 // stays on the full `points.count` (≤60 is never downsampled, so displayPoints == points).
-                if points.count <= 60 {
+                if points.count <= 60 && !hidesPoints {
                     let labelled: Set<Date> = {
                         let stride = max(1, pointValueStride)
                         guard stride > 1 else { return Set(displayPoints.map(\.date)) }
@@ -862,6 +864,12 @@ public extension TrendChart {
     func perReadingAxis(_ dates: [Date]) -> TrendChart {
         var copy = self
         copy.xAxisDates = dates
+        return copy
+    }
+
+    func withoutPoints(_ on: Bool = true) -> TrendChart {
+        var copy = self
+        copy.hidesPoints = on
         return copy
     }
 }
