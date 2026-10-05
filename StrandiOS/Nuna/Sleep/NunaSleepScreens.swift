@@ -97,18 +97,39 @@ struct NunaSleepView: View {
         .buttonStyle(.plain)
     }
 
+    /// How the night's Rest reads: a word, its colour and a sentence that says what it means against the person's own recent nights.
+    private func verdict(_ rest: Double?, _ model: NunaSleepModel) -> (word: LocalizedStringKey, color: Color, line: String)? {
+        guard let rest else { return nil }
+        let before = model.nights.dropFirst(model.index + 1).prefix(14).compactMap { model.value("sleep_performance", $0) }
+        let avg = before.count >= 3 ? before.reduce(0, +) / Double(before.count) : nil
+        let word: LocalizedStringKey, color: Color, base: String
+        switch rest {
+        case 85...: word = "Excellent"; color = NunaPalette.charge; base = String(localized: "Your body got the sleep it needed.")
+        case 70..<85: word = "Good"; color = NunaPalette.charge; base = String(localized: "A solid night. You are well rested.")
+        case 50..<70: word = "Fair"; color = NunaPalette.warning; base = String(localized: "You slept less than you needed. Go easier on yourself today.")
+        default: word = "Low"; color = NunaPalette.alert; base = String(localized: "A short or broken night. Recovery will come first today.")
+        }
+        guard let avg else { return (word, color, base) }
+        let d = Int((rest - avg).rounded())
+        let cmp = d == 0 ? String(localized: "In line with your last 14 nights.")
+            : (d > 0 ? String(localized: "\(d) points above your last 14 nights.") : String(localized: "\(-d) points below your last 14 nights."))
+        return (word, color, base + " " + cmp)
+    }
+
     private func hero(_ model: NunaSleepModel, _ night: NunaNight) -> some View {
         let rest = model.value("sleep_performance")
         let eff = model.efficiency(night)
+        let v = verdict(rest, model)
         return VStack(spacing: 14) {
-            NunaScoreHero(caption: "Last night", fraction: (rest ?? 0) / 100,
+            NunaScoreHero(caption: "Last night", chip: v?.word, chipColor: v?.color, fraction: (rest ?? 0) / 100,
                           number: rest.map { "\(Int($0.rounded()))" } ?? "–", unit: "%", name: "Rest", color: NunaPalette.rest) {
-                VStack(spacing: 6) {
-                    Text(verbatim: NunaSleepFormat.duration(night.asleepMin))
-                        .font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(verbatim: "\(NunaSleepFormat.clock(night.onset)) – \(NunaSleepFormat.clock(night.wake))")
-                        .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                VStack(spacing: 8) {
+                    if let v {
+                        Text(verbatim: v.line).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                     HStack(spacing: 6) {
+                        NunaChip(verbatim: "\(NunaSleepFormat.clock(night.onset)) – \(NunaSleepFormat.clock(night.wake))")
                         if let eff { NunaChip(verbatim: String(localized: "Efficiency \(Int(eff.rounded()))%"), color: NunaPalette.restText) }
                         if let nap = night.naps.first {
                             NavigationLink(value: NunaTodayRoute.sleepNaps(model.index)) {
