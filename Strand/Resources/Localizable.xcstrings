@@ -1,6 +1,297 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Hiking": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mendaki"}}
+    } },
+    "Cycling": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bersepeda"}}
+    } },
+    "Open-water swim": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Renang perairan terbuka"}}
+    } },
+    "Rowing": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mendayung"}}
+    } },
+    "Treadmill run": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Lari di treadmill"}}
+    } },
+    "Treadmill walk": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Jalan di treadmill"}}
+    } },
+    "Indoor cycle": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sepeda statis"}}
+    } },
+    "Pool swim": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Renang di kolam"}}
+    } },
+    "Row machine": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mesin dayung"}}
+    } },
+    "Elliptical": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Elliptical"}}
+    } },
+    "Bodybuilding": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Binaraga"}}
+    } },
+    "Weightlifting": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Angkat beban"}}
+    } },
+    "Pilates": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pilates"}}
+    } },
+    "Boxing": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tinju"}}
+    } },
+    "Basketball": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Basket"}}
+    } },
+    "Soccer": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sepak bola"}}
+    } },
+    "Baseball": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bisbol"}}
+    } },
+    "Badminton": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bulu tangkis"}}
+    } },
+    "Tennis": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tenis"}}
+    } },
+    "Squash": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Skuas"}}
+    } },
+    "Racquetball": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Racquetball"}}
+    } },
+    "Table tennis": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tenis meja"}}
+    } },
+    "Volleyball": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bola voli"}}
+    } },
+    "Martial arts": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bela diri"}}
+    } },
+    "Dancing": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Menari"}}
+    } },
+    "Golf": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Golf"}}
+    } },
+    "Climbing": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Panjat tebing"}}
+    } },
+    "Stretching": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Peregangan"}}
+    } },
+    "Skiing": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ski"}}
+    } },
+    "Snowboarding": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Snowboard"}}
+    } },
+    "Padel": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Padel"}}
+    } },
+    "Pickleball": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pickleball"}}
+    } },
+    "Bowling": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bowling"}}
+    } },
+    "Ice Hockey": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hoki es"}}
+    } },
+    "American football": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sepak bola Amerika"}}
+    } },
+    "Australian football": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sepak bola Australia"}}
+    } },
+    "Rugby": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Rugbi"}}
+    } },
+    "Cricket": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kriket"}}
+    } },
+    "Softball": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sofbol"}}
+    } },
+    "Handball": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bola tangan"}}
+    } },
+    "Water polo": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Polo air"}}
+    } },
+    "Frisbee": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Frisbee"}}
+    } },
+    "Surfing": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Selancar"}}
+    } },
+    "Kayaking": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kayak"}}
+    } },
+    "Sailing": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Berlayar"}}
+    } },
+    "Scuba diving": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Menyelam scuba"}}
+    } },
+    "Ice skating": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Seluncur es"}}
+    } },
+    "Inline skating": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sepatu roda"}}
+    } },
+    "Snowshoeing": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sepatu salju"}}
+    } },
+    "Gymnastics": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Senam"}}
+    } },
+    "Fencing": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Anggar"}}
+    } },
+    "Calisthenics": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kalistenik"}}
+    } },
+    "Stair climber": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mesin tangga"}}
+    } },
+    "Boot camp": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Boot camp"}}
+    } },
+    "Lacrosse": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Lakros"}}
+    } },
+    "Field hockey": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hoki lapangan"}}
+    } },
+    "CrossFit": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "CrossFit"}}
+    } },
+    "Kickboxing": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kickboxing"}}
+    } },
+    "Mountain biking": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sepeda gunung"}}
+    } },
+    "Skateboarding": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Skateboard"}}
+    } },
+    "Stand-up paddleboard": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Dayung berdiri"}}
+    } },
+    "Spinning": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Spinning"}}
+    } },
+    "Jump rope": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Lompat tali"}}
+    } },
+    "Powerlifting": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Powerlifting"}}
+    } },
+    "Rucking": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Berjalan dengan beban"}}
+    } },
+    "Sand volleyball": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Voli pantai"}}
+    } },
+    "Archery": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Panahan"}}
+    } },
+    "Fishing": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Memancing"}}
+    } },
+    "Hunting": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Berburu"}}
+    } },
+    "Curling": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kurling"}}
+    } },
+    "Netball": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Netball"}}
+    } },
+    "Gaelic football": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sepak bola Gaelik"}}
+    } },
+    "Spikeball": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Spikeball"}}
+    } },
+    "Meditation": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Meditasi"}}
+    } },
+    "Horseback riding": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Berkuda"}}
+    } },
+    "Wheelchair": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kursi roda"}}
+    } },
+    "Gaming": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Gaming"}}
+    } },
+    "Motor racing": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Balap motor"}}
+    } },
+    "Nordic walking": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Jalan Nordik"}}
+    } },
+    "Ballet": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Balet"}}
+    } },
+    "Billiards": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Biliar"}}
+    } },
+    "Breakdancing": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Breakdance"}}
+    } },
+    "Cheerleading": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pemandu sorak"}}
+    } },
+    "Darts": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Dart"}}
+    } },
+    "Disc golf": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Golf cakram"}}
+    } },
+    "Hurling/Camogie": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hurling/Camogie"}}
+    } },
+    "Jiu jitsu": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Jiu-jitsu"}}
+    } },
+    "Judo": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Judo"}}
+    } },
+    "Kiteboarding": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kiteboarding"}}
+    } },
+    "Motocross": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Motokros"}}
+    } },
+    "Muay Thai": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Muay Thai"}}
+    } },
+    "Paintball": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Paintball"}}
+    } },
+    "Parkour": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Parkour"}}
+    } },
+    "Polo": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Polo"}}
+    } },
+    "Skydiving": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Terjun payung"}}
+    } },
+    "No sport matches": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tidak ada olahraga yang cocok"}}
+    } },
+    "The location icon marks sports that record a route.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ikon lokasi menandai olahraga yang merekam rute."}}
+    } },
     "Your average over this period was %@.": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Rata-rata kamu pada periode ini adalah %@."}}
     } },
@@ -9961,6 +10252,7 @@
     },
     "%@ / %@": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "%@ / %@"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -10641,6 +10933,7 @@
     },
     "%@ breaths per minute: %@": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "%@ napas per menit: %@"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -12089,6 +12382,7 @@
     },
     "%@ vs start · peak %@ ms": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "%@ dibanding awal · puncak %@ ms"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -16757,6 +17051,7 @@
     },
     "%lld breaths": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "%lld napas"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -19441,6 +19736,7 @@
     },
     "%lld percent": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "%lld persen"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -26683,6 +26979,7 @@
     },
     "5 min": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "5 mnt"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -30397,6 +30694,7 @@
     },
     "A relaxation rhythm, not cardiac control. It never paces below a safe rate and you can stop anytime. If your heart rate doesn't settle, we'll say so plainly.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Ritme relaksasi, bukan pengendali jantung. Ritme ini tidak pernah turun di bawah laju yang aman dan kamu bisa berhenti kapan saja. Jika detak jantungmu tidak tenang, kami akan mengatakannya dengan jelas."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -39352,6 +39650,7 @@
     },
     "Audio cues": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Isyarat suara"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -41388,6 +41687,7 @@
     },
     "BPM": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "BPM"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -46181,6 +46481,7 @@
     },
     "Breathe in…": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tarik napas…"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -46239,6 +46540,7 @@
     },
     "Breathe mode": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Mode napas"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -46471,6 +46773,7 @@
     },
     "Breathe out…": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Buang napas…"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -50656,6 +50959,7 @@
     },
     "Calm me": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tenangkan aku"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -50714,6 +51018,7 @@
     },
     "Calm me · 3 min": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tenangkan aku · 3 mnt"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -56769,6 +57074,7 @@
     },
     "Coherence estimate": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Perkiraan koherensi"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -56833,6 +57139,7 @@
     },
     "Coherent": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Koheren"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -58748,6 +59055,7 @@
     },
     "Connect your strap for haptic guidance. You'll feel one pulse on the inhale, two on the exhale, so you can breathe with your eyes closed.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Hubungkan strap untuk panduan getar. Kamu akan merasakan satu getaran saat menarik napas dan dua saat membuang, jadi kamu bisa bernapas dengan mata terpejam."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -58806,6 +59114,7 @@
     },
     "Connect your strap for the felt cue. The sweep paces you with one buzz on the inhale, two on the exhale.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Hubungkan strap untuk isyarat getar. Pemindaian memandumu dengan satu getaran saat menarik napas dan dua saat membuang."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -59167,6 +59476,7 @@
     },
     "Connect your strap. Calm me is a felt rhythm on the wrist, so it needs a bonded connection.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Hubungkan strap. Tenangkan aku adalah ritme yang terasa di pergelangan, jadi perlu koneksi yang sudah terpasang."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -61519,6 +61829,7 @@
     },
     "Couldn't lock today": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tidak bisa dikunci hari ini"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -65845,6 +66156,7 @@
     },
     "Deep calm": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Sangat tenang"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -73616,6 +73928,7 @@
     },
     "Estimate from PPG-derived R-R: relaxation guidance, not a clinical reading. Your pace drifts, so we date it and you can re-measure anytime.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Perkiraan dari R-R hasil PPG: panduan relaksasi, bukan hasil klinis. Tempomu bisa bergeser, jadi kami beri tanggal dan kamu bisa mengukur ulang kapan saja."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -73797,6 +74110,7 @@
     },
     "Estimate only: a higher RMSSD while paced usually means your parasympathetic \"rest\" branch is engaging. It is not a clinical reading; trends over a session matter more than any single number.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Hanya perkiraan: RMSSD yang lebih tinggi saat bernapas teratur biasanya berarti cabang \"istirahat\" parasimpatismu aktif. Ini bukan hasil klinis; tren sepanjang sesi lebih penting daripada satu angka."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -74972,6 +75286,7 @@
     },
     "Everyone has a breathing pace (usually between 4.5 and 7 breaths a minute) where the heart's rhythm swings the most with each breath. We pace you through a few candidate paces, measure how your HRV responds, and lock the one that resonates best for you.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Setiap orang punya tempo napas (biasanya 4,5 sampai 7 napas per menit) saat ritme jantung paling berayun mengikuti napas. Kami memandumu melalui beberapa tempo, mengukur respons HRV-mu, lalu mengunci yang paling cocok untukmu."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -77670,6 +77985,7 @@
     },
     "Fallback": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Cadangan"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -78387,6 +78703,7 @@
     },
     "Find your resonance pace": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Temukan tempo resonansimu"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -78678,6 +78995,7 @@
     },
     "Fire a single haptic pulse on the strap (requires a bonded connection)": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Kirim satu getaran ke strap (perlu koneksi yang sudah terpasang)"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -80473,6 +80791,7 @@
     },
     "Full sweep · ~13 min": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Pemindaian penuh · ~13 mnt"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -83719,6 +84038,7 @@
     },
     "HRV (RMSSD)": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "HRV (RMSSD)"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -84485,6 +84805,7 @@
     },
     "Haptic-paced breathing · find your pace · calm down": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Napas dengan getar · temukan tempomu · tenangkan diri"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -84608,6 +84929,7 @@
     },
     "Haptics on": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Getar aktif"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -96689,6 +97011,7 @@
     },
     "Last %lld beats": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "%lld detak terakhir"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -97921,6 +98244,7 @@
     },
     "Last session: %@": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Sesi terakhir: %@"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -102010,6 +102334,7 @@
     },
     "Locked": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Terkunci"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -102068,6 +102393,7 @@
     },
     "Locked %@ · paces drift, re-measure anytime.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Terkunci %@ · tempo bisa bergeser, ukur ulang kapan saja."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -102126,6 +102452,7 @@
     },
     "Locked %@. Switch to Breathe to use it, or re-measure above.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Terkunci %@. Pindah ke Napas untuk memakainya, atau ukur ulang di atas."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -114755,6 +115082,7 @@
     },
     "No RMSSD · not enough R-R data": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tanpa RMSSD · data R-R belum cukup"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -119540,6 +119868,7 @@
     },
     "Not enough clean beat data to lock a pace today. Try again rested, sitting still with the strap snug. For now we'll pace you at 5.5 br/min (coherence).": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Data detak yang bersih belum cukup untuk mengunci tempo hari ini. Coba lagi saat tenang, duduk diam dengan strap terpasang pas. Untuk sekarang kamu dipandu di 5,5 napas/mnt (koherensi)."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -133125,6 +133454,7 @@
     },
     "Quick sweep · ~7 min": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Pemindaian cepat · ~7 mnt"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -134231,6 +134561,7 @@
     },
     "RMSSD %@": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "RMSSD %@"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -134469,6 +134800,7 @@
     },
     "RSA RESPONSE BY PACE": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "RESPONS RSA PER TEMPO"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -134527,6 +134859,7 @@
     },
     "RSA response by pace": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Respons RSA per tempo"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -142118,6 +142451,7 @@
     },
     "Resonance": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Resonansi"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -149494,6 +149828,7 @@
     },
     "Search": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Cari"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -150715,6 +151050,7 @@
     },
     "Session live": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Sesi berjalan"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -151251,6 +151587,7 @@
     },
     "Settling": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Menenang"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -153661,6 +153998,7 @@
     },
     "Sit still and breathe with the buzz. You can stop anytime; a stopped sweep won't lock a pace.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Duduk diam dan bernapaslah mengikuti getaran. Kamu bisa berhenti kapan saja; pemindaian yang dihentikan tidak mengunci tempo."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -156368,6 +156706,7 @@
     },
     "Soft tone on each phase · respects silent mode": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Nada lembut di tiap fase · mengikuti mode senyap"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -158975,6 +159314,7 @@
     },
     "Started at %lld bpm · the rhythm trails your heart down.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Mulai di %lld bpm · ritme menuntun detak jantungmu turun."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -160447,6 +160787,7 @@
     },
     "Stop session": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Hentikan sesi"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -160511,6 +160852,7 @@
     },
     "Stop sweep": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Hentikan pemindaian"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -162157,6 +162499,7 @@
     },
     "Strap needed": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Perlu strap"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -162338,6 +162681,7 @@
     },
     "Strap not worn": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Strap tidak dipakai"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -164396,6 +164740,7 @@
     },
     "Sweep progress": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Kemajuan pemindaian"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -164454,6 +164799,7 @@
     },
     "Sweeping…": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Memindai…"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -167983,6 +168329,7 @@
     },
     "Test buzz": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Uji getar"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -168280,6 +168627,7 @@
     },
     "That's normal. A paced breath often settles things when a metronome alone doesn't.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Itu wajar. Napas yang teratur sering menenangkan saat metronom saja tidak cukup."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -169419,6 +169767,7 @@
     },
     "The strap buzzes a gentle rhythm just below your current heart rate, a felt metronome to relax toward. It trails your heart down rather than yanking it, and stops on its own.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Strap bergetar dengan ritme lembut sedikit di bawah detak jantungmu saat ini, metronom yang terasa untuk menenangkan diri. Ritme ini menuntun jantungmu turun perlahan, bukan menariknya, dan berhenti sendiri."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -179132,6 +179481,7 @@
     },
     "Visual only": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Hanya visual"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -181417,6 +181767,7 @@
     },
     "Waiting for R-R": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Menunggu R-R"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -181592,6 +181943,7 @@
     },
     "Waiting for a resting heart rate. Start a live reading first, or come back when you're still.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Menunggu detak jantung istirahat. Mulai pembacaan langsung dulu, atau kembali saat kamu tenang."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -182227,6 +182579,7 @@
     },
     "Walking": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Jalan kaki"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -191557,6 +191910,7 @@
     },
     "Your locked pace": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tempo terkunci"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -191615,6 +191969,7 @@
     },
     "Your locked pace · %@ br/min": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tempo terkunci · %@ napas/mnt"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -191971,6 +192326,7 @@
     },
     "Your resonance pace": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tempo resonansimu"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -195208,6 +195564,7 @@
     },
     "br/min": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "napas/mnt"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -203345,6 +203702,7 @@
     },
     "target": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "target"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -204158,6 +204516,7 @@
     },
     "unscored": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "belum dinilai"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -213470,6 +213829,7 @@
     },
     "Hold…": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tahan…"}},
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -213598,6 +213958,7 @@
     },
     "10 min": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "10 mnt"}},
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -213662,6 +214023,7 @@
     },
     "15 min": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "15 mnt"}},
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -213726,6 +214088,7 @@
     },
     "Guided": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Terpandu"}},
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -214878,6 +215241,7 @@
     },
     "Guided timer": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Timer terpandu"}},
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -215006,6 +215370,7 @@
     },
     "Protocol info": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Info protokol"}},
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -215262,6 +215627,7 @@
     },
     "Session length": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Lama sesi"}},
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -215390,6 +215756,7 @@
     },
     "About this pace": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tentang tempo ini"}},
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -215454,6 +215821,7 @@
     },
     "Follow the cue…": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Ikuti isyarat…"}},
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -217630,6 +217998,7 @@
     },
     "Your locked resonance pace from the Resonance sweep.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tempo resonansi terkunci dari pemindaian Resonansi."}},
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -217758,6 +218127,7 @@
     },
     "Estimate only — not medical advice. Stop if you feel unwell.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Hanya perkiraan, bukan saran medis. Berhenti jika kamu merasa tidak enak badan."}},
         "en": {
           "stringUnit": {
             "state": "translated",
