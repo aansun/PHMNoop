@@ -29,7 +29,7 @@ struct NunaStepRow: View {
     }
 
     private func glyph(_ name: String) -> some View {
-        Image(systemName: name).font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 34, height: 34).background(NunaPalette.glassStrong, in: Circle())
+        Image(systemName: name).font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 34, height: 34).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
     }
 }
 
@@ -84,10 +84,10 @@ struct NunaPersonaView: View {
                         Text("Profile photo").font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         HStack(spacing: 10) {
                             PhotosPicker(selection: $photoItem, matching: .images) {
-                                Text(profile.hasAvatar ? "Change photo" : "Choose photo").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 36).background(NunaPalette.glassStrong, in: Capsule())
+                                Text(profile.hasAvatar ? "Change photo" : "Choose photo").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 36).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                             }
                             if profile.hasAvatar {
-                                Button { profile.clearAvatar() } label: { Image(systemName: "trash").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 36, height: 36).background(NunaPalette.glassStrong, in: Circle()) }.buttonStyle(.plain).accessibilityLabel(Text("Remove photo"))
+                                Button { profile.clearAvatar() } label: { Image(systemName: "trash").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 36, height: 36).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous)) }.buttonStyle(.plain).accessibilityLabel(Text("Remove photo"))
                             }
                         }
                     }
@@ -155,7 +155,7 @@ struct NunaPersonaView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Built from your first 4 nights. Restart it if the first week threw the baseline off.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                     Button { confirmRecalibrate = true } label: {
-                        Text(recalibrated ? "Restarted from tonight" : "Restart the baseline").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 48).background(NunaPalette.glassStrong, in: Capsule())
+                        Text(recalibrated ? "Restarted from tonight" : "Restart the baseline").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 48).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain).disabled(recalibrated)
                 }.padding(.vertical, 14)
             }
@@ -218,7 +218,7 @@ struct NunaZonesView: View {
             }
             if profile.hasCustomHRZones {
                 Button { profile.setCustomHRZonesEnabled(false) } label: {
-                    Text("Restore defaults").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
+                    Text("Restore defaults").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain)
             }
             nunaFootnote("Zones are used in Workouts, live sessions and zone alerts. Changing them does not change history that is already recorded.")
@@ -255,7 +255,7 @@ struct NunaGoalsView: View {
                         Text(verbatim: String(localized: "Your Effort over the last 7 days was \(UnitFormatter.effortDisplay(w, scale: scale)). A weekly target of \(UnitFormatter.effortDisplay(w * 1.1, scale: scale)) to \(UnitFormatter.effortDisplay(w * 1.2, scale: scale)) is a realistic step up."))
                             .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                         Button { effort = (w * 1.15).rounded() } label: {
-                            Text("Use it").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 20).frame(height: 40).background(NunaPalette.accent, in: Capsule())
+                            Text("Use it").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 20).frame(height: 40).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                         }.buttonStyle(.plain)
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -280,7 +280,7 @@ struct NunaGoalsView: View {
             }
             if effort > 0 || sleep > 0 || steps > 0 || water > 0 || targetWeight > 0 {
                 Button { effort = 0; sleep = 0; steps = 0; water = 0; targetWeight = 0 } label: {
-                    Text("Clear all targets").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
+                    Text("Clear all targets").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain)
             }
             nunaFootnote("Your targets stay on this iPhone. Anya reads them when you ask for advice, once you allow it to use your numbers.")

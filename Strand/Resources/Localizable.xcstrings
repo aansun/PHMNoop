@@ -1,6 +1,9 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "My journal": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Jurnal saya"}}
+    } },
     "Choose light or dark, spacing and the app icon. Colour and type follow the app's design guide.": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Pilih terang atau gelap, kerapatan, dan ikon aplikasi. Warna dan huruf mengikuti panduan desain aplikasi."}}
     } },

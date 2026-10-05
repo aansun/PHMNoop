@@ -67,12 +67,12 @@ struct NunaStravaView: View {
                     NunaFormField("Client Secret") { SecureField("", text: $clientSecret, prompt: Text("••••••••••••••••").foregroundStyle(NunaPalette.textMuted)).textInputAutocapitalization(.never).autocorrectionDisabled() }
                     HStack(spacing: 10) {
                         Button { _ = model.saveCredentials(clientID: clientID, clientSecret: clientSecret) } label: {
-                            Text("Save credentials").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 48).background(NunaPalette.accent, in: Capsule())
+                            Text("Save credentials").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 48).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                         }.buttonStyle(.plain).disabled(model.busy || clientID.trimmingCharacters(in: .whitespaces).isEmpty || clientSecret.trimmingCharacters(in: .whitespaces).isEmpty)
                             .opacity(clientID.trimmingCharacters(in: .whitespaces).isEmpty || clientSecret.trimmingCharacters(in: .whitespaces).isEmpty ? 0.4 : 1)
                         if model.isConfigured {
                             Button { model.clearCredentials(); clientID = ""; clientSecret = "" } label: {
-                                Text("Clear").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 20).frame(height: 48).background(NunaPalette.glassStrong, in: Capsule())
+                                Text("Clear").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 20).frame(height: 48).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                             }.buttonStyle(.plain)
                         }
                     }
@@ -95,7 +95,7 @@ struct NunaStravaView: View {
                         Text(verbatim: StravaCredentials.redirectURI).font(.system(size: 12.5, weight: .semibold, design: .monospaced)).foregroundStyle(NunaPalette.textPrimary).textSelection(.enabled)
                         Spacer()
                         Button { UIPasteboard.general.string = StravaCredentials.redirectURI; model.statusText = String(localized: "Callback URI copied.") } label: {
-                            Text("Copy").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 34).background(NunaPalette.glassStrong, in: Capsule())
+                            Text("Copy").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 34).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                         }.buttonStyle(.plain)
                     }
                     Text("Permissions asked for: activity:write and activity:read_all.").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
@@ -107,7 +107,7 @@ struct NunaStravaView: View {
                     Text(model.isConfigured ? "Ready to connect" : "Not connected").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     if !model.isConfigured { Text("Save the credentials first").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                     Button { Task { await model.connect() } } label: {
-                        Text("Connect Strava").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.accent, in: Capsule())
+                        Text("Connect Strava").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain).disabled(model.busy || !model.isConfigured).opacity(model.isConfigured ? 1 : 0.4)
                 }
             }
@@ -127,7 +127,7 @@ struct NunaStravaView: View {
                     }
                     Spacer()
                     Button { Task { await model.disconnect() } } label: {
-                        Text("Disconnect").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 38).background(NunaPalette.glassStrong, in: Capsule())
+                        Text("Disconnect").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 38).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain).disabled(model.busy)
                 }
             }
@@ -143,7 +143,7 @@ struct NunaStravaView: View {
                             if i > 0 { NunaDivider() }
                             row(r) {
                                 Button { Task { await model.upload(r) } } label: {
-                                    Text("Upload").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 16).frame(height: 34).background(NunaPalette.accent, in: Capsule())
+                                    Text("Upload").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 16).frame(height: 34).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                                 }.buttonStyle(.plain).disabled(model.busy)
                             }
                         }
@@ -181,7 +181,7 @@ struct NunaStravaView: View {
 
     private func stepRow(_ n: Int, _ t: LocalizedStringKey) -> some View {
         HStack(alignment: .top, spacing: 14) {
-            Text(verbatim: "\(n)").font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 30, height: 30).background(NunaPalette.glassStrong, in: Circle())
+            Text(verbatim: "\(n)").font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 30, height: 30).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
             Text(t).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
         }.padding(.vertical, 12)

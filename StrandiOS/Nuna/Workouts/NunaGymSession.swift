@@ -77,10 +77,10 @@ struct NunaGymSessionView: View {
             NunaListRow("Apple Health", subtitle: "Strength workout, duration and energy are written by the sync. Manage it in Me", systemImage: "heart.text.square")
         }
         Button { editing = true } label: {
-            Text("Edit sets").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
+            Text("Edit sets").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
         }.buttonStyle(.plain)
         Button(role: .destructive) { confirmDelete = true } label: {
-            Text("Delete").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
+            Text("Delete").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
         }.buttonStyle(.plain)
     }
 
@@ -277,7 +277,7 @@ struct NunaSaveProgramView: View {
                     NunaToggleRow("Use this session's weights as targets", subtitle: "Off: only the name and number of sets", systemImage: "scalemass", isOn: $useWeights)
                 }
                 Button { Task { await save() } } label: {
-                    Text("Save program").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: Capsule())
+                    Text("Save program").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain).disabled(!canSave).opacity(canSave ? 1 : 0.4)
                 Text("It shows up in Gym under Programs and can be edited any time.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
             }

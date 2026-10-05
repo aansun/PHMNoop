@@ -96,7 +96,7 @@ struct NunaWorkoutsView: View {
         HStack(spacing: 10) {
             Button { dismiss() } label: {
                 Image(systemName: "chevron.left").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: Circle())
+                    .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
             }.buttonStyle(.plain).accessibilityLabel(Text("Back"))
             Text("Workouts").font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             Spacer()
@@ -108,7 +108,7 @@ struct NunaWorkoutsView: View {
     private func roundLink(_ r: NunaWorkoutRoute, _ icon: String, _ label: LocalizedStringKey) -> some View {
         NavigationLink(value: r) {
             Image(systemName: icon).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: Circle())
+                .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
         }.buttonStyle(.plain).accessibilityLabel(Text(label))
     }
 
@@ -198,11 +198,11 @@ struct NunaWorkoutsView: View {
                     if let ratio, let band {
                         HStack(spacing: 12) {
                             Image(systemName: "bolt").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                .frame(width: 34, height: 34).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                .frame(width: 34, height: 34).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                             Text(verbatim: String(localized: "Acute-to-chronic load ratio \(String(format: "%.2f", locale: AppLanguage.activeLocale, ratio)). \(bandSentence(band))"))
                                 .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                         }
-                        .padding(12).background(NunaPalette.shade.opacity(0.22), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .padding(12).background(NunaPalette.shade.opacity(0.22), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                     } else {
                         Text("Needs at least three weeks with workouts to read your balance.").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
@@ -272,10 +272,10 @@ struct NunaWorkoutsView: View {
                         Button {
                             Task { _ = await repo.saveDetectedWorkout(s); suggestion = nil; await repo.refresh() }
                         } label: {
-                            Text("Save").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 24).frame(height: 44).background(NunaPalette.accent, in: Capsule())
+                            Text("Save").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 24).frame(height: 44).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                         }.buttonStyle(.plain)
                         Button { repo.dismissDetectedSuggestion(w); suggestion = nil } label: {
-                            Text("Not a workout").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 18).frame(height: 44).background(NunaPalette.glassStrong, in: Capsule())
+                            Text("Not a workout").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 18).frame(height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                         }.buttonStyle(.plain)
                     }
                 }
@@ -299,7 +299,7 @@ struct NunaWorkoutsView: View {
                         Button { query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(NunaPalette.textMuted) }.buttonStyle(.plain)
                     }
                 }
-                .padding(.horizontal, 14).frame(height: 44).background(NunaPalette.glassStrong, in: Capsule())
+                .padding(.horizontal, 14).frame(height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 if !q.isEmpty {
                     if matches.isEmpty {
                         Text("No workouts match").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
@@ -324,7 +324,7 @@ struct NunaWorkoutsView: View {
                 Image(systemName: expanded ? "chevron.up" : "chevron.down").font(.nuna(size: 11, weight: .bold))
             }
             .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 44)
-            .background(NunaPalette.glassStrong, in: Capsule())
+            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
         }.buttonStyle(.plain)
     }
 
@@ -339,8 +339,8 @@ struct NunaWorkoutsView: View {
                             .font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).minimumScaleFactor(0.75).multilineTextAlignment(.center).frame(height: 30, alignment: .top)
                     }
                     .frame(maxWidth: .infinity).frame(height: 84).padding(.horizontal, 2)
-                    .background(NunaPalette.glass, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                    .background(NunaPalette.glass, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
                 }.buttonStyle(.plain)
             }
         }
@@ -447,7 +447,7 @@ struct NunaWorkoutMonthGrid: View {
                                 if future {
                                     Color.clear.frame(height: 5)
                                 } else if rs.isEmpty {
-                                    Capsule().fill(isSel ? NunaPalette.onAccent.opacity(0.5) : NunaPalette.textMuted).frame(width: 8, height: 1.5).frame(height: 5)
+                                    RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(isSel ? NunaPalette.onAccent.opacity(0.5) : NunaPalette.textMuted).frame(width: 8, height: 1.5).frame(height: 5)
                                 } else {
                                     HStack(spacing: 3) {
                                         if cardio { Circle().fill(NunaPalette.effort).frame(width: 5, height: 5) }
@@ -457,7 +457,7 @@ struct NunaWorkoutMonthGrid: View {
                             }
                             .frame(width: 42, height: 46)
                             .background(Circle().fill(isSel ? NunaPalette.accent : .clear))
-                            .overlay(Circle().strokeBorder(isToday && !isSel ? NunaPalette.accent.opacity(0.8) : .clear, lineWidth: 1.5))
+                            .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(isToday && !isSel ? NunaPalette.accent.opacity(0.8) : .clear, lineWidth: 1.5))
                             .frame(maxWidth: .infinity)
                         }.buttonStyle(.plain).disabled(!interactive || future)
                     }
@@ -465,7 +465,7 @@ struct NunaWorkoutMonthGrid: View {
             }
             HStack(spacing: 16) {
                 legend(NunaPalette.effort, "Cardio"); legend(NunaPalette.textPrimary, "Strength")
-                HStack(spacing: 6) { Capsule().fill(NunaPalette.textMuted).frame(width: 9, height: 1.5); Text("Rest").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                HStack(spacing: 6) { RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.textMuted).frame(width: 9, height: 1.5); Text("Rest").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
             }
             .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 4)
         }

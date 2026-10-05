@@ -19,8 +19,8 @@ struct NunaDetailHeader: View {
                 Image(systemName: "chevron.left").font(.nuna(size: 16, weight: .bold))
                     .foregroundStyle(NunaPalette.textPrimary)
                     .frame(width: 44, height: 44)
-                    .background(NunaPalette.glassStrong, in: Circle())
-                    .overlay(Circle().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                    .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
             }
             .accessibilityLabel(Text("Back"))
             Text(title).font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
@@ -30,7 +30,7 @@ struct NunaDetailHeader: View {
                 Button(action: onAnya) {
                     Image(systemName: "sparkles").font(.nuna(size: 17, weight: .bold))
                         .foregroundStyle(NunaPalette.onAccent)
-                        .frame(width: 44, height: 44).background(NunaPalette.accent, in: Circle())
+                        .frame(width: 44, height: 44).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                 }
                 .accessibilityLabel(Text("Ask Anya"))
             }
@@ -416,8 +416,8 @@ struct NunaColumns: View {
                         .foregroundStyle(item.highlight ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                         .lineLimit(1).minimumScaleFactor(0.6)
                     ZStack(alignment: .bottom) {
-                        Capsule().fill(NunaPalette.ink.opacity(0.08)).frame(width: 30, height: 110)
-                        Capsule().fill(item.color ?? (item.highlight ? (highlightColor ?? color) : color))
+                        RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.ink.opacity(0.08)).frame(width: 30, height: 110)
+                        RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(item.color ?? (item.highlight ? (highlightColor ?? color) : color))
                             .frame(width: 30, height: max(14, 110 * CGFloat(min(max(item.fraction ?? 0, 0), 1))))
                             .opacity(item.fraction == nil ? 0 : 1)
                     }

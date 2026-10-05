@@ -95,7 +95,7 @@ struct NunaChargeEffortView: View {
                         Text(verbatim: NunaTrendsFormat.withWeekday(d) + " · " + String(localized: "Effort") + " " + NunaTrendsFormat.num(eSel?.value, 1) + " · Charge " + NunaTrendsFormat.num(cSel?.value) + "%")
                             .font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     }
-                    .padding(12).frame(maxWidth: .infinity, alignment: .leading).background(NunaPalette.shade.opacity(0.22), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .padding(12).frame(maxWidth: .infinity, alignment: .leading).background(NunaPalette.shade.opacity(0.22), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 }
             }
         }

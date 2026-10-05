@@ -125,7 +125,7 @@ struct NunaStageSplitBar: View {
             HStack(spacing: 2) {
                 ForEach(parts.indices, id: \.self) { i in
                     if parts[i].1 > 0 {
-                        Capsule().fill(parts[i].0.nunaColor)
+                        RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(parts[i].0.nunaColor)
                             .frame(width: max(4, geo.size.width * CGFloat(parts[i].1 / total) - 2))
                     }
                 }
@@ -148,7 +148,7 @@ struct NunaStageLegend: View {
             }
             if showsMovement {
                 HStack(spacing: 6) {
-                    Capsule().fill(NunaPalette.textSecondary).frame(width: 3, height: 12)
+                    RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.textSecondary).frame(width: 3, height: 12)
                     Text("Movement").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
             }
@@ -181,8 +181,8 @@ struct NunaProgressBar: View {
     var body: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
-                Capsule().fill(NunaPalette.ink.opacity(0.09))
-                Capsule().fill(color).frame(width: max(6, geo.size.width * CGFloat(min(max(fraction, 0), 1))))
+                RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.ink.opacity(0.09))
+                RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(color).frame(width: max(6, geo.size.width * CGFloat(min(max(fraction, 0), 1))))
             }
         }
         .frame(height: 8)
@@ -205,8 +205,8 @@ struct NunaRangeBar: View {
             let span = max(hi - lo, 0.0001)
             let x: (Double) -> CGFloat = { geo.size.width * CGFloat(min(max(($0 - lo) / span, 0), 1)) }
             ZStack(alignment: .leading) {
-                Capsule().fill(NunaPalette.ink.opacity(0.09))
-                if let value, !showsMarkerDot { Capsule().fill(color).frame(width: max(6, x(value))) }
+                RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.ink.opacity(0.09))
+                if let value, !showsMarkerDot { RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(color).frame(width: max(6, x(value))) }
                 if let mean { Rectangle().fill(NunaPalette.ink.opacity(0.7)).frame(width: 2, height: 16).offset(x: x(mean) - 1) }
                 if let value, showsMarkerDot {
                     Circle().fill(NunaPalette.ink).frame(width: 14, height: 14).offset(x: min(max(x(value) - 7, 0), geo.size.width - 14))
@@ -274,7 +274,7 @@ struct NunaNightPicker: View {
         Button(action: action) {
             Image(systemName: symbol).font(.nuna(size: 15, weight: .bold))
                 .foregroundStyle(enabled ? NunaPalette.textPrimary : NunaPalette.textMuted.opacity(0.4))
-                .frame(width: 44, height: 44).background(NunaPalette.ink.opacity(0.08), in: Circle())
+                .frame(width: 44, height: 44).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
         }
         .disabled(!enabled)
     }

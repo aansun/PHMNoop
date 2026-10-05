@@ -438,7 +438,7 @@ struct NunaHealthView: View {
                     }.buttonStyle(.plain)
                     NavigationLink(value: NunaTodayRoute.mood) {
                         Image(systemName: "face.smiling").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            .frame(width: 48, height: 48).background(NunaPalette.glassStrong, in: Circle())
+                            .frame(width: 48, height: 48).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                     }
                     .buttonStyle(.plain).accessibilityLabel(Text("Mood check-in"))
                 }
@@ -525,7 +525,7 @@ struct NunaHealthView: View {
                                 Spacer(minLength: 0)
                             }
                             .padding(.horizontal, 12).frame(height: 40)
-                            .background(NunaPalette.glassStrong, in: Capsule())
+                            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                         }
                     }
                 }
@@ -624,8 +624,8 @@ struct NunaHealthView: View {
             }
         }
         .padding(12).frame(maxWidth: .infinity, alignment: .leading)
-        .background(NunaPalette.glass, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(NunaPalette.hairlineSoft, lineWidth: 1))
+        .background(NunaPalette.glass, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(NunaPalette.hairlineSoft, lineWidth: 1))
     }
 
     private var waistCard: some View {
@@ -862,8 +862,8 @@ struct NunaHealthView: View {
                             ForEach(nights.indices, id: \.self) { i in
                                 let x0 = w * CGFloat((starts[i] - lo) / span)
                                 let x1 = w * CGFloat((min(ends[i], hi) - lo) / span)
-                                Capsule().fill(NunaPalette.glass).frame(width: w, height: 16).offset(y: CGFloat(i) * 34 + 9)
-                                Capsule().fill(NunaPalette.rest).frame(width: max(8, x1 - x0), height: 16)
+                                RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.glass).frame(width: w, height: 16).offset(y: CGFloat(i) * 34 + 9)
+                                RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.rest).frame(width: max(8, x1 - x0), height: 16)
                                     .offset(x: x0, y: CGFloat(i) * 34 + 9)
                             }
                         }

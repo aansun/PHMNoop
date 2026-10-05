@@ -80,8 +80,8 @@ struct NunaLiftSessionView: View {
         HStack(spacing: 10) {
             Button { dismiss() } label: {
                 Image(systemName: "chevron.down").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: Circle())
-                    .overlay(Circle().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                    .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
             }.buttonStyle(.plain).accessibilityLabel(Text("Minimise"))
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: session.programName.map { String(localized: "Gym session · \($0)") } ?? String(localized: "Gym session"))
@@ -93,7 +93,7 @@ struct NunaLiftSessionView: View {
                 Circle().fill(NunaPalette.alert).frame(width: 8, height: 8)
                 Text(verbatim: LiftFormat.duration(max(0, session.now - engine.startTs))).font(.nuna(size: 14.5, weight: .bold, design: NunaType.design)).monospacedDigit()
             }
-            .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 36).background(NunaPalette.glassStrong, in: Capsule())
+            .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 36).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
         }
     }
 
@@ -164,7 +164,7 @@ struct NunaLiftSessionView: View {
 
     private func restChip(_ t: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(verbatim: t).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 34).background(NunaPalette.glassStrong, in: Capsule())
+            Text(verbatim: t).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 34).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
         }.buttonStyle(.plain)
     }
 
@@ -193,17 +193,17 @@ struct NunaLiftSessionView: View {
                     }.buttonStyle(.plain)
                     if let note = item.note, !note.isEmpty {
                         Text(verbatim: note).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(4).padding(10)
-                            .frame(maxWidth: .infinity, alignment: .leading).background(NunaPalette.warning.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .frame(maxWidth: .infinity, alignment: .leading).background(NunaPalette.warning.opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                     }
                     columnHeadings
                     VStack(spacing: 2) { ForEach(slots, id: \.self) { slot in setRow(engine, slot: slot) } }
                     HStack {
                         Button { session.addSet(toExercise: index) } label: {
                             HStack(spacing: 8) { Image(systemName: "plus").font(.nuna(size: 13, weight: .bold)); Text("Add set").font(.nuna(size: 14.5, weight: .bold)) }
-                                .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 44).background(NunaPalette.glassStrong, in: Capsule())
+                                .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                         }.buttonStyle(.plain).disabled(item.targetSets >= LiftSessionEngine.maxSetsPerExercise)
                         Button { session.removeSet(fromExercise: index) } label: {
-                            Image(systemName: "minus").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: Circle())
+                            Image(systemName: "minus").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                         }.buttonStyle(.plain).disabled(!engine.canRemoveSet(fromExercise: index)).opacity(engine.canRemoveSet(fromExercise: index) ? 1 : 0.4)
                     }
                 }
@@ -269,7 +269,7 @@ struct NunaLiftSessionView: View {
                 .accessibilityLabel(recorded == nil ? Text("Start this set") : Text("Redo this set"))
         }
         .padding(.vertical, isWorking ? 6 : 2).padding(.horizontal, 8)
-        .background(isWorking ? NunaPalette.rest.opacity(0.14) : Color.clear, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(isWorking ? NunaPalette.rest.opacity(0.14) : Color.clear, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         .overlay(alignment: .top) { if !isWorking { Rectangle().fill(NunaPalette.hairline).frame(height: 0.5) } }
     }
 
@@ -283,7 +283,7 @@ struct NunaLiftSessionView: View {
 
     private func stepButton(_ icon: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: icon).font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 28, height: 28).background(NunaPalette.glassStrong, in: Circle())
+            Image(systemName: icon).font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 28, height: 28).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
         }.buttonStyle(.plain)
     }
 
@@ -335,18 +335,18 @@ struct NunaLiftSessionView: View {
             Button { session.undo() } label: {
                 Image(systemName: "arrow.uturn.backward").font(.nuna(size: 16, weight: .bold))
                     .foregroundStyle(engine.canUndo ? NunaPalette.textPrimary : NunaPalette.textMuted)
-                    .frame(width: 56, height: 56).background(NunaPalette.glassStrong, in: Circle())
+                    .frame(width: 56, height: 56).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
             }.buttonStyle(.plain).disabled(!engine.canUndo).accessibilityLabel(Text("Undo"))
             Button { session.advance() } label: {
                 Text(actionLabel(engine)).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                    .frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: Capsule())
+                    .frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }.buttonStyle(.plain)
             Button {
                 unfinishedChoice = nil; programChoice = nil; setCountChanges = []
                 showingFinish = true
             } label: {
                 Text("Finish").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText)
-                    .padding(.horizontal, 20).frame(height: 56).background(NunaPalette.glassStrong, in: Capsule())
+                    .padding(.horizontal, 20).frame(height: 56).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }.buttonStyle(.plain)
         }
         .padding(.horizontal, NunaSpacing.screenH).padding(.top, 10).padding(.bottom, 14)
@@ -443,11 +443,11 @@ struct NunaLiftSessionView: View {
                     }
                 }
                 Button { Task { await save() } } label: {
-                    Text("Save session").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: Capsule())
+                    Text("Save session").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain).disabled(saving || !answered).opacity(saving || !answered ? 0.4 : 1)
                 if !answered { Text("Choose an option above to save.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) }
                 Button(role: .destructive) { confirmingDiscard = true } label: {
-                    Text("Discard session").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
+                    Text("Discard session").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain).disabled(saving)
             }
             .scrollDismissesKeyboard(.interactively)
@@ -540,19 +540,19 @@ struct NunaLiftBar: View {
             Button { session.isPresented = true } label: {
                 HStack(spacing: 12) {
                     Image(systemName: "dumbbell").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(width: 38, height: 38).background(NunaPalette.glassStrong, in: Circle())
+                        .frame(width: 38, height: 38).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                     VStack(alignment: .leading, spacing: 2) {
                         Text(verbatim: session.programName ?? String(localized: "Gym session")).font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
                         Text(verbatim: "\(e.completedWorkingSets)/\(e.plannedWorkingSets) · " + LiftFormat.duration(max(0, session.now - e.startTs)))
                             .font(.nuna(size: 12.5, weight: .semibold)).monospacedDigit().foregroundStyle(NunaPalette.textSecondary)
                     }
                     Spacer()
-                    Text("Open").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 16).frame(height: 34).background(NunaPalette.accent, in: Capsule())
+                    Text("Open").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 16).frame(height: 34).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }
                 .padding(.horizontal, 14).padding(.vertical, 10)
-                .background(RoundedRectangle(cornerRadius: 22, style: .continuous).fill(NunaPalette.canvas))
-                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(NunaPalette.canvas))
+                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
                 .padding(.horizontal, 12).padding(.bottom, 6)
             }.buttonStyle(.plain)
         }

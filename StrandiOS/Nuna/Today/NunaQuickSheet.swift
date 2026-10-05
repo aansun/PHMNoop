@@ -85,7 +85,7 @@ struct NunaQuickSheet: View {
                 Spacer(minLength: 4)
                 Button { Task { await undoWater() } } label: {
                     Image(systemName: "minus").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: Circle())
+                        .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                 }
                 .buttonStyle(.plain).accessibilityLabel(Text("Remove last drink"))
                 Button { Task { await addWater(250) } } label: { Text("+250") }
@@ -129,7 +129,7 @@ struct NunaQuickSheet: View {
                 Image(systemName: icon).font(.nuna(size: 22, weight: .semibold))
                     .foregroundStyle(NunaPalette.textPrimary)
                     .frame(width: 60, height: 60)
-                    .background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+                    .background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 Text(title).font(.nuna(size: 12.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
                     .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.8)
             }

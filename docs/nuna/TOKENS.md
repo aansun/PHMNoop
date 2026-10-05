@@ -56,13 +56,13 @@ SF Pro (system) for text and numbers, from the "Panduan Tipografi dan Jarak UI" 
 
 | Token | Value |
 |---|---|
-| Card radius | 28 (small cards 24) |
-| Chip | height 30, radius 15 |
-| Button | height 48, radius 24 (primary actions 54-60, radius = half) |
-| Icon button | 44 x 44, radius 22 |
-| Icon tile | 40 x 40, radius 14 |
-| Tab bar | height 72, radius 36, inset 14, 24 from the bottom |
-| Sheet | top radius 34, 44 x 5 handle, scrim black 62% |
+| Card radius | 14 (small cards 12). Firm corners: shapes are rounded rectangles, never capsules or circles |
+| Chip | height 30, radius 8 (pill 10) |
+| Button | height 48, radius 12 (primary actions 54-60, same radius) |
+| Icon button | 44 x 44, radius 12 |
+| Icon tile | 40 x 40, radius 10 |
+| Tab bar | height 72, radius 18, inset 14, 24 from the bottom |
+| Sheet | top radius 20, 44 x 5 handle, scrim black 62% |
 | Floating "+" | 58 x 58, white, 104 above the bottom |
 | Toggle | 52 x 32 |
 | Screen padding | 20 horizontal, 16 between sections |

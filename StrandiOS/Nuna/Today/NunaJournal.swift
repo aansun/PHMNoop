@@ -55,7 +55,7 @@ struct NunaJournalView: View {
         Button { withAnimation { editing.toggle() } } label: {
             Text(editing ? "Done" : "Edit").font(.nuna(size: 14, weight: .bold)).foregroundStyle(editing ? NunaPalette.onAccent : NunaPalette.textPrimary)
                 .padding(.horizontal, 16).frame(height: 40)
-                .background(editing ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
+                .background(editing ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
         }.buttonStyle(.plain)
     }
 
@@ -77,7 +77,7 @@ struct NunaJournalView: View {
                                         .foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary)
                                 }
                                 .frame(width: 52, height: 62)
-                                .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                                .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                             }.buttonStyle(.plain).id(off)
                         }
                     }.padding(.horizontal, 1)
@@ -102,7 +102,7 @@ struct NunaJournalView: View {
                             Text(verbatim: "\(v)").font(.nuna(size: 20, weight: .bold, design: NunaType.design))
                                 .foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary)
                                 .frame(maxWidth: .infinity).frame(height: 52)
-                                .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel(Text(verbatim: "\(MoodStore.label(for: v)), \(v) / 5"))
@@ -175,7 +175,7 @@ struct NunaJournalView: View {
     private func pill(_ title: LocalizedStringKey, on: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Text(title).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary)
-                .padding(.horizontal, 16).frame(height: 36).background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
+                .padding(.horizontal, 16).frame(height: 36).background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
         }.buttonStyle(.plain)
     }
 
@@ -199,7 +199,7 @@ struct NunaJournalView: View {
     private func step(_ symbol: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol).font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                .frame(width: 34, height: 34).background(NunaPalette.glassStrong, in: Circle())
+                .frame(width: 34, height: 34).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
         }.buttonStyle(.plain)
     }
 
@@ -207,7 +207,7 @@ struct NunaJournalView: View {
         HStack(spacing: 8) {
             if item.hidden {
                 Button { catalog.restore(item.canonical) } label: {
-                    Text("Restore").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 34).background(NunaPalette.glassStrong, in: Capsule())
+                    Text("Restore").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 34).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain)
             } else {
                 Menu {
@@ -219,11 +219,11 @@ struct NunaJournalView: View {
                     else { Button("Change to Number") { catalog.setKind(item.canonical, to: .numeric(unitLabel: nil)) } }
                 } label: {
                     Image(systemName: "slider.horizontal.3").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(width: 36, height: 36).background(NunaPalette.glassStrong, in: Circle())
+                        .frame(width: 36, height: 36).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                 }
                 Button { catalog.remove(item.canonical) } label: {
                     Image(systemName: "minus").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.alertText)
-                        .frame(width: 36, height: 36).background(NunaPalette.glassStrong, in: Circle())
+                        .frame(width: 36, height: 36).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                 }.buttonStyle(.plain).accessibilityLabel(Text(item.custom ? "Delete this custom item" : "Hide this item"))
             }
         }
@@ -239,15 +239,15 @@ struct NunaJournalView: View {
                     TextField("", text: $customDraft, prompt: Text("Add a custom item…").foregroundStyle(NunaPalette.textMuted))
                         .font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                         .padding(.horizontal, 16).frame(height: 48)
-                        .background(NunaPalette.shade.opacity(0.28), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                        .background(NunaPalette.shade.opacity(0.28), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
                     NunaSegmented<Bool>([(value: false, title: "Yes/No"), (value: true, title: "Number")], selection: $customNumeric)
                     HStack {
                         Menu {
                             ForEach(JournalGroup.displayOrder, id: \.self) { g in Button(g.title) { customGroup = g } }
                         } label: {
                             HStack(spacing: 6) { Text(verbatim: customGroup.title); Image(systemName: "chevron.up.chevron.down").font(.nuna(size: 11, weight: .bold)) }
-                                .font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 42).background(NunaPalette.glassStrong, in: Capsule())
+                                .font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 42).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                         }
                         Spacer()
                         let ok = !customDraft.trimmingCharacters(in: .whitespaces).isEmpty
@@ -256,7 +256,7 @@ struct NunaJournalView: View {
                             customDraft = ""
                         } label: {
                             Text("Add").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 24).frame(height: 42)
-                                .background(NunaPalette.accent.opacity(ok ? 1 : 0.35), in: Capsule())
+                                .background(NunaPalette.accent.opacity(ok ? 1 : 0.35), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                         }.buttonStyle(.plain).disabled(!ok)
                     }
                 }

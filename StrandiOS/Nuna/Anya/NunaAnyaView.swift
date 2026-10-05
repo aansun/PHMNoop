@@ -166,7 +166,7 @@ struct NunaAnyaView: View {
 
     private func roundLabel(_ symbol: String) -> some View {
         Image(systemName: symbol).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-            .frame(width: 42, height: 42).background(NunaPalette.glassStrong, in: Circle()).overlay(Circle().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+            .frame(width: 42, height: 42).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous)).overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
     }
 
     /// "Anya reads: Charge · Sleep · Workouts 7 days", and the memory chip. Honest: only what the settings allow.
@@ -184,7 +184,7 @@ struct NunaAnyaView: View {
                     NavigationLink(value: NunaAnyaRoute.settings) {
                         HStack(spacing: 6) { Image(systemName: "lock").font(.nuna(size: 11, weight: .bold)); Text("Anya only sees your question. Allow data access") }
                             .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                            .padding(.horizontal, 12).frame(height: 32).background(NunaPalette.glassStrong, in: Capsule())
+                            .padding(.horizontal, 12).frame(height: 32).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain)
                 }
                 let active = memory.memories.filter(\.isActive).count
@@ -192,7 +192,7 @@ struct NunaAnyaView: View {
                     NavigationLink(value: NunaAnyaRoute.memory) {
                         HStack(spacing: 5) { Image(systemName: "brain").font(.nuna(size: 11, weight: .bold)); Text(verbatim: String(localized: "Memory active · \(active)")) }
                             .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                            .padding(.horizontal, 12).frame(height: 32).background(NunaPalette.glassStrong, in: Capsule())
+                            .padding(.horizontal, 12).frame(height: 32).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain)
                 }
             }
@@ -205,7 +205,7 @@ struct NunaAnyaView: View {
 
     private func chip(_ t: String) -> some View {
         Text(verbatim: t).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-            .padding(.horizontal, 12).frame(height: 32).background(NunaPalette.glassStrong, in: Capsule())
+            .padding(.horizontal, 12).frame(height: 32).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
     }
 
     // MARK: Not connected
@@ -220,7 +220,7 @@ struct NunaAnyaView: View {
                         .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                     NavigationLink(value: NunaAnyaRoute.connect) {
                         Text("Choose a provider").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                            .frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.accent, in: Capsule())
+                            .frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain)
                 }
             }
@@ -258,7 +258,7 @@ struct NunaAnyaView: View {
                             if let d = reading.detail { Text(verbatim: d).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true) }
                             NavigationLink(value: NunaAnyaRoute.plan) {
                                 Text("Build today's plan").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                                    .padding(.horizontal, 22).frame(height: 44).background(NunaPalette.accent, in: Capsule())
+                                    .padding(.horizontal, 22).frame(height: 44).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                             }.buttonStyle(.plain)
                         }
                     }
@@ -336,7 +336,7 @@ struct NunaAnyaView: View {
             HStack {
                 Spacer(minLength: 56)
                 Text(verbatim: m.text).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.onAccent).textSelection(.enabled)
-                    .padding(.horizontal, 16).padding(.vertical, 11).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+                    .padding(.horizontal, 16).padding(.vertical, 11).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
         case .assistant:
             VStack(alignment: .leading, spacing: 10) {
@@ -375,7 +375,7 @@ struct NunaAnyaView: View {
     }
     private func chipLabel(_ t: String) -> some View {
         Text(verbatim: t).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-            .padding(.horizontal, 14).frame(height: 38).background(NunaPalette.glassStrong, in: Capsule()).overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+            .padding(.horizontal, 14).frame(height: 38).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)).overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
     }
 
     private func errorBanner(_ text: String) -> some View {
@@ -405,13 +405,13 @@ struct NunaAnyaView: View {
                     Spacer()
                     Button { attachment = nil } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(NunaPalette.textMuted) }.buttonStyle(.plain).accessibilityLabel(Text("Remove attachment"))
                 }
-                .padding(.horizontal, 14).frame(height: 40).background(NunaPalette.glassStrong, in: Capsule())
+                .padding(.horizontal, 14).frame(height: 40).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 Text("The file is read on this iPhone and only its text is sent with your question.").font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
             }
             HStack(spacing: 10) {
                 Button { showAttach = true } label: {
                     Image(systemName: "plus").font(.nuna(size: 18, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(width: 48, height: 48).background(NunaPalette.glassStrong, in: Circle()).overlay(Circle().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                        .frame(width: 48, height: 48).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous)).overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
                 }.buttonStyle(.plain).accessibilityLabel(Text("Add attachment"))
                 HStack(spacing: 6) {
                     TextField("", text: $draft, prompt: Text("Ask Anya about your data").foregroundStyle(NunaPalette.textMuted), axis: .vertical)
@@ -425,11 +425,11 @@ struct NunaAnyaView: View {
                         }.buttonStyle(.plain).accessibilityLabel(Text("Ask out loud"))
                     } else {
                         Button { send(draft) } label: {
-                            Image(systemName: "arrow.up").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(width: 38, height: 38).background(NunaPalette.accent, in: Circle())
+                            Image(systemName: "arrow.up").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(width: 38, height: 38).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                         }.buttonStyle(.plain).accessibilityLabel(Text("Send"))
                     }
                 }
-                .frame(minHeight: 48).background(NunaPalette.shade.opacity(0.28), in: Capsule()).overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                .frame(minHeight: 48).background(NunaPalette.shade.opacity(0.28), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)).overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
             }
         }
         .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 8)
@@ -523,10 +523,10 @@ struct NunaAnyaVoiceSheet: View {
             Spacer()
             HStack(spacing: 12) {
                 Button { voice.stopTranscribing { _ in }; onFinish("") } label: {
-                    Text("Cancel").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 54).background(NunaPalette.glassStrong, in: Capsule())
+                    Text("Cancel").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 54).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain)
                 Button { voice.stopTranscribing { final in onFinish(final.isEmpty ? text : final) } } label: {
-                    Text("Send").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54).background(NunaPalette.accent, in: Capsule())
+                    Text("Send").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain).disabled(text.isEmpty).opacity(text.isEmpty ? 0.4 : 1)
             }
         }

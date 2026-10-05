@@ -122,7 +122,7 @@ struct NunaAnyaPlanView: View {
                     ForEach(Array(plan.steps.enumerated()), id: \.offset) { i, s in
                         if i > 0 { NunaDivider() }
                         HStack(alignment: .top, spacing: 14) {
-                            Text(verbatim: "\(i + 1)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 30, height: 30).background(NunaPalette.glassStrong, in: Circle())
+                            Text(verbatim: "\(i + 1)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 30, height: 30).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                             VStack(alignment: .leading, spacing: 4) {
                                 HStack { Text(phaseName(s.phase)).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary); Spacer()
                                     Text(verbatim: String(localized: "\(s.minutes) min")).font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary) }
@@ -181,14 +181,14 @@ struct NunaAnyaPlanView: View {
                 router.plannedSession = .init(title: NunaDayPlanResult(plan: plan, charge: charge, yesterdayEffort: nil, band: nil).title, minutes: plan.totalMinutes, zone: plan.mainZone)
                 router.requestedDestination = .activeWorkout
             } label: {
-                Text("Start session").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: Capsule())
+                Text("Start session").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }.buttonStyle(.plain)
             if coach.isConfigured {
                 Button {
                     coach.pendingPrompt = "Here is the session you suggested for today: \(title(plan)), main zone \(plan.mainZone). My Charge is \(charge)%. Adjust it to fit my day and explain the change."
                     router.requestedDestination = .coach
                 } label: {
-                    Text("Ask Anya to change it").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
+                    Text("Ask Anya to change it").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain)
             }
         }

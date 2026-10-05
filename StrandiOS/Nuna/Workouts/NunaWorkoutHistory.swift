@@ -71,7 +71,7 @@ struct NunaWorkoutHistoryView: View {
                 Image(systemName: "magnifyingglass").foregroundStyle(NunaPalette.textMuted)
                 TextField("", text: $query, prompt: Text("Search sessions").foregroundStyle(NunaPalette.textMuted)).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
             }
-            .padding(.horizontal, 16).frame(height: 48).background(NunaPalette.shade.opacity(0.28), in: Capsule()).overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+            .padding(.horizontal, 16).frame(height: 48).background(NunaPalette.shade.opacity(0.28), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)).overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     chip("all", String(localized: "All")); chip("cardio", String(localized: "Cardio")); chip("strength", String(localized: "Strength"))
@@ -92,7 +92,7 @@ struct NunaWorkoutHistoryView: View {
     private func chip(_ id: String, _ title: String) -> some View {
         Button { filter = id } label: {
             Text(verbatim: title).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(filter == id ? NunaPalette.onAccent : NunaPalette.textPrimary)
-                .padding(.horizontal, 14).frame(height: 36).background(filter == id ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
+                .padding(.horizontal, 14).frame(height: 36).background(filter == id ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
         }.buttonStyle(.plain)
     }
 
@@ -198,7 +198,7 @@ struct NunaWorkoutHistoryView: View {
                         if selected != nil {
                             Button { selected = nil } label: {
                                 HStack(spacing: 4) { Text("Show all").font(.nuna(size: 13, weight: .bold)); Image(systemName: "xmark").font(.nuna(size: 10, weight: .bold)) }
-                                    .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 12).frame(height: 30).background(NunaPalette.glassStrong, in: Capsule())
+                                    .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 12).frame(height: 30).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                             }.buttonStyle(.plain)
                         } else {
                             Text(dailyView ? "Tap a day" : "Tap a month").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)

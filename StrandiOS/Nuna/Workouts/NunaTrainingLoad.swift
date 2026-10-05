@@ -127,7 +127,7 @@ struct NunaTrainingLoadView: View {
 
     private func pill(_ t: LocalizedStringKey) -> some View {
         Text(t).font(.nuna(size: 12.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 36)
-            .background(NunaPalette.glassStrong, in: Capsule())
+            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
     }
 
     private func bandName(_ b: TrendInsights.LoadBand) -> LocalizedStringKey {
@@ -511,7 +511,7 @@ struct NunaTrainingLoadView: View {
                 NunaCard(highlight: true) {
                     HStack(spacing: 12) {
                         Image(systemName: "checkmark").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.charge)
-                            .frame(width: 40, height: 40).background(NunaPalette.tint(NunaPalette.charge), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .frame(width: 40, height: 40).background(NunaPalette.tint(NunaPalette.charge), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                         VStack(alignment: .leading, spacing: 2) {
                             Text(recovering.isEmpty ? "All muscle groups are recovered" : "Some muscle groups are still recovering").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             Text(verbatim: ready.isEmpty ? String(localized: "Rest today") : String(localized: "\(ready.joined(separator: " and ")) are ready to train today"))

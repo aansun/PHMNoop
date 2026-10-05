@@ -105,14 +105,16 @@ public enum NunaType {
 }
 
 public enum NunaRadius {
-    public static let card: CGFloat = 28
-    public static let cardSmall: CGFloat = 24
-    public static let chip: CGFloat = 15       // height 30
-    public static let button: CGFloat = 24     // height 48
-    public static let iconButton: CGFloat = 22 // 44 x 44
-    public static let tabBar: CGFloat = 36     // height 72
-    public static let sheet: CGFloat = 34
-    public static let iconTile: CGFloat = 14   // 40 x 40
+    // Firm corners: cards and controls are rectangles with a modest radius, not pills.
+    public static let card: CGFloat = 14
+    public static let cardSmall: CGFloat = 12
+    public static let chip: CGFloat = 8        // height 30
+    public static let pill: CGFloat = 10       // chips, buttons and bars that used to be capsules
+    public static let button: CGFloat = 12     // height 48
+    public static let iconButton: CGFloat = 12 // 44 x 44
+    public static let tabBar: CGFloat = 18     // height 72
+    public static let sheet: CGFloat = 20
+    public static let iconTile: CGFloat = 10   // 40 x 40
 }
 
 public enum NunaSpacing {
@@ -203,8 +205,8 @@ public struct NunaChip: View {
         .foregroundStyle(color ?? NunaPalette.textPrimary)
         .padding(.horizontal, 12)
         .frame(height: 30)
-        .background(color.map { NunaPalette.tint($0) } ?? NunaPalette.glassStrong, in: Capsule())
-        .overlay(Capsule().strokeBorder(color?.opacity(0.35) ?? NunaPalette.hairline, lineWidth: 1))
+        .background(color.map { NunaPalette.tint($0) } ?? NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(color?.opacity(0.35) ?? NunaPalette.hairline, lineWidth: 1))
     }
 }
 
@@ -241,11 +243,11 @@ public struct NunaZoneBar: View {
         GeometryReader { geo in
             ZStack(alignment: .topLeading) {
                 HStack(spacing: 2) {
-                    Capsule().fill(NunaPalette.zoneBase).frame(maxWidth: .infinity)
+                    RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.zoneBase).frame(maxWidth: .infinity)
                         .frame(width: geo.size.width * 0.18)
-                    Capsule().fill(NunaPalette.charge).frame(width: geo.size.width * 0.18)
-                    Capsule().fill(NunaPalette.warning).frame(width: geo.size.width * 0.18)
-                    Capsule().fill(NunaPalette.alert).frame(maxWidth: .infinity)
+                    RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.charge).frame(width: geo.size.width * 0.18)
+                    RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.warning).frame(width: geo.size.width * 0.18)
+                    RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.alert).frame(maxWidth: .infinity)
                 }
                 .frame(height: 10)
                 Image(systemName: "triangle.fill")

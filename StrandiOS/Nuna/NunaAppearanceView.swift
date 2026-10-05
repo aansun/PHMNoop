@@ -95,7 +95,7 @@ struct NunaAppearanceView: View {
                     }
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Ready for a moderate load").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
-                        Text("Start workout").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 18).frame(height: 38).background(NunaPalette.accent, in: Capsule())
+                        Text("Start workout").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 18).frame(height: 38).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }
                     Spacer(minLength: 0)
                 }
@@ -114,8 +114,8 @@ struct NunaAppearanceView: View {
                             Text(themeTitle(m)).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         }
                         .padding(10).frame(maxWidth: .infinity)
-                        .background(NunaPalette.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(themeRaw == m.rawValue ? NunaPalette.accent : NunaPalette.hairlineSoft, lineWidth: themeRaw == m.rawValue ? 2 : 1))
+                        .background(NunaPalette.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(themeRaw == m.rawValue ? NunaPalette.accent : NunaPalette.hairlineSoft, lineWidth: themeRaw == m.rawValue ? 2 : 1))
                     }.buttonStyle(.plain)
                 }
             }
@@ -134,9 +134,9 @@ struct NunaAppearanceView: View {
             VStack(alignment: .leading, spacing: 14) {
                 nunaTrendsCap("App icon")
                 HStack(spacing: 12) {
-                    iconChoice("", "Default", AnyView(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(LinearGradient(colors: [Color(hex: "#16EC06").opacity(0.9), Color(hex: "#0A0D10")], startPoint: .topLeading, endPoint: .bottomTrailing))))
-                    iconChoice("AppIcon-Navy", "Navy", AnyView(RoundedRectangle(cornerRadius: 16, style: .continuous).fill(LinearGradient(colors: [Color(hex: "#1B2D52"), Color(hex: "#0B1224")], startPoint: .top, endPoint: .bottom))))
-                    iconChoice("AppIcon-PHM", "PHMNOOP", AnyView(ZStack { RoundedRectangle(cornerRadius: 16, style: .continuous).fill(Color(hex: "#0A0D10")); Text("⌥").font(.system(size: 28, weight: .heavy)).foregroundStyle(.white) }))
+                    iconChoice("", "Default", AnyView(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(LinearGradient(colors: [Color(hex: "#16EC06").opacity(0.9), Color(hex: "#0A0D10")], startPoint: .topLeading, endPoint: .bottomTrailing))))
+                    iconChoice("AppIcon-Navy", "Navy", AnyView(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(LinearGradient(colors: [Color(hex: "#1B2D52"), Color(hex: "#0B1224")], startPoint: .top, endPoint: .bottom))))
+                    iconChoice("AppIcon-PHM", "PHMNOOP", AnyView(ZStack { RoundedRectangle(cornerRadius: 10, style: .continuous).fill(Color(hex: "#0A0D10")); Text("⌥").font(.system(size: 28, weight: .heavy)).foregroundStyle(.white) }))
                 }
             }
         }
@@ -145,7 +145,7 @@ struct NunaAppearanceView: View {
     private func iconChoice(_ name: String, _ title: LocalizedStringKey, _ art: AnyView) -> some View {
         Button { setIcon(name) } label: {
             VStack(spacing: 8) {
-                art.frame(width: 62, height: 62).overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(iconName == name ? NunaPalette.accent : NunaPalette.hairline, lineWidth: iconName == name ? 2.5 : 1))
+                art.frame(width: 62, height: 62).overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(iconName == name ? NunaPalette.accent : NunaPalette.hairline, lineWidth: iconName == name ? 2.5 : 1))
                 Text(title).font(.nuna(size: 12.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
             }.frame(maxWidth: .infinity)
         }.buttonStyle(.plain)
@@ -170,9 +170,9 @@ struct NunaAppearanceView: View {
             else { Color(hex: light ? "#F2F4F6" : "#000000") }
             VStack(alignment: .leading, spacing: 6) {
                 RoundedRectangle(cornerRadius: 5).fill(Color(hex: dark ? "#121214" : "#FFFFFF")).frame(height: 26).opacity(m == .auto ? 0.85 : 1)
-                HStack(spacing: 6) { Capsule().fill(Color(hex: dark ? "#FFFFFF" : "#0A0D10")).frame(width: 28, height: 8); Capsule().fill(Color(hex: "#00FF66")).frame(width: 14, height: 8) }
+                HStack(spacing: 6) { RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(Color(hex: dark ? "#FFFFFF" : "#0A0D10")).frame(width: 28, height: 8); RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(Color(hex: "#00FF66")).frame(width: 14, height: 8) }
             }.padding(9)
-        }.clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }.clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
     private func themeTitle(_ m: NunaTheme.Mode) -> LocalizedStringKey { switch m { case .auto: return "Automatic"; case .light: return "Light"; case .dark: return "Dark" } }

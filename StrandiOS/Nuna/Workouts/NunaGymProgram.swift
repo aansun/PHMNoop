@@ -11,8 +11,8 @@ private func nunaPill(_ title: String, on: Bool, action: @escaping () -> Void) -
         Text(verbatim: title).font(.nuna(size: 13.5, weight: .bold))
             .foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary)
             .padding(.horizontal, 14).frame(height: 38)
-            .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
-            .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: on ? 0 : 1))
+            .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: on ? 0 : 1))
     }.buttonStyle(.plain)
 }
 
@@ -61,7 +61,7 @@ struct NunaProgramEditor: View {
             if !isNew {
                 Button(role: .destructive) { confirmDelete = true } label: {
                     Text("Delete program").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText)
-                        .frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
+                        .frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain)
             }
         }
@@ -80,7 +80,7 @@ struct NunaProgramEditor: View {
     private var saveButton: some View {
         Button { Task { await save() } } label: {
             Text("Save").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                .padding(.horizontal, 20).frame(height: 44).background(NunaPalette.accent, in: Capsule())
+                .padding(.horizontal, 20).frame(height: 44).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
         }.buttonStyle(.plain).disabled(!canSave).opacity(canSave ? 1 : 0.4)
     }
 
@@ -120,7 +120,7 @@ struct NunaProgramEditor: View {
         Button { editing = NunaItemTarget(id: "new", item: nil) } label: {
             HStack(spacing: 8) { Image(systemName: "plus").font(.nuna(size: 14, weight: .bold)); Text("Add exercise").font(.nuna(size: 15, weight: .bold)) }
                 .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52)
-                .background(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(NunaPalette.hairline, style: StrokeStyle(lineWidth: 1, dash: [5, 5])))
+                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(NunaPalette.hairline, style: StrokeStyle(lineWidth: 1, dash: [5, 5])))
         }.buttonStyle(.plain)
     }
 
@@ -250,7 +250,7 @@ struct NunaProgramItemView: View {
                 if let known = vocabulary.first(where: { $0.name == trimmed }) {
                     Button(role: .destructive) { forgetting = known } label: {
                         Text("Forget this exercise").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText)
-                            .frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
+                            .frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain)
                 }
             }
@@ -272,7 +272,7 @@ struct NunaProgramItemView: View {
     private var saveButton: some View {
         Button { Task { await save() } } label: {
             Text("Save").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                .padding(.horizontal, 20).frame(height: 44).background(NunaPalette.accent, in: Capsule())
+                .padding(.horizontal, 20).frame(height: 44).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
         }.buttonStyle(.plain).disabled(!canSave).opacity(canSave ? 1 : 0.4)
     }
 
@@ -325,13 +325,13 @@ struct NunaProgramItemView: View {
                         } label: {
                             HStack(spacing: 6) { Image(systemName: "plus").font(.nuna(size: 12, weight: .bold)); Text("Add muscle").font(.nuna(size: 13.5, weight: .bold)) }
                                 .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 38)
-                                .overlay(Capsule().strokeBorder(NunaPalette.hairline, style: StrokeStyle(lineWidth: 1, dash: [4, 4])))
+                                .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, style: StrokeStyle(lineWidth: 1, dash: [4, 4])))
                         }
                     } else {
                         let mu = LiftMuscle(rawValue: id)!
                         Button { secondaries.remove(mu) } label: {
                             HStack(spacing: 6) { Text(verbatim: mu.displayName).font(.nuna(size: 13.5, weight: .bold)); Image(systemName: "xmark").font(.nuna(size: 10, weight: .bold)) }
-                                .foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 14).frame(height: 38).background(NunaPalette.accent, in: Capsule())
+                                .foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 14).frame(height: 38).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                         }.buttonStyle(.plain)
                     }
                 }
@@ -460,7 +460,7 @@ struct NunaProgramImportView: View {
 
     private func step(_ n: Int, _ t: LocalizedStringKey) -> some View {
         HStack(spacing: 12) {
-            Text(verbatim: "\(n)").font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 30, height: 30).background(NunaPalette.glassStrong, in: Circle())
+            Text(verbatim: "\(n)").font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 30, height: 30).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
             Text(t).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -470,7 +470,7 @@ struct NunaProgramImportView: View {
         return VStack(spacing: NunaSpacing.section) {
             NunaCard(small: true) {
                 HStack(spacing: 12) {
-                    Image(systemName: "doc.text").font(.nuna(size: 18, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 42, height: 42).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    Image(systemName: "doc.text").font(.nuna(size: 18, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 42, height: 42).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                     VStack(alignment: .leading, spacing: 3) {
                         Text(verbatim: fileName ?? "").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
                         Text(verbatim: String(localized: "\(r.programs.count) programs · \(lines) exercises")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
@@ -514,7 +514,7 @@ struct NunaProgramImportView: View {
 
     private func primary(_ title: LocalizedStringKey, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(title).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: Capsule())
+            Text(title).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
         }.buttonStyle(.plain)
     }
 

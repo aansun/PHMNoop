@@ -240,7 +240,7 @@ struct NunaSmartAlarmView: View {
                                         .font(.nuna(size: 13, weight: .heavy))
                                         .foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textSecondary)
                                         .frame(maxWidth: .infinity).frame(height: 40)
-                                        .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: Circle())
+                                        .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                                 }
                                 .buttonStyle(.plain)
                                 .accessibilityLabel(Text(verbatim: NunaAlarmFormat.weekdayName(dow)))

@@ -64,7 +64,7 @@ struct NunaWorkoutSummaryView: View {
         }
         Button(role: .destructive) { confirmDelete = true } label: {
             Text("Delete").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText)
-                .frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
+                .frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
         }.buttonStyle(.plain)
     }
 
@@ -87,7 +87,7 @@ struct NunaWorkoutSummaryView: View {
                 if route.count >= 2 {
                     // A map of the captured route with start and end markers (tiles are cached by MapKit; the route itself
                     // never leaves the phone). The plain line below stays as the fallback when MapKit has nothing to show.
-                    WorkoutRouteMap(points: route, stroke: UIColor(NunaPalette.effort)).environment(\.colorScheme, .dark).frame(height: 200).clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    WorkoutRouteMap(points: route, stroke: UIColor(NunaPalette.effort)).environment(\.colorScheme, .dark).frame(height: 200).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                 }
                 HStack {
                     if let dist { big("Distance", dist) }
@@ -258,7 +258,7 @@ struct NunaRouteTrace: View {
             }
             ctx.stroke(p, with: .color(NunaPalette.ink), style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
         }
-        .background(NunaPalette.shade.opacity(0.28), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(NunaPalette.shade.opacity(0.28), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         .accessibilityHidden(true)
     }
 }

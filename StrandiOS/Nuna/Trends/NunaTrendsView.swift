@@ -95,7 +95,7 @@ struct NunaTrendsView: View {
                     Text("Compare").font(.nuna(size: 13, weight: .heavy))
                 }
                 .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 38)
-                .background(NunaPalette.glassStrong, in: Capsule()).overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)).overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
             }.buttonStyle(.plain)
         }
     }
@@ -262,11 +262,11 @@ struct NunaTrendsView: View {
     private func insightRow(_ icon: String, _ text: Text) -> some View {
         HStack(spacing: 12) {
             Image(systemName: icon).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                .frame(width: 34, height: 34).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .frame(width: 34, height: 34).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
             text.font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
         }
-        .padding(12).background(NunaPalette.shade.opacity(0.22), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .padding(12).background(NunaPalette.shade.opacity(0.22), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
     // MARK: Daily signals
@@ -345,8 +345,8 @@ struct NunaTrendsView: View {
                 since("Effort", e, NunaPalette.effort, { $0.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–" }, 100)
                 since("Rest", r, NunaPalette.rest, { NunaTrendsFormat.num($0, 1) + "%" }, 100)
                 HStack(spacing: 16) {
-                    HStack(spacing: 6) { Capsule().fill(NunaPalette.ink).frame(width: 14, height: 8); Text("This period") }
-                    HStack(spacing: 6) { Capsule().fill(NunaPalette.ink.opacity(0.3)).frame(width: 14, height: 5); Text("Previous period") }
+                    HStack(spacing: 6) { RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.ink).frame(width: 14, height: 8); Text("This period") }
+                    HStack(spacing: 6) { RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.ink.opacity(0.3)).frame(width: 14, height: 5); Text("Previous period") }
                 }
                 .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }

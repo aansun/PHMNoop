@@ -88,7 +88,7 @@ private struct NunaDevicesContent: View {
                                 }.buttonStyle(.plain)
                                 if !d.isImportSource {
                                     Button { switchTarget = d } label: {
-                                        Text("Make active").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 36).background(NunaPalette.glassStrong, in: Capsule())
+                                        Text("Make active").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 36).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                                     }.buttonStyle(.plain)
                                 }
                             }.padding(.vertical, 12)
@@ -99,7 +99,7 @@ private struct NunaDevicesContent: View {
             Button { showAdd = true } label: {
                 HStack(spacing: 8) { Image(systemName: "plus").font(.nuna(size: 14, weight: .bold)); Text("Add a device").font(.nuna(size: 15, weight: .bold)) }
                     .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 54)
-                    .background(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(NunaPalette.hairline, style: StrokeStyle(lineWidth: 1, dash: [5, 5])))
+                    .background(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(NunaPalette.hairline, style: StrokeStyle(lineWidth: 1, dash: [5, 5])))
             }.buttonStyle(.plain)
             if !removed.isEmpty {
                 NunaTitleRow(title: "Removed") { EmptyView() }
@@ -204,7 +204,7 @@ private struct NunaDevicesContent: View {
                     Spacer()
                     if live.connected && !live.backfilling {
                         Button { model.ble.syncNow() } label: {
-                            Text("Sync now").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 16).frame(height: 36).background(NunaPalette.accent, in: Capsule())
+                            Text("Sync now").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 16).frame(height: 36).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                         }.buttonStyle(.plain)
                     } else { Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted) }
                 }

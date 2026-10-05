@@ -137,12 +137,12 @@ struct NunaTodayCustomizeSheet: View {
                 if let back {
                     Button(action: back) {
                         Image(systemName: "chevron.left").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: Circle())
+                            .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                     }.accessibilityLabel(Text("Back"))
                 } else {
                     Button { if isDirty { confirmDiscard = true } else { dismiss() } } label: {
                         Text("Cancel").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            .padding(.horizontal, 16).frame(height: 40).background(NunaPalette.glassStrong, in: Capsule())
+                            .padding(.horizontal, 16).frame(height: 40).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }
                 }
                 Spacer(minLength: 4)
@@ -150,7 +150,7 @@ struct NunaTodayCustomizeSheet: View {
                 Spacer(minLength: 4)
                 Button(action: save) {
                     Text("Save").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                        .padding(.horizontal, 18).frame(height: 40).background(NunaPalette.accent, in: Capsule())
+                        .padding(.horizontal, 18).frame(height: 40).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }
             }
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 14).padding(.bottom, 10)
@@ -316,7 +316,7 @@ struct NunaLayoutList<Item: Identifiable & Equatable, Extra: View>: View {
             if shown, configure(item) {
                 Button { onConfigure(item) } label: {
                     Text("Edit").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        .padding(.horizontal, 12).frame(height: 32).background(NunaPalette.glassStrong, in: Capsule())
+                        .padding(.horizontal, 12).frame(height: 32).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain)
             }
             Toggle("", isOn: Binding(
