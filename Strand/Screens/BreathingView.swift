@@ -179,7 +179,7 @@ private struct BreathingContent: View {
     }
 
     var body: some View {
-        ScreenScaffold(title: "Breathe",
+        BXScaffold(title: "Breathe",
                        subtitle: "Haptic-paced breathing · find your pace · calm down",
                        // Liquid finish: the same full-bleed day-of-sky backdrop Today + the other liquid
                        // tabs carry, so Breathe sits in one atmosphere.
@@ -240,7 +240,7 @@ private struct BreathingContent: View {
     // MARK: - Mode switch
 
     private var modeSwitch: some View {
-        SegmentedPillControl(Mode.allCases, selection: $mode) { $0.label }
+        BXSegmented(Mode.allCases, selection: $mode) { $0.label }
             .frame(maxWidth: .infinity, alignment: .center)
             .accessibilityLabel("Breathe mode")
     }
@@ -248,13 +248,26 @@ private struct BreathingContent: View {
     // MARK: - Breathe mode (the shipped fixed-pace trainer)
 
     @ViewBuilder private var breatheMode: some View {
-        statusRow
-        orbCard
-        controlRow
-        if let line = outcomeLine { outcomeCard(line) }
-        readoutRow
-        coherenceCard
-        if !live.bonded { hapticHint }
+        if BX.nuna {
+            // Everything needed to breathe fits on the first screen: the pacer, the pace, the length and Start. The
+            // explanations, readouts and the audio switch sit below and appear on scroll.
+            statusRow
+            orbCard
+            controlRow
+            if let line = outcomeLine { outcomeCard(line) }
+            readoutRow
+            audioCueToggle
+            coherenceCard
+            if !live.bonded { hapticHint }
+        } else {
+            statusRow
+            orbCard
+            controlRow
+            if let line = outcomeLine { outcomeCard(line) }
+            readoutRow
+            coherenceCard
+            if !live.bonded { hapticHint }
+        }
     }
 
     /// Start a one-minute haptic breathing cue at the user's locked resonance pace (or 5.5 fallback) —
@@ -269,83 +282,102 @@ private struct BreathingContent: View {
     // MARK: - Status row
 
     private var statusRow: some View {
-        HStack(spacing: 10) {
-            StatePill(running ? "Session live" : "Ready",
-                      tone: running ? .accent : .neutral,
-                      pulsing: running)
-
-            if live.bonded {
-                StatePill("Haptics on", tone: .positive, showsDot: true)
-            } else {
-                StatePill("Visual only", tone: .warning, showsDot: true)
-            }
-
-            Spacer()
-
-            HStack(spacing: 6) {
-                if let target = sessionLength.targetSeconds {
-                    Text("\(timeString(sessionSeconds)) / \(timeString(target))")
-                        .font(StrandFont.number(15))
-                        .foregroundStyle(StrandPalette.textPrimary)
-                } else {
-                    Text(timeString(sessionSeconds))
-                        .font(StrandFont.number(15))
-                        .foregroundStyle(StrandPalette.textPrimary)
-                }
-                Text("·").foregroundStyle(StrandPalette.textTertiary)
-                Text("\(breathCount) breaths")
-                    .font(StrandFont.captionNumber)
-                    .foregroundStyle(StrandPalette.textSecondary)
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 10) { statusPills; Spacer(); statusClock }
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 10) { statusPills; Spacer(minLength: 0) }
+                statusClock
             }
         }
+    }
+
+    private var statusPills: some View {
+        HStack(spacing: 10) {
+            BXPill(running ? "Session live" : "Ready",
+                   tone: running ? .accent : .neutral,
+                   pulsing: running)
+
+            if live.bonded {
+                BXPill("Haptics on", tone: .positive, showsDot: true)
+            } else {
+                BXPill("Visual only", tone: .warning, showsDot: true)
+            }
+        }
+    }
+
+    private var statusClock: some View {
+        HStack(spacing: 6) {
+            if let target = sessionLength.targetSeconds {
+                Text("\(timeString(sessionSeconds)) / \(timeString(target))")
+                    .font(BX.number(15))
+                    .foregroundStyle(BX.primary)
+            } else {
+                Text(timeString(sessionSeconds))
+                    .font(BX.number(15))
+                    .foregroundStyle(BX.primary)
+            }
+            if !BX.nuna {
+                Text("·").foregroundStyle(BX.tertiary)
+                Text("\(breathCount) breaths")
+                    .font(BX.captionNumber)
+                    .foregroundStyle(BX.secondary)
+            }
+        }
+        .lineLimit(1)
+        .fixedSize(horizontal: true, vertical: false)
     }
 
     // MARK: - The orb
 
     private var orbCard: some View {
-        StrandCard(padding: 24, tint: StrandPalette.restColor) {
-            VStack(spacing: 18) {
+        BXCard(padding: BX.nuna ? 16 : 24, tint: BX.rest) {
+            VStack(spacing: BX.nuna ? 12 : 18) {
                 HStack {
-                    Text(pace.label.uppercased()).strandOverline()
+                    Text(pace.label.uppercased()).bxOverline()
                     Spacer()
                     Button {
                         showEdu = true
                     } label: {
                         Image(systemName: "info.circle")
                             .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(StrandPalette.textSecondary)
+                            .foregroundStyle(BX.secondary)
                     }
                     .accessibilityLabel(String(localized: "Protocol info"))
+                    if BX.nuna && running {
+                        Text("\(breathCount) breaths")
+                            .font(BX.captionNumber)
+                            .foregroundStyle(BX.secondary)
+                    }
                     if selectedBpm > 0 {
                         Text(String(format: "%.1f br/min", selectedBpm))
-                            .font(StrandFont.captionNumber)
-                            .foregroundStyle(StrandPalette.textSecondary)
+                            .font(BX.captionNumber)
+                            .foregroundStyle(BX.secondary)
                     } else if isGuided {
                         Text(String(localized: "Guided"))
-                            .font(StrandFont.captionNumber)
-                            .foregroundStyle(StrandPalette.textSecondary)
+                            .font(BX.captionNumber)
+                            .foregroundStyle(BX.secondary)
                     }
                 }
 
                 ZStack {
-                    ScenicHeroBackground(domain: .rest, starCount: 56)
-                        .clipShape(RoundedRectangle(cornerRadius: NoopMetrics.cardRadius, style: .continuous))
+                    BXHero()
+                        .clipShape(RoundedRectangle(cornerRadius: BX.radius, style: .continuous))
                     breathingOrb
                         .padding(.vertical, 6)
                 }
-                .frame(height: 320)
+                .frame(height: BX.nuna ? 214 : 320)
                 .frame(maxWidth: .infinity)
 
                 Text(running ? phaseWord : selectedTagline)
-                    .font(StrandFont.subhead)
-                    .foregroundStyle(running ? StrandPalette.restBright : StrandPalette.textSecondary)
+                    .font(BX.subhead)
+                    .foregroundStyle(running ? BX.restBright : BX.secondary)
                     .multilineTextAlignment(.center)
                     .animation(.easeInOut(duration: 0.2), value: phaseWord)
                     .animation(.easeInOut(duration: 0.2), value: running)
 
                 pacePills
                 durationPills
-                audioCueToggle
+                if !BX.nuna { audioCueToggle }
             }
         }
     }
@@ -353,24 +385,28 @@ private struct BreathingContent: View {
     /// Opt-in audio pacer toggle, sitting on the orb card so it reads as part of the breathing setup.
     /// Default off; flipping it primes/tears down the tone engine via the onChange hook above.
     private var audioCueToggle: some View {
+        audioCueRow.modifier(AudioCardWrap())
+    }
+
+    private var audioCueRow: some View {
         HStack(spacing: 10) {
             Image(systemName: audioCues ? "speaker.wave.2.fill" : "speaker.slash.fill")
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundStyle(audioCues ? StrandPalette.restBright : StrandPalette.textTertiary)
+                .foregroundStyle(audioCues ? BX.restBright : BX.tertiary)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 1) {
                 Text("Audio cues")
-                    .font(StrandFont.footnote)
-                    .foregroundStyle(StrandPalette.textSecondary)
+                    .font(BX.footnote)
+                    .foregroundStyle(BX.secondary)
                 Text("Soft tone on each phase · respects silent mode")
-                    .font(StrandFont.caption)
-                    .foregroundStyle(StrandPalette.textTertiary)
+                    .font(BX.caption)
+                    .foregroundStyle(BX.tertiary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
             }
             Spacer(minLength: 8)
             Toggle("", isOn: $audioCues)
-                .labelsHidden().toggleStyle(.switch).tint(StrandPalette.accent)
+                .labelsHidden().toggleStyle(.switch).tint(BX.accent)
                 .accessibilityLabel("Audio cues")
         }
     }
@@ -383,17 +419,17 @@ private struct BreathingContent: View {
 
     private var pacePills: some View {
         ScrollView(.horizontal, showsIndicators: false) {
-            SegmentedPillControl(availablePaces, selection: $pace) { $0.label }
+            BXSegmented(availablePaces, selection: $pace) { $0.label }
         }
     }
 
     private var durationPills: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(String(localized: "Session length"))
-                .font(StrandFont.caption)
-                .foregroundStyle(StrandPalette.textTertiary)
+                .font(BX.caption)
+                .foregroundStyle(BX.tertiary)
             ScrollView(.horizontal, showsIndicators: false) {
-                SegmentedPillControl(SessionLength.allCases, selection: $sessionLength) { $0.label }
+                BXSegmented(SessionLength.allCases, selection: $sessionLength) { $0.label }
             }
             .disabled(running)
         }
@@ -417,34 +453,34 @@ private struct BreathingContent: View {
                 VStack(alignment: .leading, spacing: 14) {
                     if let proto = selectedProtocol {
                         Text(String(localized: String.LocalizationValue(proto.title)))
-                            .font(StrandFont.title2)
+                            .font(BX.title2)
                         Text(String(localized: String.LocalizationValue(proto.subtitle)))
-                            .font(StrandFont.subhead)
-                            .foregroundStyle(StrandPalette.textSecondary)
+                            .font(BX.subhead)
+                            .foregroundStyle(BX.secondary)
                         if proto.category == .presence {
                             Text(String(localized: String.LocalizationValue(BreathProtocolCatalog.presenceIntroTitle)))
-                                .font(StrandFont.headline)
+                                .font(BX.headline)
                             Text(String(localized: String.LocalizationValue(BreathProtocolCatalog.presenceIntroBody)))
-                                .font(StrandFont.body)
+                                .font(BX.body)
                         }
                         Text(String(localized: String.LocalizationValue(proto.edu)))
-                            .font(StrandFont.body)
+                            .font(BX.body)
                         if let hint = proto.sessionHint {
                             Text(String(localized: String.LocalizationValue(hint)))
-                                .font(StrandFont.footnote)
-                                .foregroundStyle(StrandPalette.textSecondary)
+                                .font(BX.footnote)
+                                .foregroundStyle(BX.secondary)
                         }
                         if let caution = proto.caution {
                             Text(String(localized: String.LocalizationValue(caution)))
-                                .font(StrandFont.footnote)
-                                .foregroundStyle(StrandPalette.statusWarning)
+                                .font(BX.footnote)
+                                .foregroundStyle(BX.warning)
                         }
                         Text(String(localized: "Estimate only — not medical advice. Stop if you feel unwell."))
-                            .font(StrandFont.caption)
-                            .foregroundStyle(StrandPalette.textTertiary)
+                            .font(BX.caption)
+                            .foregroundStyle(BX.tertiary)
                     } else {
                         Text(String(localized: "Your locked resonance pace from the Resonance sweep."))
-                            .font(StrandFont.body)
+                            .font(BX.body)
                     }
                 }
                 .padding(20)
@@ -476,7 +512,7 @@ private struct BreathingContent: View {
             // The breath ring — the resting track the vessel breathes within. Crisp 1px stroke, no glow.
             ZStack {
                 Circle()
-                    .strokeBorder(StrandPalette.restColor.opacity(0.28), lineWidth: 1)
+                    .strokeBorder(BX.rest.opacity(0.28), lineWidth: 1)
                     .frame(width: maxDiameter, height: maxDiameter)
 
                 // The pacer is now the canonical liquid vessel: it FILLS on the inhale and drains on the
@@ -484,24 +520,24 @@ private struct BreathingContent: View {
                 // cued by water rising and falling rather than a swelling disc. Rest-tinted to match the
                 // world; under Reduce Motion `orbProgress` parks at a steady mid-level (no pulsing), and
                 // the phase word + haptics still carry the pace.
-                LiquidVessel(value: orbProgress, tint: StrandPalette.restColor, animated: running)
+                BXOrb(progress: orbProgress, animated: running)
                     .frame(width: maxDiameter, height: maxDiameter)
 
                 VStack(spacing: 2) {
                     if let bpm = model.bpm {
                         CountUpText(value: Double(bpm),
                                     format: { "\(Int($0.rounded()))" },
-                                    font: StrandFont.number(40),
-                                    color: StrandPalette.textPrimary)
+                                    font: BX.number(40),
+                                    color: BX.primary)
                     } else {
                         Text("—")
-                            .font(StrandFont.number(40))
-                            .foregroundStyle(StrandPalette.textPrimary)
+                            .font(BX.number(40))
+                            .foregroundStyle(BX.primary)
                     }
                     Text(String(localized: "BPM"))
-                        .font(StrandFont.footnote)
+                        .font(BX.footnote)
                         .tracking(0.8)
-                        .foregroundStyle(StrandPalette.textTertiary)
+                        .foregroundStyle(BX.tertiary)
                 }
                 .shadow(color: .black.opacity(0.5), radius: 6, y: 1)
                 .allowsHitTesting(false)   // taps fall through to the vessel → splash
@@ -514,13 +550,13 @@ private struct BreathingContent: View {
 
     private var controlRow: some View {
         HStack(spacing: NoopMetrics.space3) {
-            NoopButton(running ? "Stop session" : "Start session",
+            BXButton(running ? "Stop session" : "Start session",
                        systemImage: running ? "stop.fill" : "play.fill",
                        kind: running ? .destructive : .primary, fullWidth: true) {
                 running ? stop() : start()
             }
 
-            NoopButton("Test buzz", systemImage: "waveform.path", kind: .secondary) {
+            BXButton("Test buzz", systemImage: "waveform.path", kind: .secondary) {
                 model.buzz(loops: 1)
             }
             .disabled(!live.bonded)
@@ -541,19 +577,19 @@ private struct BreathingContent: View {
     }
 
     private func outcomeCard(_ line: String) -> some View {
-        StrandCard(padding: 14, tint: StrandPalette.restColor) {
+        BXCard(padding: 14, tint: BX.rest) {
             HStack(spacing: 10) {
                 Image(systemName: "wind")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(StrandPalette.restBright)
+                    .foregroundStyle(BX.restBright)
                     .accessibilityHidden(true)
                 Text(line)
-                    .font(StrandFont.footnote)
-                    .foregroundStyle(StrandPalette.textSecondary)
+                    .font(BX.footnote)
+                    .foregroundStyle(BX.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 8)
                 if let chip = outcomeTrend {
-                    TrendChip(text: chip.text, color: chip.color)
+                    BXTrendChip(text: chip.text, color: chip.color)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -565,7 +601,7 @@ private struct BreathingContent: View {
               source != "—",
               let pct = Self.leadingSignedPercent(source) else { return nil }
         let sign = pct >= 0 ? "+" : "−"
-        let color = pct >= 0 ? StrandPalette.statusPositive : StrandPalette.textTertiary
+        let color = pct >= 0 ? BX.positive : BX.tertiary
         return ("\(sign)\(abs(pct))% HRV", color)
     }
 
@@ -584,19 +620,19 @@ private struct BreathingContent: View {
             readoutTile(label: String(localized: "Heart rate"),
                         value: model.bpm.map { "\($0)" } ?? "—",
                         unit: "bpm",
-                        accent: StrandPalette.metricRose,
+                        accent: BX.rose,
                         caption: live.worn ? String(localized: "Live") : String(localized: "Strap not worn"))
 
             readoutTile(label: String(localized: "HRV (RMSSD)"),
                         value: rmssd.map { String(format: "%.0f", $0) } ?? "—",
                         unit: "ms",
-                        accent: StrandPalette.metricPurple,
+                        accent: BX.purple,
                         caption: rrBuffer.isEmpty ? String(localized: "Waiting for R-R") : String(localized: "Last \(rrBuffer.count) beats"))
 
             readoutTile(label: String(localized: "Pace"),
                         value: selectedBpm > 0 ? String(format: "%.1f", selectedBpm) : (isGuided ? "—" : "—"),
                         unit: "br/min",
-                        accent: StrandPalette.restBright,
+                        accent: BX.restBright,
                         caption: paceCaption)
         }
     }
@@ -617,24 +653,24 @@ private struct BreathingContent: View {
 
     private func readoutTile(label: String, value: String, unit: String,
                              accent: Color, caption: String) -> some View {
-        StrandCard(padding: 14, tint: StrandPalette.restColor) {
+        BXCard(padding: 14, tint: BX.rest) {
             VStack(alignment: .leading, spacing: 0) {
-                Text(label.uppercased()).strandOverline()
+                Text(label.uppercased()).bxOverline()
                 Spacer(minLength: 6)
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(value)
-                        .font(StrandFont.number(26))
+                        .font(BX.number(26))
                         .foregroundStyle(accent)
                         .lineLimit(1)
                         .minimumScaleFactor(0.6)
                         .contentTransition(.numericText())
                     Text(unit)
-                        .font(StrandFont.caption)
-                        .foregroundStyle(StrandPalette.textTertiary)
+                        .font(BX.caption)
+                        .foregroundStyle(BX.tertiary)
                 }
                 Text(caption)
-                    .font(StrandFont.footnote)
-                    .foregroundStyle(StrandPalette.textTertiary)
+                    .font(BX.footnote)
+                    .foregroundStyle(BX.tertiary)
                     .lineLimit(1)
                     .padding(.top, 4)
             }
@@ -645,24 +681,24 @@ private struct BreathingContent: View {
     // MARK: - Coherence estimate
 
     private var coherenceCard: some View {
-        StrandCard(tint: StrandPalette.restColor) {
+        BXCard(tint: BX.rest) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text("Coherence estimate").strandOverline()
+                    Text("Coherence estimate").bxOverline()
                     Spacer()
-                    StatePill("\(coherenceLabel)", tone: coherenceTone, showsDot: true)
+                    BXPill("\(coherenceLabel)", tone: coherenceTone, showsDot: true)
                 }
 
                 // The coherence estimate as a filling liquid tube (the same horizontal vessel Today's Key
                 // Metrics use), Rest-tinted, filling to the RMSSD-derived fraction — replaces the flat
                 // gradient capsule. Live so it sloshes as the reading updates through a session.
-                LiquidTube(frac: coherenceFraction, tint: StrandPalette.restBright, height: 10)
+                BXBar(frac: coherenceFraction, height: 10)
                     .accessibilityLabel("Coherence estimate")
                     .accessibilityValue("\(Int(coherenceFraction * 100)) percent")
 
                 Text("Estimate only: a higher RMSSD while paced usually means your parasympathetic \"rest\" branch is engaging. It is not a clinical reading; trends over a session matter more than any single number.")
-                    .font(StrandFont.footnote)
-                    .foregroundStyle(StrandPalette.textTertiary)
+                    .font(BX.footnote)
+                    .foregroundStyle(BX.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -697,19 +733,19 @@ private struct BreathingContent: View {
     private var hapticHint: some View {
         HStack(spacing: 10) {
             Image(systemName: "applewatch.radiowaves.left.and.right")
-                .foregroundStyle(StrandPalette.statusWarning)
+                .foregroundStyle(BX.warning)
             Text("Connect your strap for haptic guidance. You'll feel one pulse on the inhale, two on the exhale, so you can breathe with your eyes closed.")
-                .font(StrandFont.footnote)
-                .foregroundStyle(StrandPalette.textSecondary)
+                .font(BX.footnote)
+                .foregroundStyle(BX.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
         }
         .padding(14)
-        .background(StrandPalette.statusWarning.opacity(0.08),
-                    in: RoundedRectangle(cornerRadius: NoopMetrics.cardRadius, style: .continuous))
+        .background(BX.warning.opacity(0.08),
+                    in: RoundedRectangle(cornerRadius: BX.radius, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: NoopMetrics.cardRadius, style: .continuous)
-                .strokeBorder(StrandPalette.statusWarning.opacity(0.25), lineWidth: 1)
+            RoundedRectangle(cornerRadius: BX.radius, style: .continuous)
+                .strokeBorder(BX.warning.opacity(0.25), lineWidth: 1)
         )
     }
 
@@ -1048,65 +1084,65 @@ private struct ResonanceModeView: View {
     }
 
     private var explainerCard: some View {
-        StrandCard(tint: StrandPalette.restColor) {
+        BXCard(tint: BX.rest) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("Find your resonance pace").strandOverline()
+                    Text("Find your resonance pace").bxOverline()
                     Spacer()
-                    StatePill(live.bonded ? "Haptics on" : "Visual only",
+                    BXPill(live.bonded ? "Haptics on" : "Visual only",
                               tone: live.bonded ? .positive : .warning, showsDot: true)
                 }
                 Text("Everyone has a breathing pace (usually between 4.5 and 7 breaths a minute) where the heart's rhythm swings the most with each breath. We pace you through a few candidate paces, measure how your HRV responds, and lock the one that resonates best for you.")
-                    .font(StrandFont.subhead)
-                    .foregroundStyle(StrandPalette.textSecondary)
+                    .font(BX.subhead)
+                    .foregroundStyle(BX.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 Text("Estimate from PPG-derived R-R: relaxation guidance, not a clinical reading. Your pace drifts, so we date it and you can re-measure anytime.")
-                    .font(StrandFont.footnote)
-                    .foregroundStyle(StrandPalette.textTertiary)
+                    .font(BX.footnote)
+                    .foregroundStyle(BX.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
     }
 
     private var startCard: some View {
-        StrandCard {
+        BXCard {
             VStack(spacing: NoopMetrics.space3) {
-                NoopButton("Full sweep · ~13 min", systemImage: "waveform.path.ecg",
+                BXButton("Full sweep · ~13 min", systemImage: "waveform.path.ecg",
                            kind: .primary, fullWidth: true) {
                     controller.startSweep(quick: false)
                 }
 
-                NoopButton("Quick sweep · ~7 min", systemImage: "bolt",
+                BXButton("Quick sweep · ~7 min", systemImage: "bolt",
                            kind: .secondary, fullWidth: true) {
                     controller.startSweep(quick: true)
                 }
 
                 Text("Sit still and breathe with the buzz. You can stop anytime; a stopped sweep won't lock a pace.")
-                    .font(StrandFont.footnote)
-                    .foregroundStyle(StrandPalette.textTertiary)
+                    .font(BX.footnote)
+                    .foregroundStyle(BX.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
     }
 
     private var sweepProgressCard: some View {
-        StrandCard(tint: StrandPalette.restColor) {
+        BXCard(tint: BX.rest) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     Text(controller.sweepLabel ?? String(localized: "Sweeping…"))
-                        .font(StrandFont.headline)
-                        .foregroundStyle(StrandPalette.textPrimary)
+                        .font(BX.headline)
+                        .foregroundStyle(BX.primary)
                     Spacer()
-                    StatePill("Live", tone: .accent, showsDot: true, pulsing: true)
+                    BXPill("Live", tone: .accent, showsDot: true, pulsing: true)
                 }
 
                 // Sweep progress as a filling liquid tube (the liquid idiom used across the redesign),
                 // Rest-tinted so it reads as one with the breathe world.
-                LiquidTube(frac: controller.sweepProgress, tint: StrandPalette.restColor, height: 10)
+                BXBar(frac: controller.sweepProgress, height: 10)
                     .accessibilityLabel("Sweep progress")
                     .accessibilityValue("\(Int(controller.sweepProgress * 100)) percent")
 
-                NoopButton("Stop sweep", systemImage: "stop.fill", kind: .destructive, fullWidth: true) {
+                BXButton("Stop sweep", systemImage: "stop.fill", kind: .destructive, fullWidth: true) {
                     controller.stop()
                 }
             }
@@ -1114,29 +1150,29 @@ private struct ResonanceModeView: View {
     }
 
     private func resultCard(_ result: ResonanceEngine.SweepResult) -> some View {
-        StrandCard(tint: StrandPalette.restColor) {
+        BXCard(tint: BX.rest) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text(result.didLock ? "Your resonance pace" : "Couldn't lock today").strandOverline()
+                    Text(result.didLock ? "Your resonance pace" : "Couldn't lock today").bxOverline()
                     Spacer()
-                    StatePill(result.didLock ? "Locked" : "Fallback",
+                    BXPill(result.didLock ? "Locked" : "Fallback",
                               tone: result.didLock ? .positive : .neutral, showsDot: true)
                 }
 
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     CountUpText(value: result.lockedBpm,
                                 format: { String(format: "%.1f", $0) },
-                                font: StrandFont.number(40),
-                                color: StrandPalette.restBright)
+                                font: BX.number(40),
+                                color: BX.restBright)
                     Text("br/min")
-                        .font(StrandFont.subhead)
-                        .foregroundStyle(StrandPalette.textTertiary)
+                        .font(BX.subhead)
+                        .foregroundStyle(BX.tertiary)
                 }
 
                 if !result.didLock {
                     Text("Not enough clean beat data to lock a pace today. Try again rested, sitting still with the strap snug. For now we'll pace you at 5.5 br/min (coherence).")
-                        .font(StrandFont.footnote)
-                        .foregroundStyle(StrandPalette.textTertiary)
+                        .font(BX.footnote)
+                        .foregroundStyle(BX.tertiary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
@@ -1144,34 +1180,34 @@ private struct ResonanceModeView: View {
 
                 if let date = BiofeedbackPrefs.lockedPaceDate, result.didLock {
                     Text("Locked \(date.formatted(date: .abbreviated, time: .omitted)) · paces drift, re-measure anytime.")
-                        .font(StrandFont.footnote)
-                        .foregroundStyle(StrandPalette.textTertiary)
+                        .font(BX.footnote)
+                        .foregroundStyle(BX.tertiary)
                 }
             }
         }
     }
 
     private func lockedCard(_ bpm: Double) -> some View {
-        StrandCard(tint: StrandPalette.restColor) {
+        BXCard(tint: BX.rest) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("Your locked pace").strandOverline()
+                    Text("Your locked pace").bxOverline()
                     Spacer()
-                    StatePill("Locked", tone: .positive, showsDot: true)
+                    BXPill("Locked", tone: .positive, showsDot: true)
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     CountUpText(value: bpm,
                                 format: { String(format: "%.1f", $0) },
-                                font: StrandFont.number(34),
-                                color: StrandPalette.restBright)
+                                font: BX.number(34),
+                                color: BX.restBright)
                     Text("br/min")
-                        .font(StrandFont.subhead)
-                        .foregroundStyle(StrandPalette.textTertiary)
+                        .font(BX.subhead)
+                        .foregroundStyle(BX.tertiary)
                 }
                 if let date = BiofeedbackPrefs.lockedPaceDate {
                     Text("Locked \(date.formatted(date: .abbreviated, time: .omitted)). Switch to Breathe to use it, or re-measure above.")
-                        .font(StrandFont.footnote)
-                        .foregroundStyle(StrandPalette.textTertiary)
+                        .font(BX.footnote)
+                        .foregroundStyle(BX.tertiary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -1183,21 +1219,19 @@ private struct ResonanceModeView: View {
     private func rsaCurve(_ scores: [ResonanceEngine.PaceScore]) -> some View {
         let maxRsa = scores.compactMap(\.rsaAmplitude).max() ?? 1
         return VStack(alignment: .leading, spacing: 6) {
-            Text("RSA RESPONSE BY PACE").strandOverline()
+            Text("RSA RESPONSE BY PACE").bxOverline()
             ForEach(scores, id: \.bpm) { s in
                 HStack(spacing: 8) {
                     Text(String(format: "%.1f", s.bpm))
-                        .font(StrandFont.captionNumber)
-                        .foregroundStyle(StrandPalette.textSecondary)
+                        .font(BX.captionNumber)
+                        .foregroundStyle(BX.secondary)
                         .frame(width: 34, alignment: .leading)
                     // Each pace's RSA amplitude as a static liquid tube — the same horizontal vessel used
                     // across the redesign. An unscored pace reads muted via a dimmed Rest tint.
-                    LiquidTube(frac: (s.rsaAmplitude ?? 0) / max(maxRsa, 0.0001),
-                               tint: StrandPalette.restBright.opacity(s.scored ? 1 : 0.35),
-                               height: 8, animated: false)
+                    BXBar(frac: (s.rsaAmplitude ?? 0) / max(maxRsa, 0.0001), height: 8, dim: !s.scored)
                     Text(s.rsaAmplitude.map { String(format: "%.1f", $0) } ?? "—")
-                        .font(StrandFont.captionNumber)
-                        .foregroundStyle(s.scored ? StrandPalette.textSecondary : StrandPalette.textTertiary)
+                        .font(BX.captionNumber)
+                        .foregroundStyle(s.scored ? BX.secondary : BX.tertiary)
                         .frame(width: 34, alignment: .trailing)
                 }
             }
@@ -1217,16 +1251,16 @@ private struct ResonanceModeView: View {
     private var connectHint: some View {
         HStack(spacing: 10) {
             Image(systemName: "applewatch.radiowaves.left.and.right")
-                .foregroundStyle(StrandPalette.statusWarning)
+                .foregroundStyle(BX.warning)
             Text("Connect your strap for the felt cue. The sweep paces you with one buzz on the inhale, two on the exhale.")
-                .font(StrandFont.footnote)
-                .foregroundStyle(StrandPalette.textSecondary)
+                .font(BX.footnote)
+                .foregroundStyle(BX.secondary)
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
         }
         .padding(14)
-        .background(StrandPalette.statusWarning.opacity(0.08),
-                    in: RoundedRectangle(cornerRadius: NoopMetrics.cardRadius, style: .continuous))
+        .background(BX.warning.opacity(0.08),
+                    in: RoundedRectangle(cornerRadius: BX.radius, style: .continuous))
     }
 }
 
@@ -1254,21 +1288,21 @@ private struct CalmModeView: View {
     }
 
     private var explainerCard: some View {
-        StrandCard(tint: StrandPalette.restColor) {
+        BXCard(tint: BX.rest) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("Calm me").strandOverline()
+                    Text("Calm me").bxOverline()
                     Spacer()
-                    StatePill(canRun ? "Ready" : "Strap needed",
+                    BXPill(canRun ? "Ready" : "Strap needed",
                               tone: canRun ? .neutral : .warning, showsDot: true)
                 }
                 Text("The strap buzzes a gentle rhythm just below your current heart rate, a felt metronome to relax toward. It trails your heart down rather than yanking it, and stops on its own.")
-                    .font(StrandFont.subhead)
-                    .foregroundStyle(StrandPalette.textSecondary)
+                    .font(BX.subhead)
+                    .foregroundStyle(BX.secondary)
                     .fixedSize(horizontal: false, vertical: true)
                 Text("A relaxation rhythm, not cardiac control. It never paces below a safe rate and you can stop anytime. If your heart rate doesn't settle, we'll say so plainly.")
-                    .font(StrandFont.footnote)
-                    .foregroundStyle(StrandPalette.textTertiary)
+                    .font(BX.footnote)
+                    .foregroundStyle(BX.tertiary)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -1278,9 +1312,9 @@ private struct CalmModeView: View {
     private var canRun: Bool { controller.canBuzz && (model.bpm.map { $0 >= 55 && $0 <= 120 } ?? false) }
 
     private var startCard: some View {
-        StrandCard {
+        BXCard {
             VStack(spacing: NoopMetrics.rowSpacing) {
-                NoopButton("Calm me · 3 min", systemImage: "heart.fill",
+                BXButton("Calm me · 3 min", systemImage: "heart.fill",
                            kind: .primary, fullWidth: true) {
                     controller.startCalmMe()
                 }
@@ -1288,13 +1322,13 @@ private struct CalmModeView: View {
 
                 if !controller.canBuzz {
                     Text("Connect your strap. Calm me is a felt rhythm on the wrist, so it needs a bonded connection.")
-                        .font(StrandFont.footnote)
-                        .foregroundStyle(StrandPalette.textTertiary)
+                        .font(BX.footnote)
+                        .foregroundStyle(BX.tertiary)
                         .fixedSize(horizontal: false, vertical: true)
                 } else if !canRun {
                     Text("Waiting for a resting heart rate. Start a live reading first, or come back when you're still.")
-                        .font(StrandFont.footnote)
-                        .foregroundStyle(StrandPalette.textTertiary)
+                        .font(BX.footnote)
+                        .foregroundStyle(BX.tertiary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
@@ -1302,35 +1336,35 @@ private struct CalmModeView: View {
     }
 
     private var liveCard: some View {
-        StrandCard(tint: StrandPalette.restColor) {
+        BXCard(tint: BX.rest) {
             VStack(spacing: 14) {
                 HStack {
-                    Text("Settling").strandOverline()
+                    Text("Settling").bxOverline()
                     Spacer()
-                    StatePill("Live", tone: .accent, showsDot: true, pulsing: true)
+                    BXPill("Live", tone: .accent, showsDot: true, pulsing: true)
                 }
 
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     if let bpm = model.bpm {
                         CountUpText(value: Double(bpm),
                                     format: { "\(Int($0.rounded()))" },
-                                    font: StrandFont.number(48),
-                                    color: StrandPalette.metricRose)
+                                    font: BX.number(48),
+                                    color: BX.rose)
                     } else {
                         Text("—")
-                            .font(StrandFont.number(48))
-                            .foregroundStyle(StrandPalette.metricRose)
+                            .font(BX.number(48))
+                            .foregroundStyle(BX.rose)
                     }
                     Image(systemName: "arrow.right")
-                        .foregroundStyle(StrandPalette.textTertiary)
+                        .foregroundStyle(BX.tertiary)
                         .accessibilityHidden(true)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("target")
-                            .font(StrandFont.footnote)
-                            .foregroundStyle(StrandPalette.textTertiary)
+                            .font(BX.footnote)
+                            .foregroundStyle(BX.tertiary)
                         Text(controller.calmTargetBpm.map { String(format: "%.0f", $0) } ?? "—")
-                            .font(StrandFont.number(22))
-                            .foregroundStyle(StrandPalette.restBright)
+                            .font(BX.number(22))
+                            .foregroundStyle(BX.restBright)
                     }
                     Spacer()
                 }
@@ -1338,12 +1372,12 @@ private struct CalmModeView: View {
 
                 if let h0 = controller.calmStartHR {
                     Text("Started at \(h0) bpm · the rhythm trails your heart down.")
-                        .font(StrandFont.footnote)
-                        .foregroundStyle(StrandPalette.textTertiary)
+                        .font(BX.footnote)
+                        .foregroundStyle(BX.tertiary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                 }
 
-                NoopButton("Stop", systemImage: "stop.fill", kind: .destructive, fullWidth: true) {
+                BXButton("Stop", systemImage: "stop.fill", kind: .destructive, fullWidth: true) {
                     controller.stop()
                 }
             }
@@ -1351,26 +1385,269 @@ private struct CalmModeView: View {
     }
 
     private func outcomeCard(_ line: String) -> some View {
-        StrandCard(padding: 14, tint: StrandPalette.restColor) {
+        BXCard(padding: 14, tint: BX.rest) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 10) {
                     Image(systemName: controller.calmDidNotFall ? "minus.circle" : "checkmark.circle")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(controller.calmDidNotFall ? StrandPalette.textTertiary : StrandPalette.statusPositive)
+                        .foregroundStyle(controller.calmDidNotFall ? BX.tertiary : BX.positive)
                         .accessibilityHidden(true)
                     Text(line)
-                        .font(StrandFont.subhead)
-                        .foregroundStyle(StrandPalette.textPrimary)
+                        .font(BX.subhead)
+                        .foregroundStyle(BX.primary)
                         .fixedSize(horizontal: false, vertical: true)
                     Spacer(minLength: 0)
                 }
                 if controller.calmDidNotFall {
                     Text("That's normal. A paced breath often settles things when a metronome alone doesn't.")
-                        .font(StrandFont.footnote)
-                        .foregroundStyle(StrandPalette.textTertiary)
+                        .font(BX.footnote)
+                        .foregroundStyle(BX.tertiary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }
+    }
+}
+
+// MARK: - Skin (Default or Nuna)
+
+/// This screen is shared by the Default and the Nuna experience. Under Nuna it is dressed in the Nuna tokens (palette, type,
+/// firm corners, the same cards, chips and buttons as the rest of the Nuna screens); under Default, and always on macOS, it
+/// keeps its original look. Only the dressing differs: the breathing logic above is the same.
+private enum BX {
+    static var nuna: Bool { UserDefaults.standard.string(forKey: ExperienceMode.storageKey) == ExperienceMode.nuna.rawValue }
+
+    static var primary: Color { nuna ? NunaPalette.textPrimary : StrandPalette.textPrimary }
+    static var secondary: Color { nuna ? NunaPalette.textSecondary : StrandPalette.textSecondary }
+    static var tertiary: Color { nuna ? NunaPalette.textMuted : StrandPalette.textTertiary }
+    static var rest: Color { nuna ? NunaPalette.rest : StrandPalette.restColor }
+    static var restBright: Color { nuna ? NunaPalette.restText : StrandPalette.restBright }
+    static var warning: Color { nuna ? NunaPalette.warning : StrandPalette.statusWarning }
+    static var rose: Color { nuna ? NunaPalette.alertText : StrandPalette.metricRose }
+    static var purple: Color { nuna ? NunaPalette.restLight : StrandPalette.metricPurple }
+    static var positive: Color { nuna ? NunaPalette.charge : StrandPalette.statusPositive }
+    static var accent: Color { nuna ? NunaPalette.accent : StrandPalette.accent }
+    static var radius: CGFloat { nuna ? NunaRadius.card : NoopMetrics.cardRadius }
+
+    static var footnote: Font { nuna ? .nuna(size: 13, weight: .semibold) : StrandFont.footnote }
+    static var subhead: Font { nuna ? .nuna(size: 15, weight: .semibold) : StrandFont.subhead }
+    static var caption: Font { nuna ? .nuna(size: 11.5, weight: .semibold) : StrandFont.caption }
+    static var captionNumber: Font { nuna ? .nuna(size: 12, weight: .semibold).monospacedDigit() : StrandFont.captionNumber }
+    static var body: Font { nuna ? .nuna(size: 15, weight: .regular) : StrandFont.body }
+    static var headline: Font { nuna ? .nuna(size: 17, weight: .bold) : StrandFont.headline }
+    static var title2: Font { nuna ? .nuna(size: 20, weight: .bold) : StrandFont.title2 }
+    static func number(_ size: CGFloat) -> Font { nuna ? .nuna(size: size, weight: .bold, design: NunaType.design) : StrandFont.number(size) }
+}
+
+private struct BXCard<Content: View>: View {
+    var padding: CGFloat = 16
+    var tint: Color?
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        if BX.nuna {
+            NunaCard(padding: EdgeInsets(top: padding, leading: padding, bottom: padding, trailing: padding), content: content)
+        } else {
+            StrandCard(padding: padding, tint: tint, content: content)
+        }
+    }
+}
+
+private struct BXPill: View {
+    let title: LocalizedStringKey
+    var tone: StrandTone = .neutral
+    var showsDot = true
+    var pulsing = false
+    init(_ title: LocalizedStringKey, tone: StrandTone = .neutral, showsDot: Bool = true, pulsing: Bool = false) {
+        self.title = title; self.tone = tone; self.showsDot = showsDot; self.pulsing = pulsing
+    }
+
+    private var nunaColor: Color {
+        switch tone {
+        case .neutral: return NunaPalette.textSecondary
+        case .accent: return NunaPalette.rest
+        case .positive: return NunaPalette.charge
+        case .warning: return NunaPalette.warning
+        case .critical: return NunaPalette.alert
+        }
+    }
+
+    var body: some View {
+        if BX.nuna {
+            HStack(spacing: 6) {
+                if showsDot { Circle().fill(nunaColor).frame(width: 7, height: 7).opacity(pulsing ? 0.7 : 1) }
+                Text(title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+            }
+            .foregroundStyle(nunaColor)
+            .padding(.horizontal, 10).frame(height: 28)
+            .background(nunaColor.opacity(0.14), in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
+        } else {
+            StatePill(title, tone: tone, showsDot: showsDot, pulsing: pulsing)
+        }
+    }
+}
+
+private struct BXTrendChip: View {
+    let text: String
+    var color: Color
+    init(text: String, color: Color) { self.text = text; self.color = color }
+    var body: some View {
+        if BX.nuna { NunaChip(verbatim: text, color: color) } else { TrendChip(text: text, color: color) }
+    }
+}
+
+private struct BXSegmented<T: Hashable>: View {
+    let items: [T]
+    @Binding var selection: T
+    let label: (T) -> String
+    init(_ items: [T], selection: Binding<T>, label: @escaping (T) -> String) {
+        self.items = items; self._selection = selection; self.label = label
+    }
+
+    var body: some View {
+        if BX.nuna {
+            HStack(spacing: 2) {
+                ForEach(items, id: \.self) { item in
+                    let on = item == selection
+                    Button { selection = item } label: {
+                        Text(verbatim: label(item)).font(.nuna(size: 13.5, weight: .bold)).lineLimit(1).minimumScaleFactor(0.75)
+                            .fixedSize(horizontal: items.count > 3, vertical: false)
+                            .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+                            .padding(.horizontal, 14).frame(height: 36).frame(maxWidth: items.count > 3 ? nil : .infinity)
+                            .background(on ? NunaPalette.glassStrong : Color.clear, in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
+                    }.buttonStyle(.plain)
+                }
+            }
+            .padding(3)
+            .background(NunaPalette.shade.opacity(0.28), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+        } else {
+            SegmentedPillControl(items, selection: $selection, label: label)
+        }
+    }
+}
+
+private struct BXScaffold<Content: View>: View {
+    let title: LocalizedStringKey
+    var subtitle: LocalizedStringKey
+    var topBackground: AnyView?
+    @ViewBuilder var content: () -> Content
+
+    var body: some View {
+        if BX.nuna {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(title).font(.nuna(size: NunaTypeSize.h1, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    }
+                    content()
+                }
+                .padding(.horizontal, NunaSpacing.screenH).padding(.top, 0).padding(.bottom, 40)
+            }
+            .scrollIndicators(.hidden)
+            .background(NunaPalette.canvas.ignoresSafeArea())
+        } else {
+            ScreenScaffold(title: title, subtitle: subtitle, topBackground: topBackground, content: content)
+        }
+    }
+}
+
+private struct BXButton: View {
+    let title: LocalizedStringKey
+    var systemImage: String?
+    var kind: NoopButtonKind = .primary
+    var fullWidth = false
+    let action: () -> Void
+    init(_ title: LocalizedStringKey, systemImage: String? = nil, kind: NoopButtonKind = .primary, fullWidth: Bool = false, action: @escaping () -> Void) {
+        self.title = title; self.systemImage = systemImage; self.kind = kind; self.fullWidth = fullWidth; self.action = action
+    }
+
+    var body: some View {
+        if BX.nuna {
+            let fill: Color = kind == .destructive ? NunaPalette.alert : (kind == .primary ? NunaPalette.accent : NunaPalette.glassStrong)
+            let ink: Color = kind == .destructive ? .white : (kind == .primary ? NunaPalette.onAccent : NunaPalette.textPrimary)
+            Button(action: action) {
+                HStack(spacing: 8) {
+                    if let systemImage { Image(systemName: systemImage).font(.nuna(size: 14, weight: .bold)) }
+                    Text(title).font(.nuna(size: 16, weight: .bold))
+                }
+                .foregroundStyle(ink)
+                .padding(.horizontal, 18).frame(height: 50)
+                .frame(maxWidth: fullWidth ? .infinity : nil)
+                .background(fill, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+            }
+            .buttonStyle(.plain)
+        } else {
+            NoopButton(title, systemImage: systemImage, kind: kind, fullWidth: fullWidth, action: action)
+        }
+    }
+}
+
+private extension Text {
+    @ViewBuilder func bxOverline() -> some View {
+        if BX.nuna {
+            self.font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+        } else {
+            self.strandOverline()
+        }
+    }
+}
+
+/// The pacer: a ring that the breath fills and drains (Nuna), or the liquid vessel (Default).
+private struct BXOrb: View {
+    let progress: CGFloat
+    let animated: Bool
+    var body: some View {
+        if BX.nuna {
+            GeometryReader { geo in
+                let d = min(geo.size.width, geo.size.height)
+                let p = min(max(progress, 0), 1)
+                ZStack {
+                    Circle().strokeBorder(NunaPalette.hairline, lineWidth: 1).frame(width: d, height: d)
+                    Circle().fill(NunaPalette.rest.opacity(0.14)).frame(width: d * (0.42 + 0.58 * p), height: d * (0.42 + 0.58 * p))
+                    Circle().strokeBorder(NunaPalette.rest, lineWidth: 3).frame(width: d * (0.42 + 0.58 * p), height: d * (0.42 + 0.58 * p))
+                }
+                .frame(width: geo.size.width, height: geo.size.height)
+                .animation(animated ? .easeInOut(duration: 0.45) : nil, value: progress)
+            }
+        } else {
+            LiquidVessel(value: progress, tint: StrandPalette.restColor, animated: animated)
+        }
+    }
+}
+
+private struct BXBar: View {
+    let frac: CGFloat
+    let height: CGFloat
+    var dim = false
+    var body: some View {
+        if BX.nuna {
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(NunaPalette.ink.opacity(0.08))
+                    Capsule().fill(NunaPalette.rest.opacity(dim ? 0.35 : 1)).frame(width: geo.size.width * min(max(frac, 0), 1))
+                }
+            }
+            .frame(height: height)
+        } else {
+            LiquidTube(frac: frac, tint: StrandPalette.restBright.opacity(dim ? 0.35 : 1), height: height, animated: false)
+        }
+    }
+}
+
+private struct BXHero: View {
+    var body: some View {
+        if BX.nuna {
+            Color.clear
+        } else {
+            ScenicHeroBackground(domain: .rest, starCount: 56)
+        }
+    }
+}
+
+/// The audio switch sits inside the orb card in Default; under Nuna it is a card of its own below the fold.
+private struct AudioCardWrap: ViewModifier {
+    func body(content: Content) -> some View {
+        if BX.nuna { BXCard(padding: 14) { content } } else { content }
     }
 }
