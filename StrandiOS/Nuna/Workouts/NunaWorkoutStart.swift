@@ -39,7 +39,7 @@ struct NunaWorkoutStartView: View {
             if let planned {
                 NunaCard(small: true, highlight: true) {
                     HStack(spacing: 12) {
-                        NunaIconTile("sparkles")
+                        AnyaIconTile()
                         VStack(alignment: .leading, spacing: 2) {
                             Text("From Anya's plan").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                             Text(verbatim: planned.title).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
@@ -77,6 +77,7 @@ struct NunaWorkoutStartView: View {
                 router.plannedSession = nil
                 planned = p; goal.mode = .zone; goal.zone = min(max(p.zone, 1), 5); goal.minutes = max(5, min(p.minutes, 300))
             }
+            if let s = planned?.sport, let match = WorkoutCatalog.sport(named: s) { chosen = match.name }
             if let sport { chosen = sport } else if let a = model.activeWorkout { chosen = a.sport } }
         .sheet(isPresented: $showPicker) { sportPicker.nunaSheetChrome(detents: [.large]) }
         .fullScreenCover(isPresented: $live) { NunaLiveWorkoutView(goal: goal, zoneBuzz: zoneBuzz, onClose: { live = false }) }

@@ -1,6 +1,12 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Open in Gym": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Buka di Gym"}}
+    } },
+    "Save %lld programs": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Simpan %lld program"}}
+    } },
     "Ask Anya to explain": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Jelaskan dunk, Anya"}}
     } },

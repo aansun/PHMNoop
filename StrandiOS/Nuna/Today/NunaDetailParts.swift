@@ -28,8 +28,7 @@ struct NunaDetailHeader: View {
             if let trailing { trailing }
             if let onAnya {
                 Button(action: onAnya) {
-                    Image(systemName: "sparkles").font(.nuna(size: 17, weight: .bold))
-                        .foregroundStyle(NunaPalette.onAccent)
+                    AnyaMark(size: 25)
                         .frame(width: 44, height: 44).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                 }
                 .accessibilityLabel(Text("Ask Anya"))

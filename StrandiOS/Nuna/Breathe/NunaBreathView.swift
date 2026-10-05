@@ -97,7 +97,7 @@ struct NunaBreathView: View {
         NunaCard(highlight: true) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 10) {
-                    NunaIconTile("sparkles")
+                    AnyaIconTile()
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Anya suggests").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         Text(verbatim: suggestion?.headline ?? String(localized: "Reading your numbers…")).font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)

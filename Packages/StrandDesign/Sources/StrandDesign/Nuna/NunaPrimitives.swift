@@ -321,8 +321,9 @@ public struct NunaTabItem: Identifiable, Hashable {
     public let id: Int
     public let title: LocalizedStringKey
     public let systemImage: String
-    public init(id: Int, title: LocalizedStringKey, systemImage: String) {
-        self.id = id; self.title = title; self.systemImage = systemImage
+    public let usesAssetImage: Bool
+    public init(id: Int, title: LocalizedStringKey, systemImage: String, usesAssetImage: Bool = false) {
+        self.id = id; self.title = title; self.systemImage = systemImage; self.usesAssetImage = usesAssetImage
     }
     public static func == (l: NunaTabItem, r: NunaTabItem) -> Bool { l.id == r.id }
     public func hash(into h: inout Hasher) { h.combine(id) }
@@ -346,7 +347,12 @@ public struct NunaTabBar: View {
                     if on { onReselect(item.id) } else { selection = item.id }
                 } label: {
                     VStack(spacing: 3) {
-                        Image(systemName: item.systemImage).font(.nuna(size: 18, weight: .semibold))
+                        if item.usesAssetImage {
+                            Image(item.systemImage)
+                                .resizable().scaledToFit().frame(width: 22, height: 22)
+                        } else {
+                            Image(systemName: item.systemImage).font(.nuna(size: 18, weight: .semibold))
+                        }
                         Text(item.title).font(.nuna(size: 11, weight: .bold)).lineLimit(1)
                     }
                     .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)

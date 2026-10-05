@@ -377,7 +377,7 @@ struct NunaAnyaBriefView: View {
     /// What the notification looks like: the last real brief when there is one, otherwise the line Anya would lead with.
     private var notificationPreview: some View {
         HStack(alignment: .top, spacing: 12) {
-            NunaIconTile("sparkles")
+            AnyaIconTile()
             VStack(alignment: .leading, spacing: 3) {
                 HStack { Text("Anya").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary); Spacer(); Text("now").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                 Text(verbatim: preview.map { CoachBriefScheduler.oneLineSummary(from: $0) } ?? sample?.headline ?? String(localized: "Your brief appears here"))

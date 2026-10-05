@@ -1,6 +1,7 @@
 #if os(iOS)
 import SwiftUI
 import StrandDesign
+import StrandAnalytics
 
 /// The sheet every Anya card and header button opens (AnyaSheet*.dc). The top is always the local read: a line that cites
 /// its figures, computed on this iPhone. A provider adds a short explanation only after it is connected and data access is
@@ -70,7 +71,7 @@ struct NunaAnyaSheet: View {
 
     private var top: some View {
         HStack(spacing: 10) {
-            NunaIconTile("sparkles")
+            AnyaIconTile(size: 44)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Anya").font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 Text("Anya sees").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
@@ -90,7 +91,7 @@ struct NunaAnyaSheet: View {
                     HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                 } else if let explanation {
                     NunaDivider()
-                    Text(Self.markdown(explanation)).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                    Text(Self.markdown(AnyaActions.proseOnly(explanation))).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                 }
                 HStack(spacing: 6) {
                     Text("Read:").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
@@ -98,7 +99,7 @@ struct NunaAnyaSheet: View {
                 }
                 if coach.isConfigured, coach.dataConsent, explanation == nil, !explaining {
                     Button { Task { await explain() } } label: {
-                        HStack(spacing: 6) { Image(systemName: "sparkles").font(.nuna(size: 12, weight: .bold)); Text("Ask Anya to explain") }
+                        HStack(spacing: 6) { AnyaMark(size: 18); Text("Ask Anya to explain") }
                             .font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 40).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain)
                 }
@@ -153,7 +154,7 @@ struct NunaAnyaSheet: View {
                     HStack { Spacer(minLength: 40)
                         Text(verbatim: t.text).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 14).padding(.vertical, 9).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: 12, style: .continuous)) }
                 } else {
-                    NunaCard(small: true) { Text(Self.markdown(t.text)).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading) }
+                    NunaCard(small: true) { Text(Self.markdown(AnyaActions.proseOnly(t.text))).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading) }
                 }
             }
             if sending { HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) } }

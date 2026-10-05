@@ -63,7 +63,7 @@ final class NavRouter: ObservableObject {
 
     /// One-shot: a session suggested by the day plan, handed to the workout start screen so it opens with the
     /// plan's main heart-rate zone and length already chosen. Consumed (and cleared) by the Nuna start screen only.
-    struct PlannedSession: Equatable { var title: String; var minutes: Int; var zone: Int }
+    struct PlannedSession: Equatable { var title: String; var minutes: Int; var zone: Int; var sport: String? = nil }
     @Published var plannedSession: PlannedSession?
 
     /// One-shot: the Updates inbox's "Notification settings" button. The Nuna shell opens Me > Notifications; other shells ignore it.

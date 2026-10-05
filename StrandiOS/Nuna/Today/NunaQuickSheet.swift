@@ -50,7 +50,7 @@ struct NunaQuickSheet: View {
                 Button { go(.coach) } label: {
                     NunaCard(small: true, padding: EdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 14)) {
                         HStack(spacing: 12) {
-                            Image(systemName: "sparkles").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
+                            AnyaMark(size: 26)
                                 .frame(width: 40, height: 40).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Ask Anya").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
