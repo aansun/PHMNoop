@@ -100,7 +100,7 @@ struct NunaHealthView: View {
                     switch which {
                     case .appleHealth: AppleHealthView()
                     case .live: LiveView()
-                    case .breathing: BreathingView()
+                    case .breathing: NunaBreathView().toolbar(.hidden, for: .navigationBar)
                     case .mood: ScrollView { MindSection().padding() }
                     case .cycle:
                         if let cycle = appModel.cyclePhase { CycleTrackerView(result: cycle, curve: appModel.cycleCurve) }

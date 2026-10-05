@@ -1,6 +1,315 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%lld s": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%lld dtk"}}
+    } },
+    "Last session: HRV %@%% over %@.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sesi terakhir: HRV %@%% dalam %@."}}
+    } },
+    "Your history": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Riwayatmu"}}
+    } },
+    "%@: %@, %lld min": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%@: %@, %lld mnt"}}
+    } },
+    "%lld notes, kept only in Breathing": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%lld catatan, hanya disimpan di Pernapasan"}}
+    } },
+    "%lld sessions on this phone": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%lld sesi di ponsel ini"}}
+    } },
+    "4-7-8 wind-down": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Santai 4-7-8"}}
+    } },
+    "A gentle lift": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Dorongan lembut"}}
+    } },
+    "A soft tone on each phase, muted by the silent switch": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Nada lembut di tiap fase, dibisukan oleh tombol senyap"}}
+    } },
+    "After effort or a poor night": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Setelah aktivitas berat atau tidur buruk"}}
+    } },
+    "Alternate nostril": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Napas bergantian lubang hidung"}}
+    } },
+    "An estimate for relaxation, not a medical reading.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Perkiraan untuk relaksasi, bukan hasil medis."}}
+    } },
+    "Anya suggests": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Saran Anya"}}
+    } },
+    "Anya's pick": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pilihan Anya"}}
+    } },
+    "Anya's reading": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bacaan Anya"}}
+    } },
+    "Ask Anya about this session": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tanya Anya tentang sesi ini"}}
+    } },
+    "Bellows breath": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Napas bellows"}}
+    } },
+    "Belly breathing": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Napas perut"}}
+    } },
+    "Belly reset": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Reset napas perut"}}
+    } },
+    "Box breathing": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Napas kotak"}}
+    } },
+    "Breathe again": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Napas lagi"}}
+    } },
+    "Breathing history": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Riwayat pernapasan"}}
+    } },
+    "Breathing settings": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pengaturan pernapasan"}}
+    } },
+    "Breaths": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Napas"}}
+    } },
+    "Calm down": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tenangkan diri"}}
+    } },
+    "Charge is %lld%%": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Charge %lld%%"}}
+    } },
+    "Charge is %lld%% this morning": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Charge %lld%% pagi ini"}}
+    } },
+    "Clear history": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hapus riwayat"}}
+    } },
+    "Clear the breathing history?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hapus riwayat pernapasan?"}}
+    } },
+    "Countdown": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hitung mundur"}}
+    } },
+    "Cues": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Isyarat"}}
+    } },
+    "Deep breaths": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Napas dalam"}}
+    } },
+    "Ease into the night": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Masuk ke malam dengan tenang"}}
+    } },
+    "End and see report": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Akhiri dan lihat laporan"}}
+    } },
+    "End this session?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Akhiri sesi ini?"}}
+    } },
+    "Energise": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Beri tenaga"}}
+    } },
+    "Even 6-6": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Rata 6-6"}}
+    } },
+    "Every session and report is deleted from this phone. This cannot be undone.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Semua sesi dan laporan dihapus dari ponsel ini. Tindakan ini tidak bisa dibatalkan."}}
+    } },
+    "Find your own pace, or let the strap lead you down": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Temukan tempomu sendiri, atau biarkan strap menuntunmu tenang"}}
+    } },
+    "Finish a session and its report is kept here.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Selesaikan satu sesi dan laporannya disimpan di sini."}}
+    } },
+    "Focus": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Fokus"}}
+    } },
+    "Forget Anya's notes in Breathing?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Lupakan catatan Anya di Pernapasan?"}}
+    } },
+    "Forget what Anya remembers here": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Lupakan yang Anya ingat di sini"}}
+    } },
+    "Get ready": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bersiap"}}
+    } },
+    "HRV is %lld ms under your baseline": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "HRV %lld ms di bawah baselinemu"}}
+    } },
+    "HRV move": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Perubahan HRV"}}
+    } },
+    "HRV over the last beats is low (%lld ms)": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "HRV dari detak terakhir rendah (%lld ms)"}}
+    } },
+    "Haptics": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Getar"}}
+    } },
+    "Heart rate %lld bpm, %lld above your resting rate": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Detak jantung %lld bpm, %lld di atas detak istirahatmu"}}
+    } },
+    "Heart rate came down from %lld to %lld bpm.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Detak jantung turun dari %lld ke %lld bpm."}}
+    } },
+    "Heart rate rose from %lld to %lld bpm, which is normal for energising or focus breathing.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Detak jantung naik dari %lld ke %lld bpm, wajar untuk napas penambah tenaga atau fokus."}}
+    } },
+    "How did my last sessions go?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bagaimana sesiku belakangan ini?"}}
+    } },
+    "How do I breathe better?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bagaimana agar napasku lebih baik?"}}
+    } },
+    "It is %@, close to sleep": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sekarang %@, mendekati waktu tidur"}}
+    } },
+    "It raised your HRV %lld%% in earlier sessions": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Latihan ini menaikkan HRV-mu %lld%% di sesi sebelumnya"}}
+    } },
+    "Keep breathing": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Lanjut bernapas"}}
+    } },
+    "Last session: HRV %@%% over %lld min.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sesi terakhir: HRV %@%% dalam %lld mnt."}}
+    } },
+    "Long exhale": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Buang napas panjang"}}
+    } },
+    "No HRV was recorded this time": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kali ini HRV tidak terekam"}}
+    } },
+    "No live heart rate yet, so this follows the time of day": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Belum ada detak jantung langsung, jadi ini mengikuti waktu"}}
+    } },
+    "No sessions yet. Finish one and it appears here with its report.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Belum ada sesi. Selesaikan satu dan akan muncul di sini beserta laporannya."}}
+    } },
+    "Not enough readings from the strap in this session.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bacaan dari strap di sesi ini belum cukup."}}
+    } },
+    "Nothing in your numbers calls for more": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tidak ada angkamu yang menuntut lebih"}}
+    } },
+    "Ocean breath": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Napas samudra"}}
+    } },
+    "One pulse on the inhale, two on the exhale": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Satu getaran saat tarik napas, dua saat buang napas"}}
+    } },
+    "Quick box": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kotak cepat"}}
+    } },
+    "Reading your numbers…": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Membaca angkamu…"}}
+    } },
+    "Reads your heart rate, HRV, stress and Charge": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Membaca detak jantung, HRV, stres, dan Charge-mu"}}
+    } },
+    "Ready to start": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Siap dimulai"}}
+    } },
+    "Recover": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pulih"}}
+    } },
+    "Recovery 6-6": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pemulihan 6-6"}}
+    } },
+    "Recovery coherence": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Koherensi pemulihan"}}
+    } },
+    "Resonance and Calm me": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Resonansi dan Tenangkan aku"}}
+    } },
+    "Resting heart rate is up %lld bpm": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Detak jantung istirahat naik %lld bpm"}}
+    } },
+    "Session complete": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sesi selesai"}}
+    } },
+    "Sessions, reports and Anya's notes stay on this iPhone. Anya's notes reach a provider only inside a question you ask in Breathing, and only if you allowed data access.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sesi, laporan, dan catatan Anya tetap di iPhone ini. Catatan Anya hanya sampai ke penyedia lewat pertanyaan yang kamu ajukan di Pernapasan, dan hanya jika kamu mengizinkan akses data."}}
+    } },
+    "She remembers your sessions in Breathing": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Anya mengingat sesimu di Pernapasan"}}
+    } },
+    "Short sessions often change little. Try ten minutes at a slower pace.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sesi singkat sering mengubah sedikit. Coba sepuluh menit dengan tempo lebih lambat."}}
+    } },
+    "Slow a racing heart": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Perlambat jantung yang berdebar"}}
+    } },
+    "Slow down": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Perlambat"}}
+    } },
+    "Start this": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mulai ini"}}
+    } },
+    "Steady and clear": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Stabil dan jernih"}}
+    } },
+    "Steady coherence": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Koherensi stabil"}}
+    } },
+    "Strap haptics": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Getar strap"}}
+    } },
+    "Stress is %@ of 3 today": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Stres %@ dari 3 hari ini"}}
+    } },
+    "Suggest an exercise": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sarankan latihan"}}
+    } },
+    "Template": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Template"}}
+    } },
+    "Template uses each exercise's own length. A fixed length applies to every template.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Template memakai lama bawaan tiap latihan. Lama tetap berlaku untuk semua template."}}
+    } },
+    "That can happen with focus or energising techniques, or when you were already calm. A longer exhale tends to lift it.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Itu bisa terjadi pada teknik fokus atau penambah tenaga, atau saat kamu sudah tenang. Buang napas lebih panjang cenderung menaikkannya."}}
+    } },
+    "The strap-led modes": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mode yang dipandu strap"}}
+    } },
+    "This session ran without strap haptics, so the pace was followed by sight only.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sesi ini berjalan tanpa getar strap, jadi tempo hanya diikuti lewat penglihatan."}}
+    } },
+    "Three seconds to settle before the first breath": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tiga detik untuk menenangkan diri sebelum napas pertama"}}
+    } },
+    "Wear the strap for live guidance. You can still breathe without it.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pakai strap untuk panduan langsung. Kamu tetap bisa bernapas tanpanya."}}
+    } },
+    "Wear the strap snug and sit still so it can pick up your beats.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pasang strap dengan pas dan duduk diam agar detakmu terbaca."}}
+    } },
+    "What is it for?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Untuk apa?"}}
+    } },
+    "Which exercise fits me now?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Latihan mana yang cocok sekarang?"}}
+    } },
+    "Wind down for sleep": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bersantai untuk tidur"}}
+    } },
+    "Your HRV rose %lld%% while you breathed. Your body settled.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "HRV-mu naik %lld%% saat kamu bernapas. Tubuhmu menenang."}}
+    } },
+    "Your HRV stayed close to where it began.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "HRV-mu tetap dekat dengan awalnya."}}
+    } },
+    "Your HRV was %lld%% lower than at the start.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "HRV-mu %lld%% lebih rendah dari awal."}}
+    } },
+    "Your sessions": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sesimu"}}
+    } },
+    "Your sessions stay. Only what Anya noted from them and from your questions is removed.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sesimu tetap ada. Hanya catatan Anya dari sesi dan pertanyaanmu yang dihapus."}}
+    } },
+    "sessions": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "sesi"}}
+    } },
     "Average HR must be 25-250 bpm.": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Rata-rata HR harus 25-250 bpm."}}
     } },
@@ -73670,6 +73979,7 @@
     },
     "Equal breath · ~5.5 br/min coherence": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Napas sama panjang · koherensi ~5,5 napas/mnt"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -103858,6 +104168,7 @@
     },
     "Long exhale · downshift to rest": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Buang napas panjang · turun ke mode istirahat"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -150918,6 +151229,7 @@
     },
     "Session": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Sesi"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -157762,6 +158074,7 @@
     },
     "Square breath · steady focus": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Napas persegi · fokus stabil"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -173644,6 +173957,7 @@
     },
     "Time of day": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Waktu"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -216259,6 +216573,7 @@
     },
     "Forceful 1s in · 1s out": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Kuat 1 dtk tarik · 1 dtk buang"}},
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -216515,6 +216830,7 @@
     },
     "Belly breath · soft pause": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Napas perut · jeda lembut"}},
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -216643,6 +216959,7 @@
     },
     "6s in · 6s out · ~5 br/min": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "6 dtk tarik · 6 dtk buang · ~5 napas/mnt"}},
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -216707,6 +217024,7 @@
     },
     "Ocean breath · soft throat": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Napas samudra · tenggorokan lembut"}},
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -216835,6 +217153,7 @@
     },
     "Inhale 4 · hold 7 · exhale 8": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tarik 4 · tahan 7 · buang 8"}},
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -217091,6 +217410,7 @@
     },
     "Nadi Shodhana · left/right cycle": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Nadi Shodhana · siklus kiri/kanan"}},
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -217411,6 +217731,7 @@
     },
     "Slow inhale · soft hold · long exhale": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tarik napas pelan · tahan lembut · buang panjang"}},
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -218245,6 +218566,7 @@
     },
     "If you feel dizzy or uncomfortable, stop and breathe normally.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Jika kamu pusing atau tidak nyaman, berhenti dan bernapas seperti biasa."}},
         "en": {
           "stringUnit": {
             "state": "translated",
@@ -218629,6 +218951,7 @@
     },
     "Stop if dizzy. Avoid with high blood pressure, pregnancy, or recent surgery unless cleared by a clinician.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Berhenti jika pusing. Hindari bila tekanan darah tinggi, hamil, atau baru operasi kecuali sudah disetujui tenaga medis."}},
         "en": {
           "stringUnit": {
             "state": "translated",
