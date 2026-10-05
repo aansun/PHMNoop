@@ -169,6 +169,105 @@ struct NunaGaugeHeroCard<Note: View>: View {
     }
 }
 
+// MARK: - Score hero (big ring, no card) and its contributor list
+
+/// The top of the Charge, Effort and Rest screens: a large ring straight on the screen (no card) with the score inside and its
+/// name underneath, the status chip above and a short note below. The contributors follow as plain rows.
+struct NunaScoreHero<Note: View>: View {
+    let caption: LocalizedStringKey
+    var chip: LocalizedStringKey?
+    var chipColor: Color?
+    let fraction: Double
+    let number: String
+    var unit: String = ""
+    var suffix: String = ""
+    let name: LocalizedStringKey
+    let color: Color
+    let note: Note
+
+    init(caption: LocalizedStringKey, chip: LocalizedStringKey? = nil, chipColor: Color? = nil, fraction: Double, number: String,
+         unit: String = "", suffix: String = "", name: LocalizedStringKey, color: Color, @ViewBuilder note: () -> Note) {
+        self.caption = caption; self.chip = chip; self.chipColor = chipColor; self.fraction = fraction; self.number = number
+        self.unit = unit; self.suffix = suffix; self.name = name; self.color = color; self.note = note()
+    }
+
+    var body: some View {
+        VStack(spacing: 16) {
+            HStack {
+                Text(caption).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Spacer()
+                if let chip { NunaChip(chip, color: chipColor) }
+            }
+            NunaRingGauge(fraction: fraction, color: color, size: 300, lineWidth: 24) {
+                VStack(spacing: 6) {
+                    HStack(alignment: .firstTextBaseline, spacing: 2) {
+                        Text(verbatim: number).font(.nuna(size: 84, weight: .bold, design: NunaType.design))
+                            .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.5).lineLimit(1)
+                        if !unit.isEmpty && number != "–" {
+                            Text(verbatim: unit).font(.nuna(size: 34, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        }
+                    }
+                    if !suffix.isEmpty { Text(verbatim: suffix).font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+                    Text(name).font(.nuna(size: 15, weight: .heavy)).tracking(2).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            note.multilineTextAlignment(.center).frame(maxWidth: .infinity)
+        }
+    }
+}
+
+/// One contributor under a score: icon, UPPERCASE name, value and a small triangle for the move against yesterday
+/// (green when it is the good way, amber when it is not, neutral when it does not matter which way).
+struct NunaContributorRow: View {
+    let title: LocalizedStringKey
+    let icon: String
+    let value: String?
+    var unit = ""
+    var delta: Double?
+    /// nil: direction is neutral; true: a fall is the good move; false: a rise is the good move.
+    var downIsGood: Bool?
+    var decimals = 0
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon).font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
+            Text(title).font(.nuna(size: 13.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                .lineLimit(1).minimumScaleFactor(0.7)
+            Spacer(minLength: 8)
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text(verbatim: value ?? "–").font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                if value != nil, !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+            }
+            marker.frame(width: 14)
+        }
+        .padding(.vertical, 16)
+        .contentShape(Rectangle())
+    }
+
+    @ViewBuilder private var marker: some View {
+        let step = decimals == 0 ? 0.5 : 0.05
+        if let delta, abs(delta) >= step {
+            let good: Bool? = downIsGood.map { (delta < 0) == $0 }
+            let tint: Color = good.map { $0 ? NunaPalette.charge : NunaPalette.warning } ?? NunaPalette.textSecondary
+            Image(systemName: delta > 0 ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill").font(.nuna(size: 10)).foregroundStyle(tint)
+        } else if delta != nil {
+            Image(systemName: "minus").font(.nuna(size: 10, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+        }
+    }
+}
+
+/// Rows separated by hairlines, straight on the screen.
+struct NunaPlainList<Content: View>: View {
+    @ViewBuilder let content: Content
+    var body: some View {
+        VStack(spacing: 0) {
+            Rectangle().fill(NunaPalette.hairline).frame(height: 1)
+            content
+        }
+    }
+}
+
 // MARK: - Collapsible "How it's calculated" row
 
 struct NunaExpandRow: View {
