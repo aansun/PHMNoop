@@ -608,6 +608,20 @@ final class NunaSeriesModel: ObservableObject {
         }
     }
 
+    /// Slots for `days` calendar days ending `endingDaysAgo` days before today (0 = the window that ends today).
+    func window(_ days: Int, endingDaysAgo: Int) -> [(date: Date, value: Double?)] {
+        let cal = Calendar.current
+        let today = Date()
+        return (0..<days).reversed().map { i in
+            let d = cal.date(byAdding: .day, value: -(i + endingDaysAgo), to: today) ?? today
+            return (d, byDay[Repository.localDayKey(d)])
+        }
+    }
+
+    func readings(_ days: Int, endingDaysAgo: Int) -> [(date: Date, value: Double)] {
+        window(days, endingDaysAgo: endingDaysAgo).compactMap { s in s.value.map { (s.date, $0) } }
+    }
+
     /// Real readings in the last `days` days, oldest first (days without a reading are left out).
     func readings(_ days: Int) -> [(date: Date, value: Double)] {
         window(days).compactMap { s in s.value.map { (s.date, $0) } }

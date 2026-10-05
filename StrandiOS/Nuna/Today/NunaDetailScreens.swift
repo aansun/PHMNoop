@@ -268,11 +268,34 @@ struct NunaMetricDetailView: View {
     /// Compact label for chart columns: 8.2K for 8,214 steps.
     private func fmtShort(_ v: Double) -> String { TrendChart.line2ValueString(v, formattedValue: fmt(v)) }
 
+    /// Metrics on the one-card trend layout (heart rate variability first; the rest follow once it is approved).
+    private var usesTrendCard: Bool { metric.key == "hrv" }
+
+    @ViewBuilder private var trendCardBody: some View {
+        let latest = series.latest
+        NunaTrendDetailCard(
+            title: metric.title, caption: overnight ? "Last night" : "Today",
+            valueText: latest.map { fmt($0.value) } ?? "–", unit: metric.unit,
+            chip: status.map { (text: $0.0, color: $0.1) },
+            note: previous.flatMap { prev in latest.map { l in
+                let d = l.value - prev
+                return d == 0 ? String(localized: "Same as yesterday")
+                    : (d > 0 ? String(localized: "Up \(fmt(abs(d))) from yesterday") : String(localized: "Down \(fmt(abs(d))) from yesterday"))
+            } },
+            series: series, lineColor: lineColor, decimals: metric.decimals,
+            higherIsBetter: metric.higherIsBetter ?? true)
+        NunaExpandRow(title: "What affects it", subtitle: "Common factors", systemImage: "chart.line.uptrend.xyaxis",
+                      text: "Sleep, alcohol, hydration, stress, illness and training load all move your daily numbers. Look at the trend over weeks rather than a single day.")
+        NunaExpandRow(title: "How it's calculated", subtitle: "Source and method",
+                      text: LocalizedStringKey("Source: \(metric.sourceLabel). Values are read from the data stored on this phone."))
+    }
+
     var body: some View {
         let slots = series.window(range)
         let present = slots.compactMap(\.value)
         let latest = series.latest
         NunaDetailScreen(LocalizedStringKey(metric.title), onAnya: coachEnabled ? { showCoach = true } : nil) {
+            if usesTrendCard { trendCardBody } else {
             NunaHeroCard(caption: overnight ? "Last night" : "Today", chip: status?.0, chipColor: status?.1,
                          number: latest.map { fmt($0.value) } ?? "–", unit: metric.unit, color: isColumns ? NunaPalette.textPrimary : (metric.key == "hrv" || metric.key == "rhr" ? NunaPalette.textPrimary : color)) {
                 if let latest, let prev = previous {
@@ -315,8 +338,9 @@ struct NunaMetricDetailView: View {
                           text: "Sleep, alcohol, hydration, stress, illness and training load all move your daily numbers. Look at the trend over weeks rather than a single day.")
             NunaExpandRow(title: "How it's calculated", subtitle: "Source and method",
                           text: LocalizedStringKey("Source: \(metric.sourceLabel). Values are read from the data stored on this phone."))
+            }
         }
-        .task(id: "\(metric.id)-\(repo.refreshSeq)") { await series.load(repo: repo, key: metric.key, source: metric.source) }
+        .task(id: "\(metric.id)-\(repo.refreshSeq)") { await series.load(repo: repo, key: metric.key, source: metric.source, days: usesTrendCard ? 400 : 190) }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: metric.title) }
     }
 
