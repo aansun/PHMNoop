@@ -142,7 +142,7 @@ struct NunaAnyaView: View {
                     if coach.isConfigured {
                         HStack(spacing: 6) {
                             Image(systemName: coach.provider.nunaIsOnDevice ? "iphone" : "cloud").font(.nuna(size: 11, weight: .bold))
-                            Text(verbatim: coach.provider.nunaSubtitle(model: coach.model)).lineLimit(1)
+                            Text(verbatim: coach.provider.nunaIsOnDevice ? String(localized: "On this iPhone") : String(localized: "Connected")).lineLimit(1)
                         }
                         .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
