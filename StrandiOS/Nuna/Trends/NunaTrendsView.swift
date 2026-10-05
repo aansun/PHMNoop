@@ -79,6 +79,10 @@ struct NunaTrendsView: View {
 
     private var rangeCaption: String {
         guard let a = TrendInsights.shift(m.todayKey, by: -(range - 1)), let da = m.date(a), let db = m.date(m.todayKey) else { return "" }
+        if range > 90 {
+            let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("d MMM yy")
+            return f.string(from: da) + " – " + f.string(from: db)
+        }
         return NunaTrendsFormat.short(da) + " – " + NunaTrendsFormat.short(db)
     }
 

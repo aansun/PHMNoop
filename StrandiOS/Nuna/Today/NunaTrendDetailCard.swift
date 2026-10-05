@@ -154,6 +154,8 @@ struct NunaSegmentedChart: View {
     var decimals = 0
     var band: ClosedRange<Double>?
     var higherIsBetter = true
+    /// Colour the moves green or amber by which way is better; false draws them in the plain text colour (Effort).
+    var directional = true
     var height: CGFloat = 270
 
     private func format(_ v: Double) -> String { String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, v) }
@@ -197,10 +199,11 @@ struct NunaSegmentedChart: View {
             let avg = b.values.reduce(0, +) / Double(b.values.count)
             var delta: String?
             var deltaColor = NunaPalette.textPrimary
-            if let p = prev, p != 0 {
+            // With many stretches (a year) the percentages would run into each other, so only the averages are written.
+            if buckets.count <= 8, let p = prev, p != 0 {
                 let pct = (avg - p) / abs(p) * 100
                 delta = String(format: "%+.0f%%", locale: AppLanguage.activeLocale, pct)
-                deltaColor = (pct >= 0) == higherIsBetter ? NunaPalette.charge : NunaPalette.warning
+                if directional { deltaColor = (pct >= 0) == higherIsBetter ? NunaPalette.charge : NunaPalette.warning }
             }
             // A single-day stretch is drawn as a short mark centred on its day.
             let single = b.start == b.end

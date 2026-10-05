@@ -130,27 +130,14 @@ struct NunaTrendsMetricView: View {
 
     private func chartCard(_ w: NunaDaySeries) -> some View {
         let vals = w.map(\.value)
-        let first = TrendInsights.shift(m.todayKey, by: -(range - 1)) ?? m.todayKey
         return NunaCard {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     nunaTrendsCap(kind == .charge ? "Daily Charge" : (kind == .effort ? "Daily Effort" : "Daily Rest"))
                 }
-                if range == 7 {
-                    let top = max(vals.max() ?? 1, 1)
-                    let slots = (0..<7).map { i -> (Date, String) in
-                        let k = TrendInsights.shift(first, by: i) ?? first
-                        return (m.date(k) ?? Date(), k)
-                    }
-                    let byDay = Dictionary(w.map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l })
-                    NunaColumns(items: slots.map { s in
-                        let v = byDay[s.1]
-                        return NunaColumns.Item(weekday: NunaTrendsFormat.weekdayShort(TrendInsights.weekday(s.1) ?? 1), date: s.0, fraction: v.map { $0 / top },
-                                                valueText: v.map { NunaTrendsFormat.num($0, decimals) }, highlight: s.1 == m.todayKey,
-                                                color: v.map { val in zoneColors[edges.filter { val >= $0 }.count] })
-                    }, color: bar, highlightColor: color)
-                } else {
-                    NunaLine2Chart(points: w.compactMap { r in m.date(r.day).map { ($0, r.value) } }, color: color, decimals: decimals, height: 190)
+                if vals.count >= 2 {
+                    NunaSegmentedChart(points: w.compactMap { r in m.date(r.day).map { ($0, r.value) } }, color: bar, decimals: decimals,
+                                       higherIsBetter: true, directional: kind != .effort)
                 }
                 if !vals.isEmpty {
                     NunaDivider()
