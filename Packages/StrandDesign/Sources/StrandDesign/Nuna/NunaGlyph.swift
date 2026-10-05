@@ -30,7 +30,7 @@ public struct NunaGlyph: View {
 
     public var body: some View {
         if name == Self.anya {
-            Image("AnyaLogo").renderingMode(.template)
+            Image("AnyaGlyph").renderingMode(.template)
                 .resizable().scaledToFit()
                 .frame(width: pointSize * 1.3, height: pointSize * 1.3)
         } else {
