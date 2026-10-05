@@ -369,7 +369,13 @@ final class AICoachEngine: ObservableObject {
         #endif
         // === PHM OVERLAY (PHMNOOP) === fold the user's ACTIVE Coach memories into every request so
         // saved goals/events/preferences steer replies. Empty when none exist (prompt unchanged).
-        return base + languagePrompt + Self.answerStyleBlock() + CoachMemoryStore.activePromptBlock()
+        // The Nuna experience draws charts, gym programs and workouts from fenced blocks; the Default one does not, so it never asks.
+        #if os(iOS)
+        let actions = UserDefaults.standard.string(forKey: "experience.mode") == "nuna" ? "\n\n" + AnyaActions.instruction : ""
+        #else
+        let actions = ""
+        #endif
+        return base + languagePrompt + Self.answerStyleBlock() + CoachMemoryStore.activePromptBlock() + actions
     }
 
     // MARK: Answer style (Nuna Anya settings)

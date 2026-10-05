@@ -203,7 +203,7 @@ struct NunaAnyaCard: View {
             HStack(spacing: 12) {
                 Button(action: action) {
                     HStack(spacing: 12) {
-                        NunaIconTile("sparkles")
+                        AnyaIconTile()
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Anya")
                                 .font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)

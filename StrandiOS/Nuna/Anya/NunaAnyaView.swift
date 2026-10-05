@@ -67,6 +67,7 @@ struct NunaAnyaView: View {
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
     @StateObject private var memory = CoachMemoryStore()
     @StateObject private var voice = CoachVoiceInput()
+    @State private var keyboardUp = false
     @State private var draft = UserDefaults.standard.string(forKey: "coach.composerDraft") ?? ""
     @FocusState private var focused: Bool
     @State private var reading: NunaAnyaRead?
@@ -112,6 +113,8 @@ struct NunaAnyaView: View {
             await coach.send(prompt)
         }
         .onChange(of: draft) { _, new in UserDefaults.standard.set(new, forKey: "coach.composerDraft") }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in keyboardUp = true }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in keyboardUp = false }
         .onChange(of: coach.sending) { _, sending in
             if !sending, !coach.messages.isEmpty { UIImpactFeedbackGenerator(style: .light).impactOccurred() }
         }
@@ -214,7 +217,7 @@ struct NunaAnyaView: View {
         VStack(spacing: NunaSpacing.section) {
             NunaCard(highlight: true) {
                 VStack(alignment: .leading, spacing: 14) {
-                    NunaIconTile("sparkles")
+                    AnyaIconTile(size: 44)
                     Text("Connect Anya").font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text("Anya uses the AI provider you choose. Your key stays in the Keychain on this iPhone, and nothing is sent until you allow it and ask a question.")
                         .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
@@ -245,7 +248,7 @@ struct NunaAnyaView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: NunaSpacing.section) {
                 VStack(alignment: .leading, spacing: 10) {
-                    NunaIconTile("sparkles")
+                    AnyaIconTile(size: 44)
                     Text("I'm here with you").font(.nuna(size: 26, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text("Anya reads your baseline, load and sleep together, then picks the next small step.")
                         .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
@@ -341,8 +344,7 @@ struct NunaAnyaView: View {
         case .assistant:
             VStack(alignment: .leading, spacing: 10) {
                 NunaCard(small: true, padding: EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)) {
-                    Markdown(m.text).markdownTheme(.nuna).textSelection(.enabled).fixedSize(horizontal: false, vertical: true)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    NunaAnyaReply(text: m.text)
                 }
                 HStack(spacing: 8) {
                     if coach.dataConsent {
@@ -352,9 +354,9 @@ struct NunaAnyaView: View {
                         Text("Based only on your question").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
                     }
                     Spacer(minLength: 0)
-                    Button { UIPasteboard.general.string = m.text } label: { Image(systemName: "doc.on.doc").font(.nuna(size: 13, weight: .semibold)) }.buttonStyle(.plain).accessibilityLabel(Text("Copy"))
-                    ShareLink(item: m.text) { Image(systemName: "square.and.arrow.up").font(.nuna(size: 13, weight: .semibold)) }
-                    Button { saveAdvice(m.text) } label: { Image(systemName: "bookmark").font(.nuna(size: 13, weight: .semibold)) }.buttonStyle(.plain).accessibilityLabel(Text("Save to Journal"))
+                    Button { UIPasteboard.general.string = AnyaActions.proseOnly(m.text) } label: { Image(systemName: "doc.on.doc").font(.nuna(size: 13, weight: .semibold)) }.buttonStyle(.plain).accessibilityLabel(Text("Copy"))
+                    ShareLink(item: AnyaActions.proseOnly(m.text)) { Image(systemName: "square.and.arrow.up").font(.nuna(size: 13, weight: .semibold)) }
+                    Button { saveAdvice(AnyaActions.proseOnly(m.text)) } label: { Image(systemName: "bookmark").font(.nuna(size: 13, weight: .semibold)) }.buttonStyle(.plain).accessibilityLabel(Text("Save to Journal"))
                 }
                 .foregroundStyle(NunaPalette.textSecondary).padding(.horizontal, 4)
             }
@@ -426,13 +428,15 @@ struct NunaAnyaView: View {
                     } else {
                         Button { send(draft) } label: {
                             Image(systemName: "arrow.up").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(width: 38, height: 38).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
-                        }.buttonStyle(.plain).accessibilityLabel(Text("Send"))
+                        }.buttonStyle(.plain).accessibilityLabel(Text("Send")).padding(.trailing, 5)
                     }
                 }
                 .frame(minHeight: 48).background(NunaPalette.shade.opacity(0.28), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)).overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
             }
         }
-        .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 8)
+        .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8)
+        // The floating tab bar sits over the bottom of this tab, so the box is lifted clear of it; with the keyboard up it rides above the keyboard.
+        .padding(.bottom, keyboardUp ? 8 : 104)
         .background(NunaPalette.canvas)
     }
 
