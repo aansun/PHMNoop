@@ -6,7 +6,7 @@ import StrandImport
 import WhoopStore
 
 private func nunaCap(_ t: LocalizedStringKey) -> some View {
-    Text(t).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+    Text(t).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
 }
 
 private func nbFmt(_ v: Double?, _ digits: Int = 0) -> String {
@@ -33,7 +33,7 @@ struct NunaNumberSheet: View {
             Text(title).font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(verbatim: String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, value))
-                    .font(.nuna(size: 64, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    .font(.nuna(size: 64, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(64)).foregroundStyle(NunaPalette.textPrimary)
                 Text(verbatim: unit).font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
             }
             HStack(spacing: 16) {
@@ -113,7 +113,7 @@ struct NunaWeightView: View {
                         }
                     }
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(verbatim: nbFmt(latest, 1)).font(.nuna(size: 68, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: nbFmt(latest, 1)).font(.nuna(size: 68, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(68)).foregroundStyle(NunaPalette.textPrimary)
                         Text("kg").font(.nuna(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     if target > 0, let latest {
@@ -126,7 +126,7 @@ struct NunaWeightView: View {
             }
             NunaSegmented([(value: 30, title: "30D"), (value: 90, title: "90D"), (value: 365, title: "1Y")], selection: $range)
             NunaCard {
-                NunaLine2Chart(points: pts, color: NunaPalette.ink, decimals: 1, baseline: target > 0 ? target : nil, height: 190)
+                NunaLine2Chart(points: pts, color: NunaPalette.charge, decimals: 1, baseline: target > 0 ? target : nil, height: 190)
             }
             HStack(spacing: 10) {
                 NunaStatTile(label: "Body fat", value: nbFmt(fatS.latest?.value, 1), unit: fatS.latest == nil ? "" : "%")
@@ -215,7 +215,7 @@ struct NunaWaistView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack { nunaCap("Latest"); Spacer(); NunaChip("Profile") }
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(verbatim: waist > 0 ? nbFmt(waist) : "–").font(.nuna(size: 68, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: waist > 0 ? nbFmt(waist) : "–").font(.nuna(size: 68, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(68)).foregroundStyle(NunaPalette.textPrimary)
                         if waist > 0 { Text("cm").font(.nuna(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                     }
                     Text(waist > 0 ? "Read from Apple Health when it has one, or typed in here" : "Not set yet")
@@ -230,7 +230,7 @@ struct NunaWaistView: View {
                             Spacer()
                             NunaChip(ratio < 0.5 ? "Healthy" : (ratio < 0.6 ? "Above" : "High"), color: ratio < 0.5 ? NunaPalette.charge : NunaPalette.warning)
                         }
-                        Text(verbatim: nbFmt(ratio, 2)).font(.nuna(size: 40, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: nbFmt(ratio, 2)).font(.nuna(size: 40, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(40)).foregroundStyle(NunaPalette.textPrimary)
                         NunaScaleBar(parts: [(3, NunaPalette.rest), (3, NunaPalette.charge), (2, NunaPalette.warning), (3, NunaPalette.alert)],
                                      position: min(max((ratio - 0.35) / 0.3, 0), 1))
                         HStack { Text(verbatim: "0,4"); Spacer(); Text(verbatim: "0,6") }

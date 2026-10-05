@@ -61,7 +61,7 @@ struct NunaWidgetSettingsView: View {
 
     private func stat(_ l: LocalizedStringKey, _ v: String, _ note: String?) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             Text(verbatim: v).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             if let note { Text(verbatim: note).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
         }.frame(maxWidth: .infinity, alignment: .leading)

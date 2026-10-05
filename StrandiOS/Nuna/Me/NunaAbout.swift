@@ -90,7 +90,7 @@ struct NunaHowItWorksView: View {
                         HStack(spacing: 12) {
                             NunaIconTile(s.icon, tint: tint(s))
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(verbatim: s.overline).font(.nuna(size: 11, weight: .heavy)).tracking(1).foregroundStyle(tint(s))
+                                Text(verbatim: s.overline).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).foregroundStyle(tint(s))
                                 Text(verbatim: s.title).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                             }
                         }
@@ -156,14 +156,14 @@ struct NunaScoringGuideView: View {
                                     Text(verbatim: s.sampleNumber).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                                 }
                                 VStack(alignment: .leading, spacing: 6) {
-                                    Text(verbatim: s.displayName).font(.nuna(size: 11.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(color(s))
+                                    Text(verbatim: s.displayName).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(color(s))
                                     Text(verbatim: s.headline).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                                 }
                             }
                             Text(verbatim: s.bodyText).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                             NunaDivider()
                             HStack(alignment: .top, spacing: 8) {
-                                Text("vs WHOOP").font(.nuna(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(color(s)).padding(.top, 1)
+                                Text("vs WHOOP").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(color(s)).padding(.top, 1)
                                 Text(verbatim: s.vsWhoop).font(.nuna(size: 12.5, weight: .semibold)).italic().foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
                             }
                         }.frame(maxWidth: .infinity, alignment: .leading)

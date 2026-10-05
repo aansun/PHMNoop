@@ -85,14 +85,14 @@ struct NunaHeroCard<Footer: View>: View {
         NunaCard(padding: EdgeInsets(top: 22, leading: 22, bottom: 22, trailing: 22)) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text(caption).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
+                    Text(caption).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     if let chip { NunaChip(chip, color: chipColor) }
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(verbatim: number)
-                        .font(.nuna(size: 72, weight: .bold, design: NunaType.design))
+                        .font(.nuna(size: 72, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(72))
                         .foregroundStyle(color)
                         .minimumScaleFactor(0.5).lineLimit(1)
                     if !unit.isEmpty {
@@ -141,7 +141,7 @@ struct NunaGaugeHeroCard<Note: View>: View {
         NunaCard(padding: EdgeInsets(top: 22, leading: 22, bottom: 22, trailing: 22)) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
-                    Text(caption).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
+                    Text(caption).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     if let chip { NunaChip(chip, color: chipColor) }
@@ -194,21 +194,21 @@ struct NunaScoreHero<Note: View>: View {
     var body: some View {
         VStack(spacing: 16) {
             HStack {
-                Text(caption).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text(caption).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 Spacer()
                 if let chip { NunaChip(chip, color: chipColor) }
             }
             NunaRingGauge(fraction: fraction, color: color, size: 300, lineWidth: 24) {
                 VStack(spacing: 6) {
                     HStack(alignment: .firstTextBaseline, spacing: 2) {
-                        Text(verbatim: number).font(.nuna(size: 84, weight: .bold, design: NunaType.design))
+                        Text(verbatim: number).font(.nuna(size: 84, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(84))
                             .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.5).lineLimit(1)
                         if !unit.isEmpty && number != "–" {
                             Text(verbatim: unit).font(.nuna(size: 34, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         }
                     }
                     if !suffix.isEmpty { Text(verbatim: suffix).font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
-                    Text(name).font(.nuna(size: 15, weight: .heavy)).tracking(2).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                    Text(name).font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 }
             }
             .frame(maxWidth: .infinity)
@@ -232,7 +232,7 @@ struct NunaContributorRow: View {
     var body: some View {
         HStack(spacing: 14) {
             Image(systemName: icon).font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
-            Text(title).font(.nuna(size: 13.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+            Text(title).font(.nuna(size: 13.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 .lineLimit(1).minimumScaleFactor(0.7)
             Spacer(minLength: 8)
             HStack(alignment: .firstTextBaseline, spacing: 3) {
@@ -454,7 +454,7 @@ struct NunaLine2Chart: View {
                 points: points.map { TrendPoint(date: $0.date, value: $0.value) },
                 gradient: Gradient(colors: [color, color]),
                 valueRange: (lo - pad)...(hi + pad * 1.6),
-                showsArea: false,
+                showsArea: true,
                 showsPointValues: true,
                 baselineValue: baseline,
                 height: height,

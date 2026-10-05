@@ -84,7 +84,7 @@ private extension View {
 }
 
 private func nunaCaption(_ t: LocalizedStringKey) -> some View {
-    Text(t).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+    Text(t).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
 }
 
 private func nunaNote(_ t: LocalizedStringKey, warn: Bool = false) -> some View {
@@ -192,7 +192,7 @@ struct NunaSmartAlarmView: View {
                     NunaChip(behavior.smartAlarmEnabled ? "On" : "Off", color: behavior.smartAlarmEnabled ? NunaPalette.charge : nil)
                 }
                 Text(verbatim: NunaAlarmFormat.clock(behavior.smartAlarmMinutes))
-                    .font(.nuna(size: 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    .font(.nuna(size: 56, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(56)).foregroundStyle(NunaPalette.textPrimary)
                 TimelineView(.periodic(from: .now, by: 60)) { tick in
                     VStack(alignment: .leading, spacing: 2) {
                         if let c = countdown(from: tick.date) {

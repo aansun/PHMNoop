@@ -42,7 +42,7 @@ struct NunaWorkoutStartView: View {
                     HStack(spacing: 12) {
                         NunaIconTile("sparkles")
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("From Anya's plan").font(.nuna(size: 11.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                            Text("From Anya's plan").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                             Text(verbatim: planned.title).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                         }
                         Spacer(minLength: 6)
@@ -141,7 +141,7 @@ struct NunaWorkoutStartView: View {
                     stepBtn("minus", minus)
                     Spacer()
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Text(verbatim: v).font(.nuna(size: 46, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: v).font(.nuna(size: 46, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(46)).foregroundStyle(NunaPalette.textPrimary)
                         Text(verbatim: unit).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     Spacer()
@@ -189,7 +189,7 @@ struct NunaWorkoutStartView: View {
         ZStack {
             NunaPalette.shade.opacity(0.85).ignoresSafeArea()
             VStack(spacing: 16) {
-                Text(verbatim: "\(c)").font(.nuna(size: 120, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: "\(c)").font(.nuna(size: 120, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(120)).foregroundStyle(NunaPalette.textPrimary)
                 Button("Cancel") { countdown = nil }.font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
             }
         }
@@ -273,10 +273,10 @@ struct NunaLiveWorkoutView: View {
                 }
                 NunaCard {
                     VStack(spacing: 8) {
-                        Text(verbatim: clock(elapsed)).font(.nuna(size: 64, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: clock(elapsed)).font(.nuna(size: 64, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(64)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
                         HStack(alignment: .firstTextBaseline, spacing: 6) {
                             Image(systemName: "heart.fill").foregroundStyle(NunaPalette.textPrimary)
-                            Text(verbatim: bpm.map(String.init) ?? "–").font(.nuna(size: 48, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: bpm.map(String.init) ?? "–").font(.nuna(size: 48, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(48)).foregroundStyle(NunaPalette.textPrimary)
                             Text("bpm").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                         if zone > 0 {

@@ -6,26 +6,26 @@ The repository rule "design system is law" still applies: Nuna views use only th
 
 ## Colour
 
-| Token | Hex | Use |
-|---|---|---|
-| `canvas` | `#0A0D10` | Screen background |
-| `card` | `#14181D` | Card surface |
-| `cardHighlight` | `#191F25` | Anya card, selected card (plus a 26% white border) |
-| `glass` / `glassStrong` | white 5% / 9% | Segmented control track, icon buttons, neutral chips |
-| `hairline` / `hairlineSoft` | white 10% / 8% | Dividers, card borders |
-| `textPrimary` | `#FFFFFF` | Primary text |
-| `textSecondary` | `#9AA4AC` | Secondary text, captions |
-| `textMuted` | `#6B7177` | Chevrons, placeholders |
-| `charge` | `#16EC06` | OK, Charge, active toggle, zone 2 |
-| `effort` / `effortText` | `#0093E7` / `#38AEF5` | Effort (fill / readable text) |
-| `rest` / `restText` | `#7BA1BB` / `#9DBBD0` | Rest, sleep |
-| `restLight` | `#B8CCE0` | REM |
-| `restDeep` | `#4A7090` | Deep sleep |
-| `warning` | `#FFDE00` | Needs attention, zone 3-4 |
-| `alert` / `alertText` | `#FF0026` / `#FF5468` | Heart, alert, zone 5 |
-| `zoneBase` | `#3B4258` | Zone 1, awake track |
+Dark values follow the "Rekomendasi Palet Warna Health App Dark Mode" guide. Each area has its own neon: Sleep and Rest cyan, Health and Charge green, Trend and Effort yellow, alert pink-red. Colour, font and text size are fixed to the guides and are no longer a user setting (only light or dark, spacing density and the app icon are).
 
-Chip backgrounds are the meaning colour at 12-16% opacity with a 30-40% border.
+| Token | Dark | Use |
+|---|---|---|
+| `canvas` | `#000000` | Screen background |
+| `card` | `#121214` | Card surface |
+| `cardHighlight` | `#1B1B1F` | Anya card, selected card |
+| `hairline` / `hairlineSoft` | `#71717A` 25% / 18% | Dividers, grid lines, card borders |
+| `textPrimary` | `#FFFFFF` | Primary text |
+| `textSecondary` | `#A1A1AA` | Secondary text |
+| `textMuted` | `#71717A` | Chart labels, chevrons, placeholders |
+| `charge` | `#00FF66` | Health, Charge, ok, active toggles |
+| `effort` / `effortText` | `#DFFF00` | Effort, Trend |
+| `rest` / `restText` | `#00E5FF` / `#5CEFFF` | Rest, Sleep |
+| `restLight` / `restDeep` | `#9BF4FF` / `#0093A8` | REM / deep sleep |
+| `warning` | `#FFB020` | Needs attention |
+| `alert` / `alertText` | `#FF3366` / `#FF6B8E` | Alert, heart, over-reaching |
+| `zoneBase` | `#3F3F46` | Zone 1, awake track |
+
+Charts: a 2 to 3 pt line in the area colour with a fill that fades from 35% of that colour to nothing.
 
 ### Mapping to the existing palette
 
@@ -41,17 +41,16 @@ Reuse existing tokens when a Nuna token has an equal in `StrandPalette`; only ad
 
 ## Type
 
-Mockups use two faces: a text face (labels) and a numeric face (scores). In the app both come from `StrandFont` with the WHOOP preset (`Typography.swift`).
+SF Pro (system) for text and numbers, from the "Panduan Tipografi dan Jarak UI" guide. Large numbers use -1.5% tracking, small uppercase labels +0.4 pt.
 
-| Role | Size | Weight | Notes |
-|---|---|---|---|
-| H1 | 34 | 800 | Screen title, tracking -3.5% |
-| H2 | 22 | 800 | Section title |
-| H3 | 17 | 700 | Row title |
-| Sub | 14 | 600 | Secondary text |
-| Caption | 11.5 | 800 | Uppercase, tracking 10% |
-| Number XL / L / M / S | 68 / 44 / 30 / 21 | 700 | Tabular figures, tracking -4% |
-| Unit | 40% of the number | 700 | Secondary colour, 4 pt leading |
+| Role | Size | Weight |
+|---|---|---|
+| Main stat / score | 44 to 56 | Bold |
+| Page header (H1) | 28 | Bold / Heavy |
+| H2 | 20 | Heavy |
+| Card title (H3) | 17 | Semibold / Bold |
+| Body and detail numbers | 14 | Regular to Semibold |
+| Chart labels, helper text | 11 to 12 | Regular to Semibold |
 
 ## Shape and spacing
 

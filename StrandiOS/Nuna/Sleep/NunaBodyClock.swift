@@ -150,14 +150,14 @@ struct NunaBodyClockView: View {
         NunaCard(padding: EdgeInsets(top: 22, leading: 22, bottom: 22, trailing: 22)) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text("Your body clock estimate").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
+                    Text("Your body clock estimate").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     NunaChip(est.confidence == .solid ? "Solid" : "Wide range", color: NunaPalette.restText)
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
                     Text(verbatim: NunaClockHour.text(est.tempMinHour))
-                        .font(.nuna(size: 64, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.restText)
+                        .font(.nuna(size: 64, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(64)).foregroundStyle(NunaPalette.restText)
                         .minimumScaleFactor(0.6).lineLimit(1)
                     Text("lowest point").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
@@ -180,7 +180,7 @@ struct NunaBodyClockView: View {
         NunaCard {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text("24-hour rhythm").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Text("24-hour rhythm").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     Text("Estimated shape").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
@@ -197,7 +197,7 @@ struct NunaBodyClockView: View {
         NunaCard {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
-                    Text("Confidence").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Confidence").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     Text("From the last 14 days").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
@@ -253,14 +253,14 @@ struct NunaBodyClockView: View {
         return NunaCard {
             VStack(spacing: 12) {
                 HStack {
-                    Text("Sleep and ideal window").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Sleep and ideal window").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     NunaChip(aligned ? "Aligned" : "Off", color: aligned ? NunaPalette.charge : NunaPalette.warning)
                 }
                 ZStack {
                     NunaBodyClockDial(idealBed: ideal.bed, idealWake: ideal.wake, bed: bed, wake: wake, tempMin: est.tempMinHour)
                     VStack(spacing: 2) {
-                        Text("Difference").font(.nuna(size: 10.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Difference").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         HStack(alignment: .firstTextBaseline, spacing: 3) {
                             Text(verbatim: (off <= 0 ? "−" : "+") + "\(mins)").font(.nuna(size: 34, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                             Text("min").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
@@ -315,17 +315,17 @@ struct NunaBodyClockPlanView: View {
             NunaSegmented([(value: 0, title: "Trip"), (value: 1, title: "Shift work")], selection: $kind)
             NunaCard {
                 VStack(alignment: .leading, spacing: 14) {
-                    Text(kind == 0 ? "Travel direction" : "Shift direction").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15)
+                    Text(kind == 0 ? "Travel direction" : "Shift direction").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel)
                         .textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     NunaSegmented(kind == 0 ? [(value: true, title: "East (earlier)"), (value: false, title: "West (later)")]
                                             : [(value: true, title: "Earlier"), (value: false, title: "Later")], selection: $forward)
-                    Text(kind == 0 ? "Time zone difference" : "Shift by").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15)
+                    Text(kind == 0 ? "Time zone difference" : "Shift by").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel)
                         .textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).padding(.top, 4)
                     HStack {
                         stepper("minus", enabled: hours > 1) { hours -= 1 }
                         Spacer()
                         VStack(spacing: 2) {
-                            Text(verbatim: (forward ? "+" : "−") + "\(hours)").font(.nuna(size: 52, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: (forward ? "+" : "−") + "\(hours)").font(.nuna(size: 52, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(52)).foregroundStyle(NunaPalette.textPrimary)
                             Text("hours").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                         Spacer()
@@ -354,12 +354,12 @@ struct NunaBodyClockPlanView: View {
         NunaCard(highlight: true) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text("Summary").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Summary").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     NunaChip("Light and sleep timing only")
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(verbatim: "\(plan.estimatedDays)").font(.nuna(size: 40, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: "\(plan.estimatedDays)").font(.nuna(size: 40, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(40)).foregroundStyle(NunaPalette.textPrimary)
                     Text("days").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 Text(verbatim: forward

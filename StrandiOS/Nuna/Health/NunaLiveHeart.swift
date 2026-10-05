@@ -34,7 +34,7 @@ struct NunaLiveHRCard: View {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         HStack(spacing: 6) {
-                            Text("Beats per minute").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
+                            Text("Beats per minute").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                                 .foregroundStyle(NunaPalette.textSecondary)
                             Image(systemName: "chevron.right").font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                         }
@@ -45,7 +45,7 @@ struct NunaLiveHRCard: View {
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
                         Image(systemName: "heart.fill").font(.nuna(size: 20)).foregroundStyle(NunaPalette.textPrimary)
                         Text(verbatim: bigBpm.map(String.init) ?? "–")
-                            .font(.nuna(size: 52, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            .font(.nuna(size: 52, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(52)).foregroundStyle(NunaPalette.textPrimary)
                         Text("bpm").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     Text(subtitle).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
@@ -227,7 +227,7 @@ struct NunaDeepTimelineView: View {
         NunaCard(padding: EdgeInsets(top: 16, leading: 14, bottom: 16, trailing: 14)) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text(verbatim: metric.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: metric.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     Text(verbatim: resolution).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }

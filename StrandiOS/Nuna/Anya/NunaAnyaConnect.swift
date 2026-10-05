@@ -63,7 +63,7 @@ struct NunaAnyaConnectView: View {
 
     private func group<Content: View>(_ title: LocalizedStringKey, @ViewBuilder _ content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(title).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).padding(.leading, 4)
+            Text(title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).padding(.leading, 4)
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) { VStack(spacing: 0) { content() } }
         }
     }
@@ -149,7 +149,7 @@ struct NunaAnyaKeyView: View {
     private var modelCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Model").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text("Model").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 Spacer()
                 Button { Task { await check() } } label: {
                     Label("Reload the list", systemImage: "arrow.clockwise").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
@@ -298,7 +298,7 @@ struct NunaAnyaChatGPTView: View {
                 NunaCard(highlight: true) {
                     VStack(alignment: .leading, spacing: 14) {
                         nunaTrendsCap("Device code")
-                        Text(verbatim: code.userCode).font(.nuna(size: 38, weight: .bold, design: .monospaced)).tracking(2).foregroundStyle(NunaPalette.textPrimary).textSelection(.enabled)
+                        Text(verbatim: code.userCode).font(.nuna(size: 38, weight: .bold, design: .monospaced)).tracking(nunaTrackingLabel).foregroundStyle(NunaPalette.textPrimary).textSelection(.enabled)
                         Text("Open the ChatGPT sign-in page in your browser and enter this code. It is valid for 15 minutes.")
                             .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                     }.frame(maxWidth: .infinity, alignment: .leading)

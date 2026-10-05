@@ -65,7 +65,7 @@ struct NunaAnyaSheet: View {
                 Text("Anya sees").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }
             Spacer()
-            Text(module.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(module.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 .padding(.horizontal, 12).frame(height: 30).background(NunaPalette.glassStrong, in: Capsule())
         }
     }

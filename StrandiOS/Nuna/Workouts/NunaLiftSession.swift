@@ -85,7 +85,7 @@ struct NunaLiftSessionView: View {
             }.buttonStyle(.plain).accessibilityLabel(Text("Minimise"))
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: session.programName.map { String(localized: "Gym session · \($0)") } ?? String(localized: "Gym session"))
-                    .font(.nuna(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1)
+                    .font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1)
                 Text("Lift Log").font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             }
             Spacer(minLength: 8)
@@ -112,7 +112,7 @@ struct NunaLiftSessionView: View {
     private func tile(_ l: LocalizedStringKey, _ v: String, _ unit: String?) -> some View {
         NunaCard(small: true, padding: EdgeInsets(top: 14, leading: 14, bottom: 14, trailing: 14)) {
             VStack(alignment: .leading, spacing: 6) {
-                Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
+                Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
                 HStack(alignment: .firstTextBaseline, spacing: 3) {
                     Text(verbatim: v).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
                     if let unit { Text(verbatim: unit).font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
@@ -133,7 +133,7 @@ struct NunaLiftSessionView: View {
                         Text(verbatim: LiftFormat.duration(remaining)).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
                     }
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Rest period").font(.nuna(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.restText)
+                        Text("Rest period").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.restText)
                         Text(verbatim: done ? String(localized: "All sets done") : String(localized: "Set \(engine.slotAfter(slot)?.setIndex ?? slot.setIndex) is ready soon"))
                             .font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                         HStack(spacing: 8) {
@@ -149,7 +149,7 @@ struct NunaLiftSessionView: View {
                 HStack(spacing: 14) {
                     Text(verbatim: LiftFormat.duration(max(0, session.now - engine.stageStartedAt))).font(.nuna(size: 30, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("This set").font(.nuna(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.charge)
+                        Text("This set").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.charge)
                         Text("Tap Set done when you finish").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     Spacer(minLength: 0)
@@ -240,7 +240,7 @@ struct NunaLiftSessionView: View {
             Color.clear.frame(width: tickColumn)
         }
         .padding(.horizontal, 8)
-        .font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
+        .font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
     }
 
     private func setRow(_ engine: LiftSessionEngine, slot: LiftSlot) -> some View {

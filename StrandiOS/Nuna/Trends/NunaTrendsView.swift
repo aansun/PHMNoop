@@ -85,7 +85,7 @@ struct NunaTrendsView: View {
     private var header: some View {
         HStack(alignment: .top) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(verbatim: rangeCaption).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: rangeCaption).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 Text("Trends").font(.nuna(size: NunaTypeSize.h1, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             }
             Spacer()
@@ -137,7 +137,7 @@ struct NunaTrendsView: View {
 
     private func stat(_ label: LocalizedStringKey, _ value: String, _ day: String) -> some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(verbatim: value).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 if let d = m.date(day) { Text(verbatim: NunaTrendsFormat.withWeekday(d)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
@@ -156,7 +156,7 @@ struct NunaTrendsView: View {
                         if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                     }
                 }
-                Text(title).font(.nuna(size: 11.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text(title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 if let d, abs(d) >= 0.05 {
                     Text(verbatim: (d > 0 ? "▲ " : "▼ ") + String(format: "%.1f", locale: AppLanguage.activeLocale, abs(d)) + (suffix.isEmpty ? "" : " " + suffix))
                         .font(.nuna(size: 12.5, weight: .heavy))
@@ -292,7 +292,7 @@ struct NunaTrendsView: View {
         let tile = NunaCard(small: true) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text(title).font(.nuna(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
+                    Text(title).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
                     Spacer(minLength: 4)
                     if let d, abs(d) >= (digits == 0 ? 0.5 : 0.05) {
                         Text(verbatim: (d > 0 ? "▲ " : "▼ ") + String(format: "%.\(digits)f", locale: AppLanguage.activeLocale, abs(d)))
