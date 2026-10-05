@@ -368,15 +368,14 @@ public struct TrendChart: View {
         }
         if let xAxisDateFormat, let date = value.as(Date.self) {
             AxisValueLabel(centered: false, anchor: .top, collisionResolution: xAxisDates != nil ? .disabled : .greedy) {
-                // Capitals (WHP) and letter spacing are wider than the slot a reading gets, which cut "Sep" to "S...": the label keeps its
-                // own spacing and shrinks to fit rather than truncating.
+                // One fixed size for every label, and never truncated. Capitals (WHP) are wider than a slot, so that style sets them a
+                // little smaller; shrinking each label to its own slot made "30 SEP" and "1 OKT" different sizes.
                 Text(xAxisDateFormat(date))
+                    .font(.system(size: NunaThemePrefs.skin == .whp ? 10 : 12, weight: .medium))
                     .multilineTextAlignment(.center)
                     .tracking(0)
                     .lineLimit(2)
-                    .minimumScaleFactor(0.55)
-                    .allowsTightening(true)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .fixedSize(horizontal: true, vertical: true)
             }
             .offset(y: 10)
             .foregroundStyle(StrandPalette.textTertiary)

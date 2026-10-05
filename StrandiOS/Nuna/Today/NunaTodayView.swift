@@ -569,8 +569,9 @@ struct NunaTodayView: View {
                         }
                         .accessibilityLabel(Text(metricsLayout == .cards ? "Show as list" : "Show as cards"))
                         Button { customizeDestination = .keyMetrics; showCustomize = true } label: {
-                            NunaLinkLabel(text: "Edit", systemImage: "slider.horizontal.3")
+                            Image(systemName: "slider.horizontal.3").font(.nuna(size: 14, weight: .bold))
                         }
+                        .accessibilityLabel(Text("Edit"))
                         NavigationLink(value: NunaTodayRoute.allMetrics) { NunaLinkLabel(text: "All", chevron: true) }
                     }
                     NunaMetricsGrid(tiles: tiles, layout: metricsLayout)
