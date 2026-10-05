@@ -1,6 +1,9 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Confirms each change and when you reach your target": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Konfirmasi tiap perubahan dan saat targetmu tercapai"}}
+    } },
     "Every minute": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Tiap menit"}}
     } },

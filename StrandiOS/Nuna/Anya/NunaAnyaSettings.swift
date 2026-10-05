@@ -447,7 +447,7 @@ struct NunaAnyaVoiceCoachView: View {
                     nunaTrendsCap("When Anya speaks")
                     NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                         VStack(spacing: 0) {
-                            NunaToggleRow("Start, pause and finish", subtitle: "Confirms each change", systemImage: "play.circle", isOn: $lifecycle).padding(.vertical, 8)
+                            NunaToggleRow("Start, pause and finish", subtitle: "Confirms each change and when you reach your target", systemImage: "play.circle", isOn: $lifecycle).padding(.vertical, 8)
                             NunaDivider()
                             NunaToggleRow("Out of the target zone", subtitle: "When your heart rate leaves the zone", systemImage: "heart", isOn: $heartRate).padding(.vertical, 8)
                             NunaDivider()
