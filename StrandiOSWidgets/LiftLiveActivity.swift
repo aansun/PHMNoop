@@ -18,108 +18,82 @@ struct LiftLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: LiftActivityAttributes.self) { context in
             lockScreen(context.state, program: context.attributes.programName)
-                .activityBackgroundTint(StrandPalette.surfaceBase)
-                .activitySystemActionForegroundColor(StrandPalette.textPrimary)
+                .activityBackgroundTint(NunaPalette.card)
+                .activitySystemActionForegroundColor(NunaPalette.textPrimary)
         } dynamicIsland: { context in
-            let tint = tint(context.state)
+            let s = context.state
+            let tint = tint(s)
             return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    Label(context.state.exercise, systemImage: "dumbbell.fill")
-                        .font(.caption).lineLimit(1)
-                        .foregroundStyle(tint)
+                    HStack(spacing: 8) {
+                        NOOPLiveGlyph(symbol: "dumbbell.fill", tint: tint, size: 30)
+                        VStack(alignment: .leading, spacing: 1) {
+                            Text(verbatim: s.exercise).font(.nuna(size: 14, weight: .heavy)).lineLimit(1)
+                            Text(verbatim: s.status).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1)
+                        }
+                    }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    Label {
-                        Text(context.state.bpm.map(String.init) ?? "—").monospacedDigit()
-                    } icon: {
-                        Image(systemName: "heart.fill")
-                    }
-                    .font(.caption)
-                    .foregroundStyle(context.state.bpm == nil
-                                     ? StrandPalette.textTertiary
-                                     : StrandPalette.metricRose)
+                    clock(s, tint: tint).font(.nuna(size: 26, weight: .bold, design: NunaType.design))
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    HStack {
-                        Text(context.state.detail ?? context.state.status)
-                            .font(.caption).lineLimit(1)
-                            .foregroundStyle(StrandPalette.textSecondary)
-                        Spacer(minLength: 8)
-                        clock(context.state, tint: tint)
-                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    VStack(spacing: 10) {
+                        HStack(spacing: 0) {
+                            NOOPLiveMetric(label: "SETS", value: s.progress)
+                            if let d = s.detail { NOOPLiveDivider(); NOOPLiveMetric(label: "LOAD", value: d) }
+                            NOOPLiveDivider()
+                            NOOPLiveMetric(label: "HEART", value: s.bpm.map(String.init) ?? "–")
+                        }
+                        NOOPHeartRateZoneRail(zone: s.heartRateZone, compact: true)
                     }
+                    .padding(.top, 4)
                 }
             } compactLeading: {
-                Image(systemName: "dumbbell.fill").foregroundStyle(tint)
+                clock(s, tint: tint).font(.nuna(size: 13, weight: .bold, design: NunaType.design)).frame(maxWidth: 52)
             } compactTrailing: {
-                clock(context.state, tint: tint)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                Text(verbatim: s.isResting ? s.status : s.detail ?? s.status).font(.nuna(size: 12, weight: .bold)).lineLimit(1).frame(maxWidth: 70)
             } minimal: {
-                Image(systemName: "dumbbell.fill").foregroundStyle(tint)
+                ZStack {
+                    Circle().stroke(tint, lineWidth: 2.5)
+                    Image(systemName: "dumbbell.fill").font(.system(size: 10, weight: .bold)).foregroundStyle(tint)
+                }
             }
+            .keylineTint(tint)
         }
     }
 
-    /// Green while working, amber through the rest — the sheet's and the bar's colour language.
+    /// Green while working, amber through the rest: the sheet's and the bar's colour language.
     private func tint(_ state: LiftActivityAttributes.ContentState) -> Color {
-        state.isResting ? StrandPalette.metricAmber : StrandPalette.statusPositive
+        state.isResting ? NunaPalette.warning : NunaPalette.charge
     }
 
-    private func lockScreen(_ state: LiftActivityAttributes.ContentState,
-                            program: String) -> some View {
-        VStack(spacing: 10) {
+    private func lockScreen(_ state: LiftActivityAttributes.ContentState, program: String) -> some View {
+        let tint = tint(state)
+        return VStack(spacing: 12) {
             HStack(spacing: 12) {
-                Image(systemName: "dumbbell.fill")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(tint(state))
-
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(state.exercise)
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(StrandPalette.textPrimary)
-                        .lineLimit(1)
-                    Text(state.detail.map { "\(state.status) — \($0)" } ?? state.status)
-                        .font(.caption)
-                        .foregroundStyle(StrandPalette.textSecondary)
-                        .lineLimit(1)
-                    HStack(spacing: 6) {
-                        Text(state.progress)
-                        Text(program)
-                    }
-                    .font(.caption2)
-                    .foregroundStyle(StrandPalette.textTertiary)
-                    .lineLimit(1)
+                NOOPLiveGlyph(symbol: "dumbbell.fill", tint: tint, size: 44)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(verbatim: state.exercise).font(.nuna(size: 17, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+                    Text(verbatim: state.detail.map { "\(state.status) · \($0)" } ?? state.status)
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1)
                 }
-
                 Spacer(minLength: 8)
-                HStack(spacing: 10) {
-                    Label {
-                        Text(state.bpm.map(String.init) ?? "—").monospacedDigit()
-                    } icon: {
-                        Image(systemName: "heart.fill")
-                    }
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(state.bpm == nil
-                                     ? StrandPalette.textTertiary
-                                     : StrandPalette.metricRose)
-                    clock(state, tint: tint(state))
-                        .font(.system(size: 22, weight: .bold, design: .rounded))
+                clock(state, tint: tint).font(.nuna(size: 34, weight: .bold, design: NunaType.design))
+            }
+            NOOPHeartRateZoneRail(zone: state.heartRateZone)
+            Rectangle().fill(NunaPalette.hairline).frame(height: 1)
+            HStack(spacing: 0) {
+                NOOPLiveMetric(label: "SETS", value: state.progress)
+                NOOPLiveDivider()
+                NOOPLiveMetric(label: "HEART", value: state.bpm.map { "\($0) bpm" } ?? "–")
+                if let d = state.distance {
+                    NOOPLiveDivider()
+                    NOOPLiveMetric(label: "DISTANCE", value: d)
                 }
             }
-            Rectangle()
-                .fill(StrandPalette.hairline)
-                .frame(height: 1)
-            NOOPHeartRateZoneRail(zone: state.heartRateZone)
-            HStack(spacing: 0) {
-                NOOPLiveMetric(label: "DISTANCE", value: state.distance ?? "—")
-                Rectangle()
-                    .fill(StrandPalette.hairline)
-                    .frame(width: 1, height: 34)
-                    .padding(.horizontal, 12)
-                NOOPLiveMetric(label: "SPEED", value: state.speed ?? "—")
-            }
+            Text(verbatim: program).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding()
+        .padding(16)
     }
 
     /// Counts DOWN through a rest (the number you act on) and UP through a set, both self-ticking.
