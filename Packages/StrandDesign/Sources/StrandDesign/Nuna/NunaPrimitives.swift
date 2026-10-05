@@ -346,20 +346,7 @@ public struct NunaTabBar: View {
                     if on { onReselect(item.id) } else { selection = item.id }
                 } label: {
                     VStack(spacing: 3) {
-                        if item.systemImage == NunaGlyph.anya {
-                            NunaGlyph(NunaGlyph.anya, pointSize: 17)
-                        } else if item.usesAssetImage {
-                            Image(item.systemImage)
-                                .resizable().scaledToFit().frame(width: 22, height: 22)
-                        } else {
-                            Image(systemName: item.systemImage).font(.nuna(size: 18, weight: .semibold))
-                        }
-                        if item.systemImage == NunaGlyph.anya {
-                            // Anya's name is never set in capitals.
-                            Text(item.title).font(.nuna(size: 11, weight: .bold)).lineLimit(1).minimumScaleFactor(0.7).tracking(-0.3).textCase(nil)
-                        } else {
-                            Text(item.title).font(.nuna(size: 11, weight: .bold)).lineLimit(1).minimumScaleFactor(0.7).tracking(-0.3)
-                        }
+                        Text(item.title).font(.nuna(size: 11, weight: .bold)).lineLimit(1).minimumScaleFactor(0.7).tracking(-0.3)
                     }
                     .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                     .frame(minWidth: 58, minHeight: 58)
