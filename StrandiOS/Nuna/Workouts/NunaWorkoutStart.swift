@@ -1,6 +1,7 @@
 #if os(iOS)
 import SwiftUI
 import UIKit
+import ActivityKit
 import StrandDesign
 import StrandAnalytics
 import WhoopStore
@@ -308,6 +309,7 @@ struct NunaLiveWorkoutView: View {
                 if usesRoute(w) == false { zoneTimeCard(w) }
                 metricRow(w, elapsed: elapsed)
                 footnote(w, state: state, now: now)
+                if !ActivityAuthorizationInfo().areActivitiesEnabled { liveActivityOffCard }
                 controls(w)
             }
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 12).padding(.bottom, 32)
@@ -551,6 +553,24 @@ struct NunaLiveWorkoutView: View {
             Image(systemName: "applewatch.radiowaves.left.and.right").font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.charge)
             Text(verbatim: text).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center)
         }.frame(maxWidth: .infinity)
+    }
+
+    /// Shown only while iOS has Live Activities switched off for this app: the session then has no banner on the Lock Screen or in the Island.
+    private var liveActivityOffCard: some View {
+        NunaCard(small: true) {
+            HStack(spacing: 12) {
+                Image(systemName: "exclamationmark.circle.fill").font(.system(size: 18, weight: .bold)).foregroundStyle(NunaPalette.warning)
+                Text("Live Activities are off, so this session will not show on the Lock Screen or in the Dynamic Island.")
+                    .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 4)
+                Button {
+                    if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+                } label: {
+                    Text("Settings").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 12).frame(height: 32)
+                        .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
+                }.buttonStyle(.plain)
+            }
+        }
     }
 
     private func controls(_ w: AppModel.ActiveWorkout) -> some View {

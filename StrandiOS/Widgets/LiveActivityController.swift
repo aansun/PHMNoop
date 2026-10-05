@@ -34,6 +34,10 @@ final class LiveActivityController {
     /// content state so the transition from workout → ordinary live HR can end cleanly when the
     /// workout finishes without relying on a final HR sample.
     private var workoutIsActive = false
+    /// When the current banner was requested, for the eight-hour limit.
+    private var bannerRequestedAt: Date?
+    /// A banner is replaced after this long, well inside the system's eight hours.
+    private static let rolloverAfter: TimeInterval = 7.5 * 3600
 
     deinit { workoutKeepAliveTask?.cancel() }
 
@@ -134,24 +138,39 @@ final class LiveActivityController {
             lastPush = Date()
             Task { await activity.update(ActivityContent(state: state, staleDate: staleDate)) }
         } else {
-            // Set the start gate SYNCHRONOUSLY before any await so a second `update` arriving on the
-            // main actor while `Activity.request` is still in flight bails here instead of issuing a
-            // second request. The 2-second throttle above only guards the update path.
-            guard !isStarting else { return }
-            isStarting = true
-            do {
-                activity = try Activity.request(
-                    attributes: NOOPActivityAttributes(title: String(localized: "Live HR")),
-                    content: ActivityContent(state: state, staleDate: staleDate),
-                    pushType: nil
-                )
-                lastPush = Date()
-            } catch {
-                activity = nil
-                logger.error("Live HR activity request refused: \(String(describing: error), privacy: .public)")
-            }
-            isStarting = false
+            startActivity(state, staleDate: staleDate)
         }
+    }
+
+    /// Ask iOS for a new banner. The start gate is set SYNCHRONOUSLY, before anything can suspend, so a second `update` arriving on the
+    /// main actor while `Activity.request` is in flight bails out instead of issuing a second request. The 2-second throttle on the
+    /// update path does not guard this one.
+    private func startActivity(_ state: NOOPActivityAttributes.ContentState, staleDate: Date?) {
+        guard !isStarting else { return }
+        isStarting = true
+        defer { isStarting = false }
+        do {
+            activity = try Activity.request(
+                attributes: NOOPActivityAttributes(title: String(localized: "Live HR")),
+                content: ActivityContent(state: state, staleDate: staleDate),
+                pushType: nil
+            )
+            bannerRequestedAt = Date()
+            lastPush = Date()
+        } catch {
+            // Refused in the background or while the system is busy; the workout heartbeat and the next foreground try again.
+            activity = nil
+            logger.error("Live HR activity request refused: \(String(describing: error), privacy: .public)")
+        }
+    }
+
+    /// iOS ends any Live Activity after eight hours. A workout that long gets a fresh banner before that happens.
+    private func rolloverIfNeeded() async {
+        guard let started = bannerRequestedAt, Date().timeIntervalSince(started) > Self.rolloverAfter else { return }
+        let old = activity
+        activity = nil
+        bannerRequestedAt = nil
+        await old?.end(nil, dismissalPolicy: .immediate)
     }
 
     func end() async {
@@ -164,6 +183,7 @@ final class LiveActivityController {
             await act.end(nil, dismissalPolicy: .immediate)
         }
         self.activity = nil
+        self.bannerRequestedAt = nil
         self.workoutIsActive = false
         self.lastWorkoutState = nil
         self.lastPush = .distantPast
@@ -180,8 +200,17 @@ final class LiveActivityController {
         }
     }
 
+    /// The workout heartbeat: keeps the banner fresh and, for as long as the workout runs, brings it back if it is gone (swiped away,
+    /// ended by the system, past the eight-hour limit) rather than waiting for the next heart-rate tick.
     private func refreshWorkoutActivity() async {
-        guard workoutIsActive, let activity, let state = lastWorkoutState else { return }
+        guard workoutIsActive, let state = lastWorkoutState else { return }
+        await rolloverIfNeeded()
+        if let current = activity, current.activityState != .active { activity = nil }
+        if activity == nil { activity = Activity<NOOPActivityAttributes>.activities.first { $0.activityState == .active } }
+        guard let activity else {
+            startActivity(state, staleDate: nil)
+            return
+        }
         await activity.update(ActivityContent(state: state, staleDate: nil))
         lastPush = Date()
     }

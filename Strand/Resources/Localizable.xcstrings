@@ -1,6 +1,9 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Live Activities are off, so this session will not show on the Lock Screen or in the Dynamic Island.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Live Activity mati, jadi sesi ini tidak tampil di layar kunci atau Dynamic Island."}}
+    } },
     "Target %@": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Target %@"}}
     } },
