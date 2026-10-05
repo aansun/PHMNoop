@@ -1,6 +1,18 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Typed": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Diketik"}}
+    } },
+    "%lld characters": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%lld karakter"}}
+    } },
+    "Show the key": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tampilkan kunci"}}
+    } },
+    "Hide the key": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sembunyikan kunci"}}
+    } },
     "Compared with my note %@: ": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Dibanding catatanku %@: "}}
     } },

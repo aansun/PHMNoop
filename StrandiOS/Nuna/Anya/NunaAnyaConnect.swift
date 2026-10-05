@@ -105,13 +105,7 @@ struct NunaAnyaKeyView: View {
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
             NunaFormField("API key") {
-                HStack {
-                    SecureField("", text: $key, prompt: Text(saved ? "••••••••••••••••" : "Paste your key").foregroundStyle(NunaPalette.textMuted))
-                        .textInputAutocapitalization(.never).autocorrectionDisabled()
-                    Button { if let s = UIPasteboard.general.string { key = s.trimmingCharacters(in: .whitespacesAndNewlines) } } label: {
-                        Image(systemName: "doc.on.clipboard").foregroundStyle(NunaPalette.textPrimary)
-                    }.buttonStyle(.plain).accessibilityLabel(Text("Paste from clipboard"))
-                }
+                NunaKeyField(text: $key, placeholder: saved ? "••••••••••••••••" : "Paste your key", savedKey: saved ? AIKeyStore.read() : nil, showsPaste: true)
             }
             if saved {
                 HStack(spacing: 8) {
@@ -210,7 +204,7 @@ struct NunaAnyaCustomView: View {
                     .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
             }
             NunaFormField("Key (optional)") {
-                SecureField("", text: $key, prompt: Text("Only if your server asks for one").foregroundStyle(NunaPalette.textMuted)).textInputAutocapitalization(.never).autocorrectionDisabled()
+                NunaKeyField(text: $key, placeholder: "Only if your server asks for one", savedKey: AIKeyStore.ownerProvider == AIProvider.custom.rawValue ? AIKeyStore.read() : nil)
             }
             VStack(alignment: .leading, spacing: 8) {
                 Text("Key header").font(.nuna(size: 11, weight: .heavy)).tracking(0.9).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
