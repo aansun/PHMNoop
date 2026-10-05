@@ -54,11 +54,10 @@ struct NunaSleepView: View {
             if let night = model.night {
                 NunaNightPicker(model: model)
                 hero(model, night)
-                stagesCard(model, night)
+                NunaSleepStageSection(model: model, night: night)
                 if !night.naps.isEmpty { napCard(night) }
                 tiles(model, night)
-                if let typ = model.typical() { usualCard(model, night, typ) }
-                vitalsCard(night)
+                NunaOvernightVitals(night: night)
                 needCard(model, night)
                 if let d = night.daily?.disturbances, d > 0 {
                     NunaCard(small: true) {
@@ -131,33 +130,6 @@ struct NunaSleepView: View {
         }
     }
 
-    private func stagesCard(_ model: NunaSleepModel, _ night: NunaNight) -> some View {
-        NavigationLink(value: NunaTodayRoute.sleepStages(model.index)) {
-            NunaCard {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text("Sleep stages").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
-                            .foregroundStyle(NunaPalette.textSecondary)
-                        Spacer()
-                        Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                    }
-                    if night.intervals.isEmpty {
-                        NunaStageSplitBar(stages: night.stages)
-                    } else {
-                        NunaHypnogramStrip(intervals: night.intervals)
-                        if night.motion.count >= 10 {
-                            NunaMotionStrip(epochs: night.motion, total: night.wake.timeIntervalSince(night.onset))
-                        }
-                        NunaTimeAxis(start: night.onset, end: night.wake)
-                    }
-                    NunaStageLegend(showsMovement: night.motion.count >= 10 && !night.intervals.isEmpty)
-                    if !night.intervals.isEmpty { NunaMovementStats(night: night) }
-                }
-            }
-        }
-        .buttonStyle(.plain)
-    }
-
     private func napCard(_ night: NunaNight) -> some View {
         let nap = night.naps[0]
         return NavigationLink(value: NunaTodayRoute.sleepNaps(0)) {
@@ -197,62 +169,6 @@ struct NunaSleepView: View {
             NunaStatTile(label: label, value: whole(value), unit: value == nil ? "" : "%", fraction: value.map { $0 / 100 })
         }
         .buttonStyle(.plain)
-    }
-
-    private func usualCard(_ model: NunaSleepModel, _ night: NunaNight, _ typ: Stages) -> some View {
-        NavigationLink(value: NunaTodayRoute.sleepStages(model.index)) {
-            NunaCard {
-                VStack(alignment: .leading, spacing: 14) {
-                    Text("Compared to usual").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
-                        .foregroundStyle(NunaPalette.textSecondary)
-                    stageRow(.deep, night.stages.deep, typ.deep, night.stages.total)
-                    stageRow(.rem, night.stages.rem, typ.rem, night.stages.total)
-                    stageRow(.light, night.stages.light, typ.light, night.stages.total)
-                }
-            }
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func stageRow(_ stage: SleepStage, _ minutes: Double, _ typical: Double, _ total: Double) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack {
-                Text(stage.nunaName).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                Spacer()
-                Text(verbatim: "\(NunaSleepFormat.duration(minutes)) · \(total > 0 ? Int((minutes / total * 100).rounded()) : 0)%")
-                    .font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-            }
-            NunaProgressBar(fraction: total > 0 ? minutes / total * 2 : 0, color: stage.nunaColor)
-            Text(verbatim: String(localized: "Usually \(NunaSleepFormat.duration(typical))"))
-                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-        }
-    }
-
-    private func vitalsCard(_ night: NunaNight) -> some View {
-        NavigationLink(value: NunaTodayRoute.sleepVitals(0)) {
-            NunaCard {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Overnight vitals").font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase)
-                        .foregroundStyle(NunaPalette.textSecondary)
-                    HStack {
-                        mini("HRV", whole(night.daily?.avgHrv))
-                        mini("Heart rate", whole(night.daily?.restingHr.map(Double.init)))
-                        mini("SpO₂", night.daily?.spo2Pct.map { "\(Int($0.rounded()))%" } ?? "–")
-                        mini("Breathing", night.daily?.respRateBpm.map { String(format: "%.1f", locale: AppLanguage.activeLocale, $0) } ?? "–")
-                    }
-                }
-            }
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func mini(_ label: LocalizedStringKey, _ value: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(label).font(.nuna(size: 11, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                .lineLimit(1).minimumScaleFactor(0.7)
-            Text(verbatim: value).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func needCard(_ model: NunaSleepModel, _ night: NunaNight) -> some View {
