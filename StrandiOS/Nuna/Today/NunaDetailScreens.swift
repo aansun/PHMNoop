@@ -241,6 +241,7 @@ struct NunaMetricDetailView: View {
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @StateObject private var series = NunaSeriesModel()
     @State private var range = 7
+    @State private var page = 0
     @State private var showCoach = false
 
     private var isColumns: Bool { ["steps", "steps_est", "energy_kcal", "active_kcal"].contains(metric.key) }
@@ -274,7 +275,7 @@ struct NunaMetricDetailView: View {
     @ViewBuilder private var trendCardBody: some View {
         let latest = series.latest
         NunaTrendDetailCard(
-            title: metric.title, caption: overnight ? "Last night" : "Today",
+            caption: overnight ? "Last night" : "Today",
             valueText: latest.map { fmt($0.value) } ?? "–", unit: metric.unit,
             chip: status.map { (text: $0.0, color: $0.1) },
             note: previous.flatMap { prev in latest.map { l in
@@ -283,7 +284,7 @@ struct NunaMetricDetailView: View {
                     : (d > 0 ? String(localized: "Up \(fmt(abs(d))) from yesterday") : String(localized: "Down \(fmt(abs(d))) from yesterday"))
             } },
             series: series, lineColor: lineColor, decimals: metric.decimals,
-            higherIsBetter: metric.higherIsBetter ?? true)
+            higherIsBetter: metric.higherIsBetter ?? true, range: $range, page: $page)
         NunaExpandRow(title: "What affects it", subtitle: "Common factors", systemImage: "chart.line.uptrend.xyaxis",
                       text: "Sleep, alcohol, hydration, stress, illness and training load all move your daily numbers. Look at the trend over weeks rather than a single day.")
         NunaExpandRow(title: "How it's calculated", subtitle: "Source and method",

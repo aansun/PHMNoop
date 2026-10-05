@@ -16,6 +16,7 @@ struct NunaTrendsMetricView: View {
     @StateObject private var day = NunaTodayModel()
     @EnvironmentObject private var profile: ProfileStore
     @State private var range = 30
+    @State private var page = 0
 
     private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
 
@@ -61,15 +62,20 @@ struct NunaTrendsMetricView: View {
         }
     }
 
+    private var back: Int { page * range }
+
+    /// Mean of the window the wearer is looking at and of the one before it.
+    private func means(_ s: NunaDaySeries) -> (now: Double?, before: Double?) {
+        (m.mean(m.window(s, days: range, back: back)), m.mean(m.window(s, days: range, back: back + range)))
+    }
+
     var body: some View {
-        let win = m.window(raw, days: range)
+        let win = m.window(raw, days: range, back: back)
         let dispWin: NunaDaySeries = win.map { ($0.day, disp($0.value)) }
-        let (nowS, beforeS) = m.means(raw, days: range)
+        let (nowS, beforeS) = means(raw)
         let now = nowS.map(disp), before = beforeS.map(disp)
         NunaDetailScreen(title) {
-            NunaSegmented(NunaTrendsRange.options, selection: $range)
-            hero(now, before)
-            chartCard(dispWin)
+            trendCard
             zonesCard(dispWin)
             if kind == .effort { weeklyLoad } 
             if kind == .rest { restParts(win) }
@@ -88,32 +94,19 @@ struct NunaTrendsMetricView: View {
 
     // MARK: Cards
 
-    private func hero(_ now: Double?, _ before: Double?) -> some View {
-        let d = (now != nil && before != nil) ? now! - before! : nil
-        let frac: Double = (now ?? 0) / (kind == .effort ? (scale == .whoop ? 21 : 100) : 100)
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(alignment: .top, spacing: 18) {
-                    NunaRingGauge(fraction: frac, color: color, size: 112, lineWidth: 10) {
-                        HStack(alignment: .firstTextBaseline, spacing: 1) {
-                            Text(verbatim: NunaTrendsFormat.num(now, decimals)).font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
-                        }
-                    }
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text(verbatim: String(localized: "\(range)-day average")).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                        if let now { NunaChip(level(now), color: color) }
-                        if let d, abs(d) >= (kind == .effort ? 0.05 : 0.5) {
-                            Text(verbatim: (d > 0 ? "▲ " : "▼ ") + String(format: "%.\(kind == .effort ? 1 : 1)f", locale: AppLanguage.activeLocale, abs(d)) + (kind == .effort ? "" : " " + String(localized: "points")))
-                                .font(.nuna(size: 14, weight: .heavy)).foregroundStyle(kind == .effort ? NunaPalette.textSecondary : ((d > 0) ? NunaPalette.charge : NunaPalette.warning))
-                        }
-                        if let before { Text(verbatim: String(localized: "Previous period \(NunaTrendsFormat.num(before, decimals))\(unit)")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
-                    }
-                    Spacer(minLength: 0)
-                }
-                Text(verbatim: heroSentence(d)).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
-            }
-        }
+    /// The one card: the period average with its level, the W / M / 6M switch and date stepper, the sentence, the chart
+    /// and the average, lowest and highest.
+    private var trendCard: some View {
+        NunaTrendDetailCard(
+            caption: "Average", unit: unit,
+            readings: { days, back in
+                m.window(raw, days: days, back: back).compactMap { r in m.date(r.day).map { ($0, disp(r.value)) } }
+            },
+            hasOlder: { start in raw.first.map { $0.day < Repository.localDayKey(start) } ?? false },
+            lineColor: bar, decimals: decimals, directional: kind != .effort,
+            levelChip: { v in (text: level(v), color: color) },
+            sentence: { avg, prev in heroSentence((avg != nil && prev != nil) ? avg! - prev! : nil) },
+            range: $range, page: $page)
     }
 
     private func heroSentence(_ d: Double?) -> String {
@@ -126,39 +119,6 @@ struct NunaTrendsMetricView: View {
         case .rest: return abs(d) < 1 ? String(localized: "Your sleep score is about the same as the previous period.")
             : (d > 0 ? String(localized: "Your sleep score is up from the previous period.") : String(localized: "Your sleep score is down from the previous period."))
         }
-    }
-
-    private func chartCard(_ w: NunaDaySeries) -> some View {
-        let vals = w.map(\.value)
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    nunaTrendsCap(kind == .charge ? "Daily Charge" : (kind == .effort ? "Daily Effort" : "Daily Rest"))
-                }
-                if vals.count >= 2 {
-                    NunaSegmentedChart(points: w.compactMap { r in m.date(r.day).map { ($0, r.value) } }, color: bar, decimals: decimals,
-                                       higherIsBetter: true, directional: kind != .effort)
-                }
-                if !vals.isEmpty {
-                    NunaDivider()
-                    HStack {
-                        mini("Average", NunaTrendsFormat.num(vals.reduce(0, +) / Double(vals.count), decimals))
-                        mini("Highest", NunaTrendsFormat.num(vals.max(), decimals))
-                        mini("Lowest", NunaTrendsFormat.num(vals.min(), decimals))
-                        mini("Days", "\(vals.count)")
-                    }
-                } else {
-                    Text("No data in this period").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                }
-            }
-        }
-    }
-
-    private func mini(_ l: LocalizedStringKey, _ v: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: v).font(.nuna(size: 19, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-        }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func zonesCard(_ w: NunaDaySeries) -> some View {
@@ -293,7 +253,7 @@ struct NunaTrendsMetricView: View {
 
     // Charge only: what sits behind the average.
     private var drivers: some View {
-        let hrvNow = m.means(m.hrv, days: range), rhrNow = m.means(m.rhr, days: range), restNow = m.means(m.rest, days: range)
+        let hrvNow = means(m.hrv), rhrNow = means(m.rhr), restNow = means(m.rest)
         return VStack(alignment: .leading, spacing: 12) {
             NunaTitleRow(title: "Drivers") { EmptyView() }
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
