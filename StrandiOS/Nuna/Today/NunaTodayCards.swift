@@ -12,7 +12,7 @@ struct NunaTitleRow<Trailing: View>: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
             Text(title)
-                .font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design))
+                .font(.nuna(size: 17, weight: .heavy, design: NunaType.design))
                 .foregroundStyle(NunaPalette.textPrimary)
                 .accessibilityAddTraits(.isHeader)
             Spacer(minLength: 8)
