@@ -237,6 +237,15 @@ Not built, and why:
 
 Revise existing widgets to Nuna tokens; add the Vital sign widget (small, medium, large, lock screen) and its configuration; add the new optional fields to `WidgetSnapshot`.
 
+Done, on request keeping four widgets as they were and replacing the rest:
+- Kept unchanged: Rings, Ring 2 (`PHMNRingsWidget.swift`), Heart rate (`HeartRateWidget.swift`) and Stress (`StressWidget.swift`).
+- Removed: the old Charge-Effort-Rest glance (`NOOPWidget.swift`) and the Coach brief widget (`CoachBriefWidget.swift`).
+- New, in the Nuna look (`NunaWidgetKit.swift` holds the shared pieces): **Score** (small: Charge ring with Effort and Rest beside it; medium: three rings, heart rate and strap battery; large: three rings with HRV, resting heart rate, steps and calories and the change against the average or yesterday; Lock Screen: a ring whose metric is chosen when the widget is added, a three-line Today card, one line above the clock), **Vital sign** (small: the first two chosen metrics; medium: up to five with a status bar each; large: each metric on a track with your normal range and the marker for last night; Lock Screen ring, card and one line; the metrics, the change from baseline and the highlight are chosen in the widget's own settings, as WidgetVitalConfig asks), **Anya** (the stored morning brief, small and Lock Screen card; replaces the Coach brief widget and reuses its stored text) and **Steps** (steps against your target from Me, small and Lock Screen ring).
+- `WidgetSnapshot` gained `vitals` (HRV, resting heart rate, SpO₂, breathing rate, skin temperature deviation, each with its change, its place on the personal range track and whether it is outside the range) and `stepGoal`. The app builds them in `WidgetPublish.vitalReadings` with the same `VitalBands` rule the Health screen uses; the widget only draws them. A metric the night did not produce is left out; stress comes from the day's published curve.
+- Tapping Score and Steps opens Today, Vital sign opens the Health tab (`noop://health`, new `NavRouter.Destination.health`), Anya opens the Anya tab (`noop://anya`).
+- Checked in the simulator widget gallery with the real database: Score small, medium and large, Vital sign small, medium and large (all in range, with real HRV 91, resting heart rate 54, SpO₂ 97, breathing 14,0, skin +0,1), Steps, and the Anya card (the gallery shows sample text). The Lock Screen versions, the widget settings for choosing Vital metrics, and the out-of-range yellow state were built but not run.
+- Not built: the mockup's Vital and Anya widgets showing a missing-night state beyond "No vitals yet", and a stress tile inside Vital on the Lock Screen.
+
 ## Phase 9: Onboarding (M)
 
 The 19-screen flow: welcome, privacy, terms gate, value pages, device choice, Bluetooth, wear, scan help, profile, Health, import, Anya, preferences, done, what's new.

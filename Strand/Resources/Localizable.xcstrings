@@ -1,6 +1,15 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Vital sign": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Vital sign"}}
+    } },
+    "HRV, resting heart rate, SpO₂, breathing, skin temperature. Choose which ones when you add it.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "HRV, detak istirahat, SpO₂, napas, suhu kulit. Pilih metriknya saat menambahkan."}}
+    } },
+    "Today's steps and your target": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Langkah hari ini dan targetmu"}}
+    } },
     "Live Activities are off, so this session will not show on the Lock Screen or in the Dynamic Island.": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Live Activity mati, jadi sesi ini tidak tampil di layar kunci atau Dynamic Island."}}
     } },
