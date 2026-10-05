@@ -1,6 +1,33 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Skin temperature through the night": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Suhu kulit sepanjang malam"}}
+    } },
+    "Blood oxygen through the night": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Oksigen darah sepanjang malam"}}
+    } },
+    "Breathing through the night": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pernapasan sepanjang malam"}}
+    } },
+    "Figures cover the time you were asleep. This compares with your own recent nights and is not a medical assessment; if you feel unwell, talk to a professional.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Angka mencakup waktu saat kamu tertidur. Ini dibandingkan dengan malam-malam terakhirmu sendiri dan bukan penilaian medis; jika kamu merasa tidak sehat, bicaralah dengan tenaga profesional."}}
+    } },
+    "Figures cover the time you were asleep.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Angka mencakup waktu saat kamu tertidur."}}
+    } },
+    "Within your usual range for sleep": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Dalam kisaran biasamu saat tidur"}}
+    } },
+    "Higher than your recent nights": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Lebih tinggi dari malam-malam terakhirmu"}}
+    } },
+    "Lower than your recent nights": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Lebih rendah dari malam-malam terakhirmu"}}
+    } },
+    "High for sleep. If it keeps happening, check with a professional.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tinggi untuk saat tidur. Jika terus berulang, periksakan ke tenaga profesional."}}
+    } },
     "Skin temp vs baseline": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Suhu kulit vs baseline"}}
     } },
@@ -153780,6 +153807,7 @@
     },
     "Skin temp": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Suhu kulit"}},
         "de": {
           "stringUnit": {
             "state": "translated",

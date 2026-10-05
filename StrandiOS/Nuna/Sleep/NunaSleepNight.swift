@@ -113,7 +113,10 @@ struct NunaSleepStageSection: View {
     let night: NunaNight
     @EnvironmentObject private var repo: Repository
     @State private var selected: SleepStage?
-    @State private var hr: [HRBucket] = []
+    @State private var series: [String: [(date: Date, value: Double)]] = [:]
+    @State private var metric = "hr"
+    @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
+    @AppStorage(UnitPrefs.temperatureKey) private var temperatureRaw = ""
 
     private var smoothed: [SleepInterval] { Hypnogram.displaySmoothed(night.intervals.sorted { $0.start < $1.start }, minDuration: 90) }
     private var origin: TimeInterval { smoothed.first?.start ?? 0 }
@@ -159,7 +162,7 @@ struct NunaSleepStageSection: View {
                     Text("The order of stages is not available for this night. The split comes from the daily totals.")
                         .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 } else {
-                    heartRate
+                    nightChart
                     ForEach([SleepStage.awake, .rem, .light, .deep], id: \.self) { timelineRow($0) }
                     NunaTimeAxis(start: windowStart, end: windowEnd).padding(.horizontal, 10)
                     insight
@@ -170,9 +173,9 @@ struct NunaSleepStageSection: View {
                 }
             }
         }
-        .task(id: night.dayKey) {
+        .task(id: "\(night.dayKey)-\(temperatureRaw)-\(unitSystemRaw)") {
             selected = nil
-            hr = await repo.hrBuckets(from: Int(night.chartWindow.start.timeIntervalSince1970), to: Int(night.chartWindow.end.timeIntervalSince1970), bucketSeconds: 60)
+            await loadSeries()
         }
     }
 
@@ -197,22 +200,152 @@ struct NunaSleepStageSection: View {
         }
     }
 
-    @ViewBuilder private var heartRate: some View {
-        let pts = hr.filter { Double($0.ts) >= night.onset.timeIntervalSince1970 + origin - 60 && Double($0.ts) <= night.onset.timeIntervalSince1970 + origin + span + 60 }
-            .map { (date: Date(timeIntervalSince1970: TimeInterval($0.ts)), value: $0.bpm) }
-        if pts.count >= 2 {
+    // MARK: One chart for the night
+
+    private struct Metric: Identifiable {
+        let id: String; let title: LocalizedStringKey; let chip: LocalizedStringKey; let unit: String; let decimals: Int; let color: Color
+    }
+
+    private var temperatureUnit: TemperatureUnit {
+        UnitPrefs.resolveTemperature(system: UnitSystem(rawValue: unitSystemRaw) ?? .metric, override: temperatureRaw)
+    }
+
+    /// Every reading that was recorded through the night. A reading with too little data has no entry, so it cannot be picked.
+    private var metrics: [Metric] {
+        var out: [Metric] = []
+        func has(_ k: String, _ n: Int) -> Bool { (series[k]?.count ?? 0) >= n }
+        if has("hr", 2) { out.append(Metric(id: "hr", title: "Heart rate through the night", chip: "Heart rate", unit: "bpm", decimals: 0, color: NunaPalette.rest)) }
+        if has("hrv", 8) { out.append(Metric(id: "hrv", title: "HRV through the night", chip: "HRV", unit: "ms", decimals: 0, color: NunaPalette.charge)) }
+        if has("skin", 8) { out.append(Metric(id: "skin", title: "Skin temperature through the night", chip: "Skin temp", unit: UnitFormatter.temperatureUnit(temperatureUnit), decimals: 1, color: NunaPalette.warning)) }
+        if has("spo2", 8) { out.append(Metric(id: "spo2", title: "Blood oxygen through the night", chip: "SpO₂", unit: "%", decimals: 0, color: NunaPalette.effort)) }
+        if has("resp", 8) { out.append(Metric(id: "resp", title: "Breathing through the night", chip: "Breathing", unit: "/min", decimals: 1, color: NunaPalette.rest)) }
+        return out
+    }
+
+    @ViewBuilder private var nightChart: some View {
+        let list = metrics
+        if let m = list.first(where: { $0.id == metric }) ?? list.first {
+            let pts = (series[m.id] ?? []).filter { $0.date >= windowStart.addingTimeInterval(-60) && $0.date <= windowEnd.addingTimeInterval(60) }
             let washes: [(from: Date, to: Date)] = selected.map { s in
                 smoothed.filter { $0.stage == s }.map { (night.onset.addingTimeInterval($0.start), night.onset.addingTimeInterval($0.end)) }
             } ?? []
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Heart rate through the night").font(.nuna(size: 11.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            VStack(alignment: .leading, spacing: 8) {
+                Text(m.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 NunaNightLineChart(start: windowStart, end: windowEnd, points: pts,
-                                   color: selected == nil ? NunaPalette.rest : NunaPalette.textMuted.opacity(0.7),
-                                   height: 124, lineWidth: 1.6, washes: washes, washColor: selected?.nunaColor ?? NunaPalette.rest)
+                                   color: selected == nil ? m.color : NunaPalette.textMuted.opacity(0.7), decimals: m.decimals,
+                                   height: 124, gap: m.id == "hr" ? 600 : 1800, lineWidth: m.id == "hr" ? 1.6 : 2,
+                                   washes: washes, washColor: selected?.nunaColor ?? m.color)
                     .padding(.horizontal, 10)
+                if list.count > 1 { picker(list, current: m.id) }
+                nightSummary(pts, m)
             }
         } else {
             Text("No heart-rate detail for this night").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+        }
+    }
+
+    /// Choose which reading the chart shows.
+    private func picker(_ list: [Metric], current: String) -> some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(list) { m in
+                    let on = m.id == current
+                    Button { withAnimation(.easeInOut(duration: 0.2)) { metric = m.id } } label: {
+                        Text(m.chip).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary)
+                            .padding(.horizontal, 16).frame(height: 38).background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
+                    }.buttonStyle(.plain).accessibilityAddTraits(on ? .isSelected : [])
+                }
+            }
+            .padding(.horizontal, 10)
+        }
+    }
+
+    private func loadSeries() async {
+        let from = Int(night.chartWindow.start.timeIntervalSince1970), to = Int(night.chartWindow.end.timeIntervalSince1970)
+        guard to > from else { series = [:]; return }
+        var out: [String: [(date: Date, value: Double)]] = [:]
+        out["hr"] = await repo.hrBuckets(from: from, to: to, bucketSeconds: 60).map { (Date(timeIntervalSince1970: TimeInterval($0.ts)), $0.bpm) }
+        out["hrv"] = await repo.timelineSeries(metric: .hrv, from: from, to: to, targetPoints: 240).points.map { ($0.date, $0.value) }
+        let f = temperatureUnit == .fahrenheit
+        out["skin"] = await repo.timelineSeries(metric: .skinTemp, from: from, to: to, targetPoints: 240).points.map { ($0.date, f ? UnitFormatter.celsiusToFahrenheit($0.value) : $0.value) }
+        // A ring reports real percentages and rates; a strap's raw optical and respiration signals are not, so they are not charted.
+        if repo.activeDeviceIsOura {
+            out["spo2"] = await repo.timelineSeries(metric: .spo2, from: from, to: to, targetPoints: 240).points.map { ($0.date, $0.value) }
+            out["resp"] = await repo.timelineSeries(metric: .respiration, from: from, to: to, targetPoints: 240).points.map { ($0.date, $0.value) }
+        }
+        series = out
+    }
+
+    // MARK: Heart-rate summary
+
+    /// Seconds from onset of every block that is not Awake, so the figures describe the time actually asleep (a wake-up at the
+    /// end of the night would otherwise decide the highest value).
+    private func isAsleep(_ date: Date) -> Bool {
+        let t = date.timeIntervalSince(night.onset)
+        guard !smoothed.isEmpty else { return true }
+        return smoothed.contains { $0.stage != .awake && t >= $0.start && t <= $0.end }
+    }
+
+    private enum HRStatus { case usual, higher, lower, high }
+
+    /// Compared with the person's own earlier nights (resting heart rate of the last 14), with one fixed guard for a sleeping
+    /// average over 100 bpm. It describes the number, it is not a diagnosis.
+    private func hrStatus(avg: Double) -> (status: HRStatus, tint: Color)? {
+        if avg > 100 { return (.high, NunaPalette.alert) }
+        guard let rhr = night.daily?.restingHr.map(Double.init) else { return nil }
+        let prior = model.nights.dropFirst(model.index + 1).prefix(14).compactMap { $0.daily?.restingHr.map(Double.init) }
+        guard prior.count >= 5, let lo = prior.min(), let hi = prior.max() else { return nil }
+        if rhr > hi + 3 { return (.higher, NunaPalette.warning) }
+        if rhr < lo - 3 { return (.lower, NunaPalette.textSecondary) }
+        return (.usual, NunaPalette.charge)
+    }
+
+    @ViewBuilder private func nightSummary(_ all: [(date: Date, value: Double)], _ m: Metric) -> some View {
+        let asleep = all.filter { isAsleep($0.date) }
+        let pts = asleep.count >= 5 ? asleep : all
+        if let lo = pts.map(\.value).min(), let hi = pts.map(\.value).max(), !pts.isEmpty {
+            let avg = pts.map(\.value).reduce(0, +) / Double(pts.count)
+            let st = m.id == "hr" ? hrStatus(avg: avg) : nil
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .top, spacing: 8) {
+                    hrFigure("Average", avg, m)
+                    hrFigure("Highest", hi, m)
+                    hrFigure("Lowest", lo, m)
+                }
+                if let st {
+                    HStack(spacing: 8) {
+                        Image(systemName: st.status == .usual ? "checkmark.circle.fill" : "info.circle.fill").font(.nuna(size: 15, weight: .bold)).foregroundStyle(st.tint)
+                        Text(statusText(st.status)).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.horizontal, 12).padding(.vertical, 10).frame(maxWidth: .infinity, alignment: .leading)
+                    .background(st.tint.opacity(0.14), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                }
+                Text(m.id == "hr"
+                     ? "Figures cover the time you were asleep. This compares with your own recent nights and is not a medical assessment; if you feel unwell, talk to a professional."
+                     : "Figures cover the time you were asleep.")
+                    .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.horizontal, 10)
+        }
+    }
+
+    private func hrFigure(_ label: LocalizedStringKey, _ v: Double, _ m: Metric) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.7)
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text(verbatim: String(format: "%.\(m.decimals)f", locale: AppLanguage.activeLocale, v)).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: m.unit).font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func statusText(_ s: HRStatus) -> LocalizedStringKey {
+        switch s {
+        case .usual: return "Within your usual range for sleep"
+        case .higher: return "Higher than your recent nights"
+        case .lower: return "Lower than your recent nights"
+        case .high: return "High for sleep. If it keeps happening, check with a professional."
         }
     }
 
@@ -294,23 +427,12 @@ struct NunaOvernightVitals: View {
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
     @AppStorage(UnitPrefs.temperatureKey) private var temperatureRaw = ""
 
-    private struct Vital: Identifiable {
-        let id: String; let title: LocalizedStringKey; let unit: String; let decimals: Int; let color: Color
-        var points: [(date: Date, value: Double)]
-    }
-    @State private var vitals: [Vital] = []
-    @State private var loadedKey = ""
-
     private var temperatureUnit: TemperatureUnit {
         UnitPrefs.resolveTemperature(system: UnitSystem(rawValue: unitSystemRaw) ?? .metric, override: temperatureRaw)
     }
 
     var body: some View {
-        VStack(spacing: 12) {
-            summary
-            ForEach(vitals) { card($0) }
-        }
-        .task(id: "\(night.dayKey)-\(temperatureRaw)-\(unitSystemRaw)") { await load() }
+        summary
     }
 
     // MARK: List
@@ -405,56 +527,6 @@ struct NunaOvernightVitals: View {
                 Text("Like usual").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }
         }
-    }
-
-    // MARK: A vital over the night
-
-    private func card(_ v: Vital) -> some View {
-        let vals = v.points.map(\.value)
-        let avg = vals.reduce(0, +) / Double(max(vals.count, 1))
-        let lo = vals.min() ?? 0, hi = vals.max() ?? 0
-        func f(_ x: Double) -> String { String(format: "%.\(v.decimals)f", locale: AppLanguage.activeLocale, x) }
-        return NunaCard(small: true) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text(v.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(1.15).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                    Spacer()
-                    Text(verbatim: "\(f(lo)) – \(f(hi)) \(v.unit)").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
-                }
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(verbatim: f(avg)).font(.nuna(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(verbatim: v.unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                    Text("average").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
-                }
-                NunaNightLineChart(start: night.chartWindow.start, end: night.chartWindow.end, points: v.points, color: v.color, decimals: v.decimals, height: 118, gap: 1800, average: avg)
-                NunaTimeAxis(start: night.chartWindow.start, end: night.chartWindow.end)
-            }
-        }
-    }
-
-    // MARK: Data
-
-    private func load() async {
-        let from = Int(night.chartWindow.start.timeIntervalSince1970), to = Int(night.chartWindow.end.timeIntervalSince1970)
-        guard to > from else { vitals = []; return }
-        var out: [Vital] = []
-        let hrv = await repo.timelineSeries(metric: .hrv, from: from, to: to, targetPoints: 240)
-        if hrv.points.count >= 8 {
-            out.append(Vital(id: "hrv", title: "HRV through the night", unit: "ms", decimals: 0, color: NunaPalette.charge, points: hrv.points.map { ($0.date, $0.value) }))
-        }
-        let temp = await repo.timelineSeries(metric: .skinTemp, from: from, to: to, targetPoints: 240)
-        if temp.points.count >= 8 {
-            let f = temperatureUnit == .fahrenheit
-            out.append(Vital(id: "skin", title: "Skin temperature", unit: UnitFormatter.temperatureUnit(temperatureUnit), decimals: 1, color: NunaPalette.warning,
-                             points: temp.points.map { ($0.date, f ? UnitFormatter.celsiusToFahrenheit($0.value) : $0.value) }))
-        }
-        if repo.activeDeviceIsOura {
-            let spo2 = await repo.timelineSeries(metric: .spo2, from: from, to: to, targetPoints: 240)
-            if spo2.points.count >= 8 { out.append(Vital(id: "spo2", title: "Blood oxygen", unit: "%", decimals: 0, color: NunaPalette.effort, points: spo2.points.map { ($0.date, $0.value) })) }
-            let resp = await repo.timelineSeries(metric: .respiration, from: from, to: to, targetPoints: 240)
-            if resp.points.count >= 8 { out.append(Vital(id: "resp", title: "Breathing", unit: "/min", decimals: 1, color: NunaPalette.rest, points: resp.points.map { ($0.date, $0.value) })) }
-        }
-        vitals = out
     }
 }
 #endif
