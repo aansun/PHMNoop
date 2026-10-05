@@ -2,6 +2,7 @@
 import Foundation
 import WidgetKit
 import StrandAnalytics
+import WhoopStore
 
 extension WidgetSnapshot {
     /// The ACTIVE device's charge for the widget (#2075).
@@ -152,9 +153,63 @@ extension WidgetSnapshot {
             stressDay: stressDayValue,
             steps: steps,
             caloriesKcal: caloriesKcal,
-            workoutsToday: todayRow?.exerciseCount ?? day?.exerciseCount
+            workoutsToday: todayRow?.exerciseCount ?? day?.exerciseCount,
+            // The night the vitals describe: today's row once it carries a night, otherwise the carried-over scored day (today's row can
+            // exist for steps alone while last night's HRV and resting heart rate still sit on the anchor).
+            vitals: Self.vitalReadings(days: days, row: [todayRow, day].compactMap { $0 }.first(where: { $0.avgHrv != nil || $0.restingHr != nil }) ?? day),
+            stepGoal: Self.configuredStepGoal
         )
         saveAndReloadIfChanged(snap)
+    }
+
+    /// Last night's vital signs for the Vital widget, as finished numbers. In or out of range is the same rule the Health screen
+    /// uses (`VitalBands`: the wearer's own baseline once 14 nights are trusted, the typical adult range before that). The marker
+    /// position is where the value sits between the lowest and highest of the last 30 nights.
+    static func vitalReadings(days: [DailyMetric], row: DailyMetric?) -> [WidgetVital]? {
+        guard let row else { return nil }
+        let prior = days.filter { $0.day < row.day }.suffix(30)
+        func history(_ pick: (DailyMetric) -> Double?) -> [Double?] {
+            VitalBands.calendarSeries(prior.map { ($0.day, pick($0)) })
+        }
+        func position(_ value: Double, _ past: [Double?]) -> Double? {
+            let v = past.compactMap { $0 }
+            guard v.count >= 7 else { return nil }
+            let mean = v.reduce(0, +) / Double(v.count)
+            let sd = max((v.map { ($0 - mean) * ($0 - mean) }.reduce(0, +) / Double(v.count)).squareRoot(), 0.0001)
+            // The track spans the average plus and minus four spreads; the normal band is the middle half of it.
+            return min(max((value - mean) / (8 * sd) + 0.5, 0.03), 0.97)
+        }
+        var out: [WidgetVital] = []
+        func add(_ key: String, _ value: Double?, _ pick: @escaping (DailyMetric) -> Double?, population: ClosedRange<Double>, cfg: MetricCfg?,
+                 deltaAgainstAverage: Bool = false, deltaAgainstPrevious: Bool = false) {
+            guard let value else { return }
+            let past = history(pick)
+            let band = VitalBands.band(value: value, history: past, populationRange: population, cfg: cfg)
+            var delta: Double?
+            var basis: String?
+            if deltaAgainstAverage {
+                let v = past.compactMap { $0 }
+                if v.count >= 7 { delta = value - v.reduce(0, +) / Double(v.count); basis = "average" }
+            } else if deltaAgainstPrevious, let last = prior.last.flatMap(pick) {
+                delta = value - last; basis = "previous"
+            }
+            out.append(WidgetVital(key: key, value: value, delta: delta, deltaBasis: basis,
+                                   position: position(value, past), outOfRange: band.band == .outOfRange))
+        }
+        add("hrv", row.avgHrv, { $0.avgHrv }, population: 40...120, cfg: Baselines.hrvCfg, deltaAgainstAverage: true)
+        add("rhr", row.restingHr.map(Double.init), { $0.restingHr.map(Double.init) }, population: 40...60, cfg: Baselines.restingHRCfg, deltaAgainstPrevious: true)
+        add("spo2", row.spo2Pct, { $0.spo2Pct }, population: 95...100, cfg: nil)
+        add("resp", row.respRateBpm, { $0.respRateBpm }, population: 12...20, cfg: Baselines.respCfg)
+        if let dev = row.skinTempDevC, !VitalBands.isAbsoluteSkinTemp(dev) {
+            add("skin", dev, { $0.skinTempDevC.flatMap { VitalBands.isAbsoluteSkinTemp($0) ? nil : $0 } }, population: (-0.6)...0.6, cfg: VitalBands.skinTempDeviationCfg)
+        }
+        return out.isEmpty ? nil : out
+    }
+
+    /// The daily step target the wearer set in Me, or 10,000 when none is set.
+    static var configuredStepGoal: Int {
+        let v = UserDefaults.standard.integer(forKey: "nuna.goal.steps")
+        return v > 0 ? v : 10_000
     }
 
     /// Rest resolution shared in behavior with TodayView: today's value wins, otherwise the latest
@@ -209,6 +264,7 @@ extension WidgetSnapshot {
             ?? anchor?.steps {
             snap.steps = steps
         }
+        snap.stepGoal = Self.configuredStepGoal
         snap.bpm = model.bpm ?? model.live.heartRate
         snap.batteryPct = Self.activeBatteryPct(from: model)
         snap.bonded = model.live.bonded

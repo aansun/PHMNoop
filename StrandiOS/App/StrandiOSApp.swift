@@ -336,6 +336,12 @@ struct StrandiOSApp: App {
                 .onOpenURL { url in
                     if url.host == "import-health" {
                         model.handleHealthImportURL(url)
+                    } else if url.host == "health" {
+                        // The Vital sign widget.
+                        router.openHealth()
+                    } else if url.host == "anya" {
+                        // The Anya widget.
+                        router.openCoach()
                     }
                 }
                 .alert("Import Apple Health data?", isPresented: healthImportAlertPresented) {

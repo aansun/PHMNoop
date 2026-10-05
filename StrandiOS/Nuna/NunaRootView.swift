@@ -140,6 +140,7 @@ struct NunaRootView: View {
         case .liveSession: LiquidTodayView()
         case .journal: NunaJournalView()
         case .coach: NunaAnyaView()
+        case .health: NunaHealthView()
         }
     }
 
@@ -157,6 +158,9 @@ struct NunaRootView: View {
             }
         case .trends:
             selection = Tab.trends.rawValue
+        case .health:
+            selection = Tab.health.rawValue
+            paths[Tab.health.rawValue] = NavigationPath()
         case .liveSession:
             selection = Tab.today.rawValue
         default:

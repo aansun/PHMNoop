@@ -151,15 +151,15 @@ enum CoachBriefScheduler {
         }
         // Nudge WidgetKit to reload the coach-brief widget's timeline so it picks up the new text
         // without waiting for the next scheduled refresh. The kind string must match the widget's
-        // `kind` property (see CoachBriefWidget.swift in StrandiOSWidgets).
+        // `kind` property (see NunaAnyaWidget.swift in StrandiOSWidgets).
         WidgetCenter.shared.reloadTimelines(ofKind: Self.widgetKind)
     }
     #endif
 
     /// The WidgetKit kind string for the coach-brief widget. Must match the `kind` property on
-    /// `CoachBriefWidget` in `StrandiOSWidgets/`. Declared here so `publishToWidget` can reload
+    /// `NunaAnyaWidget` in `StrandiOSWidgets/`. Declared here so `publishToWidget` can reload
     /// timelines without importing the widget extension's type (the app target can't see it).
-    static let widgetKind = "CoachBriefWidget"
+    static let widgetKind = "NunaAnyaWidget"
 
     // MARK: - Enable / configure (Settings calls these)
 

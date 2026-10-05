@@ -335,6 +335,8 @@ struct RootView: View {
             // #1862: the Today Coach card's launcher hands off here, so the send/stream/consent surface
             // stays in exactly one place.
             case .coach: selection = .coach
+            // The Health tab is an iPhone idea (a widget opens it); on the Mac it is Today.
+            case .health: selection = .today
             case nil: break
             }
             if dest != nil { router.requestedDestination = nil }

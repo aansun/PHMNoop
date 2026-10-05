@@ -248,6 +248,10 @@ struct RootTabView: View {
                     tabPaths[3] = NavigationPath()
                 }
                 router.requestedDestination = nil
+            case .health:
+                // The Default look has no Health tab; a widget that asks for it lands on Today.
+                withAnimation(.timingCurve(0.22, 1, 0.36, 1, duration: 0.24)) { selectedTab = 0 }
+                router.requestedDestination = nil
             case .trends:
                 // Trends is a primary tab on iPhone (not a pillar sheet) — switch to it.
                 withAnimation(.timingCurve(0.22, 1, 0.36, 1, duration: 0.24)) { selectedTab = 2 }
@@ -422,6 +426,8 @@ struct RootTabView: View {
                 // `AICoachEngine.pendingPrompt`); this keeps the switch exhaustive and falls back to Coach if
                 // it ever reaches the host.
                 case .coach: CoachView()
+                // .health is handled above (it lands on Today in this look); keeps the switch exhaustive.
+                case .health: LiquidTodayView()
                 }
             }
             // The Trends/Today fallbacks above emit TabRoute value pushes (#198), which need a

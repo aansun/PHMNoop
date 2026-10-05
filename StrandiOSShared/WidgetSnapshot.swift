@@ -17,6 +17,24 @@ private func noopSecTaskCopyValueForEntitlement(
 ) -> CFTypeRef?
 #endif
 
+/// One night's vital sign for the Vital widget: the finished number from the app, never computed in the widget.
+public struct WidgetVital: Codable, Equatable, Hashable {
+    /// "hrv", "rhr", "spo2", "resp" or "skin".
+    public var key: String
+    public var value: Double
+    /// Change against `deltaBasis`: the personal 30-night average for HRV, the night before for resting heart rate. Nil when there is nothing to compare with.
+    public var delta: Double?
+    public var deltaBasis: String?
+    /// Where the value sits on the personal range track, 0 to 1, with the normal band in the middle half. Nil without enough nights.
+    public var position: Double?
+    /// True when the value is outside the wearer's own normal range (the same rule the Health screen uses).
+    public var outOfRange: Bool
+
+    public init(key: String, value: Double, delta: Double? = nil, deltaBasis: String? = nil, position: Double? = nil, outOfRange: Bool = false) {
+        self.key = key; self.value = value; self.delta = delta; self.deltaBasis = deltaBasis; self.position = position; self.outOfRange = outOfRange
+    }
+}
+
 /// Small, Codable glance snapshot shared between the iOS app and its widget/Live-Activity extension
 /// via an App Group. The app writes it; the widget reads it. Keeping it tiny avoids any cross-process
 /// database access — the widget never opens SQLite.
@@ -63,13 +81,17 @@ public struct WidgetSnapshot: Codable, Equatable {
     public var caloriesKcal: Int?
     /// Number of workouts recorded for the current day, used by the Rings glance badge.
     public var workoutsToday: Int?
+    /// Last night's vital signs for the Vital widget (HRV, resting heart rate, SpO2, breathing rate, skin temperature deviation).
+    public var vitals: [WidgetVital]?
+    /// The wearer's daily step target, in steps.
+    public var stepGoal: Int?
 
     public init(recovery: Int?, bpm: Int?, batteryPct: Int?, bonded: Bool, updated: Date,
                 effort: Int? = nil, rest: Int? = nil, hrv: Int? = nil, restingHr: Int? = nil,
                 effortDisplay: String? = nil, effortWhoop: Bool? = nil,
                 hrSeries: [HrPoint]? = nil, stressSeries: [StressPoint]? = nil,
                 stressDay: Int? = nil, steps: Int? = nil, caloriesKcal: Int? = nil,
-                workoutsToday: Int? = nil) {
+                workoutsToday: Int? = nil, vitals: [WidgetVital]? = nil, stepGoal: Int? = nil) {
         self.recovery = recovery
         self.bpm = bpm
         self.batteryPct = batteryPct
@@ -87,6 +109,8 @@ public struct WidgetSnapshot: Codable, Equatable {
         self.steps = steps
         self.caloriesKcal = caloriesKcal
         self.workoutsToday = workoutsToday
+        self.vitals = vitals
+        self.stepGoal = stepGoal
     }
 
     /// The curve to DRAW: what was published, unless it belongs to a day that is over.
@@ -209,7 +233,13 @@ public struct WidgetSnapshot: Codable, Equatable {
         WidgetSnapshot(recovery: 72, bpm: 58, batteryPct: 84, bonded: true, updated: Date(),
                        effort: 38, rest: 81, hrv: 64, restingHr: 52,
                        effortDisplay: "38", effortWhoop: false, steps: 7_412,
-                       caloriesKcal: 1_086, workoutsToday: 2)
+                       caloriesKcal: 1_086, workoutsToday: 2,
+                       vitals: [WidgetVital(key: "hrv", value: 64, delta: 4, deltaBasis: "average", position: 0.58),
+                                WidgetVital(key: "rhr", value: 52, delta: -2, deltaBasis: "previous", position: 0.45),
+                                WidgetVital(key: "spo2", value: 97, position: 0.62),
+                                WidgetVital(key: "resp", value: 14.8, position: 0.5),
+                                WidgetVital(key: "skin", value: 0.2, position: 0.55)],
+                       stepGoal: 10_000)
     }
 
     /// Honest runtime state when the app has not published a readable snapshot yet. Unlike
@@ -288,6 +318,8 @@ public struct WidgetSnapshot: Codable, Equatable {
             || previous.effortWhoop != next.effortWhoop
             || previous.steps != next.steps
             || previous.workoutsToday != next.workoutsToday
+            || previous.vitals != next.vitals
+            || previous.stepGoal != next.stepGoal
             // The curve joins the comparison (#2040): a publish that scored a fresh hour and changed
             // nothing else would otherwise be deduped away, and the widget would sit an hour behind
             // until some unrelated field moved. The DAY joins it too, so the first publish after
