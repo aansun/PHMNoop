@@ -10,6 +10,7 @@ struct AudioCoachingSettingsView: View {
     @AppStorage(AudioCoachingPreferences.heartRateKey) private var heartRate = true
     @AppStorage(AudioCoachingPreferences.distanceKey) private var distance = true
     @AppStorage(AudioCoachingPreferences.coachingKey) private var coaching = false
+    @AppStorage(AudioCoachingPreferences.checkInKey) private var checkIn = false
     @AppStorage(AudioCoachingPreferences.aiWordingKey) private var aiWording = false
     @AppStorage(AudioCoachingPreferences.distanceIncludesDistanceKey) private var distanceIncludesDistance = true
     @AppStorage(AudioCoachingPreferences.distanceIncludesDurationKey) private var distanceIncludesDuration = true
@@ -54,6 +55,7 @@ struct AudioCoachingSettingsView: View {
                         Toggle("Workout start, pause and finish", isOn: $lifecycle)
                         Toggle("Heart-rate target", isOn: $heartRate)
                         Toggle("Distance milestones", isOn: $distance)
+                        Toggle("Check-in every minute", isOn: $checkIn)
                             Toggle("Smart coaching (experimental)", isOn: $coaching)
                     }
                 }
