@@ -18,7 +18,7 @@ extension SleepStage {
         switch self {
         case .awake: return "Awake"
         case .rem:   return "REM"
-        case .light: return "Light"
+        case .light: return "Light sleep"
         case .deep:  return "Deep"
         }
     }
