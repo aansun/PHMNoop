@@ -47,7 +47,7 @@ struct NunaWorkoutStartView: View {
                         }
                         Spacer(minLength: 6)
                         Button { withAnimation { self.planned = nil; goal = NunaWorkoutGoal() } } label: {
-                            Text("Clear").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 34).background(NunaPalette.glassStrong, in: Capsule())
+                            Text("Clear").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 34).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                         }.buttonStyle(.plain)
                     }
                 }
@@ -69,7 +69,7 @@ struct NunaWorkoutStartView: View {
                     Image(systemName: "play.fill").font(.nuna(size: 14, weight: .bold))
                     Text(model.activeWorkout == nil ? "Start in 3 seconds" : "View active workout").font(.nuna(size: 17, weight: .bold))
                 }
-                .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: Capsule())
+                .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }.buttonStyle(.plain)
         }
         .onAppear {
@@ -96,7 +96,7 @@ struct NunaWorkoutStartView: View {
                         .font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Spacer(minLength: 0)
                 }
-                .padding(.horizontal, 16).padding(.vertical, 12).background(NunaPalette.tint(NunaPalette.charge), in: Capsule())
+                .padding(.horizontal, 16).padding(.vertical, 12).background(NunaPalette.tint(NunaPalette.charge), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }
         }
     }
@@ -124,7 +124,7 @@ struct NunaWorkoutStartView: View {
                         ForEach(1...5, id: \.self) { z in
                             Button { goal.zone = z } label: {
                                 Text(verbatim: "\(z)").font(.nuna(size: 16, weight: .bold)).foregroundStyle(goal.zone == z ? NunaPalette.onAccent : NunaPalette.textPrimary)
-                                    .frame(maxWidth: .infinity).frame(height: 44).background(goal.zone == z ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
+                                    .frame(maxWidth: .infinity).frame(height: 44).background(goal.zone == z ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                             }.buttonStyle(.plain)
                         }
                     }
@@ -152,7 +152,7 @@ struct NunaWorkoutStartView: View {
     }
 
     private func stepBtn(_ s: String, _ a: @escaping () -> Void) -> some View {
-        Button(action: a) { Image(systemName: s).font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 52, height: 52).background(NunaPalette.glassStrong, in: Circle()) }.buttonStyle(.plain)
+        Button(action: a) { Image(systemName: s).font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 52, height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous)) }.buttonStyle(.plain)
     }
 
     private var optionsCard: some View {
@@ -245,7 +245,7 @@ struct NunaLiveWorkoutView: View {
                     } else {
                         Text("Sessions under a minute are not saved.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
-                    Button(action: onClose) { Text("Done").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 40).frame(height: 52).background(NunaPalette.accent, in: Capsule()) }.buttonStyle(.plain)
+                    Button(action: onClose) { Text("Done").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 40).frame(height: 52).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)) }.buttonStyle(.plain)
                 }
             }
         }
@@ -299,11 +299,11 @@ struct NunaLiveWorkoutView: View {
                 HStack(spacing: 12) {
                     Button { model.toggleWorkoutPause() } label: {
                         Text(w.isPaused ? "Resume" : "Pause").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            .frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.glassStrong, in: Capsule())
+                            .frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain)
                     Button { confirmEnd = true } label: {
                         Text("End").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                            .frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.alertText, in: Capsule())
+                            .frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.alertText, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain)
                 }
                 Button(action: onClose) { Text("Minimise").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }.buttonStyle(.plain)

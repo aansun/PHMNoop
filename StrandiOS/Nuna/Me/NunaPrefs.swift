@@ -149,7 +149,7 @@ struct NunaLanguageView: View {
                 }
             }
             Button { openIOSSettings() } label: {
-                Text("Open language in iOS Settings").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.glassStrong, in: Capsule())
+                Text("Open language in iOS Settings").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }.buttonStyle(.plain)
             nunaFootnote("Changing the language reloads the app for a moment. Dates and numbers follow the language. The language can also be set per app in iOS Settings.")
         }

@@ -112,7 +112,7 @@ struct NunaFitnessAgeView: View {
                     }
                     .foregroundStyle(weekly < 0 ? NunaPalette.charge : NunaPalette.warning)
                     .padding(.horizontal, 14).frame(height: 32)
-                    .background((weekly < 0 ? NunaPalette.charge : NunaPalette.warning).opacity(0.16), in: Capsule())
+                    .background((weekly < 0 ? NunaPalette.charge : NunaPalette.warning).opacity(0.16), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 } else if weekly == 0 {
                     Text("Steady since last week").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
@@ -124,7 +124,7 @@ struct NunaFitnessAgeView: View {
                         .multilineTextAlignment(.center)
                     NunaAgeSlider(fitness: latest.value, age: age)
                     HStack(spacing: 16) {
-                        legend(Capsule().fill(NunaPalette.charge.opacity(0.3)).frame(width: 14, height: 10), "Range ±5 yr")
+                        legend(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.charge.opacity(0.3)).frame(width: 14, height: 10), "Range ±5 yr")
                         legend(Circle().strokeBorder(NunaPalette.ink, lineWidth: 2).frame(width: 10, height: 10), "Actual age")
                     }
                 }
@@ -157,7 +157,7 @@ struct NunaFitnessAgeView: View {
                         }
                         .foregroundStyle(move < 0 ? NunaPalette.charge : NunaPalette.warning)
                         .padding(.horizontal, 10).frame(height: 28)
-                        .background((move < 0 ? NunaPalette.charge : NunaPalette.warning).opacity(0.16), in: Capsule())
+                        .background((move < 0 ? NunaPalette.charge : NunaPalette.warning).opacity(0.16), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }
                 }
                 if let now {
@@ -247,8 +247,8 @@ struct NunaFitnessAgeView: View {
                     let w = geo.size.width, half = w / 2
                     let span = half * CGFloat(min(abs(years) / 6, 1))
                     ZStack(alignment: .leading) {
-                        Capsule().fill(NunaPalette.ink.opacity(0.09)).frame(height: 8)
-                        Capsule().fill(younger ? NunaPalette.charge : NunaPalette.warning).frame(width: span, height: 8)
+                        RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.ink.opacity(0.09)).frame(height: 8)
+                        RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(younger ? NunaPalette.charge : NunaPalette.warning).frame(width: span, height: 8)
                             .offset(x: younger ? half - span : half)
                         Rectangle().fill(NunaPalette.ink.opacity(0.6)).frame(width: 2, height: 16).offset(x: half - 1)
                     }
@@ -334,7 +334,7 @@ struct NunaFitnessAgeView: View {
                         NunaProportionBar(parts: [(2, NunaPalette.zoneBase), (2, NunaPalette.zoneBase), (2, NunaPalette.rest), (2, NunaPalette.charge), (2, NunaPalette.charge)], height: 12)
                         GeometryReader { geo in
                             let f = CGFloat(min(max((vo2 - 20) / 40, 0), 1))
-                            Capsule().fill(NunaPalette.ink).frame(width: 6, height: 20).shadow(color: NunaPalette.ink.opacity(0.2), radius: 3)
+                            RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.ink).frame(width: 6, height: 20).shadow(color: NunaPalette.ink.opacity(0.2), radius: 3)
                                 .offset(x: min(max(geo.size.width * f - 3, 0), geo.size.width - 6), y: -4)
                         }
                         .frame(height: 12)

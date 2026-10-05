@@ -44,12 +44,12 @@ struct NunaAgeSlider: View {
             let x: (Double) -> CGFloat = { CGFloat(($0 - lo) / span) * w }
             let fx = min(max(x(fitness), 18), w - 18), ax = min(max(x(age), 30), w - 30)
             ZStack(alignment: .topLeading) {
-                Capsule().fill(NunaPalette.ink.opacity(0.09)).frame(height: 8).offset(y: 30)
-                Capsule().fill(NunaPalette.charge.opacity(0.6)).frame(width: abs(x(age) - x(fitness)), height: 8)
+                RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.ink.opacity(0.09)).frame(height: 8).offset(y: 30)
+                RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.charge.opacity(0.6)).frame(width: abs(x(age) - x(fitness)), height: 8)
                     .offset(x: min(x(age), x(fitness)), y: 30)
                 Text(verbatim: String(format: "%.0f", fitness))
                     .font(.nuna(size: 12, weight: .heavy)).foregroundStyle(NunaPalette.onAccent)
-                    .padding(.horizontal, 8).frame(height: 22).background(NunaPalette.charge, in: Capsule())
+                    .padding(.horizontal, 8).frame(height: 22).background(NunaPalette.charge, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     .position(x: fx, y: 11)
                 Circle().strokeBorder(NunaPalette.ink, lineWidth: 3).background(Circle().fill(NunaPalette.card))
                     .frame(width: 16, height: 16).position(x: x(age), y: 34)
@@ -70,8 +70,8 @@ struct NunaMiniChip: View {
     var body: some View {
         Text(text).font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(color)
             .padding(.horizontal, 9).frame(height: 24)
-            .background(NunaPalette.tint(color), in: Capsule())
-            .overlay(Capsule().strokeBorder(color.opacity(0.35), lineWidth: 1))
+            .background(NunaPalette.tint(color), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(color.opacity(0.35), lineWidth: 1))
     }
 }
 
@@ -90,7 +90,7 @@ struct NunaVitalTile: View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
                     Image(systemName: icon).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(width: 34, height: 34).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .frame(width: 34, height: 34).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                     Text(label).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
                 }
@@ -145,7 +145,7 @@ struct NunaWaistSheet: View {
     private func stepButton(_ symbol: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol).font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                .frame(width: 64, height: 64).background(NunaPalette.glassStrong, in: Circle())
+                .frame(width: 64, height: 64).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
         }.buttonStyle(.plain)
     }
 }
@@ -162,7 +162,7 @@ struct NunaProportionBar: View {
             let gaps = CGFloat(max(live.count - 1, 0)) * 3
             HStack(spacing: 3) {
                 ForEach(live.indices, id: \.self) { i in
-                    Capsule().fill(live[i].color)
+                    RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(live[i].color)
                         .frame(width: max(0, (geo.size.width - gaps) * CGFloat(live[i].weight / total)))
                 }
             }
@@ -368,7 +368,7 @@ struct NunaStressGauge: View {
             if let onInfo {
                 Button(action: onInfo) {
                     Image(systemName: "info").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                        .frame(width: 34, height: 34).overlay(Circle().strokeBorder(NunaPalette.textSecondary, lineWidth: 1.6))
+                        .frame(width: 34, height: 34).overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.textSecondary, lineWidth: 1.6))
                 }.buttonStyle(.plain).accessibilityLabel(Text("About this score"))
             }
         }

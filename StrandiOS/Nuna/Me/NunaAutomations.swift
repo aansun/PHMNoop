@@ -97,7 +97,7 @@ struct NunaDoubleTapView: View {
                 NunaFormField("Shortcut name") { TextField("", text: $behavior.doubleTapShortcut, prompt: Text("The name of your Shortcut").foregroundStyle(NunaPalette.textMuted)).textInputAutocapitalization(.never).autocorrectionDisabled() }
             }
             Button { model.runMacAction(behavior.doubleTapAction, shortcut: behavior.doubleTapShortcut) } label: {
-                Text("Try the action").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
+                Text("Try the action").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }.buttonStyle(.plain).disabled(behavior.doubleTapAction == .none).opacity(behavior.doubleTapAction == .none ? 0.4 : 1)
             if !model.moments.isEmpty {
                 NunaSettingsGroup("Latest moments") {
@@ -107,7 +107,7 @@ struct NunaDoubleTapView: View {
                     }
                 }
                 Button { model.moments.removeAll(); UserDefaults.standard.removeObject(forKey: "moments") } label: {
-                    Text("Clear").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 46).background(NunaPalette.glassStrong, in: Capsule())
+                    Text("Clear").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 46).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain)
             }
             nunaFootnote("A tap that arrives late during a sync is kept in the strap log but does not run the action.")

@@ -56,7 +56,7 @@ struct NunaNumberSheet: View {
     private func stepButton(_ symbol: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol).font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                .frame(width: 64, height: 64).background(NunaPalette.glassStrong, in: Circle())
+                .frame(width: 64, height: 64).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
         }.buttonStyle(.plain)
     }
 }
@@ -73,7 +73,7 @@ struct NunaScaleBar: View {
         ZStack(alignment: .topLeading) {
             NunaProportionBar(parts: parts, height: 12)
             GeometryReader { geo in
-                Capsule().fill(NunaPalette.ink).frame(width: 6, height: 20).shadow(color: NunaPalette.ink.opacity(0.25), radius: 3)
+                RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.ink).frame(width: 6, height: 20).shadow(color: NunaPalette.ink.opacity(0.25), radius: 3)
                     .offset(x: min(max(geo.size.width * CGFloat(position) - 3, 0), geo.size.width - 6), y: -4)
             }
             .frame(height: 12)
@@ -140,7 +140,7 @@ struct NunaWeightView: View {
                     Text("Add a measurement").font(.nuna(size: 16, weight: .bold))
                 }
                 .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52)
-                .background(NunaPalette.glassStrong, in: Capsule())
+                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }.buttonStyle(.plain)
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 Button { showTarget = true } label: {
@@ -249,7 +249,7 @@ struct NunaWaistView: View {
                     Text("Add a manual measurement").font(.nuna(size: 16, weight: .bold))
                 }
                 .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52)
-                .background(NunaPalette.glassStrong, in: Capsule())
+                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }.buttonStyle(.plain)
             NunaCard(small: true) {
                 NunaListRow("Fill the profile from Apple Health", subtitle: "The latest value is read automatically. Manage it in Me › Apple Health.", systemImage: "heart.text.square")
@@ -421,7 +421,7 @@ struct NunaLabBookView: View {
                     Image(systemName: "plus").font(.nuna(size: 14, weight: .bold))
                     Text("Add a result").font(.nuna(size: 17, weight: .bold))
                 }
-                .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54).background(NunaPalette.accent, in: Capsule())
+                .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }.buttonStyle(.plain)
             Text("Saved on this phone. Not a medical diagnosis. NOOP does not read results for you.")
                 .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).frame(maxWidth: .infinity, alignment: .leading)
@@ -595,7 +595,7 @@ struct NunaCycleView: View {
                             Text(verbatim: "\(cal.component(.day, from: d))").font(.nuna(size: 13, weight: .bold, design: NunaType.design))
                                 .foregroundStyle(isToday ? NunaPalette.onAccent : NunaPalette.textPrimary)
                                 .frame(width: 34, height: 34)
-                                .background(isToday ? NunaPalette.accent : (logged ? NunaPalette.alert.opacity(0.9) : NunaPalette.ink.opacity(0.07)), in: Circle())
+                                .background(isToday ? NunaPalette.accent : (logged ? NunaPalette.alert.opacity(0.9) : NunaPalette.ink.opacity(0.07)), in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                         }
                         .frame(maxWidth: .infinity)
                     }
@@ -620,7 +620,7 @@ struct NunaCycleView: View {
                     Text(logged ? "Period start logged today" : "Period started today").font(.nuna(size: 15, weight: .bold))
                         .foregroundStyle(logged ? NunaPalette.textSecondary : NunaPalette.onAccent)
                         .frame(maxWidth: .infinity).frame(height: 48)
-                        .background(logged ? NunaPalette.glassStrong : NunaPalette.accent, in: Capsule())
+                        .background(logged ? NunaPalette.glassStrong : NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain).disabled(logged)
             }
         }

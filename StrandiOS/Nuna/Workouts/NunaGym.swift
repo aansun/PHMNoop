@@ -48,7 +48,7 @@ struct NunaFormField<Content: View>: View {
                 .font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                 .padding(.horizontal, 14).frame(minHeight: 48, alignment: .leading)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
     }
 }
@@ -145,7 +145,7 @@ struct NunaGymView: View {
                 Spacer(minLength: 8)
                 Button { if session.isActive { session.isPresented = true } else { picking = true } } label: {
                     Text(session.isActive ? "Open" : "Start").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                        .padding(.horizontal, 22).frame(height: 44).background(NunaPalette.accent, in: Capsule())
+                        .padding(.horizontal, 22).frame(height: 44).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain)
             }
         }
@@ -174,7 +174,7 @@ struct NunaGymView: View {
             Image(systemName: icon).font(.nuna(size: 14, weight: .bold))
             Text(title).font(.nuna(size: 14.5, weight: .bold))
         }
-        .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 48).background(NunaPalette.glassStrong, in: Capsule())
+        .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 48).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
     }
 
     private func programRow(_ p: LiftProgramRow) -> some View {
@@ -193,7 +193,7 @@ struct NunaGymView: View {
                 }.buttonStyle(.plain)
                 Button { Task { await NunaGymStore.start(program: p, repo: repo, session: session) } } label: {
                     Text(session.isActive ? "Open" : "Start").font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                        .padding(.horizontal, 20).frame(height: 42).background(NunaPalette.accent, in: Capsule())
+                        .padding(.horizontal, 20).frame(height: 42).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain).disabled((c?.exercises ?? 0) == 0).opacity((c?.exercises ?? 0) == 0 ? 0.4 : 1)
             }
         }
@@ -221,9 +221,9 @@ struct NunaGymView: View {
                                 Text(verbatim: LiftFormat.trim(n)).font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary) }
                             GeometryReader { geo in
                                 ZStack(alignment: .leading) {
-                                    Capsule().fill(NunaPalette.ink.opacity(0.09))
-                                    Capsule().fill(NunaPalette.accent.opacity(n >= floorSets ? 1 : 0.5)).frame(width: max(6, geo.size.width * min(1, n / Self.setsBarSpan)))
-                                    Capsule().fill(n >= floorSets ? NunaPalette.onAccent.opacity(0.7) : NunaPalette.accent.opacity(0.55)).frame(width: 2, height: 12).offset(x: geo.size.width * min(1, floorSets / Self.setsBarSpan) - 1)
+                                    RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.ink.opacity(0.09))
+                                    RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.accent.opacity(n >= floorSets ? 1 : 0.5)).frame(width: max(6, geo.size.width * min(1, n / Self.setsBarSpan)))
+                                    RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(n >= floorSets ? NunaPalette.onAccent.opacity(0.7) : NunaPalette.accent.opacity(0.55)).frame(width: 2, height: 12).offset(x: geo.size.width * min(1, floorSets / Self.setsBarSpan) - 1)
                                 }
                             }.frame(height: 8)
                         }
@@ -337,7 +337,7 @@ struct NunaExercisePicker: View {
                 Button { onStart(chosen) } label: {
                     Text(verbatim: chosen.isEmpty ? String(localized: "Pick at least one exercise") : String(localized: "Start with \(chosen.count) exercises"))
                         .font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56)
-                        .background(NunaPalette.accent, in: Capsule())
+                        .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain).disabled(chosen.isEmpty).opacity(chosen.isEmpty ? 0.4 : 1)
             }
             .scrollDismissesKeyboard(.interactively)

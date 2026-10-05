@@ -37,7 +37,7 @@ struct NunaWidgetSettingsView: View {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) { refreshed = false }
                     } label: {
                         Text(refreshed ? "Asked iOS to refresh" : "Refresh now").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                            .frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.accent, in: Capsule())
+                            .frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain)
                 }
             }
@@ -69,7 +69,7 @@ struct NunaWidgetSettingsView: View {
 
     private func step(_ n: Int, _ t: LocalizedStringKey) -> some View {
         HStack(alignment: .top, spacing: 14) {
-            Text(verbatim: "\(n)").font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 30, height: 30).background(NunaPalette.glassStrong, in: Circle())
+            Text(verbatim: "\(n)").font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 30, height: 30).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
             Text(t).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
         }.padding(.vertical, 12)

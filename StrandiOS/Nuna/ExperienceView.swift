@@ -105,8 +105,8 @@ private struct ExperiencePreview: View {
             if mode == .nuna { nuna } else { standard }
         }
         .frame(width: 116, height: 220)
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(NunaPalette.ink.opacity(0.16), lineWidth: 1))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(NunaPalette.ink.opacity(0.16), lineWidth: 1))
         .accessibilityHidden(true)
     }
 
@@ -117,11 +117,11 @@ private struct ExperiencePreview: View {
                 ring(NunaPalette.charge, 0.78); ring(NunaPalette.effort, 0.59); ring(NunaPalette.rest, 0.86)
             }
             .padding(8).frame(maxWidth: .infinity)
-            .background(NunaPalette.ink.opacity(0.07), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .background(NunaPalette.ink.opacity(0.07), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
             RoundedRectangle(cornerRadius: 10, style: .continuous).fill(NunaPalette.ink.opacity(0.1)).frame(height: 26)
             RoundedRectangle(cornerRadius: 10, style: .continuous).fill(NunaPalette.ink.opacity(0.06)).frame(height: 26)
             Spacer(minLength: 0)
-            Capsule().fill(NunaPalette.ink.opacity(0.08)).frame(height: 24)
+            RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.ink.opacity(0.08)).frame(height: 24)
         }
         .padding(10)
         .background(NunaPalette.canvas)
@@ -180,7 +180,7 @@ private struct ExperienceConfirmSheet: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .padding(12)
-                .background(NunaPalette.warning.opacity(0.1), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .background(NunaPalette.warning.opacity(0.1), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             }
             Spacer(minLength: 0)
             Button(action: onConfirm) { Text("Switch and reload") }

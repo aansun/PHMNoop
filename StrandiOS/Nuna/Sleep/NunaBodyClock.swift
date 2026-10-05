@@ -203,7 +203,7 @@ struct NunaBodyClockView: View {
                 }
                 HStack(spacing: 6) {
                     ForEach(0..<3, id: \.self) { i in
-                        Capsule().fill(i < (est.confidence == .solid ? 3 : 2) ? NunaPalette.rest : NunaPalette.ink.opacity(0.09)).frame(height: 8)
+                        RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(i < (est.confidence == .solid ? 3 : 2) ? NunaPalette.rest : NunaPalette.ink.opacity(0.09)).frame(height: 8)
                     }
                 }
                 HStack {
@@ -270,7 +270,7 @@ struct NunaBodyClockView: View {
                 }
                 HStack(spacing: 14) {
                     legend(AnyView(Text(verbatim: "···").font(.nuna(size: 14, weight: .black)).foregroundStyle(NunaPalette.restText)), "Ideal window")
-                    legend(AnyView(Capsule().fill(NunaPalette.rest).frame(width: 14, height: 6)), "Last night")
+                    legend(AnyView(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.rest).frame(width: 14, height: 6)), "Last night")
                     legend(AnyView(Circle().strokeBorder(NunaPalette.ink, lineWidth: 2.5).frame(width: 10, height: 10)), "Lowest point")
                 }
                 Text(verbatim: String(localized: "Your sleep was \(mins) minutes \(off <= 0 ? String(localized: "earlier") : String(localized: "later")) than the ideal window (\(NunaClockHour.text(ideal.bed)) to \(NunaClockHour.text(ideal.wake))). The night has the same length, so this is about timing, not duration."))
@@ -367,7 +367,7 @@ struct NunaBodyClockPlanView: View {
                      : String(localized: "Move your body clock \(hours) hours later, about 1 hour a day."))
                     .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 HStack(spacing: 3) {
-                    ForEach(plan.days, id: \.dayIndex) { _ in Capsule().fill(NunaPalette.rest).frame(height: 10) }
+                    ForEach(plan.days, id: \.dayIndex) { _ in RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.rest).frame(height: 10) }
                 }
             }
         }
@@ -407,8 +407,8 @@ struct NunaBodyClockPlanView: View {
         Button(action: action) {
             Image(systemName: symbol).font(.nuna(size: 20, weight: .bold))
                 .foregroundStyle(enabled ? NunaPalette.textPrimary : NunaPalette.textMuted.opacity(0.4))
-                .frame(width: 52, height: 52).background(NunaPalette.glassStrong, in: Circle())
-                .overlay(Circle().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                .frame(width: 52, height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
         }
         .buttonStyle(.plain).disabled(!enabled)
     }

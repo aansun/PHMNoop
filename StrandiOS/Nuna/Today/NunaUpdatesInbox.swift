@@ -34,7 +34,7 @@ struct NunaUpdatesInbox: View {
                     }
                     Button { onClose(); router.openNotificationSettings = true } label: {
                         Text("Notification settings").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            .frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.glassStrong, in: Capsule())
+                            .frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain)
                     Button { withAnimation { updateStore.clearAll() } } label: {
                         Text("Clear all").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity).frame(height: 40)
@@ -57,7 +57,7 @@ struct NunaUpdatesInbox: View {
             Spacer(minLength: 8)
             Button { withAnimation { updateStore.markAllRead() } } label: {
                 Text("Mark all read").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 38)
-                    .background(NunaPalette.glassStrong, in: Capsule())
+                    .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }.buttonStyle(.plain).disabled(updateStore.unreadCount == 0).opacity(updateStore.unreadCount == 0 ? 0.4 : 1)
         }
     }
@@ -74,7 +74,7 @@ struct NunaUpdatesInbox: View {
                 Text("You're all caught up.").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 Text("New release notes and fresh data will land here.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center)
                 Button { onClose(); router.openNotificationSettings = true } label: {
-                    Text("Notification settings").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 18).frame(height: 40).background(NunaPalette.glassStrong, in: Capsule())
+                    Text("Notification settings").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 18).frame(height: 40).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain).padding(.top, 6)
             }.frame(maxWidth: .infinity).padding(.vertical, 12)
         }
@@ -98,7 +98,7 @@ struct NunaUpdatesInbox: View {
                 if item.kind == .dismissedCard {
                     Button { restore(item) } label: {
                         Label("Restore to Today", systemImage: "arrow.uturn.up").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            .padding(.horizontal, 14).frame(height: 36).background(NunaPalette.glassStrong, in: Capsule())
+                            .padding(.horizontal, 14).frame(height: 36).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain)
                 }
             }

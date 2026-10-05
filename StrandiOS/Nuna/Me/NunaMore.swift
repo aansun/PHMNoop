@@ -116,7 +116,7 @@ struct NunaAboutView: View {
                         Text(verbatim: "v\(version) · build \(build)").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     Spacer()
-                    NavigationLink { NunaWhatsNewView() } label: { Text("What's new").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 36).background(NunaPalette.glassStrong, in: Capsule()) }.buttonStyle(.plain)
+                    NavigationLink { NunaWhatsNewView() } label: { Text("What's new").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 36).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)) }.buttonStyle(.plain)
                 }
             }
             NunaSettingsGroup("How it works") {

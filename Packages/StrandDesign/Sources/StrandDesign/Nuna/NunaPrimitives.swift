@@ -25,8 +25,8 @@ public struct NunaButtonStyle: ButtonStyle {
             .padding(.horizontal, 22)
             .frame(maxWidth: fullWidth ? .infinity : nil)
             .frame(height: height)
-            .background(background, in: Capsule())
-            .overlay(Capsule().strokeBorder(border, lineWidth: 1))
+            .background(background, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(border, lineWidth: 1))
             .opacity(configuration.isPressed ? 0.78 : 1)
     }
 
@@ -76,8 +76,8 @@ public struct NunaIconButton: View {
                 .font(.nuna(size: 16, weight: .bold))
                 .foregroundStyle(filled ? NunaPalette.onAccent : NunaPalette.textPrimary)
                 .frame(width: 44, height: 44)
-                .background(filled ? NunaPalette.accent : NunaPalette.glassStrong, in: Circle())
-                .overlay(Circle().strokeBorder(NunaPalette.hairline, lineWidth: filled ? 0 : 1))
+                .background(filled ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: filled ? 0 : 1))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
@@ -97,7 +97,7 @@ public struct NunaFAB: View {
                 .font(.nuna(size: 24, weight: .bold))
                 .foregroundStyle(NunaPalette.onAccent)
                 .frame(width: 58, height: 58)
-                .background(NunaPalette.accent, in: Circle())
+                .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                 .shadow(color: NunaPalette.shade.opacity(0.5), radius: 14, y: 8)
         }
         .buttonStyle(.plain)
@@ -279,15 +279,15 @@ public struct NunaSegmented<Value: Hashable>: View {
                         .foregroundStyle(selected ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 36)
-                        .background(selected ? NunaPalette.glassStrong : .clear, in: Capsule())
+                        .background(selected ? NunaPalette.glassStrong : .clear, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(selected ? .isSelected : [])
             }
         }
         .padding(4)
-        .background(NunaPalette.glass, in: Capsule())
-        .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+        .background(NunaPalette.glass, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
     }
 }
 
@@ -352,7 +352,7 @@ public struct NunaTabBar: View {
                     .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                     .frame(minWidth: 58, minHeight: 58)
                     .frame(maxWidth: .infinity)
-                    .background(on ? NunaPalette.glassStrong : .clear, in: Capsule())
+                    .background(on ? NunaPalette.glassStrong : .clear, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(on ? .isSelected : [])
@@ -360,9 +360,9 @@ public struct NunaTabBar: View {
         }
         .padding(.horizontal, 8)
         .frame(height: 72)
-        .background(NunaPalette.card, in: Capsule())
+        .background(NunaPalette.card, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
         .shadow(color: NunaPalette.shade.opacity(0.45), radius: 12, y: 4)
-        .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+        .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
         .padding(.horizontal, 14)
         .padding(.bottom, 6)
     }

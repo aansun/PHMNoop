@@ -67,7 +67,7 @@ struct NunaMoodView: View {
             Button { Task { await save() } } label: {
                 Text(savedFlash ? "Saved" : "Save").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
                     .frame(maxWidth: .infinity).frame(height: 56)
-                    .background(NunaPalette.accent.opacity(mood == nil ? 0.35 : 1), in: Capsule())
+                    .background(NunaPalette.accent.opacity(mood == nil ? 0.35 : 1), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }
             .buttonStyle(.plain).disabled(mood == nil)
             weekCard
@@ -90,8 +90,8 @@ struct NunaMoodView: View {
                             VStack(spacing: 8) {
                                 Text(verbatim: MoodStore.face(for: v)).font(.nuna(size: 26))
                                     .frame(width: 52, height: 52)
-                                    .background(on ? NunaPalette.accent : NunaPalette.ink.opacity(0.07), in: Circle())
-                                    .overlay(Circle().strokeBorder(NunaPalette.hairline, lineWidth: on ? 0 : 1))
+                                    .background(on ? NunaPalette.accent : NunaPalette.ink.opacity(0.07), in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                                    .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: on ? 0 : 1))
                                 Text(verbatim: MoodStore.label(for: v)).font(.nuna(size: 11, weight: .bold))
                                     .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                                     .multilineTextAlignment(.center).lineLimit(2)
@@ -119,8 +119,8 @@ struct NunaMoodView: View {
                         Text(factorKeys.first { $0.id == id }!.title).font(.nuna(size: 13.5, weight: .bold))
                             .foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary)
                             .padding(.horizontal, 14).frame(height: 38)
-                            .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
-                            .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: on ? 0 : 1))
+                            .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: on ? 0 : 1))
                     }.buttonStyle(.plain)
                 }
             }

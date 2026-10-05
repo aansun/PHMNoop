@@ -178,8 +178,8 @@ struct NunaDeepTimelineView: View {
                         Text(verbatim: m.title).font(.nuna(size: 13.5, weight: .bold))
                             .foregroundStyle(metric == m ? NunaPalette.onAccent : NunaPalette.textPrimary)
                             .padding(.horizontal, 14).frame(height: 38)
-                            .background(metric == m ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
-                            .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: metric == m ? 0 : 1))
+                            .background(metric == m ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: metric == m ? 0 : 1))
                     }.buttonStyle(.plain)
                 }
             }
@@ -200,7 +200,7 @@ struct NunaDeepTimelineView: View {
         Button(action: a) {
             Image(systemName: s).font(.nuna(size: 15, weight: .bold))
                 .foregroundStyle(enabled ? NunaPalette.textPrimary : NunaPalette.textMuted.opacity(0.4))
-                .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: Circle())
+                .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
         }.disabled(!enabled)
     }
 

@@ -37,7 +37,7 @@ struct NunaAnyaSheet: View {
                     composer
                     Button { openFull() } label: {
                         Text("Open full conversation").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            .frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.glassStrong, in: Capsule())
+                            .frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain)
                 }
                 .padding(.horizontal, NunaSpacing.screenH).padding(.top, 20).padding(.bottom, 24)
@@ -66,7 +66,7 @@ struct NunaAnyaSheet: View {
             }
             Spacer()
             Text(module.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                .padding(.horizontal, 12).frame(height: 30).background(NunaPalette.glassStrong, in: Capsule())
+                .padding(.horizontal, 12).frame(height: 30).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
         }
     }
 
@@ -88,7 +88,7 @@ struct NunaAnyaSheet: View {
                 if coach.isConfigured, coach.dataConsent, explanation == nil, !explaining {
                     Button { Task { await explain() } } label: {
                         HStack(spacing: 6) { Image(systemName: "sparkles").font(.nuna(size: 12, weight: .bold)); Text("Explain with \(coach.provider.nunaIsOnDevice ? String(localized: "Apple Intelligence") : coach.provider.displayName)") }
-                            .font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 40).background(NunaPalette.glassStrong, in: Capsule())
+                            .font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 40).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain)
                 }
             }
@@ -128,7 +128,7 @@ struct NunaAnyaSheet: View {
                         Spacer()
                         Image(systemName: q.kind == .plan ? "chevron.right" : "arrow.up.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                     }
-                    .padding(.horizontal, 18).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
+                    .padding(.horizontal, 18).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain).disabled(sending || (q.kind == .ask && !(coach.isConfigured)))
                     .opacity(q.kind == .ask && !coach.isConfigured ? 0.45 : 1)
             }
@@ -140,7 +140,7 @@ struct NunaAnyaSheet: View {
             ForEach(turns) { t in
                 if t.role == .user {
                     HStack { Spacer(minLength: 40)
-                        Text(verbatim: t.text).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 14).padding(.vertical, 9).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: 18, style: .continuous)) }
+                        Text(verbatim: t.text).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 14).padding(.vertical, 9).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: 12, style: .continuous)) }
                 } else {
                     NunaCard(small: true) { Text(verbatim: t.text).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading) }
                 }
@@ -155,11 +155,11 @@ struct NunaAnyaSheet: View {
                 .font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1...3).focused($focused)
                 .padding(.leading, 16).padding(.vertical, 12).disabled(!coach.isConfigured).onSubmit { submit() }
             Button { submit() } label: {
-                Image(systemName: "arrow.up").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(width: 38, height: 38).background(NunaPalette.accent, in: Circle())
+                Image(systemName: "arrow.up").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(width: 38, height: 38).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
             }.buttonStyle(.plain).disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty || sending || !coach.isConfigured)
                 .opacity(draft.trimmingCharacters(in: .whitespaces).isEmpty ? 0.4 : 1).padding(.trailing, 5)
         }
-        .frame(minHeight: 48).background(NunaPalette.shade.opacity(0.28), in: Capsule()).overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+        .frame(minHeight: 48).background(NunaPalette.shade.opacity(0.28), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)).overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
     }
 
     // MARK: Actions

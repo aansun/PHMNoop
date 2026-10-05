@@ -51,6 +51,8 @@ struct NunaTodayView: View {
     @State private var showMood = false
     @AppStorage("nuna.keyMetricsLayout") private var metricsLayoutRaw = NunaMetricsLayout.cards.rawValue
     @State private var showAddCard = false
+    /// 0 when Today is at the top, 1 once the pinned score rings have shrunk to their small size.
+    @State private var collapse: CGFloat = 0
     /// Today's suggested session, the same one the plan screen shows. Nil until Charge exists.
     @State private var dayPlan: NunaDayPlanResult?
     @State private var addAfter: TodaySection?
@@ -79,19 +81,25 @@ struct NunaTodayView: View {
             if editing {
                 editScreen
             } else {
-                ScrollView {
-                    VStack(spacing: NunaSpacing.section) {
-                        header
-                        datePill
-                        if !model.isToday { pastDayBanner }
-                        ForEach(sections) { section in sectionView(section) }
-                        customizeButton
+                ZStack(alignment: .top) {
+                    ScrollView {
+                        VStack(spacing: NunaSpacing.section) {
+                            // Space for the pinned header; it scrolls away exactly as fast as the header shrinks.
+                            Color.clear.frame(height: pinnedHeight(collapse: 0))
+                            if !model.isToday { pastDayBanner }
+                            ForEach(sections) { section in sectionView(section) }
+                            customizeButton
+                        }
+                        .padding(.horizontal, NunaSpacing.screenH)
+                        .padding(.bottom, 160)
+                        .background(NunaScrollOffsetReader { offset in
+                        let t = min(max(offset / max(pinnedHeight(collapse: 0) - pinnedHeight(collapse: 1), 1), 0), 1)
+                        if abs(t - collapse) > 0.004 { collapse = t }
+                    })
                     }
-                    .padding(.horizontal, NunaSpacing.screenH)
-                    .padding(.top, 8)
-                    .padding(.bottom, 160)
+                    .scrollIndicators(.hidden)
+                    pinnedHeader
                 }
-                .scrollIndicators(.hidden)
             }
 
             if model.isToday && !editing {
@@ -146,56 +154,76 @@ struct NunaTodayView: View {
 
     // MARK: Header
 
-    private var header: some View {
-        HStack(alignment: .top, spacing: 8) {
-            Text("Today")
-                .font(.nuna(size: NunaTypeSize.h1, weight: .heavy, design: NunaType.design))
-                .foregroundStyle(NunaPalette.textPrimary)
-            Spacer(minLength: 8)
-            Button { router.openDevices() } label: {
-                NunaStrapChip(connected: live.connected, battery: live.batteryPct)
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(Text("WHOOP strap"))
-            Button { showInbox = true } label: {
-                Image(systemName: "bell")
-                    .font(.nuna(size: 17, weight: .bold))
-                    .foregroundStyle(NunaPalette.textPrimary)
-                    .frame(width: 44, height: 44)
-                    .background(NunaPalette.glassStrong, in: Circle())
-                    .overlay(Circle().strokeBorder(NunaPalette.hairline, lineWidth: 1))
-                    .overlay(alignment: .topTrailing) {
-                        if updateStore.unreadCount > 0 {
-                            Circle().fill(NunaPalette.alert).frame(width: 10, height: 10)
-                                .overlay(Circle().strokeBorder(NunaPalette.card, lineWidth: 2))
-                                .offset(x: -10, y: 10)
-                        }
-                    }
-            }
-            .accessibilityLabel(Text("Updates"))
-        }
-        .padding(.top, 2)
+    private var showsRings: Bool { sections.contains(.hero) }
+
+    private func pinnedHeight(collapse t: CGFloat) -> CGFloat {
+        let bar: CGFloat = 52
+        guard showsRings else { return bar + 8 }
+        return bar + 6 + NunaScoreRings.fullHeight + (NunaScoreRings.compactHeight - NunaScoreRings.fullHeight) * t + 8
     }
 
-    private var datePill: some View {
-        HStack {
-            Button { showDate = true } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "calendar").font(.nuna(size: 14, weight: .bold))
-                    Text(verbatim: dateTitle).font(.nuna(size: 14, weight: .heavy))
-                    Image(systemName: "chevron.down").font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+    /// Bell, the day (with arrows to step it) and the strap on one slim row, then the three score rings. Stays at the top while
+    /// the page scrolls under it; the rings shrink as the page moves.
+    private var pinnedHeader: some View {
+        VStack(spacing: 6) {
+            HStack(spacing: 8) {
+                Button { showInbox = true } label: {
+                    Image(systemName: "bell").font(.nuna(size: 17, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                        .frame(width: 44, height: 44)
+                        .overlay(alignment: .topTrailing) {
+                            if updateStore.unreadCount > 0 {
+                                Circle().fill(NunaPalette.alert).frame(width: 9, height: 9).offset(x: -8, y: 9)
+                            }
+                        }
                 }
-                .foregroundStyle(NunaPalette.textPrimary)
-                .padding(.horizontal, 14).frame(height: 38)
-                .background(NunaPalette.glassStrong, in: Capsule())
-                .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                .accessibilityLabel(Text("Updates"))
+                Spacer(minLength: 0)
+                dayNav
+                Spacer(minLength: 0)
+                Button { router.openDevices() } label: {
+                    NunaStrapChip(connected: live.connected, battery: live.batteryPct)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("WHOOP strap"))
             }
-            .buttonStyle(.plain)
-            Spacer()
+            .frame(height: 46)
+            if showsRings {
+                NunaScoreRings(charge: model.charge, effort: model.effort, rest: model.rest, effortScale: effortScale, collapse: collapse)
+                    .padding(.horizontal, 4)
+            }
         }
+        .padding(.horizontal, NunaSpacing.screenH - 4)
+        .padding(.top, 2).padding(.bottom, 8)
+        .background(
+            NunaPalette.canvas.ignoresSafeArea(edges: .top)
+                .overlay(alignment: .bottom) { Rectangle().fill(NunaPalette.hairline).frame(height: 1).opacity(Double(collapse)) }
+        )
+    }
+
+    /// "<  Today  >": the arrows step one day, the middle opens the calendar.
+    private var dayNav: some View {
+        HStack(spacing: 0) {
+            Button { model.dayOffset += 1 } label: {
+                Image(systemName: "chevron.left").font(.nuna(size: 14, weight: .bold)).frame(width: 40, height: 40)
+            }
+            Button { showDate = true } label: {
+                Text(verbatim: dateTitle).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    .frame(minWidth: 110).frame(height: 36)
+                    .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
+            }
+            Button { if model.dayOffset > 0 { model.dayOffset -= 1 } } label: {
+                Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).frame(width: 40, height: 40)
+                    .opacity(model.dayOffset > 0 ? 1 : 0.3)
+            }
+            .disabled(model.dayOffset == 0)
+        }
+        .buttonStyle(.plain)
+        .foregroundStyle(NunaPalette.textPrimary)
     }
 
     private var dateTitle: String {
+        if model.dayOffset == 0 { return String(localized: "Today") }
+        if model.dayOffset == 1 { return String(localized: "Yesterday") }
         let f = DateFormatter()
         f.locale = AppLanguage.activeLocale
         f.setLocalizedDateFormatFromTemplate("EEE d MMM")
@@ -306,14 +334,14 @@ struct NunaTodayView: View {
                 Spacer()
                 Button { withAnimation { toggleHidden(section) } } label: {
                     Image(systemName: "xmark").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(width: 34, height: 34).background(NunaPalette.glassStrong, in: Circle())
+                        .frame(width: 34, height: 34).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                 }
                 .accessibilityLabel(Text("Hide"))
             }
             editPreview(section)
         }
         .padding(12)
-        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous)
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous)
             .strokeBorder(NunaPalette.ink.opacity(0.22), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5])))
         .accessibilityAction(named: Text("Move up")) { move(section, by: -1) }
         .accessibilityAction(named: Text("Move down")) { move(section, by: 1) }
@@ -321,7 +349,7 @@ struct NunaTodayView: View {
 
     /// A compact stand-in for the card, inside the dashed frame.
     @ViewBuilder private func editPreview(_ section: TodaySection) -> some View {
-        let inner = RoundedRectangle(cornerRadius: 18, style: .continuous).fill(NunaPalette.cardHighlight)
+        let inner = RoundedRectangle(cornerRadius: 12, style: .continuous).fill(NunaPalette.cardHighlight)
         switch section {
         case .hero:
             HStack {
@@ -375,7 +403,7 @@ struct NunaTodayView: View {
 
     private func miniChip(_ title: LocalizedStringKey) -> some View {
         Text(title).font(.nuna(size: 12.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-            .padding(.horizontal, 12).frame(height: 32).background(NunaPalette.glassStrong, in: Capsule())
+            .padding(.horizontal, 12).frame(height: 32).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
     }
 
     private func miniRing(_ value: Double?, _ label: LocalizedStringKey, _ color: Color, _ unit: String, fraction: Double? = nil) -> some View {
@@ -469,7 +497,7 @@ struct NunaTodayView: View {
                     }
                 }
                 Button { showAddCard = false; customizeDestination = .today; DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { showCustomize = true } } label: {
-                    Text("Card settings").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.glassStrong, in: Capsule())
+                    Text("Card settings").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain)
             }
             .padding(.horizontal, NunaSpacing.screenH).padding(.bottom, 24)
@@ -504,9 +532,26 @@ struct NunaTodayView: View {
     @ViewBuilder private func sectionView(_ section: TodaySection) -> some View {
         switch section {
         case .hero:
+            // The rings themselves are pinned at the top; what belongs with them stays here.
             VStack(spacing: NunaSpacing.section) {
-                NunaScoreCard(charge: model.charge, effort: model.effort, rest: model.rest,
-                              effortScale: effortScale, readyLine: readyLine, heartRate: model.isToday ? live.heartRate : nil)
+                if readyLine != nil || (model.isToday && live.heartRate != nil) {
+                    HStack {
+                        if let readyLine { NunaChip(readyLine, systemImage: "bolt.fill", color: NunaPalette.charge) }
+                        Spacer(minLength: 8)
+                        if model.isToday, let hr = live.heartRate {
+                            NavigationLink(value: TabRoute.fullDayChart) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: "heart").font(.nuna(size: 12, weight: .bold))
+                                    Text(verbatim: "\(hr) bpm").font(.nuna(size: 12.5, weight: .bold))
+                                }
+                                .foregroundStyle(NunaPalette.textPrimary)
+                                .padding(.horizontal, 12).frame(height: 30)
+                                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                }
                 if model.isToday, let warn = appModel.illnessSignal, warn.level != .quiet {
                     NunaEarlyWarningCard(result: warn)
                 }
@@ -566,16 +611,18 @@ struct NunaTodayView: View {
                 .buttonStyle(.plain)
             }
         case .journal:
-            if model.isToday {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 10) {
-                        if hydrationEnabled {
-                            NunaQuickChip(title: "Water +250", systemImage: "drop", tint: NunaPalette.effortText) {
-                                Task { _ = await repo.logHydration(amountMl: 250); repo.noteHydrationChanged() }
+            VStack(spacing: 12) {
+                NunaJournalWeekCard { router.requestedDestination = .journal }
+                if model.isToday {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 10) {
+                            if hydrationEnabled {
+                                NunaQuickChip(title: "Water +250", systemImage: "drop", tint: NunaPalette.effortText) {
+                                    Task { _ = await repo.logHydration(amountMl: 250); repo.noteHydrationChanged() }
+                                }
                             }
+                            NunaQuickChip(title: "Mood", systemImage: "heart") { showMood = true }
                         }
-                        NunaQuickChip(title: "Journal", systemImage: "bookmark") { router.requestedDestination = .journal }
-                        NunaQuickChip(title: "Mood", systemImage: "heart") { showMood = true }
                     }
                 }
             }
@@ -670,6 +717,39 @@ struct NunaTodayView: View {
             case .rest:
                 return tile(m, "Sleep", model.sleepMinutes.map { NunaSleepFormat.duration($0) } ?? "–", "", .sleep(0), "moon", NunaPalette.restText)
             case .charge, .effort: return NunaMetricTile(id: m.rawValue, label: "", value: "", unit: "", route: nil)
+            }
+        }
+    }
+}
+
+/// Reports how far the scroll view it sits behind has scrolled (0 at the top, negative bounce clamped), by observing the
+/// enclosing UIScrollView's content offset. SwiftUI offers no scroll offset on iOS 17.
+struct NunaScrollOffsetReader: UIViewRepresentable {
+    let onChange: (CGFloat) -> Void
+
+    func makeUIView(context: Context) -> UIView { Probe() }
+
+    func updateUIView(_ view: UIView, context: Context) {
+        (view as? Probe)?.onChange = onChange
+    }
+
+    private final class Probe: UIView {
+        var onChange: ((CGFloat) -> Void)?
+        private var observation: NSKeyValueObservation?
+
+        override func didMoveToWindow() {
+            super.didMoveToWindow()
+            observation = nil
+            guard window != nil else { return }
+            // The probe is the scroll view's background, so the scroll view is somewhere up the chain.
+            DispatchQueue.main.async { [weak self] in
+                guard let self else { return }
+                var v: UIView? = self.superview
+                while let cur = v, !(cur is UIScrollView) { v = cur.superview }
+                guard let scroll = v as? UIScrollView else { return }
+                self.observation = scroll.observe(\.contentOffset, options: [.initial, .new]) { [weak self] sv, _ in
+                    self?.onChange?(max(0, sv.contentOffset.y + sv.adjustedContentInset.top))
+                }
             }
         }
     }

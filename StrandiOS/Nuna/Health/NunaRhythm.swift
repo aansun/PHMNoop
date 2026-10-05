@@ -20,7 +20,7 @@ struct NunaRhythmConsentView: View {
                 HStack {
                     Button(action: onCancel) {
                         Image(systemName: "xmark").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: Circle())
+                            .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                     }.buttonStyle(.plain).accessibilityLabel(Text("Close"))
                     Spacer()
                     NunaChip("Experimental")
@@ -36,7 +36,7 @@ struct NunaRhythmConsentView: View {
                     ForEach(Array(RhythmConsent.points.enumerated()), id: \.offset) { i, p in
                         HStack(alignment: .top, spacing: 14) {
                             Text(verbatim: "\(i + 1)").font(.nuna(size: 14, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                                .frame(width: 30, height: 30).background(NunaPalette.glassStrong, in: Circle())
+                                .frame(width: 30, height: 30).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(verbatim: p.0).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                                 Text(verbatim: p.1).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
@@ -56,11 +56,11 @@ struct NunaRhythmConsentView: View {
                 Button(action: onAccept) {
                     Text("Turn on Rhythm").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
                         .frame(maxWidth: .infinity).frame(height: 56)
-                        .background(NunaPalette.accent.opacity(understood ? 1 : 0.35), in: Capsule())
+                        .background(NunaPalette.accent.opacity(understood ? 1 : 0.35), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain).disabled(!understood)
                 Button(action: onCancel) {
                     Text("Not now").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
+                        .frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain)
             }
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 120)
@@ -83,7 +83,7 @@ struct NunaPoincarePlot: View {
         Canvas { ctx, size in
             let s = min(size.width, size.height), inset: CGFloat = 12, plot = s - inset * 2
             func map(_ v: Double) -> CGFloat { inset + CGFloat((min(max(v, lo), hi) - lo) / (hi - lo)) * plot }
-            ctx.fill(Path(roundedRect: CGRect(x: 0, y: 0, width: s, height: s), cornerRadius: 16), with: .color(NunaPalette.shade.opacity(0.28)))
+            ctx.fill(Path(roundedRect: CGRect(x: 0, y: 0, width: s, height: s), cornerRadius: 10), with: .color(NunaPalette.shade.opacity(0.28)))
             var grid = Path()
             for i in 1...3 {
                 let p = inset + plot * CGFloat(i) / 4

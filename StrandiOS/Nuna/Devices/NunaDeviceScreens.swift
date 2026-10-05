@@ -96,7 +96,7 @@ struct NunaDeviceSyncView: View {
                             Text(verbatim: String(localized: "\(behind) pages were waiting on the strap when it connected.")).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                         Button { model.ble.abortBackfill() } label: {
-                            Text("Stop sync").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 20).frame(height: 42).background(NunaPalette.glassStrong, in: Capsule())
+                            Text("Stop sync").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 20).frame(height: 42).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                         }.buttonStyle(.plain)
                     } else {
                         Text(verbatim: live.lastSyncedAt.map { NunaDeviceFormat.clock($0) } ?? "–").font(.nuna(size: 52, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(52)).foregroundStyle(NunaPalette.textPrimary)
@@ -105,7 +105,7 @@ struct NunaDeviceSyncView: View {
                     }
                     if !live.backfilling {
                         Button { model.ble.syncNow() } label: {
-                            Text("Sync now").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54).background(NunaPalette.accent, in: Capsule())
+                            Text("Sync now").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                         }.buttonStyle(.plain).disabled(!live.connected).opacity(live.connected ? 1 : 0.4)
                     }
                 }
@@ -177,7 +177,7 @@ struct NunaDeviceHelpView: View {
     @ViewBuilder private func step<C: View>(_ n: Int, _ title: LocalizedStringKey, _ detail: LocalizedStringKey, @ViewBuilder _ action: () -> C = { EmptyView() }) -> some View {
         NunaCard(small: true) {
             HStack(alignment: .top, spacing: 14) {
-                Text(verbatim: "\(n)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 32, height: 32).background(NunaPalette.glassStrong, in: Circle())
+                Text(verbatim: "\(n)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 32, height: 32).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                 VStack(alignment: .leading, spacing: 6) {
                     Text(title).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Text(detail).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
@@ -189,7 +189,7 @@ struct NunaDeviceHelpView: View {
     }
     private func button(_ t: LocalizedStringKey, _ run: @escaping () -> Void) -> some View { Button(action: run) { pill(t) }.buttonStyle(.plain) }
     private func pill(_ t: LocalizedStringKey) -> some View {
-        Text(t).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 36).background(NunaPalette.glassStrong, in: Capsule())
+        Text(t).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 36).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
     }
 }
 
@@ -226,11 +226,11 @@ struct NunaDeviceRepairView: View {
     private func step(_ n: Int, _ title: LocalizedStringKey, _ detail: LocalizedStringKey, _ button: LocalizedStringKey, _ run: @escaping () -> Void) -> some View {
         NunaCard(small: true) {
             HStack(alignment: .top, spacing: 14) {
-                Text(verbatim: "\(n)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 32, height: 32).background(NunaPalette.glassStrong, in: Circle())
+                Text(verbatim: "\(n)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 32, height: 32).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                 VStack(alignment: .leading, spacing: 6) {
                     Text(title).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Text(detail).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
-                    Button(action: run) { Text(button).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 36).background(NunaPalette.glassStrong, in: Capsule()) }.buttonStyle(.plain).padding(.top, 2)
+                    Button(action: run) { Text(button).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 36).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)) }.buttonStyle(.plain).padding(.top, 2)
                 }
                 Spacer(minLength: 0)
             }
@@ -264,10 +264,10 @@ struct NunaDeviceLogView: View {
             }
             HStack(spacing: 10) {
                 Button { UIPasteboard.general.string = live.log.joined(separator: "\n"); copied = true; DispatchQueue.main.asyncAfter(deadline: .now() + 2) { copied = false } } label: {
-                    Text(copied ? "Copied" : "Copy").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.accent, in: Capsule())
+                    Text(copied ? "Copied" : "Copy").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain).disabled(lines.isEmpty)
                 ShareLink(item: live.log.joined(separator: "\n")) {
-                    Text("Share").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
+                    Text("Share").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }
             }
             VStack(alignment: .leading, spacing: 10) {

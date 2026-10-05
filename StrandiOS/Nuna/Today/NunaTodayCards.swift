@@ -45,71 +45,80 @@ struct NunaStrapChip: View {
     let battery: Double?
 
     var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: "applewatch")
-                .font(.nuna(size: 15, weight: .bold))
-                .foregroundStyle(connected ? NunaPalette.charge : NunaPalette.textMuted)
+        HStack(spacing: 6) {
             if let battery {
-                RoundedRectangle(cornerRadius: 3, style: .continuous)
-                    .strokeBorder(NunaPalette.textSecondary, lineWidth: 1.5)
-                    .frame(width: 24, height: 12)
-                    .overlay(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 1, style: .continuous)
-                            .fill(battery < 20 ? NunaPalette.alertText : NunaPalette.charge)
-                            .frame(width: max(2, 18 * CGFloat(min(max(battery, 0), 100) / 100)), height: 7)
-                            .padding(.leading, 2.5)
-                    }
-                Text(verbatim: "\(Int(battery.rounded()))%").font(.nuna(size: 13, weight: .heavy))
-            } else {
-                Text(connected ? "Connected" : "Connect").font(.nuna(size: 13, weight: .heavy))
+                Text(verbatim: "\(Int(battery.rounded()))%").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
             }
+            Image(systemName: "applewatch").font(.nuna(size: 20, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
+                .overlay(alignment: .topTrailing) {
+                    Circle().fill(connected ? NunaPalette.charge : NunaPalette.textMuted).frame(width: 7, height: 7).offset(x: 2, y: -1)
+                }
         }
-        .foregroundStyle(NunaPalette.textPrimary)
-        .padding(.horizontal, 14)
-        .frame(height: 44)
-        .background(NunaPalette.glassStrong, in: Capsule())
-        .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+        .frame(minHeight: 44)
         .accessibilityElement(children: .combine)
     }
 }
 
 // MARK: - Score card (Charge / Effort / Rest)
 
-struct NunaScoreCard: View {
+/// The three daily scores, drawn straight on the screen (no card) and pinned to the top of Today. `collapse` runs from 0 (full
+/// size: big rings with their name and state under them) to 1 (small rings with the name beside them), driven by how far the page
+/// has scrolled, so the rings stay in view and shrink instead of scrolling away.
+struct NunaScoreRings: View {
     let charge: LiquidTodayView.ChargeDisplay
     let effort: Double?          // stored 0-100
     let rest: Double?            // 0-100
     let effortScale: EffortScale
-    let readyLine: LocalizedStringKey?
-    let heartRate: Int?
+    var collapse: CGFloat = 0
+
+    static let fullHeight: CGFloat = 168
+    static let compactHeight: CGFloat = 36
+
+    private func lerp(_ a: CGFloat, _ b: CGFloat) -> CGFloat { a + (b - a) * min(max(collapse, 0), 1) }
 
     var body: some View {
-        NunaCard(padding: EdgeInsets(top: 22, leading: 12, bottom: 16, trailing: 12)) {
-            VStack(spacing: 18) {
-                HStack(alignment: .top, spacing: 0) {
-                    ring(.charge)
-                    ring(.effort)
-                    ring(.rest)
-                }
-                if readyLine != nil || heartRate != nil {
-                    HStack {
-                        if let readyLine { NunaChip(readyLine, systemImage: "bolt.fill", color: NunaPalette.charge) }
-                        Spacer(minLength: 8)
-                        if let heartRate {
-                            NavigationLink(value: TabRoute.fullDayChart) {
-                                HStack(spacing: 6) {
-                                    Image(systemName: "heart").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                    Text(verbatim: "\(heartRate) bpm").font(.nuna(size: 12.5, weight: .bold))
-                                }
-                                .foregroundStyle(NunaPalette.textPrimary)
-                                .padding(.horizontal, 12).frame(height: 30)
-                                .background(NunaPalette.glassStrong, in: Capsule())
-                                .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
-                            }
-                            .buttonStyle(.plain)
-                        }
+        HStack(alignment: .top, spacing: 0) {
+            item(.charge); item(.effort); item(.rest)
+        }
+        .frame(height: lerp(Self.fullHeight, Self.compactHeight), alignment: .top)
+        .clipped()
+    }
+
+    @ViewBuilder private func item(_ kind: Kind) -> some View {
+        let v = values(kind)
+        let size = lerp(112, 26)
+        ringLink(v.route) {
+            Group {
+                if collapse < 0.55 {
+                    VStack(spacing: 8) {
+                        ringView(v, size: size)
+                        Text(v.label).font(.nuna(size: NunaTypeSize.caption, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                            .foregroundStyle(NunaPalette.textSecondary)
+                        Text(v.state).font(.nuna(size: 13, weight: .heavy))
+                            .foregroundStyle(v.number == "–" ? NunaPalette.textMuted : v.textColor)
+                            .opacity(Double(1 - collapse * 2.2))
                     }
-                    .padding(.horizontal, 8)
+                } else {
+                    HStack(spacing: 8) {
+                        ringView(v, size: size)
+                        Text(v.label).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                            .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
+                    }
+                }
+            }
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    private func ringView(_ v: RingValues, size: CGFloat) -> some View {
+        NunaRingGauge(fraction: v.fraction, color: v.color, size: size, lineWidth: max(3.5, size * 0.09)) {
+            if size >= 60 {
+                HStack(alignment: .firstTextBaseline, spacing: 1) {
+                    Text(verbatim: v.number).font(.nuna(size: size * 0.27, weight: .bold, design: NunaType.design))
+                        .tracking(nunaTrackingNumber(size * 0.27)).foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
+                    if !v.unit.isEmpty && v.number != "–" {
+                        Text(verbatim: v.unit).font(.nuna(size: size * 0.13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    }
                 }
             }
         }
@@ -126,33 +135,6 @@ struct NunaScoreCard: View {
         let label: LocalizedStringKey
         let state: LocalizedStringKey
         let route: String
-    }
-
-    @ViewBuilder private func ring(_ kind: Kind) -> some View {
-        let v = values(kind)
-        ringLink(v.route) {
-            VStack(spacing: 8) {
-                NunaRingGauge(fraction: v.fraction, color: v.color, size: 98, lineWidth: 9) {
-                    HStack(alignment: .firstTextBaseline, spacing: 1) {
-                        Text(verbatim: v.number)
-                            .font(.nuna(size: 25, weight: .bold, design: NunaType.design))
-                            .foregroundStyle(NunaPalette.textPrimary)
-                            .minimumScaleFactor(0.6).lineLimit(1)
-                        if !v.unit.isEmpty && v.number != "–" {
-                            Text(verbatim: v.unit).font(.nuna(size: 12.5, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                        }
-                    }
-                }
-                Text(v.label)
-                    .font(.nuna(size: NunaTypeSize.caption, weight: .heavy))
-                    .tracking(nunaTrackingLabel).textCase(.uppercase)
-                    .foregroundStyle(NunaPalette.textSecondary)
-                Text(v.state)
-                    .font(.nuna(size: 13, weight: .heavy))
-                    .foregroundStyle(v.number == "–" ? NunaPalette.textMuted : v.textColor)
-            }
-            .frame(maxWidth: .infinity)
-        }
     }
 
     /// Charge and Effort open the Nuna metric screen; Rest opens the Nuna sleep screen.
@@ -304,7 +286,7 @@ struct NunaStressCard: View {
                             Text(verbatim: String(localized: "Peak \(format(level)) · \(clock(peak.startTs))"))
                                 .font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                                 .padding(.horizontal, 10).frame(height: 26)
-                                .background(NunaPalette.warning.opacity(0.18), in: Capsule())
+                                .background(NunaPalette.warning.opacity(0.18), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                         }
                     }
                 }
@@ -406,8 +388,8 @@ struct NunaMetricsGrid: View {
         return Text(verbatim: text)
             .font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(tint)
             .padding(.horizontal, 8).frame(height: 24)
-            .background(NunaPalette.tint(tint), in: Capsule())
-            .overlay(Capsule().strokeBorder(tint.opacity(0.35), lineWidth: 1))
+            .background(NunaPalette.tint(tint), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(tint.opacity(0.35), lineWidth: 1))
     }
 
     private var grid: some View {
@@ -437,8 +419,8 @@ struct NunaMetricsGrid: View {
                         Text(verbatim: delta)
                             .font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(tint)
                             .padding(.horizontal, 8).frame(height: 24)
-                            .background(NunaPalette.tint(tint), in: Capsule())
-                            .overlay(Capsule().strokeBorder(tint.opacity(0.35), lineWidth: 1))
+                            .background(NunaPalette.tint(tint), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(tint.opacity(0.35), lineWidth: 1))
                     }
                 }
                 .frame(minHeight: 24, alignment: .top)
@@ -509,10 +491,73 @@ struct NunaQuickChip: View {
             }
             .foregroundStyle(NunaPalette.textPrimary)
             .padding(.horizontal, 16).frame(height: 40)
-            .background(NunaPalette.glassStrong, in: Capsule())
-            .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
         }
         .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Journal week card
+
+/// "My journal": the last seven days ending today, a check for each day with answers in the journal, an empty ring for a day
+/// without, and the card opens the journal. Reads the days that have a native journal answer.
+struct NunaJournalWeekCard: View {
+    @EnvironmentObject private var repo: Repository
+    let onOpen: () -> Void
+    @State private var logged: Set<String> = []
+
+    private var days: [Date] {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        return (0..<7).reversed().compactMap { cal.date(byAdding: .day, value: -$0, to: today) }
+    }
+
+    var body: some View {
+        Button(action: onOpen) {
+            NunaCard(small: true) {
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack {
+                        Text("My journal").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                            .foregroundStyle(NunaPalette.textPrimary)
+                        Spacer()
+                        Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    }
+                    HStack(spacing: 0) {
+                        ForEach(days, id: \.self) { d in
+                            let key = Repository.localDayKey(d)
+                            let isToday = Calendar.current.isDateInToday(d)
+                            VStack(spacing: 10) {
+                                Text(verbatim: Self.weekday(d)).font(.nuna(size: 11.5, weight: isToday ? .heavy : .bold)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                                    .foregroundStyle(isToday ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+                                mark(done: logged.contains(key), today: isToday)
+                            }
+                            .frame(maxWidth: .infinity)
+                        }
+                    }
+                }
+            }
+        }
+        .buttonStyle(.plain)
+        .task(id: repo.refreshSeq) {
+            guard let first = days.first, let last = days.last else { return }
+            logged = await repo.nativeJournalDays(from: Repository.localDayKey(first), to: Repository.localDayKey(last))
+        }
+    }
+
+    @ViewBuilder private func mark(done: Bool, today: Bool) -> some View {
+        if done {
+            Image(systemName: "checkmark").font(.nuna(size: 13, weight: .black)).foregroundStyle(.black)
+                .frame(width: 30, height: 30).background(NunaPalette.charge, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+        } else {
+            Circle().fill(today ? NunaPalette.textMuted.opacity(0.55) : .clear).frame(width: 30, height: 30)
+                .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(today ? NunaPalette.textSecondary : NunaPalette.hairline, lineWidth: 2))
+        }
+    }
+
+    private static func weekday(_ d: Date) -> String {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE")
+        return f.string(from: d)
     }
 }
 #endif

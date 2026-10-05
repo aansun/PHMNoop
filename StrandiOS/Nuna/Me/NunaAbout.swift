@@ -44,7 +44,7 @@ struct NunaWhatsNewView: View {
             if shown < AppChangelog.releases.count {
                 Button { shown = min(shown + 8, AppChangelog.releases.count) } label: {
                     Text("Show older releases").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.glassStrong, in: Capsule())
+                        .frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain)
             }
         }

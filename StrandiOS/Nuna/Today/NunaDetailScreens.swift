@@ -680,7 +680,7 @@ struct NunaAllMetricsView: View {
             if let d = row.delta {
                 let c = (row.good ?? true) ? NunaPalette.charge : NunaPalette.warning
                 Text(verbatim: d).font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(c)
-                    .padding(.horizontal, 8).frame(height: 24).background(NunaPalette.tint(c), in: Capsule())
+                    .padding(.horizontal, 8).frame(height: 24).background(NunaPalette.tint(c), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }
             Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
         }
@@ -699,14 +699,14 @@ private struct NunaAllMetricsScaffold<Content: View>: View {
                 HStack(spacing: 10) {
                     Button { dismiss() } label: {
                         Image(systemName: "chevron.left").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: Circle())
-                            .overlay(Circle().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                            .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
                     }
                     Text("All metrics").font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Spacer()
                     Button(action: onEdit) { Text("Edit").font(.nuna(size: 13.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
-                        .padding(.horizontal, 14).frame(height: 34).background(NunaPalette.glassStrong, in: Capsule())
-                        .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1)) }
+                        .padding(.horizontal, 14).frame(height: 34).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1)) }
                 }
                 content
             }

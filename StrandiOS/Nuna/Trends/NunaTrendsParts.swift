@@ -214,7 +214,7 @@ struct NunaScatter: View {
             let pad: CGFloat = 10
             func mx(_ v: Double) -> CGFloat { pad + CGFloat((v - xRange.lowerBound) / max(xRange.upperBound - xRange.lowerBound, 0.0001)) * (size.width - pad * 2) }
             func my(_ v: Double) -> CGFloat { size.height - pad - CGFloat((v - yRange.lowerBound) / max(yRange.upperBound - yRange.lowerBound, 0.0001)) * (size.height - pad * 2) }
-            ctx.fill(Path(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: 14), with: .color(NunaPalette.shade.opacity(0.28)))
+            ctx.fill(Path(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: 10), with: .color(NunaPalette.shade.opacity(0.28)))
             var grid = Path()
             for i in 1...3 {
                 let y = size.height * CGFloat(i) / 4, x = size.width * CGFloat(i) / 4
@@ -244,7 +244,7 @@ struct NunaLegendItem: View {
     var dot = false
     var body: some View {
         HStack(spacing: 6) {
-            Capsule().fill(color).frame(width: dot ? 10 : 14, height: dot ? 10 : 8)
+            RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(color).frame(width: dot ? 10 : 14, height: dot ? 10 : 8)
             Text(text).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
         }
     }

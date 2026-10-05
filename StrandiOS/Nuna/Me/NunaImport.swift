@@ -44,7 +44,7 @@ struct NunaImportView: View {
                  button: model.isImporting(.appleHealth) ? "Working…" : "Choose export.zip", working: model.isImporting(.appleHealth), target: .appleHealth,
                  result: model.appleHealthImportSummary, failed: model.appleHealthImportFailed, footer: nil) {
                 Button(role: .destructive) { confirmDeleteAppleHealth = true } label: {
-                    Text(appleHealthDeleting ? "Removing…" : "Remove imported data").font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.alertText).frame(maxWidth: .infinity).frame(height: 46).background(NunaPalette.glassStrong, in: Capsule())
+                    Text(appleHealthDeleting ? "Removing…" : "Remove imported data").font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.alertText).frame(maxWidth: .infinity).frame(height: 46).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain).disabled(busy)
                 if let s = appleHealthDeletedSummary { Text(verbatim: s).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.charge) }
             }
@@ -74,7 +74,7 @@ struct NunaImportView: View {
                 Text(blurb).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 Button { presentImporter(target) } label: {
                     HStack(spacing: 8) { if working { ProgressView().controlSize(.small).tint(NunaPalette.onAccent) }; Text(button).font(.nuna(size: 15.5, weight: .bold)) }
-                        .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.accent, in: Capsule())
+                        .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain).disabled(busy).opacity(busy && !working ? 0.4 : 1)
                 if let result { Text(verbatim: result).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(failed ? NunaPalette.warning : NunaPalette.charge).fixedSize(horizontal: false, vertical: true) }
                 if let footer { Text(verbatim: footer).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) }

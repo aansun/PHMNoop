@@ -293,8 +293,8 @@ struct NunaCompareView: View {
                     } label: {
                         Text(verbatim: NunaSignals.find(id)?.title ?? id).font(.nuna(size: 13.5, weight: .bold))
                             .foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 38)
-                            .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
-                            .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: on ? 0 : 1))
+                            .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: on ? 0 : 1))
                     }.buttonStyle(.plain)
                 }
             }
@@ -325,7 +325,7 @@ struct NunaCompareView: View {
                 }
                 HStack(spacing: 14) {
                     ForEach(Array(picked.enumerated()), id: \.offset) { i, id in
-                        HStack(spacing: 6) { Capsule().fill(colors[i % colors.count]).frame(width: 14, height: 8)
+                        HStack(spacing: 6) { RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(colors[i % colors.count]).frame(width: 14, height: 8)
                             Text(verbatim: NunaSignals.find(id)?.title ?? id).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                     }
                 }
@@ -365,7 +365,7 @@ struct NunaCompareView: View {
                     if !saved.contains(where: { $0.keys == item.keys && $0.days == item.days }) { saved.append(item); SavedComparison.store(saved) }
                 } label: {
                     HStack(spacing: 8) { Image(systemName: "checkmark").font(.nuna(size: 13, weight: .bold)); Text("Save comparison").font(.nuna(size: 15, weight: .bold)) }
-                        .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 46).background(NunaPalette.glassStrong, in: Capsule())
+                        .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 46).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain)
             }
         }
@@ -423,7 +423,7 @@ struct NunaExploreView: View {
                 Image(systemName: "magnifyingglass").foregroundStyle(NunaPalette.textMuted)
                 TextField("", text: $query, prompt: Text("Search signals").foregroundStyle(NunaPalette.textMuted)).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
             }
-            .padding(.horizontal, 16).frame(height: 48).background(NunaPalette.shade.opacity(0.28), in: Capsule()).overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+            .padding(.horizontal, 16).frame(height: 48).background(NunaPalette.shade.opacity(0.28), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)).overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     chip("all", String(localized: "All")); chip("fav", String(localized: "Favourites"))
@@ -451,7 +451,7 @@ struct NunaExploreView: View {
     private func chip(_ id: String, _ title: String) -> some View {
         Button { filter = id } label: {
             Text(verbatim: title).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(filter == id ? NunaPalette.onAccent : NunaPalette.textPrimary)
-                .padding(.horizontal, 14).frame(height: 36).background(filter == id ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
+                .padding(.horizontal, 14).frame(height: 36).background(filter == id ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
         }.buttonStyle(.plain)
     }
 

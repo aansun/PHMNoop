@@ -258,7 +258,7 @@ struct NunaSleepStageSection: View {
                     let on = m.id == current
                     Button { withAnimation(.easeInOut(duration: 0.2)) { metric = m.id } } label: {
                         Text(m.chip).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary)
-                            .padding(.horizontal, 16).frame(height: 38).background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: Capsule())
+                            .padding(.horizontal, 16).frame(height: 38).background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain).accessibilityAddTraits(on ? .isSelected : [])
                 }
             }
@@ -324,7 +324,7 @@ struct NunaSleepStageSection: View {
                         Text(statusText(st.status)).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                     }
                     .padding(.horizontal, 12).padding(.vertical, 10).frame(maxWidth: .infinity, alignment: .leading)
-                    .background(st.tint.opacity(0.14), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .background(st.tint.opacity(0.14), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 }
                 Text(m.id == "hr"
                      ? "Figures cover the time you were asleep. This compares with your own recent nights and is not a medical assessment; if you feel unwell, talk to a professional."
@@ -382,8 +382,8 @@ struct NunaSleepStageSection: View {
             .frame(height: 22)
         }
         .padding(.vertical, 9).padding(.horizontal, 10)
-        .background(NunaPalette.ink.opacity(on ? 0.09 : 0.045), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(on ? NunaPalette.textMuted : .clear, lineWidth: 1.5))
+        .background(NunaPalette.ink.opacity(on ? 0.09 : 0.045), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(on ? NunaPalette.textMuted : .clear, lineWidth: 1.5))
         .contentShape(Rectangle())
         .onTapGesture { withAnimation(.easeInOut(duration: 0.2)) { selected = on ? nil : stage } }
         .accessibilityElement(children: .ignore)
@@ -487,9 +487,9 @@ struct NunaStageCompare: View {
                 let scale = 70.0   // bar shows 0 to 70% of time in bed
                 let x: (Double) -> CGFloat = { CGFloat(min(max($0, 0), scale) / scale) * w }
                 ZStack(alignment: .leading) {
-                    Capsule().fill(NunaPalette.ink.opacity(0.08))
-                    Capsule().fill(NunaPalette.charge.opacity(0.28)).frame(width: max(4, x(r.hi) - x(r.lo))).offset(x: x(r.lo))
-                    Capsule().fill(r.stage.nunaColor).frame(width: max(6, x(pct)))
+                    RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.ink.opacity(0.08))
+                    RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.charge.opacity(0.28)).frame(width: max(4, x(r.hi) - x(r.lo))).offset(x: x(r.lo))
+                    RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(r.stage.nunaColor).frame(width: max(6, x(pct)))
                     if let u { Rectangle().fill(NunaPalette.textPrimary.opacity(0.8)).frame(width: 2, height: 14).offset(x: x(u / total * 100) - 1) }
                 }
             }

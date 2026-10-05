@@ -64,7 +64,7 @@ struct NunaBackupView: View {
                     Text(verbatim: String(localized: "\(snapshots.count) backups kept")).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     Text("Saved in the folder you choose. Point it at iCloud Drive to reach every Apple device.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                     Button { backupNow() } label: {
-                        Text(busy ? "Working…" : "Back up now").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54).background(NunaPalette.accent, in: Capsule())
+                        Text(busy ? "Working…" : "Back up now").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain).disabled(busy || !FolderBackup.hasFolder).opacity(FolderBackup.hasFolder ? 1 : 0.4)
                 }
             }
@@ -92,7 +92,7 @@ struct NunaBackupView: View {
                                 Text(verbatim: s.timeMs > 0 ? Self.date(s.timeMs) : s.name).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             }
                             Spacer()
-                            Button { restoreTarget = s } label: { Text("Restore").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 36).background(NunaPalette.glassStrong, in: Capsule()) }.buttonStyle(.plain)
+                            Button { restoreTarget = s } label: { Text("Restore").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 36).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)) }.buttonStyle(.plain)
                         }.padding(.vertical, 12)
                     }
                 }

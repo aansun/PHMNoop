@@ -51,16 +51,16 @@ struct NunaDateSheet: View {
         HStack {
             Button { dismiss() } label: {
                 Image(systemName: "xmark").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: Circle())
-                    .overlay(Circle().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                    .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
             }
             .accessibilityLabel(Text("Close"))
             Spacer()
             Text("Choose date").font(.nuna(size: 17, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
             Spacer()
             Button { pick(today) } label: { Text("Today").font(.nuna(size: 13.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
-                .padding(.horizontal, 14).frame(height: 34).background(NunaPalette.glassStrong, in: Capsule())
-                .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1)) }
+                .padding(.horizontal, 14).frame(height: 34).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1)) }
         }
     }
 
@@ -104,7 +104,7 @@ struct NunaDateSheet: View {
         Button(action: action) {
             Image(systemName: symbol).font(.nuna(size: 14, weight: .bold))
                 .foregroundStyle(enabled ? NunaPalette.textPrimary : NunaPalette.textMuted.opacity(0.4))
-                .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: Circle())
+                .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
         }
         .disabled(!enabled)
     }
@@ -122,7 +122,7 @@ struct NunaDateSheet: View {
                     Circle().fill(dot(row, isPicked)).frame(width: 6, height: 6)
                 }
                 .frame(width: 42, height: 46)
-                .background(isPicked ? NunaPalette.accent : Color.clear, in: RoundedRectangle(cornerRadius: 21, style: .continuous))
+                .background(isPicked ? NunaPalette.accent : Color.clear, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
             .buttonStyle(.plain).disabled(isFuture)
         } else {
@@ -161,7 +161,7 @@ struct NunaDateSheet: View {
         Button(action: action) {
             Text(title).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 .padding(.horizontal, 16).frame(height: 40)
-                .background(NunaPalette.glassStrong, in: Capsule()).overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)).overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
         }
         .buttonStyle(.plain)
     }

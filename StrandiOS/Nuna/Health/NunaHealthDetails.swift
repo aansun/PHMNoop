@@ -73,7 +73,7 @@ struct NunaLiveHeartView: View {
                     Text("Start a session with heart rate").font(.nuna(size: 16, weight: .bold))
                 }
                 .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56)
-                .background(NunaPalette.accent, in: Capsule())
+                .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }.buttonStyle(.plain)
         }
         .task(id: repo.refreshSeq) { await loadDay() }
@@ -435,7 +435,7 @@ struct NunaDeviationScale: View {
             let f = CGFloat(min(max((value + 1) / 2, 0), 1))
             ZStack(alignment: .leading) {
                 NunaProportionBar(parts: [(3, NunaPalette.zoneBase), (4, NunaPalette.ink.opacity(0.2)), (3, NunaPalette.zoneBase)], height: 12)
-                Capsule().fill(NunaPalette.ink).frame(width: 6, height: 20)
+                RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.ink).frame(width: 6, height: 20)
                     .shadow(color: NunaPalette.ink.opacity(0.2), radius: 3)
                     .offset(x: min(max(geo.size.width * f - 3, 0), geo.size.width - 6))
             }

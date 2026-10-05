@@ -42,7 +42,7 @@ struct NunaAppleHealthView: View {
                 if let url = URL(string: "x-apple-health://") { UIApplication.shared.open(url) }
             } label: {
                 Text("Open iOS Health settings").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    .frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: Capsule())
+                    .frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }.buttonStyle(.plain)
             Text("Access is managed by iOS. Turning it off there does not delete data.")
                 .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).frame(maxWidth: .infinity, alignment: .center).multilineTextAlignment(.center)
@@ -79,7 +79,7 @@ struct NunaAppleHealthView: View {
                             Image(systemName: "arrow.triangle.2.circlepath").font(.nuna(size: 14, weight: .bold))
                             Text("Sync now").font(.nuna(size: 15, weight: .bold))
                         }
-                        .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 48).background(NunaPalette.accent, in: Capsule())
+                        .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 48).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain).disabled(health.syncing).opacity(health.syncing ? 0.5 : 1)
                 default:
                     Button {
@@ -89,7 +89,7 @@ struct NunaAppleHealthView: View {
                         }
                     } label: {
                         Text("Enable Apple Health").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                            .frame(maxWidth: .infinity).frame(height: 48).background(NunaPalette.accent, in: Capsule())
+                            .frame(maxWidth: .infinity).frame(height: 48).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain)
                     if health.auth == .denied {
                         Text("If you don't see the prompt, allow PHMNOOP under Settings › Health › Data Access & Devices.")
