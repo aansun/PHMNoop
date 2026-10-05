@@ -87,10 +87,7 @@
 		<string>D-DIN-PRO-500-Medium.otf</string>
 		<string>D-DIN-PRO-600-SemiBold.otf</string>
 		<string>D-DIN-PRO-700-Bold.otf</string>
-		<string>ProximaNova-Regular.otf</string>
-		<string>ProximaNova-Medium.otf</string>
-		<string>ProximaNova-Semibold.otf</string>
-		<string>ProximaNova-Bold.otf</string>
+		<string>Montserrat-VF.ttf</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>

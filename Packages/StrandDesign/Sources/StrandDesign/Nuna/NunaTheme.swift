@@ -133,19 +133,21 @@ public enum NunaType {
     public static var design: Font.Design { NunaThemePrefs.skin == .whp ? .rounded : .default }
 }
 
-/// The WHP style's fonts: D-DIN-PRO for figures, Proxima Nova for words, with the system font as the fallback.
+/// The WHP style's fonts: D-DIN-PRO for figures, Montserrat (the cheat sheet's free stand-in for Proxima Nova) for words, with the system
+/// font as the fallback when a file is missing.
 enum NunaWHPFont {
     private static func available(_ name: String) -> Bool {
         CTFontCopyPostScriptName(CTFontCreateWithName(name as CFString, 12, nil)) as String == name
     }
     private static let din: [Font.Weight: String] = [.regular: "D-DIN-PRO-Regular", .medium: "D-DIN-PRO-Medium", .semibold: "D-DIN-PRO-SemiBold", .bold: "D-DIN-PRO-Bold"]
-    private static let proxima: [Font.Weight: String] = [.regular: "ProximaNova-Regular", .medium: "ProximaNova-Medium",
-                                                          .semibold: "ProximaNova-Semibold", .bold: "ProximaNova-Bold"]
     private static let dinOK = din.values.allSatisfy(available)
-    private static let proximaOK = proxima.values.allSatisfy(available)
+    /// Montserrat ships as one variable file; its family name is "Montserrat" and the weight axis follows `.weight`.
+    private static let montserratOK = CTFontCopyFamilyName(CTFontCreateWithName("Montserrat" as CFString, 12, nil)) as String == "Montserrat"
 
     static func font(size: CGFloat, weight: Font.Weight, design: Font.Design) -> Font {
-        if design == .rounded {
+        // Headings ask for the figure design too but in the heaviest weight; below 32 pt those are words, set in Montserrat.
+        let isHeading = (weight == .heavy || weight == .black) && size < 32
+        if design == .rounded && !isHeading {
             // Figures: bold when large, semibold in lists, regular for small units.
             let w: Font.Weight = size >= 24 ? .bold : (size >= 15 ? .semibold : (weight == .regular ? .regular : .medium))
             return dinOK ? .custom(din[w] ?? "D-DIN-PRO-Bold", size: size) : .system(size: size, weight: w, design: .default).width(.condensed)
@@ -158,7 +160,19 @@ enum NunaWHPFont {
         case 13..<16: w = (weight == .heavy || weight == .black || weight == .bold) ? .semibold : .regular
         default: w = weight == .regular ? .regular : .medium
         }
-        return proximaOK ? .custom(proxima[w] ?? "ProximaNova-Regular", size: pt) : .system(size: pt, weight: w, design: .default)
+        // Montserrat runs wider than Proxima Nova, so its words are set about 8% smaller to keep the same line lengths.
+        return montserratOK ? montserrat(size: (pt * 0.92 * 2).rounded() / 2, weight: w) : .system(size: pt, weight: w, design: .default)
+    }
+
+    /// One size and weight of the variable Montserrat file, set on its weight axis (`wght`, 100 to 900).
+    private static func montserrat(size: CGFloat, weight: Font.Weight) -> Font {
+        let value: Double = weight == .bold ? 700 : (weight == .semibold ? 600 : (weight == .medium ? 500 : 400))
+        let wght = 2003265652   // the four-character axis tag "wght"
+        let descriptor = CTFontDescriptorCreateWithAttributes([
+            kCTFontNameAttribute: "Montserrat",
+            kCTFontVariationAttribute: [wght: value],
+        ] as CFDictionary)
+        return Font(CTFontCreateWithFontDescriptor(descriptor, size, nil))
     }
 }
 
