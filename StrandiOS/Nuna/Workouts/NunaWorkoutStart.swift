@@ -30,7 +30,6 @@ struct NunaWorkoutStartView: View {
     @State private var showPicker = false
     @State private var countdown: Int?
     @State private var live = false
-    @State private var query = ""
 
     private var isDistance: Bool { WorkoutCatalog.sport(named: chosen)?.isDistanceSport ?? false }
     private var zoneSet: HRZoneSet { profile.hrZoneSet }
@@ -57,7 +56,7 @@ struct NunaWorkoutStartView: View {
             goalCard
             optionsCard
             Button { showPicker = true } label: {
-                NunaCard(small: true) { NunaListRow("Sport", subtitle: LocalizedStringKey(chosen), systemImage: "figure.run", showsChevron: true) }
+                NunaCard(small: true) { NunaListRow("Sport", subtitle: LocalizedStringKey(chosen), systemImage: NunaSportPicker.symbol(for: chosen), showsChevron: true) }
             }.buttonStyle(.plain)
             if chosen == "Strength" || chosen == "Weightlifting" || chosen == "Powerlifting" || chosen == "Bodybuilding" {
                 NavigationLink(value: NunaWorkoutRoute.gym) {
@@ -169,80 +168,8 @@ struct NunaWorkoutStartView: View {
         }
     }
 
-    /// The sport list: a search field and one card of rows, each with a symbol, the sport and a check on the chosen one.
     private var sportPicker: some View {
-        let sports = WorkoutCatalog.matching(query)
-        return ScrollView {
-            VStack(alignment: .leading, spacing: NunaSpacing.section) {
-                HStack {
-                    Text("Sport").font(.nuna(size: NunaTypeSize.h2, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Spacer()
-                    Button { showPicker = false } label: {
-                        Text("Done").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            .padding(.horizontal, 16).frame(height: 38)
-                            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                    }.buttonStyle(.plain)
-                }
-                HStack(spacing: 10) {
-                    Image(systemName: "magnifyingglass").foregroundStyle(NunaPalette.textMuted)
-                    TextField("", text: $query, prompt: Text("Search").foregroundStyle(NunaPalette.textMuted))
-                        .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        .textInputAutocapitalization(.never).autocorrectionDisabled()
-                    if !query.isEmpty {
-                        Button { query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(NunaPalette.textMuted) }.buttonStyle(.plain)
-                    }
-                }
-                .padding(.horizontal, 16).frame(height: 48)
-                .background(NunaPalette.shade.opacity(0.28), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
-                if sports.isEmpty {
-                    Text("No sport matches").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                        .frame(maxWidth: .infinity, minHeight: 80)
-                } else {
-                    NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 14, bottom: 4, trailing: 14)) {
-                        VStack(spacing: 0) {
-                            ForEach(Array(sports.enumerated()), id: \.element.id) { i, sport in
-                                if i > 0 { NunaDivider() }
-                                let on = sport.name == chosen
-                                Button { chosen = sport.name; showPicker = false } label: {
-                                    HStack(spacing: 12) {
-                                        NunaIconTile(Self.symbol(for: sport.name), tint: on ? NunaPalette.charge : nil)
-                                        Text(LocalizedStringKey(sport.name)).font(.nuna(size: 16, weight: on ? .heavy : .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                                        Spacer(minLength: 8)
-                                        if sport.isDistanceSport {
-                                            Image(systemName: "location").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
-                                        }
-                                        if on { Image(systemName: "checkmark").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.charge) }
-                                    }
-                                    .padding(.vertical, 8).contentShape(Rectangle())
-                                }.buttonStyle(.plain)
-                            }
-                        }
-                    }
-                    Text("The location icon marks sports that record a route.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                }
-            }
-            .padding(.horizontal, NunaSpacing.screenH).padding(.top, 20).padding(.bottom, 32)
-        }
-        .scrollIndicators(.hidden).scrollDismissesKeyboard(.interactively)
-        .background(NunaPalette.canvas.ignoresSafeArea())
-        .presentationDragIndicator(.visible)
-        .preferredColorScheme(NunaTheme.colorScheme)
-    }
-
-    /// A neutral symbol for a sport, by what its name says.
-    static func symbol(for name: String) -> String {
-        let n = name.lowercased()
-        let table: [(String, String)] = [
-            ("swim", "figure.pool.swim"), ("row", "figure.rower"), ("treadmill", "figure.run.treadmill"), ("run", "figure.run"),
-            ("walk", "figure.walk"), ("hik", "figure.hiking"), ("cycl", "figure.outdoor.cycle"), ("bike", "figure.outdoor.cycle"),
-            ("elliptical", "figure.elliptical"), ("yoga", "figure.yoga"), ("pilates", "figure.pilates"), ("strength", "dumbbell"),
-            ("weight", "dumbbell"), ("gym", "dumbbell"), ("climb", "figure.climbing"), ("boxing", "figure.boxing"), ("dance", "figure.dance"),
-            ("tennis", "figure.tennis"), ("padel", "figure.tennis"), ("badminton", "figure.badminton"), ("golf", "figure.golf"),
-            ("soccer", "figure.soccer"), ("football", "figure.american.football"), ("basketball", "figure.basketball"), ("ski", "figure.skiing.downhill"),
-            ("stair", "figure.stairs"), ("hiit", "bolt.heart"), ("stretch", "figure.flexibility"), ("martial", "figure.martial.arts"),
-        ]
-        return table.first { n.contains($0.0) }?.1 ?? "figure.mixed.cardio"
+        NunaSportPicker(selection: $chosen) { showPicker = false }
     }
 
     private func countdownView(_ c: Int) -> some View {

@@ -133,14 +133,14 @@ struct NunaTodayView: View {
             NunaDateSheet(dayOffset: $model.dayOffset).nunaSheetChrome(detents: [.large])
         }
         .sheet(isPresented: $showManual) {
-            ManualWorkoutSheet(editing: nil) { row, replacing in
+            NunaManualWorkoutSheet(editing: nil) { row, replacing in
                 Task {
                     await repo.saveManualWorkout(row, replacing: replacing)
                     await intelligence.analyzeRecent()
                     await model.load(repo: repo, profile: profile)
                 }
             }
-            .preferredColorScheme(NunaTheme.colorScheme)
+            .nunaSheetChrome(detents: [.large])
         }
         .sheet(isPresented: $showAddCard) { addCardSheet }
         .sheet(isPresented: $showMood) {
