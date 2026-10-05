@@ -85,7 +85,17 @@ final class AppModel: ObservableObject {
     /// since; on End the window is scored via `StrainScorer` and saved as a `WorkoutRow` (source
     /// "manual"), which then shows in the Workouts view. The day's strain already counts this HR (it's
     /// the same live stream the store persists), so this is a per-session annotation, not a double-count.
-    @Published var activeWorkout: ActiveWorkout?
+    @Published var activeWorkout: ActiveWorkout? {
+        didSet { if activeWorkout == nil { workoutTarget = nil } }
+    }
+    /// What the wearer asked the running session to reach (a time, a distance or a heart-rate zone). Set by the Nuna start screen,
+    /// read by the Live Activity, cleared when the session ends. nil = a free session.
+    @Published var workoutTarget: WorkoutTarget?
+    struct WorkoutTarget: Equatable {
+        var seconds: Int?
+        var meters: Double?
+        var zone: Int?
+    }
     /// The just-ended workout, for a brief inline confirmation on Live (cleared on the next start).
     @Published var lastWorkout: WorkoutRow?
 

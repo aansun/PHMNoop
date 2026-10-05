@@ -1,6 +1,12 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Target %@": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Target %@"}}
+    } },
+    "%lld kcal": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%lld kkal"}}
+    } },
     "Live heart rate": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Detak jantung"}}
     } },

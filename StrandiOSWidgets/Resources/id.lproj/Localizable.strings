@@ -36,3 +36,15 @@
 "LOAD" = "BEBAN";
 "HEART" = "DETAK";
 "Chunks %lld" = "Paket %lld";
+"SPEED" = "KECEPATAN";
+"CALORIES" = "KALORI";
+"ZONE %lld" = "ZONA %lld";
+"ZONE" = "ZONA";
+"VOLUME" = "VOLUME";
+"CHUNKS" = "PAKET";
+"Paused" = "Dijeda";
+"Resting" = "Istirahat";
+"Gym" = "Gym";
+"kcal" = "kkal";
+"Effort +%lld" = "Effort +%lld";
+"Effort +%@" = "Effort +%@";

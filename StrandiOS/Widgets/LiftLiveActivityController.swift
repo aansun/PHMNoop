@@ -40,7 +40,9 @@ final class LiftLiveActivityController {
         // Re-adopt an activity that outlived a previous app session — ActivityKit keeps them alive
         // across relaunches, and a fresh controller starts with `activity == nil`. Without this we
         // could neither update nor END one already on the Lock Screen, and could spawn a duplicate.
-        if activity == nil { activity = Activity<LiftActivityAttributes>.activities.first }
+        // An activity that was just ended lingers in the list for a moment; only one still showing can be updated.
+        if let current = activity, current.activityState != .active { activity = nil }
+        if activity == nil { activity = Activity<LiftActivityAttributes>.activities.first { $0.activityState == .active } }
 
         // Shares the existing Live Activity opt-out rather than adding a second switch: a user who
         // turned Live Activities off meant all of them.

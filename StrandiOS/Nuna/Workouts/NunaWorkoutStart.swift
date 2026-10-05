@@ -229,6 +229,12 @@ struct NunaWorkoutStartView: View {
             guard countdown != nil else { return }
             countdown = nil
             model.startWorkout(sport: chosen)
+            switch goal.mode {
+            case .free: model.workoutTarget = nil
+            case .time: model.workoutTarget = .init(seconds: goal.minutes * 60)
+            case .distance: model.workoutTarget = .init(meters: goal.km * 1000)
+            case .zone: model.workoutTarget = .init(zone: goal.zone)
+            }
             live = true
         }
     }
@@ -314,7 +320,7 @@ struct NunaLiveWorkoutView: View {
 
     private func header(_ w: AppModel.ActiveWorkout, shownZone: Int, color: Color) -> some View {
         let gps = model.gpsRecorder
-        let gpsText = gps.isRecording ? (gps.pointCount == 0 ? String(localized: "Searching GPS") : String(localized: "GPS on")) : String(localized: "No GPS")
+        let gpsText = usesRoute(w) ? (gps.pointCount == 0 ? String(localized: "Searching GPS") : String(localized: "GPS on")) : String(localized: "No GPS")
         let buzzText = zoneBuzz ? String(localized: "zone buzz on") : String(localized: "silent session")
         let title = String(localized: String.LocalizationValue(w.sport)) + (shownZone > 0 ? " · " + String(localized: "Zone \(shownZone)") : "")
         return HStack(alignment: .center) {
@@ -464,26 +470,8 @@ struct NunaLiveWorkoutView: View {
         return (String(s[..<i]), String(s[s.index(after: i)...]))
     }
 
-    private func kcal(_ w: AppModel.ActiveWorkout) -> Int? {
-        guard w.samples.count >= 2 else { return nil }
-        let rhr = model.repo.today?.restingHr.map(Double.init) ?? StrainScorer.defaultRestingHR
-        let up = UserProfile(weightKg: model.profile.weightKg, heightCm: model.profile.heightCm, age: Double(model.profile.age), sex: model.profile.sex)
-        let v = Calories.estimateBoutCalories(w.samples, profile: up, hrmax: Double(model.profile.hrMax), restingHR: rhr).0
-        return v > 0 ? Int(v.rounded()) : nil
-    }
-
-    private func zoneSeconds(_ w: AppModel.ActiveWorkout) -> [Int] {
-        var out = [Double](repeating: 0, count: 5)
-        let s = w.samples
-        if s.count >= 2 {
-            for i in 0..<(s.count - 1) {
-                let dt = min(Double(s[i + 1].ts - s[i].ts), 10)
-                let z = zoneSet.zoneNumber(forBPM: Double(s[i].bpm))
-                if dt > 0, z >= 1 { out[min(z, 5) - 1] += dt }
-            }
-        }
-        return out.map { Int($0.rounded()) }
-    }
+    private func kcal(_ w: AppModel.ActiveWorkout) -> Int? { NunaLiveMetrics.kcal(w, model: model) }
+    private func zoneSeconds(_ w: AppModel.ActiveWorkout) -> [Int] { NunaLiveMetrics.zoneSeconds(w, zoneSet: zoneSet) }
 
     private typealias Tile = (label: LocalizedStringKey, value: String, unit: String)
 
