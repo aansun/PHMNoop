@@ -16,8 +16,8 @@ public struct NunaAnyaLetters: View {
     }
 }
 
-/// An icon by name: an SF Symbol, or Anya's letters for `NunaGlyph.anya`. The icon tiles, icon buttons and tab bar use it so every
-/// place that stands for Anya shows the same mark at the size of the icon beside it.
+/// An icon by name: an SF Symbol, or Anya's shared logo for `NunaGlyph.anya`. The logo is rendered
+/// as a template so icon tiles and navigation inherit the surrounding theme colour.
 public struct NunaGlyph: View {
     public static let anya = "anya.mark"
     private let name: String
@@ -30,7 +30,9 @@ public struct NunaGlyph: View {
 
     public var body: some View {
         if name == Self.anya {
-            NunaAnyaLetters(size: pointSize * 1.3)
+            Image("AnyaLogo")
+                .resizable().scaledToFit().renderingMode(.template)
+                .frame(width: pointSize * 1.3, height: pointSize * 1.3)
         } else {
             Image(systemName: name).font(.nuna(size: pointSize, weight: weight))
         }

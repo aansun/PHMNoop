@@ -346,7 +346,7 @@ public struct NunaTabBar: View {
                 } label: {
                     VStack(spacing: 3) {
                         if item.systemImage == NunaGlyph.anya {
-                            NunaAnyaLetters(size: 24)
+                            NunaGlyph(NunaGlyph.anya, pointSize: 17)
                         } else if item.usesAssetImage {
                             Image(item.systemImage)
                                 .resizable().scaledToFit().frame(width: 22, height: 22)

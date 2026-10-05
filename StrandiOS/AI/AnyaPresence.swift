@@ -10,13 +10,17 @@ struct AnyaDetailVisibilityKey: PreferenceKey {
     }
 }
 
-/// Anya's shared visual mark. Keep the asset in one component so every Coach entry point has
-/// the same warm, friendly face instead of a collection of unrelated symbols.
+/// Anya's shared full-colour mark. The navigation bar intentionally uses the separate monochrome
+/// `NunaAnyaLetters` glyph so its selected and unselected states match every other tab icon.
 struct AnyaMark: View {
     var size: CGFloat = 28
 
     var body: some View {
-        NunaAnyaLetters(size: size)
+        Image("AnyaLogo")
+            .resizable()
+            .scaledToFit()
+            .frame(width: size, height: size)
+            .accessibilityHidden(true)
     }
 }
 
@@ -24,12 +28,9 @@ struct AnyaIconTile: View {
     var size: CGFloat = 40
 
     var body: some View {
-        // The primary-action fill of the theme (white on dark, near-black on light) with its label colour on top: it reads the same on
-        // Default and on WHP, in light and in dark, and is the one place the app says "Anya".
-        NunaAnyaLetters(size: size * 0.7)
-            .foregroundStyle(NunaPalette.onAccent)
+        AnyaMark(size: size * 0.82)
             .frame(width: size, height: size)
-            .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
+            .background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
             .accessibilityHidden(true)
     }
 }
