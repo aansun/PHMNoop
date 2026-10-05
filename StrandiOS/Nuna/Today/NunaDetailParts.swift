@@ -450,20 +450,23 @@ struct NunaLine2Chart: View {
         let vals = points.map(\.value)
         if vals.count >= 2, let lo = vals.min(), let hi = vals.max() {
             let pad = max((hi - lo) * 0.15, 0.5)
-            TrendChart(
-                points: points.map { TrendPoint(date: $0.date, value: $0.value) },
-                gradient: Gradient(colors: [color, color]),
-                valueRange: (lo - pad)...(hi + pad * 1.6),
-                showsArea: true,
-                showsPointValues: true,
-                baselineValue: baseline,
-                height: height,
-                valueFormat: { String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, $0) },
-                dateFormat: { TrendChart.defaultDateString($0) },
-                xAxisDateFormat: { TrendChart.line2AxisDateString($0) }
-            )
-            .pointValueStride(max(1, Int((Double(vals.count) / 12).rounded(.up))))
-            .reservingAxisBand()
+            VStack(spacing: 8) {
+                TrendChart(
+                    points: points.map { TrendPoint(date: $0.date, value: $0.value) },
+                    gradient: Gradient(colors: [color, color]),
+                    valueRange: (lo - pad)...(hi + pad * 1.6),
+                    showsArea: true,
+                    showsPointValues: true,
+                    baselineValue: baseline,
+                    height: height,
+                    valueFormat: { String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, $0) },
+                    dateFormat: { TrendChart.defaultDateString($0) },
+                    xAxisDateFormat: { TrendChart.line2AxisDateString($0) }
+                )
+                .pointValueStride(max(1, Int((Double(vals.count) / 12).rounded(.up))))
+                .hidingXAxisLabels()
+                NunaDateAxis(dates: points.map(\.date))
+            }
         } else {
             Text(vals.count == 1 ? "Not enough data yet" : "No data in this period")
                 .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)

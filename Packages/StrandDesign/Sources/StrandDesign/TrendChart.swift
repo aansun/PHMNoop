@@ -89,6 +89,8 @@ public struct TrendChart: View {
     public var showsPointValues: Bool
     /// Label every Nth point (the newest is always labelled) so dense Line2 charts stay readable. 1 = every point.
     public var pointValueStride: Int = 1
+    /// The caller draws the dates in a row of its own under the chart: the chart shows grid lines only on the x axis.
+    public var hidesXAxisLabels: Bool = false
     /// Keeps the date labels in a band of their own under the plot, so a filled area cannot run behind them.
     public var reservesAxisBand: Bool = false
     public var yAxisStep: Double?
@@ -310,6 +312,35 @@ public struct TrendChart: View {
         return (resolvedYDomain.lowerBound - lowerHeadroom)...resolvedYDomain.upperBound
     }
 
+    /// The x axis: grid lines, and the date labels unless the caller draws its own row of dates.
+    @AxisContentBuilder
+    private func xAxisMarks(desiredCount: Int) -> some AxisContent {
+        if hidesXAxisLabels {
+            AxisMarks(values: .automatic(desiredCount: desiredCount)) { _ in
+                AxisGridLine().foregroundStyle(StrandPalette.hairline.opacity(0.4))
+            }
+        } else {
+            AxisMarks(values: .automatic(desiredCount: desiredCount)) { value in
+                AxisGridLine().foregroundStyle(StrandPalette.hairline.opacity(0.4))
+                if let xAxisDateFormat, let date = value.as(Date.self) {
+                    AxisValueLabel(collisionResolution: .greedy) {
+                        Text(xAxisDateFormat(date))
+                            .multilineTextAlignment(.center)
+                            .lineLimit(2)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .offset(y: 10)
+                    .foregroundStyle(StrandPalette.textTertiary)
+                    .font(StrandFont.footnote)
+                } else {
+                    AxisValueLabel(collisionResolution: .greedy)
+                        .foregroundStyle(StrandPalette.textTertiary)
+                        .font(StrandFont.footnote)
+                }
+            }
+        }
+    }
+
     public var body: some View {
         // Resolve against current data so the marker and readout never refer to a removed date.
         let currentSelection = selectedPoint.flatMap { selected in points.first { $0.date == selected.date } }
@@ -455,26 +486,7 @@ public struct TrendChart: View {
                 plotArea.padding(.bottom, axisBottomPadding).clipped()
             }
         }
-        .chartXAxis {
-            AxisMarks(values: .automatic(desiredCount: xAxisDesiredCount)) { value in
-                AxisGridLine().foregroundStyle(StrandPalette.hairline.opacity(0.4))
-                if let xAxisDateFormat, let date = value.as(Date.self) {
-                    AxisValueLabel(collisionResolution: .greedy) {
-                        Text(xAxisDateFormat(date))
-                            .multilineTextAlignment(.center)
-                            .lineLimit(2)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    .offset(y: 10)
-                    .foregroundStyle(StrandPalette.textTertiary)
-                    .font(StrandFont.footnote)
-                } else {
-                    AxisValueLabel(collisionResolution: .greedy)
-                        .foregroundStyle(StrandPalette.textTertiary)
-                        .font(StrandFont.footnote)
-                }
-            }
-        }
+        .chartXAxis { xAxisMarks(desiredCount: xAxisDesiredCount) }
         .chartYAxis {
             if let step = yAxisStep, step > 0 {
                 AxisMarks(position: .leading, values: Array(stride(from: 0.0, through: plotYDomain.upperBound, by: step))) { value in
@@ -747,6 +759,12 @@ public extension TrendChart {
     func reservingAxisBand(_ on: Bool = true) -> TrendChart {
         var copy = self
         copy.reservesAxisBand = on
+        return copy
+    }
+
+    func hidingXAxisLabels(_ on: Bool = true) -> TrendChart {
+        var copy = self
+        copy.hidesXAxisLabels = on
         return copy
     }
 
