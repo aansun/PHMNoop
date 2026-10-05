@@ -1,6 +1,27 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Endurance": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Daya tahan"}}
+    } },
+    "Tempo": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tempo"}}
+    } },
+    "Very easy. Warm up, cool down, active recovery.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sangat ringan. Pemanasan, pendinginan, pemulihan aktif."}}
+    } },
+    "Easy and steady. You can talk in full sentences.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Ringan dan stabil. Kamu masih bisa bicara kalimat penuh."}}
+    } },
+    "Comfortably hard. Short sentences only.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Cukup berat tapi terkendali. Hanya kalimat pendek."}}
+    } },
+    "Hard. Hold it for minutes, not hours.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Berat. Bertahan beberapa menit, bukan berjam-jam."}}
+    } },
+    "All out. Only in short bursts.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Habis-habisan. Hanya sesaat."}}
+    } },
     "Open in Gym": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Buka di Gym"}}
     } },
