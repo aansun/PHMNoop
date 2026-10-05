@@ -26,7 +26,7 @@ struct NunaAnyaSettingsView: View {
         NunaDetailScreen("Anya settings") {
             Text("What Anya may read, how it answers and when it writes to you.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             NunaCard(small: true) {
-                NunaToggleRow("Show Anya", subtitle: "The tab, the cards and the buttons", systemImage: "sparkles", isOn: $coachEnabled).padding(.vertical, 8)
+                NunaToggleRow("Show Anya", subtitle: "The tab, the cards and the buttons", systemImage: NunaGlyph.anya, isOn: $coachEnabled).padding(.vertical, 8)
             }
             .onChange(of: coachEnabled) { _, on in CoachBriefScheduler.applyMasterSwitch(on) }
 

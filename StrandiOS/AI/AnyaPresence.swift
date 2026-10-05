@@ -16,11 +16,7 @@ struct AnyaMark: View {
     var size: CGFloat = 28
 
     var body: some View {
-        Image("AnyaIcon")
-            .resizable()
-            .scaledToFit()
-            .frame(width: size, height: size)
-            .accessibilityHidden(true)
+        NunaAnyaLetters(size: size)
     }
 }
 
@@ -28,12 +24,12 @@ struct AnyaIconTile: View {
     var size: CGFloat = 40
 
     var body: some View {
-        AnyaMark(size: size * 0.76)
+        // The primary-action fill of the theme (white on dark, near-black on light) with its label colour on top: it reads the same on
+        // Default and on WHP, in light and in dark, and is the one place the app says "Anya".
+        NunaAnyaLetters(size: size * 0.7)
+            .foregroundStyle(NunaPalette.onAccent)
             .frame(width: size, height: size)
-            // Rest's cyan well ties North Star's cool blue orb to the app's meaning palette;
-            // the amber point inside the mark echoes the warning token without becoming a status color.
-            .background(NunaPalette.rest.opacity(0.14), in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous).strokeBorder(NunaPalette.rest.opacity(0.35), lineWidth: 1))
+            .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
             .accessibilityHidden(true)
     }
 }

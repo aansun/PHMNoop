@@ -104,7 +104,7 @@ struct NunaTrainingLoadView: View {
             }
             NunaCard(small: true) {
                 HStack(alignment: .top, spacing: 12) {
-                    Image(systemName: "sparkles").foregroundStyle(NunaPalette.textMuted)
+                    AnyaMark(size: 18).foregroundStyle(NunaPalette.textMuted)
                     Text("Cardio is counted from daily Effort, not TRIMP. Strength is estimated from the volume you lift and is not added to cardio, because the heart strain of lifting is not invented.")
                         .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }
@@ -270,7 +270,7 @@ struct NunaTrainingLoadView: View {
             zonesCard
             NunaCard(small: true) {
                 HStack(alignment: .top, spacing: 12) {
-                    Image(systemName: "sparkles").foregroundStyle(NunaPalette.textMuted)
+                    AnyaMark(size: 18).foregroundStyle(NunaPalette.textMuted)
                     Text("Fitness (CTL) averages Effort over 42 days, fatigue (ATL) over 7 days, and form is the gap. Descriptive only: it does not change Charge or any other score.")
                         .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }
@@ -426,7 +426,7 @@ struct NunaTrainingLoadView: View {
             }.buttonStyle(.plain)
             NunaCard(small: true) {
                 HStack(alignment: .top, spacing: 12) {
-                    Image(systemName: "sparkles").foregroundStyle(NunaPalette.textMuted)
+                    AnyaMark(size: 18).foregroundStyle(NunaPalette.textMuted)
                     Text("Estimated from lifting volume (weight × reps). This is not heart strain, so it is not added to cardio Effort.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                 }
             }

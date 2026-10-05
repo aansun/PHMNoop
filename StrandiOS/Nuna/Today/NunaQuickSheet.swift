@@ -50,7 +50,7 @@ struct NunaQuickSheet: View {
                 Button { go(.coach) } label: {
                     NunaCard(small: true, padding: EdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 14)) {
                         HStack(spacing: 12) {
-                            AnyaMark(size: 26)
+                            AnyaMark(size: 28).foregroundStyle(NunaPalette.onAccent)
                                 .frame(width: 40, height: 40).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("Ask Anya").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
@@ -146,7 +146,7 @@ struct NunaQuickSheet: View {
     private func tile(_ title: LocalizedStringKey, _ icon: String, _ tint: Color?, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: 8) {
-                Image(systemName: icon).font(.nuna(size: 22, weight: .semibold))
+                NunaGlyph(icon, pointSize: 22, weight: .semibold)
                     .foregroundStyle(NunaPalette.textPrimary)
                     .frame(width: 60, height: 60)
                     .background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))

@@ -262,7 +262,7 @@ struct NunaWorkoutsView: View {
             NunaCard(highlight: true) {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(spacing: 10) {
-                        Image(systemName: "sparkles").foregroundStyle(NunaPalette.textPrimary)
+                        AnyaMark(size: 18).foregroundStyle(NunaPalette.textPrimary)
                         nunaTrendsCap("Detected automatically")
                     }
                     Text(verbatim: "\(NunaWorkoutFormat.clock(s.startSec)) · \(s.sport) · \(w.durationMin) min")
