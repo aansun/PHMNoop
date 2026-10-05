@@ -111,24 +111,60 @@ struct NunaWorkoutStartView: View {
             stepperCard("Target distance", String(format: "%.1f", locale: AppLanguage.activeLocale, goal.km), unitSystemRaw == UnitSystem.imperial.rawValue ? "km" : "km",
                         minus: { goal.km = max(0.5, goal.km - 0.5) }, plus: { goal.km = min(100, goal.km + 0.5) })
         case .zone:
-            NunaCard {
-                VStack(alignment: .leading, spacing: 12) {
-                    nunaTrendsCap("Target zone")
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(verbatim: "Zone \(goal.zone)").font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        if let z = zoneSet.zones.first(where: { $0.number == goal.zone }) {
-                            Text(verbatim: "\(Int(z.lower.rounded()))–\(Int(z.upper.rounded())) bpm").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+            zoneCard
+        }
+    }
+
+    // MARK: Zone picker
+
+    /// Colour, name and purpose of each heart-rate zone, light to hard.
+    private static let zoneInfo: [(color: Color, name: LocalizedStringKey, purpose: LocalizedStringKey)] = [
+        (NunaPalette.restLight, "Recovery", "Very easy. Warm up, cool down, active recovery."),
+        (NunaPalette.charge, "Endurance", "Easy and steady. You can talk in full sentences."),
+        (NunaPalette.effort, "Tempo", "Comfortably hard. Short sentences only."),
+        (NunaPalette.warning, "Threshold", "Hard. Hold it for minutes, not hours."),
+        (NunaPalette.alert, "Maximum", "All out. Only in short bursts."),
+    ]
+
+    private var zoneCard: some View {
+        let z = min(max(goal.zone, 1), 5)
+        let info = Self.zoneInfo[z - 1]
+        let range = zoneSet.zones.first(where: { $0.number == z })
+        return NunaCard {
+            VStack(alignment: .leading, spacing: 16) {
+                nunaTrendsCap("Target zone")
+                HStack(alignment: .center, spacing: 14) {
+                    Text(verbatim: "Z\(z)").font(.nuna(size: 26, weight: .heavy, design: NunaType.design)).foregroundStyle(Color.black.opacity(0.85))
+                        .frame(width: 64, height: 64).background(info.color, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(info.name).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        if let r = range {
+                            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                                Text(verbatim: "\(Int(r.lower.rounded()))–\(Int(r.upper.rounded()))").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(info.color).monospacedDigit()
+                                Text(verbatim: "bpm").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            }
                         }
                     }
-                    HStack(spacing: 8) {
-                        ForEach(1...5, id: \.self) { z in
-                            Button { goal.zone = z } label: {
-                                Text(verbatim: "\(z)").font(.nuna(size: 16, weight: .bold)).foregroundStyle(goal.zone == z ? NunaPalette.onAccent : NunaPalette.textPrimary)
-                                    .frame(maxWidth: .infinity).frame(height: 44).background(goal.zone == z ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                            }.buttonStyle(.plain)
+                    Spacer(minLength: 0)
+                }
+                Text(info.purpose).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                // Five columns that climb with the effort; the chosen one lights up in its colour.
+                HStack(alignment: .bottom, spacing: 8) {
+                    ForEach(1...5, id: \.self) { n in
+                        let on = n == z
+                        let c = Self.zoneInfo[n - 1].color
+                        Button { withAnimation(.easeOut(duration: 0.18)) { goal.zone = n } } label: {
+                            VStack(spacing: 6) {
+                                Text(verbatim: "\(n)").font(.nuna(size: 15, weight: .heavy, design: NunaType.design)).foregroundStyle(on ? Color.black.opacity(0.85) : NunaPalette.textSecondary)
+                            }
+                            .frame(maxWidth: .infinity).frame(height: CGFloat(34 + n * 12))
+                            .background(on ? c : c.opacity(0.22), in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous).strokeBorder(on ? Color.white.opacity(0.6) : Color.clear, lineWidth: 1.5))
                         }
+                        .buttonStyle(.plain).accessibilityLabel(Text("Zone \(n)")).accessibilityAddTraits(on ? .isSelected : [])
                     }
                 }
+                .frame(height: 100, alignment: .bottom)
             }
         }
     }
