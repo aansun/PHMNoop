@@ -1268,7 +1268,9 @@ final class AICoachEngine: ObservableObject {
         prompt += "\n\nUser's new question:\n"
         prompt += trimmed
 
-        guard let reply = try? await callProvider(key: key, messages: [(.user, prompt)]) else { return nil }
+        let reply: String
+        do { reply = try await callProvider(key: key, messages: [(.user, prompt)]) }
+        catch { NSLog("[AnyaDebug] contextual send failed: %@", String(describing: error)); return nil }
         let clean = reply.trimmingCharacters(in: .whitespacesAndNewlines)
         return clean.isEmpty ? nil : clean
     }
