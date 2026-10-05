@@ -117,54 +117,50 @@ struct NunaWorkoutStartView: View {
 
     // MARK: Zone picker
 
-    /// Colour, name and purpose of each heart-rate zone, light to hard.
-    private static let zoneInfo: [(color: Color, name: LocalizedStringKey, purpose: LocalizedStringKey)] = [
-        (NunaPalette.restLight, "Recovery", "Very easy. Warm up, cool down, active recovery."),
-        (NunaPalette.charge, "Endurance", "Easy and steady. You can talk in full sentences."),
-        (NunaPalette.effort, "Tempo", "Comfortably hard. Short sentences only."),
-        (NunaPalette.warning, "Threshold", "Hard. Hold it for minutes, not hours."),
-        (NunaPalette.alert, "Maximum", "All out. Only in short bursts."),
-    ]
+    /// The colour of each heart-rate zone, light to hard.
+    private static let zoneColors: [Color] = [NunaPalette.zoneBase, NunaPalette.charge, NunaPalette.effort, NunaPalette.warning, NunaPalette.alert]
 
+    /// One slim bar of five zones: tap a segment to choose it. A pointer sits under the chosen zone, the lowest and highest heart
+    /// rate of the wearer's own zones are at the ends and the chosen zone's range is written in its colour in the middle.
     private var zoneCard: some View {
         let z = min(max(goal.zone, 1), 5)
-        let info = Self.zoneInfo[z - 1]
-        let range = zoneSet.zones.first(where: { $0.number == z })
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 16) {
-                nunaTrendsCap("Target zone")
-                HStack(alignment: .center, spacing: 14) {
-                    Text(verbatim: "Z\(z)").font(.nuna(size: 26, weight: .heavy, design: NunaType.design)).foregroundStyle(Color.black.opacity(0.85))
-                        .frame(width: 64, height: 64).background(info.color, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(info.name).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        if let r = range {
-                            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                                Text(verbatim: "\(Int(r.lower.rounded()))–\(Int(r.upper.rounded()))").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(info.color).monospacedDigit()
-                                Text(verbatim: "bpm").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+        let color = Self.zoneColors[z - 1]
+        let zones = zoneSet.zones
+        let range = zones.first(where: { $0.number == z })
+        let lo = zones.first(where: { $0.number == 1 }).map { Int($0.lower.rounded()) }
+        let hi = zones.first(where: { $0.number == 5 }).map { Int($0.upper.rounded()) }
+        return NunaCard(small: true, padding: EdgeInsets(top: 16, leading: 16, bottom: 14, trailing: 16)) {
+            VStack(spacing: 8) {
+                GeometryReader { geo in
+                    let w = geo.size.width, gap: CGFloat = 3
+                    let seg = (w - gap * 4) / 5
+                    ZStack(alignment: .topLeading) {
+                        HStack(spacing: gap) {
+                            ForEach(1...5, id: \.self) { n in
+                                Button { withAnimation(.easeOut(duration: 0.18)) { goal.zone = n } } label: {
+                                    RoundedRectangle(cornerRadius: n == 1 || n == 5 ? 12 : 4, style: .continuous)
+                                        .fill(Self.zoneColors[n - 1].opacity(n == z ? 1 : 0.45)).frame(height: 26)
+                                        .padding(.vertical, 6).contentShape(Rectangle())
+                                }
+                                .buttonStyle(.plain).frame(width: seg)
+                                .accessibilityLabel(Text("Zone \(n)")).accessibilityAddTraits(n == z ? .isSelected : [])
                             }
                         }
-                    }
-                    Spacer(minLength: 0)
-                }
-                Text(info.purpose).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
-                // Five columns that climb with the effort; the chosen one lights up in its colour.
-                HStack(alignment: .bottom, spacing: 8) {
-                    ForEach(1...5, id: \.self) { n in
-                        let on = n == z
-                        let c = Self.zoneInfo[n - 1].color
-                        Button { withAnimation(.easeOut(duration: 0.18)) { goal.zone = n } } label: {
-                            VStack(spacing: 6) {
-                                Text(verbatim: "\(n)").font(.nuna(size: 15, weight: .heavy, design: NunaType.design)).foregroundStyle(on ? Color.black.opacity(0.85) : NunaPalette.textSecondary)
-                            }
-                            .frame(maxWidth: .infinity).frame(height: CGFloat(34 + n * 12))
-                            .background(on ? c : c.opacity(0.22), in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous).strokeBorder(on ? Color.white.opacity(0.6) : Color.clear, lineWidth: 1.5))
-                        }
-                        .buttonStyle(.plain).accessibilityLabel(Text("Zone \(n)")).accessibilityAddTraits(on ? .isSelected : [])
+                        Triangle().fill(NunaPalette.textPrimary).frame(width: 14, height: 9)
+                            .offset(x: CGFloat(z - 1) * (seg + gap) + seg / 2 - 7, y: 42)
+                            .animation(.easeOut(duration: 0.18), value: z).allowsHitTesting(false)
                     }
                 }
-                .frame(height: 100, alignment: .bottom)
+                .frame(height: 52)
+                ZStack {
+                    HStack {
+                        Text(verbatim: lo.map(String.init) ?? "").font(.nuna(size: 13, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary).monospacedDigit()
+                        Spacer()
+                        Text(verbatim: hi.map(String.init) ?? "").font(.nuna(size: 13, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary).monospacedDigit()
+                    }
+                    Text(verbatim: String(localized: "Zone \(z)") + (range.map { " · \(Int($0.lower.rounded())) – \(Int($0.upper.rounded()))" } ?? ""))
+                        .font(.nuna(size: 16, weight: .heavy, design: NunaType.design)).foregroundStyle(z == 1 ? NunaPalette.textPrimary : color).monospacedDigit()
+                }
             }
         }
     }
@@ -387,6 +383,12 @@ struct NunaLiveWorkoutView: View {
 
     private func clock(_ s: TimeInterval) -> String {
         let t = Int(s); return t >= 3600 ? String(format: "%d:%02d:%02d", t / 3600, (t % 3600) / 60, t % 60) : String(format: "%02d:%02d", t / 60, t % 60)
+    }
+}
+
+private struct Triangle: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path(); p.move(to: CGPoint(x: r.midX, y: r.minY)); p.addLine(to: CGPoint(x: r.maxX, y: r.maxY)); p.addLine(to: CGPoint(x: r.minX, y: r.maxY)); p.closeSubpath(); return p
     }
 }
 #endif

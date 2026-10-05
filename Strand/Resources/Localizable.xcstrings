@@ -223706,7 +223706,7 @@
     "Speech speed": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kecepatan suara"}}}},
     "Test audio": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Test audio"}}}},
     "Test current settings": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Test pengaturan saat ini"}}}},
-    "Zone %lld": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Zone %lld"}}}},
+    "Zone %lld": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Zona %lld"}}}},
     "Every %lld km": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Setiap %lld km"}}}},
     "Last prompt: %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Prompt terakhir: %@"}}}},
     "Workout started.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Workout dimulai."}}}},
