@@ -8,7 +8,8 @@ enum NunaTrendsMetricKind { case charge, effort, rest }
 /// Charge, Effort and Rest trend screens (TrendsCharge / TrendsEffort / TrendsRest): average with the change from the
 /// previous period, the daily chart, zones, patterns by weekday, extremes and what sits behind the number.
 struct NunaTrendsMetricView: View {
-    let kind: NunaTrendsMetricKind
+    @State private var kind: NunaTrendsMetricKind
+    init(kind: NunaTrendsMetricKind) { _kind = State(initialValue: kind) }
     @EnvironmentObject private var repo: Repository
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
     @StateObject private var m = NunaTrendsModel()
@@ -62,6 +63,7 @@ struct NunaTrendsMetricView: View {
         }
     }
 
+    private var kindKey: String { kind == .charge ? "charge" : (kind == .effort ? "effort" : "rest") }
     private var back: Int { page * range }
 
     /// Mean of the window the wearer is looking at and of the one before it.
@@ -85,6 +87,11 @@ struct NunaTrendsMetricView: View {
             if kind == .charge { drivers }
             links
         }
+        .environment(\.nunaDetailSwitch, NunaDetailSwitch(current: kindKey, items: [
+            .init(key: "charge", title: String(localized: "Charge"), icon: "heart.circle"),
+            .init(key: "effort", title: String(localized: "Effort"), icon: "flame"),
+            .init(key: "rest", title: String(localized: "Rest"), icon: "moon.stars"),
+        ]) { key in kind = key == "charge" ? .charge : (key == "effort" ? .effort : .rest) })
         .task(id: repo.refreshSeq) {
             await m.load(repo: repo)
             if kind == .rest { await sleep.load(repo: repo) }

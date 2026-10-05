@@ -34,18 +34,7 @@ extension View {
     func nunaTodayDestinations() -> some View {
         navigationDestination(for: NunaTodayRoute.self) { route in
             switch route {
-            case .metric(let m):
-                switch (m.key, m.source) {
-                case ("recovery", _): NunaChargeDetailView()
-                case ("strain", _): NunaEffortDetailView()
-                case ("stress", "my-whoop"): NunaStressDetailView()
-                case ("sleep_performance", _): NunaSleepView()
-                case ("spo2", _): NunaOxygenView()
-                case ("resp_rate", _): NunaOxygenView(startOnBreathing: true)
-                case ("skin_temp", _): NunaSkinTempView()
-                case ("fitness_age", _): NunaFitnessAgeView()
-                default: NunaMetricDetailView(metric: m)
-                }
+            case .metric(let m): NunaMetricHost(initial: m)
             case .allMetrics: NunaAllMetricsView()
             case .earlyWarning: NunaEarlyWarningView()
             case .sleep(let i): NunaSleepView(startIndex: i)

@@ -5,7 +5,7 @@ import StrandAnalytics
 import WhoopStore
 
 private func rangeOptions() -> [(value: Int, title: LocalizedStringKey)] {
-    [(value: 7, title: "7D"), (value: 30, title: "30D"), (value: 90, title: "90D"), (value: 180, title: "6M")]
+    [(value: 7, title: "W\u{2060}"), (value: 30, title: "M"), (value: 180, title: "6M")]
 }
 
 private func signedWhole(_ d: Double) -> String { (d >= 0 ? "+" : "−") + String(format: "%.0f", abs(d)) }
@@ -285,6 +285,11 @@ struct NunaMetricDetailView: View {
             } },
             series: series, lineColor: lineColor, decimals: metric.decimals,
             higherIsBetter: metric.higherIsBetter ?? true, range: $range, page: $page)
+        if ["spo2", "resp_rate", "hrv", "rhr"].contains(metric.key) {
+            NavigationLink(value: NunaTodayRoute.earlyWarning) {
+                NunaCard(small: true) { NunaListRow("Part of the early warning", subtitle: "Breathing, SpO₂, HRV and resting heart rate are watched too", systemImage: "bell", showsChevron: true) }
+            }.buttonStyle(.plain)
+        }
         NunaExpandRow(title: "What affects it", subtitle: "Common factors", systemImage: "chart.line.uptrend.xyaxis",
                       text: "Sleep, alcohol, hydration, stress, illness and training load all move your daily numbers. Look at the trend over weeks rather than a single day.")
         NunaExpandRow(title: "How it's calculated", subtitle: "Source and method",
@@ -444,7 +449,7 @@ struct NunaStressDetailView: View {
                 }
             }
             recoveryTiles
-            NunaSegmented([(value: 1, title: "Today"), (value: 7, title: "7D"), (value: 30, title: "30D")], selection: $range)
+            NunaSegmented([(value: 1, title: "Today"), (value: 7, title: "W\u{2060}"), (value: 30, title: "M")], selection: $range)
             chartCard
             if range == 1, let curve = day.stressCurve {
                 let zones = zoneMinutes(curve)
