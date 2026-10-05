@@ -1,6 +1,21 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Skin temp vs baseline": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Suhu kulit vs baseline"}}
+    } },
+    "vs last 14 nights": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "vs 14 malam terakhir"}}
+    } },
+    "Average %@ · range %@–%@": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Rata-rata %@ · rentang %@–%@"}}
+    } },
+    "Not enough nights to compare": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Malam belum cukup untuk dibandingkan"}}
+    } },
+    "Like usual": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Seperti biasa"}}
+    } },
     "The order of stages is not available for this night. The split comes from the daily totals.": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Urutan fase tidak tersedia untuk malam ini. Pembagian diambil dari total harian."}}
     } },
@@ -133863,6 +133878,7 @@
     },
     "RHR": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "RHR"}},
         "de": {
           "stringUnit": {
             "state": "translated",
