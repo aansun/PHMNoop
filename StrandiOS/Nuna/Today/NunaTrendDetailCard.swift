@@ -54,8 +54,8 @@ struct NunaTrendDetailCard: View {
                     Text(series.loaded ? "No data in this period" : " ").font(.nuna(size: 14, weight: .semibold))
                         .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 160)
                 } else {
-                    NunaLine2Chart(points: pts, color: lineColor, decimals: decimals, baseline: nil,
-                                   band: series.band.map { $0.lo...$0.hi }, higherIsBetter: higherIsBetter)
+                    NunaSegmentedChart(points: pts, color: lineColor, decimals: decimals,
+                                       band: series.band.map { $0.lo...$0.hi }, higherIsBetter: higherIsBetter)
                 }
                 if let avg = average(vals), let lo = vals.min(), let hi = vals.max() {
                     NunaDivider()
@@ -141,6 +141,114 @@ struct NunaTrendDetailCard: View {
         return pct > 0
             ? String(localized: "Your average over this period (\(fmt(avg))) was \(pct)% above the period before (\(fmt(prev))).")
             : String(localized: "Your average over this period (\(fmt(avg))) was \(-pct)% below the period before (\(fmt(prev))).")
+    }
+}
+
+/// The trend chart of the one-card detail screens: the raw readings drawn thin and faint, and over them one short line
+/// per stretch with its average above and the move against the stretch before below it. A week has one stretch per day,
+/// a month one per week (counted back from the latest reading) and six months one per calendar month, so the same
+/// design reads the same at every range, and the x axis carries the same "day over month" label under each stretch.
+struct NunaSegmentedChart: View {
+    let points: [(date: Date, value: Double)]
+    var color: Color = NunaPalette.charge
+    var decimals = 0
+    var band: ClosedRange<Double>?
+    var higherIsBetter = true
+    var height: CGFloat = 270
+
+    private func format(_ v: Double) -> String { String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, v) }
+
+    /// "29" over "Sep", the label under every stretch at every range.
+    static func dayOverMonth(_ d: Date) -> String {
+        let m = DateFormatter(); m.locale = AppLanguage.activeLocale; m.setLocalizedDateFormatFromTemplate("MMM")
+        return String(Calendar.current.component(.day, from: d)) + "\n" + m.string(from: d)
+    }
+
+    private struct Bucket { let start: Date; let end: Date; let values: [Double] }
+
+    private var buckets: [Bucket] {
+        guard let first = points.first?.date, let last = points.last?.date else { return [] }
+        let cal = Calendar.current
+        let days = last.timeIntervalSince(first) / 86400
+        if days <= 8 {
+            return points.map { Bucket(start: $0.date, end: $0.date, values: [$0.value]) }
+        }
+        let groups: [[(date: Date, value: Double)]]
+        let minCount: Int
+        if days <= 40 {
+            minCount = 3
+            let byWeek = Dictionary(grouping: points) { Int((last.timeIntervalSince($0.date) / 86400 / 7).rounded(.down)) }
+            groups = byWeek.keys.sorted(by: >).map { byWeek[$0]!.sorted { $0.date < $1.date } }
+        } else {
+            minCount = 7
+            let byMonth = Dictionary(grouping: points) { cal.dateComponents([.year, .month], from: $0.date) }
+            groups = byMonth.values.map { $0.sorted { $0.date < $1.date } }.sorted { ($0.first?.date ?? .distantPast) < ($1.first?.date ?? .distantPast) }
+        }
+        return groups.compactMap { g in
+            guard g.count >= minCount, let a = g.first?.date, let b = g.last?.date else { return nil }
+            return Bucket(start: a, end: b, values: g.map(\.value))
+        }
+    }
+
+    private func segments(_ buckets: [Bucket]) -> [TrendSegmentAverage] {
+        var out: [TrendSegmentAverage] = []
+        var prev: Double?
+        for b in buckets {
+            let avg = b.values.reduce(0, +) / Double(b.values.count)
+            var delta: String?
+            var deltaColor = NunaPalette.textPrimary
+            if let p = prev, p != 0 {
+                let pct = (avg - p) / abs(p) * 100
+                delta = String(format: "%+.0f%%", locale: AppLanguage.activeLocale, pct)
+                deltaColor = (pct >= 0) == higherIsBetter ? NunaPalette.charge : NunaPalette.warning
+            }
+            // A single-day stretch is drawn as a short mark centred on its day.
+            let single = b.start == b.end
+            let from = single ? b.start.addingTimeInterval(-0.3 * 86400) : b.start
+            let to = single ? b.end.addingTimeInterval(0.3 * 86400) : b.end
+            out.append(TrendSegmentAverage(start: from, end: to, value: avg, valueText: format(avg), deltaText: delta, deltaColor: deltaColor))
+            prev = avg
+        }
+        return out
+    }
+
+    var body: some View {
+        let vals = points.map(\.value)
+        if vals.count >= 2, let lo = vals.min(), let hi = vals.max() {
+            let bs = buckets
+            let floor = min(lo, band?.lowerBound ?? lo), ceil = max(hi, band?.upperBound ?? hi)
+            let pad = max((ceil - floor) * 0.2, 1)
+            VStack(alignment: .leading, spacing: 8) {
+                if band != nil {
+                    HStack(spacing: 6) {
+                        Spacer(minLength: 0)
+                        RoundedRectangle(cornerRadius: 2, style: .continuous).fill(NunaPalette.textSecondary.opacity(0.35)).frame(width: 9, height: 9)
+                        Text("Typical range").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                            .foregroundStyle(NunaPalette.textSecondary)
+                    }
+                }
+                TrendChart(
+                    points: points.map { TrendPoint(date: $0.date, value: $0.value) },
+                    gradient: Gradient(colors: [color, color]),
+                    valueRange: (floor - pad * 0.6)...(ceil + pad * 1.6),
+                    showsArea: false,
+                    showsPointValues: false,
+                    height: height,
+                    valueFormat: { format($0) },
+                    dateFormat: { TrendChart.defaultDateString($0) },
+                    xAxisDateFormat: { Self.dayOverMonth($0) }
+                )
+                .typicalRange(band)
+                .withoutPoints()
+                .line(width: 1.2, opacity: 0.6)
+                .segmentAverages(segments(bs))
+                .perReadingAxis(bs.map(\.start))
+            }
+        } else {
+            Text(vals.count == 1 ? "Not enough data yet" : "No data in this period")
+                .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                .frame(maxWidth: .infinity, minHeight: 120)
+        }
     }
 }
 #endif
