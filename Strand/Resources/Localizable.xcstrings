@@ -1,6 +1,36 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Average HR must be 25-250 bpm.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Rata-rata HR harus 25-250 bpm."}}
+    } },
+    "Calories must be 0-20,000.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kalori harus 0-20.000."}}
+    } },
+    "Choose a sport": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pilih olahraga"}}
+    } },
+    "Customize quick actions": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Atur aksi cepat"}}
+    } },
+    "Distance, Avg HR and Calories are optional.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Jarak, rata-rata HR, dan kalori boleh dikosongkan."}}
+    } },
+    "Lab book": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Buku lab"}}
+    } },
+    "Shown · %lld of %lld": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tampil · %lld dari %lld"}}
+    } },
+    "Six is the most. Remove one to add another.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Maksimal enam. Hapus satu untuk menambah yang lain."}}
+    } },
+    "Train": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Latihan"}}
+    } },
+    "Use as typed": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pakai seperti yang diketik"}}
+    } },
     "Switch metric": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Ganti metrik"}}
     } },
@@ -8698,6 +8728,7 @@
       "de": { "stringUnit": { "state": "translated", "value": "Wähle Einheiten für Körpermaße und Trainingsdistanz separat. Deine Daten werden immer gleich gespeichert; diese Einstellungen ändern nur die Anzeige." } }, "es": { "stringUnit": { "state": "translated", "value": "Elige por separado las unidades de las medidas corporales y de la distancia de ejercicio. Los datos siempre se almacenan igual; estos ajustes solo cambian su visualización." } }, "fr": { "stringUnit": { "state": "translated", "value": "Choisissez séparément les unités des mensurations et de la distance d’exercice. Les données sont toujours stockées de la même façon ; ces réglages ne changent que leur affichage." } }, "it": { "stringUnit": { "state": "translated", "value": "Scegli separatamente le unità per le misure corporee e la distanza di allenamento. I dati vengono sempre memorizzati allo stesso modo; queste impostazioni cambiano solo la visualizzazione." } }, "pl": { "stringUnit": { "state": "translated", "value": "Wybierz osobno jednostki pomiarów ciała i dystansu treningu. Dane są zawsze przechowywane tak samo; te ustawienia zmieniają tylko sposób wyświetlania." } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "Escolha separadamente as unidades para medidas corporais e distância de exercício. Os dados são sempre armazenados da mesma forma; estas definições alteram apenas a apresentação." } }, "ru": { "stringUnit": { "state": "translated", "value": "Выберите единицы для параметров тела и дистанции тренировки отдельно. Данные всегда хранятся одинаково; эти настройки меняют только отображение." } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "分别选择身体测量和运动距离的单位。数据的存储方式始终不变；这些设置只会改变显示方式。" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "分別選擇身體測量和運動距離的單位。資料的儲存方式始終不變；這些設定只會改變顯示方式。" } }
     } },
     "Distance must be 0–621 mi.": { "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Jarak harus 0–621 mi."}},
       "de": { "stringUnit": { "state": "translated", "value": "Die Distanz muss zwischen 0 und 621 mi liegen." } }, "es": { "stringUnit": { "state": "translated", "value": "La distancia debe ser de 0 a 621 mi." } }, "fr": { "stringUnit": { "state": "translated", "value": "La distance doit être comprise entre 0 et 621 mi." } }, "it": { "stringUnit": { "state": "translated", "value": "La distanza deve essere compresa tra 0 e 621 mi." } }, "pl": { "stringUnit": { "state": "translated", "value": "Dystans musi wynosić od 0 do 621 mi." } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "A distância deve ser entre 0 e 621 mi." } }, "ru": { "stringUnit": { "state": "translated", "value": "Дистанция должна быть от 0 до 621 мили." } }, "zh-Hans": { "stringUnit": { "state": "translated", "value": "距离必须在 0–621 英里之间。" } }, "zh-Hant": { "stringUnit": { "state": "translated", "value": "距離必須在 0–621 英里之間。" } }
     } },
     "Exercise distance & pace": { "localizations": {
@@ -33953,6 +33984,7 @@
     },
     "Add Workout": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Tambah workout"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -35005,6 +35037,7 @@
     },
     "Adjust this session's details.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Ubah detail sesi ini."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -36124,6 +36157,7 @@
     },
     "All activities": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Semua aktivitas"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -41040,6 +41074,7 @@
     },
     "Avg HR is shown as typed. The HR graph, zones and Effort stay from the recorded session.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Rata-rata HR ditampilkan seperti yang diketik. Grafik HR, zona, dan Effort tetap dari sesi yang terekam."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -54323,6 +54358,7 @@
     },
     "Check the values and try again.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Periksa nilainya lalu coba lagi."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -68445,6 +68481,7 @@
     },
     "Distance must be 0–1,000 km.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Jarak harus 0–1.000 km."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -71551,6 +71588,7 @@
     },
     "Edit Workout": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Ubah workout"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -73515,6 +73553,7 @@
     },
     "Enter a sport.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Isi olahraga."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -85646,6 +85685,7 @@
     },
     "Heart Rate Variability": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Variabilitas detak jantung"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -102703,6 +102743,7 @@
     },
     "Log a session you tracked elsewhere.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Catat sesi yang kamu rekam di tempat lain."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -137698,6 +137739,7 @@
     },
     "Recent": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Terbaru"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -158784,6 +158826,7 @@
     },
     "Start can't be in the future.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Mulai tidak boleh di masa depan."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -158842,6 +158885,7 @@
     },
     "End must be after the start.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Akhir harus setelah mulai."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -158900,6 +158944,7 @@
     },
     "End can't be in the future.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Akhir tidak boleh di masa depan."}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -201715,6 +201760,7 @@
     },
     "optional": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "opsional"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -207873,6 +207919,7 @@
     },
     "A workout must be at least 1 minute.": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Workout minimal 1 menit."}},
         "de": {
           "stringUnit": {
             "state": "translated",

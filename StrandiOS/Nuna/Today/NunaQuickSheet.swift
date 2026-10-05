@@ -13,25 +13,38 @@ struct NunaQuickSheet: View {
     @EnvironmentObject private var router: NavRouter
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
-    @State private var presented: Panel?
     @State private var waterML = 0
     @State private var goalML = 2500
 
-    private enum Panel: String, Identifiable { case breathing, nap, weight; var id: String { rawValue } }
+    @AppStorage(NunaQuickActions.storageKey) private var actionsRaw = ""
+    @State private var editing = false
+    @State private var todayPanel: NunaTodayRoute?
+    @State private var mePanel: NunaMeRoute?
+    @State private var workoutPanel: NunaWorkoutRoute?
+    @State private var breathing = false
+
+    private var actions: [NunaQuickAction] {
+        let ids = NunaQuickActions.decode(actionsRaw.isEmpty ? NunaQuickActions.encode(NunaQuickActions.defaultIDs) : actionsRaw)
+        return ids.compactMap(NunaQuickActions.action)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text("Quick actions")
-                .font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design))
-                .foregroundStyle(NunaPalette.textPrimary)
-                .padding(.top, 22)
+            HStack {
+                Text("Quick actions")
+                    .font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design))
+                    .foregroundStyle(NunaPalette.textPrimary)
+                Spacer()
+                Button { editing = true } label: {
+                    Image(systemName: "slider.horizontal.3").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        .frame(width: 40, height: 40)
+                        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                }
+                .buttonStyle(.plain).accessibilityLabel(Text("Customize quick actions"))
+            }
+            .padding(.top, 22)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 14) {
-                tile("Add activity", "plus", nil) { dismiss(); onAddActivity() }
-                tile("Start session", "play", NunaPalette.charge) { go(.activeWorkout) }
-                tile("Journal", "bookmark", nil) { go(.journal) }
-                tile("Breathing", "wind", NunaPalette.charge) { presented = .breathing }
-                tile("Nap", "moon", nil) { presented = .nap }
-                tile("Weight", "scalemass", NunaPalette.effortText) { presented = .weight }
+                ForEach(actions) { a in tile(LocalizedStringKey(a.title), a.icon, nil) { run(a) } }
             }
             if coachEnabled {
                 Button { go(.coach) } label: {
@@ -57,19 +70,28 @@ struct NunaQuickSheet: View {
         .background(NunaPalette.card.ignoresSafeArea())
         .preferredColorScheme(NunaTheme.colorScheme)
         .task { await reloadWater() }
-        .sheet(item: $presented) { panel in
+        .sheet(isPresented: $editing) { NunaQuickActionsEditor(raw: $actionsRaw).nunaSheetChrome(detents: [.large]) }
+        .sheet(isPresented: $breathing) {
             NavigationStack {
-                Group {
-                    switch panel {
-                    case .breathing: BreathingView()
-                    case .nap: NunaNapView().nunaTodayDestinations()
-                    case .weight:
-                        if let m = MetricCatalog.metric(key: "weight", source: "apple-health") { NunaMetricDetailView(metric: m) }
-                    }
-                }
-                .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { presented = nil } } }
+                BreathingView().toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { breathing = false } } }
             }
             .preferredColorScheme(NunaTheme.colorScheme)
+        }
+        .sheet(item: $todayPanel) { NunaQuickPanel(route: $0) }
+        .sheet(item: $mePanel) { NunaQuickPanel(route: $0) }
+        .sheet(item: $workoutPanel) { NunaQuickPanel(route: $0) }
+    }
+
+    private func run(_ a: NunaQuickAction) {
+        switch a.kind {
+        case .addActivity: dismiss(); onAddActivity()
+        case .route(let d): go(d)
+        case .breathing: breathing = true
+        case .today(let r): todayPanel = r
+        case .me(let r): mePanel = r
+        case .workout(let r): workoutPanel = r
+        case .metric(let key):
+            if let m = MetricCatalog.metric(key: key, source: "my-whoop") { todayPanel = .metric(m) }
         }
     }
 
