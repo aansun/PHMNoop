@@ -175,4 +175,17 @@ final class AudioCoachingCoreTests: XCTestCase {
         XCTAssertTrue(engine.prompts(for: [.activityStarted], context: context, policy: on, now: Date(timeIntervalSince1970: 20_002)).isEmpty,
                       "lifecycle off silences start")
     }
+
+    func testReachedTargetIsSpokenOnceAndFollowsTheStartStopSwitch() {
+        let context = AudioWorkoutContext(sport: "Run", state: .active, duration: 1800, targetHeartRate: nil)
+        let on = AudioPromptPolicy(enabled: true, lifecyclePrompts: true, heartRatePrompts: false, distancePrompts: false, frequency: .low)
+        let engine = AudioPromptEngine()
+        XCTAssertEqual(engine.prompts(for: [.timeTargetReached(minutes: 30)], context: context, policy: on, now: Date(timeIntervalSince1970: 30_000)).count, 1)
+        XCTAssertTrue(engine.prompts(for: [.timeTargetReached(minutes: 30)], context: context, policy: on, now: Date(timeIntervalSince1970: 30_001)).isEmpty)
+        XCTAssertEqual(AudioPromptEngine().prompts(for: [.distanceTargetReached(meters: 5_000)], context: context, policy: on,
+                                                   now: Date(timeIntervalSince1970: 30_002)).first?.text, "Distance target reached: 5 kilometers.")
+        let off = AudioPromptPolicy(enabled: true, lifecyclePrompts: false, heartRatePrompts: false, distancePrompts: false, frequency: .low)
+        XCTAssertTrue(AudioPromptEngine().prompts(for: [.timeTargetReached(minutes: 30)], context: context, policy: off,
+                                                  now: Date(timeIntervalSince1970: 30_003)).isEmpty)
+    }
 }

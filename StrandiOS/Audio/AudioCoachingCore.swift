@@ -46,6 +46,9 @@ enum AudioActivityEvent: Equatable, Sendable {
     case activityResumed
     case activityEnded
     case workoutCheckIn
+    /// The time or distance the wearer set when starting the session has been reached.
+    case timeTargetReached(minutes: Int)
+    case distanceTargetReached(meters: Double)
     case distanceMilestone(meters: Double)
     case heartRateAboveTarget(current: Int, targetMax: Int)
     case heartRateBelowTarget(current: Int, targetMin: Int)
@@ -54,7 +57,7 @@ enum AudioActivityEvent: Equatable, Sendable {
 
     var priority: AudioPromptPriority {
         switch self {
-        case .activityStarted, .activityPaused, .activityResumed, .activityEnded:
+        case .activityStarted, .activityPaused, .activityResumed, .activityEnded, .timeTargetReached, .distanceTargetReached:
             return .workoutTransition
         case .workoutCheckIn:
             return .information
@@ -77,6 +80,8 @@ enum AudioActivityEvent: Equatable, Sendable {
         case .activityResumed: return "activity_resumed"
         case .activityEnded: return "activity_ended"
         case .workoutCheckIn: return "workout_check_in"
+        case .timeTargetReached: return "target_time_reached"
+        case .distanceTargetReached: return "target_distance_reached"
         case .distanceMilestone(let meters): return "distance_\(Int(meters.rounded()))"
         case .heartRateAboveTarget: return "hr_above_target"
         case .heartRateBelowTarget: return "hr_below_target"
@@ -484,7 +489,7 @@ final class AudioPromptEngine {
 
     private func categoryEnabled(for event: AudioActivityEvent, policy: AudioPromptPolicy) -> Bool {
         switch event {
-        case .activityStarted, .activityPaused, .activityResumed, .activityEnded:
+        case .activityStarted, .activityPaused, .activityResumed, .activityEnded, .timeTargetReached, .distanceTargetReached:
             return policy.lifecyclePrompts
         case .workoutCheckIn:
             return policy.checkInPrompts
@@ -513,7 +518,8 @@ final class AudioPromptEngine {
             return 120
         case .heartRateReturnedToTarget:
             return 30
-        case .distanceMilestone, .activityStarted, .activityPaused, .activityResumed, .activityEnded:
+        case .distanceMilestone, .activityStarted, .activityPaused, .activityResumed, .activityEnded,
+             .timeTargetReached, .distanceTargetReached:
             return 86_400
         case .workoutCheckIn:
             return 55
@@ -550,6 +556,20 @@ final class AudioPromptEngine {
             }
             text = "\(durationText(context.duration)) \(zoneText)"
             expires = 12
+        case .timeTargetReached(let minutes):
+            template = "target.time_reached"
+            text = AudioCoachingCopy.isIndonesian
+                ? "Target waktu \(minutes) menit tercapai."
+                : "Time target reached: \(minutes) minutes."
+            expires = 15
+        case .distanceTargetReached(let meters):
+            template = "target.distance_reached"
+            let km = meters / 1_000
+            let shown = km.rounded() == km ? String(Int(km)) : String(format: "%.1f", km)
+            text = AudioCoachingCopy.isIndonesian
+                ? "Target jarak \(shown.replacingOccurrences(of: ".", with: ",")) kilometer tercapai."
+                : "Distance target reached: \(shown) kilometers."
+            expires = 15
         case .distanceMilestone(let meters):
             template = "distance.milestone"
             text = distanceMilestoneText(meters: meters, context: context, policy: policy)

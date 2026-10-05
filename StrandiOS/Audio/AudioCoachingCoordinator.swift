@@ -29,6 +29,9 @@ final class AudioCoachingCoordinator: ObservableObject {
     private var latestDistance: Double?
     private var latestPace: Double?
     private var latestCadence: Double?
+    /// Whether the time and the distance target of this session have been announced, so each is said once.
+    private var timeTargetAnnounced = false
+    private var distanceTargetAnnounced = false
     private var latestTrends = AudioMetricTrends(sampleCount: 0, windowDuration: 0,
                                                  heartRateDeltaBPM: nil,
                                                  paceDeltaSecondsPerKm: nil,
@@ -160,6 +163,8 @@ final class AudioCoachingCoordinator: ObservableObject {
                                          heartRateDeltaBPM: nil, paceDeltaSecondsPerKm: nil,
                                          cadenceDeltaSPM: nil)
         promptEngine.reset()
+        timeTargetAnnounced = false
+        distanceTargetAnnounced = false
         promptHistory.removeAll()
         scheduler.setSpeechRate(AudioCoachingPreferences.speechRate)
         if AudioCoachingPreferences.policy().enabled { scheduler.beginSession() }
@@ -225,7 +230,23 @@ final class AudioCoachingCoordinator: ObservableObject {
         let trends = trendEngine.update(metrics)
         latestTrends = trends
         let events = activityEngine.update(metrics) + coachingRuleEngine.update(metrics: metrics, trends: trends)
+            + targetEvents(for: workout, now: now)
         emit(events, for: workout, now: now)
+    }
+
+    /// The time or distance the wearer chose on the start screen, once reached. Said one time per session.
+    private func targetEvents(for workout: AppModel.ActiveWorkout, now: Date) -> [AudioActivityEvent] {
+        guard let target = model?.workoutTarget else { return [] }
+        var out: [AudioActivityEvent] = []
+        if !timeTargetAnnounced, let seconds = target.seconds, workout.elapsed(at: now) >= Double(seconds) {
+            timeTargetAnnounced = true
+            out.append(.timeTargetReached(minutes: max(1, seconds / 60)))
+        }
+        if !distanceTargetAnnounced, let meters = target.meters, let distance = latestDistance, distance >= meters {
+            distanceTargetAnnounced = true
+            out.append(.distanceTargetReached(meters: meters))
+        }
+        return out
     }
 
     private func targetHeartRate() -> ClosedRange<Int>? {
