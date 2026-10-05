@@ -265,7 +265,7 @@ struct NunaLegendItem: View {
     var body: some View {
         HStack(spacing: 6) {
             RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(color).frame(width: dot ? 10 : 14, height: dot ? 10 : 8)
-            Text(text).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text(text).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
         }
     }
 }

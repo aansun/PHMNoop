@@ -10,7 +10,7 @@ struct NunaDataHubView: View {
 
     var body: some View {
         NunaDetailScreen("Data and integrations") {
-            Text("Everything stays on this iPhone. Bring your history in once, then it is yours.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+            Text("Everything stays on this iPhone. Bring your history in once, then it is yours.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             NunaSettingsGroup("Connected") {
                 NavigationLink(value: NunaMeRoute.appleHealth) { NunaListRow("Apple Health", subtitle: "Permissions, what is read and written", systemImage: "heart.text.square", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
@@ -61,8 +61,8 @@ struct NunaBackupView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack { nunaTrendsCap("Status"); Spacer(); NunaChip(lastMs > 0 ? "Running" : "Not yet", color: lastMs > 0 ? NunaPalette.charge : nil) }
                     Text(verbatim: lastMs > 0 ? NunaDataHubView.when(lastMs) : "–").font(.nuna(size: 32, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(verbatim: String(localized: "\(snapshots.count) backups kept")).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                    Text("Saved in the folder you choose. Point it at iCloud Drive to reach every Apple device.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    Text(verbatim: String(localized: "\(snapshots.count) backups kept")).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    Text("Saved in the folder you choose. Point it at iCloud Drive to reach every Apple device.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     Button { backupNow() } label: {
                         Text(busy ? "Working…" : "Back up now").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain).disabled(busy || !FolderBackup.hasFolder).opacity(FolderBackup.hasFolder ? 1 : 0.4)
@@ -100,7 +100,7 @@ struct NunaBackupView: View {
             NunaCard(small: true) {
                 HStack(alignment: .top, spacing: 12) {
                     Image(systemName: "exclamationmark.triangle").foregroundStyle(NunaPalette.warning)
-                    Text("Backups are not encrypted. A folder that syncs to Drive, Dropbox or iCloud keeps a readable file. Choose the folder with care.").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    Text("Backups are not encrypted. A folder that syncs to Drive, Dropbox or iCloud keeps a readable file. Choose the folder with care.").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
             nunaFootnote("Restoring replaces the data on this iPhone. Back up first if you are unsure.")

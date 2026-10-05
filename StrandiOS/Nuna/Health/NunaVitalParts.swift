@@ -102,7 +102,7 @@ struct NunaVitalTile: View {
                     }
                 }
                 if let chip { NunaMiniChip(text: chip, color: chipColor) }
-                else if let note { Text(verbatim: note).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).frame(height: 24, alignment: .leading) }
+                else if let note { Text(verbatim: note).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).frame(height: 24, alignment: .leading) }
                 else { Color.clear.frame(height: 24) }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -274,9 +274,9 @@ struct NunaPaceDial: View {
     var body: some View {
         VStack(spacing: 8) {
             HStack {
-                Text("Slow").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text("Slow").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 Spacer()
-                Text("Fast").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text("Fast").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             GeometryReader { geo in
                 let w = geo.size.width
@@ -353,7 +353,7 @@ struct NunaStressGauge: View {
                                 Text(verbatim: value.map { String(format: "%.1f", locale: AppLanguage.activeLocale, $0) } ?? "–")
                                     .font(.nuna(size: 92, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(92)).foregroundStyle(NunaPalette.textPrimary)
                                 if let level { Text(level).font(.nuna(size: 20, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(levelColor) }
-                                if let time { Text(verbatim: time).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                                if let time { Text(verbatim: time).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                             }
                             .position(x: c.x, y: c.y - 6)
                             ForEach([("0.0", start), ("3.0", start + span)], id: \.0) { label, deg in

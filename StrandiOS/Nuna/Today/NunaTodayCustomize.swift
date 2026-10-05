@@ -263,7 +263,7 @@ struct NunaLayoutList<Item: Identifiable & Equatable, Extra: View>: View {
     var body: some View {
         List {
             Section {
-                Text(intro).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                Text(intro).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     .listRowBackground(Color.clear).listRowInsets(EdgeInsets(top: 4, leading: 4, bottom: 4, trailing: 4))
             }
             extra()
@@ -275,7 +275,7 @@ struct NunaLayoutList<Item: Identifiable & Equatable, Extra: View>: View {
 
             if draft.hidden.isEmpty {
                 Section {
-                    Text("Nothing hidden").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                    Text("Nothing hidden").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                 } header: { cap(hiddenTitle) }
                 .listRowBackground(NunaPalette.card)
             } else if let group {
@@ -310,7 +310,7 @@ struct NunaLayoutList<Item: Identifiable & Equatable, Extra: View>: View {
             NunaIconTile(icon(item))
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: title(item)).font(.nuna(size: 16, weight: .bold)).foregroundStyle(shown ? NunaPalette.textPrimary : NunaPalette.textSecondary)
-                if let s = subtitle(item) { Text(verbatim: s).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(2) }
+                if let s = subtitle(item) { Text(verbatim: s).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(2) }
             }
             Spacer(minLength: 6)
             if shown, configure(item) {

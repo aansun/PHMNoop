@@ -150,7 +150,7 @@ struct NunaLiveHeartView: View {
                 HStack {
                     nunaCap("Zones today")
                     Spacer()
-                    Text(verbatim: String(localized: "Total \(dur(tiz.total))")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: String(localized: "Total \(dur(tiz.total))")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 if tiz.total > 0 {
                     NunaProportionBar(parts: (0..<6).map { i in (secs[i], i == 0 ? NunaPalette.zoneBase.opacity(0.6) : zoneColors[i - 1]) })
@@ -159,7 +159,7 @@ struct NunaLiveHeartView: View {
                         ForEach(0..<5, id: \.self) { i in zoneRow(Text(zoneNames[i]), secs[i + 1], zoneColors[i], dur) }
                     }
                 } else {
-                    Text("No heart-rate readings yet today").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("No heart-rate readings yet today").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
         }
@@ -237,7 +237,7 @@ struct NunaSkinTempView: View {
                         Text(verbatim: latest.map { nunaSigned($0) } ?? "–").font(.nuna(size: 68, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(68)).foregroundStyle(NunaPalette.textPrimary)
                         if latest != nil { Text("°C").font(.nuna(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                     }
-                    Text("Compared with your personal baseline").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Compared with your personal baseline").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
             NunaCard {
@@ -245,7 +245,7 @@ struct NunaSkinTempView: View {
                     HStack {
                         nunaCap("14 nights")
                         Spacer()
-                        Text("Centre line = baseline").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Centre line = baseline").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     if nights.count >= 2 {
                         NunaDivergingBars(values: nights.map(\.value))
@@ -254,7 +254,7 @@ struct NunaSkinTempView: View {
                         }
                         .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     } else {
-                        Text("Not enough data yet").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Not enough data yet").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                 }
             }

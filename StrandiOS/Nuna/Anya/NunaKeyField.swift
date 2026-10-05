@@ -48,7 +48,7 @@ struct NunaKeyField: View {
                 }.buttonStyle(.plain).accessibilityLabel(Text(revealed ? "Hide the key" : "Show the key"))
             }
             if !shown.isEmpty {
-                Text(verbatim: shown).font(.nuna(size: 12, weight: .semibold)).monospacedDigit().foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: shown).font(.nuna(size: 12, weight: .semibold)).monospacedDigit().foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
         }
     }

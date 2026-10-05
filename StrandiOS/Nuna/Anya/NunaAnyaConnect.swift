@@ -73,7 +73,7 @@ struct NunaAnyaConnectView: View {
             NunaIconTile(icon)
             VStack(alignment: .leading, spacing: 3) {
                 Text(title).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                Text(verbatim: subtitle).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                Text(verbatim: subtitle).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 if let badge { NunaChip(verbatim: badge).fixedSize().padding(.top, 2) }
             }
             Spacer(minLength: 4)
@@ -101,7 +101,7 @@ struct NunaAnyaKeyView: View {
             NunaCard(small: true) {
                 HStack(spacing: 10) {
                     Image(systemName: "lock.shield").foregroundStyle(NunaPalette.textPrimary)
-                    Text("The key is kept in this iPhone's Keychain.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("The key is kept in this iPhone's Keychain.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
             NunaFormField("API key") {
@@ -110,7 +110,7 @@ struct NunaAnyaKeyView: View {
             if saved {
                 HStack(spacing: 8) {
                     Image(systemName: "checkmark.circle.fill").foregroundStyle(NunaPalette.charge)
-                    Text(checked.map { String(localized: "Key accepted · \($0) models found") } ?? String(localized: "A key is saved for this provider")).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(checked.map { String(localized: "Key accepted · \($0) models found") } ?? String(localized: "A key is saved for this provider")).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     Spacer()
                     Button { Task { await check() } } label: {
                         Text(checking ? "Checking…" : "Check key").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
@@ -124,7 +124,7 @@ struct NunaAnyaKeyView: View {
             Text("Usage is billed by the provider to your account. The key only leaves this iPhone to reach this provider.")
                 .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
             if let e = coach.errorText, !e.isEmpty {
-                Text(verbatim: e).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.alertText).fixedSize(horizontal: false, vertical: true)
+                Text(verbatim: e).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.alertText).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
             Button { save() } label: {
                 Text("Save and start").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
@@ -231,13 +231,13 @@ struct NunaAnyaCustomView: View {
                         Image(systemName: "checkmark.circle.fill").foregroundStyle(NunaPalette.charge)
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Connected").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            Text(verbatim: String(localized: "\(t.count) models found · \(t.ms) ms")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: String(localized: "\(t.count) models found · \(t.ms) ms")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                         Spacer()
                     }
                 }
             } else if let e = coach.errorText, !e.isEmpty {
-                Text(verbatim: e).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.alertText).fixedSize(horizontal: false, vertical: true)
+                Text(verbatim: e).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.alertText).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
             Button { Task { await test() } } label: {
                 Text(testing ? "Testing…" : "Test connection").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
@@ -282,7 +282,7 @@ struct NunaAnyaChatGPTView: View {
                 NunaCard(highlight: true) {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack(spacing: 10) { Image(systemName: "checkmark.seal.fill").foregroundStyle(NunaPalette.charge); Text("ChatGPT connected").font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary) }
-                        Text("The token is kept in this iPhone's Keychain and refreshed automatically.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("The token is kept in this iPhone's Keychain and refreshed automatically.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }
                 Button(role: .destructive) { auth.logout() } label: {
@@ -307,7 +307,7 @@ struct NunaAnyaChatGPTView: View {
                     ProgressView().controlSize(.small).tint(NunaPalette.textSecondary)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Waiting for approval…").font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("The app checks every few seconds").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("The app checks every few seconds").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                 }
             } else {
@@ -322,7 +322,7 @@ struct NunaAnyaChatGPTView: View {
                 }
             }
             if let e = auth.errorMessage, !e.isEmpty {
-                Text(verbatim: e).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.alertText).fixedSize(horizontal: false, vertical: true)
+                Text(verbatim: e).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.alertText).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
             Text("The token is kept in Apple's Keychain and refreshed automatically. Sign out any time from Anya settings.")
                 .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)

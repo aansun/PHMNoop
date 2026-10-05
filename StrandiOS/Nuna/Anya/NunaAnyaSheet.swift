@@ -55,6 +55,7 @@ struct NunaAnyaSheet: View {
                 .padding(.horizontal, NunaSpacing.screenH).padding(.top, 20).padding(.bottom, 24)
             }
             .scrollIndicators(.hidden).scrollDismissesKeyboard(.interactively)
+            .textCase(nil)
             .background(NunaPalette.canvas.ignoresSafeArea())
             .toolbar(.hidden, for: .navigationBar)
             .nunaAnyaDestinations()
@@ -74,7 +75,7 @@ struct NunaAnyaSheet: View {
             AnyaIconTile(size: 44)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Anya").font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                Text("Anya sees").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text("Anya sees").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             Spacer()
             Text(module.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
@@ -85,17 +86,17 @@ struct NunaAnyaSheet: View {
     private func card(_ r: NunaAnyaRead) -> some View {
         NunaCard(highlight: true) {
             VStack(alignment: .leading, spacing: 12) {
-                Text(verbatim: r.headline).font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
-                if let d = r.detail { Text(verbatim: d).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true) }
+                Text(verbatim: r.headline).font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                if let d = r.detail { Text(verbatim: d).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil) }
                 if explaining {
-                    HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                    HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                 } else if let explanation {
                     NunaDivider()
-                    Text(Self.markdown(AnyaActions.proseOnly(explanation))).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                    Text(Self.markdown(AnyaActions.proseOnly(explanation))).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
                 HStack(spacing: 6) {
-                    Text("Read:").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                    ForEach(r.read, id: \.self) { Text(LocalizedStringKey($0)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                    Text("Read:").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    ForEach(r.read, id: \.self) { Text(LocalizedStringKey($0)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                 }
                 if coach.isConfigured, coach.dataConsent, explanation == nil, !explaining {
                     Button { Task { await explain() } } label: {
@@ -111,7 +112,7 @@ struct NunaAnyaSheet: View {
         NunaCard(small: true) {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Nothing to read yet").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                Text("Anya shows a line only when it has figures to cite. Wear the strap and sync, then ask again.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text("Anya shows a line only when it has figures to cite. Wear the strap and sync, then ask again.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }.frame(maxWidth: .infinity, alignment: .leading)
         }
     }
@@ -154,10 +155,10 @@ struct NunaAnyaSheet: View {
                     HStack { Spacer(minLength: 40)
                         Text(verbatim: t.text).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 14).padding(.vertical, 9).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: 12, style: .continuous)) }
                 } else {
-                    NunaCard(small: true) { Text(Self.markdown(AnyaActions.proseOnly(t.text))).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading) }
+                    NunaCard(small: true) { Text(Self.markdown(AnyaActions.proseOnly(t.text))).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) }
                 }
             }
-            if sending { HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) } }
+            if sending { HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) } }
         }
     }
 

@@ -195,12 +195,12 @@ struct NunaSleepStageSection: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: NunaSleepFormat.duration(night.asleepMin)).font(.nuna(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 Text("Hours of sleep").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                if let tAsleep { Text(verbatim: String(localized: "typically \(NunaSleepFormat.duration(tAsleep.mean))")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) }
+                if let tAsleep { Text(verbatim: String(localized: "typically \(NunaSleepFormat.duration(tAsleep.mean))")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil) }
             }
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: NunaSleepFormat.duration(restorative)).font(.nuna(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(SleepStage.rem.nunaColor)
                 Text("Restorative sleep").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                if let tRest { Text(verbatim: String(localized: "typically \(NunaSleepFormat.duration(tRest.mean))")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) }
+                if let tRest { Text(verbatim: String(localized: "typically \(NunaSleepFormat.duration(tRest.mean))")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil) }
             }
             Spacer(minLength: 0)
         }
@@ -246,7 +246,7 @@ struct NunaSleepStageSection: View {
                 nightSummary(pts, m)
             }
         } else {
-            Text("No heart-rate detail for this night").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+            Text("No heart-rate detail for this night").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
         }
     }
 
@@ -321,7 +321,7 @@ struct NunaSleepStageSection: View {
                 if let st {
                     HStack(spacing: 8) {
                         Image(systemName: st.status == .usual ? "checkmark.circle.fill" : "info.circle.fill").font(.nuna(size: 15, weight: .bold)).foregroundStyle(st.tint)
-                        Text(statusText(st.status)).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                        Text(statusText(st.status)).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }
                     .padding(.horizontal, 12).padding(.vertical, 10).frame(maxWidth: .infinity, alignment: .leading)
                     .background(st.tint.opacity(0.14), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
@@ -497,10 +497,10 @@ struct NunaStageCompare: View {
             HStack {
                 Text(status.0).font(.nuna(size: 12.5, weight: .heavy)).foregroundStyle(status.1)
                 Spacer()
-                Text(verbatim: String(localized: "Range \(Int(r.lo))–\(Int(r.hi))%")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: String(localized: "Range \(Int(r.lo))–\(Int(r.hi))%")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             if let u {
-                Text(verbatim: String(localized: "Usually \(NunaSleepFormat.duration(u))")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: String(localized: "Usually \(NunaSleepFormat.duration(u))")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
         }
         .padding(.vertical, 12)
@@ -559,7 +559,7 @@ struct NunaOvernightVitals: View {
                     HStack {
                         nunaTrendsCap("Overnight vitals")
                         Spacer()
-                        Text("vs last 14 nights").font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                        Text("vs last 14 nights").font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                     }
                     .padding(.bottom, 6)
                     ForEach(Array(list.enumerated()), id: \.element.id) { i, r in
@@ -579,9 +579,9 @@ struct NunaOvernightVitals: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(r.title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
                 if let avg, let lo = r.prior.min(), let hi = r.prior.max() {
-                    Text(verbatim: String(localized: "Average \(f(avg)) · range \(f(lo))–\(f(hi))")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
+                    Text(verbatim: String(localized: "Average \(f(avg)) · range \(f(lo))–\(f(hi))")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
                 } else {
-                    Text("Not enough nights to compare").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Not enough nights to compare").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
             Spacer(minLength: 8)
@@ -617,7 +617,7 @@ struct NunaOvernightVitals: View {
             if abs(d) >= step {
                 Text(verbatim: (d > 0 ? "▲ " : "▼ ") + f(abs(d))).font(.nuna(size: 12.5, weight: .heavy)).foregroundStyle(tint)
             } else {
-                Text("Like usual").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text("Like usual").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
         }
     }

@@ -65,14 +65,14 @@ struct NunaWidgetSettingsView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             Text(verbatim: v).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-            if let note { Text(verbatim: note).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+            if let note { Text(verbatim: note).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func step(_ n: Int, _ t: LocalizedStringKey) -> some View {
         HStack(alignment: .top, spacing: 14) {
             Text(verbatim: "\(n)").font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 30, height: 30).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
-            Text(t).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+            Text(t).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             Spacer(minLength: 0)
         }.padding(.vertical, 12)
     }

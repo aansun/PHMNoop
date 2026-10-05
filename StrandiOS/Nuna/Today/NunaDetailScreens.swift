@@ -35,7 +35,7 @@ struct NunaChargeDetailView: View {
                     Text(verbatim: d == 0 ? String(localized: "In line with your 30-day average")
                          : (d > 0 ? String(localized: "\(d) points above your 30-day average") : String(localized: "\(-d) points below your 30-day average")))
                         .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
             NunaPlainList {
@@ -118,8 +118,8 @@ struct NunaEffortDetailView: View {
                           number: day.effort.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–",
                           suffix: String(localized: "of \(UnitFormatter.effortScaleMax(scale))"),
                           name: "Effort", color: NunaPalette.effortText) {
-                Text("Cardio load so far today").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                Text("Cardio load so far today").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    .fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
             sourcesSection
             NunaSegmented(rangeOptions(), selection: $range)
@@ -310,7 +310,7 @@ struct NunaMetricDetailView: View {
                          : (d > 0 ? String(localized: "Up \(fmt(abs(d))) from yesterday") : String(localized: "Down \(fmt(abs(d))) from yesterday")))
                         .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 } else if let blurb = metric.description {
-                    Text(verbatim: blurb).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: blurb).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
             NunaSegmented(rangeOptions(), selection: $range)
@@ -492,7 +492,7 @@ struct NunaStressDetailView: View {
                     NunaIconTile("wind", tint: NunaPalette.charge)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("2-minute breathing").font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("A gentle buzz on the strap helps the rhythm").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("A gentle buzz on the strap helps the rhythm").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer(minLength: 4)
                     Button("Start") { showBreathing = true }.buttonStyle(.nuna(.primary, height: 40)).fixedSize()
@@ -522,14 +522,14 @@ struct NunaStressDetailView: View {
                     HStack {
                         Text("All day").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         Spacer()
-                        Text("By time of day").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("By time of day").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     if let curve = day.stressCurve, let pts = chartPoints(curve) {
                         // The same line NOOP draws on Default Today and in the widget.
                         HStack(alignment: .top, spacing: 8) {
                             VStack(alignment: .trailing, spacing: 0) {
                                 ForEach([3, 2, 1, 0], id: \.self) { t in
-                                    Text(verbatim: "\(t)").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                                    Text(verbatim: "\(t)").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                                     if t > 0 { Spacer(minLength: 0) }
                                 }
                             }
@@ -544,7 +544,7 @@ struct NunaStressDetailView: View {
                         .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         .padding(.leading, 22)
                     } else {
-                        Text("Calibrating").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Calibrating").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                             .frame(maxWidth: .infinity, minHeight: 110)
                     }
                 } else {
@@ -588,7 +588,7 @@ struct NunaStressDetailView: View {
     private func legend(_ c: Color, _ t: LocalizedStringKey) -> some View {
         HStack(spacing: 6) {
             RoundedRectangle(cornerRadius: 3, style: .continuous).fill(c).frame(width: 10, height: 10)
-            Text(t).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text(t).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
         }
     }
 

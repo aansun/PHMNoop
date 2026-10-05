@@ -43,7 +43,7 @@ struct NunaWorkoutStartView: View {
                         AnyaIconTile()
                         VStack(alignment: .leading, spacing: 2) {
                             Text("From Anya's plan").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                            Text(verbatim: planned.title).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                            Text(verbatim: planned.title).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                         }
                         Spacer(minLength: 6)
                         Button { withAnimation { self.planned = nil; goal = NunaWorkoutGoal() } } label: {
@@ -105,7 +105,7 @@ struct NunaWorkoutStartView: View {
     @ViewBuilder private var goalCard: some View {
         switch goal.mode {
         case .free:
-            NunaCard { Text("No target. The session records heart rate, Effort and, for outdoor sports, your route.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading) }
+            NunaCard { Text("No target. The session records heart rate, Effort and, for outdoor sports, your route.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) }
         case .time:
             stepperCard("Target duration", "\(goal.minutes)", "min", minus: { goal.minutes = max(5, goal.minutes - 5) }, plus: { goal.minutes = min(300, goal.minutes + 5) })
         case .distance:
@@ -273,7 +273,7 @@ struct NunaLiveWorkoutView: View {
                     if let last = model.lastWorkout {
                         Text(verbatim: WorkoutSource.displaySport(last.sport) + " · " + NunaWorkoutFormat.duration(last.durationS)).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     } else {
-                        Text("Sessions under a minute are not saved.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Sessions under a minute are not saved.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Button(action: onClose) { Text("Done").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 40).frame(height: 52).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)) }.buttonStyle(.plain)
                 }
@@ -333,7 +333,7 @@ struct NunaLiveWorkoutView: View {
             Spacer(minLength: 8)
             VStack(spacing: 2) {
                 Text(verbatim: title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(color).lineLimit(1)
-                Text(verbatim: gpsText + " · " + buzzText).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
+                Text(verbatim: gpsText + " · " + buzzText).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
             }
             Spacer(minLength: 8)
             HStack(spacing: 6) {
@@ -374,7 +374,7 @@ struct NunaLiveWorkoutView: View {
                 if let chip { NunaChip(verbatim: chip.0, color: chip.1) } else { Color.clear.frame(height: 30) }
                 Text(verbatim: clock(elapsed)).font(.nuna(size: 46, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(46)).monospacedDigit()
                     .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.7).lineLimit(1)
-                Text(verbatim: caption).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: caption).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }.padding(.horizontal, 26)
         }
         .frame(width: 220, height: 220)
@@ -424,7 +424,7 @@ struct NunaLiveWorkoutView: View {
                 }.padding(.top, 14)
                 if goal.mode == .zone, let line = guidance(bpm: bpm, state: state) {
                     Text(verbatim: line).font(.nuna(size: 14, weight: .bold)).foregroundStyle(state == .inZone ? NunaPalette.textPrimary : tone)
-                        .fixedSize(horizontal: false, vertical: true).padding(.top, 6)
+                        .fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.top, 6)
                 }
             }
         }
@@ -504,7 +504,7 @@ struct NunaLiveWorkoutView: View {
                 VStack(spacing: 6) {
                     Text(t.label).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.6).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.7)
                     Text(verbatim: t.value).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
-                    Text(verbatim: t.unit.isEmpty ? " " : t.unit).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: t.unit.isEmpty ? " " : t.unit).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 .padding(.vertical, 10).padding(.horizontal, 6).frame(maxWidth: .infinity)
                 .background(NunaPalette.card, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
@@ -551,7 +551,7 @@ struct NunaLiveWorkoutView: View {
         }
         return HStack(spacing: 8) {
             Image(systemName: "applewatch.radiowaves.left.and.right").font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.charge)
-            Text(verbatim: text).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center)
+            Text(verbatim: text).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).multilineTextAlignment(.center)
         }.frame(maxWidth: .infinity)
     }
 

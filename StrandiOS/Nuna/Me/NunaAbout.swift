@@ -17,7 +17,7 @@ struct NunaWhatsNewView: View {
                             NunaIconTile(e.icon)
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(verbatim: e.title).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                Text(verbatim: e.body).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                                Text(verbatim: e.body).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                             }
                         }
                     }
@@ -29,13 +29,13 @@ struct NunaWhatsNewView: View {
                         HStack(spacing: 8) {
                             NunaChip(verbatim: "v\(r.version)", color: i == 0 ? NunaPalette.charge : nil)
                             Spacer()
-                            Text(verbatim: r.date).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                            Text(verbatim: r.date).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                         }
-                        Text(verbatim: r.title).font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                        Text(verbatim: r.title).font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                         ForEach(Array(r.items.enumerated()), id: \.offset) { _, item in
                             HStack(alignment: .top, spacing: 10) {
                                 Circle().fill(NunaPalette.accent).frame(width: 5, height: 5).padding(.top, 8)
-                                Text(Self.styled(item)).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                                Text(Self.styled(item)).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                             }
                         }
                     }.frame(maxWidth: .infinity, alignment: .leading)
@@ -91,10 +91,10 @@ struct NunaHowItWorksView: View {
                             NunaIconTile(s.icon, tint: tint(s))
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(verbatim: s.overline).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).foregroundStyle(tint(s))
-                                Text(verbatim: s.title).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                                Text(verbatim: s.title).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                             }
                         }
-                        Text(verbatim: s.body).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        Text(verbatim: s.body).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
@@ -108,7 +108,7 @@ struct NunaHowItWorksView: View {
                             Text(verbatim: m.name).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             Text(verbatim: m.family).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.4).foregroundStyle(methodTint(m))
                         }
-                        Text(verbatim: m.method).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        Text(verbatim: m.method).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 12)
                 }
             }
@@ -143,7 +143,7 @@ struct NunaScoringGuideView: View {
                             .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                         HStack(spacing: 16) {
                             ForEach(ScoreSection.allCases) { s in
-                                HStack(spacing: 6) { Circle().fill(color(s)).frame(width: 8, height: 8); Text(verbatim: s.displayName).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                                HStack(spacing: 6) { Circle().fill(color(s)).frame(width: 8, height: 8); Text(verbatim: s.displayName).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                             }
                         }
                     }.frame(maxWidth: .infinity, alignment: .leading)
@@ -157,21 +157,21 @@ struct NunaScoringGuideView: View {
                                 }
                                 VStack(alignment: .leading, spacing: 6) {
                                     Text(verbatim: s.displayName).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(color(s))
-                                    Text(verbatim: s.headline).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                                    Text(verbatim: s.headline).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                                 }
                             }
-                            Text(verbatim: s.bodyText).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                            Text(verbatim: s.bodyText).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                             NunaDivider()
                             HStack(alignment: .top, spacing: 8) {
                                 Text("vs WHOOP").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(color(s)).padding(.top, 1)
-                                Text(verbatim: s.vsWhoop).font(.nuna(size: 12.5, weight: .semibold)).italic().foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+                                Text(verbatim: s.vsWhoop).font(.nuna(size: 12.5, weight: .semibold)).italic().foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
                             }
                         }.frame(maxWidth: .infinity, alignment: .leading)
                     }.id(s.id)
                 }
                 NunaCard(small: true) {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("How sure is NOOP?  ·  Solid · Building · Calibrating").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                        Text("How sure is NOOP?  ·  Solid · Building · Calibrating").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                         HStack(spacing: 8) {
                             NunaChip("Solid", color: NunaPalette.charge)
                             NunaChip("Building", color: NunaPalette.warning)

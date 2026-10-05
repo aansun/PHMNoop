@@ -33,7 +33,7 @@ struct NunaStravaView: View {
                 NunaToggleRow("Enable Strava", subtitle: "Off by default. While it is off, no request is made to Strava", systemImage: "figure.run.circle", isOn: $enabled).padding(.vertical, 8)
             }
             if !enabled { needs } else if !model.isConnected { setup } else { connected }
-            if let s = model.statusText { Text(verbatim: s).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true) }
+            if let s = model.statusText { Text(verbatim: s).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil) }
         }
         .scrollDismissesKeyboard(.interactively)
         .task(id: "\(enabled)") { await load() }
@@ -62,7 +62,7 @@ struct NunaStravaView: View {
             NunaCard {
                 VStack(alignment: .leading, spacing: 14) {
                     nunaTrendsCap("API credentials")
-                    Text("Create your Strava API app, then fill in its Client ID and Client Secret. Both are kept in the Keychain.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    Text("Create your Strava API app, then fill in its Client ID and Client Secret. Both are kept in the Keychain.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     NunaFormField("Client ID") { TextField("", text: $clientID, prompt: Text("123456").foregroundStyle(NunaPalette.textMuted)).keyboardType(.numberPad).textInputAutocapitalization(.never).autocorrectionDisabled() }
                     NunaFormField("Client Secret") { SecureField("", text: $clientSecret, prompt: Text("••••••••••••••••").foregroundStyle(NunaPalette.textMuted)).textInputAutocapitalization(.never).autocorrectionDisabled() }
                     HStack(spacing: 10) {
@@ -76,7 +76,7 @@ struct NunaStravaView: View {
                             }.buttonStyle(.plain)
                         }
                     }
-                    Text("Never shown again after it is saved").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                    Text("Never shown again after it is saved").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                 }
             }
             NunaSettingsGroup("How to set up the Strava app") {
@@ -98,14 +98,14 @@ struct NunaStravaView: View {
                             Text("Copy").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 34).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                         }.buttonStyle(.plain)
                     }
-                    Text("Permissions asked for: activity:write and activity:read_all.").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Permissions asked for: activity:write and activity:read_all.").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
             NunaCard {
                 VStack(alignment: .leading, spacing: 10) {
                     nunaTrendsCap("Connection")
                     Text(model.isConfigured ? "Ready to connect" : "Not connected").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    if !model.isConfigured { Text("Save the credentials first").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                    if !model.isConfigured { Text("Save the credentials first").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                     Button { Task { await model.connect() } } label: {
                         Text("Connect Strava").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain).disabled(model.busy || !model.isConfigured).opacity(model.isConfigured ? 1 : 0.4)
@@ -123,7 +123,7 @@ struct NunaStravaView: View {
                     Image(systemName: "checkmark.circle.fill").font(.system(size: 24)).foregroundStyle(NunaPalette.charge)
                     VStack(alignment: .leading, spacing: 3) {
                         Text("Connected").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: model.athleteName.map { "Strava · \($0)" } ?? "Strava").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: model.athleteName.map { "Strava · \($0)" } ?? "Strava").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer()
                     Button { Task { await model.disconnect() } } label: {
@@ -138,7 +138,7 @@ struct NunaStravaView: View {
                 nunaTrendsCap("Waiting to upload")
                 NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                     VStack(spacing: 0) {
-                        if pending.isEmpty { Text(uploadable.isEmpty ? "No GPS or treadmill workouts yet." : "Everything recent is already on Strava.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 16) }
+                        if pending.isEmpty { Text(uploadable.isEmpty ? "No GPS or treadmill workouts yet." : "Everything recent is already on Strava.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 16) }
                         ForEach(Array(pending.enumerated()), id: \.element.startTs) { i, r in
                             if i > 0 { NunaDivider() }
                             row(r) {
@@ -172,7 +172,7 @@ struct NunaStravaView: View {
             NunaIconTile(sportSymbol(r.sport))
             VStack(alignment: .leading, spacing: 3) {
                 Text(verbatim: WorkoutSource.displaySport(r.sport)).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                Text(verbatim: NunaWorkoutFormat.day(r.startTs) + " · " + NunaWorkoutFormat.clock(r.startTs)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: NunaWorkoutFormat.day(r.startTs) + " · " + NunaWorkoutFormat.clock(r.startTs)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             Spacer(minLength: 6)
             trailing()
@@ -182,7 +182,7 @@ struct NunaStravaView: View {
     private func stepRow(_ n: Int, _ t: LocalizedStringKey) -> some View {
         HStack(alignment: .top, spacing: 14) {
             Text(verbatim: "\(n)").font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 30, height: 30).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
-            Text(t).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+            Text(t).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             Spacer(minLength: 0)
         }.padding(.vertical, 12)
     }

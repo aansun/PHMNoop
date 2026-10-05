@@ -394,7 +394,7 @@ struct NunaTodayView: View {
             NunaIconTile(icon, tint: tint)
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: title).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2)
-                Text(sub).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text(sub).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             Spacer(minLength: 0)
         }
@@ -462,7 +462,7 @@ struct NunaTodayView: View {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Add a card").font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).padding(.top, 22)
                 if hiddenSections.isEmpty && hiddenDashboardCards.isEmpty && hiddenHostedCards.isEmpty {
-                    Text("Every card is already on Today.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Every card is already on Today.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 if !hiddenSections.isEmpty {
                     NunaSettingsGroup("Hidden cards") {

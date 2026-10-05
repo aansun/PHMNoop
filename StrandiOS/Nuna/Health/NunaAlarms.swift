@@ -90,7 +90,7 @@ private func nunaCaption(_ t: LocalizedStringKey) -> some View {
 private func nunaNote(_ t: LocalizedStringKey, warn: Bool = false) -> some View {
     Text(t).font(.nuna(size: 13, weight: .semibold))
         .foregroundStyle(warn ? NunaPalette.warning : NunaPalette.textSecondary)
-        .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+        .fixedSize(horizontal: false, vertical: true).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
 }
 
 // MARK: - Rows for the Health Sleep tab
@@ -198,7 +198,7 @@ struct NunaSmartAlarmView: View {
                         if let c = countdown(from: tick.date) {
                             Text(verbatim: c).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             if let s = stamp(from: tick.date) {
-                                Text(verbatim: s).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                Text(verbatim: s).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                             }
                         } else {
                             Text(behavior.smartAlarmEnabled ? "Not armed on this strap" : "Turn it on to buzz your wrist at wake time")
@@ -397,8 +397,8 @@ struct NunaWindDownView: View {
                         NunaDivider()
                         dayRow(d)
                     }
-                    Text(untouched).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true).padding(.top, 10)
+                    Text(untouched).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        .fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.top, 10)
                 }
             }
         }
@@ -417,7 +417,7 @@ struct NunaWindDownView: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text(verbatim: NunaAlarmFormat.weekdayName(d)).font(.nuna(size: 15, weight: .bold))
                     .foregroundStyle(has ? NunaPalette.textPrimary : NunaPalette.textSecondary)
-                if !has { Text("no time of its own").font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) }
+                if !has { Text("no time of its own").font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil) }
             }
             Spacer(minLength: 0)
             if has {

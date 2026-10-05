@@ -24,7 +24,7 @@ struct NunaBreathReportView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(readOnly ? "Session" : "Session complete").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         Text(verbatim: title).font(.nuna(size: NunaTypeSize.h1, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: dateText).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: dateText).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer()
                     Button(action: onDone) {
@@ -44,7 +44,7 @@ struct NunaBreathReportView: View {
                 metricCard("HRV (RMSSD)", series: record.rmssdSeries, color: NunaPalette.restLight, unit: "ms",
                            lines: [("Start", record.rmssdStart), ("Average", record.rmssdAvg), ("Peak", record.rmssdPeak)])
                 if !record.haptics {
-                    Text("This session ran without strap haptics, so the pace was followed by sight only.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("This session ran without strap haptics, so the pace was followed by sight only.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 Button { showAnya = true } label: {
                     NunaCard(small: true) { HStack(spacing: 12) { AnyaIconTile(); NunaListRow("Ask Anya about this session", subtitle: "She remembers your sessions in Breathing", showsChevron: true) } }
@@ -56,7 +56,7 @@ struct NunaBreathReportView: View {
                             .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
                     }.buttonStyle(.plain)
                 }
-                Text("An estimate for relaxation, not a medical reading.").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                Text("An estimate for relaxation, not a medical reading.").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
             }
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 22).padding(.bottom, 32)
         }
@@ -78,8 +78,8 @@ struct NunaBreathReportView: View {
                     Spacer()
                     if let p = record.rmssdChangePct { NunaChip(verbatim: String(format: "%+.0f%% HRV", locale: AppLanguage.activeLocale, p), color: p >= 5 ? NunaPalette.charge : nil) }
                 }
-                Text(verbatim: v.headline).font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
-                if let d = v.detail { Text(verbatim: d).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true) }
+                Text(verbatim: v.headline).font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                if let d = v.detail { Text(verbatim: d).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil) }
             }
         }
     }
@@ -109,7 +109,7 @@ struct NunaBreathReportView: View {
                 Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 HStack(alignment: .firstTextBaseline, spacing: 3) {
                     Text(verbatim: value).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
-                    if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) }
+                    if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil) }
                 }
             }
         }
@@ -135,7 +135,7 @@ struct NunaBreathReportView: View {
                         }
                     }
                 } else {
-                    Text("Not enough readings from the strap in this session.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Not enough readings from the strap in this session.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
         }
@@ -171,7 +171,7 @@ struct NunaBreathHistoryView: View {
                     }.buttonStyle(.plain)
                 }
                 if records.isEmpty {
-                    NunaCard { Text("No sessions yet. Finish one and it appears here with its report.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                    NunaCard { Text("No sessions yet. Finish one and it appears here with its report.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                 } else {
                     HStack(spacing: 10) {
                         tile("Last 7 days", "\(week.count)", String(localized: "sessions"))
@@ -205,7 +205,7 @@ struct NunaBreathHistoryView: View {
                 Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.7)
                 HStack(alignment: .firstTextBaseline, spacing: 3) {
                     Text(verbatim: value).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(verbatim: unit).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                    Text(verbatim: unit).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                 }
             }
         }
@@ -219,7 +219,7 @@ struct NunaBreathHistoryView: View {
             NunaIconTile(goal.icon, tint: goal.tint)
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: name).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                Text(verbatim: "\(f.string(from: r.date)) · \(r.durationText)").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: "\(f.string(from: r.date)) · \(r.durationText)").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             Spacer(minLength: 6)
             if let p = r.rmssdChangePct {

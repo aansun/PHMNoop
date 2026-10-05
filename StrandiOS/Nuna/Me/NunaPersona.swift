@@ -19,7 +19,7 @@ struct NunaStepRow: View {
         HStack(spacing: 10) {
             VStack(alignment: .leading, spacing: 3) {
                 Text(label).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                if let note { Text(note).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true) }
+                if let note { Text(note).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil) }
             }
             Spacer(minLength: 6)
             Button(action: onMinus) { glyph("minus") }.buttonStyle(.plain).disabled(!canDecrement).opacity(canDecrement ? 1 : 0.35)
@@ -47,7 +47,7 @@ struct NunaSettingsGroup<Content: View>: View {
 }
 
 func nunaFootnote(_ key: LocalizedStringKey) -> some View {
-    Text(key).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+    Text(key).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
 }
 
 // MARK: - Goals (kept in the app's own preferences, read by Anya)
@@ -98,7 +98,7 @@ struct NunaPersonaView: View {
                 HStack {
                     Text("Date of birth").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Spacer()
-                    Text(verbatim: String(localized: "\(profile.age) years")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: String(localized: "\(profile.age) years")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     DatePicker("", selection: $profile.dateOfBirth, in: ProfileStore.dateOfBirthRange, displayedComponents: .date).labelsHidden().colorScheme(.dark)
                 }.padding(.vertical, 8)
                 NunaDivider()
@@ -153,7 +153,7 @@ struct NunaPersonaView: View {
             }
             NunaSettingsGroup("Recovery baseline") {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Built from your first 4 nights. Restart it if the first week threw the baseline off.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    Text("Built from your first 4 nights. Restart it if the first week threw the baseline off.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     Button { confirmRecalibrate = true } label: {
                         Text(recalibrated ? "Restarted from tonight" : "Restart the baseline").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 48).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain).disabled(recalibrated)
@@ -208,7 +208,7 @@ struct NunaZonesView: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(names[i]).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                Text(verbatim: pcts[i] + " " + String(localized: "of maximum")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                Text(verbatim: pcts[i] + " " + String(localized: "of maximum")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                             }
                             Spacer()
                             Text(verbatim: "\(bpm) bpm").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)

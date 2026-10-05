@@ -118,7 +118,19 @@ public enum NunaTheme {
 public extension Font {
     /// The Nuna system font (SF Pro) at a design size.
     static func nuna(size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> Font {
-        .system(size: size, weight: weight, design: design)
+        // WHP follows the WHOOP typography cheat sheet by role, read from the size: big figures are a condensed bold (DIN's role),
+        // main headers bold, card headers semibold, body and descriptions regular, captions and menu labels medium. Sizes stay at the
+        // sheet's values, so nothing is set larger than it asks.
+        if NunaThemePrefs.skin == .whp {
+            switch size {
+            case 32...: return .system(size: size, weight: .bold, design: design).width(.condensed)
+            case 24..<32: return .system(size: size, weight: .bold, design: design)
+            case 16..<24: return .system(size: (size * 0.92).rounded(), weight: weight == .regular ? .regular : .semibold, design: design)
+            case 13..<16: return .system(size: size, weight: weight == .heavy || weight == .black || weight == .bold ? .semibold : .regular, design: design)
+            default: return .system(size: size, weight: weight == .regular ? .regular : .medium, design: design)
+            }
+        }
+        return .system(size: size, weight: weight, design: design)
     }
 }
 

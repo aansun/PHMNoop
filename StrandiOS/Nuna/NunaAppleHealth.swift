@@ -57,7 +57,7 @@ struct NunaAppleHealthView: View {
                         .frame(width: 48, height: 48).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Apple Health").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: syncCaption).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: syncCaption).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer()
                     switch health.auth {
@@ -97,7 +97,7 @@ struct NunaAppleHealthView: View {
                     }
                 }
                 if let err = health.lastError {
-                    Text(verbatim: err).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.alertText).fixedSize(horizontal: false, vertical: true)
+                    Text(verbatim: err).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.alertText).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
         }

@@ -103,7 +103,7 @@ struct NunaBreathSessionView: View {
             Spacer(minLength: 0)
             VStack(spacing: 4) {
                 Text(verbatim: clock(max(0, request.seconds - seconds))).font(.nuna(size: 40, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
-                Text(verbatim: String(localized: "\(breaths) breaths")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: String(localized: "\(breaths) breaths")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             liveRow
             controls
@@ -132,7 +132,7 @@ struct NunaBreathSessionView: View {
             }.buttonStyle(.plain).accessibilityLabel(Text("Close"))
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: title).font(.nuna(size: 18, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
-                Text(request.goal.title).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text(request.goal.title).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             Spacer()
             Button { audioCues.toggle(); audioCues ? tone.activate() : tone.deactivate() } label: {
@@ -156,7 +156,7 @@ struct NunaBreathSessionView: View {
                 Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.7)
                 HStack(alignment: .firstTextBaseline, spacing: 3) {
                     Text(verbatim: value).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(color).monospacedDigit()
-                    if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) }
+                    if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil) }
                 }
             }
         }

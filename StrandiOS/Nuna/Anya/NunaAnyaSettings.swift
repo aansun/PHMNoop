@@ -24,7 +24,7 @@ struct NunaAnyaSettingsView: View {
 
     var body: some View {
         NunaDetailScreen("Anya settings") {
-            Text("What Anya may read, how it answers and when it writes to you.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text("What Anya may read, how it answers and when it writes to you.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             NunaCard(small: true) {
                 NunaToggleRow("Show Anya", subtitle: "The tab, the cards and the buttons", systemImage: NunaGlyph.anya, isOn: $coachEnabled).padding(.vertical, 8)
             }
@@ -95,7 +95,7 @@ struct NunaAnyaSettingsView: View {
             Button(role: .destructive) { confirmDeleteAll = true } label: {
                 Text("Delete all conversations").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }.buttonStyle(.plain)
-            Text("Anya is not a medical tool. Its answers are personal notes, not a doctor's advice.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+            Text("Anya is not a medical tool. Its answers are personal notes, not a doctor's advice.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
         }
         .confirmationDialog("Delete all conversations?", isPresented: $confirmDeleteAll, titleVisibility: .visible) {
             Button("Delete", role: .destructive) { coach.deleteAllConversations(); historyCount = 0 }
@@ -140,7 +140,7 @@ struct NunaAnyaInstructionsView: View {
                             if text.isEmpty { Text("For example: answer casually, always name the numbers you use, and give one next step.").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).padding(.top, 8).padding(.leading, 5).allowsHitTesting(false) }
                         }
                     HStack {
-                        Text(verbatim: String(localized: "\(text.count) of \(limit) characters")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: String(localized: "\(text.count) of \(limit) characters")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         Spacer()
                         Button("Clear") { text = "" }.font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).disabled(text.isEmpty)
                     }
@@ -200,7 +200,7 @@ struct NunaAnyaMemoryView: View {
                 }
             }
             if all.isEmpty {
-                NunaCard(small: true) { Text("Nothing yet. Tell Anya things like “remember I race on 5 December”, or add one above.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading) }
+                NunaCard(small: true) { Text("Nothing yet. Tell Anya things like “remember I race on 5 December”, or add one above.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) }
             } else {
                 NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                     VStack(spacing: 0) {
@@ -208,7 +208,7 @@ struct NunaAnyaMemoryView: View {
                             if i > 0 { NunaDivider() }
                             HStack(spacing: 12) {
                                 VStack(alignment: .leading, spacing: 4) {
-                                    Text(verbatim: m.title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(m.isActive ? NunaPalette.textPrimary : NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+                                    Text(verbatim: m.title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(m.isActive ? NunaPalette.textPrimary : NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
                                     Text(verbatim: (m.fromConversation ? String(localized: "From conversation") : String(localized: "Manual")) + " · " + (m.isActive ? String(localized: "Active") : String(localized: "Paused")))
                                         .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                                 }
@@ -230,7 +230,7 @@ struct NunaAnyaMemoryView: View {
                     Text("Delete all memory").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain)
             }
-            Text("Memory is used with every AI provider and is stored only on this iPhone.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+            Text("Memory is used with every AI provider and is stored only on this iPhone.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
         }
         .scrollDismissesKeyboard(.interactively)
         .confirmationDialog("Delete all memory?", isPresented: $confirmDeleteAll, titleVisibility: .visible) {
@@ -265,7 +265,7 @@ struct NunaAnyaHistoryView: View {
             }
             .padding(.horizontal, 16).frame(height: 48).background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)).overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
             if items.isEmpty {
-                NunaCard(small: true) { Text(coach.conversationHistory.isEmpty ? "Finished conversations are kept here, on this iPhone." : "No conversation matches.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading) }
+                NunaCard(small: true) { Text(coach.conversationHistory.isEmpty ? "Finished conversations are kept here, on this iPhone." : "No conversation matches.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) }
             }
             ForEach(groups(items), id: \.title) { g in
                 VStack(alignment: .leading, spacing: 10) {
@@ -280,10 +280,10 @@ struct NunaAnyaHistoryView: View {
                                             HStack {
                                                 Text(verbatim: item.title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).multilineTextAlignment(.leading)
                                                 Spacer(minLength: 6)
-                                                Text(verbatim: Self.time(item.updatedAt)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                                Text(verbatim: Self.time(item.updatedAt)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                                             }
                                             if let a = item.messages.last(where: { $0.role == "assistant" }) {
-                                                Text(verbatim: a.text.replacingOccurrences(of: "\n", with: " ")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1)
+                                                Text(verbatim: a.text.replacingOccurrences(of: "\n", with: " ")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1)
                                             }
                                         }.padding(.vertical, 13).contentShape(Rectangle())
                                     }.buttonStyle(.plain)
@@ -298,7 +298,7 @@ struct NunaAnyaHistoryView: View {
                     }
                 }
             }
-            Text("Saved on this iPhone. Tap Edit to delete a conversation.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+            Text("Saved on this iPhone. Tap Edit to delete a conversation.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
         }
         .scrollDismissesKeyboard(.interactively)
     }
@@ -343,7 +343,7 @@ struct NunaAnyaBriefView: View {
 
     var body: some View {
         NunaDetailScreen("Morning brief") {
-            Text("Anya writes a short brief on this iPhone each morning and shows it as a notification.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+            Text("Anya writes a short brief on this iPhone each morning and shows it as a notification.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             notificationPreview
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
@@ -366,8 +366,8 @@ struct NunaAnyaBriefView: View {
                     Text(coach.isConfigured ? "Allow Anya to use my numbers first" : "Connect Anya first").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 }.buttonStyle(.plain)
             }
-            if let status { Text(verbatim: status).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
-            Text("Uses the connected provider. iOS may delay the notification by a few minutes.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+            if let status { Text(verbatim: status).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
+            Text("Uses the connected provider. iOS may delay the notification by a few minutes.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
         }
         .task {
             sample = await NunaAnyaReader.read(context: "today", repo: repo, profile: profile, scale: UnitPrefs.resolveEffortScale(effortScaleRaw))
@@ -379,7 +379,7 @@ struct NunaAnyaBriefView: View {
         HStack(alignment: .top, spacing: 12) {
             AnyaIconTile()
             VStack(alignment: .leading, spacing: 3) {
-                HStack { Text("Anya").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary); Spacer(); Text("now").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                HStack { Text("Anya").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary); Spacer(); Text("now").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                 Text(verbatim: preview.map { CoachBriefScheduler.oneLineSummary(from: $0) } ?? sample?.headline ?? String(localized: "Your brief appears here"))
                     .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
             }
@@ -436,7 +436,7 @@ struct NunaAnyaVoiceCoachView: View {
                 NunaCard {
                     VStack(alignment: .leading, spacing: 12) {
                         nunaTrendsCap("Example cue")
-                        Text(verbatim: String(localized: "Kilometre \(every * 3), pace 7:05. Zone \(max(targetZone, 2)), keep it steady.")).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                        Text(verbatim: String(localized: "Kilometre \(every * 3), pace 7:05. Zone \(max(targetZone, 2)), keep it steady.")).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                         Button { audio.testAudio() } label: {
                             HStack(spacing: 8) { Image(systemName: "play.fill").font(.nuna(size: 13, weight: .bold)); Text("Hear an example").font(.nuna(size: 15, weight: .bold)) }
                                 .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 18).frame(height: 42).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))

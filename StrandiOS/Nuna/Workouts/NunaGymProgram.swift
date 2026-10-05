@@ -88,7 +88,7 @@ struct NunaProgramEditor: View {
         NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
             VStack(spacing: 0) {
                 if items.isEmpty {
-                    Text("No exercises yet. Add the first one below.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("No exercises yet. Add the first one below.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         .frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 16)
                 }
                 ForEach(Array(items.enumerated()), id: \.element.id) { i, item in
@@ -98,7 +98,7 @@ struct NunaProgramEditor: View {
                             HStack(spacing: 10) {
                                 VStack(alignment: .leading, spacing: 3) {
                                     Text(verbatim: item.exercise).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2)
-                                    if !detail(item).isEmpty { Text(verbatim: detail(item)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                                    if !detail(item).isEmpty { Text(verbatim: detail(item)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                                 }
                                 Spacer(minLength: 6)
                                 if let s = item.targetSets {
@@ -246,7 +246,7 @@ struct NunaProgramItemView: View {
                     TextField("", text: $note, prompt: Text("Slow lowering, pause at the bottom").foregroundStyle(NunaPalette.textMuted), axis: .vertical).lineLimit(1...4)
                         .onChange(of: note) { new in if new.count > WhoopStore.maxExerciseNoteLength { note = String(new.prefix(WhoopStore.maxExerciseNoteLength)) } }
                 }
-                Text("Every target is optional. Leave out what you do not need and fill it in during the session.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                Text("Every target is optional. Leave out what you do not need and fill it in during the session.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                 if let known = vocabulary.first(where: { $0.name == trimmed }) {
                     Button(role: .destructive) { forgetting = known } label: {
                         Text("Forget this exercise").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText)
@@ -335,7 +335,7 @@ struct NunaProgramItemView: View {
                         }.buttonStyle(.plain)
                     }
                 }
-                Text("Direct sets count one, indirect sets count half. This is the basis of the weekly sets per muscle.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+                Text("Direct sets count one, indirect sets count half. This is the basis of the weekly sets per muscle.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
         }
     }
@@ -436,7 +436,7 @@ struct NunaProgramImportView: View {
         NunaDetailScreen("Import program") {
             if let parsed { preview(parsed) } else { intro }
             if let failure {
-                NunaCard(small: true) { Text(verbatim: failure).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.alertText).fixedSize(horizontal: false, vertical: true) }
+                NunaCard(small: true) { Text(verbatim: failure).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.alertText).fixedSize(horizontal: false, vertical: true).textCase(nil) }
             }
         }
         .fileImporter(isPresented: $picking, allowedContentTypes: Self.acceptedTypes, allowsMultipleSelection: false) { handle($0) }
@@ -447,13 +447,13 @@ struct NunaProgramImportView: View {
             NunaCard {
                 VStack(alignment: .leading, spacing: 14) {
                     Text("Fill it in on a computer").font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("Typing a dozen exercise rows on a phone is tiring. A spreadsheet is much faster.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    Text("Typing a dozen exercise rows on a phone is tiring. A spreadsheet is much faster.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     step(1, "Download the template from the NOOP repository")
                     step(2, "Fill in one row per exercise")
                     step(3, "Bring the file here (.xlsx or .csv)")
                 }
             }
-            Text("Only the exercise name is required. The rest can stay empty and be filled in later or during the session.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+            Text("Only the exercise name is required. The rest can stay empty and be filled in later or during the session.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
             primary("Choose file") { failure = nil; picking = true }
         }
     }
@@ -461,7 +461,7 @@ struct NunaProgramImportView: View {
     private func step(_ n: Int, _ t: LocalizedStringKey) -> some View {
         HStack(spacing: 12) {
             Text(verbatim: "\(n)").font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 30, height: 30).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
-            Text(t).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+            Text(t).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
         }
     }
 
@@ -473,7 +473,7 @@ struct NunaProgramImportView: View {
                     Image(systemName: "doc.text").font(.nuna(size: 18, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 42, height: 42).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                     VStack(alignment: .leading, spacing: 3) {
                         Text(verbatim: fileName ?? "").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
-                        Text(verbatim: String(localized: "\(r.programs.count) programs · \(lines) exercises")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: String(localized: "\(r.programs.count) programs · \(lines) exercises")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer()
                     NunaChip("Read", color: NunaPalette.charge)
@@ -485,10 +485,10 @@ struct NunaProgramImportView: View {
                         if i > 0 { NunaDivider() }
                         VStack(alignment: .leading, spacing: 8) {
                             HStack { Text(verbatim: p.name).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary); Spacer()
-                                Text(verbatim: String(localized: "\(p.lines.count) exercises")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                                Text(verbatim: String(localized: "\(p.lines.count) exercises")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                             ForEach(Array(p.lines.enumerated()), id: \.offset) { _, l in
-                                HStack { Text(verbatim: l.exercise).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary); Spacer()
-                                    Text(verbatim: summary(l)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) }
+                                HStack { Text(verbatim: l.exercise).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil); Spacer()
+                                    Text(verbatim: summary(l)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil) }
                             }
                         }.padding(.vertical, 12)
                     }
@@ -499,9 +499,9 @@ struct NunaProgramImportView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Worth checking").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.warning)
                         ForEach(Array(r.warnings.enumerated()), id: \.offset) { _, w in
-                            Text(verbatim: w).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                            Text(verbatim: w).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                         }
-                        Text("These lines still import. Anything unclassified can be set in the app.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                        Text("These lines still import. Anything unclassified can be set in the app.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                     }
                 }
             }

@@ -121,7 +121,7 @@ struct NunaTrendsView: View {
                     if !win.isEmpty { NunaChip(verbatim: String(localized: "\(green) of \(win.count) days green"), color: NunaPalette.charge) }
                 }
                 Text(verbatim: summarySentence(c: c, e: e, r: r)).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    .fixedSize(horizontal: false, vertical: true)
+                    .fixedSize(horizontal: false, vertical: true).textCase(nil)
                 HStack(alignment: .top, spacing: 0) {
                     ring(.charge, "Charge", c.now.map { $0 / 100 }, NunaTrendsFormat.num(c.now), "%", NunaPalette.charge, delta(c.now, c.before), suffix: String(localized: "points"), upGood: true)
                     ring(.effort, "Effort", e.now.map { $0 / 100 }, e.now.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–", "", NunaPalette.effortText,
@@ -144,7 +144,7 @@ struct NunaTrendsView: View {
             Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             HStack(alignment: .firstTextBaseline, spacing: 6) {
                 Text(verbatim: value).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                if let d = m.date(day) { Text(verbatim: NunaTrendsFormat.withWeekday(d)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                if let d = m.date(day) { Text(verbatim: NunaTrendsFormat.withWeekday(d)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -166,7 +166,7 @@ struct NunaTrendsView: View {
                         .font(.nuna(size: 12.5, weight: .heavy))
                         .foregroundStyle(upGood.map { (d > 0) == $0 ? NunaPalette.charge : NunaPalette.warning } ?? NunaPalette.textSecondary)
                 }
-                Text("Average").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text("Average").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             .frame(maxWidth: .infinity)
         }.buttonStyle(.plain)
@@ -206,7 +206,7 @@ struct NunaTrendsView: View {
             HStack {
                 Text("Comparisons").font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 Spacer()
-                Text("Tap for details").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text("Tap for details").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             chargeEffortCard
             chargeRestCard
@@ -324,7 +324,7 @@ struct NunaTrendsView: View {
                     HStack {
                         nunaTrendsCap("Charge heat map")
                         Spacer()
-                        Text("12 weeks · a year").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("12 weeks · a year").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     NunaHeatGrid(model: m, weeks: 12, cell: 22)
                     HStack(spacing: 14) { zoneKey(NunaPalette.charge, "67+"); zoneKey(NunaPalette.warning, "34–66"); zoneKey(NunaPalette.alert, "0–33") }
@@ -336,7 +336,7 @@ struct NunaTrendsView: View {
     private func zoneKey(_ c: Color, _ t: String) -> some View {
         HStack(spacing: 6) {
             RoundedRectangle(cornerRadius: 3).fill(c.opacity(0.8)).frame(width: 10, height: 10)
-            Text(verbatim: t).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text(verbatim: t).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
         }
     }
 
@@ -363,7 +363,7 @@ struct NunaTrendsView: View {
                 Text(title).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 Spacer()
                 Text(verbatim: fmt(v.now)).font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                Text(verbatim: "vs " + fmt(v.before).replacingOccurrences(of: "%", with: "")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: "vs " + fmt(v.before).replacingOccurrences(of: "%", with: "")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             NunaProgressBar(fraction: (v.now ?? 0) / top, color: color)
             NunaProgressBar(fraction: (v.before ?? 0) / top, color: NunaPalette.ink.opacity(0.3)).frame(height: 5)

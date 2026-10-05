@@ -74,7 +74,7 @@ struct NunaDateSheet: View {
                     Spacer()
                     VStack(spacing: 2) {
                         Text(verbatim: monthTitle).font(.nuna(size: 17, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: String(localized: "\(recordedCount) days recorded")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: String(localized: "\(recordedCount) days recorded")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer()
                     arrow("chevron.right", enabled: !isCurrentMonth) { shiftMonth(1) }
@@ -139,7 +139,7 @@ struct NunaDateSheet: View {
     private func legend(_ color: Color, _ text: LocalizedStringKey) -> some View {
         HStack(spacing: 6) {
             Circle().fill(color).frame(width: 8, height: 8)
-            Text(text).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text(text).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
         }
     }
 

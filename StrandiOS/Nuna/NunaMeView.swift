@@ -102,7 +102,7 @@ struct NunaMeView: View {
                         ProfileAvatarView(imageData: profile.avatarImageData, size: 64)
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Profile").font(.nuna(size: NunaTypeSize.h2 - 1, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
-                            Text(verbatim: "\(profile.age) · \(Int(profile.heightCm.rounded())) cm · \(String(format: "%.1f", locale: AppLanguage.activeLocale, profile.weightKg)) kg").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: "\(profile.age) · \(Int(profile.heightCm.rounded())) cm · \(String(format: "%.1f", locale: AppLanguage.activeLocale, profile.weightKg)) kg").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                         Spacer(minLength: 8)
                         Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
@@ -131,8 +131,13 @@ struct NunaMeView: View {
         }
     }
 
-    private func row(_ route: NunaMeRoute, _ title: LocalizedStringKey, _ subtitle: LocalizedStringKey, _ icon: String) -> some View {
-        NavigationLink(value: route) { NunaListRow(title, subtitle: subtitle, systemImage: icon, showsChevron: true) }.buttonStyle(.plain)
+    @ViewBuilder private func row(_ route: NunaMeRoute, _ title: LocalizedStringKey, _ subtitle: LocalizedStringKey, _ icon: String) -> some View {
+        if route == .anya {
+            // Anya's name is never set in capitals.
+            NavigationLink(value: route) { NunaListRow(title, subtitle: subtitle, systemImage: icon, showsChevron: true).textCase(nil) }.buttonStyle(.plain)
+        } else {
+            NavigationLink(value: route) { NunaListRow(title, subtitle: subtitle, systemImage: icon, showsChevron: true) }.buttonStyle(.plain)
+        }
     }
 }
 

@@ -39,7 +39,7 @@ struct NunaRhythmConsentView: View {
                                 .frame(width: 30, height: 30).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(verbatim: p.0).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                Text(verbatim: p.1).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                                Text(verbatim: p.1).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                             }
                         }
                     }
@@ -113,10 +113,10 @@ struct NunaPoincarePlot: View {
         }
         .aspectRatio(1, contentMode: .fit)
         .overlay(alignment: .bottomLeading) {
-            Text("RR now (ms) →").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).padding(12)
+            Text("RR now (ms) →").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).padding(12)
         }
         .overlay(alignment: .topLeading) {
-            Text("↑ next RR").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).padding(12)
+            Text("↑ next RR").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).padding(12)
         }
         .accessibilityHidden(true)
     }
@@ -170,7 +170,7 @@ struct NunaRhythmView: View {
 
     @ViewBuilder private var content: some View {
         HStack {
-            Text("A picture of your beat-to-beat timing, not a verdict.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text("A picture of your beat-to-beat timing, not a verdict.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             Spacer(minLength: 8)
             NunaChip("Experimental")
         }
@@ -231,7 +231,7 @@ struct NunaRhythmView: View {
                         .frame(width: 56, height: 56).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
                     Text(unsupported ? "This device can't support a rhythm reading" : "No clear reading yet")
                         .font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(emptyMessage).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    Text(emptyMessage).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -282,7 +282,7 @@ struct NunaRhythmView: View {
                     NunaChip(confidence, systemImage: "checkmark", color: NunaPalette.restText)
                 }
                 NunaChip(label(overall), systemImage: overall == .steady ? "checkmark" : "waveform.path.ecg", color: NunaPalette.restText)
-                Text(detail).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                Text(detail).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 if let h = headline {
                     VStack(spacing: 12) {
                         bar("Beat-to-beat variation", h.normRmssd, NunaPalette.restLight)
@@ -299,7 +299,7 @@ struct NunaRhythmView: View {
             HStack {
                 Text(title).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 Spacer()
-                Text(verbatim: pct(v)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: pct(v)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             NunaProgressBar(fraction: min(max(v ?? 0, 0), 1), color: color)
         }

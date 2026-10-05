@@ -283,7 +283,7 @@ struct NunaNutritionView: View {
                                 row("Difference", (diff >= 0 ? "+" : "−") + nbFmt(abs(diff)), color: diff < 0 ? NunaPalette.charge : nil)
                                 NunaChip(abs(diff) < 100 ? "Balanced" : (diff < 0 ? "Mild deficit" : "Surplus"), color: abs(diff) < 100 || diff < 0 ? NunaPalette.charge : NunaPalette.warning)
                             }
-                            Text(verbatim: kin.day).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: kin.day).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                         Spacer(minLength: 0)
                     }
@@ -309,7 +309,7 @@ struct NunaNutritionView: View {
 
     private func row(_ label: LocalizedStringKey, _ value: String, color: Color? = nil) -> some View {
         HStack(spacing: 18) {
-            Text(label).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text(label).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             Spacer()
             Text(verbatim: value).font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(color ?? NunaPalette.textPrimary)
         }
@@ -334,7 +334,7 @@ struct NunaNutritionView: View {
                         }
                     }
                 }
-                Text("Bars show each macro's share of calories").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text("Bars show each macro's share of calories").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
         }
     }
@@ -347,13 +347,13 @@ struct NunaNutritionView: View {
                         NunaIconTile("plus")
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Import CSV").font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            Text("From Cronometer or MacroFactor").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text("From Cronometer or MacroFactor").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                         Spacer()
                         Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                     }
                     HStack(spacing: 8) { NunaChip("Cronometer"); NunaChip("MacroFactor") }
-                    Text("Processed on this phone. Never uploaded.").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Processed on this phone. Never uploaded.").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
         }.buttonStyle(.plain)
@@ -581,7 +581,7 @@ struct NunaCycleView: View {
                         let isToday = cal.isDateInToday(d)
                         let logged = starts.contains(Repository.localDayKey(d))
                         VStack(spacing: 6) {
-                            Text(verbatim: f.string(from: d)).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: f.string(from: d)).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                             Text(verbatim: "\(cal.component(.day, from: d))").font(.nuna(size: 13, weight: .bold, design: NunaType.design))
                                 .foregroundStyle(isToday ? NunaPalette.onAccent : NunaPalette.textPrimary)
                                 .frame(width: 34, height: 34)
@@ -592,7 +592,7 @@ struct NunaCycleView: View {
                 }
                 HStack(spacing: 6) {
                     Circle().fill(NunaPalette.alert).frame(width: 10, height: 10)
-                    Text("Period start").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Period start").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
         }

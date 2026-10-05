@@ -206,13 +206,13 @@ struct NunaAnyaCard: View {
                         AnyaIconTile()
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Anya")
-                                .font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                                .font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(NunaThemePrefs.skin == .whp ? nil : .uppercase)
                                 .foregroundStyle(NunaPalette.textSecondary)
                             title
                                 .font(.nuna(size: 16, weight: .bold))
                                 .foregroundStyle(NunaPalette.textPrimary)
                                 .multilineTextAlignment(.leading)
-                                .fixedSize(horizontal: false, vertical: true)
+                                .fixedSize(horizontal: false, vertical: true).textCase(nil)
                         }
                         Spacer(minLength: 4)
                         if buttonTitle == nil {
@@ -273,7 +273,7 @@ struct NunaStressCard: View {
                         HStack(alignment: .top, spacing: 8) {
                             VStack(alignment: .trailing, spacing: 0) {
                                 ForEach([3, 2, 1, 0], id: \.self) { tick in
-                                    Text(verbatim: "\(tick)").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                                    Text(verbatim: "\(tick)").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                                     if tick > 0 { Spacer(minLength: 0) }
                                 }
                             }
@@ -367,7 +367,7 @@ struct NunaMetricsGrid: View {
             NunaIconTile(tile.icon, tint: tile.tint)
             VStack(alignment: .leading, spacing: 2) {
                 Text(tile.label).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                if let c = tile.caption { Text(c).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8) }
+                if let c = tile.caption { Text(c).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8) }
             }
             Spacer(minLength: 8)
             HStack(alignment: .firstTextBaseline, spacing: 3) {

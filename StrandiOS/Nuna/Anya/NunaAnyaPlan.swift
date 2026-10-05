@@ -75,11 +75,11 @@ struct NunaAnyaPlanView: View {
                 NunaCard {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("No plan yet").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("Anya needs today's Charge to suggest a session. Wear the strap overnight and sync, then come back.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Anya needs today's Charge to suggest a session. Wear the strap overnight and sync, then come back.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-            Text("A suggestion from your own numbers, not a prescription. Listen to how you feel and stop if something hurts.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+            Text("A suggestion from your own numbers, not a prescription. Listen to how you feel and stop if something hurts.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
         }
         .task(id: repo.refreshSeq) { await load() }
     }
@@ -94,8 +94,8 @@ struct NunaAnyaPlanView: View {
                     Spacer()
                     NunaChip(verbatim: String(localized: "Charge \(charge)%"))
                 }
-                Text(verbatim: title(plan)).font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
-                Text(verbatim: blurb(plan.kind)).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                Text(verbatim: title(plan)).font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                Text(verbatim: blurb(plan.kind)).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 NunaDivider()
                 HStack {
                     tile("Duration", String(format: "%d:00", plan.totalMinutes), nil)
@@ -110,7 +110,7 @@ struct NunaAnyaPlanView: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             Text(verbatim: v).font(.nuna(size: 21, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
-            if let note { Text(verbatim: note).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) }
+            if let note { Text(verbatim: note).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil) }
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -126,7 +126,7 @@ struct NunaAnyaPlanView: View {
                             VStack(alignment: .leading, spacing: 4) {
                                 HStack { Text(phaseName(s.phase)).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary); Spacer()
                                     Text(verbatim: String(localized: "\(s.minutes) min")).font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary) }
-                                Text(verbatim: instruction(s, plan.kind)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                                Text(verbatim: instruction(s, plan.kind)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                             }
                         }.padding(.vertical, 14)
                     }
@@ -138,7 +138,7 @@ struct NunaAnyaPlanView: View {
     private func zonesCard(_ plan: DayPlan.Plan) -> some View {
         NunaCard {
             VStack(alignment: .leading, spacing: 12) {
-                HStack { nunaTrendsCap("Heart-rate zones"); Spacer(); Text(verbatim: String(localized: "Max \(Int(zones.maxHR)) bpm")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                HStack { nunaTrendsCap("Heart-rate zones"); Spacer(); Text(verbatim: String(localized: "Max \(Int(zones.maxHR)) bpm")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                 HStack(spacing: 4) {
                     ForEach(zones.zones, id: \.number) { z in
                         RoundedRectangle(cornerRadius: 6).fill(z.number == plan.mainZone ? NunaPalette.accent : NunaPalette.ink.opacity(0.12)).frame(height: 14)
@@ -158,10 +158,10 @@ struct NunaAnyaPlanView: View {
         NunaCard(small: true) {
             VStack(alignment: .leading, spacing: 10) {
                 nunaTrendsCap("Why this")
-                Text(verbatim: reasons(plan, charge).joined(separator: " ")).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                Text(verbatim: reasons(plan, charge).joined(separator: " ")).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 HStack(spacing: 6) {
-                    Text("Read:").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                    ForEach(readNames, id: \.self) { Text(verbatim: $0).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                    Text("Read:").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    ForEach(readNames, id: \.self) { Text(verbatim: $0).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                 }
             }.frame(maxWidth: .infinity, alignment: .leading)
         }

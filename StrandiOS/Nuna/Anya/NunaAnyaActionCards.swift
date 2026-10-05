@@ -64,7 +64,7 @@ private struct NunaAnyaMetricChart: View {
                     NunaSegmentedChart(points: pts, color: color, decimals: metric?.decimals ?? 0, band: series.band.map { $0.lo...$0.hi },
                                        higherIsBetter: metric?.higherIsBetter ?? true, directional: metric?.higherIsBetter != nil, height: 190)
                 } else {
-                    Text(series.loaded ? "No data in this period" : " ").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(series.loaded ? "No data in this period" : " ").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         .frame(maxWidth: .infinity, minHeight: 80)
                 }
             }
@@ -98,7 +98,7 @@ struct NunaAnyaProgramCard: View {
                     NunaIconTile("dumbbell")
                     VStack(alignment: .leading, spacing: 2) {
                         Text(verbatim: spec.name).font(.nuna(size: 16.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
-                        if let n = spec.note { Text(verbatim: n).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                        if let n = spec.note { Text(verbatim: n).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                     }
                     Spacer(minLength: 0)
                 }
@@ -172,9 +172,9 @@ struct NunaAnyaWorkoutCard: View {
             HStack(spacing: 12) {
                 NunaIconTile(NunaSportPicker.symbol(for: spec.sport ?? spec.title))
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(verbatim: spec.title).font(.nuna(size: 16.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
-                    Text(verbatim: detail).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                    if let n = spec.note { Text(verbatim: n).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true) }
+                    Text(verbatim: spec.title).font(.nuna(size: 16.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    Text(verbatim: detail).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    if let n = spec.note { Text(verbatim: n).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil) }
                 }
                 Spacer(minLength: 6)
                 Button {

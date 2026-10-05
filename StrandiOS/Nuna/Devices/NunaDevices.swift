@@ -50,7 +50,7 @@ struct NunaDevicesView: View {
     @EnvironmentObject private var model: AppModel
     var body: some View {
         if let registry = model.deviceRegistry { NunaDevicesContent(registry: registry) }
-        else { NunaDetailScreen("Devices") { NunaCard(small: true) { Text("Opening your on-device data. Your paired bands appear here in a moment.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) } } }
+        else { NunaDetailScreen("Devices") { NunaCard(small: true) { Text("Opening your on-device data. Your paired bands appear here in a moment.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) } } }
     }
 }
 
@@ -83,7 +83,7 @@ private struct NunaDevicesContent: View {
                                 NavigationLink(value: NunaDeviceRoute.detail(d.id)) {
                                     VStack(alignment: .leading, spacing: 3) {
                                         Text(verbatim: d.displayName).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                        Text(verbatim: NunaDeviceFormat.family(d) + " · " + String(localized: "history kept")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                        Text(verbatim: NunaDeviceFormat.family(d) + " · " + String(localized: "history kept")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                                     }.frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
                                 }.buttonStyle(.plain)
                                 if !d.isImportSource {
@@ -144,7 +144,7 @@ private struct NunaDevicesContent: View {
                         NunaIconTile("applewatch")
                         VStack(alignment: .leading, spacing: 3) {
                             Text(verbatim: d.displayName).font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            Text(verbatim: NunaDeviceFormat.family(d)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: NunaDeviceFormat.family(d)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                         Spacer()
                         Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
@@ -168,7 +168,7 @@ private struct NunaDevicesContent: View {
                 if pct != nil { Text("%").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
             }
             if live.charging == true { Text("Charging").font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.charge) }
-            else if let est { Text(verbatim: "~" + NunaDeviceFormat.remaining(est.remainingHours)).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(2) }
+            else if let est { Text(verbatim: "~" + NunaDeviceFormat.remaining(est.remainingHours)).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(2) }
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -176,7 +176,7 @@ private struct NunaDevicesContent: View {
         VStack(alignment: .leading, spacing: 4) {
             Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             Text(verbatim: v).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
-            if let note { Text(verbatim: note).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+            if let note { Text(verbatim: note).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
@@ -219,7 +219,7 @@ private struct NunaDevicesContent: View {
                     Image(systemName: "exclamationmark.triangle.fill").foregroundStyle(NunaPalette.warning)
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Can't connect: the strap's pairing was reset").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("See how to pair it again").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("See how to pair it again").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer()
                     Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
@@ -275,7 +275,7 @@ struct NunaDeviceDetailView: View {
                 if isActive && isWhoop { actions(d) }
                 manage(d)
             } else {
-                NunaCard(small: true) { Text("This device is no longer in the list.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                NunaCard(small: true) { Text("This device is no longer in the list.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
             }
         }
         .alert("Rename device", isPresented: $renaming) {
@@ -312,7 +312,7 @@ struct NunaDeviceDetailView: View {
                     NunaIconTile("applewatch")
                     VStack(alignment: .leading, spacing: 2) {
                         Text(verbatim: d.displayName).font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: NunaDeviceFormat.family(d)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: NunaDeviceFormat.family(d)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer()
                     NunaChip(d.status == .archived ? "Removed" : (linked ? "Connected" : (isActive ? "Not connected" : "Paired")), color: linked ? NunaPalette.charge : nil)

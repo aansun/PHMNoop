@@ -62,7 +62,7 @@ struct StravaSettingsView: View {
                          : "Off by default. No Strava request is made while this experiment is disabled.")
                         .font(StrandFont.footnote)
                         .foregroundStyle(StrandPalette.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
         }
@@ -92,7 +92,7 @@ struct StravaSettingsView: View {
                         Text("Save the Client ID and Client Secret above before connecting.")
                             .font(StrandFont.footnote)
                             .foregroundStyle(StrandPalette.statusWarning)
-                            .fixedSize(horizontal: false, vertical: true)
+                            .fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }
 
                     HStack(spacing: 10) {
@@ -114,7 +114,7 @@ struct StravaSettingsView: View {
                         Text(status)
                             .font(StrandFont.footnote)
                             .foregroundStyle(StrandPalette.textSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
+                            .fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }
                 }
             }
@@ -130,7 +130,7 @@ struct StravaSettingsView: View {
                         Text("Create your own Strava API app, then enter its Client ID and Client Secret here. NOOP keeps both values in Apple Keychain and uses them only for the explicit Strava connection.")
                             .font(StrandFont.footnote)
                             .foregroundStyle(StrandPalette.textSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
+                            .fixedSize(horizontal: false, vertical: true).textCase(nil)
 
                         TextField("Client ID", text: $clientID)
                             .font(StrandFont.body)
@@ -190,7 +190,7 @@ struct StravaSettingsView: View {
                         }
                         .font(StrandFont.footnote)
                         .foregroundStyle(StrandPalette.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .fixedSize(horizontal: false, vertical: true).textCase(nil)
 
                         VStack(alignment: .leading, spacing: 6) {
                             Text("Callback URI")
@@ -250,7 +250,7 @@ struct StravaSettingsView: View {
                          : "GPS workouts and treadmill sessions can be uploaded as FIT activities. Tap Upload for each activity.")
                         .font(StrandFont.footnote)
                         .foregroundStyle(StrandPalette.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
+                        .fixedSize(horizontal: false, vertical: true).textCase(nil)
                         .padding(.bottom, 14)
 
                     if pendingUploadWorkouts.isEmpty {

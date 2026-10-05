@@ -36,7 +36,7 @@ struct NunaChargeEffortView: View {
                 NunaCard(highlight: true) {
                     HStack(spacing: 12) {
                         Image(systemName: "bolt").foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: sweetSpot(b, hi: hi, lo: lo)).font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                        Text(verbatim: sweetSpot(b, hi: hi, lo: lo)).font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
@@ -73,7 +73,7 @@ struct NunaChargeEffortView: View {
                             .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                 } else {
-                    Text("Not enough paired days yet.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Not enough paired days yet.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
         }
@@ -86,7 +86,7 @@ struct NunaChargeEffortView: View {
         let eSel = sel.flatMap { s in ef.first { $0.day == s } }, cSel = sel.flatMap { s in ch.first { $0.day == s } }
         return NunaCard {
             VStack(alignment: .leading, spacing: 12) {
-                HStack { nunaTrendsCap(LocalizedStringKey(String(localized: "\(range) days"))); Spacer(); Text("Bars: Effort · Line: Charge").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                HStack { nunaTrendsCap(LocalizedStringKey(String(localized: "\(range) days"))); Spacer(); Text("Bars: Effort · Line: Charge").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                 NunaComboChart(start: start, days: range, bars: ef, barMax: eMax, line: ch, lineMax: 100, selected: $selected, height: 150)
                 HStack(spacing: 14) { NunaLegendItem(color: NunaPalette.charge, text: "Charge"); NunaLegendItem(color: NunaPalette.effort, text: "Effort", dot: true) }
                 if let sel, let d = m.date(sel) {
@@ -111,7 +111,7 @@ struct NunaChargeEffortView: View {
                             HStack {
                                 Text(names[i]).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                                 Spacer()
-                                Text(verbatim: String(localized: "\(b[i].n) days")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                Text(verbatim: String(localized: "\(b[i].n) days")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                                 Text(verbatim: b[i].meanOutcome.map { "\(Int($0.rounded()))%" } ?? "–").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 52, alignment: .trailing)
                             }
                             NunaProgressBar(fraction: (b[i].meanOutcome ?? 0) / 100, color: b[i].meanOutcome.map(nunaChargeColor) ?? NunaPalette.zoneBase)
@@ -130,10 +130,10 @@ struct NunaChargeEffortView: View {
                 nunaTrendsCap("Spread")
                 if pairs.count >= 3 {
                     NunaScatter(points: pairs.map { ($0.x, $0.y) }, xRange: lo...hi, yRange: 0...100, slope: c?.slope, intercept: c?.intercept, color: NunaPalette.effortText)
-                    HStack { Text("Effort →").font(.nuna(size: 11.5, weight: .semibold)); Spacer(); Text("↑ next-day Charge").font(.nuna(size: 11.5, weight: .semibold)) }.foregroundStyle(NunaPalette.textMuted)
-                    Text("Each dot is one day. The dashed line is the general direction.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    HStack { Text("Effort →").font(.nuna(size: 11.5, weight: .semibold)); Spacer(); Text("↑ next-day Charge").font(.nuna(size: 11.5, weight: .semibold)) }.foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                    Text("Each dot is one day. The dashed line is the general direction.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 } else {
-                    Text("Not enough paired days yet.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Not enough paired days yet.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
         }
@@ -182,14 +182,14 @@ struct NunaChargeRestView: View {
                         Text(verbatim: corr.r > 0.3 ? String(localized: "Sleep is one of the biggest drivers of your Charge.") : String(localized: "Your sleep score and Charge show only a loose link in this period."))
                             .font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                         if let hi = b[2].meanOutcome, let lo = b[0].meanOutcome, b[2].n > 0, b[0].n > 0 {
-                            Text(verbatim: String(localized: "A high-Rest night gives a Charge about \(Int(abs(hi - lo).rounded())) points \(hi >= lo ? String(localized: "better") : String(localized: "lower")).")).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: String(localized: "A high-Rest night gives a Charge about \(Int(abs(hi - lo).rounded())) points \(hi >= lo ? String(localized: "better") : String(localized: "lower")).")).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
-                    } else { Text("Not enough paired days yet.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                    } else { Text("Not enough paired days yet.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                 }
             }
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
-                    HStack { nunaTrendsCap(LocalizedStringKey(String(localized: "\(range) days"))); Spacer(); Text("Two lines moving together").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                    HStack { nunaTrendsCap(LocalizedStringKey(String(localized: "\(range) days"))); Spacer(); Text("Two lines moving together").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                     NunaMultiLineChart(start: start, days: range, lines: [.init(series: rs, max: 100, color: NunaPalette.rest), .init(series: ch, max: 100, color: NunaPalette.charge)], height: 150)
                     HStack(spacing: 14) { NunaLegendItem(color: NunaPalette.charge, text: "Charge"); NunaLegendItem(color: NunaPalette.rest, text: "Rest") }
                 }
@@ -203,7 +203,7 @@ struct NunaChargeRestView: View {
                             HStack {
                                 Text(names[i]).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                                 Spacer()
-                                Text(verbatim: String(localized: "\(b[i].n) days")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                Text(verbatim: String(localized: "\(b[i].n) days")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                                 Text(verbatim: b[i].meanOutcome.map { "\(Int($0.rounded()))%" } ?? "–").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 52, alignment: .trailing)
                             }
                             NunaProgressBar(fraction: (b[i].meanOutcome ?? 0) / 100, color: b[i].meanOutcome.map(nunaChargeColor) ?? NunaPalette.zoneBase)
@@ -217,8 +217,8 @@ struct NunaChargeRestView: View {
                     if pairs.count >= 3 {
                         let xs = pairs.map(\.x), lo = xs.min() ?? 0, hi = max(xs.max() ?? 1, lo + 1)
                         NunaScatter(points: pairs.map { ($0.x, $0.y) }, xRange: lo...hi, yRange: 0...100, slope: corr?.slope, intercept: corr?.intercept, color: NunaPalette.restText)
-                        HStack { Text("Rest →").font(.nuna(size: 11.5, weight: .semibold)); Spacer(); Text("↑ Charge").font(.nuna(size: 11.5, weight: .semibold)) }.foregroundStyle(NunaPalette.textMuted)
-                    } else { Text("Not enough paired days yet.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                        HStack { Text("Rest →").font(.nuna(size: 11.5, weight: .semibold)); Spacer(); Text("↑ Charge").font(.nuna(size: 11.5, weight: .semibold)) }.foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                    } else { Text("Not enough paired days yet.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                 }
             }
             restParts
@@ -273,7 +273,7 @@ struct NunaHeatmapView: View {
             NunaSegmented([(value: 3, title: "3 mo"), (value: 6, title: "6 mo"), (value: 12, title: "1 yr")], selection: $months)
             NunaCard {
                 VStack(alignment: .leading, spacing: 14) {
-                    HStack { nunaTrendsCap(LocalizedStringKey(String(localized: "Last \(weeks) weeks"))); Spacer(); Text("One square = one day").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                    HStack { nunaTrendsCap(LocalizedStringKey(String(localized: "Last \(weeks) weeks"))); Spacer(); Text("One square = one day").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                     NunaHeatGrid(model: m, weeks: min(weeks, 26), cell: weeks > 20 ? 10 : 14)
                     HStack(spacing: 14) {
                         key(NunaPalette.charge, "67+"); key(NunaPalette.warning, "34–66"); key(NunaPalette.alert, "0–33")
@@ -298,7 +298,7 @@ struct NunaHeatmapView: View {
                             Text(verbatim: String(localized: "Charge is highest on \(day(hi.key)) and lowest on \(day(lo.key))."))
                                 .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         }
-                    } else { Text("Not enough days yet.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                    } else { Text("Not enough days yet.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                 }
             }
             monthly(win)
@@ -312,7 +312,7 @@ struct NunaHeatmapView: View {
     }
 
     private func key(_ c: Color, _ t: String) -> some View {
-        HStack(spacing: 6) { RoundedRectangle(cornerRadius: 3).fill(c.opacity(0.8)).frame(width: 10, height: 10); Text(verbatim: t).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+        HStack(spacing: 6) { RoundedRectangle(cornerRadius: 3).fill(c.opacity(0.8)).frame(width: 10, height: 10); Text(verbatim: t).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
     }
 
     private func day(_ w: Int) -> String { let f = DateFormatter(); f.locale = AppLanguage.activeLocale; return f.weekdaySymbols[(w - 1) % 7] }

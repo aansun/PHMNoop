@@ -42,11 +42,11 @@ struct NunaDeviceBatteryView: View {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack { nunaTrendsCap("This session"); Spacer()
-                        if let a = samples.first, let b = samples.last, samples.count >= 2 { Text(verbatim: "\(NunaDeviceFormat.clock(TimeInterval(a.ts))) – \(NunaDeviceFormat.clock(TimeInterval(b.ts)))").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) } }
+                        if let a = samples.first, let b = samples.last, samples.count >= 2 { Text(verbatim: "\(NunaDeviceFormat.clock(TimeInterval(a.ts))) – \(NunaDeviceFormat.clock(TimeInterval(b.ts)))").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) } }
                     if samples.count >= 2 {
                         NunaLine2Chart(points: samples.map { (Date(timeIntervalSince1970: TimeInterval($0.ts)), $0.soc) }, decimals: 0, height: 150)
                     } else {
-                        Text("Readings appear here as the strap reports them. Keep it connected for a while to see the trend.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        Text("Readings appear here as the strap reports them. Keep it connected for a while to see the trend.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }
                 }
             }
@@ -62,7 +62,7 @@ struct NunaDeviceBatteryView: View {
                     }
                 }
             }
-            Text("The percentage is read from the strap. The time left is estimated from the readings of this session only and gets better the longer the strap stays connected.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+            Text("The percentage is read from the strap. The time left is estimated from the readings of this session only and gets better the longer the strap stays connected.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
         }
     }
 
@@ -93,7 +93,7 @@ struct NunaDeviceSyncView: View {
                             Text("packets so far").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                         if let behind = live.pagesBehindAtConnect, behind > 0 {
-                            Text(verbatim: String(localized: "\(behind) pages were waiting on the strap when it connected.")).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: String(localized: "\(behind) pages were waiting on the strap when it connected.")).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                         Button { model.ble.abortBackfill() } label: {
                             Text("Stop sync").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 20).frame(height: 42).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
@@ -125,7 +125,7 @@ struct NunaDeviceSyncView: View {
                     NunaToggleRow("Progress in the Dynamic Island", subtitle: "And on the Lock Screen while a sync runs", systemImage: "iphone.gen3", isOn: $island).padding(.vertical, 8)
                 }
             }
-            Text("The strap keeps its history until it is pulled. If a sync is delayed for a long time, today's scores wait for the data to arrive.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+            Text("The strap keeps its history until it is pulled. If a sync is delayed for a long time, today's scores wait for the data to arrive.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
         }
     }
 }
@@ -139,7 +139,7 @@ struct NunaDeviceHelpView: View {
 
     var body: some View {
         NunaDetailScreen("Strap not found?") {
-            Text("Try these one by one, from the top. It is usually solved by step 3.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text("Try these one by one, from the top. It is usually solved by step 3.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             step(1, "Bring the strap close", "Within 1 metre and nothing blocking it.")
             step(2, "Check Bluetooth on the iPhone", "Turn it off and on again if needed.") { button("Open Settings", openSettings) }
             step(3, "Scan again", "Disconnect, then scan once more.") { button("Scan again") { model.disconnect(); model.ble.connect() } }
@@ -180,7 +180,7 @@ struct NunaDeviceHelpView: View {
                 Text(verbatim: "\(n)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 32, height: 32).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                 VStack(alignment: .leading, spacing: 6) {
                     Text(title).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(detail).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    Text(detail).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     action().padding(.top, 2)
                 }
                 Spacer(minLength: 0)
@@ -207,14 +207,14 @@ struct NunaDeviceRepairView: View {
             NunaCard(highlight: true) {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("Can't connect").font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("The strap's pairing with this iPhone seems to have been reset.").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
-                    Text("This happens when the strap was paired to another phone or app. iOS still keeps the old pairing, so it has to be forgotten first.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    Text("The strap's pairing with this iPhone seems to have been reset.").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    Text("This happens when the strap was paired to another phone or app. iOS still keeps the old pairing, so it has to be forgotten first.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
             step(1, "Forget the strap in iOS", "Settings, Bluetooth, tap the i next to WHOOP, then Forget This Device.", "Open Settings", openSettings)
             step(2, "Remove it from NOOP's list", "Data already recorded stays.", "Remove from the list") { confirmRemove = true }
             step(3, "Add it again", "Turn the strap on and follow the pairing steps.", "Add WHOOP") { showAdd = true }
-            Text("The last 14 days are pulled from the strap again if they are still on it.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+            Text("The last 14 days are pulled from the strap again if they are still on it.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
         }
         .sheet(isPresented: $showAdd) { AddDeviceWizard(live: live) { showAdd = false }.environmentObject(model).environmentObject(live) }
         .alert("Remove this device?", isPresented: $confirmRemove) {
@@ -229,7 +229,7 @@ struct NunaDeviceRepairView: View {
                 Text(verbatim: "\(n)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 32, height: 32).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                 VStack(alignment: .leading, spacing: 6) {
                     Text(title).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(detail).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    Text(detail).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     Button(action: run) { Text(button).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 36).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)) }.buttonStyle(.plain).padding(.top, 2)
                 }
                 Spacer(minLength: 0)
@@ -250,10 +250,10 @@ struct NunaDeviceLogView: View {
 
     var body: some View {
         NunaDetailScreen("Strap log") {
-            Text("Take this when reporting a problem. It holds what the app sees from the strap.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+            Text("Take this when reporting a problem. It holds what the app sees from the strap.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             NunaCard(small: true) {
                 if lines.isEmpty {
-                    Text("Nothing logged yet.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading)
+                    Text("Nothing logged yet.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
                 } else {
                     VStack(alignment: .leading, spacing: 8) {
                         ForEach(Array(lines.enumerated()), id: \.offset) { _, l in
@@ -278,7 +278,7 @@ struct NunaDeviceLogView: View {
                     }.buttonStyle(.plain).disabled(!(live.connected && live.bonded)).opacity(live.connected && live.bonded ? 1 : 0.4)
                 }
             }
-            Text("The log only holds connection and sync events. No health data is in it.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+            Text("The log only holds connection and sync events. No health data is in it.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
         }
     }
 }
@@ -296,7 +296,7 @@ struct NunaDeviceModelsView: View {
 
     var body: some View {
         NunaDetailScreen("Models and support") {
-            Text("WHOOP 4.0 is the fully supported path. The deeper metrics on 5.0 and MG are still being researched.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+            Text("WHOOP 4.0 is the fully supported path. The deeper metrics on 5.0 and MG are still being researched.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             HStack(spacing: 12) {
                 badge("WHOOP 4.0", "Fully supported"); badge("5.0 and MG", "Experimental")
             }
@@ -315,7 +315,7 @@ struct NunaDeviceModelsView: View {
                     }
                 }
             }
-            Text("Support for 5.0 and MG grows as their protocol is mapped. Research features are under Experiments.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+            Text("Support for 5.0 and MG grows as their protocol is mapped. Research features are under Experiments.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
         }
     }
 
@@ -323,7 +323,7 @@ struct NunaDeviceModelsView: View {
         NunaCard(small: true) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(verbatim: t).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                Text(s).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text(s).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }.frame(maxWidth: .infinity, alignment: .leading)
         }
     }
