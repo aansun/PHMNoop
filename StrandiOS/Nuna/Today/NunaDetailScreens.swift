@@ -26,10 +26,10 @@ struct NunaChargeDetailView: View {
         let latest = series.latest
         let slots = series.window(range)
         NunaDetailScreen("Charge", onAnya: coachEnabled ? { showCoach = true } : nil) {
-            NunaGaugeHeroCard(caption: "Today", chip: chip?.0, chipColor: NunaPalette.charge,
-                              fraction: (day.charge.pct ?? latest?.value ?? 0) / 100,
-                              number: (day.charge.pct ?? latest?.value).map { String(format: "%.0f", $0) } ?? "–",
-                              unit: "%", color: NunaPalette.charge) {
+            NunaScoreHero(caption: "Today", chip: chip?.0, chipColor: NunaPalette.charge,
+                          fraction: (day.charge.pct ?? latest?.value ?? 0) / 100,
+                          number: (day.charge.pct ?? latest?.value).map { String(format: "%.0f", $0) } ?? "–",
+                          unit: "%", name: "Charge", color: NunaPalette.charge) {
                 if let v = day.charge.pct ?? latest?.value, let base = series.baseline {
                     let d = Int((v - base).rounded())
                     Text(verbatim: d == 0 ? String(localized: "In line with your 30-day average")
@@ -38,25 +38,16 @@ struct NunaChargeDetailView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-            NunaTitleRow(title: "Drivers") { EmptyView() }
-            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                VStack(spacing: 0) {
-                    driver("HRV", "waveform.path.ecg", NunaPalette.charge, day.hrv.map { String(format: "%.0f", $0) }, day.hrvDelta, false, key: "hrv")
-                    NunaDivider()
-                    driver("Resting HR", "heart", NunaPalette.alertText, day.restingHr.map { String(format: "%.0f", $0) }, day.restingHrDelta, true, key: "rhr")
-                    NunaDivider()
-                    NavigationLink(value: NunaTodayRoute.sleep(0)) {
-                        HStack(spacing: 12) {
-                            NunaIconTile("moon", tint: NunaPalette.restText)
-                            Text("Rest").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            Spacer()
-                            Text(verbatim: day.rest.map { String(format: "%.0f%%", $0) } ?? "–")
-                                .font(.nuna(size: 18, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                        }
-                        .frame(minHeight: 58)
-                    }.buttonStyle(.plain)
-                }
+            NunaPlainList {
+                contributor("Heart rate variability", "waveform.path.ecg", day.hrv.map { String(format: "%.0f", $0) }, "", day.hrvDelta, false, key: "hrv")
+                NunaDivider()
+                contributor("Resting heart rate", "heart", day.restingHr.map { String(format: "%.0f", $0) }, "", day.restingHrDelta, true, key: "rhr")
+                NunaDivider()
+                contributor("Respiratory rate", "lungs", day.respiratory.map { String(format: "%.1f", locale: AppLanguage.activeLocale, $0) }, "", day.respiratoryDelta, nil, decimals: 1, key: "resp_rate")
+                NunaDivider()
+                NavigationLink(value: NunaTodayRoute.sleep(0)) {
+                    NunaContributorRow(title: "Sleep performance", icon: "moon", value: day.rest.map { String(format: "%.0f%%", $0) }, delta: nil)
+                }.buttonStyle(.plain)
             }
             NunaSegmented(rangeOptions(), selection: $range)
             NunaCard {
@@ -97,22 +88,9 @@ struct NunaChargeDetailView: View {
         }
     }
 
-    @ViewBuilder private func driver(_ title: LocalizedStringKey, _ icon: String, _ tint: Color, _ value: String?,
-                                     _ delta: Double?, _ downIsGood: Bool, key: String) -> some View {
-        let row = HStack(spacing: 12) {
-            NunaIconTile(icon, tint: tint)
-            Text(title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-            Spacer()
-            Text(verbatim: value ?? "–").font(.nuna(size: 18, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-            if let delta, abs(delta.rounded()) >= 1 {
-                let good = downIsGood ? delta < 0 : delta > 0
-                let c = good ? NunaPalette.charge : NunaPalette.warning
-                Text(verbatim: delta > 0 ? "▲" : "▼").font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(c)
-                    .padding(.horizontal, 8).frame(height: 24).background(NunaPalette.tint(c), in: Capsule())
-            }
-            Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-        }
-        .frame(minHeight: 58)
+    @ViewBuilder private func contributor(_ title: LocalizedStringKey, _ icon: String, _ value: String?, _ unit: String,
+                                          _ delta: Double?, _ downIsGood: Bool?, decimals: Int = 0, key: String) -> some View {
+        let row = NunaContributorRow(title: title, icon: icon, value: value, unit: unit, delta: delta, downIsGood: downIsGood, decimals: decimals)
         if let m = MetricCatalog.metric(key: key, source: "my-whoop") {
             NavigationLink(value: NunaTodayRoute.metric(m)) { row }.buttonStyle(.plain)
         } else { row }
@@ -135,45 +113,15 @@ struct NunaEffortDetailView: View {
     var body: some View {
         let slots = series.window(range)
         NunaDetailScreen("Effort") {
-            NunaGaugeHeroCard(caption: "Today", chip: level.map { $0.0 }, chipColor: NunaPalette.effortText,
-                              fraction: (day.effort ?? 0) / 100,
-                              number: day.effort.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–",
-                              suffix: String(localized: "of \(UnitFormatter.effortScaleMax(scale))"),
-                              color: NunaPalette.effortText) {
+            NunaScoreHero(caption: "Today", chip: level.map { $0.0 }, chipColor: NunaPalette.effortText,
+                          fraction: (day.effort ?? 0) / 100,
+                          number: day.effort.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–",
+                          suffix: String(localized: "of \(UnitFormatter.effortScaleMax(scale))"),
+                          name: "Effort", color: NunaPalette.effortText) {
                 Text("Cardio load so far today").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
-            NunaTitleRow(title: "Today's sources") { EmptyView() }
-            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                VStack(spacing: 0) {
-                    ForEach(Array(day.workouts.enumerated()), id: \.offset) { idx, w in
-                        if idx > 0 { NunaDivider() }
-                        Button { router.requestedDestination = .workouts } label: {
-                            HStack(spacing: 12) {
-                                NunaIconTile("flame", tint: NunaPalette.effortText)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(verbatim: WorkoutSource.displaySport(w.sport)).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                    if let d = w.durationS {
-                                        Text(verbatim: String(localized: "\(Int((d / 60).rounded())) min")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                                    }
-                                }
-                                Spacer()
-                                if let s = w.strain { NunaChip(verbatim: "+" + UnitFormatter.effortDisplay(s, scale: scale), color: NunaPalette.effortText) }
-                                Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                            }
-                            .frame(minHeight: 58)
-                        }.buttonStyle(.plain)
-                    }
-                    if !day.workouts.isEmpty { NunaDivider() }
-                    HStack(spacing: 12) {
-                        NunaIconTile("waveform.path.ecg")
-                        Text("Daily activity").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Spacer()
-                        NunaChip(verbatim: "+" + UnitFormatter.effortDisplay(dailyActivity, scale: scale))
-                    }
-                    .frame(minHeight: 58)
-                }
-            }
+            sourcesSection
             NunaSegmented(rangeOptions(), selection: $range)
             NunaCard {
                 if range == 7 {
@@ -197,8 +145,81 @@ struct NunaEffortDetailView: View {
         }
     }
 
-    private var dailyActivity: Double {
-        max(0, (day.effort ?? 0) - day.workouts.compactMap(\.strain).reduce(0, +))
+    // MARK: Today's sources
+
+    private struct Source: Identifiable {
+        let id: String; let title: String; let icon: String; let minutes: Int?; let points: Double; let share: Double; let isWorkout: Bool
+    }
+
+    /// Where today's Effort came from. Effort is a logarithm of the day's heart-rate load (TRIMP), so Effort points do not add up
+    /// the way minutes do. The split is therefore made on the load: each workout's stored Effort is turned back into its load,
+    /// the rest of the day's load is everyday movement, and each source gets its share of the day's Effort. A workout window
+    /// that overlaps the day's measured load more than it can (their loads sum above the day's) is scaled down to fit.
+    private var sources: [Source] {
+        guard let e = day.effort, e > 0 else { return [] }
+        let withEffort = day.workouts.filter { ($0.strain ?? 0) > 0 }
+        let split = EffortAttribution.split(dayEffort: e, workoutEfforts: withEffort.map(\.strain),
+                                            logDenominator: StrainScorer.logMapDenominator(method: PuffinExperiment.effortMethod, sex: profile.sex))
+        var out: [Source] = withEffort.enumerated().map { i, w in
+            let pts = split.workoutPoints[i]
+            return Source(id: "w\(i)", title: WorkoutSource.displaySport(w.sport), icon: "flame",
+                          minutes: w.durationS.map { Int(($0 / 60).rounded()) }, points: pts, share: pts / e, isWorkout: true)
+        }
+        if split.dailyPoints >= 0.5 || out.isEmpty {
+            out.append(Source(id: "daily", title: String(localized: "Daily activity"), icon: "waveform.path.ecg", minutes: nil,
+                              points: split.dailyPoints, share: split.dailyPoints / e, isWorkout: false))
+        }
+        return out
+    }
+
+    @ViewBuilder private var sourcesSection: some View {
+        let list = sources
+        VStack(alignment: .leading, spacing: 12) {
+            NunaTitleRow(title: "Today's sources") { EmptyView() }
+            if list.isEmpty {
+                Text(day.effort == nil ? "Effort for today appears once the strap has recorded some heart rate." : "No Effort recorded yet today.")
+                    .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            } else {
+                // Share of the day's load, as one bar.
+                GeometryReader { geo in
+                    HStack(spacing: 3) {
+                        ForEach(list) { s in
+                            RoundedRectangle(cornerRadius: 5, style: .continuous)
+                                .fill(s.isWorkout ? NunaPalette.effortText : NunaPalette.effort.opacity(0.45))
+                                .frame(width: max(6, (geo.size.width - 3 * CGFloat(list.count - 1)) * CGFloat(s.share)))
+                        }
+                    }
+                }
+                .frame(height: 12)
+                NunaPlainList {
+                    ForEach(Array(list.enumerated()), id: \.element.id) { idx, s in
+                        if idx > 0 { NunaDivider() }
+                        row(s)
+                    }
+                }
+                Text("Each source gets its share of today's heart-rate load, so the parts add up to the day's Effort.")
+                    .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    @ViewBuilder private func row(_ s: Source) -> some View {
+        let content = HStack(spacing: 14) {
+            Image(systemName: s.icon).font(.nuna(size: 18)).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: s.title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: [s.minutes.map { String(localized: "\($0) min") }, "\(Int((s.share * 100).rounded()))%"].compactMap { $0 }.joined(separator: " · "))
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            }
+            Spacer(minLength: 8)
+            Text(verbatim: "+" + UnitFormatter.effortDisplay(s.points, scale: scale))
+                .font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+            if s.isWorkout { Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted) }
+        }
+        .padding(.vertical, 14).contentShape(Rectangle())
+        if s.isWorkout {
+            Button { router.requestedDestination = .workouts } label: { content }.buttonStyle(.plain)
+        } else { content }
     }
 
     private var level: (LocalizedStringKey, Color)? {

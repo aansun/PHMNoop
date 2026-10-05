@@ -100,20 +100,12 @@ struct NunaSleepView: View {
     private func hero(_ model: NunaSleepModel, _ night: NunaNight) -> some View {
         let rest = model.value("sleep_performance")
         let eff = model.efficiency(night)
-        return NunaCard {
-            HStack(spacing: 18) {
-                NunaRingGauge(fraction: (rest ?? 0) / 100, color: NunaPalette.rest, size: 112, lineWidth: 10) {
-                    VStack(spacing: 0) {
-                        Text(verbatim: rest.map { "\(Int($0.rounded()))%" } ?? "–")
-                            .font(.nuna(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("Rest").font(.nuna(size: 11, weight: .heavy)).tracking(1).textCase(.uppercase)
-                            .foregroundStyle(NunaPalette.textSecondary)
-                    }
-                }
-                VStack(alignment: .leading, spacing: 8) {
+        return VStack(spacing: 14) {
+            NunaScoreHero(caption: "Last night", fraction: (rest ?? 0) / 100,
+                          number: rest.map { "\(Int($0.rounded()))" } ?? "–", unit: "%", name: "Rest", color: NunaPalette.rest) {
+                VStack(spacing: 6) {
                     Text(verbatim: NunaSleepFormat.duration(night.asleepMin))
-                        .font(.nuna(size: NunaTypeSize.numberL - 6, weight: .bold, design: NunaType.design))
-                        .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
+                        .font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text(verbatim: "\(NunaSleepFormat.clock(night.onset)) – \(NunaSleepFormat.clock(night.wake))")
                         .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     HStack(spacing: 6) {
@@ -125,7 +117,6 @@ struct NunaSleepView: View {
                         }
                     }
                 }
-                Spacer(minLength: 0)
             }
         }
     }

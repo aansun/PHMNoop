@@ -1,6 +1,15 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Each source gets its share of today's heart-rate load, so the parts add up to the day's Effort.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Setiap sumber mendapat bagiannya dari beban detak jantung hari ini, jadi bagian-bagiannya berjumlah sama dengan Effort hari ini."}}
+    } },
+    "Effort for today appears once the strap has recorded some heart rate.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Effort hari ini muncul setelah strap merekam detak jantung."}}
+    } },
+    "No Effort recorded yet today.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Belum ada Effort tercatat hari ini."}}
+    } },
     "Steady since last week": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Stabil sejak minggu lalu"}}
     } },
@@ -26354,6 +26363,7 @@
     },
     "30D": {
       "localizations": {
+        
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -27039,6 +27049,7 @@
     },
     "7D": {
       "localizations": {
+        
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -27213,6 +27224,7 @@
     },
     "90D": {
       "localizations": {
+        
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -85788,6 +85800,7 @@
     },
     "Heart rate variability": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Variabilitas detak jantung"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -143424,6 +143437,7 @@
     },
     "Resting heart rate": {
       "localizations": {
+        "id": {"stringUnit": {"state": "translated", "value": "Detak jantung istirahat"}},
         "de": {
           "stringUnit": {
             "state": "translated",
