@@ -72,10 +72,8 @@ struct NunaQuickSheet: View {
         .task { await reloadWater() }
         .sheet(isPresented: $editing) { NunaQuickActionsEditor(raw: $actionsRaw).nunaSheetChrome(detents: [.large]) }
         .sheet(isPresented: $breathing) {
-            NavigationStack {
-                BreathingView().toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { breathing = false } } }
-            }
-            .preferredColorScheme(NunaTheme.colorScheme)
+            NavigationStack { NunaBreathView().toolbar(.hidden, for: .navigationBar) }
+                .preferredColorScheme(NunaTheme.colorScheme)
         }
         .sheet(item: $todayPanel) { NunaQuickPanel(route: $0) }
         .sheet(item: $mePanel) { NunaQuickPanel(route: $0) }

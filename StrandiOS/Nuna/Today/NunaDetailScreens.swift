@@ -510,7 +510,7 @@ struct NunaStressDetailView: View {
             await day.load(repo: repo, profile: profile)
         }
         .sheet(isPresented: $showBreathing) {
-            NavigationStack { BreathingView().toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { showBreathing = false } } } }
+            NavigationStack { NunaBreathView().toolbar(.hidden, for: .navigationBar) }
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "stress") }
     }

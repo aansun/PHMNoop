@@ -25,6 +25,11 @@ struct NunaAnyaSheet: View {
 
     private var module: NunaAnyaModule { NunaAnyaModule(context: context) }
 
+    /// What the provider is told about this page: the local read and the notes Anya kept in this module (and only this one).
+    private var notice: String? {
+        [read.map { $0.headline + ($0.detail.map { ". " + $0 } ?? "") }, NunaAnyaMemory.summary(module)].compactMap { $0 }.joined(separator: "\n\n").nilIfEmpty
+    }
+
     var body: some View {
         NavigationStack(path: $path) {
             ScrollView {
@@ -83,7 +88,7 @@ struct NunaAnyaSheet: View {
                 }
                 HStack(spacing: 6) {
                     Text("Read:").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                    ForEach(r.read, id: \.self) { Text(verbatim: $0).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
+                    ForEach(r.read, id: \.self) { Text(LocalizedStringKey($0)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary) }
                 }
                 if coach.isConfigured, coach.dataConsent, explanation == nil, !explaining {
                     Button { Task { await explain() } } label: {
@@ -178,13 +183,14 @@ struct NunaAnyaSheet: View {
         guard coach.dataConsent else { coach.pendingPrompt = prompt; openFull(); return }
         turns.append(ChatMessage(id: UUID(), role: .user, text: shown))
         sending = true; defer { sending = false }
-        let reply = await coach.answerContextualMessage(pageContext: context, notice: read?.headline, history: Array(turns.dropLast()), question: prompt)
+        let reply = await coach.answerContextualMessage(pageContext: context, notice: notice, history: Array(turns.dropLast()), question: prompt)
         turns.append(ChatMessage(id: UUID(), role: .assistant, text: reply ?? String(localized: "I couldn't answer right now. Check the provider in Anya settings.")))
+        if let reply { NunaAnyaMemory.remember(module, "Asked: \(shown) Answer: \(reply.prefix(220))") }
     }
 
     private func explain() async {
         explaining = true; defer { explaining = false }
-        explanation = await coach.generateContextualBrief(pageContext: context)
+        explanation = await coach.generateContextualBrief(pageContext: context + (NunaAnyaMemory.summary(module).map { "\n\n" + $0 } ?? ""))
     }
 
     private func openFull() {
@@ -193,4 +199,6 @@ struct NunaAnyaSheet: View {
         router.requestedDestination = .coach
     }
 }
+
+private extension String { var nilIfEmpty: String? { isEmpty ? nil : self } }
 #endif

@@ -27,11 +27,12 @@ struct NunaAnyaQuestion: Equatable, Identifiable {
 
 /// The modules Anya appears in (docs/nuna/mockups/AnyaMap.dc.html).
 enum NunaAnyaModule: String, Equatable {
-    case today, health, trends, sleep, workouts, nutrition, device
+    case today, health, trends, sleep, workouts, nutrition, device, breathing
 
     init(context: String) {
         let c = context.lowercased()
-        if c.contains("sleep") || c.contains("nap") || c.contains("body clock") || c.contains("rest") { self = .sleep }
+        if c.contains("breath") { self = .breathing }
+        else if c.contains("sleep") || c.contains("nap") || c.contains("body clock") || c.contains("rest") { self = .sleep }
         else if c.contains("trend") { self = .trends }
         else if c.contains("workout") || c.contains("effort") || c.contains("training") { self = .workouts }
         else if c.contains("health") || c.contains("stress") || c.contains("warning") || c.contains("hrv") || c.contains("heart") || c.contains("oxygen") || c.contains("respir") || c.contains("weight") || c.contains("body") { self = .health }
@@ -43,7 +44,7 @@ enum NunaAnyaModule: String, Equatable {
     var title: LocalizedStringKey {
         switch self {
         case .today: return "Today"; case .health: return "Health"; case .trends: return "Trends"; case .sleep: return "Sleep"
-        case .workouts: return "Workouts"; case .nutrition: return "Nutrition"; case .device: return "Devices"
+        case .workouts: return "Workouts"; case .nutrition: return "Nutrition"; case .device: return "Devices"; case .breathing: return "Breathing"
         }
     }
 }
@@ -58,6 +59,7 @@ enum NunaAnyaReader {
         case .health: return await health(repo: repo, profile: profile)
         case .trends: return trends(repo: repo)
         case .workouts: return await workouts(repo: repo, scale: scale)
+        case .breathing: return await breathing(repo: repo, profile: profile)
         }
     }
 
@@ -144,6 +146,19 @@ enum NunaAnyaReader {
                             read: ["Charge", "30 days"], module: .trends, questions: questions(.trends))
     }
 
+    // MARK: Breathing
+
+    /// The Breathing module's read: the advisor's pick for right now, with the figures behind it and a note on the last session.
+    private static func breathing(repo: Repository, profile: ProfileStore) async -> NunaAnyaRead? {
+        let s = await NunaBreathAdviceMaker.make(repo: repo, profile: profile)
+        var detail = s.detail
+        if let last = NunaBreathLog.all().first, let pct = last.rmssdChangePct {
+            let note = String(localized: "Last session: HRV \(String(format: "%+.0f", locale: AppLanguage.activeLocale, pct))% over \(last.durationText).")
+            detail = [detail, note].compactMap { $0 }.joined(separator: " ")
+        }
+        return NunaAnyaRead(headline: s.headline, detail: detail, read: s.read, module: .breathing, questions: questions(.breathing))
+    }
+
     // MARK: Workouts
 
     private static func workouts(repo: Repository, scale: EffortScale) async -> NunaAnyaRead? {
@@ -185,6 +200,10 @@ enum NunaAnyaReader {
         case .nutrition:
             return [NunaAnyaQuestion(title: String(localized: "Dinner suggestion"), prompt: "Suggest what to eat tonight given today's activity."),
                     NunaAnyaQuestion(title: String(localized: "How much protein do I need?"), prompt: "How much protein should I aim for, given my training?")]
+        case .breathing:
+            return [NunaAnyaQuestion(title: String(localized: "Which exercise fits me now?"), prompt: "Which breathing exercise fits me right now? Use my live heart rate, HRV, stress and Charge, and what worked in my earlier breathing sessions."),
+                    NunaAnyaQuestion(title: String(localized: "How did my last sessions go?"), prompt: "How did my recent breathing sessions go? Look at the HRV and heart rate change in each and tell me what is working."),
+                    NunaAnyaQuestion(title: String(localized: "How do I breathe better?"), prompt: "Give me one practical tip to get more from my breathing sessions, given how my body responded before.")]
         case .device:
             return [NunaAnyaQuestion(title: String(localized: "Why did the strap disconnect?"), prompt: "Why might my strap keep disconnecting from the phone?"),
                     NunaAnyaQuestion(title: String(localized: "How do I charge the battery?"), prompt: "How should I charge my strap and how long does the battery last?")]
