@@ -436,36 +436,98 @@ struct NunaColumns: View {
     }
 }
 
-/// NOOP's own "Line2" trend chart (`TrendChart`): a clean line with a labelled point per reading while
-/// there are 60 or fewer, month-over-day labels on the axis, and a dashed personal baseline. Every value
-/// drawn is a stored reading; days without one are simply absent from the line.
+private extension TrendChart {
+    /// A week is labelled under every reading; a longer window keeps the chart's own grid and the date row beneath it.
+    func perWeekAxis(_ dates: [Date]?) -> TrendChart {
+        if let dates { return perReadingAxis(dates) }
+        return hidingXAxisLabels()
+    }
+}
+
+/// NOOP's own "Line2" trend chart (`TrendChart`), set up to be read at a glance: open rings on each reading with its value
+/// above (while there are 60 or fewer), a shaded typical range with a legend when the metric has one, month-over-day labels on
+/// the axis, and, on a window of several months, thin raw readings with one average line per month and its move against the
+/// month before. Every value drawn is a stored reading; days without one are simply absent from the line.
 struct NunaLine2Chart: View {
     let points: [(date: Date, value: Double)]
     var color: Color = NunaPalette.textPrimary
     var decimals = 0
     var baseline: Double?
+    /// The wearer's typical range for this metric (their own baseline band), shaded behind the line.
+    var band: ClosedRange<Double>?
+    /// Which way is better, for colouring the move between monthly averages.
+    var higherIsBetter = true
     var height: CGFloat = 190
+
+    private func format(_ v: Double) -> String { String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, v) }
+
+    /// One average per calendar month for a long window (3 to 8 months), with the percentage move against the month before.
+    private var monthlyAverages: [TrendSegmentAverage] {
+        guard points.count > 60, let first = points.first?.date, let last = points.last?.date, last.timeIntervalSince(first) > 75 * 86400 else { return [] }
+        let cal = Calendar.current
+        let groups = Dictionary(grouping: points) { cal.dateComponents([.year, .month], from: $0.date) }
+        let months = groups.values.map { $0.sorted { $0.date < $1.date } }.sorted { ($0.first?.date ?? .distantPast) < ($1.first?.date ?? .distantPast) }
+        guard months.count >= 3, months.count <= 8 else { return [] }
+        var out: [TrendSegmentAverage] = []
+        var prev: Double?
+        for m in months {
+            guard let first = m.first, let last = m.last, m.count >= 7 else { continue }
+            let avg = m.map(\.value).reduce(0, +) / Double(m.count)
+            var delta: String?
+            var deltaColor = NunaPalette.textPrimary
+            if let p = prev, p != 0 {
+                let pct = (avg - p) / abs(p) * 100
+                delta = String(format: "%+.0f%%", locale: AppLanguage.activeLocale, pct)
+                deltaColor = (pct >= 0) == higherIsBetter ? NunaPalette.charge : NunaPalette.warning
+            }
+            out.append(TrendSegmentAverage(start: first.date, end: last.date, value: avg, valueText: format(avg), deltaText: delta, deltaColor: deltaColor))
+            prev = avg
+        }
+        return out
+    }
+
+    /// "Mon" over "5", as in the reference week chart.
+    private static func weekdayOverDay(_ d: Date) -> String {
+        let w = DateFormatter(); w.locale = AppLanguage.activeLocale; w.setLocalizedDateFormatFromTemplate("EEE")
+        return w.string(from: d) + "\n" + String(Calendar.current.component(.day, from: d))
+    }
 
     var body: some View {
         let vals = points.map(\.value)
         if vals.count >= 2, let lo = vals.min(), let hi = vals.max() {
-            let pad = max((hi - lo) * 0.15, 0.5)
-            VStack(spacing: 8) {
+            let segments = monthlyAverages
+            let long = !segments.isEmpty
+            let week = points.count <= 8
+            let floor = min(lo, band?.lowerBound ?? lo), ceil = max(hi, band?.upperBound ?? hi)
+            let pad = max((ceil - floor) * 0.15, 0.5)
+            VStack(alignment: .leading, spacing: 8) {
+                if band != nil {
+                    HStack(spacing: 6) {
+                        Spacer(minLength: 0)
+                        RoundedRectangle(cornerRadius: 2, style: .continuous).fill(NunaPalette.textSecondary.opacity(0.35)).frame(width: 9, height: 9)
+                        Text("Typical range").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                            .foregroundStyle(NunaPalette.textSecondary)
+                    }
+                }
                 TrendChart(
                     points: points.map { TrendPoint(date: $0.date, value: $0.value) },
                     gradient: Gradient(colors: [color, color]),
-                    valueRange: (lo - pad)...(hi + pad * 1.6),
-                    showsArea: true,
-                    showsPointValues: true,
+                    valueRange: (floor - pad)...(ceil + pad * (long ? 2.4 : 1.6)),
+                    showsArea: !long,
+                    showsPointValues: !long,
                     baselineValue: baseline,
                     height: height,
-                    valueFormat: { String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, $0) },
+                    valueFormat: { format($0) },
                     dateFormat: { TrendChart.defaultDateString($0) },
-                    xAxisDateFormat: { TrendChart.line2AxisDateString($0) }
+                    xAxisDateFormat: { week ? Self.weekdayOverDay($0) : TrendChart.line2AxisDateString($0) }
                 )
                 .pointValueStride(max(1, Int((Double(vals.count) / 12).rounded(.up))))
-                .hidingXAxisLabels()
-                NunaDateAxis(dates: points.map(\.date))
+                .typicalRange(band)
+                .hollowPoints(fill: long ? nil : NunaPalette.card, labelColor: color)
+                .line(width: long ? 1 : 2.5, opacity: long ? 0.6 : 1)
+                .segmentAverages(segments)
+                .perWeekAxis(week ? points.map(\.date) : nil)
+                if !week { NunaDateAxis(dates: points.map(\.date)) }
             }
         } else {
             Text(vals.count == 1 ? "Not enough data yet" : "No data in this period")
@@ -526,7 +588,7 @@ final class NunaSeriesModel: ObservableObject {
     @Published private(set) var loaded = false
 
     /// `also` is a second source merged on top (a value typed in by hand wins over the imported one for that day).
-    func load(repo: Repository, key: String, source: String, days: Int = 130, also: String? = nil) async {
+    func load(repo: Repository, key: String, source: String, days: Int = 190, also: String? = nil) async {
         let s = await repo.exploreSeries(key: key, source: source, days: days)
         var map = Dictionary(s.map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l })
         if let also {

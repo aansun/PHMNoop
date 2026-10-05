@@ -9,6 +9,7 @@ struct NunaAppearanceView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage(ExperienceMode.storageKey) private var experienceRaw = ExperienceMode.standard.rawValue
     @AppStorage(NunaTheme.storageKey) private var themeRaw = NunaTheme.Mode.dark.rawValue
+    @AppStorage(NunaThemePrefs.skinKey) private var skinRaw = NunaThemePrefs.Skin.standard.rawValue
     @AppStorage(NunaThemePrefs.densityKey) private var densityRaw = NunaThemePrefs.Density.standard.rawValue
     @AppStorage("appIcon.name") private var iconName = ""
     @AppStorage(UnitPrefs.systemKey) private var unitSystem = UnitSystem.metric.rawValue
@@ -35,7 +36,8 @@ struct NunaAppearanceView: View {
                     }
                 }
                 preview
-                themeSection
+                skinSection
+                if skinRaw != NunaThemePrefs.Skin.whp.rawValue { themeSection }
                 densityCard
                 #if os(iOS)
                 iconCard
@@ -101,6 +103,45 @@ struct NunaAppearanceView: View {
                 }
             }
         }
+    }
+
+    /// Default (the black-and-neon Nuna look) or WHP (a slate, blue-grey night look). WHP has no light mode.
+    private var skinSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            nunaTrendsCap("Style")
+            HStack(spacing: 12) {
+                ForEach(NunaThemePrefs.Skin.allCases) { k in
+                    let on = skinRaw == k.rawValue
+                    Button { skinRaw = k.rawValue } label: {
+                        VStack(spacing: 10) {
+                            skinThumb(k).frame(height: 78)
+                            Text(verbatim: k.displayName).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        }
+                        .padding(10).frame(maxWidth: .infinity)
+                        .background(NunaPalette.card, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(on ? NunaPalette.accent : NunaPalette.hairlineSoft, lineWidth: on ? 2 : 1))
+                    }.buttonStyle(.plain)
+                }
+            }
+            if skinRaw == NunaThemePrefs.Skin.whp.rawValue {
+                Text("WHP is a night look only, so light and automatic are off while it is on.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    private func skinThumb(_ k: NunaThemePrefs.Skin) -> some View {
+        let whp = k == .whp
+        return ZStack {
+            Color(hex: whp ? "#0F1519" : "#000000")
+            VStack(alignment: .leading, spacing: 6) {
+                RoundedRectangle(cornerRadius: 5).fill(Color(hex: whp ? "#1B242B" : "#121214")).frame(height: 26)
+                    .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(Color(hex: whp ? "#27333B" : "#202024"), lineWidth: 1))
+                HStack(spacing: 6) {
+                    RoundedRectangle(cornerRadius: 3).fill(Color(hex: whp ? "#7FB5E6" : "#00FF66")).frame(width: 28, height: 8)
+                    RoundedRectangle(cornerRadius: 3).fill(Color(hex: whp ? "#6F7C86" : "#71717A")).frame(width: 18, height: 8)
+                }
+            }.padding(9)
+        }.clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
     private var themeSection: some View {

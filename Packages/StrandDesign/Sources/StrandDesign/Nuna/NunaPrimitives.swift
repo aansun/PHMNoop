@@ -94,11 +94,11 @@ public struct NunaFAB: View {
     public var body: some View {
         Button(action: action) {
             Image(systemName: "plus")
-                .font(.nuna(size: 24, weight: .bold))
+                .font(.nuna(size: 19, weight: .bold))
                 .foregroundStyle(NunaPalette.onAccent)
-                .frame(width: 58, height: 58)
-                .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
-                .shadow(color: NunaPalette.shade.opacity(0.5), radius: 14, y: 8)
+                .frame(width: 44, height: 44)
+                .background(NunaPalette.accent.opacity(0.82), in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                .shadow(color: NunaPalette.shade.opacity(0.28), radius: 8, y: 4)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)

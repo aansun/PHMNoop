@@ -318,7 +318,7 @@ struct NunaHealthView: View {
                         Text(verbatim: fmt(day.restingHr)).font(.nuna(size: 56, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(56)).foregroundStyle(NunaPalette.textPrimary)
                         Text("bpm").font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
-                    NunaLine2Chart(points: pts, color: NunaPalette.charge, decimals: 0, baseline: rhrS.band?.mean, height: 120)
+                    NunaLine2Chart(points: pts, color: NunaPalette.charge, decimals: 0, baseline: rhrS.band?.mean, band: rhrS.band.map { $0.lo...$0.hi }, higherIsBetter: false, height: 120)
                 }
             }
         }.buttonStyle(.plain)
@@ -380,7 +380,7 @@ struct NunaHealthView: View {
                     }
                 }
                 NunaSegmented([(value: 14, title: "14D"), (value: 30, title: "30D"), (value: 90, title: "90D")], selection: $hrvRange)
-                NunaLine2Chart(points: pts, color: NunaPalette.charge, decimals: 0, baseline: b?.mean, height: 170)
+                NunaLine2Chart(points: pts, color: NunaPalette.charge, decimals: 0, baseline: b?.mean, band: b.map { $0.lo...$0.hi }, height: 170)
                 if let b {
                     HStack(spacing: 12) {
                         miniStat("Average", fmt(b.mean)); miniStat("Lowest", fmt(b.lo)); miniStat("Highest", fmt(b.hi))

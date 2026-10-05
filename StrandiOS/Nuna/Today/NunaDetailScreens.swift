@@ -5,7 +5,7 @@ import StrandAnalytics
 import WhoopStore
 
 private func rangeOptions() -> [(value: Int, title: LocalizedStringKey)] {
-    [(value: 7, title: "7D"), (value: 30, title: "30D"), (value: 90, title: "90D")]
+    [(value: 7, title: "7D"), (value: 30, title: "30D"), (value: 90, title: "90D"), (value: 180, title: "6M")]
 }
 
 private func signedWhole(_ d: Double) -> String { (d >= 0 ? "+" : "−") + String(format: "%.0f", abs(d)) }
@@ -59,7 +59,7 @@ struct NunaChargeDetailView: View {
                                              highlight: Calendar.current.isDateInToday(s.date), color: s.value.map(nunaChargeColor))
                         }, color: NunaPalette.charge)
                     } else {
-                        NunaLine2Chart(points: series.readings(range), color: NunaPalette.charge, decimals: 0, baseline: series.baseline)
+                        NunaLine2Chart(points: series.readings(range), color: NunaPalette.charge, decimals: 0, baseline: series.baseline, band: series.band.map { $0.lo...$0.hi })
                     }
                 }
             }
@@ -297,7 +297,7 @@ struct NunaMetricDetailView: View {
                                              valueText: s.value.map { fmtShort($0) }, highlight: Calendar.current.isDateInToday(s.date))
                         }, color: NunaPalette.restText.opacity(0.85), highlightColor: NunaPalette.textPrimary)
                     } else {
-                        NunaLine2Chart(points: series.readings(range), color: lineColor, decimals: metric.decimals, baseline: series.baseline)
+                        NunaLine2Chart(points: series.readings(range), color: lineColor, decimals: metric.decimals, baseline: series.baseline, band: series.band.map { $0.lo...$0.hi }, higherIsBetter: !["rhr", "resting_hr"].contains(metric.key))
                     }
                 }
             }
@@ -518,7 +518,7 @@ struct NunaStressDetailView: View {
                             .frame(maxWidth: .infinity, minHeight: 110)
                     }
                 } else {
-                    NunaLine2Chart(points: series.readings(range), color: NunaPalette.charge, decimals: 1, baseline: series.baseline)
+                    NunaLine2Chart(points: series.readings(range), color: NunaPalette.charge, decimals: 1, baseline: series.baseline, band: series.band.map { $0.lo...$0.hi })
                 }
                 HStack(spacing: 14) {
                     legend(NunaPalette.charge, "Low"); legend(NunaPalette.warning, "Medium"); legend(NunaPalette.alert, "High")

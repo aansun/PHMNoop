@@ -14,17 +14,25 @@ import SwiftUI
 //    (WHOOP typography preset), not from web fonts used in the mockups.
 
 public enum NunaPalette {
+    /// A token that follows the selected skin: the light and dark values of the Default skin, or the WHP slate in dark.
+    static func skinned(light: String, dark: String, whp: String) -> Color {
+        Color(light: light, dark: NunaThemePrefs.skin == .whp ? whp : dark)
+    }
+
     // Every surface and text token is adaptive: the first hex is the light value, the second the dark one. The dark
     // values are the Nuna originals; the light ones keep the same hierarchy on a white-grey canvas.
 
     // Surfaces. Dark values follow the "Rekomendasi Palet Warna Health App Dark Mode" guide: pure black canvas, #121214 cards.
-    public static let canvas        = Color(light: "#F2F4F6", dark: "#000000")
-    public static let card          = Color(light: "#FFFFFF", dark: "#121214")
-    public static let cardHighlight = Color(light: "#E9EEF2", dark: "#1B1B1F")
-    public static let glass         = Color(light: "#0A0D100D", dark: "#FFFFFF0D")
-    public static let glassStrong   = Color(light: "#0A0D1014", dark: "#FFFFFF17")
-    public static let hairline      = Color(light: "#0A0D1020", dark: "#71717A40")
-    public static let hairlineSoft  = Color(light: "#0A0D1016", dark: "#71717A2E")
+    public static var canvas: Color { skinned(light: "#E9ECEF", dark: "#000000", whp: "#0F1519") }
+    public static var card: Color { skinned(light: "#FFFFFF", dark: "#121214", whp: "#1B242B") }
+    public static var cardHighlight: Color { skinned(light: "#E9EEF2", dark: "#1B1B1F", whp: "#25313A") }
+    public static var glass: Color { skinned(light: "#0A0D100D", dark: "#FFFFFF0D", whp: "#FFFFFF0D") }
+    public static var glassStrong: Color { skinned(light: "#0A0D1014", dark: "#FFFFFF17", whp: "#FFFFFF17") }
+    // Lines are opaque tones a step off the card colour, so a card edge reads as part of the card instead of a drawn outline.
+    // The card itself stays clearly apart from the canvas (#121214 on #000000, white on #E9ECEF).
+    public static var hairline: Color { skinned(light: "#D5DAE0", dark: "#2A2A30", whp: "#2F3B44") }
+    public static var hairlineSoft: Color { skinned(light: "#E1E5EA", dark: "#202024", whp: "#27333B") }
+    public static var cardBorderHighlight: Color { skinned(light: "#C3CAD2", dark: "#34343B", whp: "#3B4A55") }
 
     /// The foreground ink of the theme (white on dark, near-black on light) and the matching shade for wells.
     /// Use `.opacity` on them wherever a translucent overlay of the text colour is wanted.
@@ -34,8 +42,8 @@ public enum NunaPalette {
     // Text. The guide's #71717A (grid lines and chart labels) is `textMuted`; running secondary text uses #A1A1AA, which keeps
     // its contrast on the #121214 cards where #71717A alone would not.
     public static let textPrimary   = Color(light: "#0A0D10", dark: "#FFFFFF")
-    public static let textSecondary = Color(light: "#4C565E", dark: "#A1A1AA")
-    public static let textMuted     = Color(light: "#7A848C", dark: "#71717A")
+    public static var textSecondary: Color { skinned(light: "#4C565E", dark: "#A1A1AA", whp: "#9FABB4") }
+    public static var textMuted: Color { skinned(light: "#7A848C", dark: "#71717A", whp: "#6F7C86") }
 
     // Meaning colours (fills) and their readable text variants. Each area has its own neon: Sleep / Rest cyan, Health / Charge
     // green, Trend / Effort yellow; alert is the guide's #FF3366. Light values stay readable on white.
@@ -49,7 +57,7 @@ public enum NunaPalette {
     public static let warning       = Color(light: "#C98A00", dark: "#FFB020")
     public static let alert         = Color(light: "#E0003C", dark: "#FF3366")
     public static let alertText     = Color(light: "#D0103C", dark: "#FF6B8E")
-    public static let zoneBase      = Color(light: "#C3C9D6", dark: "#3F3F46")   // zone 1 / awake track
+    public static var zoneBase: Color { skinned(light: "#C3C9D6", dark: "#3F3F46", whp: "#3A4650") }   // zone 1 / awake track
 
     // Primary action: white (the theme ink) on dark.
     public static var accent: Color { NunaThemePrefs.Accent.fill }
@@ -69,6 +77,17 @@ public enum NunaThemePrefs {
     }
 
     public static let densityKey = "nuna.density"
+    public static let skinKey = "nuna.skin"
+
+    /// Which palette the app wears. Default is the black-and-neon Nuna look (light, dark or automatic); WHP is a slate,
+    /// blue-grey night look in the style of the WHOOP app and is dark only.
+    public enum Skin: String, CaseIterable, Identifiable {
+        case standard, whp
+        public var id: String { rawValue }
+        public var displayName: String { self == .standard ? "Default" : "WHP" }
+    }
+
+    public static var skin: Skin { Skin(rawValue: UserDefaults.standard.string(forKey: skinKey) ?? "") ?? .standard }
 
     public enum Density: String, CaseIterable, Identifiable {
         case roomy, standard, compact
@@ -88,7 +107,8 @@ public enum NunaTheme {
         public var id: String { rawValue }
         public var scheme: ColorScheme? { self == .auto ? nil : (self == .light ? .light : .dark) }
     }
-    public static var mode: Mode { Mode(rawValue: UserDefaults.standard.string(forKey: storageKey) ?? "") ?? .dark }
+    /// WHP is a night-only skin, so it overrides whatever light or automatic choice is stored.
+    public static var mode: Mode { NunaThemePrefs.skin == .whp ? .dark : (Mode(rawValue: UserDefaults.standard.string(forKey: storageKey) ?? "") ?? .dark) }
     public static var colorScheme: ColorScheme? { mode.scheme }
 }
 
@@ -182,7 +202,7 @@ public struct NunaCard<Content: View>: View {
             .background(highlight ? NunaPalette.cardHighlight : NunaPalette.card,
                         in: RoundedRectangle(cornerRadius: small ? NunaRadius.cardSmall : NunaRadius.card, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: small ? NunaRadius.cardSmall : NunaRadius.card, style: .continuous)
-                .strokeBorder(highlight ? Color.white.opacity(0.26) : NunaPalette.hairlineSoft, lineWidth: 1))
+                .strokeBorder(highlight ? NunaPalette.cardBorderHighlight : NunaPalette.hairlineSoft, lineWidth: 1))
     }
 }
 

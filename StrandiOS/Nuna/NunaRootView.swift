@@ -20,6 +20,7 @@ struct NunaRootView: View {
     /// The theme choices. The palette reads them from UserDefaults, so a change rebuilds the tabs (the navigation paths are kept).
     @AppStorage(NunaTheme.storageKey) private var themeRaw = NunaTheme.Mode.dark.rawValue
     @AppStorage(NunaThemePrefs.densityKey) private var densityRaw = NunaThemePrefs.Density.standard.rawValue
+    @AppStorage(NunaThemePrefs.skinKey) private var skinRaw = NunaThemePrefs.Skin.standard.rawValue
 
     private enum Tab: Int, CaseIterable { case today = 0, health, trends, anya, me }
 
@@ -57,11 +58,12 @@ struct NunaRootView: View {
             }
         }
         .nunaScreenBackground()
-        .id("\(themeRaw)-\(densityRaw)")
+        .id("\(themeRaw)-\(densityRaw)-\(skinRaw)")
         // Nuna is dark-first. The Appearance setting is honoured again once Phase 7 lands the Nuna theme screen.
         .preferredColorScheme(NunaTheme.colorScheme)
         .onAppear { Self.applyWindowStyle() }
         .onChange(of: themeRaw) { _, _ in Self.applyWindowStyle() }
+        .onChange(of: skinRaw) { _, _ in Self.applyWindowStyle() }
         .onDisappear { Self.applyWindowStyle(reset: true) }
         .sheet(isPresented: $liftSession.isPresented) { NunaLiftSessionView() }
         // A session left running by a previous launch comes back as the bar, not as a sheet thrown in the user's face.

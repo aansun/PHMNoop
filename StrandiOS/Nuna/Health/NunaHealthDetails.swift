@@ -310,7 +310,7 @@ struct NunaOxygenView: View {
                     Text(verbatim: nunaFmt(latest, 1)).font(.nuna(size: 56, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(56)).foregroundStyle(NunaPalette.textPrimary)
                     Text("/min").font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
-                NunaLine2Chart(points: respS.readings(14), color: NunaPalette.charge, decimals: 1, baseline: b?.mean, height: 150)
+                NunaLine2Chart(points: respS.readings(14), color: NunaPalette.charge, decimals: 1, baseline: b?.mean, band: b.map { $0.lo...$0.hi }, height: 150)
                 if let b {
                     Text(verbatim: String(localized: "Your personal range \(nunaFmt(b.lo, 1)) – \(nunaFmt(b.hi, 1)). Spikes in breathing often appear before illness."))
                         .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
