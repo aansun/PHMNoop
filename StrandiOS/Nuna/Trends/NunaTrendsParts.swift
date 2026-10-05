@@ -48,6 +48,8 @@ struct NunaTrendChart: View {
             let slot = max(geo.size.width - 36, 1) / CGFloat(max(days, 1))
             let barWidth = max(2, min(12, slot * 0.62))
             Chart {
+                // The bottom edge of the plot, drawn solid so the chart area is plainly bounded above the dates.
+                RuleMark(y: .value("Axis", 0)).lineStyle(StrokeStyle(lineWidth: 2)).foregroundStyle(NunaPalette.hairline)
                 ForEach(series) { s in
                     if s.bars {
                         ForEach(s.points, id: \.day) { p in
@@ -75,7 +77,7 @@ struct NunaTrendChart: View {
                             if let d = date(p.day) {
                                 LineMark(x: .value("Day", d), y: .value("Value", scaled(p.value, s)), series: .value("Series", s.id.uuidString))
                                     .interpolationMethod(.catmullRom)
-                                    .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
+                                    .lineStyle(StrokeStyle(lineWidth: days > 120 ? 1.5 : 2.5, lineCap: .round, lineJoin: .round))
                                     .foregroundStyle(s.color)
                             }
                         }
@@ -104,16 +106,20 @@ struct NunaTrendChart: View {
             .chartYScale(domain: 0...100)
             .chartPlotStyle { $0.clipped() }
             .chartXAxis {
-                AxisMarks(values: .automatic(desiredCount: 3)) { value in
+                AxisMarks(values: tickDates) { value in
                     AxisGridLine().foregroundStyle(NunaPalette.hairline.opacity(0.4))
+                    AxisTick(length: 5, stroke: StrokeStyle(lineWidth: 1)).foregroundStyle(NunaPalette.hairline)
                     if let d = value.as(Date.self) {
-                        AxisValueLabel(collisionResolution: .greedy) { Text(verbatim: nunaAxisDate(d)) }
-                            .foregroundStyle(NunaPalette.textMuted).font(.nuna(size: 11.5, weight: .semibold))
+                        AxisValueLabel(centered: false, anchor: .top, collisionResolution: .disabled) {
+                            Text(verbatim: NunaSegmentedChart.dayOverMonth(d)).multilineTextAlignment(.center).fixedSize()
+                        }
+                        .offset(y: 8)
+                        .foregroundStyle(NunaPalette.textMuted).font(.nuna(size: 11.5, weight: .semibold))
                     }
                 }
             }
             .chartYAxis {
-                AxisMarks(position: .leading, values: [0, 50, 100]) { _ in
+                AxisMarks(position: .leading, values: [0, 25, 50, 75, 100]) { _ in
                     AxisGridLine().foregroundStyle(NunaPalette.hairline.opacity(0.4))
                     AxisValueLabel().foregroundStyle(NunaPalette.textMuted).font(.nuna(size: 11.5, weight: .semibold))
                 }
@@ -135,8 +141,22 @@ struct NunaTrendChart: View {
                 }
             }
         }
-        .frame(height: height)
+        .frame(height: height + 30)
         .accessibilityHidden(true)
+    }
+
+    /// The same labelling as the one-card trend chart: every day for a week, every seventh day (counted back from the
+    /// latest) for a month, and the first of each month beyond that.
+    private var tickDates: [Date] {
+        let cal = Calendar(identifier: .gregorian)
+        let all = (0..<max(days, 1)).compactMap { cal.date(byAdding: .day, value: $0, to: origin) }
+        if days <= 8 { return all }
+        if days <= 40 {
+            return all.enumerated().filter { (days - 1 - $0.offset) % 7 == 0 }.map(\.element)
+        }
+        let firsts = all.filter { cal.component(.day, from: $0) == 1 }
+        // Beyond eight months every second one, so the labels never touch.
+        return firsts.count > 8 ? firsts.enumerated().filter { (firsts.count - 1 - $0.offset) % 2 == 0 }.map(\.element) : firsts
     }
 }
 
