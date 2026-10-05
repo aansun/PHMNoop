@@ -205,7 +205,7 @@ struct SettingsView: View {
     @AppStorage(UnitPrefs.syncLiveActivityKey) private var syncLiveActivityEnabled = true
     @AppStorage(DayCycleMode.storageKey) private var dayCycleModeRaw = DayCycleMode.sleepOnset.rawValue
     // === PHM OVERLAY (PHMNOOP) === Alternate app icon (iOS only). "" = Default (primary AppIcon),
-    // "AppIcon-Navy" = Blue Titanium, "AppIcon-PHM" = PHMNOOP (Option ⌥ mark). Display-only preference;
+    // "AppIcon-Butterfly" = the butterfly without the orbit ring. Display-only preference;
     // the live switch goes through setAlternateIconName.
     @AppStorage("appIcon.name") private var appIconName = ""
     // Light/Dark/System theme. Read by both app roots' .preferredColorScheme; default follows the OS.
@@ -1435,11 +1435,10 @@ struct SettingsView: View {
                 #if os(iOS)
                 rowDivider   // #79: separator before App icon (inside #if so macOS keeps a single divider)
                 FormRow(label: "App icon") {
-                    // === PHMN === 3-way: Default / Navy / PHMN alternate icon.
+                    // === PHMN === Two icons: the butterfly inside the orbit ring (primary) and the butterfly alone.
                     Picker("App icon", selection: $appIconName) {
-                        Text("Default").tag("")
-                        Text("Navy").tag("AppIcon-Navy")
-                        Text("PHMN").tag("AppIcon-PHM")
+                        Text("Orbit").tag("")
+                        Text("Butterfly").tag("AppIcon-Butterfly")
                     }
                     .labelsHidden()
                     .pickerStyle(.menu)
