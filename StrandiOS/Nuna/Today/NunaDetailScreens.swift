@@ -268,8 +268,8 @@ struct NunaMetricDetailView: View {
     /// Compact label for chart columns: 8.2K for 8,214 steps.
     private func fmtShort(_ v: Double) -> String { TrendChart.line2ValueString(v, formattedValue: fmt(v)) }
 
-    /// Metrics on the one-card trend layout (heart rate variability first; the rest follow once it is approved).
-    private var usesTrendCard: Bool { metric.key == "hrv" }
+    /// Every metric except the daily totals (steps, energy), which stay as columns, uses the one-card trend layout.
+    private var usesTrendCard: Bool { !isColumns }
 
     @ViewBuilder private var trendCardBody: some View {
         let latest = series.latest
