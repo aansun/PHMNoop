@@ -19,6 +19,9 @@ struct NunaWorkoutGoal: Equatable {
 
 struct NunaWorkoutStartView: View {
     let sport: String?
+    /// Opened to carry on a session that is already running: straight to its live screen instead of the start screen.
+    var resume = false
+    @State private var didResume = false
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
@@ -73,6 +76,7 @@ struct NunaWorkoutStartView: View {
             }.buttonStyle(.plain)
         }
         .onAppear {
+            if resume, !didResume, model.activeWorkout != nil { didResume = true; live = true }
             // A session suggested by the day plan: hold its main zone, and keep its length for the Time goal.
             if let p = router.plannedSession {
                 router.plannedSession = nil

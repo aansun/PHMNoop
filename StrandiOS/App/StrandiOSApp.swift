@@ -349,6 +349,9 @@ struct StrandiOSApp: App {
                     } else if url.host == "health" {
                         // The Vital sign widget.
                         router.openHealth()
+                    } else if url.host == "workout" {
+                        // The Live Activity (Lock Screen banner and Dynamic Island): open the session that is running.
+                        router.requestedDestination = .activeWorkout
                     } else if url.host == "anya" {
                         // The Anya widget.
                         router.openCoach()
@@ -487,20 +490,17 @@ struct StrandiOSApp: App {
         if let w = workout {
             calories = NunaLiveMetrics.kcal(w, model: model)
             let elapsed = w.elapsed()
-            var parts: [String] = []
             if let t = model.workoutTarget {
                 if let secs = t.seconds {
                     progress = min(max(elapsed / Double(max(secs, 1)), 0), 1)
-                    parts.append(String(localized: "Target \(Self.clock(TimeInterval(secs)))"))
                 } else if let m = t.meters {
                     progress = min(max(model.gpsRecorder.distanceM / max(m, 1), 0), 1)
-                    parts.append(String(localized: "Target \(UnitFormatter.distanceFromMeters(m, system: distanceSystem))"))
-                } else if let z = t.zone {
-                    parts.append(String(localized: "Target zone \(z)"))
                 }
             }
-            if let c = calories { parts.append(String(localized: "\(c) kcal")) }
-            subtitle = parts.isEmpty ? nil : parts.joined(separator: " · ")
+            // The line beside the heart rate is the range of the zone it is in now (not the target or the calories).
+            if let z = metrics.zone, z >= 1, let band = zoneSet.zones.first(where: { $0.number == z }) {
+                subtitle = "\(Int(ceil(band.lower)))–\(Int(floor(band.upper))) bpm"
+            }
             if let z = metrics.zone, z >= 1 { zoneSeconds = NunaLiveMetrics.zoneSeconds(w, zoneSet: zoneSet)[min(z, 5) - 1] }
             // A bike shows speed where a runner shows pace.
             if w.sport == "Cycling", let pace = model.gpsRecorder.paceSecPerKm, pace > 0 {

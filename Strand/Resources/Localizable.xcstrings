@@ -1,6 +1,18 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Plays a sample with your current distance interval, details and voice speed.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Memutar contoh dengan interval jarak, rincian, dan kecepatan suara saat ini."}}
+    } },
+    "The voice coach is off. Turn it on below to hear cues during a workout; the test plays either way.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pelatih suara mati. Nyalakan di bawah untuk mendengar arahan saat latihan; tesnya tetap berbunyi."}}
+    } },
+    "%d bpm": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%d bpm"}}
+    } },
+    "Reconnecting\u2026": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Menyambungkan ulang…"}}
+    } },
     "Journal and mood": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Jurnal dan suasana hati"}}
     } },

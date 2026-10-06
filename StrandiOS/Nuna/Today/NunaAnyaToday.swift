@@ -61,11 +61,8 @@ struct NunaAnyaTodayCard: View {
 
     @ViewBuilder private func content(running: AppModel.ActiveWorkout?) -> some View {
         if let running {
-            // 1. A session is running.
-            let minutes = max(0, Int(Date().timeIntervalSince(running.start) - running.pausedDuration) / 60)
-            NunaAnyaCard(verbatim: String(format: String(localized: "%@ is running"), running.sport),
-                         detail: runningDetail(running, minutes: minutes), progress: nil,
-                         buttonTitle: "Open", onButton: { router.requestedDestination = .activeWorkout }, action: onCoach)
+            // 1. A session is running: how long, the heart rate now, and a way straight back into it.
+            RunningSessionCard(running: running, effort: shown(running.liveStrain), onResume: { router.requestedDestination = .activeWorkout }, onCoach: onCoach)
         } else if hour >= 20 && !journalDone {
             // 5. Evening: close the day in the journal.
             NunaAnyaCard(verbatim: String(localized: "How was today? Fill in your journal and mood"),
@@ -114,13 +111,6 @@ struct NunaAnyaTodayCard: View {
         }
     }
 
-    private func runningDetail(_ r: AppModel.ActiveWorkout, minutes: Int) -> String {
-        var parts = [String(format: String(localized: "%d min"), minutes)]
-        if r.avgHr > 0 { parts.append(String(format: String(localized: "avg %d bpm"), r.avgHr)) }
-        parts.append(String(format: String(localized: "Effort +%@"), shown(r.liveStrain)))
-        return parts.joined(separator: " · ")
-    }
-
     private var planDetail: String? {
         guard let t = target else { return nil }
         return String(format: String(localized: "Today's Effort target %@"), targetText(t))
@@ -130,6 +120,28 @@ struct NunaAnyaTodayCard: View {
         guard let effort else { return nil }
         if let t = target { return String(format: String(localized: "Effort %@ of %@ today"), shown(effort), targetText(t)) }
         return String(format: String(localized: "Effort %@ today"), shown(effort))
+    }
+}
+
+/// The card while a session is on. Its minutes tick on their own; the heart rate follows the strap.
+private struct RunningSessionCard: View {
+    let running: AppModel.ActiveWorkout
+    let effort: String
+    let onResume: () -> Void
+    let onCoach: () -> Void
+    @EnvironmentObject private var model: AppModel
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 15)) { tick in
+            let secs = max(0, Int(running.elapsed(at: tick.date)))
+            let time = secs >= 3600 ? String(format: "%d:%02d:%02d", secs / 3600, (secs % 3600) / 60, secs % 60) : String(format: "%d:%02d", secs / 60, secs % 60)
+            var parts = [time]
+            if let bpm = model.bpm { parts.append(String(format: String(localized: "%d bpm"), bpm)) }
+            parts.append(String(format: String(localized: "Effort +%@"), effort))
+            return NunaAnyaCard(verbatim: String(localized: "Session in progress"),
+                                detail: String(localized: String.LocalizationValue(running.sport)) + " · " + parts.joined(separator: " · "),
+                                progress: nil, buttonTitle: "Resume", onButton: onResume, action: onCoach)
+        }
     }
 }
 #endif

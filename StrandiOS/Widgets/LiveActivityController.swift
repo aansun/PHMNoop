@@ -28,7 +28,8 @@ final class LiveActivityController {
     /// refreshed every ~2 s while streaming, so this never bites a live session; it auto-greys a
     /// frozen activity if the app is suspended/killed without an explicit end (a missed-tick safety net
     /// on top of the connected-driven end below).
-    private static let staleAfter: TimeInterval = 120
+    private static let staleAfter: TimeInterval = 600
+    private static let staleAfterDisconnected: TimeInterval = 3 * 3600
 
     /// Whether the current activity was started for a workout. This is kept separately from the
     /// content state so the transition from workout → ordinary live HR can end cleanly when the
@@ -87,13 +88,12 @@ final class LiveActivityController {
             return
         }
 
-        // End the ordinary live-HR activity when the live link drops. A workout deliberately stays up
-        // through that disconnect so the user can finish the session and its timer remains visible.
-        if !connected && !workoutActive {
-            Task { await end() }
-            return
-        }
-        guard workoutActive || bpm != nil else { return }
+        // The banner outlives the strap link. It used to end when the link dropped, but iOS only lets an app START a Live Activity while it is
+        // in the foreground: once ended in the background (a locked phone, a strap that reconnects on its own) there was no way to bring it back
+        // until the app was opened again, which is why it seemed to vanish after a few minutes. It now stays, says it is reconnecting, and
+        // carries on when the heart rate returns. It is ended only by the user (the setting) or by the system's eight-hour limit.
+        if !connected && !workoutActive && activity == nil { return }
+        guard workoutActive || bpm != nil || activity != nil else { return }
 
         let state = NOOPActivityAttributes.ContentState(
             bpm: bpm,
@@ -120,7 +120,8 @@ final class LiveActivityController {
         // A workout owns this activity until End/Discard. Do not let a temporary strap disconnect or
         // quiet GPS stream make the Lock Screen activity stale while the workout clock is still live.
         // Ordinary live-HR activity keeps the shorter freshness date as a safety net.
-        let staleDate: Date? = workoutActive ? nil : Date().addingTimeInterval(Self.staleAfter)
+        // A long window: the number is frozen while the app is suspended, and the "Reconnecting" line, not a dimmed banner, tells the truth.
+        let staleDate: Date? = workoutActive ? nil : Date().addingTimeInterval(connected ? Self.staleAfter : Self.staleAfterDisconnected)
         // Track the lifecycle even when the content update is throttled. A workout can start within
         // two seconds of the previous live-HR tick, and its later end must still be able to close the
         // activity without waiting for another HR sample.
