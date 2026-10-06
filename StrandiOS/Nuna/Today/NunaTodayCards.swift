@@ -203,42 +203,70 @@ struct NunaAnyaCard: View {
         if cardsOn { content }
     }
 
-    private var content: some View {
+    @ViewBuilder private var content: some View {
+        if let buttonTitle, let onButton { stacked(buttonTitle, onButton) } else { inline }
+    }
+
+    private var label: some View {
+        Text("Anya")
+            .font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(NunaThemePrefs.skin == .whp ? nil : .uppercase)
+            .foregroundStyle(NunaPalette.textSecondary)
+    }
+
+    private var body_: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            title
+                .font(.nuna(size: 16, weight: .bold))
+                .foregroundStyle(NunaPalette.textPrimary)
+                .multilineTextAlignment(.leading)
+                .fixedSize(horizontal: false, vertical: true).textCase(nil)
+            if let detail {
+                Text(verbatim: detail).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.top, 2)
+            }
+            if let progress {
+                NunaProgressBar(fraction: min(max(progress, 0), 1), color: progressColor).frame(height: 6).padding(.top, 6)
+            }
+        }
+    }
+
+    /// No button: the icon, the words and a chevron in one row, the whole card opens Anya.
+    private var inline: some View {
         NunaCard(small: true, highlight: highlight, padding: EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)) {
-            HStack(spacing: 12) {
+            Button(action: action) {
+                HStack(spacing: 12) {
+                    AnyaIconTile()
+                    VStack(alignment: .leading, spacing: 2) {
+                        label
+                        body_
+                    }
+                    Spacer(minLength: 4)
+                    Image(systemName: "chevron.right")
+                        .font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                }
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    /// With an action: the icon and "Anya" on top, the words across the full width under them, and the button under that, full width.
+    private func stacked(_ buttonTitle: LocalizedStringKey, _ onButton: @escaping () -> Void) -> some View {
+        NunaCard(small: true, highlight: highlight, padding: EdgeInsets(top: 14, leading: 16, bottom: 16, trailing: 16)) {
+            VStack(alignment: .leading, spacing: 14) {
                 Button(action: action) {
-                    HStack(spacing: 12) {
-                        AnyaIconTile()
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Anya")
-                                .font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(NunaThemePrefs.skin == .whp ? nil : .uppercase)
-                                .foregroundStyle(NunaPalette.textSecondary)
-                            title
-                                .font(.nuna(size: 16, weight: .bold))
-                                .foregroundStyle(NunaPalette.textPrimary)
-                                .multilineTextAlignment(.leading)
-                                .fixedSize(horizontal: false, vertical: true).textCase(nil)
-                            if let detail {
-                                Text(verbatim: detail).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                                    .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.top, 2)
-                            }
-                            if let progress {
-                                NunaProgressBar(fraction: min(max(progress, 0), 1), color: progressColor).frame(height: 6).padding(.top, 6)
-                            }
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(spacing: 10) {
+                            AnyaIconTile()
+                            label
+                            Spacer(minLength: 4)
+                            Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                         }
-                        Spacer(minLength: 4)
-                        if buttonTitle == nil {
-                            Image(systemName: "chevron.right")
-                                .font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                        }
+                        body_.frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
                 .buttonStyle(.plain)
-                if let buttonTitle, let onButton {
-                    Button(action: onButton) { Text(buttonTitle) }
-                        .buttonStyle(.nuna(.primary, height: 40))
-                        .fixedSize()
-                }
+                Button(action: onButton) { Text(buttonTitle).frame(maxWidth: .infinity) }
+                    .buttonStyle(.nuna(.primary, height: 44))
             }
         }
     }
