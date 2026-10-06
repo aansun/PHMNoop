@@ -49,9 +49,20 @@ enum NunaAnyaModule: String, Equatable {
     }
 }
 
+/// The one metric a detail screen is about, so the sheet reads that and not the whole module.
+struct NunaAnyaMetric: Equatable {
+    let key: String
+    let source: String
+    let title: String
+    let unit: String
+    let decimals: Int
+    let higherIsBetter: Bool?
+}
+
 @MainActor
 enum NunaAnyaReader {
-    static func read(context: String, repo: Repository, profile: ProfileStore, scale: EffortScale) async -> NunaAnyaRead? {
+    static func read(context: String, metric: NunaAnyaMetric? = nil, repo: Repository, profile: ProfileStore, scale: EffortScale) async -> NunaAnyaRead? {
+        if let metric { return await metricRead(metric, repo: repo, profile: profile) }
         let module = NunaAnyaModule(context: context)
         switch module {
         case .today, .nutrition, .device: return await today(module, repo: repo, profile: profile, scale: scale)
@@ -196,6 +207,71 @@ enum NunaAnyaReader {
                                         detail: String(localized: "\(minutes) minutes of training in the last 7 days."),
                                         read: ["Workouts 7 days", "Effort"], module: .workouts, questions: questions(.workouts)),
                            values: ["sessions": Double(week.count), "minutes": Double(minutes), "weekEffort": Double(UnitFormatter.effortDisplay(effort, scale: scale)) ?? effort])
+    }
+
+    // MARK: One metric
+
+    /// What Anya says on a single-metric screen: the latest reading, against yesterday and against the wearer's own 30 days, from the
+    /// stored daily series of that metric and nothing else. Nil when there is no reading to cite.
+    private static func metricRead(_ m: NunaAnyaMetric, repo: Repository, profile: ProfileStore) async -> NunaAnyaRead? {
+        if m.key == "stress" { return await stressRead(m, repo: repo, profile: profile) }
+        let series = await repo.exploreSeries(key: m.key, source: m.source, days: 60)
+        guard let latest = series.last else { return nil }
+        let earlier = series.dropLast().suffix(30).map(\.value)
+        func f(_ v: Double) -> String { String(format: "%.\(m.decimals)f", locale: AppLanguage.activeLocale, v) }
+        let unit = m.unit.isEmpty ? "" : (m.unit == "%" ? "%" : " " + m.unit)
+        var head = "\(m.title) \(f(latest.value))\(unit)"
+        var read = [m.title]
+        if earlier.count >= 5 {
+            let avg = earlier.reduce(0, +) / Double(earlier.count)
+            let tol = max(abs(avg) * 0.03, m.decimals == 0 ? 0.5 : 0.05)
+            let word = abs(latest.value - avg) <= tol ? String(localized: "in line with")
+                : (latest.value > avg ? String(localized: "above") : String(localized: "below"))
+            head += ", \(word) " + String(localized: "your \(earlier.count)-day average (\(f(avg)))")
+            read.append(String(localized: "\(earlier.count) days"))
+        }
+        var detail: String?
+        if series.count >= 2 {
+            let prev = series[series.count - 2].value, d = latest.value - prev
+            // "Down 0" is no news: a move too small to show at this precision counts as the same.
+            let tiny = Double(f(abs(d))) == 0
+            detail = tiny ? String(localized: "Same as the day before (\(f(prev))).")
+                : (d > 0 ? String(localized: "Up \(f(abs(d))) from the day before (\(f(prev))).") : String(localized: "Down \(f(abs(d))) from the day before (\(f(prev))).")) 
+        }
+        return NunaAnyaRead(headline: head, detail: detail, read: read, module: .health, questions: metricQuestions(m))
+    }
+
+    private static func stressRead(_ m: NunaAnyaMetric, repo: Repository, profile: ProfileStore) async -> NunaAnyaRead? {
+        let model = NunaTodayModel()
+        await model.load(repo: repo, profile: profile)
+        let level = model.stressCurve.flatMap { StressDayCurve.latestLevel($0) } ?? model.stress.map { min(max($0, 0), 3) }
+        guard let level else { return nil }
+        func f(_ v: Double) -> String { String(format: "%.1f", locale: AppLanguage.activeLocale, v) }
+        var head = String(localized: "Stress \(f(level)) of 3")
+        if let base = model.stressBaseline {
+            let d = level - base
+            head += ", " + (abs(d) < 0.05 ? String(localized: "at your baseline (\(f(base)))")
+                            : (d < 0 ? String(localized: "calmer than your baseline (\(f(base)))") : String(localized: "tenser than your baseline (\(f(base)))")))
+        }
+        var detail: String?
+        if let curve = model.stressCurve, curve.hours.contains(where: { $0.level != nil }) {
+            detail = String(localized: "High stress for \(StressTrace.clock(minutes: StressDayCurve.highMinutes(curve))) hours so far. Moments when you were moving are left out.")
+        }
+        var read = ["Stress"]
+        if model.hrv != nil { read.append("HRV") }
+        if model.restingHr != nil { read.append("Resting HR") }
+        return NunaAnyaRead(headline: head, detail: detail, read: read, module: .health, questions: metricQuestions(m))
+    }
+
+    /// Questions about this metric, in this metric's words.
+    private static func metricQuestions(_ m: NunaAnyaMetric) -> [NunaAnyaQuestion] {
+        let t = m.title
+        return [NunaAnyaQuestion(title: String(localized: "Is my \(t) normal for me?"),
+                                 prompt: "Is my \(t) normal for me? Compare my latest reading with my own recent days and say whether it is worth attention."),
+                NunaAnyaQuestion(title: String(localized: "Why did \(t) change?"),
+                                 prompt: "Why might my \(t) have changed compared with the days before? Look at my sleep, training and journal for triggers."),
+                NunaAnyaQuestion(title: String(localized: "What affects \(t)?"),
+                                 prompt: "What affects \(t) and what could I do to keep it in a good range, given my own numbers?")]
     }
 
     // MARK: Questions per module (AnyaSheet*.dc.html)

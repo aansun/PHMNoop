@@ -348,7 +348,10 @@ struct NunaMetricDetailView: View {
             }
         }
         .task(id: "\(metric.id)-\(repo.refreshSeq)") { await series.load(repo: repo, key: metric.key, source: metric.source, days: usesTrendCard ? 400 : 190) }
-        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: metric.title) }
+        .sheet(isPresented: $showCoach) {
+            NunaAnyaSheet(context: metric.title, metric: NunaAnyaMetric(key: metric.key, source: metric.source, title: metric.title, unit: metric.unit,
+                                                                       decimals: metric.decimals, higherIsBetter: metric.higherIsBetter))
+        }
     }
 
     private var previous: Double? {
@@ -530,7 +533,9 @@ struct NunaStressDetailView: View {
         .sheet(isPresented: $showBreathing) {
             NavigationStack { NunaBreathView().toolbar(.hidden, for: .navigationBar) }
         }
-        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "stress") }
+        .sheet(isPresented: $showCoach) {
+            NunaAnyaSheet(context: "stress", metric: NunaAnyaMetric(key: "stress", source: "my-whoop", title: String(localized: "Stress"), unit: "", decimals: 1, higherIsBetter: false))
+        }
     }
 
     private var chartCard: some View {

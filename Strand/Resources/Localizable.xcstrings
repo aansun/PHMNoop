@@ -1,6 +1,48 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "in line with": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "sejalan dengan"}}
+    } },
+    "above": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "di atas"}}
+    } },
+    "below": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "di bawah"}}
+    } },
+    "your %lld-day average (%@)": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "rata-rata %1$lld harimu (%2$@)"}}
+    } },
+    "Same as the day before (%@).": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sama seperti hari sebelumnya (%@)."}}
+    } },
+    "Up %@ from the day before (%@).": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Naik %1$@ dari hari sebelumnya (%2$@)."}}
+    } },
+    "Down %@ from the day before (%@).": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Turun %1$@ dari hari sebelumnya (%2$@)."}}
+    } },
+    "at your baseline (%@)": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "sesuai baselinemu (%@)"}}
+    } },
+    "calmer than your baseline (%@)": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "lebih tenang dari baselinemu (%@)"}}
+    } },
+    "tenser than your baseline (%@)": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "lebih tegang dari baselinemu (%@)"}}
+    } },
+    "High stress for %@ hours so far. Moments when you were moving are left out.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Stres tinggi selama %@ jam sejauh ini. Saat kamu bergerak tidak dihitung."}}
+    } },
+    "Is my %@ normal for me?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Apakah %@-ku normal untukku?"}}
+    } },
+    "Why did %@ change?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mengapa %@ berubah?"}}
+    } },
+    "What affects %@?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Apa yang memengaruhi %@?"}}
+    } },
     "High %@ hrs": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Tinggi %@ jam"}}
     } },

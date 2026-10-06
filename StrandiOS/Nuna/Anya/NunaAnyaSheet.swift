@@ -8,6 +8,8 @@ import StrandAnalytics
 /// allowed; follow-up questions are answered inside the sheet, and "Open full conversation" hands over to the Anya tab.
 struct NunaAnyaSheet: View {
     let context: String
+    /// Set by a single-metric screen, so the read and the questions are about that metric.
+    var metric: NunaAnyaMetric?
     @EnvironmentObject private var coach: AICoachEngine
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
@@ -63,8 +65,8 @@ struct NunaAnyaSheet: View {
         }
         .presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
         .preferredColorScheme(NunaTheme.colorScheme)
-        .task(id: context) {
-            read = await NunaAnyaReader.read(context: context, repo: repo, profile: profile, scale: UnitPrefs.resolveEffortScale(effortScaleRaw))
+        .task(id: "\(context)|\(metric?.key ?? "")") {
+            read = await NunaAnyaReader.read(context: context, metric: metric, repo: repo, profile: profile, scale: UnitPrefs.resolveEffortScale(effortScaleRaw))
             loaded = true
         }
     }
@@ -79,7 +81,7 @@ struct NunaAnyaSheet: View {
                 Text("Anya sees").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             Spacer()
-            Text(module.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(metric.map { LocalizedStringKey($0.title) } ?? module.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 .padding(.horizontal, 12).frame(height: 30).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
         }
     }
