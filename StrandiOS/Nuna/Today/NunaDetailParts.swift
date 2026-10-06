@@ -178,6 +178,22 @@ struct NunaGaugeHeroCard<Note: View>: View {
 
 /// The top of the Charge, Effort and Rest screens: a large ring straight on the screen (no card) with the score inside and its
 /// name underneath, the status chip above and a short note below. The contributors follow as plain rows.
+/// The "i" button that opens or closes a short explanation under a ring, the same control as on the Stress screen.
+struct NunaInfoButton: View {
+    @Binding var isOn: Bool
+    var body: some View {
+        Button { withAnimation(.snappy) { isOn.toggle() } } label: {
+            Image(systemName: "info").font(.nuna(size: 14, weight: .bold)).foregroundStyle(isOn ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+                .frame(width: 32, height: 32)
+                .background(isOn ? NunaPalette.glassStrong : .clear, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(isOn ? NunaPalette.textPrimary : NunaPalette.textSecondary, lineWidth: 1.6))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text("About this score"))
+        .accessibilityAddTraits(isOn ? .isSelected : [])
+    }
+}
+
 struct NunaScoreHero<Note: View>: View {
     let caption: LocalizedStringKey
     var chip: LocalizedStringKey?
@@ -189,11 +205,14 @@ struct NunaScoreHero<Note: View>: View {
     let name: LocalizedStringKey
     let color: Color
     let note: Note
+    /// Whether there is anything to explain; without it the info button is left out.
+    var hasNote = true
+    @State private var showInfo = false
 
     init(caption: LocalizedStringKey, chip: LocalizedStringKey? = nil, chipColor: Color? = nil, fraction: Double, number: String,
-         unit: String = "", suffix: String = "", name: LocalizedStringKey, color: Color, @ViewBuilder note: () -> Note) {
+         unit: String = "", suffix: String = "", name: LocalizedStringKey, color: Color, hasNote: Bool = true, @ViewBuilder note: () -> Note) {
         self.caption = caption; self.chip = chip; self.chipColor = chipColor; self.fraction = fraction; self.number = number
-        self.unit = unit; self.suffix = suffix; self.name = name; self.color = color; self.note = note()
+        self.unit = unit; self.suffix = suffix; self.name = name; self.color = color; self.hasNote = hasNote; self.note = note()
     }
 
     var body: some View {
@@ -202,6 +221,7 @@ struct NunaScoreHero<Note: View>: View {
                 Text(caption).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 Spacer()
                 if let chip { NunaChip(chip, color: chipColor) }
+                if hasNote { NunaInfoButton(isOn: $showInfo) }
             }
             NunaRingGauge(fraction: fraction, color: color, size: 300, lineWidth: 24) {
                 VStack(spacing: 6) {
@@ -217,7 +237,7 @@ struct NunaScoreHero<Note: View>: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            note.multilineTextAlignment(.center).frame(maxWidth: .infinity)
+            if showInfo && hasNote { note.multilineTextAlignment(.center).frame(maxWidth: .infinity).transition(.opacity) }
         }
     }
 }

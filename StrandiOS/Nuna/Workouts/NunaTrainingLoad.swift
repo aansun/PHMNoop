@@ -17,6 +17,7 @@ struct NunaTrainingLoadView: View {
     @State private var weeks = 5
     @State private var zoneMinutes: [Double] = [0, 0, 0, 0, 0]
     @State private var showCoach = false
+    @State private var showBalanceInfo = false
 
     private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
     private func eff(_ v: Double) -> Double { UnitFormatter.effortValue(v, scale: scale) }
@@ -141,9 +142,12 @@ struct NunaTrainingLoadView: View {
                     nunaTrendsCap("Load balance")
                     Spacer()
                     if let ratio { NunaChip(verbatim: String(format: "%.2f", locale: AppLanguage.activeLocale, ratio), color: band == .optimal ? NunaPalette.charge : NunaPalette.warning) }
+                    if ratio != nil { NunaInfoButton(isOn: $showBalanceInfo) }
                 }
                 if let ratio {
-                    Text("Your last 7 days against your usual week over 6 weeks. Between 0.8 and 1.3 is the safe range.").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    if showBalanceInfo {
+                        Text("Your last 7 days against your usual week over 6 weeks. Between 0.8 and 1.3 is the safe range.").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    }
                     NunaScaleBar(parts: [(3, NunaPalette.zoneBase), (5, NunaPalette.charge), (2, NunaPalette.warning), (2, NunaPalette.alert)], position: min(max((ratio - 0.5) / 1.1, 0), 1))
                     HStack { Text(verbatim: "0,5"); Spacer(); Text(verbatim: "1,6") }.font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     HStack { Text("Under"); Spacer(); Text("Optimal").foregroundStyle(NunaPalette.charge).fontWeight(.heavy); Spacer(); Text("High"); Spacer(); Text("Excess") }
