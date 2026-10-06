@@ -1,6 +1,48 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Decent": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Lumayan"}}
+    } },
+    "Challenging": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Menantang"}}
+    } },
+    "Full power": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Full power"}}
+    } },
+    "Slide to rate": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Geser untuk menilai"}}
+    } },
+    "Off. Turn it on in Me \u203a Strava": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mati. Nyalakan di Me › Strava"}}
+    } },
+    "Not connected. Connect it in Me \u203a Strava": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Belum terhubung. Hubungkan di Me › Strava"}}
+    } },
+    "Only GPS and treadmill workouts go to Strava": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hanya latihan GPS dan treadmill yang masuk ke Strava"}}
+    } },
+    "On Strava": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sudah di Strava"}}
+    } },
+    "Strava is processing it": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Strava sedang memprosesnya"}}
+    } },
+    "Uploaded automatically": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Diunggah otomatis"}}
+    } },
+    "Upload when you tap OK": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Diunggah saat kamu mengetuk OK"}}
+    } },
+    "Not on Strava yet": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Belum ada di Strava"}}
+    } },
+    "Upload to Strava": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Unggah ke Strava"}}
+    } },
+    "You called the last one challenging, so this stays easy": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Latihan tadi kamu bilang menantang, jadi yang ini ringan saja"}}
+    } },
     "heart rate %lld, %lld over your resting rate": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "detak jantung %1$lld, %2$lld di atas detak istirahatmu"}}
     } },

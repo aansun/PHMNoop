@@ -15,6 +15,9 @@ final class StravaSettingsModel: ObservableObject {
 
     var isConfigured: Bool { hasCredentials }
 
+    /// Re-reads the upload ledger, which an automatic upload writes from its own model instance.
+    func reload() { records = StravaActivityStore.load() }
+
     var savedClientID: String { StravaCredentialStore.load()?.clientId ?? "" }
     var savedClientSecret: String { StravaCredentialStore.load()?.clientSecret ?? "" }
 

@@ -195,7 +195,7 @@ struct NunaAnyaTodayCard: View {
             detail.append(String(format: String(localized: "about +%@–%@"), shown(lo), shown(hi)))
             if hi < n.left * 0.8 { detail.append(String(localized: "not all of it in one go")) }
         }
-        if let f = n.feeling, f == .hard { detail.append(String(localized: "You called the last one hard, so this stays easy")) }
+        if let f = n.feeling, f == .hard { detail.append(String(localized: "You called the last one challenging, so this stays easy")) }
         let title = String(format: String(localized: "Another %d min in zone %d"), n.minutes, n.zone)
         return NunaAnyaCard(verbatim: title, detail: detail.joined(separator: " · "), progress: nil,
                             buttonTitle: "Start",
