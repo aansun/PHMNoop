@@ -1,6 +1,15 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "What's happening today, %@?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Apa yang terjadi hari ini, %@?"}}
+    } },
+    "What's happening on %@?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Apa yang terjadi pada %@?"}}
+    } },
+    "Save journal": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Simpan jurnal"}}
+    } },
     "A notification in the evening and a card in Today": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Notifikasi di malam hari dan kartu di Hari ini"}}
     } },
