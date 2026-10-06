@@ -515,14 +515,15 @@ struct NunaQuickChip: View {
     let action: () -> Void
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 8) {
-                Image(systemName: systemImage).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            HStack(spacing: 10) {
+                Image(systemName: systemImage).font(.nuna(size: 13, weight: .bold)).foregroundStyle(tint ?? NunaPalette.textPrimary)
+                    .frame(width: 28, height: 28).background((tint ?? NunaPalette.textPrimary).opacity(0.14), in: Circle())
                 Text(title).font(.nuna(size: 13.5, weight: .bold))
             }
             .foregroundStyle(NunaPalette.textPrimary)
-            .padding(.horizontal, 16).frame(height: 40)
-            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+            .padding(.leading, 8).padding(.trailing, 16).frame(height: 44)
+            .background(NunaPalette.glassStrong, in: Capsule())
+            .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
         }
         .buttonStyle(.plain)
     }
@@ -546,23 +547,26 @@ struct NunaJournalWeekCard: View {
     var body: some View {
         Button(action: onOpen) {
             NunaCard(small: true) {
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 14) {
                     HStack {
                         Text("My journal").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                             .foregroundStyle(NunaPalette.textPrimary)
                         Spacer()
                         Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
-                    HStack(spacing: 0) {
+                    HStack(spacing: 4) {
                         ForEach(days, id: \.self) { d in
-                            let key = Repository.localDayKey(d)
                             let isToday = Calendar.current.isDateInToday(d)
-                            VStack(spacing: 10) {
-                                Text(verbatim: Self.weekday(d)).font(.nuna(size: 11.5, weight: isToday ? .heavy : .bold)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                            VStack(spacing: 6) {
+                                Text(verbatim: Self.weekday(d)).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                                    .foregroundStyle(NunaPalette.textSecondary)
+                                Text(verbatim: String(Calendar.current.component(.day, from: d))).font(.nuna(size: 17, weight: .bold, design: NunaType.design))
                                     .foregroundStyle(isToday ? NunaPalette.textPrimary : NunaPalette.textSecondary)
-                                mark(done: logged.contains(key), today: isToday)
+                                mark(done: logged.contains(Repository.localDayKey(d)))
                             }
-                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10).frame(maxWidth: .infinity)
+                            .background(isToday ? NunaPalette.glassStrong : .clear, in: Capsule())
+                            .overlay(Capsule().strokeBorder(isToday ? NunaPalette.hairline : .clear, lineWidth: 1))
                         }
                     }
                 }
@@ -575,13 +579,12 @@ struct NunaJournalWeekCard: View {
         }
     }
 
-    @ViewBuilder private func mark(done: Bool, today: Bool) -> some View {
+    @ViewBuilder private func mark(done: Bool) -> some View {
         if done {
-            Image(systemName: "checkmark").font(.nuna(size: 13, weight: .black)).foregroundStyle(.black)
-                .frame(width: 30, height: 30).background(NunaPalette.charge, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+            Image(systemName: "checkmark").font(.nuna(size: 11, weight: .black)).foregroundStyle(.black)
+                .frame(width: 22, height: 22).background(NunaPalette.charge, in: Circle())
         } else {
-            Circle().fill(today ? NunaPalette.textMuted.opacity(0.55) : .clear).frame(width: 30, height: 30)
-                .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(today ? NunaPalette.textSecondary : NunaPalette.hairline, lineWidth: 2))
+            Circle().strokeBorder(NunaPalette.hairline, lineWidth: 1.5).frame(width: 22, height: 22)
         }
     }
 
