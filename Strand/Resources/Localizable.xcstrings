@@ -1,6 +1,72 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "heart rate %lld, %lld over your resting rate": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "detak jantung %1$lld, %2$lld di atas detak istirahatmu"}}
+    } },
+    "stress %@ of 3": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "stres %@ dari 3"}}
+    } },
+    "Your session ended %lld min ago": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Latihanmu selesai %lld menit lalu"}}
+    } },
+    "Let your body settle first": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Biarkan tubuhmu tenang dulu"}}
+    } },
+    "Water and a shower now, then five minutes of breathing before bed.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Minum dan mandi dulu sekarang, lalu lima menit pernapasan sebelum tidur."}}
+    } },
+    "%@ hours of high stress today": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%@ jam stres tinggi hari ini"}}
+    } },
+    "Five minutes of breathing before bed is worth it": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Lima menit pernapasan sebelum tidur layak dilakukan"}}
+    } },
+    "A slow breath out lowers it, and sleep starts easier.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Embusan napas yang panjang menurunkannya, dan tidur jadi lebih mudah."}}
+    } },
+    "last night was %@ against the %@ you need": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "semalam %1$@ dari %2$@ yang kamu butuhkan"}}
+    } },
+    "Effort %@ is above today's band (up to %@)": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Effort %1$@ di atas rentang hari ini (sampai %2$@)"}}
+    } },
+    "resting heart rate is up %lld bpm": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "detak istirahat naik %lld bpm"}}
+    } },
+    "No breathing needed, but go to bed early": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tidak perlu pernapasan, tapi tidurlah lebih awal"}}
+    } },
+    "Sleep is what puts it back.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tidurlah yang memulihkannya."}}
+    } },
+    "Effort %@ is in today's band": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Effort %@ ada di rentang hari ini"}}
+    } },
+    "You can go straight to sleep": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kamu bisa langsung tidur"}}
+    } },
+    "Nothing in your numbers asks for more.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tidak ada di angkamu yang meminta lebih."}}
+    } },
+    "That is more than enough for today": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Itu lebih dari cukup untuk hari ini"}}
+    } },
+    "Effort %@ is above the %@ band. More training now costs tomorrow's Charge: drink, eat well and sleep early.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Effort %1$@ di atas rentang %2$@. Latihan lagi sekarang mengurangi Charge besok: minum, makan yang cukup, dan tidur lebih awal."}}
+    } },
+    "Target reached, so stop here": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Target tercapai, cukup sampai di sini"}}
+    } },
+    "Effort %@ is in the %@ band, and HRV is %lld ms under your baseline. Keep the rest of the day easy.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Effort %1$@ ada di rentang %2$@, dan HRV %3$lld ms di bawah baselinemu. Santai saja sisa hari ini."}}
+    } },
+    "Target reached, you are done for today": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Target tercapai, selesai untuk hari ini"}}
+    } },
+    "Effort %@ is in the %@ band. The rest of the day is for eating, drinking and an early night.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Effort %1$@ ada di rentang %2$@. Sisa hari untuk makan, minum, dan tidur lebih awal."}}
+    } },
     "not all of it in one go": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "tidak semuanya sekaligus"}}
     } },
