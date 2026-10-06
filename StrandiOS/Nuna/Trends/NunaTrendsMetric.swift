@@ -210,8 +210,10 @@ struct NunaTrendsMetricView: View {
                     } else {
                         NunaColumns(items: order.map { wd in
                             let v = means[wd]
+                            // Each bar takes the colour of the zone its average falls in, the same colours as the zones above; the highest day is full strength.
+                            let zone = v.map { x in zoneColors[min(edges.filter { x >= $0 }.count, zoneColors.count - 1)].opacity(wd == hi?.key ? 1 : 0.7) }
                             return NunaColumns.Item(weekday: NunaTrendsFormat.weekdayShort(wd), date: Date(), fraction: v.map { $0 / top }, valueText: v.map { NunaTrendsFormat.num($0, decimals) },
-                                                    highlight: wd == hi?.key)
+                                                    highlight: wd == hi?.key, color: zone)
                         }, color: bar, highlightColor: color, showsDates: false)
                         if let hi, let lo, hi.key != lo.key {
                             Text(verbatim: String(localized: "Highest on \(longDay(hi.key)), lowest on \(longDay(lo.key))."))

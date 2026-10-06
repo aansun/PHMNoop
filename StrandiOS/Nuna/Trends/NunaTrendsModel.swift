@@ -30,11 +30,25 @@ final class NunaTrendsModel: ObservableObject {
         async let s = repo.exploreSeries(key: "stress", source: "my-whoop", days: 400)
         async let t = repo.exploreSeries(key: "steps_est", source: "my-whoop", days: 400)
         charge = Self.clean(await c); effort = Self.clean(await e); rest = Self.clean(await r)
-        hrv = Self.clean(await h); rhr = Self.clean(await k); stress = Self.clean(await s)
+        hrv = Self.clean(await h); rhr = Self.clean(await k)
+        // Stress is not a stored daily column on every install; the Stress screen derives it from resting heart rate and HRV against
+        // your own baseline, so Trends reads the same daily history the same way.
+        let storedStress = Self.clean(await s)
+        let daysSnapshot = repo.days
+        let derived: Series = await Task.detached(priority: .utility) {
+            StressModel(days: daysSnapshot, stored: storedStress)?.fullTrend.map { (day: Self.utcDay($0.date), value: $0.value) } ?? []
+        }.value
+        stress = derived.isEmpty ? storedStress : Self.clean(derived)
         var st = Self.clean(await t)
         if st.isEmpty { st = Self.clean(await repo.exploreSeries(key: "steps", source: "my-whoop", days: 400)) }
         steps = st
         loaded = true
+    }
+
+    /// `StressModel` keys its days as UTC midnights.
+    nonisolated private static func utcDay(_ d: Date) -> String {
+        let f = DateFormatter(); f.locale = Locale(identifier: "en_US_POSIX"); f.timeZone = TimeZone(identifier: "UTC"); f.dateFormat = "yyyy-MM-dd"
+        return f.string(from: d)
     }
 
     private static func clean(_ s: [(day: String, value: Double)]) -> Series {
