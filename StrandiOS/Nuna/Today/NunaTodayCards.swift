@@ -178,6 +178,10 @@ struct NunaAnyaCard: View {
     var buttonTitle: LocalizedStringKey?
     var onButton: (() -> Void)?
     var highlight = true
+    /// A second line under the title, and a thin bar (0 to 1) under that, for cards that report progress.
+    var detail: String?
+    var progress: Double?
+    var progressColor: Color = NunaPalette.effort
     let action: () -> Void
 
     init(title: LocalizedStringKey, highlight: Bool = true, buttonTitle: LocalizedStringKey? = nil, onButton: (() -> Void)? = nil,
@@ -186,9 +190,10 @@ struct NunaAnyaCard: View {
     }
 
     /// For text that is already localized (the readiness one-liner).
-    init(verbatim: String, buttonTitle: LocalizedStringKey? = nil, onButton: (() -> Void)? = nil,
+    init(verbatim: String, detail: String? = nil, progress: Double? = nil, progressColor: Color = NunaPalette.effort, buttonTitle: LocalizedStringKey? = nil, onButton: (() -> Void)? = nil,
          action: @escaping () -> Void) {
-        self.title = Text(verbatim: verbatim); self.buttonTitle = buttonTitle; self.onButton = onButton; self.action = action
+        self.title = Text(verbatim: verbatim); self.detail = detail; self.progress = progress; self.progressColor = progressColor
+        self.buttonTitle = buttonTitle; self.onButton = onButton; self.action = action
     }
 
     /// "Suggestion cards on each screen" in Anya settings.
@@ -213,6 +218,13 @@ struct NunaAnyaCard: View {
                                 .foregroundStyle(NunaPalette.textPrimary)
                                 .multilineTextAlignment(.leading)
                                 .fixedSize(horizontal: false, vertical: true).textCase(nil)
+                            if let detail {
+                                Text(verbatim: detail).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                    .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.top, 2)
+                            }
+                            if let progress {
+                                NunaProgressBar(fraction: min(max(progress, 0), 1), color: progressColor).frame(height: 6).padding(.top, 6)
+                            }
                         }
                         Spacer(minLength: 4)
                         if buttonTitle == nil {

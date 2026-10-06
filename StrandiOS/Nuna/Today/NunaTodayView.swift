@@ -613,11 +613,8 @@ struct NunaTodayView: View {
             }
         case .synthesis:
             if coachEnabled && model.isToday {
-                NunaAnyaCard(verbatim: dayPlan?.title ?? synthLine, buttonTitle: "Start",
-                             onButton: {
-                                 if let r = dayPlan { router.plannedSession = .init(title: r.title, minutes: r.plan.totalMinutes, zone: r.plan.mainZone) }
-                                 router.requestedDestination = .activeWorkout
-                             }) { showCoach = true }
+                NunaAnyaTodayCard(plan: dayPlan, fallbackLine: synthLine, workouts: model.workouts, effort: model.effort,
+                                  charge: model.charge.pct, onCoach: { showCoach = true })
             }
         case .recoveryVitals:
             if model.stress != nil || model.stressCurve != nil {
