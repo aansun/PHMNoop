@@ -112,7 +112,7 @@ struct NunaAboutView: View {
                 HStack(spacing: 14) {
                     NunaIconTile("waveform.path.ecg")
                     VStack(alignment: .leading, spacing: 3) {
-                        Text("PHMNOOP").font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("PHMN").font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         Text(verbatim: "v\(version) · build \(build)").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer()
@@ -136,7 +136,7 @@ struct NunaAboutView: View {
             NunaCard(small: true) {
                 VStack(alignment: .leading, spacing: 8) {
                     nunaTrendsCap("Credits")
-                    Text("PHMNOOP is an internal fork of NOOP by ryanbr, with an iOS layer, Apple Health integration and on-device Anya. The Nes 2011 (HUNT) non-exercise model is used for fitness age.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    Text("PHMN is an internal fork of NOOP by ryanbr, with an iOS layer, Apple Health integration and on-device Anya. The Nes 2011 (HUNT) non-exercise model is used for fitness age.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
             nunaFootnote("Not a medical device. It does not diagnose or detect disease and does not replace a professional. Not affiliated with WHOOP, Inc.")

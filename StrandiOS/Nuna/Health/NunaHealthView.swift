@@ -671,7 +671,17 @@ struct NunaHealthView: View {
         let goal = repo.hydrationGoalML(profileSex: profile.sex)
         return NunaCard {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Water").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                // The title row opens the water log and its history; the +250 and +500 below add a drink without leaving.
+                NavigationLink(value: TabRoute.hydration) {
+                    HStack {
+                        Text("Water").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Spacer()
+                        Text("Details").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(verbatim: String(format: "%.1f", locale: AppLanguage.activeLocale, Double(waterML) / 1000))
                         .font(.nuna(size: NunaTypeSize.numberL, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(NunaTypeSize.numberL)).foregroundStyle(NunaPalette.textPrimary)

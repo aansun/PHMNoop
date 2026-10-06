@@ -92,7 +92,7 @@ struct NunaAppleHealthView: View {
                             .frame(maxWidth: .infinity).frame(height: 48).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain)
                     if health.auth == .denied {
-                        Text("If you don't see the prompt, allow PHMNOOP under Settings › Health › Data Access & Devices.")
+                        Text("If you don't see the prompt, allow PHMN under Settings › Health › Data Access & Devices.")
                             .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }
                 }

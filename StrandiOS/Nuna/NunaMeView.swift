@@ -65,7 +65,7 @@ struct NunaMeView: View {
                     NunaDivider()
                     row(.about, "About and help", "Version, how it works, credits", "info.circle.fill")
                 }
-                Text("PHMNOOP · a fork of NOOP. Not a medical device.")
+                Text("PHMN · a fork of NOOP. Not a medical device.")
                     .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).frame(maxWidth: .infinity).multilineTextAlignment(.center).textCase(nil)
             }
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 14).padding(.bottom, 24)

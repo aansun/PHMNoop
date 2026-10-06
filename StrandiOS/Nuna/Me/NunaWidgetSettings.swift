@@ -52,7 +52,7 @@ struct NunaWidgetSettingsView: View {
             NunaSettingsGroup("How to add one") {
                 step(1, "Hold the Home Screen until the icons wiggle, then tap +.")
                 NunaDivider()
-                step(2, "Find PHMNOOP and choose a widget and its size.")
+                step(2, "Find PHMN and choose a widget and its size.")
                 NunaDivider()
                 step(3, "For the Lock Screen, hold the Lock Screen and tap Customize.")
             }
