@@ -1,6 +1,10 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "You spent %lld min in zone %lld, %lld%% of the session.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Kamu menghabiskan %1$lld menit di zona %2$lld, %3$lld%% dari sesi." } } } },
+        "You spent %lld min in zone %lld, %lld%% of the session. Your usual is %lld min, so this one ran harder.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Kamu menghabiskan %1$lld menit di zona %2$lld, %3$lld%% dari sesi. Biasanya %4$lld menit, jadi sesi ini lebih berat." } } } },
+        "You spent %lld min in zone %lld, %lld%% of the session. Your usual is %lld min, so this one was lighter.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Kamu menghabiskan %1$lld menit di zona %2$lld, %3$lld%% dari sesi. Biasanya %4$lld menit, jadi sesi ini lebih ringan." } } } },
+        "You spent %lld min in zone %lld, %lld%% of the session. That is about your usual %lld min.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Kamu menghabiskan %1$lld menit di zona %2$lld, %3$lld%% dari sesi. Itu sekitar biasanya, %4$lld menit." } } } },
     "Decent": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Lumayan"}}
     } },
