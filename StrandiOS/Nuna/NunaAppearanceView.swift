@@ -7,7 +7,7 @@ import StrandDesign
 /// (strap automations, History sync, Anya) and are not repeated here; the arrangement of Today is under Optional features.
 struct NunaAppearanceView: View {
     @Environment(\.dismiss) private var dismiss
-    @AppStorage(ExperienceMode.storageKey) private var experienceRaw = ExperienceMode.standard.rawValue
+    @AppStorage(ExperienceMode.storageKey) private var experienceRaw = ExperienceMode.nuna.rawValue
     @AppStorage(NunaTheme.storageKey) private var themeRaw = NunaTheme.Mode.dark.rawValue
     @AppStorage(NunaThemePrefs.skinKey) private var skinRaw = NunaThemePrefs.Skin.standard.rawValue
     @AppStorage(NunaThemePrefs.densityKey) private var densityRaw = NunaThemePrefs.Density.standard.rawValue
@@ -17,7 +17,7 @@ struct NunaAppearanceView: View {
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScale = EffortScale.hundred.rawValue
     @State private var iconError: String?
 
-    private var experience: ExperienceMode { ExperienceMode(rawValue: experienceRaw) ?? .standard }
+    private var experience: ExperienceMode { ExperienceMode(rawValue: experienceRaw) ?? .nuna }
 
     var body: some View {
         ScrollView {

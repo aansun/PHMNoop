@@ -6,10 +6,10 @@ import StrandDesign
 /// so a user can always go back: Nuna → Me → Appearance → Experience, and Default → Settings → Experience.
 struct ExperienceView: View {
     @Environment(\.dismiss) private var dismiss
-    @AppStorage(ExperienceMode.storageKey) private var experienceRaw = ExperienceMode.standard.rawValue
+    @AppStorage(ExperienceMode.storageKey) private var experienceRaw = ExperienceMode.nuna.rawValue
     @State private var pending: ExperienceMode?
 
-    private var current: ExperienceMode { ExperienceMode(rawValue: experienceRaw) ?? .standard }
+    private var current: ExperienceMode { ExperienceMode(rawValue: experienceRaw) ?? .nuna }
 
     var body: some View {
         ScrollView {
