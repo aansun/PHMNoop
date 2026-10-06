@@ -266,7 +266,7 @@ struct NunaStressCard: View {
                             }
                             comparison
                         }
-                        .frame(width: 148, alignment: .leading)
+                        .frame(width: 160, alignment: .leading)
                         NunaStressDayChart(points: curve?.timeline ?? []).frame(height: 116)
                     }
                 }
@@ -280,7 +280,16 @@ struct NunaStressCard: View {
         if isToday, let highMin, let typicalMin {
             let diff = highMin - typicalMin
             let tint: Color = diff < 0 ? NunaPalette.charge : (diff > 0 ? NunaPalette.warning : NunaPalette.textSecondary)
-            NunaChip(verbatim: String(format: String(localized: "vs. typical %@"), Self.weekday), systemImage: diff < 0 ? "arrowtriangle.down.fill" : (diff > 0 ? "arrowtriangle.up.fill" : "equal"), color: tint)
+            // One line whatever the language: the text shrinks a little before it would wrap.
+            HStack(spacing: 5) {
+                Image(systemName: diff < 0 ? "arrowtriangle.down.fill" : (diff > 0 ? "arrowtriangle.up.fill" : "equal")).font(.nuna(size: 9, weight: .bold))
+                Text(verbatim: String(format: String(localized: "vs. typical %@"), Self.weekday)).font(.nuna(size: 11.5, weight: .bold))
+                    .lineLimit(1).minimumScaleFactor(0.65)
+            }
+            .foregroundStyle(tint).padding(.horizontal, 10).frame(height: 28)
+            .background(tint.opacity(0.16), in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous).strokeBorder(tint.opacity(0.35), lineWidth: 1))
+            .fixedSize(horizontal: false, vertical: true)
         }
     }
 
