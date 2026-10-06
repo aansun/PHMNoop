@@ -678,7 +678,7 @@ struct NunaTodayView: View {
                                     Task { _ = await repo.logHydration(amountMl: 250); repo.noteHydrationChanged() }
                                 }
                             }
-                            NunaQuickChip(title: "Mood", systemImage: "heart") { showMood = true }
+                            NunaQuickChip(title: "Mood", systemImage: "face.smiling") { showMood = true }
                         }
                     }
                 }
