@@ -268,8 +268,8 @@ struct NunaAnyaCard: View {
                 Button(action: onButton) {
                     Text(buttonTitle).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         .padding(.horizontal, 22).frame(height: 40)
-                        .background(NunaPalette.textPrimary.opacity(0.12), in: Capsule())
-                        .overlay(Capsule().strokeBorder(NunaPalette.textPrimary.opacity(0.18), lineWidth: 1))
+                        .background(NunaPalette.textPrimary.opacity(0.12), in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous).strokeBorder(NunaPalette.textPrimary.opacity(0.18), lineWidth: 1))
                 }
                 .buttonStyle(.plain)
             }
