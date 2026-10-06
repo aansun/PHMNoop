@@ -431,9 +431,10 @@ public struct OverviewHRChart: View {
         .chartXAxis {
             AxisMarks(values: .automatic(desiredCount: xAxisDesiredCount)) { _ in
                 AxisGridLine().foregroundStyle(StrandPalette.hairline.opacity(0.4))
+                // Same size and weight as the other charts' time axis (TrendChart), one size for every label.
                 AxisValueLabel(collisionResolution: .greedy)
                     .foregroundStyle(StrandPalette.textTertiary)
-                    .font(StrandFont.footnote)
+                    .font(.system(size: NunaThemePrefs.skin == .whp ? 10 : 12, weight: .medium))
             }
         }
         .chartYAxis {

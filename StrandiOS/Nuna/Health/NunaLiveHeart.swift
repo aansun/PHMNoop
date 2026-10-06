@@ -184,13 +184,19 @@ struct NunaDeepTimelineView: View {
     }
     private var dayBounds: ClosedRange<Date> { dayStart...dayStart.addingTimeInterval(86_400) }
     private var panBounds: ClosedRange<Date> { dayStart.addingTimeInterval(-2 * 86_400)...dayBounds.upperBound }
+    /// What the chart spans when it is not zoomed: from the first to the last reading on show, so it opens full and the latest
+    /// value sits at the right edge instead of trailing off into an empty rest of the day.
+    private var chartRange: ClosedRange<Date> {
+        guard let first = series.points.first?.date, let last = series.points.last?.date, last > first else { return dayBounds }
+        return max(first, dayBounds.lowerBound)...min(last, dayBounds.upperBound)
+    }
     private var visibleWindow: ClosedRange<Date> { zoomDomain ?? dayBounds }
     private var isLatest: Bool { dayStart >= Repository.logicalDayStart(Date()) }
     private let metrics: [Repository.TimelineMetric] = [.hr, .hrv, .spo2, .skinTemp, .respiration, .motion, .bandSleepState]
 
     var body: some View {
         NunaDetailScreen("Deep timeline") {
-            metricChips
+            metricMenu
             chartCard
             hint
         }
@@ -218,25 +224,26 @@ struct NunaDeepTimelineView: View {
         "\(metric.rawValue)|\(Int(dayStart.timeIntervalSince1970))|\(Int(visibleWindow.lowerBound.timeIntervalSince1970))|\(Int(visibleWindow.upperBound.timeIntervalSince1970))|\(repo.refreshSeq)"
     }
 
-    private var metricChips: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(metrics) { m in
-                    let on = metric == m
-                    Button { metric = m } label: {
-                        HStack(spacing: 7) {
-                            Circle().fill(tint(m)).frame(width: 8, height: 8)
-                            Text(verbatim: m.title).font(.nuna(size: 14, weight: .bold))
-                        }
-                        .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
-                        .padding(.horizontal, 14).frame(height: 40)
-                        .background(on ? NunaPalette.glassStrong : Color.clear, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(on ? tint(m).opacity(0.7) : NunaPalette.hairline, lineWidth: on ? 1.5 : 1))
-                    }.buttonStyle(.plain)
+    /// The signal picker: one dropdown instead of a row of tabs, tinted with the colour of the signal on show.
+    private var metricMenu: some View {
+        Menu {
+            ForEach(metrics) { m in
+                Button { metric = m } label: {
+                    if metric == m { Label(m.title, systemImage: "checkmark") } else { Text(verbatim: m.title) }
                 }
             }
-            .padding(.vertical, 2)
+        } label: {
+            HStack(spacing: 10) {
+                Circle().fill(tint(metric)).frame(width: 9, height: 9)
+                Text(verbatim: metric.title).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+                Spacer(minLength: 8)
+                Image(systemName: "chevron.up.chevron.down").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+            }
+            .padding(.horizontal, 16).frame(maxWidth: .infinity, minHeight: 48)
+            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(tint(metric).opacity(0.7), lineWidth: 1.5))
         }
+        .buttonStyle(.plain)
     }
 
     /// The day switcher that sits in the top right of the chart card: previous day, the date, next day.
@@ -275,17 +282,17 @@ struct NunaDeepTimelineView: View {
         let v = displayPoints.map(\.value)
         return NunaCard(padding: EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16)) {
             VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .center) {
-                    Text(verbatim: metric.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                HStack(alignment: .top) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(alignment: .firstTextBaseline, spacing: 5) {
+                            Text(verbatim: displayPoints.last.map { format($0.value) } ?? "–").font(.nuna(size: 40, weight: .bold, design: NunaType.design))
+                                .foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: unit).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        }
+                        Text(verbatim: resolution).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    }
                     Spacer()
                     dayNav
-                }
-                HStack(alignment: .firstTextBaseline, spacing: 5) {
-                    Text(verbatim: displayPoints.last.map { format($0.value) } ?? "–").font(.nuna(size: 40, weight: .bold, design: NunaType.design))
-                        .foregroundStyle(NunaPalette.textPrimary)
-                    Text(verbatim: unit).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                    Spacer()
-                    Text(verbatim: resolution).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 Group {
                     if loading && series.points.isEmpty {
@@ -299,7 +306,7 @@ struct NunaDeepTimelineView: View {
                     } else {
                         OverviewHRChart(points: displayPoints, sleep: sleepSpan, workouts: workoutSpans,
                                         gradient: Gradient(colors: [tint(metric).opacity(0.6), tint(metric)]),
-                                        valueRange: range(displayPoints), xRange: dayBounds, height: 280, touchScrub: true,
+                                        valueRange: range(displayPoints), xRange: chartRange, height: 280, touchScrub: true,
                                         zoomDomain: $zoomDomain, zoomBounds: panBounds,
                                         valueFormat: { format($0) },
                                         dateFormat: { Self.timeFmt.string(from: $0) })
