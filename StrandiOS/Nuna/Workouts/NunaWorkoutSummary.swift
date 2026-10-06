@@ -56,13 +56,11 @@ struct NunaWorkoutSummaryView: View {
         }
         mainCard(r, secs)
         if let s = r.strain { effortCard(s) }
-        NunaWorkoutReviewCard(startTs: r.startTs, sport: r.sport)
+        NunaWorkoutReviewSection(row: r)
         zonesCard(r)
         hrCard(r)
         if let line = anyaLine(r) { NunaAnyaCard(verbatim: line) { showCoach = true } }
-        NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-            NunaListRow("Apple Health", subtitle: "Workouts, energy and distance are written by the sync. Manage it in Me", systemImage: "heart.text.square")
-        }
+        NunaWorkoutStravaCard(row: r, afterWorkout: false, checked: .constant(false))
         Button(role: .destructive) { confirmDelete = true } label: {
             Text("Delete").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText)
                 .frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
