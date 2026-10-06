@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/assets/logo-v3.png" alt="NOOP" width="72">
+  <img src="assets/logo-v3.png" alt="NOOP" width="72">
 </p>
 
 <h1 align="center">NOOP</h1>
@@ -29,20 +29,20 @@
   <a href="https://discord.com/invite/wKgyqVdjrP">💬&nbsp;Discord</a> ·
   <a href="https://www.reddit.com/r/NoopBand/">👽&nbsp;Reddit</a> ·
   <a href="#features">Features</a> ·
-  <a href="docs/PROTOCOL.md">Protocol</a> ·
-  <a href="docs/RAW_DATA_CAPTURE.md">Raw data capture</a> ·
+  <a href="PROTOCOL.md">Protocol</a> ·
+  <a href="RAW_DATA_CAPTURE.md">Raw data capture</a> ·
 </p>
 
 <p align="center">
-  <a href="https://github.com/ryanbr/noop/releases/latest"><img src="docs/assets/hero-v8.jpg" alt="NOOP in the new Liquid Metal design, on iPhone, Mac and Android" width="820"></a>
+  <a href="https://github.com/ryanbr/noop/releases/latest"><img src="assets/hero-v8.jpg" alt="NOOP in the new Liquid Metal design, on iPhone, Mac and Android" width="820"></a>
 </p>
 
 <p align="center">
-  <img src="docs/assets/shot-ios-today.png" alt="Today on iPhone" width="218">
+  <img src="assets/shot-ios-today.png" alt="Today on iPhone" width="218">
   &nbsp;&nbsp;
-  <img src="docs/assets/shot-android-today.png" alt="Today on Android" width="218">
+  <img src="assets/shot-android-today.png" alt="Today on Android" width="218">
   &nbsp;&nbsp;
-  <img src="docs/assets/shot-android-trend.png" alt="A metric's own trend on Android" width="218">
+  <img src="assets/shot-android-trend.png" alt="A metric's own trend on Android" width="218">
 </p>
 <p align="center"><sub>The all-new <b>Liquid Metal</b> look: living liquid scores, a sky that moves with your day, rebuilt on every screen. The same Today on iPhone and Android, and a metric&rsquo;s own trend. One design across iPhone, Android &amp; Mac.</sub></p>
 
@@ -61,7 +61,7 @@ Pre-built apps you can run right now:
 |---|---|---|
 | **macOS** | `NOOP.app` (see [Releases](https://github.com/ryanbr/noop/releases)) | Apple Silicon + Intel. Drag to Applications. Not notarized — see **First launch on macOS** below. _(A Homebrew cask isn't currently published for this fork — grab the `.app` from Releases.)_ |
 | **Android** | `NOOP-full.apk` (see [Releases](https://github.com/ryanbr/noop/releases)) | The full app. `minSdk 26` (Android 8+). Sideload — enable "install unknown apps". Blocked by Play Protect? See **Installing on Android** below. |
-| **iOS** | **AltStore / SideStore source** (recommended — one-tap install + auto-updates): add `https://raw.githubusercontent.com/ryanbr/noop/main/altstore-source.json` as a source. Or a **direct** [`NOOP-vX-ios.ipa`](https://github.com/ryanbr/noop/releases) download. | The `.ipa` is unsigned; **you** sign it on your iPhone with your own free Apple ID (no App Store, no developer account — NOOP stays anonymous). Re-signs every 7 days (AltStore/SideStore automates it). See [docs/IOS.md](docs/IOS.md). Or build from source in Xcode. |
+| **iOS** | **AltStore / SideStore source** (recommended — one-tap install + auto-updates): add `https://raw.githubusercontent.com/ryanbr/noop/main/altstore-source.json` as a source. Or a **direct** [`NOOP-vX-ios.ipa`](https://github.com/ryanbr/noop/releases) download. | The `.ipa` is unsigned; **you** sign it on your iPhone with your own free Apple ID (no App Store, no developer account — NOOP stays anonymous). Re-signs every 7 days (AltStore/SideStore automates it). See [docs/IOS.md](IOS.md). Or build from source in Xcode. |
 
 > **First launch on macOS.** NOOP is **not notarized** by Apple — notarization needs a paid Apple
 > Developer ID tied to a real identity, which doesn't fit an anonymous, free project. The app *is*
@@ -94,9 +94,9 @@ Pre-built apps you can run right now:
 >   data on-device with `allowBackup=false`, so a reinstall simply starts fresh. There's no cloud copy
 >   to lose either way.
 
-Prefer to build it yourself? See [`docs/BUILD.md`](docs/BUILD.md).
+Prefer to build it yourself? See [`docs/BUILD.md`](BUILD.md).
 
-Everything runs **offline by default** — nothing about you leaves the device unless you switch on a feature that sends it. NOOP makes only three kinds of network request, all described in [`docs/PRIVACY_SECURITY.md`](docs/PRIVACY_SECURITY.md): the optional **AI Coach** (off until you add your own API key), a once-a-day check for a newer release, which sends nothing about you and never installs anything, and Android's default-off Experimental one-way **push** to an endpoint you own. Turn the check off in Settings → About and it makes no request at all. NOOP operates no server, account, or telemetry service.
+Everything runs **offline by default** — nothing about you leaves the device unless you switch on a feature that sends it. NOOP makes only three kinds of network request, all described in [`docs/PRIVACY_SECURITY.md`](PRIVACY_SECURITY.md): the optional **AI Coach** (off until you add your own API key), a once-a-day check for a newer release, which sends nothing about you and never installs anything, and Android's default-off Experimental one-way **push** to an endpoint you own. Turn the check off in Settings → About and it makes no request at all. NOOP operates no server, account, or telemetry service.
 
 ---
 
@@ -189,7 +189,7 @@ shared cross-platform code.
 | **Data Sources** | One-tap import of a WHOOP CSV export, an Apple Health export, or a **nutrition CSV** (Cronometer / MacroFactor), plus live-strap status. "Bring your history in once, then it's yours." |
 | **Notifications** | Configure local notifications and thresholds (`Strand/Data/NotificationSettingsStore.swift`). |
 | **Automations** | Turn the strap's physical inputs and live biometrics into Mac actions — all on-device (see below). |
-| **Coach** | An optional **AI Coach** you can ask about your data in plain language. It is off until you add your own key — Anthropic, OpenAI, or any OpenAI-compatible endpoint including a local/self-hosted model (Ollama, LM Studio) — and it sends only a short text summary of recent metrics plus your question, never raw streams or identifiers. With a local model the conversation never leaves your machine. Available on macOS, Android, and iOS. See [`docs/PRIVACY_SECURITY.md`](docs/PRIVACY_SECURITY.md). |
+| **Coach** | An optional **AI Coach** you can ask about your data in plain language. It is off until you add your own key — Anthropic, OpenAI, or any OpenAI-compatible endpoint including a local/self-hosted model (Ollama, LM Studio) — and it sends only a short text summary of recent metrics plus your question, never raw streams or identifiers. With a local model the conversation never leaves your machine. Available on macOS, Android, and iOS. See [`docs/PRIVACY_SECURITY.md`](PRIVACY_SECURITY.md). |
 | **Settings** | Profile, preferences, **step calibration** (tune the stride/step estimate to your own walking), unit choices, the in-app **What's new** changelog, and an opt-in **Experimental** section (WHOOP 5/MG protocol probes). On **iOS**, also **Export for Shortcuts** — a HealthKit-free path that hands your metrics to Apple Health via the Shortcuts app. |
 
 There is also a **menu-bar extra** (`Strand/MenuBar/MenuBarContent.swift`) with a
@@ -236,7 +236,7 @@ import required.
 |---|---|
 | **macOS** | ✅ Full app (`Strand/`, SwiftUI, macOS 13+). Pairs over BLE, offloads the strap's history, and scores recovery / strain / sleep on-device. The complete feature set above runs here. |
 | **Android** | ✅ Full app (`android/`, Jetpack Compose, Android 8+). Pairs over BLE, persists and scores on-device, and imports WHOOP / Apple Health / Health Connect. Grab the APK from [Releases](https://github.com/ryanbr/noop/releases). |
-| **iOS** | 📲 **Direct download**: an unsigned `.ipa` you sideload with AltStore/SideStore — it signs on your iPhone with your *own* free Apple ID, so there's an anonymous install path with no App Store / developer account (see [docs/IOS.md](docs/IOS.md)). Also still builds from source in Xcode. Shares the cross-platform Swift packages, so scoring matches macOS. Newer and less battle-tested than macOS/Android — live BLE on a real iPhone is still being validated; Apple Health + Live Activity widgets can be limited under a free signing identity. |
+| **iOS** | 📲 **Direct download**: an unsigned `.ipa` you sideload with AltStore/SideStore — it signs on your iPhone with your *own* free Apple ID, so there's an anonymous install path with no App Store / developer account (see [docs/IOS.md](IOS.md)). Also still builds from source in Xcode. Shares the cross-platform Swift packages, so scoring matches macOS. Newer and less battle-tested than macOS/Android — live BLE on a real iPhone is still being validated; Apple Health + Live Activity widgets can be limited under a free signing identity. |
 
 ### Strap support
 
@@ -306,7 +306,7 @@ everything else here.
 
 **Which ring.** Every row in the table below was measured on a **Gen 3**. The framing, the auth
 handshake and the event-record dictionary are the same across Gen 3, Ring 4 and Ring 5
-([`docs/OURA_PROTOCOL.md` §7.2](docs/OURA_PROTOCOL.md)); what changes per generation is the MTU, which
+([`docs/OURA_PROTOCOL.md` §7.2](OURA_PROTOCOL.md)); what changes per generation is the MTU, which
 characteristics are discovered and the live-HR enable command set — verified on Gen 3, expected the same
 on 4/5. A **Ring 5** has been reported working over that path (#2075: pairing/auth, live HR and
 inter-beat intervals, skin temperature, battery), which is marked per row as *Ring 5 ✓*. Nothing has
@@ -322,7 +322,7 @@ true beat-to-beat intervals.
 to a phone (i.e. its only prior bond is with the official Oura app) reproducibly hangs on macOS —
 `connect()` is issued cleanly and no CoreBluetooth callback ever arrives. Factory-resetting the ring
 from the official Oura app first, then pairing with NOOP on macOS, works. Documented in
-[`docs/OURA_PROTOCOL.md` §3.8](docs/OURA_PROTOCOL.md).
+[`docs/OURA_PROTOCOL.md` §3.8](OURA_PROTOCOL.md).
 
 | Input / output | Status |
 |---|---|
@@ -349,7 +349,7 @@ from the official Oura app first, then pairing with NOOP on macOS, works. Docume
 > no decryption bypass). Because that key is tied to your account, the ring keeps whatever cloud
 > configuration the real app already unlocked for it, which is what makes otherwise server-gated
 > streams (SpO₂, Exercise HR, real steps) start arriving. Step-by-step recipe:
-> [`docs/OURA_PROTOCOL.md` §3.7](docs/OURA_PROTOCOL.md).
+> [`docs/OURA_PROTOCOL.md` §3.7](OURA_PROTOCOL.md).
 >
 > **Read the limits honestly before counting on it:**
 >
@@ -538,13 +538,13 @@ Every arrow stays on your machine.
 and computed metrics live in a local SQLite database on your device. They leave only through an
 export or optional network feature you deliberately configure, including Android's default-off
 Experimental one-way push to your own endpoint; see
-[`docs/PRIVACY_SECURITY.md`](docs/PRIVACY_SECURITY.md).
+[`docs/PRIVACY_SECURITY.md`](PRIVACY_SECURITY.md).
 
 The app makes two kinds of network request, neither carrying anything about you: the optional
 **AI Coach** (off until you add your own key), and a once-a-day read of the latest release number so a
 sideloaded install can tell you an update exists — on by default, switchable off in Settings → About,
 and it never installs anything. Both are detailed in
-[`docs/PRIVACY_SECURITY.md`](docs/PRIVACY_SECURITY.md).
+[`docs/PRIVACY_SECURITY.md`](PRIVACY_SECURITY.md).
 
 ---
 
@@ -562,7 +562,7 @@ thanks:
 - **`weichsel/ZIPFoundation`** — export unzipping.
 
 NOOP contains no WHOOP proprietary code, firmware, logos, or assets, and performs
-no DRM circumvention. Full detail in [`ATTRIBUTION.md`](ATTRIBUTION.md).
+no DRM circumvention. Full detail in [`ATTRIBUTION.md`](../ATTRIBUTION.md).
 
 ---
 
@@ -586,7 +586,7 @@ use it at your own risk. Read the full notice in [`DISCLAIMER.md`](DISCLAIMER.md
 
 ## License
 
-NOOP is **source-available** under the [PolyForm Noncommercial License 1.0.0](LICENSE):
+NOOP is **source-available** under the [PolyForm Noncommercial License 1.0.0](../LICENSE):
 **free for personal and other non-commercial use** — read it, run it, fork it, and
 contribute. Commercial use is not granted by this license. (PolyForm Noncommercial is
 a proper software license with patent terms; it is deliberately *not* an OSI
@@ -596,8 +596,8 @@ non-commercial nature rules out.)
 The license covers NOOP's own original code and docs. Protocol facts (frame layouts,
 command numbers, byte offsets) are uncopyrightable and free to reuse; bundled
 dependencies keep their own licenses (GRDB.swift and ZIPFoundation are MIT — see
-[`NOTICE`](NOTICE)). By opening a pull request you agree your contribution is licensed
-under the same terms — see [`docs/CONTRIBUTING.md`](docs/CONTRIBUTING.md).
+[`NOTICE`](../NOTICE)). By opening a pull request you agree your contribution is licensed
+under the same terms — see [`docs/CONTRIBUTING.md`](CONTRIBUTING.md).
 
 ### Mirroring & forking
 
@@ -605,7 +605,7 @@ NOOP is public and built to be hard to erase. **Clone it freely** — `git clone
 
 Two simple asks:
 
-- **Keep it non-commercial** and keep the [`LICENSE`](LICENSE) + `Copyright 2026 NoopApp` notice intact (PolyForm Noncommercial — mirror and use freely, just don't sell it or ship it in a paid product).
+- **Keep it non-commercial** and keep the [`LICENSE`](../LICENSE) + `Copyright 2026 NoopApp` notice intact (PolyForm Noncommercial — mirror and use freely, just don't sell it or ship it in a paid product).
 - **Point people back to the canonical home, [github.com/ryanbr/noop](https://github.com/ryanbr/noop)**, so everyone lands on the current code and releases rather than a stale fork.
 
 That's it — copy away.
@@ -614,9 +614,9 @@ That's it — copy away.
 
 ## Docs
 
-- [`CHANGELOG.md`](CHANGELOG.md) — release history and what to expect (also shown in-app under **What's new**).
+- [`CHANGELOG.md`](../CHANGELOG.md) — release history and what to expect (also shown in-app under **What's new**).
 - [`DISCLAIMER.md`](DISCLAIMER.md) — trademark, interoperability, and medical/legal notice.
-- [`ATTRIBUTION.md`](ATTRIBUTION.md) — full credits and licensing notes.
+- [`ATTRIBUTION.md`](../ATTRIBUTION.md) — full credits and licensing notes.
 - [`project.yml`](project.yml) — XcodeGen project definition (source of `Strand.xcodeproj`).
 
 ---
