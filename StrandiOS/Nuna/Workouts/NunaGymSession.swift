@@ -27,7 +27,7 @@ struct NunaGymSessionView: View {
     private var system: UnitSystem { UnitSystem(rawValue: unitSystemRaw) ?? .metric }
 
     var body: some View {
-        NunaDetailScreen(LocalizedStringKey(session?.programName ?? String(localized: "Gym session")), onAnya: records.isEmpty ? nil : { showCoach = true }) {
+        NunaDetailScreen(LocalizedStringKey(session?.programName ?? String(localized: "Gym session"))) {
             if let session { content(session) }
             else if loaded { NunaCard { Text("This session is no longer saved.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) } }
         }
