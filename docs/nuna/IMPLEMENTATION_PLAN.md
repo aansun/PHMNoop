@@ -299,3 +299,7 @@ The 19-screen flow: welcome, privacy, terms gate, value pages, device choice, Bl
 ## Legacy clean-up (PHMN)
 
 `PHMNLegacyMigration` runs once per install before the first screen: forces `experience.mode` to Nuna (the default is Nuna too), removes the retired `app.experience` key, clears URL/Caches/tmp leftovers and delivered notifications, and resets an unknown alternate app icon to the primary one. The watch app icon now uses the PHMN mark.
+
+## 0.1.1 (workout detail)
+
+One layout for every saved session (`NunaWorkoutDetailParts`: header with the Effort it added, Anya line, map, sport-aware summary, heart-rate curve, zones, photos, feeling, Strava), shared by the generic summary and the gym session. The summary follows the sport (`NunaWorkoutSportKind`: on foot, cycling, swimming, rowing, other distance, session without distance); the map card appears only when a route was recorded. Zones are rows with the bpm range, minutes, share and a bar. Review pieces split into `NunaWorkoutPhotosCard` and `NunaWorkoutFeelingCard`; the Strava card carries the Strava mark. "Start a workout" is a pin list (`NunaPinnedSports`, at most 8, `nuna.workouts.pinnedSports`, default the old seven). A Today Anya card with an action stacks: words full width, then a small translucent button. A card built from a line of text opens the Anya sheet on that line when its screen sets `nunaAnyaCardContext` (Today, Workouts, Trends); the sheet keeps the screen's questions. Not seen on a device: map card, cycling and rowing summaries, a filled photo carousel, a Strava upload.
