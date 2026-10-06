@@ -427,22 +427,45 @@ struct NunaAnyaVoiceCoachView: View {
     @AppStorage(AudioCoachingPreferences.frequencyKey) private var frequency = AudioPromptFrequency.normal.rawValue
     @AppStorage(AudioCoachingPreferences.speechRateKey) private var speechRate = AudioSpeechRate.normal.rawValue
 
+    /// The same test the standard screen has, kept visible whether or not the coach is on: it plays a sample cue with the current settings
+    /// and says what happened, so a silent workout can be told apart from a setting that is off or an audio session that did not start.
+    private var testCard: some View {
+        NunaCard {
+            VStack(alignment: .leading, spacing: 12) {
+                nunaTrendsCap("Test audio")
+                Text("Plays a sample with your current distance interval, details and voice speed.").font(.nuna(size: 13.5, weight: .semibold))
+                    .foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                Button { audio.testAudio() } label: {
+                    HStack(spacing: 8) { Image(systemName: "play.fill").font(.nuna(size: 13, weight: .bold)); Text("Test current settings").font(.nuna(size: 15, weight: .bold)) }
+                        .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 46)
+                        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                }.buttonStyle(.plain)
+                if let error = audio.lastAudioError {
+                    Label { Text(verbatim: error).textCase(nil) } icon: { Image(systemName: "exclamationmark.triangle.fill") }
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.warning).fixedSize(horizontal: false, vertical: true)
+                }
+                if let decision = audio.lastDecision {
+                    Text(verbatim: decision).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                }
+                if let prompt = audio.lastPromptText {
+                    Text(verbatim: String(localized: "Last prompt: \(prompt)")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true).textCase(nil)
+                }
+                if !enabled {
+                    Text("The voice coach is off. Turn it on below to hear cues during a workout; the test plays either way.").font(.nuna(size: 12.5, weight: .semibold))
+                        .foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                }
+            }.frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
     var body: some View {
         NunaDetailScreen("Voice coach") {
             NunaCard(highlight: enabled) {
                 NunaToggleRow("Anya's voice coach", subtitle: "Short spoken cues during a session, through earphones", systemImage: "speaker.wave.2", isOn: $enabled).padding(.vertical, 8)
             }
+            testCard
             if enabled {
-                NunaCard {
-                    VStack(alignment: .leading, spacing: 12) {
-                        nunaTrendsCap("Example cue")
-                        Text(verbatim: String(localized: "Kilometre \(every * 3), pace 7:05. Zone \(max(targetZone, 2)), keep it steady.")).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                        Button { audio.testAudio() } label: {
-                            HStack(spacing: 8) { Image(systemName: "play.fill").font(.nuna(size: 13, weight: .bold)); Text("Hear an example").font(.nuna(size: 15, weight: .bold)) }
-                                .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 18).frame(height: 42).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                        }.buttonStyle(.plain)
-                    }.frame(maxWidth: .infinity, alignment: .leading)
-                }
                 VStack(alignment: .leading, spacing: 10) {
                     nunaRuledHeader("When Anya speaks")
                     NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {

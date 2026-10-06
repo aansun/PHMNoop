@@ -13,6 +13,7 @@ struct NOOPLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: NOOPActivityAttributes.self) { context in
             LockScreen(state: context.state, title: context.attributes.title)
+                .widgetURL(URL(string: "noop://workout"))
                 .activityBackgroundTint(NunaPalette.card)
                 .activitySystemActionForegroundColor(NunaPalette.textPrimary)
         } dynamicIsland: { context in
@@ -22,24 +23,27 @@ struct NOOPLiveActivity: Widget {
                 DynamicIslandExpandedRegion(.leading) {
                     HStack(spacing: 8) {
                         NOOPLiveRing(symbol: s.symbol, tint: tint, progress: s.progress)
-                        VStack(alignment: .leading, spacing: 1) {
+                        VStack(alignment: .leading, spacing: 2) {
                             Text(verbatim: s.activityName ?? context.attributes.title).font(.nuna(size: 14.5, weight: .heavy)).lineLimit(1).minimumScaleFactor(0.7)
-                            if s.isPaused {
-                                Text("Paused").font(.nuna(size: 11, weight: .heavy)).foregroundStyle(tint)
-                            } else if let z = s.heartRateZone {
-                                Text("Zone \(z)").font(.nuna(size: 11, weight: .heavy)).foregroundStyle(tint)
+                            // Zone and Effort on one line under the name, as the mockup has them, rather than in a region of their own.
+                            HStack(spacing: 6) {
+                                if s.isPaused {
+                                    Text("Paused").foregroundStyle(tint)
+                                } else if let z = s.heartRateZone {
+                                    Text("Zone \(z)").foregroundStyle(tint)
+                                }
+                                if let e = s.effort { s.effortText(e).foregroundStyle(NunaPalette.effortText) }
                             }
+                            .font(.nuna(size: 11, weight: .heavy)).lineLimit(1).minimumScaleFactor(0.7)
                         }
                     }
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     HStack(alignment: .firstTextBaseline, spacing: 5) {
-                        Image(systemName: "heart.fill").font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.alertText)
-                        Text(verbatim: s.bpm.map(String.init) ?? "–").font(.nuna(size: 18, weight: .bold, design: NunaType.design)).monospacedDigit()
+                        Image(systemName: "heart.fill").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.alertText)
+                        Text(verbatim: s.bpm.map(String.init) ?? "–").font(.nuna(size: 22, weight: .bold, design: NunaType.design)).monospacedDigit()
+                            .foregroundStyle(s.outOfZone ? tint : NunaPalette.textPrimary).fixedSize()
                     }
-                }
-                DynamicIslandExpandedRegion(.center) {
-                    if let e = s.effort { NOOPLiveChip(text: s.effortText(e), color: NunaPalette.effortText, systemImage: "bolt.fill") }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
                     VStack(spacing: 12) {
@@ -76,6 +80,8 @@ struct NOOPLiveActivity: Widget {
             } minimal: {
                 Image(systemName: s.compactSymbol).font(.system(size: 13, weight: .bold)).foregroundStyle(tint)
             }
+            // Tapping the banner or the Island opens the app on the session that is running.
+            .widgetURL(URL(string: "noop://workout"))
             .keylineTint(s.isPaused ? NunaPalette.warning : (s.outOfZone ? NunaPalette.alert : nil))
         }
     }
@@ -124,8 +130,30 @@ private struct LockScreen: View {
     let title: String
 
     var body: some View {
+        if state.activityName == nil { liveHeartRate } else { workout }
+    }
+
+    /// No workout, only the live heart rate: a heart and the number, nothing else.
+    private var liveHeartRate: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "heart.fill").font(.system(size: 26, weight: .bold)).foregroundStyle(NunaPalette.alertText)
+            HStack(alignment: .firstTextBaseline, spacing: 5) {
+                Text(verbatim: state.bpm.map(String.init) ?? "–").font(.nuna(size: 40, weight: .bold, design: NunaType.design)).monospacedDigit()
+                    .foregroundStyle(state.bonded ? NunaPalette.textPrimary : NunaPalette.textMuted)
+                Text("bpm").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            }
+            Spacer(minLength: 8)
+            // The link to the strap dropped: the banner stays and says so, instead of vanishing and needing the app to come back.
+            if !state.bonded {
+                Text("Reconnecting…").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1)
+            }
+        }
+        .padding(EdgeInsets(top: 14, leading: 20, bottom: 14, trailing: 20))
+    }
+
+    private var workout: some View {
         let tint = state.accent
-        VStack(spacing: 0) {
+        return VStack(spacing: 0) {
             HStack {
                 HStack(spacing: 10) {
                     Circle().fill(NunaPalette.alert).frame(width: 10, height: 10)
@@ -145,19 +173,20 @@ private struct LockScreen: View {
                     NOOPLiveChip(text: state.effortText(e), color: NunaPalette.effortText, systemImage: "bolt.fill")
                 }
             }
-            HStack {
-                HStack(spacing: 8) {
-                    Image(systemName: "heart.fill").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText)
-                    HStack(alignment: .firstTextBaseline, spacing: 3) {
-                        Text(verbatim: state.bpm.map(String.init) ?? "–").font(.nuna(size: 22, weight: .bold, design: NunaType.design)).monospacedDigit()
-                            .foregroundStyle(state.outOfZone ? tint : NunaPalette.textPrimary)
-                        Text("bpm").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                    }
-                    if let z = state.heartRateZone { NOOPLiveChip(text: Text("Zone \(z)"), color: NOOPLive.tint(zone: z)).scaleEffect(0.85, anchor: .leading) }
+            // The heart rate never gives way: the number and its unit keep their size, the zone chip and the range after it take what is left.
+            HStack(spacing: 10) {
+                Image(systemName: "heart.fill").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText)
+                HStack(alignment: .firstTextBaseline, spacing: 3) {
+                    Text(verbatim: state.bpm.map(String.init) ?? "–").font(.nuna(size: 24, weight: .bold, design: NunaType.design)).monospacedDigit()
+                        .foregroundStyle(state.outOfZone ? tint : NunaPalette.textPrimary)
+                    Text("bpm").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
+                .fixedSize().layoutPriority(3)
+                if let z = state.heartRateZone { NOOPLiveChip(text: Text("Zone \(z)"), color: NOOPLive.tint(zone: z)).scaleEffect(0.85, anchor: .leading).fixedSize().layoutPriority(2) }
                 Spacer(minLength: 6)
-                if let sub = state.subtitle {
-                    Text(verbatim: sub).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.7)
+                // The current zone's own range, in place of the target and calories line.
+                if let range = state.subtitle {
+                    Text(verbatim: range).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.7)
                 }
             }
             .padding(.top, 8)

@@ -45,19 +45,41 @@ final class AudioPromptScheduler: NSObject, @preconcurrency AVSpeechSynthesizerD
         speechRateMultiplier = rate.multiplier
     }
 
+    /// The last thing that went wrong getting the audio session (or speech) going, for the test screen to show. Nil when all is well.
+    private(set) var lastError: String?
+    var onStatus: ((String?) -> Void)?
+
     func beginSession(resetFinishAfterQueue: Bool = true) {
         if resetFinishAfterQueue { finishAfterQueue = false }
-        do {
-            try session.setCategory(.playback, mode: .spokenAudio,
-                                    options: [.duckOthers, .allowBluetoothHFP, .allowBluetoothA2DP])
-            try session.setActive(true, options: [])
-            isSessionActive = true
-        } catch {
-            // A Bluetooth route can disappear while the old session still looks active. Keep the
-            // queue intact and mark it inactive so the next route callback can retry activation.
-            isSessionActive = false
-            logger.error("Unable to activate audio session: \(String(describing: error), privacy: .public)")
+        // Spoken cues over the music: ducked, not stopped. The first attempt is the full set of options; if iOS refuses that combination the
+        // session is brought up with fewer, rather than being left off with the coach silent. A plain playback session still routes to
+        // a Bluetooth headset (A2DP) by itself.
+        let attempts: [(AVAudioSession.Category, AVAudioSession.CategoryOptions)] = [
+            (.playback, [.duckOthers, .allowBluetoothHFP, .allowBluetoothA2DP]),
+            (.playback, [.duckOthers]),
+            (.playback, []),
+        ]
+        var failure: Error?
+        for (category, options) in attempts {
+            do {
+                try session.setCategory(category, mode: .spokenAudio, options: options)
+                try session.setActive(true, options: [])
+                isSessionActive = true
+                failure = nil
+                lastError = nil
+                onStatus?(nil)
+                return
+            } catch {
+                failure = error
+            }
         }
+        // A Bluetooth route can disappear while the old session still looks active. Keep the
+        // queue intact and mark it inactive so the next route callback can retry activation.
+        isSessionActive = false
+        let message = failure.map { String(describing: $0) } ?? "unknown"
+        lastError = "Audio session: \(message)"
+        onStatus?(lastError)
+        logger.error("Unable to activate audio session: \(message, privacy: .public)")
     }
 
     func enqueue(_ prompts: [AudioPrompt]) {
@@ -105,6 +127,10 @@ final class AudioPromptScheduler: NSObject, @preconcurrency AVSpeechSynthesizerD
         let utterance = AVSpeechUtterance(string: prompt.text)
         utterance.voice = AVSpeechSynthesisVoice(language: speechLanguage)
             ?? AVSpeechSynthesisVoice(language: "en-US")
+        if utterance.voice == nil {
+            lastError = "No speech voice is installed for \(speechLanguage)"
+            onStatus?(lastError)
+        }
         utterance.rate = AVSpeechUtteranceDefaultSpeechRate * speechRateMultiplier
         utterance.pitchMultiplier = 1.0
         logger.debug("Speaking \(prompt.templateName, privacy: .public)")

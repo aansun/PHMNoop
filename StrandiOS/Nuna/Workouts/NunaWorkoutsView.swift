@@ -81,7 +81,7 @@ struct NunaWorkoutsView: View {
         .toolbar(.hidden, for: .navigationBar)
         .nunaWorkoutDestinations()
         .nunaTodayDestinations()
-        .navigationDestination(isPresented: $openStart) { NunaWorkoutStartView(sport: nil) }
+        .navigationDestination(isPresented: $openStart) { NunaWorkoutStartView(sport: nil, resume: autoOpenStart) }
         .onAppear { if autoOpenStart, !didAutoOpen { didAutoOpen = true; openStart = true } }
         .task(id: repo.refreshSeq) {
             await m.load(repo: repo)

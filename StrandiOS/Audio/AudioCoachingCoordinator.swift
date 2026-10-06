@@ -12,6 +12,8 @@ final class AudioCoachingCoordinator: ObservableObject {
     @Published private(set) var lastPromptText: String?
     @Published private(set) var lastDecision: String?
     @Published private(set) var promptHistory: [AudioPrompt] = []
+    /// The audio or speech failure behind a silent prompt, in plain words, for the settings screen. Nil when nothing is wrong.
+    @Published private(set) var lastAudioError: String?
 
     private let activityEngine = AudioActivityEngine()
     private let trendEngine = AudioTrendEngine()
@@ -44,6 +46,7 @@ final class AudioCoachingCoordinator: ObservableObject {
         self.model = model
         AudioAICoachingProvider.bootstrapDefaults()
         scheduler.setSpeechRate(AudioCoachingPreferences.speechRate)
+        scheduler.onStatus = { [weak self] message in self?.lastAudioError = message }
         model.$activeWorkout
             .receive(on: DispatchQueue.main)
             .sink { [weak self] workout in self?.handleWorkoutChange(workout) }
@@ -92,25 +95,20 @@ final class AudioCoachingCoordinator: ObservableObject {
     /// explicit user action so it remains available while the experiment toggle is off.
     func testAudio() {
         let storedPolicy = AudioCoachingPreferences.policy()
-        guard storedPolicy.distancePrompts else {
-            lastDecision = "Distance milestones are disabled"
-            return
-        }
-        guard storedPolicy.distanceIncludesDistance || storedPolicy.distanceIncludesDuration || storedPolicy.distanceIncludesHeartRate else {
-            lastDecision = "Enable at least one milestone detail"
-            return
-        }
+        // The test is about the sound and the voice, so it does not depend on which cues are switched on: the sample is always a distance
+        // milestone, with whatever details are chosen (all of them when none are).
+        let none = !(storedPolicy.distanceIncludesDistance || storedPolicy.distanceIncludesDuration || storedPolicy.distanceIncludesHeartRate)
         let policy = AudioPromptPolicy(
             enabled: true,
             lifecyclePrompts: storedPolicy.lifecyclePrompts,
             heartRatePrompts: storedPolicy.heartRatePrompts,
-            distancePrompts: storedPolicy.distancePrompts,
+            distancePrompts: true,
             frequency: storedPolicy.frequency,
             coachingPrompts: storedPolicy.coachingPrompts,
             coachingFrequency: storedPolicy.coachingFrequency,
-            distanceIncludesDistance: storedPolicy.distanceIncludesDistance,
-            distanceIncludesDuration: storedPolicy.distanceIncludesDuration,
-            distanceIncludesHeartRate: storedPolicy.distanceIncludesHeartRate,
+            distanceIncludesDistance: none ? true : storedPolicy.distanceIncludesDistance,
+            distanceIncludesDuration: none ? true : storedPolicy.distanceIncludesDuration,
+            distanceIncludesHeartRate: none ? true : storedPolicy.distanceIncludesHeartRate,
             distanceMilestoneKilometers: storedPolicy.distanceMilestoneKilometers)
         let kilometre = Double(policy.distanceMilestoneKilometers)
         let context = AudioWorkoutContext(
@@ -127,6 +125,8 @@ final class AudioCoachingCoordinator: ObservableObject {
         promptHistory = Array(([prompt] + promptHistory).prefix(10))
         lastDecision = "Test audio queued using current settings"
         scheduler.enqueue([prompt])
+        // Whatever the session or the voice refused is reported by the scheduler right away.
+        lastAudioError = scheduler.lastError
         logger.debug("Queued audio coaching test prompt")
     }
 
