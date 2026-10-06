@@ -3,10 +3,9 @@ import SwiftUI
 import StrandDesign
 import WhoopStore
 
-/// The "+" sheet: six shortcuts, Ask Anya and today's water, as in the Quick actions mockup.
+/// The "+" sheet: six shortcuts and today's water, as in the Quick actions mockup.
 struct NunaQuickSheet: View {
     let hydrationEnabled: Bool
-    let coachEnabled: Bool
     let onAddActivity: () -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -45,23 +44,6 @@ struct NunaQuickSheet: View {
             .padding(.top, 22)
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 14) {
                 ForEach(actions) { a in tile(LocalizedStringKey(a.title), a.icon, nil) { run(a) } }
-            }
-            if coachEnabled {
-                Button { go(.coach) } label: {
-                    NunaCard(small: true, padding: EdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 14)) {
-                        HStack(spacing: 12) {
-                            AnyaMark(size: 28).foregroundStyle(NunaPalette.onAccent)
-                                .frame(width: 40, height: 40).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Ask Anya").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                Text("About today, by voice or text").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                            }
-                            Spacer(minLength: 4)
-                            Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                        }
-                    }
-                }
-                .buttonStyle(.plain)
             }
             if hydrationEnabled { waterRow }
             Spacer(minLength: 0)
