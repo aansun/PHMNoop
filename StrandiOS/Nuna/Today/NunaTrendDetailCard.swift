@@ -1,6 +1,7 @@
 #if os(iOS)
 import SwiftUI
 import StrandDesign
+import Charts
 
 /// The one card of a metric detail screen: the latest reading at the top left, the W / M / 6M switch and the date
 /// stepper at the top right, a sentence about the period, the chart, and the average, lowest and highest as plain text.
@@ -24,6 +25,8 @@ struct NunaTrendDetailCard: View {
     var higherIsBetter = true
     var directional = true
     var averageHero = false
+    /// Daily totals (steps, energy) read as bars, not as a line.
+    var bars = false
     var levelChip: ((Double) -> (text: LocalizedStringKey, color: Color)?)?
     /// Replaces the generic sentence about the period (average and the average before it).
     var sentence: ((_ avg: Double?, _ prev: Double?) -> String?)?
@@ -35,7 +38,8 @@ struct NunaTrendDetailCard: View {
     /// The card for a single stored series (`NunaSeriesModel`).
     init(caption: LocalizedStringKey, valueText: String?, unit: String = "", chip: (text: LocalizedStringKey, color: Color)? = nil, note: String? = nil,
          series: NunaSeriesModel, showsBand: Bool = true, reference: Double? = nil, lineColor: Color = NunaPalette.charge, decimals: Int = 0,
-         higherIsBetter: Bool = true, directional: Bool = true, range: Binding<Int>, page: Binding<Int>) {
+         higherIsBetter: Bool = true, directional: Bool = true, bars: Bool = false, range: Binding<Int>, page: Binding<Int>) {
+        self.bars = bars
         self.caption = caption; self.valueText = valueText; self.unit = unit; self.chip = chip; self.note = note
         self.readings = { series.readings($0, endingDaysAgo: $1) }
         self.hasOlder = { start in series.byDay.keys.min().map { Repository.localDayKey(start) > $0 } ?? false }
@@ -88,8 +92,10 @@ struct NunaTrendDetailCard: View {
                     Text(loaded ? "No data in this period" : " ").font(.nuna(size: 14, weight: .semibold))
                         .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 160).textCase(nil)
                 } else {
-                    NunaSegmentedChart(points: pts, color: lineColor, decimals: decimals, band: band, reference: reference,
-                                       higherIsBetter: higherIsBetter, directional: directional)
+                    if bars { barChart(pts) } else {
+                        NunaSegmentedChart(points: pts, color: lineColor, decimals: decimals, band: band, reference: reference,
+                                           higherIsBetter: higherIsBetter, directional: directional)
+                    }
                 }
                 if let avg, let lo = vals.min(), let hi = vals.max() {
                     NunaDivider()
@@ -99,6 +105,54 @@ struct NunaTrendDetailCard: View {
                 }
             }
         }
+    }
+
+    // MARK: Bars
+
+    /// A week is one labelled column per day; a month or six months is one thin bar per day on a time axis.
+    @ViewBuilder private func barChart(_ pts: [(date: Date, value: Double)]) -> some View {
+        let cal = Calendar.current
+        if range <= 7 {
+            let days: [Date] = (0..<7).compactMap { cal.date(byAdding: .day, value: $0, to: cal.startOfDay(for: windowStart)) }
+            let byDay = Dictionary(pts.map { (cal.startOfDay(for: $0.date), $0.value) }, uniquingKeysWith: { _, l in l })
+            let top = max(vals(pts).max() ?? 1, 1)
+            NunaColumns(items: days.map { d in
+                let v = byDay[d]
+                return NunaColumns.Item(weekday: Self.weekday(d), date: d, fraction: v.map { $0 / top },
+                                        valueText: v.map { Self.short($0) }, highlight: cal.isDateInToday(d))
+            }, color: lineColor.opacity(0.85), highlightColor: NunaPalette.textPrimary)
+        } else {
+            Chart(Array(pts.enumerated()), id: \.offset) { _, p in
+                BarMark(x: .value("Day", p.date, unit: .day), y: .value("Value", p.value), width: .automatic)
+                    .foregroundStyle(lineColor.opacity(0.85)).cornerRadius(1.5)
+            }
+            .chartXScale(domain: cal.startOfDay(for: windowStart)...cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: windowEnd))!)
+            .chartXAxis {
+                AxisMarks(values: .automatic(desiredCount: 5)) { _ in
+                    AxisGridLine().foregroundStyle(NunaPalette.hairline.opacity(0.5))
+                    AxisValueLabel(format: .dateTime.day().month(.abbreviated)).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                }
+            }
+            .chartYAxis {
+                AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) { v in
+                    AxisGridLine().foregroundStyle(NunaPalette.hairline.opacity(0.5))
+                    AxisValueLabel { if let d = v.as(Double.self) { Text(verbatim: Self.short(d)).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) } }
+                }
+            }
+            .frame(height: 240)
+        }
+    }
+
+    private func vals(_ pts: [(date: Date, value: Double)]) -> [Double] { pts.map(\.value) }
+
+    private static func weekday(_ d: Date) -> String {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE")
+        return f.string(from: d)
+    }
+
+    /// 12 345 as "12.3k", for the narrow labels over the columns and on the axis.
+    private static func short(_ v: Double) -> String {
+        v >= 10_000 ? String(format: "%.1fk", locale: AppLanguage.activeLocale, v / 1000) : String(format: "%.0f", locale: AppLanguage.activeLocale, v)
     }
 
     private func header(avg: Double?, prev: Double?) -> some View {

@@ -1,6 +1,12 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Right now": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Saat ini"}}
+    } },
+    "Now %@ / 3": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Kini %@ / 3"}}
+    } },
     "%@ is running": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "%@ sedang berjalan"}}
     } },

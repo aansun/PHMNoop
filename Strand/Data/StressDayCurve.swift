@@ -117,6 +117,20 @@ enum StressDayCurve {
                                        to: calendar.startOfDay(for: date)).day ?? 0
     }
 
+    /// Minutes in the high stress band, counted on the half-hourly display timeline rather than on whole hours, so the figure moves
+    /// every half hour instead of in steps of an hour. Falls back to the hourly count when the timeline carries nothing.
+    static func highMinutes(_ r: DaytimeStress.Result) -> Int {
+        let scored = r.timeline.filter { $0.level != nil }
+        guard !scored.isEmpty else { return r.highStressMinutes }
+        let step = DaytimeStress.timelineStepSeconds / 60
+        return scored.filter { ($0.level ?? 0) >= DaytimeStress.highBandFloor }.count * step
+    }
+
+    /// The newest scored reading on the timeline, 0 to 3, for "now" read-outs. Nil when nothing was scored.
+    static func latestLevel(_ r: DaytimeStress.Result) -> Double? {
+        r.timeline.last(where: { $0.level != nil })?.level.map { min(max($0, 0), 3) }
+    }
+
     /// Drops the memo so a test starts from a known state.
     @MainActor
     static func resetForTest() { memo = nil }

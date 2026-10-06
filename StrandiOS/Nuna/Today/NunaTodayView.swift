@@ -185,6 +185,13 @@ struct NunaTodayView: View {
             await model.load(repo: repo, profile: profile)
             dayPlan = model.isToday ? await NunaDayPlanResult.load(repo: repo, profile: profile) : nil
         }
+        // The stress card follows the day: every minute it re-reads the curve while the screen is up.
+        .task(id: model.dayOffset) {
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 60_000_000_000)
+                await model.refreshStress(repo: repo)
+            }
+        }
         .sheet(isPresented: $showCustomize) {
             NunaTodayCustomizeSheet(
                 initialDestination: customizeDestination,
