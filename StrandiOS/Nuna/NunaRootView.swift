@@ -124,6 +124,7 @@ struct NunaRootView: View {
         NavigationStack {
             content()
                 .tabRouteDestinations()
+                .nunaTodayDestinations()
                 .nunaDeviceDestinations()
                 .nunaAnyaDestinations()
                 .nunaMeDestinations()
