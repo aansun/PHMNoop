@@ -451,12 +451,12 @@ struct NunaWorkoutStravaCard: View {
 
 /// The review on a saved session: every change is kept as it is made.
 struct NunaWorkoutReviewSection: View {
-    let row: WorkoutRow
     @StateObject private var draft: NunaWorkoutReviewDraft
 
-    init(row: WorkoutRow) {
-        self.row = row
-        _draft = StateObject(wrappedValue: NunaWorkoutReviewDraft(startTs: row.startTs, sport: row.sport, immediate: true))
+    init(row: WorkoutRow) { self.init(startTs: row.startTs, sport: row.sport) }
+
+    init(startTs: Int, sport: String) {
+        _draft = StateObject(wrappedValue: NunaWorkoutReviewDraft(startTs: startTs, sport: sport, immediate: true))
     }
 
     var body: some View { NunaWorkoutReviewCard(draft: draft) }

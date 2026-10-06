@@ -10,9 +10,10 @@ import WhoopStore
 struct NunaGymSessionView: View {
     let sessionId: String
     @EnvironmentObject private var repo: Repository
+    @EnvironmentObject private var profile: ProfileStore
     @Environment(\.dismiss) private var dismiss
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
+    @StateObject private var data = NunaWorkoutDetailData()
     @State private var session: LiftSessionRow?
     @State private var sets: [LiftSetRow] = []
     @State private var workout: WorkoutRow?
@@ -23,7 +24,6 @@ struct NunaGymSessionView: View {
     @State private var confirmDelete = false
     @State private var showCoach = false
 
-    private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
     private var system: UnitSystem { UnitSystem(rawValue: unitSystemRaw) ?? .metric }
 
     var body: some View {
@@ -57,22 +57,23 @@ struct NunaGymSessionView: View {
 
     @ViewBuilder private func content(_ s: LiftSessionRow) -> some View {
         let secs = max(0, (s.endTs ?? s.startTs) - s.startTs)
-        HStack {
-            Text(verbatim: NunaWorkoutFormat.day(s.startTs) + " · " + NunaWorkoutFormat.clock(s.startTs)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            Spacer()
-            NunaChip("Done", systemImage: "checkmark")
-        }
+        NunaWorkoutHeaderCard(symbol: ActivitySport.symbol(for: s.sport), startTs: s.startTs, endTs: s.endTs ?? s.startTs, source: "Done", strain: workout?.strain, dayEffort: data.dayEffort)
+        if !records.isEmpty {
+            NunaAnyaCard(verbatim: String(localized: "Personal record on \(records.joined(separator: ", ")). Give the trained muscles two days to recover before the next session.")) { showCoach = true }
+        } else if let line = volumeLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
         statsCard(secs)
-        Button { saveProgram = true } label: {
-            NunaCard(small: true) { NunaListRow("Save as program", subtitle: "Repeat this session later with the same weights", systemImage: "square.and.arrow.down", showsChevron: true) }
-        }.buttonStyle(.plain)
-        if let strain = workout?.strain { effortCard(strain) }
         NunaTitleRow(title: "Exercises") { EmptyView() }
         ForEach(summaries, id: \.exercise) { exerciseCard($0) }
         muscleVolume
-        if !records.isEmpty {
-            NunaAnyaCard(verbatim: String(localized: "Personal record on \(records.joined(separator: ", ")). Give the trained muscles two days to recover before the next session.")) { showCoach = true }
+        if let w = workout {
+            NunaWorkoutHRCard(start: w.startTs, end: w.endTs, buckets: data.hr)
+            if let mins = NunaWorkoutZoneMath.minutes(w, measured: data.zoneMin), mins.contains(where: { $0 > 0 }) { NunaWorkoutZonesCard(minutes: mins, avgHr: w.avgHr, maxHr: w.maxHr) }
         }
+        NunaWorkoutReviewSection(startTs: s.startTs, sport: s.sport)
+        if let w = workout { NunaWorkoutStravaCard(row: w, afterWorkout: false, checked: .constant(false)) }
+        Button { saveProgram = true } label: {
+            NunaCard(small: true) { NunaListRow("Save as program", subtitle: "Repeat this session later with the same weights", systemImage: "square.and.arrow.down", showsChevron: true) }
+        }.buttonStyle(.plain)
         NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
             NunaListRow("Apple Health", subtitle: "Strength workout, duration and energy are written by the sync. Manage it in Me", systemImage: "heart.text.square")
         }
@@ -82,6 +83,16 @@ struct NunaGymSessionView: View {
         Button(role: .destructive) { confirmDelete = true } label: {
             Text("Delete").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
         }.buttonStyle(.plain)
+    }
+
+    /// Which muscle group took most of the volume, when no record was set.
+    private var volumeLine: String? {
+        var vol: [NunaMuscleGroup: Double] = [:]
+        for r in working { if let p = r.primaryMuscle, let w = r.weightKg, let n = r.reps { vol[NunaMuscleGroup.of(p), default: 0] += w * Double(n) } }
+        let total = vol.values.reduce(0, +)
+        guard total > 0, let top = vol.max(by: { $0.value < $1.value }) else { return nil }
+        let pct = Int((top.value / total * 100).rounded())
+        return String(localized: "Most of the volume, \(pct)%, went to \(top.key.name).")
     }
 
     private func statsCard(_ secs: Int) -> some View {
@@ -121,20 +132,6 @@ struct NunaGymSessionView: View {
             Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
             Text(verbatim: v).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }.frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func effortCard(_ e: Double) -> some View {
-        let day = session.flatMap { s in repo.days.first { $0.day == Repository.localDayKey(Date(timeIntervalSince1970: TimeInterval(s.startTs))) }?.strain }
-        return NunaCard(small: true) {
-            HStack(spacing: 14) {
-                Text(verbatim: "+" + UnitFormatter.effortDisplay(e, scale: scale)).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.effortText)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Effort added").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    if let day { Text(verbatim: String(localized: "That day reached \(UnitFormatter.effortDisplay(day, scale: scale)) of \(UnitFormatter.effortScaleMax(scale))")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
-                }
-                Spacer()
-            }
-        }
     }
 
     private func exerciseCard(_ s: LiftMetrics.ExerciseSummary) -> some View {
@@ -205,6 +202,7 @@ struct NunaGymSessionView: View {
         sets = (try? await store.liftSets(sessionId: s.id)) ?? []
         let rows = (try? await store.workouts(deviceId: repo.deviceId, from: s.startTs - 1, to: s.startTs + 1, limit: 10)) ?? []
         workout = rows.first { $0.startTs == s.startTs && $0.sport == s.sport }
+        if let w = workout { await data.load(startTs: w.startTs, endTs: w.endTs, sport: w.sport, source: w.source, repo: repo, zoneSet: profile.hrZoneSet) }
         // The heaviest working set of each exercise across every earlier session: a record means beating all of them.
         var prev: [String: Double] = [:]
         let names = Set(sets.map(\.exercise))
@@ -220,6 +218,7 @@ struct NunaGymSessionView: View {
     private func deleteSession() async {
         guard let session, let store = await repo.storeHandle() else { return }
         _ = try? await store.deleteLiftSession(id: session.id)
+        NunaWorkoutReviewStore.remove(startTs: session.startTs, sport: session.sport)
         if let workout { await repo.deleteWorkout(workout) }
         await repo.refresh()
         dismiss()
