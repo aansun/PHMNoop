@@ -16,6 +16,8 @@ struct NunaJournalView: View {
     @State private var numbers: [String: Double] = [:]
     @State private var imported: [String] = []
     @State private var mood: Int?
+    /// Days in the strip that have at least one answer.
+    @State private var loggedDays: Set<String> = []
     @State private var editing = false
     @State private var customDraft = ""
     @State private var customNumeric = false
@@ -61,24 +63,27 @@ struct NunaJournalView: View {
 
     // MARK: Day and mood
 
+    /// The date as a heading with the week as a row of capsules: the chosen day is filled, a dot under a day says it has answers.
     private var dayStrip: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(verbatim: Self.title(dayDate)).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .center) {
+                Text(verbatim: Self.title(dayDate)).font(.nuna(size: 22, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+                    .lineLimit(1).minimumScaleFactor(0.8)
+                Spacer(minLength: 8)
+                if dayOffset != 0 {
+                    Button { withAnimation(.snappy) { dayOffset = 0 } } label: {
+                        Text("Today").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            .padding(.horizontal, 14).frame(height: 32)
+                            .background(NunaPalette.glassStrong, in: Capsule())
+                            .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                    }.buttonStyle(.plain)
+                }
+            }
             ScrollViewReader { proxy in
                 ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 8) {
+                    HStack(spacing: 6) {
                         ForEach(Self.offsets, id: \.self) { off in
-                            let on = dayOffset == off
-                            Button { dayOffset = off } label: {
-                                VStack(spacing: 2) {
-                                    Text(verbatim: Self.weekday(off)).font(.nuna(size: 11, weight: .heavy)).tracking(0.6).textCase(.uppercase)
-                                        .foregroundStyle(on ? NunaPalette.onAccent.opacity(0.75) : NunaPalette.textSecondary)
-                                    Text(verbatim: Self.dayNumber(off)).font(.nuna(size: 18, weight: .bold, design: NunaType.design))
-                                        .foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary)
-                                }
-                                .frame(width: 52, height: 62)
-                                .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            }.buttonStyle(.plain).id(off)
+                            dayCapsule(off)
                         }
                     }.padding(.horizontal, 1)
                 }
@@ -87,28 +92,72 @@ struct NunaJournalView: View {
         }
     }
 
+    private func dayCapsule(_ off: Int) -> some View {
+        let on = dayOffset == off
+        let isToday = off == 0
+        let logged = loggedDays.contains(Repository.localDayKey(Calendar.current.date(byAdding: .day, value: -off, to: Date()) ?? Date()))
+        return Button { withAnimation(.snappy) { dayOffset = off } } label: {
+            VStack(spacing: 6) {
+                Text(verbatim: Self.weekday(off)).font(.nuna(size: 11, weight: .heavy)).tracking(0.6).textCase(.uppercase)
+                    .foregroundStyle(on ? NunaPalette.onAccent.opacity(0.7) : NunaPalette.textSecondary)
+                Text(verbatim: Self.dayNumber(off)).font(.nuna(size: 19, weight: .bold, design: NunaType.design))
+                    .foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary)
+                Circle().fill(logged ? (on ? NunaPalette.onAccent : NunaPalette.charge) : .clear).frame(width: 5, height: 5)
+            }
+            .frame(width: 48, height: 80)
+            .background(on ? NunaPalette.accent : .clear, in: Capsule())
+            .overlay(Capsule().strokeBorder(on ? .clear : (isToday ? NunaPalette.textSecondary : NunaPalette.hairline), lineWidth: isToday && !on ? 1.5 : 1))
+        }
+        .buttonStyle(.plain).id(off)
+    }
+
+    /// One colour per step of the 1 to 5 scale, from rough to great.
+    private static let moodTints: [Color] = [NunaPalette.alert, NunaPalette.warning, NunaPalette.effort, NunaPalette.charge, NunaPalette.rest]
+
     private var moodCard: some View {
         NunaCard {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack {
-                    nunaTrendsCap("Mood")
+            VStack(alignment: .leading, spacing: 18) {
+                HStack(alignment: .firstTextBaseline) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        nunaTrendsCap("Mood")
+                        if let mood {
+                            Text(verbatim: MoodStore.label(for: mood)).font(.nuna(size: 24, weight: .heavy)).foregroundStyle(Self.moodTints[min(max(mood, 1), 5) - 1])
+                        } else {
+                            Text("How are you feeling right now?").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        }
+                    }
                     Spacer()
-                    if let mood { Text(verbatim: MoodStore.label(for: mood)).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+                    if let mood {
+                        Text(verbatim: "\(mood)/5").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
+                    }
                 }
-                HStack(spacing: 10) {
+                HStack(spacing: 0) {
                     ForEach(Array(MoodStore.scale), id: \.self) { v in
                         let on = mood == v
-                        Button { mood = v; Task { await repo.saveMood(day: dayKey, value: v) } } label: {
-                            Text(verbatim: "\(v)").font(.nuna(size: 20, weight: .bold, design: NunaType.design))
-                                .foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary)
-                                .frame(maxWidth: .infinity).frame(height: 52)
-                                .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        let tint = Self.moodTints[v - 1]
+                        Button {
+                            withAnimation(.snappy) { mood = v }
+                            Task { await repo.saveMood(day: dayKey, value: v) }
+                        } label: {
+                            Text(verbatim: "\(v)").font(.nuna(size: 19, weight: .bold, design: NunaType.design))
+                                .foregroundStyle(on ? Color.black : tint)
+                                .frame(width: 52, height: 52)
+                                .background(on ? tint : tint.opacity(0.14), in: Circle())
+                                .overlay(Circle().strokeBorder(tint.opacity(on ? 0 : 0.35), lineWidth: 1))
+                                .scaleEffect(on ? 1.12 : 1)
+                                .frame(maxWidth: .infinity)
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel(Text(verbatim: "\(MoodStore.label(for: v)), \(v) / 5"))
                         .accessibilityAddTraits(on ? .isSelected : [])
                     }
                 }
+                HStack {
+                    Text(verbatim: MoodStore.label(for: 1))
+                    Spacer()
+                    Text(verbatim: MoodStore.label(for: 5))
+                }
+                .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
             }
         }
     }
@@ -288,6 +337,11 @@ struct NunaJournalView: View {
         answers = await repo.nativeJournalAnswers(day: key)
         numbers = await repo.nativeJournalNumeric(day: key)
         mood = await repo.mood(day: key)
+        let cal = Calendar.current
+        if let first = Self.offsets.last.flatMap({ cal.date(byAdding: .day, value: -$0, to: Date()) }),
+           let last = Self.offsets.first.flatMap({ cal.date(byAdding: .day, value: -$0, to: Date()) }) {
+            loggedDays = await repo.nativeJournalDays(from: Repository.localDayKey(first), to: Repository.localDayKey(last))
+        }
     }
 
     // MARK: Formatting

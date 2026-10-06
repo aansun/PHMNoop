@@ -607,7 +607,7 @@ struct NunaTodayView: View {
             VStack(spacing: NunaSpacing.section) {
                 if readyLine != nil || model.charge.pct != nil {
                     // Readiness, Charge state and heart rate: three chips of one shape on one line.
-                    HStack(spacing: 8) { synthesisChips; heartRatePill; Spacer(minLength: 0) }
+                    HStack(spacing: 8) { Spacer(minLength: 0); synthesisChips; heartRatePill }
                 }
                 if model.isToday { NunaIllnessGate() }
             }
@@ -641,7 +641,8 @@ struct NunaTodayView: View {
                             Image(systemName: "slider.horizontal.3").font(.nuna(size: 14, weight: .bold))
                         }
                         .accessibilityLabel(Text("Edit"))
-                        NavigationLink(value: NunaTodayRoute.allMetrics) { NunaLinkLabel(text: "All", chevron: true) }
+                        NavigationLink(value: NunaTodayRoute.allMetrics) { Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .heavy)) }
+                            .accessibilityLabel(Text("All"))
                     }
                     NunaMetricsGrid(tiles: tiles, layout: metricsLayout)
                 }
@@ -660,7 +661,7 @@ struct NunaTodayView: View {
                 NavigationLink(value: TabRoute.fullDayChart) {
                     NunaCard(small: true) {
                         NunaListRow("Heart Rate", systemImage: "heart.fill", tint: NunaPalette.alertText, showsChevron: true) {
-                            Text(verbatim: "\(hr) bpm").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: "\(hr)").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         }
                     }
                 }
@@ -752,7 +753,7 @@ struct NunaTodayView: View {
     @ViewBuilder private var heartRatePill: some View {
         NunaLiveHR(isToday: model.isToday) { hr in
             NavigationLink(value: TabRoute.fullDayChart) {
-                todayChip(icon: .symbol("heart.fill"), text: Text(verbatim: "\(hr) bpm"), tint: nil)
+                todayChip(icon: .symbol("heart.fill"), text: Text(verbatim: "\(hr)"), tint: nil)
             }
             .buttonStyle(.plain)
         }
