@@ -20,6 +20,19 @@ enum PHMNChangelog {
 
     static let releases: [Release] = [
         Release(
+            version: "0.1.1",
+            title: "Workout detail, rebuilt around the session",
+            date: "October 2026",
+            items: [
+                "**One layout for every sport.** A saved session reads the same way: when it ran and the Effort it added, Anya's line, the map when a route was recorded, a summary that fits the sport, the heart-rate curve, the zones, photos, how it felt, and Strava. Runs, rides and swims lead with distance and pace or speed; classes and court sports with time, calories and heart rate; gym sessions with volume, sets and each exercise.",
+                "**Zones you can read.** Each zone has its bpm range, minutes, share and a bar sized against your longest zone.",
+                "**Review a session.** Slide to say how it felt, add photos as a carousel, and see where it stands with Strava (the logo, ticked when uploads are automatic). Photos and answers stay on the phone.",
+                "**Pin up to 8 workouts** to Start a workout. Tap Edit to choose, or press and hold any workout.",
+                "**Anya cards open on their own line.** Tapping a card with a figure in it opens the sheet about that figure, not a general read. The explain button no longer carries an icon.",
+                "**Today's Anya card with an action** puts the words across the full width and a small translucent button under them.",
+            ]
+        ),
+        Release(
             version: "0.1.0",
             title: "The first PHMN: NOOP's engine, rebuilt around reading your day",
             date: "October 2026",
