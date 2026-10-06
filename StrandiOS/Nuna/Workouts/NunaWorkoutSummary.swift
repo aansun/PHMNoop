@@ -49,22 +49,43 @@ struct NunaWorkoutSummaryView: View {
 
     @ViewBuilder private func content(_ r: WorkoutRow) -> some View {
         let secs = r.durationS ?? Double(r.endTs - r.startTs)
-        HStack {
-            Text(verbatim: NunaWorkoutFormat.day(r.startTs) + " · " + NunaWorkoutFormat.clock(r.startTs)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            Spacer()
-            NunaChip(sourceName(r), systemImage: "checkmark")
-        }
-        mainCard(r, secs)
+        headerCard(r)
         if let s = r.strain { effortCard(s) }
-        NunaWorkoutReviewSection(row: r)
-        zonesCard(r)
-        hrCard(r)
+        if route.count >= 2 { mapCard }
+        summaryCard(r, secs)
         if let line = anyaLine(r) { NunaAnyaCard(verbatim: line) { showCoach = true } }
+        hrCard(r)
+        zonesCard(r)
+        NunaWorkoutReviewSection(row: r)
         NunaWorkoutStravaCard(row: r, afterWorkout: false, checked: .constant(false))
         Button(role: .destructive) { confirmDelete = true } label: {
             Text("Delete").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText)
                 .frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
         }.buttonStyle(.plain)
+    }
+
+    /// The sport and when it happened: the day and the start and end time.
+    private func headerCard(_ r: WorkoutRow) -> some View {
+        NunaCard(small: true) {
+            HStack(spacing: 12) {
+                NunaIconTile(ActivitySport.symbol(for: r.sport))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(LocalizedStringKey(WorkoutSource.displaySport(r.sport))).font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: NunaWorkoutFormat.day(r.startTs) + " · " + NunaWorkoutFormat.clock(r.startTs) + " – " + NunaWorkoutFormat.clock(r.endTs))
+                        .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                }
+                Spacer(minLength: 8)
+                NunaChip(sourceName(r), systemImage: "checkmark")
+            }
+        }
+    }
+
+    private var mapCard: some View {
+        NunaCard {
+            // A map of the captured route with start and end markers (tiles are cached by MapKit; the route itself
+            // never leaves the phone).
+            WorkoutRouteMap(points: route, stroke: UIColor(NunaPalette.effort)).environment(\.colorScheme, .dark).frame(height: 220).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        }
     }
 
     private func sourceName(_ r: WorkoutRow) -> LocalizedStringKey {
@@ -78,16 +99,11 @@ struct NunaWorkoutSummaryView: View {
         }
     }
 
-    private func mainCard(_ r: WorkoutRow, _ secs: Double) -> some View {
+    private func summaryCard(_ r: WorkoutRow, _ secs: Double) -> some View {
         let dist = NunaWorkoutFormat.distance(r.distanceM, system)
         let pace = WorkoutCatalog.isOnFoot(r.sport) ? NunaWorkoutFormat.pace(distanceM: r.distanceM, seconds: secs, system) : nil
         return NunaCard {
             VStack(alignment: .leading, spacing: 14) {
-                if route.count >= 2 {
-                    // A map of the captured route with start and end markers (tiles are cached by MapKit; the route itself
-                    // never leaves the phone). The plain line below stays as the fallback when MapKit has nothing to show.
-                    WorkoutRouteMap(points: route, stroke: UIColor(NunaPalette.effort)).environment(\.colorScheme, .dark).frame(height: 200).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                }
                 HStack {
                     if let dist { big("Distance", dist) }
                     big("Time", clockDuration(secs))
@@ -186,11 +202,32 @@ struct NunaWorkoutSummaryView: View {
         }
     }
 
+    /// Minutes in each zone for a row, from the stored percentages.
+    private func zoneMinutes(_ r: WorkoutRow) -> [Double]? {
+        guard let pct = WorkoutZones.percents(r.zonesJSON) else { return nil }
+        let d = (r.durationS ?? Double(r.endTs - r.startTs)) / 60
+        return pct.map { d * $0 / 100 }
+    }
+
+    /// Where the time went, set against the user's own other sessions of the same sport when there are enough of them.
     private func anyaLine(_ r: WorkoutRow) -> String? {
-        guard let mins = zoneMin ?? WorkoutZones.percents(r.zonesJSON).map({ p in p.map { (r.durationS ?? 0) / 60 * $0 / 100 } }), mins.reduce(0, +) > 0 else { return nil }
+        guard let mins = zoneMin ?? zoneMinutes(r), mins.reduce(0, +) > 0 else { return nil }
         let total = mins.reduce(0, +)
         let top = mins.enumerated().max { $0.element < $1.element }!
-        return String(localized: "Most of this session, \(Int((top.element / total * 100).rounded()))%, was in zone \(top.offset + 1).")
+        let zone = top.offset + 1, minutes = Int(top.element.rounded()), share = Int((top.element / total * 100).rounded())
+        guard minutes >= 1 else { return nil }
+        let others = m.rows.filter { $0.sport == r.sport && $0.startTs != r.startTs }.compactMap(zoneMinutes)
+        if others.count >= 2 {
+            let typical = others.map { $0[top.offset] }.reduce(0, +) / Double(others.count)
+            let usual = Int(typical.rounded())
+            if Double(minutes) >= typical * 1.25 + 1 {
+                return String(localized: "You spent \(minutes) min in zone \(zone), \(share)% of the session. Your usual is \(usual) min, so this one ran harder.")
+            } else if Double(minutes) <= typical * 0.75 - 1 {
+                return String(localized: "You spent \(minutes) min in zone \(zone), \(share)% of the session. Your usual is \(usual) min, so this one was lighter.")
+            }
+            return String(localized: "You spent \(minutes) min in zone \(zone), \(share)% of the session. That is about your usual \(usual) min.")
+        }
+        return String(localized: "You spent \(minutes) min in zone \(zone), \(share)% of the session.")
     }
 
     private func loadDetail(_ r: WorkoutRow) async {

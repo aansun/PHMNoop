@@ -166,39 +166,25 @@ final class NunaWorkoutReviewDraft: ObservableObject {
     }
 }
 
-/// "How did it feel?" as a slider with four steps, and the photos as a carousel.
+/// The photos and the "How did it feel?" slider as two cards, in that order.
 struct NunaWorkoutReviewCard: View {
     @ObservedObject var draft: NunaWorkoutReviewDraft
-    @State private var picked: [PhotosPickerItem] = []
-    @State private var viewing: UUID?
-    @State private var page = 0
 
     var body: some View {
-        NunaCard {
-            VStack(alignment: .leading, spacing: 18) {
-                feelingSlider
-                NunaDivider()
-                photosSection
-            }
+        VStack(spacing: 14) {
+            NunaWorkoutPhotosCard(draft: draft)
+            NunaWorkoutFeelingCard(draft: draft)
         }
-        .onChange(of: picked) { _, items in
-            guard !items.isEmpty else { return }
-            Task {
-                var datas: [Data] = []
-                for item in items { if let d = try? await item.loadTransferable(type: Data.self) { datas.append(d) } }
-                picked = []
-                let before = draft.photos.count
-                draft.add(datas)
-                // Show the first one that was just added.
-                if draft.photos.count > before { page = before }
-            }
-        }
-        .fullScreenCover(item: Binding(get: { viewing.map { Photo(id: $0) } }, set: { viewing = $0?.id })) { p in viewer(p.id) }
     }
+}
 
-    private struct Photo: Identifiable { let id: UUID }
+/// "How did it feel?" as a slider with four steps. The answer shows once, top right.
+struct NunaWorkoutFeelingCard: View {
+    @ObservedObject var draft: NunaWorkoutReviewDraft
 
-    // MARK: Slider
+    var body: some View {
+        NunaCard { feelingSlider }
+    }
 
     private var feelingSlider: some View {
         let f = draft.feeling
@@ -215,25 +201,35 @@ struct NunaWorkoutReviewCard: View {
                 .sensoryFeedback(.selection, trigger: Int(draft.step))
                 .accessibilityLabel(Text("How did it feel?"))
                 .accessibilityValue(Text(f.title))
-            // Each label sits under its own stop: the slider's ends are the first and last, the others a third apart.
-            GeometryReader { geo in
-                let thumb: CGFloat = 14   // the slider keeps its thumb this far inside each end
-                let usable = max(geo.size.width - 2 * thumb, 1)
-                ForEach(NunaWorkoutFeeling.allCases) { item in
-                    let on = draft.rated && item == f
-                    Text(item.title).font(.nuna(size: 10, weight: .heavy)).tracking(0).lineLimit(1).fixedSize()
-                        .foregroundStyle(on ? item.tint : NunaPalette.textMuted)
-                        .position(x: min(max(thumb + usable * CGFloat(item.index) / 3, labelHalf(item)), geo.size.width - labelHalf(item)), y: 8)
-                }
-            }
-            .frame(height: 16)
         }
     }
+}
 
-    /// Half the width of a label, so the first and last never run off the card.
-    private func labelHalf(_ item: NunaWorkoutFeeling) -> CGFloat {
-        switch item { case .easy: return 18; case .fairlyHard: return 26; case .hard: return 37; case .veryHard: return 33 }
+/// The photos of a session as a carousel.
+struct NunaWorkoutPhotosCard: View {
+    @ObservedObject var draft: NunaWorkoutReviewDraft
+    @State private var picked: [PhotosPickerItem] = []
+    @State private var viewing: UUID?
+    @State private var page = 0
+
+    var body: some View {
+        NunaCard { photosSection }
+        .onChange(of: picked) { _, items in
+            guard !items.isEmpty else { return }
+            Task {
+                var datas: [Data] = []
+                for item in items { if let d = try? await item.loadTransferable(type: Data.self) { datas.append(d) } }
+                picked = []
+                let before = draft.photos.count
+                draft.add(datas)
+                // Show the first one that was just added.
+                if draft.photos.count > before { page = before }
+            }
+        }
+        .fullScreenCover(item: Binding(get: { viewing.map { Photo(id: $0) } }, set: { viewing = $0?.id })) { p in viewer(p.id) }
     }
+
+    private struct Photo: Identifiable { let id: UUID }
 
     // MARK: Photos
 
@@ -314,6 +310,29 @@ struct NunaWorkoutReviewCard: View {
 
 // MARK: - Strava
 
+/// The Strava mark: the two chevrons in white on Strava orange.
+struct NunaStravaLogo: View {
+    var size: CGFloat = 40
+    var body: some View {
+        RoundedRectangle(cornerRadius: size * 0.26, style: .continuous).fill(Color(red: 252 / 255, green: 76 / 255, blue: 2 / 255))
+            .frame(width: size, height: size)
+            .overlay { NunaStravaGlyph().fill(.white).frame(width: size * 0.5, height: size * 0.5) }
+            .accessibilityHidden(true)
+    }
+}
+
+private struct NunaStravaGlyph: Shape {
+    func path(in rect: CGRect) -> Path {
+        func pt(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: rect.minX + rect.width * x / 24, y: rect.minY + rect.height * y / 24) }
+        var p = Path()
+        p.move(to: pt(15.387, 17.944)); p.addLine(to: pt(13.298, 13.828)); p.addLine(to: pt(10.233, 13.828))
+        p.addLine(to: pt(15.387, 24)); p.addLine(to: pt(20.537, 13.828)); p.addLine(to: pt(17.471, 13.828)); p.closeSubpath()
+        p.move(to: pt(10.463, 8.229)); p.addLine(to: pt(13.299, 13.827)); p.addLine(to: pt(17.471, 13.827))
+        p.addLine(to: pt(10.463, 0)); p.addLine(to: pt(3.463, 13.828)); p.addLine(to: pt(8.632, 13.828)); p.closeSubpath()
+        return p
+    }
+}
+
 /// Where a session stands with Strava, from the settings and the upload ledger.
 enum NunaStravaState: Equatable {
     case off, notConnected, notEligible, uploaded, processing, ready
@@ -351,7 +370,7 @@ struct NunaWorkoutStravaCard: View {
     var body: some View {
         NunaCard(small: true) {
             HStack(spacing: 12) {
-                NunaIconTile("figure.run.circle", tint: NunaPalette.effortText)
+                NunaStravaLogo()
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Strava").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Text(verbatim: subtitle).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
