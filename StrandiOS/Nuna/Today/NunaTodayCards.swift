@@ -257,6 +257,9 @@ struct NunaStressCard: View {
     private var highMin: Int? { scored ? curve.map(StressDayCurve.highMinutes) : nil }
     /// The big number: the average over the latest hour (today) or over the day, never above the scale's 3.
     private var level: Double? { curve.flatMap { StressDayCurve.headlineLevel($0, isToday: isToday) } ?? score.map { min(max($0, 0), 3) } }
+    /// "Last hour" only when the figure really is the latest reading on the curve; the day-level score that stands in when nothing has been
+    /// read yet is a day figure, and says so.
+    private var isLastHour: Bool { isToday && curve.flatMap(StressDayCurve.latestLevel) != nil }
 
     var body: some View {
         NavigationLink(value: stressRoute) {
@@ -274,7 +277,7 @@ struct NunaStressCard: View {
                     }
                     HStack(alignment: .center, spacing: 14) {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(isToday ? "Last hour average" : "Day average").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel)
+                            Text(isLastHour ? "Last hour average" : "Day average").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel)
                                 .textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                             HStack(alignment: .firstTextBaseline, spacing: 5) {
                                 Text(verbatim: level.map(Self.format) ?? "–")
