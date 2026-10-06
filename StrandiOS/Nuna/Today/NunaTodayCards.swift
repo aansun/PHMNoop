@@ -249,7 +249,7 @@ struct NunaAnyaCard: View {
         }
     }
 
-    /// With an action: the icon and "Anya" on top, the words across the full width under them, and the button under that, full width.
+    /// With an action: the icon and "Anya" on top, the words across the full width under them, and a small translucent button under that, on the left.
     private func stacked(_ buttonTitle: LocalizedStringKey, _ onButton: @escaping () -> Void) -> some View {
         NunaCard(small: true, highlight: highlight, padding: EdgeInsets(top: 14, leading: 16, bottom: 16, trailing: 16)) {
             VStack(alignment: .leading, spacing: 14) {
@@ -265,8 +265,13 @@ struct NunaAnyaCard: View {
                     }
                 }
                 .buttonStyle(.plain)
-                Button(action: onButton) { Text(buttonTitle).frame(maxWidth: .infinity) }
-                    .buttonStyle(.nuna(.primary, height: 44))
+                Button(action: onButton) {
+                    Text(buttonTitle).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        .padding(.horizontal, 22).frame(height: 40)
+                        .background(NunaPalette.textPrimary.opacity(0.12), in: Capsule())
+                        .overlay(Capsule().strokeBorder(NunaPalette.textPrimary.opacity(0.18), lineWidth: 1))
+                }
+                .buttonStyle(.plain)
             }
         }
     }
