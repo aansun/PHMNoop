@@ -29,6 +29,38 @@ struct NunaNight: Identifiable {
 
 struct NunaMotionEpoch { let t: TimeInterval; let v: Double }
 
+/// Where the night really ended when the strap stopped recording before the session did. Movement the strap measured is never
+/// exactly zero, so a run of exact zeros right after the last sleep is a stretch with no recording (the strap was off the wrist or
+/// had not synced yet), and calling it "awake" would put the person in bed long after they got up. The night is cut a few minutes
+/// after the last sleep at most, and only when a gap of at least `minGap` seconds starts within `reach` seconds of it. Anything
+/// the strap did record stays.
+enum NunaNightTail {
+    static let minGap: TimeInterval = 600
+    static let reach: TimeInterval = 600
+    static let grace: TimeInterval = 300
+
+    /// The new end in seconds from onset, or nil to leave the night as it is.
+    static func cutoff(intervals: [SleepInterval], motion: [NunaMotionEpoch]) -> TimeInterval? {
+        guard let lastSleep = intervals.filter({ $0.stage != .awake }).map(\.end).max(),
+              let end = intervals.map(\.end).max(), end > lastSleep + grace else { return nil }
+        let sorted = motion.sorted { $0.t < $1.t }
+        var runStart: TimeInterval?
+        var runEpochs = 0
+        var step: TimeInterval = 30
+        if sorted.count > 1 { step = max(1, sorted[1].t - sorted[0].t) }
+        for e in sorted where e.t >= lastSleep - step {
+            if e.v == 0 {
+                if runStart == nil { runStart = e.t; runEpochs = 0 }
+                runEpochs += 1
+                if let r = runStart, Double(runEpochs) * step >= minGap, r <= lastSleep + reach {
+                    return min(max(r, lastSleep), lastSleep + grace)
+                }
+            } else { runStart = nil; runEpochs = 0 }
+        }
+        return nil
+    }
+}
+
 /// What the movement strip adds up to. Magnitudes are not calibrated, so these are relative counts:
 /// a movement is a burst above `moveThreshold`, a position change a burst whose peak clears `positionPeak`,
 /// and restlessness is movements per hour of sleep window.
@@ -222,6 +254,20 @@ final class NunaSleepModel: ObservableObject {
             }
             _ = first
 
+            // A stretch with no recording at the end is not time awake: end the night where the recording stopped.
+            var wakeAt = wakeDate
+            if let cut = NunaNightTail.cutoff(intervals: intervals, motion: motion) {
+                var removedAwake = 0.0
+                intervals = intervals.compactMap { iv in
+                    if iv.start >= cut { if iv.stage == .awake { removedAwake += (iv.end - iv.start) / 60 }; return nil }
+                    if iv.end > cut { if iv.stage == .awake { removedAwake += (iv.end - cut) / 60 }; return SleepInterval(stage: iv.stage, start: iv.start, end: cut) }
+                    return iv
+                }
+                motion = motion.filter { $0.t < cut }
+                stages = Stages(awake: max(0, stages.awake - removedAwake), light: stages.light, deep: stages.deep, rem: stages.rem)
+                wakeAt = Date(timeIntervalSince1970: TimeInterval(onsetTs) + cut)
+            }
+
             let naps: [NunaNap] = group.filter { !mainStarts.contains($0.startTs) }.map { b in
                 let start = b.effectiveStartTs
                 let seg = SleepView.decodeSegments(b.stagesJSON, sessionStart: start)
@@ -234,7 +280,7 @@ final class NunaSleepModel: ObservableObject {
 
             out.append(NunaNight(dayKey: key, wakeDate: wakeDate,
                                  onset: Date(timeIntervalSince1970: TimeInterval(onsetTs)),
-                                 wake: wakeDate, stages: stages, intervals: intervals, naps: naps,
+                                 wake: wakeAt, stages: stages, intervals: intervals, naps: naps,
                                  daily: row, proportional: proportional, motion: motion))
         }
         nights = out
