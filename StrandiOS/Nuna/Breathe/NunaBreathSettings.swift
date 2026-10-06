@@ -35,7 +35,7 @@ struct NunaBreathSettingsView: View {
                     NunaToggleRow("Countdown", subtitle: "Three seconds to settle before the first breath", systemImage: "timer", isOn: $countdown).padding(.vertical, 8)
                 }
                 VStack(alignment: .leading, spacing: 10) {
-                    nunaTrendsCap("Session length")
+                    nunaRuledHeader("Session length")
                     NunaSegmented([(value: 0, title: "Template"), (value: 5, title: "5 min"), (value: 10, title: "10 min"), (value: 15, title: "15 min")], selection: $length)
                     Text("Template uses each exercise's own length. A fixed length applies to every template.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }

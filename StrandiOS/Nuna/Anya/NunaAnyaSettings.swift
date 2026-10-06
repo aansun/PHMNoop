@@ -57,7 +57,7 @@ struct NunaAnyaSettingsView: View {
                 .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
 
             VStack(alignment: .leading, spacing: 10) {
-                nunaTrendsCap("How Anya answers")
+                nunaRuledHeader("How Anya answers")
                 NunaCard {
                     VStack(alignment: .leading, spacing: 16) {
                         labelled("Language") { NunaSegmented([(value: "id", title: "Indonesian"), (value: "en", title: "English"), (value: "app", title: "Follow app")], selection: $language) }
@@ -444,7 +444,7 @@ struct NunaAnyaVoiceCoachView: View {
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }
                 VStack(alignment: .leading, spacing: 10) {
-                    nunaTrendsCap("When Anya speaks")
+                    nunaRuledHeader("When Anya speaks")
                     NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                         VStack(spacing: 0) {
                             NunaToggleRow("Start, pause and finish", subtitle: "Confirms each change and when you reach your target", systemImage: "play.circle", isOn: $lifecycle).padding(.vertical, 8)
@@ -461,7 +461,7 @@ struct NunaAnyaVoiceCoachView: View {
                 }
                 if heartRate || coaching {
                     VStack(alignment: .leading, spacing: 10) {
-                        nunaTrendsCap("How often")
+                        nunaRuledHeader("How often")
                         NunaCard { NunaSegmented([(value: AudioPromptFrequency.low.rawValue, title: "Rarely"), (value: AudioPromptFrequency.normal.rawValue, title: "Balanced"), (value: AudioPromptFrequency.high.rawValue, title: "Often")], selection: $frequency) }
                     }
                 }
@@ -487,7 +487,7 @@ struct NunaAnyaVoiceCoachView: View {
                     NunaCard(small: true) { NunaToggleRow("Let the AI word the cues", subtitle: "Uses the connected provider; a local fallback stays", systemImage: "text.bubble", isOn: $aiWording) }
                 }
                 VStack(alignment: .leading, spacing: 10) {
-                    nunaTrendsCap("Voice")
+                    nunaRuledHeader("Voice")
                     NunaCard { NunaSegmented(AudioSpeechRate.allCases.map { (value: $0.rawValue, title: LocalizedStringKey($0.title)) }, selection: $speechRate) }
                 }
             }

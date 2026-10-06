@@ -138,7 +138,7 @@ struct NunaScoringGuideView: View {
             NunaDetailScreen("How scores are worked out") {
                 NunaCard(highlight: true) {
                     VStack(alignment: .leading, spacing: 10) {
-                        nunaTrendsCap("The three scores")
+                        nunaRuledHeader("The three scores")
                         Text("NOOP gives you three daily scores (Charge, Effort and Rest), each on a 0-100 scale. They're built from your strap's raw signals using published, peer-reviewed sport science, and computed entirely on your device. They are NOT WHOOP's scores: we don't have WHOOP's private algorithms and don't pretend to. They aim at the same three questions using open science, so they'll usually track WHOOP's in direction, but won't match number-for-number. And that's the point.")
                             .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                         HStack(spacing: 16) {

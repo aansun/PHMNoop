@@ -34,33 +34,33 @@ struct NunaMeView: View {
                     .buttonStyle(.plain).accessibilityLabel(Text("Search"))
                 }
                 profileCard
-                group("Account and device") {
+                group("Account and device", count: 3) {
                     row(.persona, "Persona", "Profile, heart-rate zones, targets", "person.fill")
                     NunaDivider()
                     row(.devices, "Devices", LocalizedStringKey(deviceSubtitle), "applewatch")
                     NunaDivider()
                     row(.anya, "Anya", LocalizedStringKey(anyaSubtitle), NunaGlyph.anya)
                 }
-                group("Appearance") {
+                group("Appearance", count: 2) {
                     row(.appearance, "Appearance", LocalizedStringKey(appearanceSubtitle), "slider.horizontal.3")
                     NunaDivider()
                     row(.widgets, "Widgets and Lock Screen", "Home and lock screen widgets", "square.grid.2x2.fill")
                 }
-                group("Notifications and automation") {
+                group("Notifications and automation", count: 3) {
                     row(.notifications, "Notifications", LocalizedStringKey(notificationsSubtitle), "bell.fill")
                     NunaDivider()
                     row(.automations, "Strap automations", LocalizedStringKey(wrist ? String(localized: "Wrist alerts on") : String(localized: "Wrist alerts off")), "applewatch.radiowaves.left.and.right")
                     NunaDivider()
                     row(.features, "Optional features", LocalizedStringKey(featuresSubtitle), "checkmark.circle.fill")
                 }
-                group("Data") {
+                group("Data", count: 3) {
                     row(.data, "Data and integrations", "Apple Health, Strava, import, export", "square.and.arrow.up")
                     NunaDivider()
                     row(.backup, "Backup", LocalizedStringKey(FolderBackup.lastBackupMs > 0 ? String(localized: "Last \(NunaDataHubView.when(FolderBackup.lastBackupMs))") : String(localized: "Not backed up yet")), "clock.arrow.circlepath")
                     NunaDivider()
                     row(.privacy, "Privacy", "Everything stays on this iPhone", "lock.shield.fill")
                 }
-                group("More") {
+                group("More", count: 2) {
                     row(.advanced, "Advanced and experiments", "Baseline, HRV, Test Centre", "flame.fill")
                     NunaDivider()
                     row(.about, "About and help", "Version, how it works, credits", "info.circle.fill")
@@ -132,9 +132,9 @@ struct NunaMeView: View {
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func group<Rows: View>(_ title: LocalizedStringKey, @ViewBuilder _ rows: () -> Rows) -> some View {
+    private func group<Rows: View>(_ title: LocalizedStringKey, count: Int, @ViewBuilder _ rows: () -> Rows) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            NunaSectionHeader(title)
+            nunaRuledHeader(title, count: count)
             NunaCard(small: true) { VStack(spacing: 0) { rows() } }
         }
     }

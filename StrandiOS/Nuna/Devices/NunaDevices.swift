@@ -74,7 +74,7 @@ private struct NunaDevicesContent: View {
             if let d = active { activeCard(d) } else { emptyCard }
             if live.lastSyncedAt != nil || live.backfilling { syncRow }
             if !others.isEmpty {
-                NunaTitleRow(title: "Other WHOOP") { EmptyView() }
+                nunaRuledHeader("Other WHOOP")
                 NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                     VStack(spacing: 0) {
                         ForEach(Array(others.enumerated()), id: \.element.id) { i, d in
@@ -102,7 +102,7 @@ private struct NunaDevicesContent: View {
                     .background(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(NunaPalette.hairline, style: StrokeStyle(lineWidth: 1, dash: [5, 5])))
             }.buttonStyle(.plain)
             if !removed.isEmpty {
-                NunaTitleRow(title: "Removed") { EmptyView() }
+                nunaRuledHeader("Removed")
                 NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                     VStack(spacing: 0) {
                         ForEach(Array(removed.enumerated()), id: \.element.id) { i, d in
@@ -230,7 +230,7 @@ private struct NunaDevicesContent: View {
 
     private var help: some View {
         VStack(alignment: .leading, spacing: 12) {
-            NunaTitleRow(title: "Help") { EmptyView() }
+            nunaRuledHeader("Help")
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
                     NavigationLink(value: NunaDeviceRoute.battery) { NunaListRow("Battery", subtitle: "Level, trend and care", systemImage: "battery.75percent", showsChevron: true) }.buttonStyle(.plain)
@@ -363,7 +363,7 @@ struct NunaDeviceDetailView: View {
 
     private func actions(_ d: PairedDevice) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            nunaTrendsCap("Actions")
+            nunaRuledHeader("Actions")
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
                     action("Sync now", live.lastSyncedAt.map { String(localized: "Last at \(NunaDeviceFormat.clock($0))") } ?? String(localized: "Not synced yet"), "arrow.triangle.2.circlepath", enabled: live.connected && !live.backfilling) { model.ble.syncNow() }
@@ -391,7 +391,7 @@ struct NunaDeviceDetailView: View {
 
     private func manage(_ d: PairedDevice) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            nunaTrendsCap("Manage")
+            nunaRuledHeader("Manage")
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
                     if d.status == .archived {

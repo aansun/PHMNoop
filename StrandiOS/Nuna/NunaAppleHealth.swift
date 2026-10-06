@@ -30,9 +30,9 @@ struct NunaAppleHealthView: View {
         NunaDetailScreen("Apple Health") {
             statusCard
             if health.auth == .authorized || health.auth == .unknown || health.auth == .denied {
-                NunaTitleRow(title: "Read from Health") { EmptyView() }
+                nunaRuledHeader("Read from Health")
                 list(reads, tag: "Read")
-                NunaTitleRow(title: "Written to Health") { EmptyView() }
+                nunaRuledHeader("Written to Health")
                 list(writes, tag: "Written")
                 NunaCard(small: true) {
                     NunaListRow("Steps without double counting", subtitle: "A sample NOOP wrote is never read back as a phone step", systemImage: "info.circle")

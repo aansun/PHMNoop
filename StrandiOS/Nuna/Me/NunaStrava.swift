@@ -103,7 +103,7 @@ struct NunaStravaView: View {
             }
             NunaCard {
                 VStack(alignment: .leading, spacing: 10) {
-                    nunaTrendsCap("Connection")
+                    nunaRuledHeader("Connection")
                     Text(model.isConfigured ? "Ready to connect" : "Not connected").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     if !model.isConfigured { Text("Save the credentials first").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                     Button { Task { await model.connect() } } label: {
@@ -135,7 +135,7 @@ struct NunaStravaView: View {
                 NunaToggleRow("Upload automatically", subtitle: "New GPS and treadmill workouts are uploaded when they finish", systemImage: "arrow.up.circle", isOn: $automatic).padding(.vertical, 8)
             }
             VStack(alignment: .leading, spacing: 10) {
-                nunaTrendsCap("Waiting to upload")
+                nunaRuledHeader("Waiting to upload")
                 NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                     VStack(spacing: 0) {
                         if pending.isEmpty { Text(uploadable.isEmpty ? "No GPS or treadmill workouts yet." : "Everything recent is already on Strava.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 16) }
@@ -152,7 +152,7 @@ struct NunaStravaView: View {
             }
             if !done.isEmpty {
                 VStack(alignment: .leading, spacing: 10) {
-                    nunaTrendsCap("Already uploaded")
+                    nunaRuledHeader("Already uploaded")
                     NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                         VStack(spacing: 0) {
                             ForEach(Array(done.prefix(8).enumerated()), id: \.element.startTs) { i, r in

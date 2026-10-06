@@ -275,6 +275,35 @@ func nunaTrendsCap(_ t: LocalizedStringKey) -> some View {
     Text(t).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
 }
 
+/// The section header of the Journal, used across Me: the title, how many (when it is known), a hairline out to the edge and, optionally,
+/// a control at the far end.
+struct NunaRuledHeader<Trailing: View>: View {
+    let title: LocalizedStringKey
+    var count: Int?
+    let trailing: Trailing
+
+    init(_ title: LocalizedStringKey, count: Int? = nil, @ViewBuilder trailing: () -> Trailing) {
+        self.title = title; self.count = count; self.trailing = trailing()
+    }
+
+    var body: some View {
+        HStack(spacing: 10) {
+            nunaTrendsCap(title).lineLimit(1).minimumScaleFactor(0.7).fixedSize(horizontal: false, vertical: true)
+            if let count { Text(verbatim: "\(count)").font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(NunaPalette.textMuted) }
+            Rectangle().fill(NunaPalette.hairline).frame(height: 1)
+            trailing
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isHeader)
+    }
+}
+
+extension NunaRuledHeader where Trailing == EmptyView {
+    init(_ title: LocalizedStringKey, count: Int? = nil) { self.init(title, count: count) { EmptyView() } }
+}
+
+func nunaRuledHeader(_ title: LocalizedStringKey, count: Int? = nil) -> some View { NunaRuledHeader(title, count: count) }
+
 /// Charge zone colour (green 67+, yellow 34 to 66, red below).
 func nunaZoneColor(_ v: Double) -> Color { nunaChargeColor(v) }
 #endif
