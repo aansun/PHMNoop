@@ -23,6 +23,18 @@ struct NunaAnyaTodayCard: View {
     let onCoach: () -> Void
     /// Opens one saved session's detail.
     let onViewWorkout: (NunaWorkoutKey) -> Void
+    /// Opens the breathing exercise.
+    let onBreathe: () -> Void
+    /// Opens the wind-down screen.
+    let onWindDown: () -> Void
+    /// What the evening read looks at.
+    var stressNow: Double?
+    var stressHighMin: Int?
+    var restingHr: Double?
+    var hrvDelta: Double?
+    var restingHrDelta: Double?
+    var sleepMinutes: Double?
+    @AppStorage(NunaGoals.sleepMinutes) private var sleepGoal = 0
 
     @State private var journalDone = false
 
@@ -55,7 +67,7 @@ struct NunaAnyaTodayCard: View {
         // Re-evaluated every minute, so the card lets go of a session on its own once the hour is up.
         TimelineView(.periodic(from: .now, by: 60)) { tick in
             NunaWithApp { app in
-                content(running: app.activeWorkout, now: tick.date)
+                content(running: app.activeWorkout, bpm: app.live.connected ? app.bpm : nil, now: tick.date)
             }
         }
         .task(id: repo.refreshSeq) {
@@ -71,29 +83,35 @@ struct NunaAnyaTodayCard: View {
         workouts.last { now.timeIntervalSince1970 - Double($0.endTs) <= Self.afterWorkoutWindow && now.timeIntervalSince1970 >= Double($0.endTs) }
     }
 
-    @ViewBuilder private func content(running: AppModel.ActiveWorkout?, now: Date) -> some View {
+    @ViewBuilder private func content(running: AppModel.ActiveWorkout?, bpm: Int?, now: Date) -> some View {
         let hourNow = Calendar.current.component(.hour, from: now)
         if let running {
             // 1. A session is running: how long, the heart rate now, and a way straight back into it.
             RunningSessionCard(running: running, effort: shown(running.liveStrain), onResume: { router.requestedDestination = .activeWorkout }, onCoach: onCoach)
         } else if let last = justFinished(now) {
             // 2. A session ended within the hour: what it earned, a way to its detail and, if the target is still open, what to do next.
+            //    Once the target is reached, or it is late, the day's read takes the second place instead.
             VStack(spacing: 10) {
                 doneCard(last)
-                if let next = nextSession(after: last, hour: hourNow) { suggestionCard(next) }
+                if targetMet || hourNow >= 19, let v = evening(now: now, bpm: bpm, hour: hourNow, last: last) {
+                    verdictCard(v)
+                } else if let next = nextSession(after: last, hour: hourNow) {
+                    suggestionCard(next)
+                }
             }
-        } else if hourNow >= 20 && !journalDone {
-            // 3. Evening: close the day in the journal.
-            NunaAnyaCard(verbatim: String(localized: "How was today? Fill in your journal and mood"),
-                         detail: eveningDetail, progress: nil,
-                         buttonTitle: "Journal", onButton: { router.requestedDestination = .journal }, action: onCoach)
-        } else if hourNow >= 20 {
-            NunaAnyaCard(verbatim: String(localized: "Wind down for tonight"),
-                         detail: String(localized: "An earlier night is the best thing for tomorrow's Charge."), progress: nil, action: onCoach)
-        } else if targetMet, let t = target {
-            NunaAnyaCard(verbatim: String(localized: "Today's Effort target is reached"),
-                         detail: String(format: String(localized: "Effort %@ of %@. Keep the rest of the day easy and eat and drink well."), shown(effort ?? 0), targetText(t)),
-                         progress: progress, action: onCoach)
+        } else if hourNow >= 19 {
+            // 3. Evening: whether to breathe, sleep early or go straight to bed, and the journal after it while it is still open.
+            VStack(spacing: 10) {
+                if let v = evening(now: now, bpm: bpm, hour: hourNow, last: workouts.last) { verdictCard(v) }
+                else { NunaAnyaCard(verbatim: String(localized: "Wind down for tonight"), detail: String(localized: "An earlier night is the best thing for tomorrow's Charge."), progress: nil, action: onCoach) }
+                if hourNow >= 20 && !journalDone {
+                    NunaAnyaCard(verbatim: String(localized: "How was today? Fill in your journal and mood"),
+                                 detail: eveningDetail, progress: nil,
+                                 buttonTitle: "Journal", onButton: { router.requestedDestination = .journal }, action: onCoach)
+                }
+            }
+        } else if targetMet, let v = reached(now: now, bpm: bpm, hour: hourNow, last: workouts.last) {
+            verdictCard(v, progress: progress)
         } else if !workouts.isEmpty, let next = nextSession(after: workouts.last, hour: hourNow) {
             // 4. Earlier today, and the target is still open: the rest of it, as one more session.
             suggestionCard(next)
@@ -105,6 +123,38 @@ struct NunaAnyaTodayCard: View {
                              if let r = plan { router.plannedSession = .init(title: r.title, minutes: r.plan.totalMinutes, zone: r.plan.mainZone) }
                              router.requestedDestination = .activeWorkout
                          }, action: onCoach)
+        }
+    }
+
+    // MARK: How the day should end
+
+    private func inputs(now: Date, bpm: Int?, hour: Int, last: WorkoutRow?) -> NunaAnyaDayInputs {
+        let t = target
+        return NunaAnyaDayInputs(
+            hour: hour,
+            minutesSinceWorkout: last.map { max(0, Int(now.timeIntervalSince1970 - Double($0.endTs)) / 60) },
+            bpm: bpm, restingHr: restingHr, stressNow: stressNow, stressHighMin: stressHighMin,
+            sleepMin: sleepMinutes, sleepNeedMin: sleepGoal > 0 ? Double(sleepGoal) : 480,
+            effort: effort, targetLow: t?.low, targetHigh: t?.high, hrvDelta: hrvDelta, restingHrDelta: restingHrDelta)
+    }
+
+    private func evening(now: Date, bpm: Int?, hour: Int, last: WorkoutRow?) -> NunaAnyaDayVerdict? {
+        NunaAnyaDayRead.evening(inputs(now: now, bpm: bpm, hour: hour, last: last), effortShown: shown)
+    }
+
+    private func reached(now: Date, bpm: Int?, hour: Int, last: WorkoutRow?) -> NunaAnyaDayVerdict? {
+        guard let t = target else { return nil }
+        return NunaAnyaDayRead.targetReached(inputs(now: now, bpm: bpm, hour: hour, last: last), effortShown: shown, band: targetText(t))
+    }
+
+    @ViewBuilder private func verdictCard(_ v: NunaAnyaDayVerdict, progress: Double? = nil) -> some View {
+        switch v.action {
+        case .breathe:
+            NunaAnyaCard(verbatim: v.title, detail: v.detail, progress: progress, buttonTitle: "Breathe", onButton: onBreathe, action: onCoach)
+        case .windDown:
+            NunaAnyaCard(verbatim: v.title, detail: v.detail, progress: progress, buttonTitle: "Wind down", onButton: onWindDown, action: onCoach)
+        case .none:
+            NunaAnyaCard(verbatim: v.title, detail: v.detail, progress: progress, action: onCoach)
         }
     }
 
@@ -165,8 +215,7 @@ struct NunaAnyaTodayCard: View {
             if targetMet {
                 // The plan is fulfilled: only recovery, and a way to the detail.
                 NunaAnyaCard(verbatim: title,
-                             detail: [earned, felt, String(format: String(localized: "Target %@ reached"), targetText(t)),
-                                      String(localized: "Rest, water and an early night now.")].compactMap { $0 }.joined(separator: " · "),
+                             detail: [earned, felt, String(format: String(localized: "Target %@ reached"), targetText(t))].compactMap { $0 }.joined(separator: " · "),
                              progress: min(effort / t.high, 1), progressColor: NunaPalette.charge,
                              buttonTitle: "View", onButton: { onViewWorkout(key) }, action: onCoach)
             } else {

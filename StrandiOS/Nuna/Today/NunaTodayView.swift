@@ -120,6 +120,8 @@ struct NunaTodayView: View {
     @State private var showMood = false
     /// The saved session the Anya card opens straight to.
     @State private var summaryKey: NunaWorkoutKey?
+    @State private var showBreath = false
+    @State private var showWindDown = false
     @AppStorage("nuna.keyMetricsLayout") private var metricsLayoutRaw = NunaMetricsLayout.cards.rawValue
     @State private var showAddCard = false
     /// 0 when Today is at the top, 1 once the pinned score rings have shrunk to their small size.
@@ -184,6 +186,10 @@ struct NunaTodayView: View {
         .background(NunaPalette.canvas.ignoresSafeArea())
         .nunaTodayDestinations()
         .navigationDestination(item: $summaryKey) { NunaWorkoutSummaryView(key: $0) }
+        .navigationDestination(isPresented: $showWindDown) { NunaWindDownView() }
+        .sheet(isPresented: $showBreath) {
+            NavigationStack { NunaBreathView().toolbar(.hidden, for: .navigationBar) }.preferredColorScheme(NunaTheme.colorScheme)
+        }
         .task(id: "\(repo.refreshSeq)-\(model.dayOffset)") {
             await model.load(repo: repo, profile: profile)
             dayPlan = model.isToday ? await NunaDayPlanResult.load(repo: repo, profile: profile) : nil
@@ -623,7 +629,12 @@ struct NunaTodayView: View {
         case .synthesis:
             if coachEnabled && model.isToday {
                 NunaAnyaTodayCard(plan: dayPlan, fallbackLine: synthLine, workouts: model.workouts, effort: model.effort,
-                                  charge: model.charge.pct, onCoach: { showCoach = true }, onViewWorkout: { summaryKey = $0 })
+                                  charge: model.charge.pct, onCoach: { showCoach = true }, onViewWorkout: { summaryKey = $0 },
+                                  onBreathe: { showBreath = true }, onWindDown: { showWindDown = true },
+                                  stressNow: model.stressCurve.flatMap(StressDayCurve.latestLevel),
+                                  stressHighMin: model.stressCurve.map(StressDayCurve.highMinutes),
+                                  restingHr: model.restingHr, hrvDelta: model.hrvDelta, restingHrDelta: model.restingHrDelta,
+                                  sleepMinutes: model.sleepMinutes)
             }
         case .recoveryVitals:
             if model.stress != nil || model.stressCurve != nil {
