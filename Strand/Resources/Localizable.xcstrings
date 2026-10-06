@@ -20,7 +20,7 @@
       "id": {"stringUnit": {"state": "translated", "value": "jam"}}
     } },
     "vs. typical %@": { "localizations": {
-      "id": {"stringUnit": {"state": "translated", "value": "vs. %@ biasanya"}}
+      "id": {"stringUnit": {"state": "translated", "value": "vs. %@ biasa"}}
     } },
     "What's happening today, %@?": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Apa yang terjadi hari ini, %@?"}}

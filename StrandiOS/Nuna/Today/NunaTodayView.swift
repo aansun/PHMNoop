@@ -628,21 +628,28 @@ struct NunaTodayView: View {
             if !tiles.isEmpty {
                 VStack(spacing: 12) {
                     NunaTitleRow(title: "Key metrics") {
-                        Button {
-                            withAnimation(.easeInOut(duration: 0.2)) {
-                                metricsLayoutRaw = (metricsLayout == .cards ? NunaMetricsLayout.list : .cards).rawValue
+                        // Three separate targets, each 40 pt wide, so a thumb lands on the one it means.
+                        HStack(spacing: 0) {
+                            Button {
+                                withAnimation(.easeInOut(duration: 0.2)) {
+                                    metricsLayoutRaw = (metricsLayout == .cards ? NunaMetricsLayout.list : .cards).rawValue
+                                }
+                            } label: {
+                                Image(systemName: metricsLayout == .cards ? "list.bullet" : "square.grid.2x2")
+                                    .font(.nuna(size: 14, weight: .bold)).frame(width: 40, height: 40).contentShape(Rectangle())
                             }
-                        } label: {
-                            Image(systemName: metricsLayout == .cards ? "list.bullet" : "square.grid.2x2")
-                                .font(.nuna(size: 14, weight: .bold))
-                        }
-                        .accessibilityLabel(Text(metricsLayout == .cards ? "Show as list" : "Show as cards"))
-                        Button { customizeDestination = .keyMetrics; showCustomize = true } label: {
-                            Image(systemName: "slider.horizontal.3").font(.nuna(size: 14, weight: .bold))
-                        }
-                        .accessibilityLabel(Text("Edit"))
-                        NavigationLink(value: NunaTodayRoute.allMetrics) { Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .heavy)) }
+                            .accessibilityLabel(Text(metricsLayout == .cards ? "Show as list" : "Show as cards"))
+                            Button { customizeDestination = .keyMetrics; showCustomize = true } label: {
+                                Image(systemName: "slider.horizontal.3").font(.nuna(size: 14, weight: .bold)).frame(width: 40, height: 40).contentShape(Rectangle())
+                            }
+                            .accessibilityLabel(Text("Edit"))
+                            NavigationLink(value: NunaTodayRoute.allMetrics) {
+                                Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .heavy)).frame(width: 40, height: 40).contentShape(Rectangle())
+                            }
                             .accessibilityLabel(Text("All"))
+                        }
+                        // The last glyph still lines up with the card edge below.
+                        .padding(.trailing, -13)
                     }
                     NunaMetricsGrid(tiles: tiles, layout: metricsLayout)
                 }
