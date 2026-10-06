@@ -29,7 +29,8 @@ struct NunaChargeDetailView: View {
             NunaScoreHero(caption: "Today", chip: chip?.0, chipColor: NunaPalette.charge,
                           fraction: (day.charge.pct ?? latest?.value ?? 0) / 100,
                           number: (day.charge.pct ?? latest?.value).map { String(format: "%.0f", $0) } ?? "–",
-                          unit: "%", name: "Charge", color: NunaPalette.charge) {
+                          unit: "%", name: "Charge", color: NunaPalette.charge,
+                          hasNote: (day.charge.pct ?? latest?.value) != nil && series.baseline != nil) {
                 if let v = day.charge.pct ?? latest?.value, let base = series.baseline {
                     let d = Int((v - base).rounded())
                     Text(verbatim: d == 0 ? String(localized: "In line with your 30-day average")
