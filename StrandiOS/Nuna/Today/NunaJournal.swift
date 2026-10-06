@@ -38,7 +38,7 @@ struct NunaJournalView: View {
             dayNav
             daySelector
             heading
-            moodCard
+            moodLink
             ForEach(JournalGroup.displayOrder, id: \.self) { group($0) }
             addCard
             nunaFootnote(dayOffset == -1
@@ -148,54 +148,16 @@ struct NunaJournalView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    /// One colour per step of the 1 to 5 scale, from rough to great.
-    private static let moodTints: [Color] = [NunaPalette.alert, NunaPalette.warning, NunaPalette.effort, NunaPalette.charge, NunaPalette.rest]
-
-    private var moodCard: some View {
-        NunaCard {
-            VStack(alignment: .leading, spacing: 18) {
-                HStack(alignment: .firstTextBaseline) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        nunaTrendsCap("Mood")
-                        if let mood {
-                            Text(verbatim: MoodStore.label(for: mood)).font(.nuna(size: 22, weight: .heavy)).foregroundStyle(Self.moodTints[min(max(mood, 1), 5) - 1])
-                        } else {
-                            Text("How are you feeling right now?").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        }
-                    }
-                    Spacer()
-                    if let mood {
-                        Text(verbatim: "\(mood)/5").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
-                    }
+    /// Mood has its own screen, so the journal only points to it, with what was logged for the day.
+    private var moodLink: some View {
+        NavigationLink(value: NunaTodayRoute.mood) {
+            NunaCard(small: true) {
+                NunaListRow("Mood", subtitle: mood.map { LocalizedStringKey(MoodStore.label(for: $0)) } ?? "Log how you feel", systemImage: "face.smiling", showsChevron: true) {
+                    if let mood { Text(verbatim: "\(mood)/5").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary) }
                 }
-                HStack(spacing: 0) {
-                    ForEach(Array(MoodStore.scale), id: \.self) { v in
-                        let on = mood == v
-                        let tint = Self.moodTints[v - 1]
-                        Button {
-                            withAnimation(.snappy) { mood = v }
-                            Task { await repo.saveMood(day: dayKey, value: v) }
-                        } label: {
-                            NunaMoodFace(level: v, color: on ? .black : tint).frame(width: 30, height: 30)
-                                .frame(width: 52, height: 52)
-                                .background(on ? tint : tint.opacity(0.14), in: Circle())
-                                .overlay(Circle().strokeBorder(tint.opacity(on ? 0 : 0.35), lineWidth: 1))
-                                .scaleEffect(on ? 1.12 : 1)
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(Text(verbatim: "\(MoodStore.label(for: v)), \(v) / 5"))
-                        .accessibilityAddTraits(on ? .isSelected : [])
-                    }
-                }
-                HStack {
-                    Text(verbatim: MoodStore.label(for: 1))
-                    Spacer()
-                    Text(verbatim: MoodStore.label(for: 5))
-                }
-                .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
             }
         }
+        .buttonStyle(.plain)
     }
 
     // MARK: Behaviours
@@ -412,34 +374,6 @@ struct NunaJournalView: View {
     private static func dayNumber(_ off: Int) -> String {
         let d = Calendar.current.date(byAdding: .day, value: -off, to: Date()) ?? Date()
         return String(Calendar.current.component(.day, from: d))
-    }
-}
-
-/// A face for the 1 to 5 mood scale: two eyes and a mouth that bends from a frown through flat to a wide smile.
-struct NunaMoodFace: View {
-    let level: Int
-    let color: Color
-
-    private var curve: CGFloat {
-        switch level { case ...1: return -0.22; case 2: return -0.1; case 3: return 0; case 4: return 0.16; default: return 0.3 }
-    }
-
-    var body: some View {
-        GeometryReader { geo in
-            let s = min(geo.size.width, geo.size.height)
-            ZStack {
-                Circle().fill(color).frame(width: s * 0.12, height: s * 0.12).position(x: s * 0.33, y: s * 0.36)
-                Circle().fill(color).frame(width: s * 0.12, height: s * 0.12).position(x: s * 0.67, y: s * 0.36)
-                Path { p in
-                    let y = s * (curve < 0 ? 0.72 : 0.62)
-                    p.move(to: CGPoint(x: s * 0.26, y: y))
-                    p.addQuadCurve(to: CGPoint(x: s * 0.74, y: y), control: CGPoint(x: s * 0.5, y: y + curve * s * 2))
-                }
-                .stroke(color, style: StrokeStyle(lineWidth: s * 0.085, lineCap: .round))
-            }
-            .frame(width: s, height: s)
-        }
-        .accessibilityHidden(true)
     }
 }
 #endif
