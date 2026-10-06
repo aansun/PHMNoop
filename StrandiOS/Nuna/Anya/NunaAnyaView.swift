@@ -291,7 +291,8 @@ struct NunaAnyaView: View {
             }
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 24)
         }
-        .scrollIndicators(.hidden).scrollDismissesKeyboard(.interactively)
+        .scrollIndicators(.hidden).scrollDismissesKeyboard(.immediately)
+        .simultaneousGesture(TapGesture().onEnded { focused = false })
     }
 
     private struct Starter { let title: String; let subtitle: String; let prompt: String }
@@ -321,7 +322,8 @@ struct NunaAnyaView: View {
                 }
                 .padding(.horizontal, NunaSpacing.screenH).padding(.vertical, 8)
             }
-            .scrollIndicators(.hidden).scrollDismissesKeyboard(.interactively)
+            .scrollIndicators(.hidden).scrollDismissesKeyboard(.immediately)
+            .simultaneousGesture(TapGesture().onEnded { focused = false })
             .onChange(of: coach.messages.count) { _, _ in scroll(proxy) }
             .onChange(of: coach.sending) { _, _ in scroll(proxy) }
             .onAppear { scroll(proxy) }
