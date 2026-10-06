@@ -475,7 +475,9 @@ struct StrandiOSApp: App {
         let bpm = model.live.connected ? (model.bpm ?? model.live.heartRate) : nil
         let metrics = liveActivityMetrics(bpm: bpm)
         let workout = model.activeWorkout
-        let workoutActive = workout != nil && !liftSession.isActive && !model.live.backfilling
+        // A workout keeps its banner through a history sync. The strap syncs on its own every few minutes; treating that as "no workout"
+        // used to end the banner, and a banner ended in the background cannot be started again until the app is opened.
+        let workoutActive = workout != nil && !liftSession.isActive
         let effort = workout.map { Int($0.liveStrain.rounded()) }
             ?? day?.strain.map { Int($0.rounded()) }
         let zoneSet = model.profile.hrZoneSet
@@ -513,7 +515,7 @@ struct StrandiOSApp: App {
             bpm: bpm,
             recovery: day?.recovery.map { Int($0.rounded()) },
             // While a sync or lift session runs its own activity is the useful banner; don't stack the HR one.
-            connected: model.live.connected && !liftSession.isActive && !model.live.backfilling,
+            connected: model.live.connected && !liftSession.isActive && (workout != nil || !model.live.backfilling),
             batteryPct: model.live.batteryPct.map { Int($0.rounded()) },
             effort: effort,
             heartRateZone: metrics.zone,
