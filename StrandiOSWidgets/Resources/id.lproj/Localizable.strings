@@ -99,3 +99,9 @@
 "No suggestion yet" = "Belum ada saran";
 "%lld%% of %@" = "%1$lld%% dari %2$@";
 "Today's steps and your target." = "Langkah hari ini dan targetmu.";
+"Stress monitor" = "Monitor stres";
+"Today's high stress" = "Stres tinggi hari ini";
+"hrs" = "jam";
+"vs. typical %@" = "vs. %@ biasanya";
+"Today's high stress and its curve." = "Stres tinggi hari ini dan kurvanya.";
+"Today's high stress %@ hours" = "Stres tinggi hari ini %@ jam";
