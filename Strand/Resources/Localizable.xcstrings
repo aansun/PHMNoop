@@ -1,6 +1,15 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Search settings": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Cari pengaturan"}}
+    } },
+    "No settings match.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tidak ada pengaturan yang cocok."}}
+    } },
+    "Settings you open show up here.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Pengaturan yang kamu buka muncul di sini."}}
+    } },
     "Today's high stress": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Stres tinggi hari ini"}}
     } },

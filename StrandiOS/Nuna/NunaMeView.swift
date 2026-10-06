@@ -24,7 +24,15 @@ struct NunaMeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: NunaSpacing.section) {
-                NunaHeader("Me")
+                NunaHeader("Me") {
+                    NavigationLink(value: NunaMeRoute.search) {
+                        NunaGlyph("magnifyingglass", pointSize: 16).foregroundStyle(NunaPalette.textPrimary)
+                            .frame(width: 44, height: 44)
+                            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                            .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain).accessibilityLabel(Text("Search"))
+                }
                 profileCard
                 group("Account and device") {
                     row(.persona, "Persona", "Profile, heart-rate zones, targets", "person.fill")
@@ -135,8 +143,10 @@ struct NunaMeView: View {
         if route == .anya {
             // Anya's name is never set in capitals.
             NavigationLink(value: route) { NunaListRow(title, subtitle: subtitle, systemImage: icon, showsChevron: true).textCase(nil) }.buttonStyle(.plain)
+                .simultaneousGesture(TapGesture().onEnded { NunaMeRecents.record(route) })
         } else {
             NavigationLink(value: route) { NunaListRow(title, subtitle: subtitle, systemImage: icon, showsChevron: true) }.buttonStyle(.plain)
+                .simultaneousGesture(TapGesture().onEnded { NunaMeRecents.record(route) })
         }
     }
 }
@@ -147,6 +157,7 @@ enum NunaMeRoute: Hashable {
     case automations, doubleTap, presence, sessionCues, sedentary, shortcuts, alarm
     case data, backup, imports, appleHealth, strava
     case advanced, experiments, testCentre, about
+    case search
 }
 
 extension View {
@@ -182,6 +193,7 @@ extension View {
             case .experiments: NunaExperimentsView()
             case .testCentre: NunaTestCentreView()
             case .about: NunaAboutView()
+            case .search: NunaMeSearchView()
             }
         }
     }
