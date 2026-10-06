@@ -50,10 +50,9 @@ struct NunaWorkoutSummaryView: View {
     @ViewBuilder private func content(_ r: WorkoutRow) -> some View {
         let secs = r.durationS ?? Double(r.endTs - r.startTs)
         headerCard(r)
-        if let s = r.strain { effortCard(s) }
+        if let line = anyaLine(r) { NunaAnyaCard(verbatim: line) { showCoach = true } }
         if route.count >= 2 { mapCard }
         summaryCard(r, secs)
-        if let line = anyaLine(r) { NunaAnyaCard(verbatim: line) { showCoach = true } }
         hrCard(r)
         zonesCard(r)
         NunaWorkoutReviewSection(row: r)
@@ -64,18 +63,31 @@ struct NunaWorkoutSummaryView: View {
         }.buttonStyle(.plain)
     }
 
-    /// The sport and when it happened: the day and the start and end time.
+    /// One block for what the session was, when it ran and the Effort it added. The sport is already the screen title.
     private func headerCard(_ r: WorkoutRow) -> some View {
-        NunaCard(small: true) {
-            HStack(spacing: 12) {
-                NunaIconTile(ActivitySport.symbol(for: r.sport))
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(LocalizedStringKey(WorkoutSource.displaySport(r.sport))).font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+        let max: Double = scale == .whoop ? 21 : 100
+        return NunaCard {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 8) {
+                    Image(systemName: ActivitySport.symbol(for: r.sport)).font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     Text(verbatim: NunaWorkoutFormat.day(r.startTs) + " · " + NunaWorkoutFormat.clock(r.startTs) + " – " + NunaWorkoutFormat.clock(r.endTs))
-                        .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
+                    Spacer(minLength: 8)
+                    NunaChip(sourceName(r), systemImage: "checkmark")
                 }
-                Spacer(minLength: 8)
-                NunaChip(sourceName(r), systemImage: "checkmark")
+                if let s = r.strain {
+                    HStack(alignment: .lastTextBaseline, spacing: 10) {
+                        Text(verbatim: "+" + UnitFormatter.effortDisplay(s, scale: scale)).font(.nuna(size: 46, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.effortText)
+                        Text("Effort added").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Spacer(minLength: 0)
+                    }
+                    if let d = dayEffort {
+                        VStack(alignment: .leading, spacing: 6) {
+                            NunaProportionBar(parts: [(UnitFormatter.effortValue(d, scale: scale), NunaPalette.effortText), (Swift.max(max - UnitFormatter.effortValue(d, scale: scale), 0), NunaPalette.glassStrong)])
+                            Text(verbatim: String(localized: "That day reached \(UnitFormatter.effortDisplay(d, scale: scale)) of \(UnitFormatter.effortScaleMax(scale))")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        }
+                    }
+                }
             }
         }
     }
@@ -137,24 +149,6 @@ struct NunaWorkoutSummaryView: View {
         }.frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func effortCard(_ s: Double) -> some View {
-        let max: Double = scale == .whoop ? 21 : 100
-        return NunaCard {
-            HStack(spacing: 16) {
-                NunaRingGauge(fraction: UnitFormatter.effortValue(dayEffort ?? s, scale: scale) / max, color: NunaPalette.effortText, size: 84, lineWidth: 8) {
-                    Text(verbatim: "+" + UnitFormatter.effortDisplay(s, scale: scale)).font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                }
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Effort added").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    if let d = dayEffort {
-                        Text(verbatim: String(localized: "That day reached \(UnitFormatter.effortDisplay(d, scale: scale)) of \(UnitFormatter.effortScaleMax(scale))")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    }
-                }
-                Spacer(minLength: 0)
-            }
-        }
-    }
-
     private func zonesCard(_ r: WorkoutRow) -> some View {
         var mins = zoneMin
         if let pct = WorkoutZones.percents(r.zonesJSON) {
@@ -163,23 +157,35 @@ struct NunaWorkoutSummaryView: View {
         }
         let total = max(mins?.reduce(0, +) ?? 0, 0.0001)
         let colors: [Color] = [NunaPalette.zoneBase, NunaPalette.rest, NunaPalette.charge, NunaPalette.warning, NunaPalette.alert]
+        let bands = profile.hrZoneSet.zones
         return NunaCard {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 14) {
                 HStack {
                     nunaTrendsCap("Heart rate zones")
                     Spacer()
                     if let a = r.avgHr, let mx = r.maxHr { Text(verbatim: String(localized: "Average \(a) · max \(mx)")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                 }
                 if let mins, mins.contains(where: { $0 > 0 }) {
-                    NunaProportionBar(parts: mins.enumerated().map { ($1, colors[$0]) })
+                    let peak = max(mins.max() ?? 1, 0.0001)
                     ForEach(0..<5, id: \.self) { i in
-                        if mins[i] >= 0.5 {
-                            HStack(spacing: 10) {
-                                Circle().fill(colors[i]).frame(width: 9, height: 9)
-                                Text(verbatim: String(localized: "Zone \(i + 1)")).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                Spacer()
-                                Text(verbatim: String(localized: "\(Int(mins[i].rounded())) min · \(Int((mins[i] / total * 100).rounded()))%")).font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        let share = mins[i] / total
+                        VStack(spacing: 7) {
+                            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                                Text(verbatim: "\(i + 1)").font(.nuna(size: 12, weight: .heavy, design: NunaType.design)).foregroundStyle(.black.opacity(0.8))
+                                    .frame(width: 22, height: 22).background(colors[i].opacity(mins[i] >= 0.5 ? 1 : 0.35), in: Circle())
+                                if i < bands.count {
+                                    Text(verbatim: "\(Int(bands[i].lower.rounded()))–\(Int(bands[i].upper.rounded())) bpm").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                                }
+                                Spacer(minLength: 8)
+                                Text(verbatim: String(localized: "\(Int(mins[i].rounded())) min")).font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(mins[i] >= 0.5 ? NunaPalette.textPrimary : NunaPalette.textMuted)
+                                Text(verbatim: "\(Int((share * 100).rounded()))%").font(.nuna(size: 13, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary).frame(width: 40, alignment: .trailing)
                             }
+                            GeometryReader { geo in
+                                ZStack(alignment: .leading) {
+                                    Capsule().fill(NunaPalette.glassStrong)
+                                    Capsule().fill(colors[i]).frame(width: mins[i] >= 0.5 ? max(geo.size.width * CGFloat(mins[i] / peak), 8) : 0)
+                                }
+                            }.frame(height: 8)
                         }
                     }
                 } else {
