@@ -552,7 +552,7 @@ struct NunaStressDetailView: View {
                                 }
                             }
                             .frame(width: 14, height: 110)
-                            DaytimeLoadLine(hours: pts).frame(height: 110)
+                            NunaStressReadout(points: pts, isToday: day.isToday).frame(height: 110)
                         }
                         HStack {
                             if let f = pts.first(where: { $0.level != nil }) { Text(verbatim: NunaSleepFormat.clock(Date(timeIntervalSince1970: TimeInterval(f.startTs)))) }
@@ -763,6 +763,78 @@ private struct NunaAllMetricsScaffold<Content: View>: View {
         .scrollIndicators(.hidden)
         .background(NunaPalette.canvas.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
+    }
+}
+
+/// The all-day stress line with its numbers on it: the peak, the lowest and, today, the latest reading; and a finger held or dragged on the
+/// line reads any point (value and time). Points sit exactly where `DaytimeLoadLine` puts them (evenly across the readings, 0 to 3 up the side).
+private struct NunaStressReadout: View {
+    let points: [DaytimeStress.HourPoint]
+    let isToday: Bool
+    @State private var touchIndex: Int?
+
+    private func fmt(_ v: Double) -> String { String(format: "%.1f", locale: AppLanguage.activeLocale, min(max(v, 0), 3)) }
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width, h = geo.size.height
+            let n = max(points.count, 1)
+            let x: (Int) -> CGFloat = { i in n <= 1 ? w / 2 : w * CGFloat(i) / CGFloat(n - 1) }
+            let y: (Double) -> CGFloat = { v in h - h * CGFloat(min(max(v / 3, 0), 1)) }
+            let scored = points.enumerated().filter { $0.element.level != nil }
+            let peak = scored.max { ($0.element.level ?? 0) < ($1.element.level ?? 0) }
+            let low = scored.min { ($0.element.level ?? 0) < ($1.element.level ?? 0) }
+            let last = scored.last
+            ZStack(alignment: .topLeading) {
+                DaytimeLoadLine(hours: points)
+                if let touchIndex, points.indices.contains(touchIndex), let v = points[touchIndex].level {
+                    let px = x(touchIndex), py = y(v)
+                    Path { p in p.move(to: CGPoint(x: px, y: 0)); p.addLine(to: CGPoint(x: px, y: h)) }
+                        .stroke(NunaPalette.textSecondary, style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                    Circle().fill(NunaPalette.textPrimary).frame(width: 10, height: 10).position(x: px, y: py)
+                    tag("\(fmt(v)) · \(NunaSleepFormat.clock(Date(timeIntervalSince1970: TimeInterval(points[touchIndex].startTs))))", bold: true)
+                        .position(x: min(max(px, 58), w - 58), y: max(py - 22, 12))
+                } else {
+                    if let peak, peak.offset != last?.offset {
+                        marker(fmt(peak.element.level ?? 0), at: CGPoint(x: x(peak.offset), y: y(peak.element.level ?? 0)), size: w, above: true)
+                    }
+                    if let low, low.offset != peak?.offset, low.offset != last?.offset, (peak?.element.level ?? 0) - (low.element.level ?? 0) >= 0.3 {
+                        marker(fmt(low.element.level ?? 0), at: CGPoint(x: x(low.offset), y: y(low.element.level ?? 0)), size: w, above: false)
+                    }
+                    if isToday, let last {
+                        let pt = CGPoint(x: x(last.offset), y: y(last.element.level ?? 0))
+                        Circle().fill(NunaPalette.textPrimary).frame(width: 10, height: 10).position(pt)
+                        tag(fmt(last.element.level ?? 0), bold: true)
+                            .position(x: min(max(pt.x - 24, 22), w - 22), y: min(max(pt.y - 20, 12), h - 12))
+                    }
+                }
+            }
+            .contentShape(Rectangle())
+            // Hold, then drag: a plain swipe over the chart still scrolls the screen.
+            .gesture(LongPressGesture(minimumDuration: 0.25)
+                .sequenced(before: DragGesture(minimumDistance: 0))
+                .onChanged { value in
+                    guard n > 1, case .second(true, let drag?) = value else { return }
+                    let i = Int((drag.location.x / max(w, 1) * CGFloat(n - 1)).rounded())
+                    let clamped = min(max(i, 0), n - 1)
+                    // The nearest hour that carries a reading.
+                    touchIndex = scored.min { abs($0.offset - clamped) < abs($1.offset - clamped) }?.offset
+                }
+                .onEnded { _ in touchIndex = nil })
+        }
+        .accessibilityHidden(true)
+    }
+
+    private func marker(_ text: String, at pt: CGPoint, size w: CGFloat, above: Bool) -> some View {
+        tag(text, bold: false).position(x: min(max(pt.x, 20), w - 20), y: pt.y + (above ? -14 : 14))
+    }
+
+    private func tag(_ text: String, bold: Bool) -> some View {
+        Text(verbatim: text).font(.nuna(size: bold ? 13 : 12, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+            .padding(.horizontal, 7).frame(height: 21)
+            .background(NunaPalette.card.opacity(0.92), in: Capsule())
+            .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+            .fixedSize()
     }
 }
 #endif
