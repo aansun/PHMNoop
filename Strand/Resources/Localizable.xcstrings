@@ -1,6 +1,57 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%@ is running": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%@ sedang berjalan"}}
+    } },
+    "How was today? Fill in your journal and mood": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bagaimana harimu? Isi jurnal dan suasana hati"}}
+    } },
+    "Wind down for tonight": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bersiap tidur malam ini"}}
+    } },
+    "An earlier night is the best thing for tomorrow's Charge.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tidur lebih awal adalah hal terbaik untuk Charge besok."}}
+    } },
+    "Today's Effort target is reached": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Target Effort hari ini tercapai"}}
+    } },
+    "Effort %@ of %@. Keep the rest of the day easy and eat and drink well.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Effort %1$@ dari %2$@. Santai saja sisa hari ini, makan dan minum yang cukup."}}
+    } },
+    "%@ \u00b7 %d min done": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%1$@ · %2$d mnt selesai"}}
+    } },
+    "Effort +%@": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Effort +%@"}}
+    } },
+    "Target %@ reached": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Target %@ tercapai"}}
+    } },
+    "Rest, water and an early night now.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sekarang istirahat, minum, dan tidur lebih awal."}}
+    } },
+    "%@ of %@ target": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%1$@ dari target %2$@"}}
+    } },
+    "View": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Lihat"}}
+    } },
+    "%d min": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%d mnt"}}
+    } },
+    "avg %d bpm": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "rata-rata %d bpm"}}
+    } },
+    "Today's Effort target %@": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Target Effort hari ini %@"}}
+    } },
+    "Effort %@ of %@ today": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Effort %1$@ dari %2$@ hari ini"}}
+    } },
+    "Effort %@ today": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Effort %@ hari ini"}}
+    } },
     "Search settings": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Cari pengaturan"}}
     } },
