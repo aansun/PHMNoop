@@ -32,6 +32,7 @@ EXTRAS = [
     ("persona", "Date of birth", "Age, used for your heart-rate zones"),
     ("persona", "Sex", "Male, female or non-binary"),
     ("persona", "The day starts", "With main sleep or at 00:00"),
+    ("appearance", "Sleep chart", "Classic, Fitbit, Fill, Garmin or Ribbon"),
 ]
 
 STOP = {"Preview", "Status", "Actions", "Manage", "Connected", "Folder", "Schedule", "Device", "Tools", "Now", "Test", "Examples", "Help", "Credits"}

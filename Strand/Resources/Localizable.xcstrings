@@ -1,6 +1,12 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "A row for each stage": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Satu baris untuk tiap fase" } } } },
+        "A lane for each stage, with the restlessness": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Satu lajur untuk tiap fase, beserta kegelisahan" } } } },
+        "One stepped chart, filled to the baseline": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Satu grafik bertingkat, terisi sampai dasar" } } } },
+        "The same stepped chart in Garmin's colours": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Grafik bertingkat yang sama dengan warna Garmin" } } } },
+        "One stepped chart as a slim band": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Satu grafik bertingkat berupa pita tipis" } } } },
+        "Choose how the night's stages are drawn on the Sleep page.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Pilih cara fase tidur semalam digambar di halaman Tidur." } } } },
         "Classic": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Klasik" } } } },
         "Fitbit": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Fitbit" } } } },
         "Fill": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Isi" } } } },

@@ -25,6 +25,17 @@ enum NunaSleepChartStyle: String, CaseIterable, Identifiable {
         }
     }
 
+    /// One line under the name in the settings.
+    var summary: LocalizedStringKey {
+        switch self {
+        case .classic: return "A row for each stage"
+        case .fitbit: return "A lane for each stage, with the restlessness"
+        case .fill: return "One stepped chart, filled to the baseline"
+        case .garmin: return "The same stepped chart in Garmin's colours"
+        case .ribbon: return "One stepped chart as a slim band"
+        }
+    }
+
     static func resolve(_ raw: String) -> NunaSleepChartStyle { NunaSleepChartStyle(rawValue: raw) ?? .classic }
 
     /// The stepped hypnogram NOOP draws for this style, or nil for the two that Nuna draws itself.
@@ -35,26 +46,6 @@ enum NunaSleepChartStyle: String, CaseIterable, Identifiable {
         case .garmin: return (true, .garmin)
         case .ribbon: return (false, .oura)
         }
-    }
-}
-
-/// Chips to choose the chart style.
-struct NunaSleepChartStylePicker: View {
-    @Binding var selection: String
-
-    var body: some View {
-        HStack(spacing: 6) {
-            ForEach(NunaSleepChartStyle.allCases) { s in
-                let on = s.rawValue == NunaSleepChartStyle.resolve(selection).rawValue
-                Button { withAnimation(.easeInOut(duration: 0.2)) { selection = s.rawValue } } label: {
-                    Text(s.label).font(.nuna(size: 12, weight: .bold)).foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary)
-                        .lineLimit(1).minimumScaleFactor(0.7)
-                        .frame(maxWidth: .infinity).frame(height: 36)
-                        .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                }.buttonStyle(.plain).accessibilityAddTraits(on ? .isSelected : [])
-            }
-        }
-        .padding(.horizontal, 10)
     }
 }
 

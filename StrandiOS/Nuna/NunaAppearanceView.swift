@@ -15,6 +15,7 @@ struct NunaAppearanceView: View {
     @AppStorage(UnitPrefs.systemKey) private var unitSystem = UnitSystem.metric.rawValue
     @AppStorage(UnitPrefs.distanceSystemKey) private var distance = ""
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScale = EffortScale.hundred.rawValue
+    @AppStorage(NunaSleepChartStyle.storageKey) private var sleepChartRaw = NunaSleepChartStyle.classic.rawValue
     @State private var iconError: String?
 
     private var experience: ExperienceMode { ExperienceMode(rawValue: experienceRaw) ?? .nuna }
@@ -39,6 +40,7 @@ struct NunaAppearanceView: View {
                 skinSection
                 if skinRaw != NunaThemePrefs.Skin.whp.rawValue { themeSection }
                 densityCard
+                sleepChartCard
                 #if os(iOS)
                 iconCard
                 #endif
@@ -160,6 +162,34 @@ struct NunaAppearanceView: View {
                     }.buttonStyle(.plain)
                 }
             }
+        }
+    }
+
+    /// How the night's stages are drawn on the Sleep page.
+    private var sleepChartCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            nunaRuledHeader("Sleep chart")
+            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
+                VStack(spacing: 0) {
+                    ForEach(Array(NunaSleepChartStyle.allCases.enumerated()), id: \.element.id) { i, style in
+                        if i > 0 { NunaDivider() }
+                        let on = NunaSleepChartStyle.resolve(sleepChartRaw) == style
+                        Button { sleepChartRaw = style.rawValue } label: {
+                            HStack(spacing: 12) {
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(style.label).font(.nuna(size: 16, weight: on ? .heavy : .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                    Text(style.summary).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                                }
+                                Spacer(minLength: 8)
+                                Image(systemName: on ? "checkmark.circle.fill" : "circle").font(.nuna(size: 22))
+                                    .foregroundStyle(on ? NunaPalette.accent : NunaPalette.textMuted)
+                            }
+                            .padding(.vertical, 12).contentShape(Rectangle())
+                        }.buttonStyle(.plain).accessibilityAddTraits(on ? .isSelected : [])
+                    }
+                }
+            }
+            nunaFootnote("Choose how the night's stages are drawn on the Sleep page.")
         }
     }
 
