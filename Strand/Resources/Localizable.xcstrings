@@ -1,6 +1,11 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "Classic": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Klasik" } } } },
+        "Fitbit": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Fitbit" } } } },
+        "Fill": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Isi" } } } },
+        "Garmin": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Garmin" } } } },
+        "Ribbon": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Pita" } } } },
         "Pinned %lld of %lld": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Disematkan %1$lld dari %2$lld" } } } },
         "You can pin up to 8 workouts.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Maksimal 8 workout yang bisa disematkan." } } } },
         "Tap a workout to pin or unpin it.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Ketuk workout untuk menyematkan atau melepasnya." } } } },

@@ -121,6 +121,7 @@ struct NunaSleepStageSection: View {
     @State private var selected: SleepStage?
     @State private var series: [String: [(date: Date, value: Double)]] = [:]
     @State private var metric = "hr"
+    @AppStorage(NunaSleepChartStyle.storageKey) private var chartStyleRaw = NunaSleepChartStyle.classic.rawValue
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
     @AppStorage(UnitPrefs.temperatureKey) private var temperatureRaw = ""
 
@@ -169,13 +170,8 @@ struct NunaSleepStageSection: View {
                         .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 } else {
                     nightChart
-                    ForEach([SleepStage.awake, .rem, .light, .deep], id: \.self) { timelineRow($0) }
-                    NunaTimeAxis(start: windowStart, end: windowEnd).padding(.horizontal, 10)
-                    insight
-                    if night.motion.count >= 10 {
-                        NunaMotionStrip(epochs: night.motion, total: night.wake.timeIntervalSince(night.onset))
-                        NunaMovementStats(night: night)
-                    }
+                    NunaSleepChartStylePicker(selection: $chartStyleRaw)
+                    stageChart
                 }
             }
         }
@@ -183,6 +179,66 @@ struct NunaSleepStageSection: View {
             selected = nil
             await loadSeries()
         }
+    }
+
+    // MARK: The stage chart, in the chosen style
+
+    @ViewBuilder private var stageChart: some View {
+        let style = NunaSleepChartStyle.resolve(chartStyleRaw)
+        switch style {
+        case .classic:
+            ForEach([SleepStage.awake, .rem, .light, .deep], id: \.self) { timelineRow($0) }
+            NunaTimeAxis(start: windowStart, end: windowEnd).padding(.horizontal, 10)
+            insight
+            motionBlock(strip: true)
+        case .fitbit:
+            NunaFitbitStageChart(intervals: smoothed, origin: origin, span: span, motion: night.motion, restlessMin: night.restlessMinutes,
+                                 minutes: { minutes($0) }, selected: $selected)
+                .padding(.horizontal, 10)
+            NunaTimeAxis(start: windowStart, end: windowEnd).padding(.horizontal, 10)
+            insight
+            motionBlock(strip: false)
+        case .fill, .garmin, .ribbon:
+            if let h = style.hypnogram {
+                Hypnogram(intervals: night.intervals, height: 150, showsStageAxis: false, showsHover: true, nightStart: night.onset,
+                          showsTimeAxis: false, highlightedStage: selected, filled: h.filled, stagePalette: h.palette)
+                    .padding(.horizontal, 10)
+                NunaTimeAxis(start: windowStart, end: windowEnd).padding(.horizontal, 10)
+                ForEach([SleepStage.awake, .rem, .light, .deep], id: \.self) { breakdownRow($0, palette: h.palette) }
+            }
+            insight
+            motionBlock(strip: true)
+        }
+    }
+
+    /// The movement ticks (not in Fitbit, whose chart has a lane for them) and the movement figures.
+    @ViewBuilder private func motionBlock(strip: Bool) -> some View {
+        if night.motion.count >= 10 {
+            if strip { NunaMotionStrip(epochs: night.motion, total: night.wake.timeIntervalSince(night.onset)) }
+            NunaMovementStats(night: night)
+        }
+    }
+
+    /// A stage row under a stepped chart: its colour from the chart's ramp, the share and the time. Tapping selects the stage.
+    private func breakdownRow(_ stage: SleepStage, palette: SleepStagePalette) -> some View {
+        let on = selected == stage
+        let dimmed = selected != nil && !on
+        let color = dimmed ? NunaPalette.textMuted.opacity(0.55) : StrandPalette.sleepStageColor(stage, palette: palette)
+        return HStack(spacing: 10) {
+            RoundedRectangle(cornerRadius: 3, style: .continuous).fill(color).frame(width: 12, height: 12)
+            Text(stage.nunaName).font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            Text(verbatim: "\(share(stage))%").font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(dimmed ? NunaPalette.textMuted : color)
+            Spacer()
+            Text(verbatim: NunaSleepFormat.duration(minutes(stage))).font(.nuna(size: 13.5, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+        }
+        .padding(.vertical, 9).padding(.horizontal, 10)
+        .background(NunaPalette.ink.opacity(on ? 0.09 : 0.045), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(on ? NunaPalette.textMuted : .clear, lineWidth: 1.5))
+        .contentShape(Rectangle())
+        .onTapGesture { withAnimation(.easeInOut(duration: 0.2)) { selected = on ? nil : stage } }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(verbatim: "\(minutes(stage).rounded()) min, \(share(stage))%"))
+        .accessibilityAddTraits(.isButton)
     }
 
     // MARK: Parts
@@ -242,6 +298,7 @@ struct NunaSleepStageSection: View {
                                    height: 124, gap: m.id == "hr" ? 600 : 1800, lineWidth: m.id == "hr" ? 1.6 : 2,
                                    washes: washes, washColor: selected?.nunaColor ?? m.color)
                     .padding(.horizontal, 10)
+                NunaHourAxis(start: windowStart, end: windowEnd).padding(.horizontal, 10)
                 if list.count > 1 { picker(list, current: m.id) }
                 nightSummary(pts, m)
             }
