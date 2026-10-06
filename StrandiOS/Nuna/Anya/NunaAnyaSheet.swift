@@ -54,7 +54,8 @@ struct NunaAnyaSheet: View {
                 }
                 .padding(.horizontal, NunaSpacing.screenH).padding(.top, 20).padding(.bottom, 24)
             }
-            .scrollIndicators(.hidden).scrollDismissesKeyboard(.interactively)
+            .scrollIndicators(.hidden).scrollDismissesKeyboard(.immediately)
+            .simultaneousGesture(TapGesture().onEnded { focused = false })
             .textCase(nil)
             .background(NunaPalette.canvas.ignoresSafeArea())
             .toolbar(.hidden, for: .navigationBar)

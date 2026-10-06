@@ -62,7 +62,7 @@ struct NunaDetailScreen<Content: View>: View {
             .padding(.top, 8)
             .padding(.bottom, 120)
         }
-        .scrollIndicators(.hidden)
+        .scrollIndicators(.hidden).scrollDismissesKeyboard(.interactively)
         .background(NunaPalette.canvas.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
     }
