@@ -4,26 +4,18 @@ import StrandDesign
 import StrandAnalytics
 import WhoopStore
 
-/// One saved session (WorkoutSummary): distance, time and pace, the Effort it added, time in each heart-rate zone, the
-/// heart-rate curve, splits when a GPS route was recorded, an Anya line and the housekeeping actions.
+/// One saved session (WorkoutSummary): when it ran and the Effort it added, an Anya line, the map when a route was recorded,
+/// a summary that fits the sport, the heart-rate curve and zones, photos, how it felt, Strava and the housekeeping actions.
+/// Gym sessions open [NunaGymSessionView], which is built from the same pieces.
 struct NunaWorkoutSummaryView: View {
     let key: NunaWorkoutKey
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
     @Environment(\.dismiss) private var dismiss
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
-    @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
-    @AppStorage(UnitPrefs.distanceSystemKey) private var distanceRaw = ""
     @StateObject private var m = NunaWorkoutsModel()
-    @State private var hr: [HRBucket] = []
-    @State private var zoneMin: [Double]?
-    @State private var route: [RouteMath.LatLng] = []
-    @State private var dayEffort: Double?
+    @StateObject private var data = NunaWorkoutDetailData()
     @State private var confirmDelete = false
     @State private var showCoach = false
-
-    private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
-    private var system: UnitSystem { UnitPrefs.resolveDistance(system: UnitSystem(rawValue: unitSystemRaw) ?? .metric, override: distanceRaw) }
 
     var body: some View {
         Group {
@@ -37,7 +29,10 @@ struct NunaWorkoutSummaryView: View {
                 }
             }
         }
-        .task(id: repo.refreshSeq) { await m.load(repo: repo); if let r = m.row(key) { await loadDetail(r) } }
+        .task(id: repo.refreshSeq) {
+            await m.load(repo: repo)
+            if let r = m.row(key) { await data.load(startTs: r.startTs, endTs: r.endTs, sport: r.sport, source: r.source, repo: repo, zoneSet: profile.hrZoneSet) }
+        }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "workouts") }
         .confirmationDialog("Delete this workout?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) {
@@ -48,13 +43,13 @@ struct NunaWorkoutSummaryView: View {
     }
 
     @ViewBuilder private func content(_ r: WorkoutRow) -> some View {
-        let secs = r.durationS ?? Double(r.endTs - r.startTs)
-        headerCard(r)
-        if let line = anyaLine(r) { NunaAnyaCard(verbatim: line) { showCoach = true } }
-        if route.count >= 2 { mapCard }
-        summaryCard(r, secs)
-        hrCard(r)
-        zonesCard(r)
+        let mins = NunaWorkoutZoneMath.minutes(r, measured: data.zoneMin)
+        NunaWorkoutHeaderCard(symbol: ActivitySport.symbol(for: r.sport), startTs: r.startTs, endTs: r.endTs, source: NunaWorkoutSourceLabel.label(r.source), strain: r.strain, dayEffort: data.dayEffort)
+        if let line = NunaWorkoutInsight.zoneLine(mins: mins, others: otherSessions(r)) { NunaAnyaCard(verbatim: line) { showCoach = true } }
+        if data.route.count >= 2 { NunaWorkoutRouteCard(points: data.route) }
+        NunaWorkoutSummaryCard(row: r, zoneMin: data.zoneMin)
+        NunaWorkoutHRCard(start: r.startTs, end: r.endTs, buckets: data.hr)
+        if mins?.contains(where: { $0 > 0 }) ?? false { NunaWorkoutZonesCard(minutes: mins, avgHr: r.avgHr, maxHr: r.maxHr) }
         NunaWorkoutReviewSection(row: r)
         NunaWorkoutStravaCard(row: r, afterWorkout: false, checked: .constant(false))
         Button(role: .destructive) { confirmDelete = true } label: {
@@ -63,187 +58,13 @@ struct NunaWorkoutSummaryView: View {
         }.buttonStyle(.plain)
     }
 
-    /// One block for what the session was, when it ran and the Effort it added. The sport is already the screen title.
-    private func headerCard(_ r: WorkoutRow) -> some View {
-        let max: Double = scale == .whoop ? 21 : 100
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(spacing: 8) {
-                    Image(systemName: ActivitySport.symbol(for: r.sport)).font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                    Text(verbatim: NunaWorkoutFormat.day(r.startTs) + " · " + NunaWorkoutFormat.clock(r.startTs) + " – " + NunaWorkoutFormat.clock(r.endTs))
-                        .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
-                    Spacer(minLength: 8)
-                    NunaChip(sourceName(r), systemImage: "checkmark")
-                }
-                if let s = r.strain {
-                    HStack(alignment: .lastTextBaseline, spacing: 10) {
-                        Text(verbatim: "+" + UnitFormatter.effortDisplay(s, scale: scale)).font(.nuna(size: 46, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.effortText)
-                        Text("Effort added").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Spacer(minLength: 0)
-                    }
-                    if let d = dayEffort {
-                        VStack(alignment: .leading, spacing: 6) {
-                            NunaProportionBar(parts: [(UnitFormatter.effortValue(d, scale: scale), NunaPalette.effortText), (Swift.max(max - UnitFormatter.effortValue(d, scale: scale), 0), NunaPalette.glassStrong)])
-                            Text(verbatim: String(localized: "That day reached \(UnitFormatter.effortDisplay(d, scale: scale)) of \(UnitFormatter.effortScaleMax(scale))")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        }
-                    }
-                }
-            }
+    /// Zone minutes of the other saved sessions of the same sport.
+    private func otherSessions(_ r: WorkoutRow) -> [[Double]] {
+        m.rows.filter { $0.sport == r.sport && $0.startTs != r.startTs }.compactMap { o in
+            guard let pct = WorkoutZones.percents(o.zonesJSON) else { return nil }
+            let d = (o.durationS ?? Double(o.endTs - o.startTs)) / 60
+            return pct.map { d * $0 / 100 }
         }
-    }
-
-    private var mapCard: some View {
-        NunaCard {
-            // A map of the captured route with start and end markers (tiles are cached by MapKit; the route itself
-            // never leaves the phone).
-            WorkoutRouteMap(points: route, stroke: UIColor(NunaPalette.effort)).environment(\.colorScheme, .dark).frame(height: 220).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-        }
-    }
-
-    private func sourceName(_ r: WorkoutRow) -> LocalizedStringKey {
-        switch WorkoutSource.classify(r.source) {
-        case .whoop: return "Strap"
-        case .manual: return "Manual"
-        case .detected: return "Detected"
-        case .apple: return "Apple Health"
-        case .lifting: return "Lifting"
-        case .activityFile: return "Imported file"
-        }
-    }
-
-    private func summaryCard(_ r: WorkoutRow, _ secs: Double) -> some View {
-        let dist = NunaWorkoutFormat.distance(r.distanceM, system)
-        let pace = WorkoutCatalog.isOnFoot(r.sport) ? NunaWorkoutFormat.pace(distanceM: r.distanceM, seconds: secs, system) : nil
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack {
-                    if let dist { big("Distance", dist) }
-                    big("Time", clockDuration(secs))
-                    if let pace { big("Pace", pace) }
-                    else if dist == nil { big("Avg HR", r.avgHr.map { "\($0)" } ?? "–") }
-                }
-                HStack {
-                    if let kcal = r.energyKcal { small("Calories", NunaTrendsFormat.num(kcal)) }
-                    if let avg = r.avgHr { small("Avg HR", "\(avg) bpm") }
-                    if let mx = r.maxHr { small("Max HR", "\(mx) bpm") }
-                }
-            }
-        }
-    }
-
-    private func clockDuration(_ s: Double) -> String {
-        let t = Int(s.rounded()); return t >= 3600 ? String(format: "%d:%02d:%02d", t / 3600, (t % 3600) / 60, t % 60) : String(format: "%d:%02d", t / 60, t % 60)
-    }
-
-    private func big(_ l: LocalizedStringKey, _ v: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: v).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.7).lineLimit(1)
-        }.frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func small(_ l: LocalizedStringKey, _ v: String) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: v).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-        }.frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func zonesCard(_ r: WorkoutRow) -> some View {
-        var mins = zoneMin
-        if let pct = WorkoutZones.percents(r.zonesJSON) {
-            let d = (r.durationS ?? Double(r.endTs - r.startTs)) / 60
-            mins = pct.map { d * $0 / 100 }
-        }
-        let total = max(mins?.reduce(0, +) ?? 0, 0.0001)
-        let colors: [Color] = [NunaPalette.zoneBase, NunaPalette.rest, NunaPalette.charge, NunaPalette.warning, NunaPalette.alert]
-        let bands = profile.hrZoneSet.zones
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack {
-                    nunaTrendsCap("Heart rate zones")
-                    Spacer()
-                    if let a = r.avgHr, let mx = r.maxHr { Text(verbatim: String(localized: "Average \(a) · max \(mx)")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
-                }
-                if let mins, mins.contains(where: { $0 > 0 }) {
-                    let peak = max(mins.max() ?? 1, 0.0001)
-                    ForEach(0..<5, id: \.self) { i in
-                        let share = mins[i] / total
-                        VStack(spacing: 7) {
-                            HStack(alignment: .firstTextBaseline, spacing: 8) {
-                                Text(verbatim: "\(i + 1)").font(.nuna(size: 12, weight: .heavy, design: NunaType.design)).foregroundStyle(.black.opacity(0.8))
-                                    .frame(width: 22, height: 22).background(colors[i].opacity(mins[i] >= 0.5 ? 1 : 0.35), in: Circle())
-                                if i < bands.count {
-                                    Text(verbatim: "\(Int(bands[i].lower.rounded()))–\(Int(bands[i].upper.rounded())) bpm").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                                }
-                                Spacer(minLength: 8)
-                                Text(verbatim: String(localized: "\(Int(mins[i].rounded())) min")).font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(mins[i] >= 0.5 ? NunaPalette.textPrimary : NunaPalette.textMuted)
-                                Text(verbatim: "\(Int((share * 100).rounded()))%").font(.nuna(size: 13, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary).frame(width: 40, alignment: .trailing)
-                            }
-                            GeometryReader { geo in
-                                ZStack(alignment: .leading) {
-                                    Capsule().fill(NunaPalette.glassStrong)
-                                    Capsule().fill(colors[i]).frame(width: mins[i] >= 0.5 ? max(geo.size.width * CGFloat(mins[i] / peak), 8) : 0)
-                                }
-                            }.frame(height: 8)
-                        }
-                    }
-                } else {
-                    Text("No heart-rate readings were recorded for this session.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                }
-            }
-        }
-    }
-
-    private func hrCard(_ r: WorkoutRow) -> some View {
-        NunaCard {
-            VStack(alignment: .leading, spacing: 12) {
-                nunaTrendsCap("Heart rate")
-                if hr.count >= 2 {
-                    NunaWorkoutHRCurve(buckets: hr, start: r.startTs, end: r.endTs)
-                } else {
-                    Text("No heart-rate readings were recorded for this session.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                }
-            }
-        }
-    }
-
-    /// Minutes in each zone for a row, from the stored percentages.
-    private func zoneMinutes(_ r: WorkoutRow) -> [Double]? {
-        guard let pct = WorkoutZones.percents(r.zonesJSON) else { return nil }
-        let d = (r.durationS ?? Double(r.endTs - r.startTs)) / 60
-        return pct.map { d * $0 / 100 }
-    }
-
-    /// Where the time went, set against the user's own other sessions of the same sport when there are enough of them.
-    private func anyaLine(_ r: WorkoutRow) -> String? {
-        guard let mins = zoneMin ?? zoneMinutes(r), mins.reduce(0, +) > 0 else { return nil }
-        let total = mins.reduce(0, +)
-        let top = mins.enumerated().max { $0.element < $1.element }!
-        let zone = top.offset + 1, minutes = Int(top.element.rounded()), share = Int((top.element / total * 100).rounded())
-        guard minutes >= 1 else { return nil }
-        let others = m.rows.filter { $0.sport == r.sport && $0.startTs != r.startTs }.compactMap(zoneMinutes)
-        if others.count >= 2 {
-            let typical = others.map { $0[top.offset] }.reduce(0, +) / Double(others.count)
-            let usual = Int(typical.rounded())
-            if Double(minutes) >= typical * 1.25 + 1 {
-                return String(localized: "You spent \(minutes) min in zone \(zone), \(share)% of the session. Your usual is \(usual) min, so this one ran harder.")
-            } else if Double(minutes) <= typical * 0.75 - 1 {
-                return String(localized: "You spent \(minutes) min in zone \(zone), \(share)% of the session. Your usual is \(usual) min, so this one was lighter.")
-            }
-            return String(localized: "You spent \(minutes) min in zone \(zone), \(share)% of the session. That is about your usual \(usual) min.")
-        }
-        return String(localized: "You spent \(minutes) min in zone \(zone), \(share)% of the session.")
-    }
-
-    private func loadDetail(_ r: WorkoutRow) async {
-        hr = await repo.workoutHrBuckets(from: r.startTs, to: r.endTs, source: r.source)
-        zoneMin = await repo.workoutZoneMinutes(from: r.startTs, to: r.endTs, zoneSet: profile.hrZoneSet, source: r.source)
-        if let rt = RouteStore.load(startTs: r.startTs, sport: r.sport) {
-            let pts = RouteMath.decode(rt.polyline); route = pts.count >= 2 ? pts : []
-        }
-        let k = m.dayKey(r.startTs)
-        dayEffort = repo.days.first { $0.day == k }?.strain
     }
 }
 
