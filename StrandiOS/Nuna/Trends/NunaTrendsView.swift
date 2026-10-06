@@ -51,7 +51,7 @@ struct NunaTrendsView: View {
                 } else if !m.hasAnything {
                     NunaCard {
                         Text("Trends appear once your strap has recorded a few days.").font(.nuna(size: 15, weight: .semibold))
-                            .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading)
+                            .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading).textCase(nil)
                     }
                 } else {
                     summaryCard
@@ -352,7 +352,7 @@ struct NunaTrendsView: View {
                     HStack(spacing: 6) { RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.ink).frame(width: 14, height: 8); Text("This period") }
                     HStack(spacing: 6) { RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.ink.opacity(0.3)).frame(width: 14, height: 5); Text("Previous period") }
                 }
-                .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
         }
     }

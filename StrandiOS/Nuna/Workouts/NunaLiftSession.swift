@@ -417,7 +417,7 @@ struct NunaLiftSessionView: View {
                             TextField("", text: $sessionRpeText, prompt: Text("7").foregroundStyle(NunaPalette.textMuted)).keyboardType(.decimalPad).focused($focused, equals: .sessionRpe)
                         }
                         Text("This is session RPE. Multiplied by the session's length it gives session load — the one figure that compares across completely different training.")
-                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }
                 }
                 if unfinished > 0 {
@@ -544,7 +544,7 @@ struct NunaLiftBar: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(verbatim: session.programName ?? String(localized: "Gym session")).font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
                         Text(verbatim: "\(e.completedWorkingSets)/\(e.plannedWorkingSets) · " + LiftFormat.duration(max(0, session.now - e.startTs)))
-                            .font(.nuna(size: 12.5, weight: .semibold)).monospacedDigit().foregroundStyle(NunaPalette.textSecondary)
+                            .font(.nuna(size: 12.5, weight: .semibold)).monospacedDigit().foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer()
                     Text("Open").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 16).frame(height: 34).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))

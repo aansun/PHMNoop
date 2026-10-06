@@ -303,7 +303,7 @@ struct NunaPaceDial: View {
             HStack {
                 Text(verbatim: "-1.0x"); Spacer(); Text(verbatim: "1.0x"); Spacer(); Text(verbatim: "3.0x")
             }
-            .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+            .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(verbatim: value.map { String(format: "%.1fx", $0) } ?? "–"))

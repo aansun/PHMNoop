@@ -70,7 +70,7 @@ struct NunaChargeEffortView: View {
                         .font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                     if let hi = b[2].meanOutcome, let lo = b[0].meanOutcome, b[2].n > 0, b[0].n > 0 {
                         Text(verbatim: String(localized: "The gap is about \(Int(abs(lo - hi).rounded())) points between light and hard days."))
-                            .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                 } else {
                     Text("Not enough paired days yet.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
@@ -296,7 +296,7 @@ struct NunaHeatmapView: View {
                         }, color: NunaPalette.charge, showsDates: false)
                         if let hi = means.max(by: { $0.value < $1.value }), let lo = means.min(by: { $0.value < $1.value }), hi.key != lo.key {
                             Text(verbatim: String(localized: "Charge is highest on \(day(hi.key)) and lowest on \(day(lo.key))."))
-                                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                     } else { Text("Not enough days yet.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                 }

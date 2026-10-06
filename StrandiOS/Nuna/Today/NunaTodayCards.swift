@@ -266,7 +266,7 @@ struct NunaStressCard: View {
                         Spacer(minLength: 8)
                         if let latest, isToday {
                             Text(verbatim: String(localized: "Now \(format(latest)) · \(wording(latest))"))
-                                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                     }
                     if let curve, !scored.isEmpty {
@@ -303,7 +303,7 @@ struct NunaStressCard: View {
                 if isToday { Text("Now") } else { Text(verbatim: clock(last.startTs)) }
             }
         }
-        .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+        .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
         .padding(.leading, 22)
     }
 
@@ -484,7 +484,7 @@ struct NunaActivityRow: View {
                         Text(verbatim: WorkoutSource.displaySport(workout.sport))
                             .font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         Text(verbatim: detail)
-                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer(minLength: 8)
                     if let s = workout.strain {

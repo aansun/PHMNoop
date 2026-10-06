@@ -143,7 +143,7 @@ struct NunaBreathView: View {
                                 Image(systemName: g.icon).font(.nuna(size: 20, weight: .semibold)).foregroundStyle(on ? NunaPalette.onAccent : g.tint)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(g.title).font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary).lineLimit(2).multilineTextAlignment(.leading)
-                                    Text(g.blurb).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(on ? NunaPalette.onAccent.opacity(0.7) : NunaPalette.textSecondary).lineLimit(2).multilineTextAlignment(.leading)
+                                    Text(g.blurb).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(on ? NunaPalette.onAccent.opacity(0.7) : NunaPalette.textSecondary).lineLimit(2).multilineTextAlignment(.leading).textCase(nil)
                                 }
                             }
                             .padding(12).frame(width: 150, height: 120, alignment: .topLeading)

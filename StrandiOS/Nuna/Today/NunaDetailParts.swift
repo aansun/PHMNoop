@@ -331,7 +331,7 @@ struct NunaDateAxis: View {
                 if dates.count > 4 { Text(verbatim: nunaAxisDate(dates[dates.count / 2])); Spacer() }
                 Text(verbatim: nunaAxisDate(last))
             }
-            .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
         }
     }
 }
@@ -536,8 +536,8 @@ struct NunaLine2Chart: View {
             }
         } else {
             Text(vals.count == 1 ? "Not enough data yet" : "No data in this period")
-                .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                .frame(maxWidth: .infinity, minHeight: 120)
+                .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                .frame(maxWidth: .infinity, minHeight: 120).textCase(nil)
         }
     }
 }

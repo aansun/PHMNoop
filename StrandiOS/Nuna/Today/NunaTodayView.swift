@@ -12,11 +12,17 @@ import WhoopStore
 /// skipped here and stay available in the Default Experience.
 /// The order and visibility the Nuna Today screen uses until the person arranges their own.
 enum NunaTodayDefaults {
+    /// Nuna keeps its own arrangement: the Default look saves its order and hidden set under other keys, and the two looks start from
+    /// different defaults, so one must not leak into the other.
+    static let orderKey = "nuna.today.sectionOrder"
+    static let hiddenKey = "nuna.today.hiddenSections"
+    /// Rings and the synthesis chips, Anya, key metrics, the stress card, the journal with water and mood, then the add-or-arrange card.
+    /// Everything else (activity, heart rate, start session, your cards, cycle, added cards) stays out until the person adds it.
     static let order: [TodaySection] = [
-        .hero, .synthesis, .recoveryVitals, .keyMetrics, .workouts, .journal,
-        .yourCards, .menstrualCycle, .addedCards, .heartRate, .liveSession,
+        .hero, .synthesis, .keyMetrics, .recoveryVitals, .journal,
+        .workouts, .heartRate, .liveSession, .yourCards, .menstrualCycle, .addedCards,
     ]
-    static let hidden: [TodaySection] = [.heartRate, .liveSession, .yourCards]
+    static let hidden: [TodaySection] = [.workouts, .heartRate, .liveSession, .yourCards, .menstrualCycle, .addedCards]
 }
 
 struct NunaTodayView: View {
@@ -31,8 +37,8 @@ struct NunaTodayView: View {
 
     @AppStorage("noop.coachEnabled") var coachEnabled = true
     @AppStorage(HydrationStore.enabledKey) var hydrationEnabled = false
-    @AppStorage(TodayLayoutPrefs.orderKey) private var sectionOrderRaw = ""
-    @AppStorage(TodayLayoutPrefs.hiddenKey) private var hiddenSectionsRaw = ""
+    @AppStorage(NunaTodayDefaults.orderKey) private var sectionOrderRaw = ""
+    @AppStorage(NunaTodayDefaults.hiddenKey) private var hiddenSectionsRaw = ""
     @AppStorage(KeyMetricPrefs.layoutKey) private var keyMetricsRaw = ""
     @AppStorage("today.keyMetricsDetailed") private var keyMetricsDetailed = false
     @AppStorage("today.keyMetricsWindowDays") private var keyMetricsWindowDays = 14
@@ -235,7 +241,7 @@ struct NunaTodayView: View {
             HStack(spacing: 12) {
                 Image(systemName: "lock.fill").foregroundStyle(NunaPalette.textSecondary)
                 Text("Viewing a past day. Read only.")
-                    .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 Spacer()
                 Button("Today") { model.dayOffset = 0 }.buttonStyle(.nuna(.ghost, height: 36))
             }
@@ -282,7 +288,7 @@ struct NunaTodayView: View {
                         .buttonStyle(.nuna(.primary, height: 44)).fixedSize()
                 }
                 Text("Hold the grip on the right, then drag to reorder. Tap X to hide a card.")
-                    .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             .moveDisabled(true).plainRow()
 

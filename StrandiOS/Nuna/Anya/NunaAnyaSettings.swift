@@ -54,7 +54,7 @@ struct NunaAnyaSettingsView: View {
                 }
             }
             Text("Anya names the figures it reads in every answer. Raw heartbeat intervals, PPG and motion are never sent.")
-                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
 
             VStack(alignment: .leading, spacing: 10) {
                 nunaTrendsCap("How Anya answers")
@@ -131,7 +131,7 @@ struct NunaAnyaInstructionsView: View {
     var body: some View {
         NunaDetailScreen("Anya's instructions", trailing: AnyView(saveButton)) {
             Text("Change how Anya thinks and talks. It applies from your next message, on top of Anya's built-in safety rules.")
-                .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             NunaCard {
                 VStack(alignment: .leading, spacing: 10) {
                     TextEditor(text: $text).scrollContentBackground(.hidden).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
@@ -152,7 +152,7 @@ struct NunaAnyaInstructionsView: View {
             example(String(localized: "Sleep adviser"), String(localized: "Focus on routine and bedtime"),
                     String(localized: "Act as a sleep adviser. Focus on my routine and bedtime, and put sleep before adding training load."))
             Text("Safety rules, the data you allow and your memories always apply. These instructions cannot turn them off.")
-                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
         }
         .scrollDismissesKeyboard(.interactively)
     }
@@ -186,7 +186,7 @@ struct NunaAnyaMemoryView: View {
         let all = store.memories
         NunaDetailScreen("Memory") {
             Text("What Anya remembers about you: goals, events and preferences. Delete or pause any of it at any time.")
-                .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             HStack(spacing: 12) {
                 NunaStatTile(label: "Active", value: "\(all.filter(\.isActive).count)")
                 NunaStatTile(label: "From conversation", value: "\(all.filter(\.fromConversation).count)")
@@ -210,7 +210,7 @@ struct NunaAnyaMemoryView: View {
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text(verbatim: m.title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(m.isActive ? NunaPalette.textPrimary : NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
                                     Text(verbatim: (m.fromConversation ? String(localized: "From conversation") : String(localized: "Manual")) + " · " + (m.isActive ? String(localized: "Active") : String(localized: "Paused")))
-                                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                                 }
                                 Spacer(minLength: 6)
                                 Toggle("", isOn: Binding(get: { m.isActive }, set: { store.setActive(m, $0) })).labelsHidden().tint(NunaPalette.charge)
@@ -261,7 +261,7 @@ struct NunaAnyaHistoryView: View {
         NunaDetailScreen("History", trailing: AnyView(editButton)) {
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass").foregroundStyle(NunaPalette.textMuted)
-                TextField("", text: $query, prompt: Text("Search conversations").foregroundStyle(NunaPalette.textMuted)).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                TextField("", text: $query, prompt: Text("Search conversations").foregroundStyle(NunaPalette.textMuted)).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
             }
             .padding(.horizontal, 16).frame(height: 48).background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)).overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
             if items.isEmpty {
@@ -492,7 +492,7 @@ struct NunaAnyaVoiceCoachView: View {
                 }
             }
             Text("Spoken on this iPhone with the system voice. Music is lowered briefly and returns to normal. Silent strap vibrations are set under strap automations.")
-                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
         }
     }
 }

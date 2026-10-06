@@ -57,7 +57,7 @@ struct NunaMoodView: View {
                 .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                 .padding(.horizontal, 18).padding(.vertical, 14)
                 .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                .overlay(RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1)).textCase(nil)
             if let stress {
                 NunaCard(small: true) {
                     NunaListRow(LocalizedStringKey(String(localized: "Stress today \(String(format: "%.1f", locale: AppLanguage.activeLocale, stress)) · \(stress < 1 ? String(localized: "low") : (stress < 2 ? String(localized: "medium") : String(localized: "high")))")),
@@ -73,7 +73,7 @@ struct NunaMoodView: View {
             weekCard
             if !lines.isEmpty { insightsCard }
             Text("Self-tracking, not a clinical assessment. If low mood persists, talk to a professional. You deserve support.")
-                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).frame(maxWidth: .infinity, alignment: .leading)
+                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).frame(maxWidth: .infinity, alignment: .leading).textCase(nil)
         }
         .task(id: repo.refreshSeq) { await load() }
     }
@@ -138,7 +138,7 @@ struct NunaMoodView: View {
                 }
                 Slider(value: $extras.energy, in: 0...1).tint(NunaPalette.charge)
                 HStack { Text("Tired"); Spacer(); Text("Energetic") }
-                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
         }
     }

@@ -86,7 +86,7 @@ struct NunaTrendDetailCard: View {
                 }
                 if pts.isEmpty {
                     Text(loaded ? "No data in this period" : " ").font(.nuna(size: 14, weight: .semibold))
-                        .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 160)
+                        .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 160).textCase(nil)
                 } else {
                     NunaSegmentedChart(points: pts, color: lineColor, decimals: decimals, band: band, reference: reference,
                                        higherIsBetter: higherIsBetter, directional: directional)
@@ -293,8 +293,8 @@ struct NunaSegmentedChart: View {
             }
         } else {
             Text(vals.count == 1 ? "Not enough data yet" : "No data in this period")
-                .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                .frame(maxWidth: .infinity, minHeight: 120)
+                .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                .frame(maxWidth: .infinity, minHeight: 120).textCase(nil)
         }
     }
 }

@@ -62,7 +62,7 @@ struct NunaManualWorkoutSheet: View {
                         Text(editing == nil ? "Add Workout" : "Edit Workout")
                             .font(.nuna(size: NunaTypeSize.h2, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         Text(editing == nil ? "Log a session you tracked elsewhere." : "Adjust this session's details.")
-                            .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer()
                     Button { dismiss() } label: {

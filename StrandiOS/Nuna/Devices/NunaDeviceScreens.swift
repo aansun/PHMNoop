@@ -29,9 +29,9 @@ struct NunaDeviceBatteryView: View {
                         if pct != nil { Text("%").font(.nuna(size: 22, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                     }
                     if let est, live.charging != true {
-                        Text(verbatim: String(localized: "About \(NunaDeviceFormat.remaining(est.remainingHours)) left.")).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: String(localized: "About \(NunaDeviceFormat.remaining(est.remainingHours)) left.")).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     } else if pct == nil {
-                        Text("Connect the strap to read its battery.").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Connect the strap to read its battery.").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     if let mv = live.batteryMv {
                         NunaDivider()
@@ -101,7 +101,7 @@ struct NunaDeviceSyncView: View {
                     } else {
                         Text(verbatim: live.lastSyncedAt.map { NunaDeviceFormat.clock($0) } ?? "–").font(.nuna(size: 52, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(52)).foregroundStyle(NunaPalette.textPrimary)
                         Text(verbatim: live.lastSyncError ?? (live.lastSyncedAt != nil ? String(localized: "All the history on the strap has been pulled. The next sync runs on its own when the strap is nearby.") : String(localized: "No sync has run since the app opened.")))
-                            .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(live.lastSyncError == nil ? NunaPalette.textSecondary : NunaPalette.alertText).fixedSize(horizontal: false, vertical: true)
+                            .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(live.lastSyncError == nil ? NunaPalette.textSecondary : NunaPalette.alertText).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }
                     if !live.backfilling {
                         Button { model.ble.syncNow() } label: {

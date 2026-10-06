@@ -186,7 +186,7 @@ private struct NunaDevicesContent: View {
                 NunaIconTile("applewatch")
                 Text("No strap yet").font(.nuna(size: 20, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 Text("Add your WHOOP to record heart rate, sleep and workouts. NOOP connects directly over Bluetooth, without the WHOOP app or any cloud.")
-                    .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }.frame(maxWidth: .infinity, alignment: .leading)
         }
     }
@@ -324,7 +324,7 @@ struct NunaDeviceDetailView: View {
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(verbatim: String(localized: "Battery \(Int(pct.rounded()))%")).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                                 Text(verbatim: live.charging == true ? String(localized: "Charging") : (live.batteryEstimate.map { String(localized: "Not charging · about \(NunaDeviceFormat.remaining($0.remainingHours))") } ?? String(localized: "Not charging")))
-                                    .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                    .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                             }
                             Spacer()
                             Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
@@ -353,7 +353,7 @@ struct NunaDeviceDetailView: View {
 
     @ViewBuilder private func row(_ l: LocalizedStringKey, _ v: String, action: (() -> Void)? = nil) -> some View {
         let content = HStack {
-            Text(l).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Text(l).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             Spacer(minLength: 12)
             Text(verbatim: v).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
             if action != nil { Image(systemName: "pencil").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted) }

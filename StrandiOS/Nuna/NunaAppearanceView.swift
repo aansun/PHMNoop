@@ -24,7 +24,7 @@ struct NunaAppearanceView: View {
             VStack(alignment: .leading, spacing: NunaSpacing.section) {
                 NunaHeader("Appearance", onBack: { dismiss() })
                 Text("Choose light or dark, spacing and the app icon. Colour and type follow the app's design guide.")
-                    .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 experienceCard
                 NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                     VStack(spacing: 0) {
@@ -215,6 +215,6 @@ struct NunaAppearanceView: View {
         }.clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
-    private func themeTitle(_ m: NunaTheme.Mode) -> LocalizedStringKey { switch m { case .auto: return "Automatic"; case .light: return "Light"; case .dark: return "Dark" } }
+    private func themeTitle(_ m: NunaTheme.Mode) -> LocalizedStringKey { switch m { case .auto: return "Automatic"; case .light: return "Light theme"; case .dark: return "Dark" } }
 }
 #endif

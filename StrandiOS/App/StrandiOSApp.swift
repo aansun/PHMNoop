@@ -228,6 +228,13 @@ struct StrandiOSApp: App {
                 // A workout must start its Lock-Screen activity immediately, before the first HR
                 // sample arrives. This also makes the workout activity independent from the optional
                 // "Live HR in Dynamic Island" setting.
+                .onReceive(NotificationCenter.default.publisher(for: .noopJournalSaved)) { _ in
+                    Task { await JournalReminderNotifier.refresh(repo: model.repo) }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: UserDefaults.didChangeNotification)
+                    .map { _ in "\(JournalReminderNotifier.isEnabled)-\(JournalReminderNotifier.minuteOfDay)" }.removeDuplicates().dropFirst()) { _ in
+                    Task { await JournalReminderNotifier.refresh(repo: model.repo) }
+                }
                 .onReceive(model.$activeWorkout) { _ in
                     // `$activeWorkout` publishes before the value is stored, so read it one turn later: otherwise a pause, an end
                     // or a new session would show the previous state until the next heart-rate tick.
@@ -376,6 +383,8 @@ struct StrandiOSApp: App {
         .onChange(of: scenePhase) { _, phase in
             audioCoaching.scenePhaseChanged(phase)
             if phase == .active {
+                // Plan the coming journal reminders (and drop tonight's once the entry is written).
+                Task { await JournalReminderNotifier.refresh(repo: model.repo) }
                 // A banner swiped away from the Lock Screen (or ended by the system) while the app was in the background can only be
                 // started again from the foreground, so a running workout gets it back the moment the app is opened.
                 pushLiveActivity()

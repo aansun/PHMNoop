@@ -57,7 +57,7 @@ struct NunaProgramEditor: View {
             exercises
             summaryCard
             Text("Every target is optional: this is the plan, not the record. What you lift is entered during the session. Sessions already logged from this program are kept.")
-                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
             if !isNew {
                 Button(role: .destructive) { confirmDelete = true } label: {
                     Text("Delete program").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText)

@@ -166,7 +166,7 @@ struct NunaSleepStageSection: View {
                     NunaStageSplitBar(stages: night.stages)
                     ForEach([SleepStage.awake, .rem, .light, .deep], id: \.self) { simpleRow($0) }
                     Text("The order of stages is not available for this night. The split comes from the daily totals.")
-                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 } else {
                     nightChart
                     ForEach([SleepStage.awake, .rem, .light, .deep], id: \.self) { timelineRow($0) }
@@ -329,7 +329,7 @@ struct NunaSleepStageSection: View {
                 Text(m.id == "hr"
                      ? "Figures cover the time you were asleep. This compares with your own recent nights and is not a medical assessment; if you feel unwell, talk to a professional."
                      : "Figures cover the time you were asleep.")
-                    .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+                    .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
             .padding(.horizontal, 10)
         }
@@ -453,13 +453,13 @@ struct NunaStageCompare: View {
                 VStack(alignment: .leading, spacing: 4) {
                     nunaTrendsCap("Compared to usual")
                     Text("Against your recent nights and the range healthy adults usually fall in.")
-                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).padding(.bottom, 6)
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).padding(.bottom, 6).textCase(nil)
                     ForEach(Array(refs.enumerated()), id: \.element.stage) { i, r in
                         if i > 0 { NunaDivider() }
                         row(r, total: total)
                     }
                     Text("The range is a rule of thumb for healthy adults, as a share of time in bed. Strap staging is an estimate, so read it as a guide, not a diagnosis.")
-                        .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).padding(.top, 10)
+                        .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).padding(.top, 10).textCase(nil)
                 }
             }
         }
@@ -585,12 +585,25 @@ struct NunaOvernightVitals: View {
                 }
             }
             Spacer(minLength: 8)
-            VStack(alignment: .trailing, spacing: 4) {
-                HStack(alignment: .firstTextBaseline, spacing: 3) {
-                    Text(verbatim: f(r.value)).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(verbatim: r.unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+            // The same trailing block as every metric list: the figure with a small trend triangle (no unit), and the 14-night average under it.
+            let d = avg.map { r.value - $0 }
+            let step = r.decimals == 0 ? 0.5 : 0.05
+            let good: Bool? = r.upIsGood.map { ((d ?? 0) > 0) == $0 }
+            let tint: Color = good.map { $0 ? NunaPalette.charge : NunaPalette.warning } ?? NunaPalette.textSecondary
+            VStack(alignment: .trailing, spacing: 2) {
+                HStack(alignment: .center, spacing: 5) {
+                    Text(verbatim: f(r.value)).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                    Group {
+                        if let d, abs(d) >= step {
+                            Image(systemName: d > 0 ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill").font(.system(size: 8, weight: .bold)).foregroundStyle(tint)
+                        } else { Color.clear }
+                    }.frame(width: 10, height: 10)
                 }
-                if let avg { delta(r, avg: avg, f: f) }
+                if let avg {
+                    Text(verbatim: f(avg)).font(.nuna(size: 12, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
+                        .monospacedDigit().padding(.trailing, 15)
+                }
             }
             if MetricCatalog.metric(key: r.key, source: "my-whoop") != nil {
                 Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
@@ -603,21 +616,6 @@ struct NunaOvernightVitals: View {
                 NavigationLink(value: NunaTodayRoute.metric(m)) { content }.buttonStyle(.plain)
             } else {
                 content
-            }
-        }
-    }
-
-    /// "▲ 4" against the average of the earlier nights, green when the move is the good way, amber when it is not.
-    private func delta(_ r: Row, avg: Double, f: (Double) -> String) -> some View {
-        let d = r.value - avg
-        let step = r.decimals == 0 ? 0.5 : 0.05
-        let good: Bool? = r.upIsGood.map { (d > 0) == $0 }
-        let tint: Color = good.map { $0 ? NunaPalette.charge : NunaPalette.warning } ?? NunaPalette.textSecondary
-        return Group {
-            if abs(d) >= step {
-                Text(verbatim: (d > 0 ? "▲ " : "▼ ") + f(abs(d))).font(.nuna(size: 12.5, weight: .heavy)).foregroundStyle(tint)
-            } else {
-                Text("Like usual").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
         }
     }

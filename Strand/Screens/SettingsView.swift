@@ -212,7 +212,6 @@ struct SettingsView: View {
     @AppStorage(AppearanceMode.storageKey) private var appearanceRaw = AppearanceMode.system.rawValue
     // App-wide interaction and navigation experience. Kept separate from Theme and ThemePreset so the
     // upcoming Nuna redesign can switch the shell without changing visual preferences.
-    @AppStorage(AppExperience.storageKey) private var appExperienceRaw = AppExperience.default.rawValue
     // App-owned copy language. Apple binds a bundle localization at process launch, so this writes the
     // standard AppleLanguages override and takes effect after the user reopens NOOP.
     @AppStorage(AppLanguage.storageKey) private var appLanguageRaw = AppLanguage.system.rawValue
@@ -1306,27 +1305,6 @@ struct SettingsView: View {
                     }
                 }
                 #endif
-                rowDivider
-                // Experience changes the app-wide shell and interaction model; it is deliberately not a
-                // theme preset. Nuna is persisted now so the new design can be activated without moving
-                // the user's colour, typography, or card preferences later.
-                FormRow(label: "Experience") {
-                    Picker("Experience", selection: $appExperienceRaw) {
-                        ForEach(AppExperience.allCases) { experience in
-                            Text(experience.label).tag(experience.rawValue)
-                        }
-                    }
-                    .labelsHidden()
-                    .pickerStyle(.menu)
-                    .tint(StrandPalette.accent)
-                    .accessibilityLabel("App experience")
-                }
-                Text("Nuna is the upcoming app-wide redesign. Your selection is saved separately from Theme and Preset.")
-                    .font(StrandFont.footnote)
-                    .foregroundStyle(StrandPalette.textTertiary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.top, NoopMetrics.space1)
                 rowDivider
                 // Theme presets — one-tap bundles coordinating accent + chart world + backdrop + card
                 // opacity. Derived (no stored value): tweaking any control below flips this to Custom.

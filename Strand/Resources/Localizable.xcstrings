@@ -1,6 +1,18 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "A notification in the evening and a card in Today": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Notifikasi di malam hari dan kartu di Hari ini"}}
+    } },
+    "Reminder time": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Jam pengingat"}}
+    } },
+    "A minute to write today's journal?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sempatkan semenit untuk menulis jurnal hari ini?"}}
+    } },
+    "Light theme": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Terang"}}
+    } },
     "Confirms each change and when you reach your target": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Konfirmasi tiap perubahan dan saat targetmu tercapai"}}
     } },
@@ -100685,7 +100697,7 @@
     },
     "Light": {
       "localizations": {
-        "id": {"stringUnit": {"state": "translated", "value": "Terang"}},
+        "id": {"stringUnit": {"state": "translated", "value": "Ringan"}},
         "de": {
           "stringUnit": {
             "state": "translated",

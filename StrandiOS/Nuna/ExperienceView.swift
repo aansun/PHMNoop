@@ -78,7 +78,7 @@ struct ExperienceView: View {
                         VStack(alignment: .leading, spacing: 10) {
                             Text(blurb)
                                 .font(.nuna(size: 13, weight: .semibold))
-                                .foregroundStyle(NunaPalette.textSecondary)
+                                .foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                             ForEach(bullets.indices, id: \.self) { i in
                                 HStack(alignment: .top, spacing: 8) {
                                     Circle().fill(NunaPalette.textMuted).frame(width: 5, height: 5).padding(.top, 7)
@@ -164,7 +164,7 @@ private struct ExperienceConfirmSheet: View {
                     Text(target == .standard ? "Switch to the Default look?" : "Switch to Nuna?")
                         .font(.nuna(size: 20, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
                     Text(target == .standard ? "The original NOOP look" : "The new PHMNOOP design")
-                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
             VStack(alignment: .leading, spacing: 10) {

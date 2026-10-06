@@ -169,7 +169,7 @@ struct NunaTrendsMetricView: View {
                         if let last = t.last {
                             let avg = t.map(\.total).reduce(0, +) / Double(t.count)
                             Text(verbatim: String(localized: "Total Effort for every 7 days. This week \(NunaTrendsFormat.num(disp(last.total), 0)), average \(NunaTrendsFormat.num(disp(avg), 0))."))
-                                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                     }
                 }
@@ -215,7 +215,7 @@ struct NunaTrendsMetricView: View {
                         }, color: bar, highlightColor: color, showsDates: false)
                         if let hi, let lo, hi.key != lo.key {
                             Text(verbatim: String(localized: "Highest on \(longDay(hi.key)), lowest on \(longDay(lo.key))."))
-                                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                     }
                 }

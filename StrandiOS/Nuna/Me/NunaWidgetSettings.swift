@@ -25,7 +25,7 @@ struct NunaWidgetSettingsView: View {
     var body: some View {
         NunaDetailScreen("Widgets and Lock Screen") {
             Text("See your scores and vitals without opening the app. Widgets use ready-made numbers from the app and do not compute anything themselves.")
-                .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             NunaCard(highlight: fresh) {
                 VStack(alignment: .leading, spacing: 14) {
                     HStack { nunaTrendsCap("Widget data"); Spacer()

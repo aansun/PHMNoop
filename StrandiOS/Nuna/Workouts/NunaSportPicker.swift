@@ -51,7 +51,7 @@ struct NunaSportPicker: View {
                     Image(systemName: "magnifyingglass").foregroundStyle(NunaPalette.textMuted)
                     TextField("", text: $query, prompt: Text("Search").foregroundStyle(NunaPalette.textMuted))
                         .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        .textInputAutocapitalization(.never).autocorrectionDisabled()
+                        .textInputAutocapitalization(.never).autocorrectionDisabled().textCase(nil)
                     if !query.isEmpty {
                         Button { query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(NunaPalette.textMuted) }.buttonStyle(.plain)
                     }
