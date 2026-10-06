@@ -50,15 +50,44 @@ enum NunaMeIndex {
 
     static func item(_ id: String) -> NunaMeItem? { all.first { $0.id == id } }
 
-    /// Items whose name (in the app language or in English), group or keywords contain every word typed.
-    static func search(_ query: String) -> [NunaMeItem] {
+    /// What a search finds: a whole screen, or one setting on a screen. Both open the screen.
+    struct Hit: Identifiable {
+        let route: NunaMeRoute
+        let title: String
+        let parent: String        // the screen's own title, shown under a setting
+        let icon: String
+        let group: String
+        let isSetting: Bool
+        var id: String { "\(route)-\(title)-\(isSetting)" }
+    }
+
+    /// Screens and settings that contain every word typed, in the app language or in English. What is named by the search comes first, a
+    /// screen and then the settings on screens; what only matches through keywords or notes follows.
+    static func search(_ query: String) -> [Hit] {
         let words = fold(query).split(separator: " ").map(String.init)
         guard !words.isEmpty else { return [] }
-        return all.filter { item in
-            let hay = fold([item.title, String(localized: String.LocalizationValue(item.title)), item.group,
-                            String(localized: String.LocalizationValue(item.group)), item.keywords].joined(separator: " "))
-            return words.allSatisfy { hay.contains($0) }
+        func hay(_ parts: [String]) -> String {
+            fold(parts.flatMap { [$0, String(localized: String.LocalizationValue($0))] }.joined(separator: " "))
         }
+        func matches(_ text: String) -> Bool { words.allSatisfy { text.contains($0) } }
+
+        var screens: [Hit] = [], screensByKeyword: [Hit] = []
+        for item in all {
+            let hit = Hit(route: item.route, title: item.title, parent: item.group, icon: item.icon, group: item.group, isSetting: false)
+            if matches(hay([item.title])) { screens.append(hit) }
+            else if matches(hay([item.title, item.group]) + " " + fold(item.keywords)) { screensByKeyword.append(hit) }
+        }
+        var byName: [Hit] = [], byNote: [Hit] = []
+        var seen = Set((screens + screensByKeyword).map { "\($0.route)|\($0.title)" })
+        for st in NunaMeSettingsIndex.all {
+            guard let owner = all.first(where: { $0.route == st.route }) else { continue }
+            let key = "\(st.route)|\(st.title)"
+            guard !seen.contains(key) else { continue }
+            let hit = Hit(route: st.route, title: st.title, parent: owner.title, icon: owner.icon, group: owner.group, isSetting: true)
+            if matches(hay([st.title])) { byName.append(hit); seen.insert(key) }
+            else if matches(hay([st.title, st.note, owner.title])) { byNote.append(hit); seen.insert(key) }
+        }
+        return screens + byName + screensByKeyword + byNote
     }
 
     private static func fold(_ s: String) -> String {
@@ -139,11 +168,11 @@ struct NunaMeSearchView: View {
                 .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 8)
         } else {
             ForEach(NunaMeIndex.groups, id: \.self) { g in
-                let items = found.filter { $0.group == g }
-                if !items.isEmpty {
+                let hits = found.filter { $0.group == g }
+                if !hits.isEmpty {
                     VStack(alignment: .leading, spacing: 10) {
-                        header(LocalizedStringKey(g), count: items.count, trailing: nil)
-                        card(items)
+                        NunaRuledHeader(LocalizedStringKey(g), count: hits.count)
+                        hitsCard(hits)
                     }
                 }
             }
@@ -152,12 +181,7 @@ struct NunaMeSearchView: View {
 
     /// Title, how many, then a hairline to the edge: the Journal's section header.
     private func header(_ title: LocalizedStringKey, count: Int, trailing: AnyView?) -> some View {
-        HStack(spacing: 10) {
-            nunaTrendsCap(title).lineLimit(1).minimumScaleFactor(0.7).fixedSize(horizontal: false, vertical: true)
-            Text(verbatim: "\(count)").font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-            Rectangle().fill(NunaPalette.hairline).frame(height: 1)
-            if let trailing { trailing }
-        }
+        NunaRuledHeader(title, count: count) { if let trailing { trailing } }
     }
 
     /// Anya's name is never set in capitals, as in the hub.
@@ -174,6 +198,24 @@ struct NunaMeSearchView: View {
                     NavigationLink(value: item.route) { row(item) }
                     .buttonStyle(.plain)
                     .simultaneousGesture(TapGesture().onEnded { NunaMeRecents.record(item.route) })
+                }
+            }
+        }
+    }
+
+    /// A screen shows its group as the note; a setting shows the screen it lives on.
+    private func hitsCard(_ hits: [NunaMeIndex.Hit]) -> some View {
+        NunaCard(small: true) {
+            VStack(spacing: 0) {
+                ForEach(Array(hits.enumerated()), id: \.element.id) { i, hit in
+                    if i > 0 { NunaDivider() }
+                    NavigationLink(value: hit.route) {
+                        let base = NunaListRow(LocalizedStringKey(hit.title), subtitle: LocalizedStringKey(hit.isSetting ? hit.parent : hit.group),
+                                               systemImage: hit.icon, showsChevron: true)
+                        if hit.route == .anya && !hit.isSetting { base.textCase(nil) } else { base }
+                    }
+                    .buttonStyle(.plain)
+                    .simultaneousGesture(TapGesture().onEnded { NunaMeRecents.record(hit.route) })
                 }
             }
         }

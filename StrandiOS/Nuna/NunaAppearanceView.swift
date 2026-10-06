@@ -62,7 +62,7 @@ struct NunaAppearanceView: View {
                     Image(systemName: "sparkle").font(.system(size: 18, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
                         .frame(width: 44, height: 44).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
                     VStack(alignment: .leading, spacing: 2) {
-                        NunaSectionHeader("Experience")
+                        nunaRuledHeader("Experience")
                         Text(verbatim: experience.displayName).font(.nuna(size: NunaTypeSize.h2 - 2, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
                         Text("Switch to Default to return to the original NOOP look").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
@@ -108,7 +108,7 @@ struct NunaAppearanceView: View {
     /// Default (the black-and-neon Nuna look) or WHP (a slate, blue-grey night look). WHP has no light mode.
     private var skinSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            nunaTrendsCap("Style")
+            nunaRuledHeader("Style")
             HStack(spacing: 12) {
                 ForEach(NunaThemePrefs.Skin.allCases) { k in
                     let on = skinRaw == k.rawValue
@@ -146,7 +146,7 @@ struct NunaAppearanceView: View {
 
     private var themeSection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            nunaTrendsCap("Theme")
+            nunaRuledHeader("Theme")
             HStack(spacing: 12) {
                 ForEach(NunaTheme.Mode.allCases) { m in
                     Button { themeRaw = m.rawValue } label: {
@@ -165,7 +165,7 @@ struct NunaAppearanceView: View {
 
     private var densityCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            nunaTrendsCap("Density")
+            nunaRuledHeader("Density")
             NunaSegmented([(value: NunaThemePrefs.Density.roomy.rawValue, title: "Roomy"), (value: NunaThemePrefs.Density.standard.rawValue, title: "Standard"), (value: NunaThemePrefs.Density.compact.rawValue, title: "Compact")], selection: $densityRaw)
         }
     }

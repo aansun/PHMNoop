@@ -40,7 +40,7 @@ struct NunaSettingsGroup<Content: View>: View {
     init(_ title: LocalizedStringKey? = nil, @ViewBuilder content: () -> Content) { self.title = title; self.content = content() }
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            if let title { nunaTrendsCap(title) }
+            if let title { nunaRuledHeader(title) }
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) { VStack(spacing: 0) { content } }
         }
     }

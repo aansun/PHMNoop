@@ -51,7 +51,7 @@ struct NunaDeviceBatteryView: View {
                 }
             }
             VStack(alignment: .leading, spacing: 10) {
-                nunaTrendsCap("Looking after the battery")
+                nunaRuledHeader("Looking after the battery")
                 NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                     VStack(spacing: 0) {
                         NunaListRow("Charge while you are awake", subtitle: "In the shower or at your desk, so no sleep data is lost", systemImage: "moon.zzz")
@@ -111,7 +111,7 @@ struct NunaDeviceSyncView: View {
                 }
             }
             VStack(alignment: .leading, spacing: 10) {
-                nunaTrendsCap("How sync happens")
+                nunaRuledHeader("How sync happens")
                 NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                     VStack(spacing: 0) {
                         NunaListRow("Manual", subtitle: "Tap Sync now at any time", systemImage: "hand.tap")
@@ -153,7 +153,7 @@ struct NunaDeviceHelpView: View {
                 NavigationLink(value: NunaDeviceRoute.repair) { pill("See how") }.buttonStyle(.plain)
             }
             VStack(alignment: .leading, spacing: 10) {
-                nunaTrendsCap("Connection states")
+                nunaRuledHeader("Connection states")
                 NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                     VStack(spacing: 0) {
                         NunaListRow("Connected", subtitle: "Data arrives live", systemImage: "checkmark.circle")
@@ -271,7 +271,7 @@ struct NunaDeviceLogView: View {
                 }
             }
             VStack(alignment: .leading, spacing: 10) {
-                nunaTrendsCap("Test")
+                nunaRuledHeader("Test")
                 NunaCard(small: true) {
                     Button { model.buzzStrapOnce(); buzzed = true; DispatchQueue.main.asyncAfter(deadline: .now() + 3) { buzzed = false } } label: {
                         NunaListRow("Test vibration", subtitle: LocalizedStringKey(buzzed ? String(localized: "Sent") : String(localized: "The strap vibrates once")), systemImage: "waveform", showsChevron: true)
