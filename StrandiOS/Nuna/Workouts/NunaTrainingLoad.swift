@@ -43,6 +43,7 @@ struct NunaTrainingLoadView: View {
             await loadZones()
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "workouts") }
+        .environment(\.nunaAnyaCardContext, "workouts")
     }
 
     private var anyaLine: String {

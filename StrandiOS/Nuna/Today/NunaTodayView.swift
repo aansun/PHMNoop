@@ -237,6 +237,7 @@ struct NunaTodayView: View {
         }
         .sheet(isPresented: $showInbox) { NunaUpdatesInbox(onClose: { showInbox = false }).nunaSheetChrome(detents: [.large]) }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "today") }
+        .environment(\.nunaAnyaCardContext, "today")
     }
 
     // MARK: Header

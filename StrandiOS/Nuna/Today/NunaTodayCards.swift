@@ -172,6 +172,17 @@ struct NunaScoreRings: View {
 
 // MARK: - Anya card
 
+private struct NunaAnyaCardContextKey: EnvironmentKey { static let defaultValue: String? = nil }
+
+extension EnvironmentValues {
+    /// The Anya context of the screen. When it is set, a card that carries its own line (a verdict, a zone read, a record) opens the
+    /// Anya sheet about that very line instead of the screen's general read, so what is tapped and what opens always agree.
+    var nunaAnyaCardContext: String? {
+        get { self[NunaAnyaCardContextKey.self] }
+        set { self[NunaAnyaCardContextKey.self] = newValue }
+    }
+}
+
 /// Highlighted Anya card: icon tile, caption, one-line advice and an optional white action button.
 struct NunaAnyaCard: View {
     let title: Text
@@ -183,6 +194,10 @@ struct NunaAnyaCard: View {
     var progress: Double?
     var progressColor: Color = NunaPalette.effort
     let action: () -> Void
+    /// The line itself, when it is already text; with a screen context it is what the sheet opens on.
+    private var line: String?
+    @Environment(\.nunaAnyaCardContext) private var sheetContext
+    @State private var showSheet = false
 
     init(title: LocalizedStringKey, highlight: Bool = true, buttonTitle: LocalizedStringKey? = nil, onButton: (() -> Void)? = nil,
          action: @escaping () -> Void) {
@@ -192,7 +207,7 @@ struct NunaAnyaCard: View {
     /// For text that is already localized (the readiness one-liner).
     init(verbatim: String, detail: String? = nil, progress: Double? = nil, progressColor: Color = NunaPalette.effort, buttonTitle: LocalizedStringKey? = nil, onButton: (() -> Void)? = nil,
          action: @escaping () -> Void) {
-        self.title = Text(verbatim: verbatim); self.detail = detail; self.progress = progress; self.progressColor = progressColor
+        self.title = Text(verbatim: verbatim); self.line = verbatim; self.detail = detail; self.progress = progress; self.progressColor = progressColor
         self.buttonTitle = buttonTitle; self.onButton = onButton; self.action = action
     }
 
@@ -200,7 +215,16 @@ struct NunaAnyaCard: View {
     @AppStorage(NunaAnyaPrefs.cardsKey) private var cardsOn = true
 
     var body: some View {
-        if cardsOn { content }
+        if cardsOn {
+            content.sheet(isPresented: $showSheet) {
+                if let ctx = sheetContext, let line { NunaAnyaSheet(context: ctx, cardLine: .init(headline: line, detail: detail, read: NunaAnyaCardLine.signals(ctx))) }
+            }
+        }
+    }
+
+    /// A card with its own line opens the sheet about it; the others keep the screen's action.
+    private func tapped() {
+        if sheetContext != nil, line != nil { showSheet = true } else { action() }
     }
 
     @ViewBuilder private var content: some View {
@@ -233,7 +257,7 @@ struct NunaAnyaCard: View {
     /// No button: the icon, the words and a chevron in one row, the whole card opens Anya.
     private var inline: some View {
         NunaCard(small: true, highlight: highlight, padding: EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)) {
-            Button(action: action) {
+            Button(action: tapped) {
                 HStack(spacing: 12) {
                     AnyaIconTile()
                     VStack(alignment: .leading, spacing: 2) {
@@ -253,7 +277,7 @@ struct NunaAnyaCard: View {
     private func stacked(_ buttonTitle: LocalizedStringKey, _ onButton: @escaping () -> Void) -> some View {
         NunaCard(small: true, highlight: highlight, padding: EdgeInsets(top: 14, leading: 16, bottom: 16, trailing: 16)) {
             VStack(alignment: .leading, spacing: 14) {
-                Button(action: action) {
+                Button(action: tapped) {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack(spacing: 10) {
                             AnyaIconTile()

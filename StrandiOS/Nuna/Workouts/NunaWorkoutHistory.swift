@@ -85,6 +85,7 @@ struct NunaWorkoutHistoryView: View {
         }
         .task(id: repo.refreshSeq) { await m.load(repo: repo) }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "workouts") }
+        .environment(\.nunaAnyaCardContext, "workouts")
         .onChange(of: months) { _ in selected = nil }
         .onChange(of: filter) { _ in selected = nil }
     }

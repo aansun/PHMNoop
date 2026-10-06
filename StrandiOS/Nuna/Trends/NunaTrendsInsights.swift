@@ -43,6 +43,7 @@ struct NunaInsightsView: View {
         }
         .task(id: repo.refreshSeq) { await load() }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "trends") }
+        .environment(\.nunaAnyaCardContext, "trends")
     }
 
     private var anyaLine: String {

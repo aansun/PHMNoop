@@ -6,8 +6,27 @@ import StrandAnalytics
 /// The sheet every Anya card and header button opens (AnyaSheet*.dc). The top is always the local read: a line that cites
 /// its figures, computed on this iPhone. A provider adds a short explanation only after it is connected and data access is
 /// allowed; follow-up questions are answered inside the sheet, and "Open full conversation" hands over to the Anya tab.
+/// The line of the card that opened the sheet, so the sheet talks about what was tapped.
+struct NunaAnyaCardLine: Equatable {
+    var headline: String
+    var detail: String?
+    var read: [String]
+
+    /// The signals a card on this screen was drawn from.
+    static func signals(_ context: String) -> [String] {
+        switch context {
+        case "today": return ["Charge", "Effort", "Sleep"]
+        case "workouts": return ["Effort", "Heart rate zones"]
+        case "trends": return ["Charge", "Effort"]
+        default: return []
+        }
+    }
+}
+
 struct NunaAnyaSheet: View {
     let context: String
+    /// Set when a card with its own line opened the sheet.
+    var cardLine: NunaAnyaCardLine?
     /// Set by a single-metric screen, so the read and the questions are about that metric.
     var metric: NunaAnyaMetric?
     @EnvironmentObject private var coach: AICoachEngine
@@ -67,6 +86,8 @@ struct NunaAnyaSheet: View {
         .preferredColorScheme(NunaTheme.colorScheme)
         .task(id: "\(context)|\(metric?.key ?? "")") {
             read = await NunaAnyaReader.read(context: context, metric: metric, repo: repo, profile: profile, scale: UnitPrefs.resolveEffortScale(effortScaleRaw))
+            // The questions stay the screen's; the line and the signals are the card's.
+            if let c = cardLine { read = NunaAnyaRead(headline: c.headline, detail: c.detail, read: c.read, module: read?.module ?? module, questions: read?.questions ?? []) }
             loaded = true
         }
     }
@@ -97,13 +118,15 @@ struct NunaAnyaSheet: View {
                     NunaDivider()
                     Text(Self.markdown(AnyaActions.proseOnly(explanation))).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
-                HStack(spacing: 6) {
-                    Text("Read:").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    ForEach(r.read, id: \.self) { Text(LocalizedStringKey($0)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
+                if !r.read.isEmpty {
+                    HStack(spacing: 6) {
+                        Text("Read:").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        ForEach(r.read, id: \.self) { Text(LocalizedStringKey($0)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
+                    }
                 }
                 if coach.isConfigured, coach.dataConsent, explanation == nil, !explaining {
                     Button { Task { await explain() } } label: {
-                        HStack(spacing: 6) { AnyaMark(size: 18); Text("Ask Anya to explain") }
+                        Text("Ask Anya to explain")
                             .font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 40).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain)
                 }
@@ -201,7 +224,7 @@ struct NunaAnyaSheet: View {
 
     private func explain() async {
         explaining = true; defer { explaining = false }
-        explanation = await coach.generateContextualBrief(pageContext: context + (NunaAnyaMemory.summary(module).map { "\n\n" + $0 } ?? ""))
+        explanation = await coach.generateContextualBrief(pageContext: context + (cardLine.map { "\n\n" + $0.headline + ($0.detail.map { ". " + $0 } ?? "") } ?? "") + (NunaAnyaMemory.summary(module).map { "\n\n" + $0 } ?? ""))
     }
 
     private func openFull() {

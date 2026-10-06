@@ -47,6 +47,7 @@ struct NunaChargeEffortView: View {
         }
         .task(id: repo.refreshSeq) { await m.load(repo: repo) }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "trends") }
+        .environment(\.nunaAnyaCardContext, "trends")
     }
 
     private func sweetSpot(_ b: [TrendInsights.Bucket], hi: Double, lo: Double) -> String {
@@ -231,6 +232,7 @@ struct NunaChargeRestView: View {
         }
         .task(id: repo.refreshSeq) { await m.load(repo: repo); await sleep.load(repo: repo) }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "trends") }
+        .environment(\.nunaAnyaCardContext, "trends")
     }
 
     private func anyaLine(_ b: [TrendInsights.Bucket]) -> String {

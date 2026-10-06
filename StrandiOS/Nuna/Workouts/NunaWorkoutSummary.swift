@@ -34,6 +34,7 @@ struct NunaWorkoutSummaryView: View {
             if let r = m.row(key) { await data.load(startTs: r.startTs, endTs: r.endTs, sport: r.sport, source: r.source, repo: repo, zoneSet: profile.hrZoneSet) }
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "workouts") }
+        .environment(\.nunaAnyaCardContext, "workouts")
         .confirmationDialog("Delete this workout?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) {
                 if let r = m.row(key) { Task { NunaWorkoutReviewStore.remove(startTs: r.startTs, sport: r.sport); await repo.deleteWorkout(r); await repo.refresh(); dismiss() } }
