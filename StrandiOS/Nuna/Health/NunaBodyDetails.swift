@@ -91,7 +91,8 @@ struct NunaWeightView: View {
     @StateObject private var weightS = NunaSeriesModel()
     @StateObject private var fatS = NunaSeriesModel()
     @StateObject private var leanS = NunaSeriesModel()
-    @AppStorage("nuna.weightTarget") private var target = 0.0
+    /// The same target as Me › Targets, so the two cannot disagree.
+    @AppStorage(NunaGoals.targetWeightKg) private var target = 0.0
     @State private var range = 30
     @State private var page = 0
     @State private var showAdd = false

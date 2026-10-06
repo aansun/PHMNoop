@@ -1,6 +1,36 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Journal and mood": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Jurnal dan suasana hati"}}
+    } },
+    "NOOP history": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Riwayat NOOP"}}
+    } },
+    "The releases of NOOP that PHMN is built on.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Rilis NOOP yang menjadi dasar PHMN."}}
+    } },
+    "A personal project": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Proyek pribadi"}}
+    } },
+    "PHMN is built around how I read my own day. It may not fit yours, and nothing here is a promise.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "PHMN dibuat mengikuti cara saya membaca hari saya sendiri. Belum tentu cocok untukmu, dan tidak ada janji apa pun."}}
+    } },
+    "On NOOP's engine": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Di atas mesin NOOP"}}
+    } },
+    "Strap protocol, storage, sleep staging and scoring are NOOP's, unchanged. WHOOP 4.0 is the tested path; 5.0 and MG are newer.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Protokol strap, penyimpanan, tahap tidur, dan penilaian adalah milik NOOP, tidak diubah. WHOOP 4.0 adalah jalur yang diuji; 5.0 dan MG lebih baru."}}
+    } },
+    "Scores build over a few nights": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Skor terbentuk dalam beberapa malam"}}
+    } },
+    "Live heart rate is instant. Charge, Effort and Rest sharpen as PHMN learns your baseline over your first nights of wear.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Detak jantung langsung muncul. Charge, Effort, dan Rest makin tajam seiring PHMN mempelajari baselinemu di malam-malam pertama."}}
+    } },
+    "No account, no cloud. Everything shown is an estimate, not medical advice, and PHMN is not affiliated with WHOOP.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tanpa akun, tanpa cloud. Semua yang tampil adalah perkiraan, bukan saran medis, dan PHMN tidak berafiliasi dengan WHOOP."}}
+    } },
     "in line with": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "sejalan dengan"}}
     } },
@@ -1649,8 +1679,8 @@
     "Hold the Home Screen until the icons wiggle, then tap +.": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Tahan Layar Utama sampai ikon bergoyang, lalu ketuk +."}}
     } },
-    "Find PHMNOOP and choose a widget and its size.": { "localizations": {
-      "id": {"stringUnit": {"state": "translated", "value": "Cari PHMNOOP lalu pilih widget dan ukurannya."}}
+    "Find PHMN and choose a widget and its size.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Cari PHMN lalu pilih widget dan ukurannya."}}
     } },
     "For the Lock Screen, hold the Lock Screen and tap Customize.": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Untuk Layar Kunci, tahan Layar Kunci lalu ketuk Sesuaikan."}}
@@ -1829,8 +1859,8 @@
     "Apple Health isn't available on this device.": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Apple Health tidak tersedia di perangkat ini."}}
     } },
-    "If you don't see the prompt, allow PHMNOOP under Settings › Health › Data Access & Devices.": { "localizations": {
-      "id": {"stringUnit": {"state": "translated", "value": "Jika permintaan izin tidak muncul, izinkan PHMNOOP di Pengaturan › Kesehatan › Akses Data & Perangkat."}}
+    "If you don't see the prompt, allow PHMN under Settings › Health › Data Access & Devices.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Jika permintaan izin tidak muncul, izinkan PHMN di Pengaturan › Kesehatan › Akses Data & Perangkat."}}
     } },
     "Import CSV": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Impor CSV"}}
@@ -2441,11 +2471,11 @@
     "Optional, only on this iPhone": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Opsional, hanya di iPhone"}}
     } },
-    "PHMNOOP": { "localizations": {
-      "id": {"stringUnit": {"state": "translated", "value": "PHMNOOP"}}
+    "PHMN": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "PHMN"}}
     } },
-    "PHMNOOP is an internal fork of NOOP by ryanbr, with an iOS layer, Apple Health integration and on-device Anya. The Nes 2011 (HUNT) non-exercise model is used for fitness age.": { "localizations": {
-      "id": {"stringUnit": {"state": "translated", "value": "PHMNOOP adalah fork internal dari NOOP oleh ryanbr, dengan lapisan iOS, integrasi Apple Health, dan Anya on-device. Model non-latihan Nes 2011 (HUNT) dipakai untuk usia kebugaran."}}
+    "PHMN is an internal fork of NOOP by ryanbr, with an iOS layer, Apple Health integration and on-device Anya. The Nes 2011 (HUNT) non-exercise model is used for fitness age.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "PHMN adalah fork internal dari NOOP oleh ryanbr, dengan lapisan iOS, integrasi Apple Health, dan Anya on-device. Model non-latihan Nes 2011 (HUNT) dipakai untuk usia kebugaran."}}
     } },
     "Pauses extra capture when the phone or strap battery is low": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Menjeda perekaman tambahan saat baterai ponsel atau strap rendah"}}
@@ -6679,8 +6709,8 @@
         "Apple Health permissions": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Izin Apple Health"}}
         } },
-        "What PHMNOOP reads and writes": { "localizations": {
-          "id": {"stringUnit": {"state": "translated", "value": "Yang dibaca dan ditulis PHMNOOP"}}
+        "What PHMN reads and writes": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Yang dibaca dan ditulis PHMN"}}
         } },
         "Steps, weight and waist": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Langkah, berat, dan pinggang"}}
@@ -6850,8 +6880,8 @@
         "New design": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Desain baru"}}
         } },
-        "The new PHMNOOP design: simple, clear and customisable.": { "localizations": {
-          "id": {"stringUnit": {"state": "translated", "value": "Desain baru PHMNOOP: sederhana, jelas, dan bisa diatur."}}
+        "The new PHMN design: simple, clear and customisable.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Desain baru PHMN: sederhana, jelas, dan bisa diatur."}}
         } },
         "Three-ring score card and customisable Today cards": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Kartu skor tiga cincin dan kartu Hari ini yang bisa diatur"}}
@@ -6874,8 +6904,8 @@
         "The original NOOP look": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Tampilan NOOP asli"}}
         } },
-        "The new PHMNOOP design": { "localizations": {
-          "id": {"stringUnit": {"state": "translated", "value": "Desain baru PHMNOOP"}}
+        "The new PHMN design": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Desain baru PHMN"}}
         } },
         "Your data, scores and settings stay the same": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Data, skor, dan pengaturanmu tetap sama"}}
@@ -6976,8 +7006,8 @@
         "Version, how it works, credits": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Versi, cara kerja, atribusi"}}
         } },
-        "PHMNOOP · a fork of NOOP. Not a medical device.": { "localizations": {
-          "id": {"stringUnit": {"state": "translated", "value": "PHMNOOP · fork dari NOOP. Bukan alat medis."}}
+        "PHMN · a fork of NOOP. Not a medical device.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "PHMN · fork dari NOOP. Bukan alat medis."}}
         } },
         "Connected · %lld%%": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Terhubung · %lld%%"}}

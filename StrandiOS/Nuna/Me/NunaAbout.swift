@@ -5,6 +5,7 @@ import StrandDesign
 // MARK: - What's new (About.dc › What's new)
 
 struct NunaWhatsNewView: View {
+    @State private var showNoop = false
     @State private var shown = 6
 
     var body: some View {
@@ -12,41 +13,59 @@ struct NunaWhatsNewView: View {
             NunaCard(small: true) {
                 VStack(alignment: .leading, spacing: 14) {
                     nunaTrendsCap("What to expect")
-                    ForEach(AppChangelog.expectations) { e in
+                    ForEach(PHMNChangelog.expectations) { e in
                         HStack(alignment: .top, spacing: 12) {
                             NunaIconTile(e.icon)
                             VStack(alignment: .leading, spacing: 3) {
-                                Text(verbatim: e.title).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                Text(verbatim: e.body).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                                Text(LocalizedStringKey(e.title)).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                Text(LocalizedStringKey(e.body)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                             }
                         }
                     }
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
-            ForEach(Array(AppChangelog.releases.prefix(shown).enumerated()), id: \.element.id) { i, r in
-                NunaCard(highlight: i == 0) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack(spacing: 8) {
-                            NunaChip(verbatim: "v\(r.version)", color: i == 0 ? NunaPalette.charge : nil)
-                            Spacer()
-                            Text(verbatim: r.date).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-                        }
-                        Text(verbatim: r.title).font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                        ForEach(Array(r.items.enumerated()), id: \.offset) { _, item in
-                            HStack(alignment: .top, spacing: 10) {
-                                Circle().fill(NunaPalette.accent).frame(width: 5, height: 5).padding(.top, 8)
-                                Text(Self.styled(item)).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                            }
-                        }
-                    }.frame(maxWidth: .infinity, alignment: .leading)
+            ForEach(Array(PHMNChangelog.releases.enumerated()), id: \.element.id) { i, r in
+                releaseCard(version: r.version, title: r.title, date: r.date, items: r.items, highlight: i == 0)
+            }
+            Button { withAnimation(.easeInOut(duration: 0.2)) { showNoop.toggle() } } label: {
+                HStack {
+                    Text("NOOP history").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Spacer()
+                    Image(systemName: "chevron.down").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted).rotationEffect(.degrees(showNoop ? 180 : 0))
+                }
+                .padding(.horizontal, 18).frame(height: 50).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+            }.buttonStyle(.plain)
+            if showNoop {
+                nunaFootnote("The releases of NOOP that PHMN is built on.")
+                ForEach(Array(AppChangelog.releases.prefix(shown))) { r in
+                    releaseCard(version: r.version, title: r.title, date: r.date, items: r.items, highlight: false, prefix: "NOOP ")
+                }
+                if shown < AppChangelog.releases.count {
+                    Button { shown = min(shown + 8, AppChangelog.releases.count) } label: {
+                        Text("Show older releases").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            .frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                    }.buttonStyle(.plain)
                 }
             }
-            if shown < AppChangelog.releases.count {
-                Button { shown = min(shown + 8, AppChangelog.releases.count) } label: {
-                    Text("Show older releases").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                }.buttonStyle(.plain)
-            }
+        }
+    }
+
+    private func releaseCard(version: String, title: String, date: String, items: [String], highlight: Bool, prefix: String = "") -> some View {
+        NunaCard(highlight: highlight) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(spacing: 8) {
+                    NunaChip(verbatim: "\(prefix)v\(version)", color: highlight ? NunaPalette.charge : nil)
+                    Spacer()
+                    Text(verbatim: date).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                }
+                Text(verbatim: title).font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                    HStack(alignment: .top, spacing: 10) {
+                        Circle().fill(NunaPalette.accent).frame(width: 5, height: 5).padding(.top, 8)
+                        Text(Self.styled(item)).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    }
+                }
+            }.frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 

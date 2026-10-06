@@ -58,6 +58,14 @@ enum NunaGoals {
     static let steps = "nuna.goal.steps"
     static let waterLitres = "nuna.goal.waterL"
     static let targetWeightKg = "nuna.goal.targetWeightKg"
+
+    /// Health once kept its own weight target ("nuna.weightTarget"). Carry it into the shared one when that is still empty, then drop it.
+    static func migrateWeightTarget() {
+        let d = UserDefaults.standard
+        guard let old = d.object(forKey: "nuna.weightTarget") as? Double else { return }
+        if d.double(forKey: targetWeightKg) <= 0, old > 0 { d.set(old, forKey: targetWeightKg) }
+        d.removeObject(forKey: "nuna.weightTarget")
+    }
 }
 
 // MARK: - Persona (Persona.dc)

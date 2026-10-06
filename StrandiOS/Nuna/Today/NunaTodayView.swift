@@ -16,7 +16,7 @@ enum NunaTodayDefaults {
     /// different defaults, so one must not leak into the other.
     static let orderKey = "nuna.today.sectionOrder"
     static let hiddenKey = "nuna.today.hiddenSections"
-    /// Rings and the synthesis chips, Anya, key metrics, the stress card, the journal with water and mood, then the add-or-arrange card.
+    /// Rings and the synthesis chips, Anya, key metrics, the stress card, the journal with mood, then the add-or-arrange card.
     /// Everything else (activity, heart rate, start session, your cards, cycle, added cards) stays out until the person adds it.
     static let order: [TodaySection] = [
         .hero, .synthesis, .keyMetrics, .recoveryVitals, .journal,
@@ -456,7 +456,6 @@ struct NunaTodayView: View {
                        "Latest activity").background(inner)
         case .journal:
             HStack(spacing: 8) {
-                if hydrationEnabled { miniChip("Water +250") }
                 miniChip("Journal"); miniChip("Mood"); Spacer(minLength: 0)
             }
         case .yourCards: previewRow("rectangle.stack", nil, String(localized: "Your cards"), "Cards you chose").background(inner)
@@ -684,11 +683,6 @@ struct NunaTodayView: View {
                 if model.isToday {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 10) {
-                            if hydrationEnabled {
-                                NunaQuickChip(title: "Water +250", systemImage: "drop", tint: NunaPalette.effortText) {
-                                    Task { _ = await repo.logHydration(amountMl: 250); repo.noteHydrationChanged() }
-                                }
-                            }
                             NunaQuickChip(title: "Mood", systemImage: "face.smiling") { showMood = true }
                         }
                     }

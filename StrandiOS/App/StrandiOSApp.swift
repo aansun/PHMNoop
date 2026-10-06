@@ -61,6 +61,7 @@ struct StrandiOSApp: App {
     init() {
         // PHMN: before anything reads a preference, drop what an older NOOP/PHMN install left behind and open in Nuna.
         PHMNLegacyMigration.runIfNeeded()
+        NunaGoals.migrateWeightTarget()
         // #1008: pin the pre-change Overnight-only default for existing installs before
         // anything reads it. Idempotent; a no-op on fresh installs and after the first launch.
         PuffinExperiment.migrateContinuousHrvOvernightDefault()

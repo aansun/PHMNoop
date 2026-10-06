@@ -28,7 +28,7 @@ extension TodaySection {
         case .recoveryVitals: return String(localized: "Average and timeline")
         case .keyMetrics: return String(localized: "The metrics you choose")
         case .workouts: return String(localized: "Latest activity")
-        case .journal: return String(localized: "Water, journal and mood")
+        case .journal: return String(localized: "Journal and mood")
         case .yourCards: return String(localized: "Cards you chose")
         case .menstrualCycle: return String(localized: "Cycle awareness")
         case .heartRate: return String(localized: "Live heart rate")
