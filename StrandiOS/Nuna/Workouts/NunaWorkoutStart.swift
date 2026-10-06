@@ -272,15 +272,7 @@ struct NunaLiveWorkoutView: View {
                     content(w, now: tick.date)
                 }
             } else {
-                VStack(spacing: 16) {
-                    Text("Session finished").font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    if let last = model.lastWorkout {
-                        Text(verbatim: WorkoutSource.displaySport(last.sport) + " · " + NunaWorkoutFormat.duration(last.durationS)).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    } else {
-                        Text("Sessions under a minute are not saved.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    }
-                    Button(action: onClose) { Text("Done").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 40).frame(height: 52).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)) }.buttonStyle(.plain)
-                }
+                finished
             }
         }
         .onAppear { if keepScreenOn { UIApplication.shared.isIdleTimerDisabled = true } }
@@ -290,6 +282,24 @@ struct NunaLiveWorkoutView: View {
             Button("Discard", role: .destructive) { model.discardWorkout(); onClose() }
             Button("Keep going", role: .cancel) {}
         }
+    }
+
+    /// After the session: what it was, how it felt and a photo, then Done.
+    private var finished: some View {
+        ScrollView {
+            VStack(spacing: 16) {
+                Text("Session finished").font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).padding(.top, 40)
+                if let last = model.lastWorkout {
+                    Text(verbatim: WorkoutSource.displaySport(last.sport) + " · " + NunaWorkoutFormat.duration(last.durationS)).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    NunaWorkoutReviewCard(startTs: last.startTs, sport: last.sport).padding(.top, 8)
+                } else {
+                    Text("Sessions under a minute are not saved.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                }
+                Button(action: onClose) { Text("Done").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)) }.buttonStyle(.plain).padding(.top, 8)
+            }
+            .padding(.horizontal, NunaSpacing.screenH).padding(.bottom, 32)
+        }
+        .scrollIndicators(.hidden)
     }
 
     private static let zoneColors: [Color] = [NunaPalette.zoneBase, NunaPalette.charge, NunaPalette.effort, NunaPalette.warning, NunaPalette.alert]
