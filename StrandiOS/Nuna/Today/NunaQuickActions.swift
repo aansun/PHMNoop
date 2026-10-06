@@ -56,7 +56,6 @@ enum NunaQuickActions {
         .init(id: "fitnessAge", title: "Fitness age", icon: "figure.run", group: "Read", kind: .today(.fitnessAge)),
         .init(id: "trends", title: "Trends", icon: "chart.line.uptrend.xyaxis", group: "Read", kind: .route(.trends)),
         .init(id: "labBook", title: "Lab book", icon: "testtube.2", group: "Read", kind: .route(.labBook)),
-        .init(id: "coach", title: "Ask Anya", icon: NunaGlyph.anya, group: "Read", kind: .route(.coach)),
         // App
         .init(id: "theme", title: "Theme", icon: "paintpalette", group: "App", kind: .me(.theme)),
         .init(id: "devices", title: "Strap", icon: "applewatch", group: "App", kind: .route(.devices)),

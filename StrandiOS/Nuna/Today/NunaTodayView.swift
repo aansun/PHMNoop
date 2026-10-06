@@ -196,7 +196,7 @@ struct NunaTodayView: View {
                 dashboardCardsRaw: $dashboardCardsRaw, hostedCardsRaw: $hostedCardsRaw)
         }
         .sheet(isPresented: $showQuick) {
-            NunaQuickSheet(hydrationEnabled: hydrationEnabled, coachEnabled: coachEnabled,
+            NunaQuickSheet(hydrationEnabled: hydrationEnabled,
                            onAddActivity: { DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { showManual = true } })
                 .nunaSheetChrome(detents: [.medium, .large])
         }
