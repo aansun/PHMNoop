@@ -75,6 +75,10 @@ public struct WidgetSnapshot: Codable, Equatable {
     /// so the widget cannot show yesterday's afternoon under today's date while waiting for the first
     /// scorable hour after midnight.
     public var stressDay: Int?
+    /// Minutes of today's scored waking hours spent in the high stress band, and the average for the same weekday over the last
+    /// four weeks. Both are finished numbers the app wrote; the widget only prints them. Optional so an older snapshot still decodes.
+    public var stressHighMin: Int?
+    public var stressTypicalMin: Int?
     /// Today's total steps, resolved from Apple Health first and the active strap fallback.
     public var steps: Int?
     /// Today's active calories in kcal, resolved from Apple Health first and the on-device estimate fallback.
@@ -90,7 +94,7 @@ public struct WidgetSnapshot: Codable, Equatable {
                 effort: Int? = nil, rest: Int? = nil, hrv: Int? = nil, restingHr: Int? = nil,
                 effortDisplay: String? = nil, effortWhoop: Bool? = nil,
                 hrSeries: [HrPoint]? = nil, stressSeries: [StressPoint]? = nil,
-                stressDay: Int? = nil, steps: Int? = nil, caloriesKcal: Int? = nil,
+                stressDay: Int? = nil, stressHighMin: Int? = nil, stressTypicalMin: Int? = nil, steps: Int? = nil, caloriesKcal: Int? = nil,
                 workoutsToday: Int? = nil, vitals: [WidgetVital]? = nil, stepGoal: Int? = nil) {
         self.recovery = recovery
         self.bpm = bpm
@@ -106,6 +110,8 @@ public struct WidgetSnapshot: Codable, Equatable {
         self.hrSeries = hrSeries
         self.stressSeries = stressSeries
         self.stressDay = stressDay
+        self.stressHighMin = stressHighMin
+        self.stressTypicalMin = stressTypicalMin
         self.steps = steps
         self.caloriesKcal = caloriesKcal
         self.workoutsToday = workoutsToday
@@ -315,6 +321,8 @@ public struct WidgetSnapshot: Codable, Equatable {
             // midnight still reaches WidgetKit even when the new day has no scored hour yet.
             || previous.stressSeries != next.stressSeries
             || previous.stressDay != next.stressDay
+            || previous.stressHighMin != next.stressHighMin
+            || previous.stressTypicalMin != next.stressTypicalMin
     }
 
     /// A live-only update may reuse score fields only within the same local calendar day. At rollover,

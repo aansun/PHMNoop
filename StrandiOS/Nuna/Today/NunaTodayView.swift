@@ -621,7 +621,7 @@ struct NunaTodayView: View {
             }
         case .recoveryVitals:
             if model.stress != nil || model.stressCurve != nil {
-                NunaStressCard(score: model.stress, curve: model.stressCurve, isToday: model.isToday)
+                NunaStressCard(score: model.stress, curve: model.stressCurve, typicalMin: model.stressTypicalMin, isToday: model.isToday)
             }
         case .keyMetrics:
             let tiles = metricTiles

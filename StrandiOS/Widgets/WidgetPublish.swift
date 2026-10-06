@@ -151,6 +151,10 @@ extension WidgetSnapshot {
             // has one: carry the stored values forward instead of publishing an absence.
             stressSeries: stressSeriesValue,
             stressDay: stressDayValue,
+            // Finished numbers for the Stress widget: today's minutes in the high band (from the same scoring as the curve) and the typical
+            // figure for this weekday, which Today works out once a day. Either carries the stored value forward when it cannot be had now.
+            stressHighMin: stress.flatMap { $0.result.hours.contains { $0.level != nil } ? $0.result.highStressMinutes : nil } ?? storedStress?.stressHighMin,
+            stressTypicalMin: StressTypical.cached() ?? storedStress?.stressTypicalMin,
             steps: steps,
             caloriesKcal: caloriesKcal,
             workoutsToday: todayRow?.exerciseCount ?? day?.exerciseCount,

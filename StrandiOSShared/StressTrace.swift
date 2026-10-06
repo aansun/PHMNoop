@@ -105,6 +105,17 @@ public enum StressTrace {
         return "\(tenths / 10).\(tenths % 10)"
     }
 
+    /// Minutes as "h:mm", the way the high-stress figure is printed ("0:34").
+    public static func clock(minutes: Int) -> String {
+        let m = max(minutes, 0)
+        return "\(m / 60):" + (m % 60 < 10 ? "0" : "") + "\(m % 60)"
+    }
+
+    /// The newest scored point placed in the box, for the "now" marker; nil when nothing was scored.
+    public static func latestPoint(_ series: [StressPoint], width: CGFloat, height: CGFloat) -> Pt? {
+        segments(series, width: width, height: height).last?.last
+    }
+
     /// The one placement rule, shared so a dot and its vertex cannot land apart.
     private static func place(ts: Int64, level: Double, t0: Int64, span: CGFloat,
                               width: CGFloat, height: CGFloat) -> Pt {

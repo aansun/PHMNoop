@@ -36,6 +36,8 @@ final class NunaTodayModel: ObservableObject {
     @Published private(set) var readiness: ReadinessEngine.Readiness?
     /// Today's hourly stress curve (nil on past days or when it could not be scored).
     @Published private(set) var stressCurve: DaytimeStress.Result?
+    /// Typical high-stress minutes for today's weekday, for the Stress card's comparison; today only, and only once it has been worked out.
+    @Published private(set) var stressTypicalMin: Int?
     /// Change against the previous day that has a value: HRV in ms, resting HR in bpm.
     @Published private(set) var hrvDelta: Double?
     @Published private(set) var restingHrDelta: Double?
@@ -152,6 +154,16 @@ final class NunaTodayModel: ObservableObject {
 
         workouts = (await workoutsA).filter { $0.startTs >= from && $0.startTs < to }
         loaded = true
+        if today {
+            // After the screen is up: it reads four earlier days of heart rate, once a day.
+            stressTypicalMin = StressTypical.cached()
+            Task { [weak self] in
+                let typical = await StressTypical.load(repo: repo)
+                self?.stressTypicalMin = typical
+            }
+        } else {
+            stressTypicalMin = nil
+        }
     }
 }
 #endif

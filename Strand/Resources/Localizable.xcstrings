@@ -1,6 +1,18 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Today's high stress": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Stres tinggi hari ini"}}
+    } },
+    "High stress": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Stres tinggi"}}
+    } },
+    "hrs": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "jam"}}
+    } },
+    "vs. typical %@": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "vs. %@ biasanya"}}
+    } },
     "What's happening today, %@?": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Apa yang terjadi hari ini, %@?"}}
     } },
