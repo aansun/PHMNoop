@@ -1,6 +1,12 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "Pinned %lld of %lld": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Disematkan %1$lld dari %2$lld" } } } },
+        "You can pin up to 8 workouts.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Maksimal 8 workout yang bisa disematkan." } } } },
+        "Tap a workout to pin or unpin it.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Ketuk workout untuk menyematkan atau melepasnya." } } } },
+        "Pin the workouts you do most. Tap Edit to choose up to 8.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Sematkan workout yang paling sering kamu lakukan. Ketuk Edit untuk memilih hingga 8." } } } },
+        "Pin": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Sematkan" } } } },
+        "Unpin": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Lepas sematan" } } } },
         "Most of the volume, %lld%%, went to %@.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Sebagian besar volume, %1$lld%%, ke %2$@." } } } },
         "Top zone": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Zona teratas" } } } },
         "You spent %lld min in zone %lld, %lld%% of the session.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Kamu menghabiskan %1$lld menit di zona %2$lld, %3$lld%% dari sesi." } } } },
