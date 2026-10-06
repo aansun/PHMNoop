@@ -1,6 +1,45 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "not all of it in one go": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "tidak semuanya sekaligus"}}
+    } },
+    "How did it feel?": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Bagaimana rasanya?"}}
+    } },
+    "Photos": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Foto"}}
+    } },
+    "Add a photo of the run, the view or the gym.": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tambahkan foto lari, pemandangan, atau gym."}}
+    } },
+    "Easy": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Mudah"}}
+    } },
+    "Fairly hard": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Cukup berat"}}
+    } },
+    "Hard": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Berat"}}
+    } },
+    "Very hard": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sangat berat"}}
+    } },
+    "Delete photo": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Hapus foto"}}
+    } },
+    "%@ Effort left for today's target": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sisa Effort %@ untuk target hari ini"}}
+    } },
+    "about +%@\u2013%@": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "sekitar +%1$@–%2$@"}}
+    } },
+    "You called the last one hard, so this stays easy": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Latihan tadi kamu bilang berat, jadi yang ini ringan saja"}}
+    } },
+    "Another %d min in zone %d": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Satu sesi lagi %1$d mnt di zona %2$d"}}
+    } },
     "Plays a sample with your current distance interval, details and voice speed.": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Memutar contoh dengan interval jarak, rincian, dan kecepatan suara saat ini."}}
     } },

@@ -13,6 +13,8 @@ struct NunaDayPlanResult {
     var charge: Int
     var yesterdayEffort: Double?
     var band: TrendInsights.LoadBand?
+    /// The wearer's own typical Effort per minute of training (stored axis), nil under three sessions.
+    var effortPerMinute: Double? = nil
 
     var title: String {
         switch plan.kind {
@@ -44,7 +46,9 @@ struct NunaDayPlanResult {
             return s / (d / 60)
         }
         let plan = DayPlan.plan(charge: c, yesterdayEffort: y, usualEffort: usual, loadBand: b, effortPerMinute: perMinute)
-        return NunaDayPlanResult(plan: plan, charge: Int(c.rounded()), yesterdayEffort: y, band: b)
+        let usable = perMinute.filter { $0.isFinite && $0 > 0 }.sorted()
+        return NunaDayPlanResult(plan: plan, charge: Int(c.rounded()), yesterdayEffort: y, band: b,
+                                 effortPerMinute: usable.count >= 3 ? usable[usable.count / 2] : nil)
     }
 }
 
