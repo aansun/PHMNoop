@@ -307,7 +307,12 @@ struct NunaTrendsView: View {
                     Text(verbatim: NunaTrendsFormat.num(now, digits)).font(.nuna(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                 }
-                NunaSpark(values: win.map(\.value)).frame(height: 34)
+                // The same height with or without data, so a card with nothing to plot keeps the shape of the others.
+                ZStack {
+                    if win.count < 2 { Rectangle().fill(NunaPalette.hairline).frame(height: 1.5) }
+                    NunaSpark(values: win.map(\.value))
+                }
+                .frame(height: 34)
             }
         }
         if case .metricKey(let k) = route, let md = MetricCatalog.metric(key: k, source: "my-whoop") {
