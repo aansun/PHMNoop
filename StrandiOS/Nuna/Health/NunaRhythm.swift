@@ -30,7 +30,7 @@ struct NunaRhythmConsentView: View {
                         .frame(width: 56, height: 56).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
                     Text("Before you turn on Rhythm").font(.nuna(size: NunaTypeSize.h1 - 4, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text("An experimental picture of your beat-to-beat timing. Please read these first.")
-                        .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 VStack(alignment: .leading, spacing: 18) {
                     ForEach(Array(RhythmConsent.points.enumerated()), id: \.offset) { i, p in
@@ -45,7 +45,7 @@ struct NunaRhythmConsentView: View {
                     }
                 }
                 Text("This is a wellness visualization, not a screening test. It does not tell you to see a clinician and it names no condition. This is not legal or medical advice.")
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 NunaCard {
                     HStack(alignment: .top, spacing: 14) {
                         Toggle("", isOn: $understood).labelsHidden().tint(NunaPalette.charge)
@@ -193,7 +193,7 @@ struct NunaRhythmView: View {
             VStack(alignment: .leading, spacing: 8) {
                 Text("How this is measured").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 Text("During quiet, still, resting windows, NOOP looks at the timing between your heartbeats (R-R intervals) and draws their Poincaré scatter. From the cloud it computes its short and long axes (SD1, SD2) and a few plain regularity numbers. Movement and noisy windows are skipped, not shown. These are transparent, published descriptive statistics: a picture of your timing, never a clinical measurement.")
-                    .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
         }
         disclaimer
@@ -215,7 +215,7 @@ struct NunaRhythmView: View {
             HStack(alignment: .top, spacing: 12) {
                 Image(systemName: "info.circle").foregroundStyle(NunaPalette.textMuted)
                 Text("Experimental wellness visualization: not a diagnosis, not an ECG, and not a medical device. It cannot detect any heart condition. Beat-to-beat variation has many ordinary, benign causes. If you feel unwell or are worried, contact a qualified professional; in an emergency, your local emergency service. Everything is computed on your device.")
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
         }
     }
@@ -311,7 +311,7 @@ struct NunaRhythmView: View {
                 Text("Beat-to-beat scatter").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 NunaPoincarePlot(points: allPoints, sd1: headline?.sd1, sd2: headline?.sd2)
                 Text("Each dot pairs one heartbeat interval with the next. A tight line along the diagonal means a steady beat; a rounder, more spread-out cloud means the timing varied more.")
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
         }
     }

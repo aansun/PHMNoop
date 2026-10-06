@@ -294,7 +294,7 @@ struct NunaWorkoutsView: View {
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
                     TextField("", text: $query, prompt: Text("Search all workouts").foregroundStyle(NunaPalette.textMuted))
-                        .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).autocorrectionDisabled()
+                        .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).autocorrectionDisabled().textCase(nil)
                     if !query.isEmpty {
                         Button { query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(NunaPalette.textMuted) }.buttonStyle(.plain)
                     }

@@ -75,7 +75,7 @@ private struct NunaModeRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(verbatim: mode.title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 Text(verbatim: TestCentreLayout.statusText(for: mode, active: on, elapsedSeconds: TestCentre.startedAt(mode.domain).map { Date().timeIntervalSince($0) }, capturedUnits: nil))
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 Text(verbatim: mode.blurb).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
             Spacer(minLength: 6)

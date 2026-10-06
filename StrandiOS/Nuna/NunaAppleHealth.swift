@@ -45,7 +45,7 @@ struct NunaAppleHealthView: View {
                     .frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }.buttonStyle(.plain)
             Text("Access is managed by iOS. Turning it off there does not delete data.")
-                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).frame(maxWidth: .infinity, alignment: .center).multilineTextAlignment(.center)
+                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).frame(maxWidth: .infinity, alignment: .center).multilineTextAlignment(.center).textCase(nil)
         }
     }
 
@@ -69,10 +69,10 @@ struct NunaAppleHealthView: View {
                 switch health.auth {
                 case .entitlementMissing:
                     Text("This install can't connect to Apple Health directly. It was signed with a profile that doesn't include Apple's Health permission, so there is nothing to enable. Bring your data in with a Health export in Data and integrations.")
-                        .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 case .unavailable:
                     Text("Apple Health isn't available on this device.")
-                        .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 case .authorized:
                     Button { Task { await sync() } } label: {
                         HStack(spacing: 8) {
@@ -93,7 +93,7 @@ struct NunaAppleHealthView: View {
                     }.buttonStyle(.plain)
                     if health.auth == .denied {
                         Text("If you don't see the prompt, allow PHMNOOP under Settings › Health › Data Access & Devices.")
-                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }
                 }
                 if let err = health.lastError {

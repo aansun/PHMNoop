@@ -100,7 +100,7 @@ struct NunaHowItWorksView: View {
             }
             NunaSettingsGroup("How your scores are computed") {
                 Text("Each score follows a published method, computed on your device. We name the method family so you can read up on it, and we never claim to reproduce another company's number exactly.")
-                    .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).padding(.vertical, 12)
+                    .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).padding(.vertical, 12).textCase(nil)
                 ForEach(HowNoopWorksView.ScoreMethod.allCases) { m in
                     NunaDivider()
                     VStack(alignment: .leading, spacing: 4) {
@@ -178,7 +178,7 @@ struct NunaScoringGuideView: View {
                             NunaChip("Calibrating")
                         }
                         Text("Every score carries a small honesty label. Calibrating means NOOP is still learning your baseline, or doesn't have enough data yet. Building means there's enough to show, but it's thin. Solid means full inputs are present. When NOOP can't compute a score honestly, it shows nothing rather than a fake number.")
-                            .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                            .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }
                 nunaFootnote("These are independent approximations from a consumer strap, built on open science: not medical advice, and not WHOOP's official scores.")

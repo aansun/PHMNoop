@@ -76,7 +76,7 @@ struct NunaPersonaView: View {
     var body: some View {
         NunaDetailScreen("Persona") {
             Text("Used for heart-rate zones, calorie estimates and your recovery baseline. Keep it accurate.")
-                .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             NunaCard(small: true) {
                 HStack(spacing: 16) {
                     ProfileAvatarView(imageData: profile.avatarImageData, size: 64)

@@ -148,7 +148,7 @@ struct NunaAnyaView: View {
                             Image(systemName: coach.provider.nunaIsOnDevice ? "iphone" : "cloud").font(.nuna(size: 11, weight: .bold))
                             Text(verbatim: coach.provider.nunaIsOnDevice ? String(localized: "On this iPhone") : String(localized: "Connected")).lineLimit(1)
                         }
-                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                 }
                 Spacer(minLength: 8)
@@ -221,7 +221,7 @@ struct NunaAnyaView: View {
                     AnyaIconTile(size: 44)
                     Text("Connect Anya").font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text("Anya uses the AI provider you choose. Your key stays in the Keychain on this iPhone, and nothing is sent until you allow it and ask a question.")
-                        .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     NavigationLink(value: NunaAnyaRoute.connect) {
                         Text("Choose a provider").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
                             .frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
@@ -252,7 +252,7 @@ struct NunaAnyaView: View {
                     AnyaIconTile(size: 44)
                     Text("I'm here with you").font(.nuna(size: 26, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text("Anya reads your baseline, load and sleep together, then picks the next small step.")
-                        .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
                 if let reading {
                     NunaCard(highlight: true) {

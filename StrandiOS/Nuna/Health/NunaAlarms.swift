@@ -202,7 +202,7 @@ struct NunaSmartAlarmView: View {
                             }
                         } else {
                             Text(behavior.smartAlarmEnabled ? "Not armed on this strap" : "Turn it on to buzz your wrist at wake time")
-                                .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -248,7 +248,7 @@ struct NunaSmartAlarmView: View {
                             }
                         }
                         Text(verbatim: SmartAlarmView.alarmWeekdaySummary(behavior.smartAlarmWeekdays))
-                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         if !overrides.isEmpty {
                             nunaNote("Some days have a time of their own, set in the bedtime reminder.")
                         }
@@ -359,7 +359,7 @@ struct NunaWindDownView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Your usual wake time").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             Text("This time does not wake you. It only decides when the evening reminder fires.")
-                                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                         }
                         Spacer(minLength: 8)
                         DatePicker("", selection: Binding(get: { NunaAlarmFormat.date(minutes: wind.wakeMinutes) },
@@ -369,10 +369,10 @@ struct NunaWindDownView: View {
                     }
                     .padding(.vertical, 12)
                     Text("You'll be reminded around \(NunaAlarmFormat.clock(wind.reminderMinutes)).")
-                        .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     if behavior.smartAlarmEnabled {
                         Text("Your strap alarm is what wakes you, at \(NunaAlarmFormat.clock(behavior.smartAlarmMinutes)).")
-                            .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).padding(.top, 6)
+                            .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).padding(.top, 6).textCase(nil)
                     }
                 }
             }

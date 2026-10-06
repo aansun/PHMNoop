@@ -17,6 +17,14 @@ struct NunaLiveHRCard: View {
 
     private var isLive: Bool { live.connected && samples.count >= 2 }
 
+    /// The clock time of the first, middle and last banked reading, so the labels match what the line shows.
+    private var dayLabels: [String] {
+        guard banked.count >= 2 else { return [] }
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("HH:mm")
+        func t(_ i: Int) -> String { f.string(from: Date(timeIntervalSince1970: TimeInterval(banked[i].ts))) }
+        return [t(0), t(banked.count / 2), t(banked.count - 1)]
+    }
+
     private var bigBpm: Int? {
         if let hr = live.heartRate, hr > 0, live.connected { return hr }
         return banked.last.map { Int($0.bpm.rounded()) }
@@ -43,7 +51,7 @@ struct NunaLiveHRCard: View {
                                  color: isLive ? NunaPalette.charge : (live.connected ? nil : NunaPalette.warning))
                     }
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Image(systemName: "heart.fill").font(.nuna(size: 20)).foregroundStyle(NunaPalette.textPrimary)
+                        Image(systemName: "heart.fill").font(.nuna(size: 20)).foregroundStyle(NunaPalette.alert)
                         Text(verbatim: bigBpm.map(String.init) ?? "–")
                             .font(.nuna(size: 52, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(52)).foregroundStyle(NunaPalette.textPrimary)
                         Text("bpm").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
@@ -51,16 +59,17 @@ struct NunaLiveHRCard: View {
                     Text(subtitle).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     if isLive || banked.count >= 2 {
                         NunaHRTrace(values: isLive ? samples : banked.map(\.bpm),
-                                    segments: isLive ? nil : hrGapSegments(bucketTs: banked.map(\.ts), bucketSeconds: 300))
-                            .frame(height: 92)
+                                    segments: isLive ? nil : hrGapSegments(bucketTs: banked.map(\.ts), bucketSeconds: 300),
+                                    xLabels: isLive ? [String(localized: "Earlier"), String(localized: "Now")] : dayLabels)
+                            .frame(height: 110)
                         let vals = isLive ? samples : banked.map(\.bpm)
                         HStack {
                             stat("Min", vals.min()); Spacer(); stat("Avg", vals.reduce(0, +) / Double(vals.count)); Spacer(); stat("Max", vals.max())
                         }
                     } else {
                         Text(live.connected ? "Waiting for a live heartbeat…" : "Connect your strap to see live heart rate")
-                            .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                            .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading)
+                            .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                            .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading).textCase(nil)
                     }
                 }
             }
@@ -86,35 +95,67 @@ struct NunaLiveHRCard: View {
     }
 }
 
-/// A heart-rate line with three faint guides. `segments` lifts the pen across hours nothing was recorded.
+/// A heart-rate line in red with its axes: the beats-per-minute scale on the left, three guides, a baseline, and optional labels under it.
+/// `segments` lifts the pen across hours nothing was recorded.
 struct NunaHRTrace: View {
     let values: [Double]
     let segments: [String]?
+    /// Labels spread evenly under the baseline (for example 00:00, 06:00, 12:00, Now). Empty draws none.
+    var xLabels: [String] = []
+    var color: Color = NunaPalette.alert
+
+    private var scale: (lo: Double, hi: Double)? {
+        guard let lo = values.min(), let hi = values.max() else { return nil }
+        let pad = max((hi - lo) * 0.12, 2)
+        return (lo - pad, hi + pad)
+    }
 
     var body: some View {
-        Canvas { ctx, size in
-            guard values.count >= 2, let lo = values.min(), let hi = values.max() else { return }
-            let pad = max((hi - lo) * 0.12, 2)
-            let lo2 = lo - pad, span = max(hi - lo + 2 * pad, 1)
-            for i in 0...2 {
-                var g = Path(); let y = size.height * CGFloat(i) / 2
-                g.move(to: CGPoint(x: 0, y: y)); g.addLine(to: CGPoint(x: size.width, y: y))
-                ctx.stroke(g, with: .color(NunaPalette.ink.opacity(0.07)), lineWidth: 1)
-            }
-            func pt(_ i: Int) -> CGPoint {
-                CGPoint(x: size.width * CGFloat(i) / CGFloat(values.count - 1),
-                        y: size.height * CGFloat(1 - (values[i] - lo2) / span))
-            }
-            let runs: [ClosedRange<Int>] = (segments.map { hrGapRuns(segments: $0) } ?? [0...(values.count - 1)])
-            for run in runs {
-                if run.count == 1 {
-                    let c = pt(run.lowerBound)
-                    ctx.fill(Path(ellipseIn: CGRect(x: c.x - 2.5, y: c.y - 2.5, width: 5, height: 5)), with: .color(NunaPalette.ink))
-                    continue
+        let sc = scale
+        VStack(spacing: 6) {
+            HStack(alignment: .top, spacing: 8) {
+                // The scale, top to bottom, at the three guides.
+                VStack {
+                    ForEach([0, 1, 2], id: \.self) { i in
+                        if i > 0 { Spacer(minLength: 0) }
+                        Text(verbatim: sc.map { String(Int(($0.hi - ($0.hi - $0.lo) * Double(i) / 2).rounded())) } ?? "")
+                            .font(.system(size: 11, weight: .medium)).foregroundStyle(NunaPalette.textMuted).monospacedDigit()
+                    }
                 }
-                var p = Path(); p.move(to: pt(run.lowerBound))
-                for i in (run.lowerBound + 1)...run.upperBound { p.addLine(to: pt(i)) }
-                ctx.stroke(p, with: .color(NunaPalette.ink), style: StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round))
+                .frame(width: 26, alignment: .trailing)
+                Canvas { ctx, size in
+                    guard values.count >= 2, let sc else { return }
+                    let span = max(sc.hi - sc.lo, 1)
+                    for i in 0...2 {
+                        var g = Path(); let y = size.height * CGFloat(i) / 2
+                        g.move(to: CGPoint(x: 0, y: y)); g.addLine(to: CGPoint(x: size.width, y: y))
+                        ctx.stroke(g, with: .color(NunaPalette.ink.opacity(i == 2 ? 0.22 : 0.08)), lineWidth: i == 2 ? 1.2 : 1)
+                    }
+                    func pt(_ i: Int) -> CGPoint {
+                        CGPoint(x: size.width * CGFloat(i) / CGFloat(values.count - 1),
+                                y: size.height * CGFloat(1 - (values[i] - sc.lo) / span))
+                    }
+                    let runs: [ClosedRange<Int>] = (segments.map { hrGapRuns(segments: $0) } ?? [0...(values.count - 1)])
+                    for run in runs {
+                        if run.count == 1 {
+                            let c = pt(run.lowerBound)
+                            ctx.fill(Path(ellipseIn: CGRect(x: c.x - 2.5, y: c.y - 2.5, width: 5, height: 5)), with: .color(color))
+                            continue
+                        }
+                        var p = Path(); p.move(to: pt(run.lowerBound))
+                        for i in (run.lowerBound + 1)...run.upperBound { p.addLine(to: pt(i)) }
+                        ctx.stroke(p, with: .color(color), style: StrokeStyle(lineWidth: 2.4, lineCap: .round, lineJoin: .round))
+                    }
+                }
+            }
+            if !xLabels.isEmpty {
+                HStack(spacing: 0) {
+                    Color.clear.frame(width: 34, height: 1)
+                    ForEach(Array(xLabels.enumerated()), id: \.offset) { i, t in
+                        Text(verbatim: t).font(.system(size: 11, weight: .medium)).foregroundStyle(NunaPalette.textMuted).monospacedDigit()
+                            .frame(maxWidth: .infinity, alignment: i == 0 ? .leading : (i == xLabels.count - 1 ? .trailing : .center))
+                    }
+                }
             }
         }
         .accessibilityHidden(true)
@@ -149,12 +190,8 @@ struct NunaDeepTimelineView: View {
 
     var body: some View {
         NunaDetailScreen("Deep timeline") {
-            Text("Every second of your day, zoomable.").font(.nuna(size: 14, weight: .semibold))
-                .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading)
             metricChips
-            dayNav
             chartCard
-            if !series.points.isEmpty { statTiles }
             hint
         }
         .task(id: taskKey) { await reload() }
@@ -166,6 +203,17 @@ struct NunaDeepTimelineView: View {
         }
     }
 
+    /// One colour per signal, so the chart and its chip read as the same thing.
+    private func tint(_ m: Repository.TimelineMetric) -> Color {
+        switch m {
+        case .hr: return NunaPalette.alert
+        case .hrv: return NunaPalette.charge
+        case .spo2, .respiration, .bandSleepState: return NunaPalette.rest
+        case .skinTemp: return NunaPalette.effort
+        default: return NunaPalette.ink
+        }
+    }
+
     private var taskKey: String {
         "\(metric.rawValue)|\(Int(dayStart.timeIntervalSince1970))|\(Int(visibleWindow.lowerBound.timeIntervalSince1970))|\(Int(visibleWindow.upperBound.timeIntervalSince1970))|\(repo.refreshSeq)"
     }
@@ -174,34 +222,32 @@ struct NunaDeepTimelineView: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(metrics) { m in
+                    let on = metric == m
                     Button { metric = m } label: {
-                        Text(verbatim: m.title).font(.nuna(size: 13.5, weight: .bold))
-                            .foregroundStyle(metric == m ? NunaPalette.onAccent : NunaPalette.textPrimary)
-                            .padding(.horizontal, 14).frame(height: 38)
-                            .background(metric == m ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: metric == m ? 0 : 1))
+                        HStack(spacing: 7) {
+                            Circle().fill(tint(m)).frame(width: 8, height: 8)
+                            Text(verbatim: m.title).font(.nuna(size: 14, weight: .bold))
+                        }
+                        .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+                        .padding(.horizontal, 14).frame(height: 40)
+                        .background(on ? NunaPalette.glassStrong : Color.clear, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(on ? tint(m).opacity(0.7) : NunaPalette.hairline, lineWidth: on ? 1.5 : 1))
                     }.buttonStyle(.plain)
                 }
             }
+            .padding(.vertical, 2)
         }
     }
 
+    /// The day switcher that sits in the top right of the chart card: previous day, the date, next day.
     private var dayNav: some View {
-        HStack {
-            step("chevron.left", true) { stepDay(-1) }
-            Spacer()
-            Text(verbatim: dayLabel).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-            Spacer()
-            step("chevron.right", !isLatest) { stepDay(1) }
+        HStack(spacing: 4) {
+            Button { stepDay(-1) } label: { Image(systemName: "chevron.left").font(.nuna(size: 13, weight: .bold)).frame(width: 30, height: 30) }
+            Text(verbatim: dayLabel).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(minWidth: 72)
+            Button { stepDay(1) } label: { Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).frame(width: 30, height: 30) }.disabled(isLatest)
+                .opacity(isLatest ? 0.35 : 1)
         }
-    }
-
-    private func step(_ s: String, _ enabled: Bool, _ a: @escaping () -> Void) -> some View {
-        Button(action: a) {
-            Image(systemName: s).font(.nuna(size: 15, weight: .bold))
-                .foregroundStyle(enabled ? NunaPalette.textPrimary : NunaPalette.textMuted.opacity(0.4))
-                .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
-        }.disabled(!enabled)
+        .foregroundStyle(NunaPalette.textPrimary)
     }
 
     private func stepDay(_ d: Int) {
@@ -223,49 +269,60 @@ struct NunaDeepTimelineView: View {
         return series.points.map { TrendPoint(date: $0.date, value: UnitFormatter.celsiusToFahrenheit($0.value)) }
     }
 
+    /// One card, like the other detail screens: the signal and the day switcher on top, the latest reading, the chart, and the minimum,
+    /// average and maximum of what is on show as plain text underneath.
     private var chartCard: some View {
-        NunaCard(padding: EdgeInsets(top: 16, leading: 14, bottom: 16, trailing: 14)) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
+        let v = displayPoints.map(\.value)
+        return NunaCard(padding: EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16)) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .center) {
                     Text(verbatim: metric.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Spacer()
+                    dayNav
+                }
+                HStack(alignment: .firstTextBaseline, spacing: 5) {
+                    Text(verbatim: displayPoints.last.map { format($0.value) } ?? "–").font(.nuna(size: 40, weight: .bold, design: NunaType.design))
+                        .foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: unit).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     Text(verbatim: resolution).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
-                if let last = displayPoints.last {
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(verbatim: format(last.value)).font(.nuna(size: 34, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: unit).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                    }
-                }
                 Group {
                     if loading && series.points.isEmpty {
-                        ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 260)
+                        ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 280)
                     } else if series.points.isEmpty {
                         VStack(spacing: 8) {
                             Image(systemName: "waveform.slash").font(.nuna(size: 26, weight: .light)).foregroundStyle(NunaPalette.textMuted)
                             Text("Nothing recorded for this window").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
-                        .frame(maxWidth: .infinity, minHeight: 260)
+                        .frame(maxWidth: .infinity, minHeight: 280)
                     } else {
                         OverviewHRChart(points: displayPoints, sleep: sleepSpan, workouts: workoutSpans,
-                                        gradient: Gradient(colors: [NunaPalette.ink.opacity(0.55), Color.white]),
-                                        valueRange: range(displayPoints), xRange: dayBounds, height: 260, touchScrub: true,
+                                        gradient: Gradient(colors: [tint(metric).opacity(0.6), tint(metric)]),
+                                        valueRange: range(displayPoints), xRange: dayBounds, height: 280, touchScrub: true,
                                         zoomDomain: $zoomDomain, zoomBounds: panBounds,
                                         valueFormat: { format($0) },
                                         dateFormat: { Self.timeFmt.string(from: $0) })
+                    }
+                }
+                if !v.isEmpty {
+                    Rectangle().fill(NunaPalette.hairlineSoft).frame(height: 1)
+                    HStack(spacing: 0) {
+                        stat("Min", format(v.min() ?? 0))
+                        stat("Avg", format(v.reduce(0, +) / Double(max(1, v.count))))
+                        stat("Max", format(v.max() ?? 0))
                     }
                 }
             }
         }
     }
 
-    private var statTiles: some View {
-        let v = displayPoints.map(\.value)
-        return HStack(spacing: 12) {
-            NunaStatTile(label: "Min", value: format(v.min() ?? 0), unit: unit)
-            NunaStatTile(label: "Avg", value: format(v.reduce(0, +) / Double(max(1, v.count))), unit: unit)
-            NunaStatTile(label: "Max", value: format(v.max() ?? 0), unit: unit)
+    private func stat(_ label: LocalizedStringKey, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(label).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(verbatim: value).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var hint: some View {
@@ -275,7 +332,7 @@ struct NunaDeepTimelineView: View {
             Spacer()
             if zoomDomain != nil { Button("Reset") { zoomDomain = nil }.foregroundStyle(NunaPalette.textPrimary) }
         }
-        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
     }
 
     private var resolution: String {

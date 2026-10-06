@@ -34,7 +34,7 @@ struct NunaChargeDetailView: View {
                     let d = Int((v - base).rounded())
                     Text(verbatim: d == 0 ? String(localized: "In line with your 30-day average")
                          : (d > 0 ? String(localized: "\(d) points above your 30-day average") : String(localized: "\(-d) points below your 30-day average")))
-                        .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         .fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
@@ -178,7 +178,7 @@ struct NunaEffortDetailView: View {
             NunaTitleRow(title: "Today's sources") { EmptyView() }
             if list.isEmpty {
                 Text(day.effort == nil ? "Effort for today appears once the strap has recorded some heart rate." : "No Effort recorded yet today.")
-                    .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             } else {
                 // Share of the day's load, as one bar.
                 GeometryReader { geo in
@@ -198,7 +198,7 @@ struct NunaEffortDetailView: View {
                     }
                 }
                 Text("Each source gets its share of today's heart-rate load, so the parts add up to the day's Effort.")
-                    .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+                    .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
         }
     }
@@ -209,7 +209,7 @@ struct NunaEffortDetailView: View {
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: s.title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 Text(verbatim: [s.minutes.map { String(localized: "\($0) min") }, "\(Int((s.share * 100).rounded()))%"].compactMap { $0 }.joined(separator: " · "))
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             Spacer(minLength: 8)
             Text(verbatim: "+" + UnitFormatter.effortDisplay(s.points, scale: scale))
@@ -269,8 +269,8 @@ struct NunaMetricDetailView: View {
     /// Compact label for chart columns: 8.2K for 8,214 steps.
     private func fmtShort(_ v: Double) -> String { TrendChart.line2ValueString(v, formattedValue: fmt(v)) }
 
-    /// Every metric except the daily totals (steps, energy), which stay as columns, uses the one-card trend layout.
-    private var usesTrendCard: Bool { !isColumns }
+    /// Every metric, the daily totals (steps, energy) included, uses the one-card trend layout.
+    private var usesTrendCard: Bool { true }
 
     @ViewBuilder private var trendCardBody: some View {
         let latest = series.latest
@@ -308,7 +308,7 @@ struct NunaMetricDetailView: View {
                     let d = latest.value - prev
                     Text(verbatim: d == 0 ? String(localized: "Same as yesterday")
                          : (d > 0 ? String(localized: "Up \(fmt(abs(d))) from yesterday") : String(localized: "Down \(fmt(abs(d))) from yesterday")))
-                        .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 } else if let blurb = metric.description {
                     Text(verbatim: blurb).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
@@ -318,7 +318,7 @@ struct NunaMetricDetailView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     if present.isEmpty {
                         Text(series.loaded ? "No data in this period" : " ").font(.nuna(size: 14, weight: .semibold))
-                            .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 130)
+                            .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 130).textCase(nil)
                     } else if isColumns && range == 7 {
                         let top = max(present.max() ?? 1, 1)
                         NunaColumns(items: slots.map { s in
@@ -394,8 +394,8 @@ struct NunaStressDetailView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
-    @AppStorage(TodayLayoutPrefs.orderKey) private var orderRaw = ""
-    @AppStorage(TodayLayoutPrefs.hiddenKey) private var hiddenRaw = ""
+    @AppStorage(NunaTodayDefaults.orderKey) private var orderRaw = ""
+    @AppStorage(NunaTodayDefaults.hiddenKey) private var hiddenRaw = ""
     @StateObject private var series = NunaSeriesModel()
     @StateObject private var day = NunaTodayModel()
     @State private var range = 1
@@ -438,14 +438,14 @@ struct NunaStressDetailView: View {
                                 levelColor: tint, time: gaugeTime, onInfo: { withAnimation { showInfo.toggle() } })
                 if showInfo {
                     Text("0 to 3 against your own calm reference. Under 1 is low, 1 to 2 medium, above 2 high. Moments when you were moving are left out.")
-                        .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
                 if let score, let base = series.baseline {
                     let b = String(format: "%.1f", locale: AppLanguage.activeLocale, base)
                     Text(verbatim: score < base - 0.05 ? String(localized: "Calmer than your baseline (\(b))")
                          : (score > base + 0.05 ? String(localized: "Tenser than your baseline (\(b))")
                             : String(localized: "About your usual baseline (\(b))")))
-                        .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center)
+                        .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center).textCase(nil)
                 }
             }
             recoveryTiles
@@ -541,7 +541,7 @@ struct NunaStressDetailView: View {
                             Spacer()
                             Text("Now")
                         }
-                        .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         .padding(.leading, 22)
                     } else {
                         Text("Calibrating").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
@@ -622,7 +622,7 @@ struct NunaStressDetailView: View {
                 NunaProgressBar(fraction: minutes / total, color: color)
             }
             Text(verbatim: "\(Int((minutes / total * 100).rounded()))%").font(.nuna(size: 12.5, weight: .semibold))
-                .foregroundStyle(NunaPalette.textSecondary).frame(width: 38, alignment: .trailing)
+                .foregroundStyle(NunaPalette.textSecondary).frame(width: 38, alignment: .trailing).textCase(nil)
         }
         .frame(minHeight: 60)
     }
@@ -643,8 +643,8 @@ struct NunaAllMetricsView: View {
     @AppStorage(KeyMetricPrefs.layoutKey) private var keyMetricsRaw = ""
     @AppStorage("today.keyMetricsDetailed") private var detailed = false
     @AppStorage("today.keyMetricsWindowDays") private var windowDays = 14
-    @AppStorage(TodayLayoutPrefs.orderKey) private var orderRaw = ""
-    @AppStorage(TodayLayoutPrefs.hiddenKey) private var hiddenRaw = ""
+    @AppStorage(NunaTodayDefaults.orderKey) private var orderRaw = ""
+    @AppStorage(NunaTodayDefaults.hiddenKey) private var hiddenRaw = ""
     @AppStorage(DashboardCardPrefs.selectionKey) private var dashRaw = ""
     @AppStorage(HostedCardPrefs.selectionKey) private var hostedRaw = ""
 
@@ -691,7 +691,7 @@ struct NunaAllMetricsView: View {
                 }
             }
             Text("Tap a metric for its detail. Change the order with Edit.")
-                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
         }
         .task(id: repo.refreshSeq) { await day.load(repo: repo, profile: profile) }
         .sheet(isPresented: $showEdit) {

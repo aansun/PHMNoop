@@ -98,7 +98,7 @@ struct NunaLiveHeartView: View {
                     }
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Image(systemName: "heart.fill").font(.nuna(size: 26)).foregroundStyle(NunaPalette.textPrimary)
+                    Image(systemName: "heart.fill").font(.nuna(size: 26)).foregroundStyle(NunaPalette.alert)
                     Text(verbatim: currentBpm.map(String.init) ?? "–").font(.nuna(size: 76, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(76)).foregroundStyle(NunaPalette.textPrimary)
                     Text("bpm").font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
@@ -106,17 +106,17 @@ struct NunaLiveHeartView: View {
                     if let stateLabel { NunaChip(stateLabel) }
                     Spacer()
                     Text(isLive ? "Updated every second" : (banked.last.map { lastReading($0.ts) } ?? "–"))
-                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 if isLive || banked.count >= 2 {
                     NunaHRTrace(values: isLive ? rolling : banked.suffix(36).map(\.bpm), segments: nil).frame(height: 100)
                     HStack {
                         Text(isLive ? "−\(rolling.count) s" : "Earlier today"); Spacer(); Text(isLive ? "Now" : "Latest")
                     }
-                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 } else {
                     Text(live.connected ? "Waiting for a live heartbeat…" : "Connect your strap to see live heart rate")
-                        .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
         }
@@ -252,7 +252,7 @@ struct NunaSkinTempView: View {
                         HStack {
                             Text(verbatim: nunaAxisDate(nights.first!.date)); Spacer(); Text(verbatim: nunaAxisDate(nights.last!.date))
                         }
-                        .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     } else {
                         Text("Not enough data yet").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
@@ -262,7 +262,7 @@ struct NunaSkinTempView: View {
                 VStack(spacing: 8) {
                     NunaDeviationScale(value: latest)
                     HStack { Text("−1 °C"); Spacer(); Text("+1 °C") }
-                        .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
             NunaTitleRow(title: "What affects it") { EmptyView() }

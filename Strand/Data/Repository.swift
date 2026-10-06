@@ -2694,6 +2694,7 @@ final class Repository: ObservableObject {
         _ = try? await store.upsertJournal(
             [JournalEntry(day: day, question: question, answeredYes: answeredYes, notes: notes)],
             deviceId: Self.journalDeviceId)
+        NotificationCenter.default.post(name: .noopJournalSaved, object: nil)
     }
 
     /// Write one native NUMERIC answer (#322): stores the value AND answeredYes=true, so the existing
@@ -2705,6 +2706,7 @@ final class Repository: ObservableObject {
             [JournalEntry(day: day, question: question, answeredYes: true, notes: notes,
                           numericValue: value)],
             deviceId: Self.journalDeviceId)
+        NotificationCenter.default.post(name: .noopJournalSaved, object: nil)
     }
 
     /// Per-question numeric series (question → [day: value]) over the imported ∪ native union, native
@@ -3546,4 +3548,10 @@ extension DailyMetric {
             sleepHrOnly: source.sleepHrOnly
         )
     }
+}
+
+
+extension Notification.Name {
+    /// Posted after a journal answer is written, so the evening reminder can drop tonight's nudge once the entry exists.
+    static let noopJournalSaved = Notification.Name("noop.journal.saved")
 }

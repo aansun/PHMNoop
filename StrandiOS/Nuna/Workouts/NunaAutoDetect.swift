@@ -40,7 +40,7 @@ struct NunaAutoDetectView: View {
                 }
             }
             Text("The rules are deliberately conservative so stress, caffeine or climbing stairs are not counted as workouts. Short or light sessions can be missed.")
-                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             if on {
                 NunaTitleRow(title: "Latest suggestion") { EmptyView() }
                 NunaCard(small: true) {

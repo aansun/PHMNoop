@@ -106,7 +106,7 @@ struct NunaTrainingLoadView: View {
                 HStack(alignment: .top, spacing: 12) {
                     AnyaMark(size: 18).foregroundStyle(NunaPalette.textMuted)
                     Text("Cardio is counted from daily Effort, not TRIMP. Strength is estimated from the volume you lift and is not added to cardio, because the heart strain of lifting is not invented.")
-                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
         }
@@ -147,7 +147,7 @@ struct NunaTrainingLoadView: View {
                     NunaScaleBar(parts: [(3, NunaPalette.zoneBase), (5, NunaPalette.charge), (2, NunaPalette.warning), (2, NunaPalette.alert)], position: min(max((ratio - 0.5) / 1.1, 0), 1))
                     HStack { Text(verbatim: "0,5"); Spacer(); Text(verbatim: "1,6") }.font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     HStack { Text("Under"); Spacer(); Text("Optimal").foregroundStyle(NunaPalette.charge).fontWeight(.heavy); Spacer(); Text("High"); Spacer(); Text("Excess") }
-                        .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 } else {
                     Text("Needs at least three weeks with workouts to read your balance.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
@@ -272,7 +272,7 @@ struct NunaTrainingLoadView: View {
                 HStack(alignment: .top, spacing: 12) {
                     AnyaMark(size: 18).foregroundStyle(NunaPalette.textMuted)
                     Text("Fitness (CTL) averages Effort over 42 days, fatigue (ATL) over 7 days, and form is the gap. Descriptive only: it does not change Charge or any other score.")
-                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
         }
@@ -334,7 +334,7 @@ struct NunaTrainingLoadView: View {
                     ForEach(0..<5, id: \.self) { i in
                         HStack(spacing: 10) {
                             RoundedRectangle(cornerRadius: 3).fill(colors[i]).frame(width: 10, height: 10)
-                            Text(verbatim: String(localized: "Zone \(i + 1)")).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: String(localized: "Zone \(i + 1)")).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                             Spacer()
                             Text(verbatim: String(localized: "\(Int(zoneMinutes[i].rounded())) min")).font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         }
@@ -384,7 +384,7 @@ struct NunaTrainingLoadView: View {
                         }
                         if let change {
                             Text(verbatim: (change >= 0 ? String(localized: "Up \(Int(abs(change).rounded()))% from your 6-week average.") : String(localized: "Down \(Int(abs(change).rounded()))% from your 6-week average.")) + " " + String(localized: "\(lifts.count) lifting sessions and \(weekSets.count) working sets."))
-                                .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                                .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                         }
                         NunaDivider()
                         HStack { tileSmall("Sessions", "\(lifts.count)"); tileSmall("Sets", "\(weekSets.count)"); tileSmall("Reps", "\(reps)") }
@@ -515,7 +515,7 @@ struct NunaTrainingLoadView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(recovering.isEmpty ? "All muscle groups are recovered" : "Some muscle groups are still recovering").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             Text(verbatim: ready.isEmpty ? String(localized: "Rest today") : String(localized: "\(ready.joined(separator: " and ")) are ready to train today"))
-                                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                         Spacer(minLength: 0)
                     }

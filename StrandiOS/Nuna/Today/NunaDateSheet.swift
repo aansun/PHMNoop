@@ -27,8 +27,8 @@ struct NunaDateSheet: View {
                 jumps
                 summary
                 Text("Past days are view-only. The journal can still be edited.")
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                    .multilineTextAlignment(.center)
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    .multilineTextAlignment(.center).textCase(nil)
             }
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 14).padding(.bottom, 40)
         }

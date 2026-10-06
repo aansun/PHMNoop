@@ -73,8 +73,8 @@ struct NunaEarlyWarningCard: View {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Early warning").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         Text(verbatim: localizedIllnessCopy(result))
-                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                            .lineLimit(2).multilineTextAlignment(.leading)
+                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                            .lineLimit(2).multilineTextAlignment(.leading).textCase(nil)
                     }
                     Spacer(minLength: 8)
                     Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
@@ -127,12 +127,12 @@ struct NunaEarlyWarningView: View {
                 } else {
                     NunaCard {
                         Text("Still learning your baseline and keeping an eye on your signals.")
-                            .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                            .frame(maxWidth: .infinity, alignment: .leading).textCase(nil)
                     }
                 }
                 Text("On-device estimate. Not a diagnosis.")
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                 if coachEnabled { NunaAnyaCard(title: "Ask Anya about this") { showCoach = true } }
             }
             .padding(.horizontal, NunaSpacing.screenH)

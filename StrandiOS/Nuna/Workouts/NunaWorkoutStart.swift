@@ -271,7 +271,7 @@ struct NunaLiveWorkoutView: View {
                 VStack(spacing: 16) {
                     Text("Session finished").font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     if let last = model.lastWorkout {
-                        Text(verbatim: WorkoutSource.displaySport(last.sport) + " · " + NunaWorkoutFormat.duration(last.durationS)).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: WorkoutSource.displaySport(last.sport) + " · " + NunaWorkoutFormat.duration(last.durationS)).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     } else {
                         Text("Sessions under a minute are not saved.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
@@ -561,7 +561,7 @@ struct NunaLiveWorkoutView: View {
             HStack(spacing: 12) {
                 Image(systemName: "exclamationmark.circle.fill").font(.system(size: 18, weight: .bold)).foregroundStyle(NunaPalette.warning)
                 Text("Live Activities are off, so this session will not show on the Lock Screen or in the Dynamic Island.")
-                    .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                    .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 Spacer(minLength: 4)
                 Button {
                     if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }

@@ -153,7 +153,7 @@ struct NunaGymSessionView: View {
                 ForEach(Array(rows.enumerated()), id: \.element.id) { i, r in
                     HStack {
                         Text(verbatim: r.isWarmup ? String(localized: "Warm-up") : String(localized: "Set \(rows.prefix(i + 1).filter { !$0.isWarmup }.count)"))
-                            .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         Spacer()
                         Text(verbatim: setText(r)).font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     }

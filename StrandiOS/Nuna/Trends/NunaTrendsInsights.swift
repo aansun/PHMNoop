@@ -37,7 +37,7 @@ struct NunaInsightsView: View {
                 HStack(alignment: .top, spacing: 12) {
                     Image(systemName: "info.circle").foregroundStyle(NunaPalette.textMuted)
                     Text("A link is not proof of cause. Effects are computed from your own data and recalculated every day. Confidence rises as more days are logged.")
-                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
         }
@@ -69,7 +69,7 @@ struct NunaInsightsView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("No behaviour effects yet").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Text("Log yes or no habits in your journal (caffeine, alcohol, hydration, late workouts). Once a habit has days with and without it, its effect on Charge shows here.")
-                        .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                        .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
         } else {
@@ -421,7 +421,7 @@ struct NunaExploreView: View {
             Color.clear.frame(height: 0).task { for s in NunaSignals.all { await store.ensure(s, repo: repo) } }
             HStack(spacing: 10) {
                 Image(systemName: "magnifyingglass").foregroundStyle(NunaPalette.textMuted)
-                TextField("", text: $query, prompt: Text("Search signals").foregroundStyle(NunaPalette.textMuted)).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                TextField("", text: $query, prompt: Text("Search signals").foregroundStyle(NunaPalette.textMuted)).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
             }
             .padding(.horizontal, 16).frame(height: 48).background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)).overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
             ScrollView(.horizontal, showsIndicators: false) {

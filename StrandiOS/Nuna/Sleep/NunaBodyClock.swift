@@ -159,10 +159,10 @@ struct NunaBodyClockView: View {
                     Text(verbatim: NunaClockHour.text(est.tempMinHour))
                         .font(.nuna(size: 64, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(64)).foregroundStyle(NunaPalette.restText)
                         .minimumScaleFactor(0.6).lineLimit(1)
-                    Text("lowest point").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("lowest point").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 Text("You are sleepiest around this time. Good sleep ends about 2.5 hours after it.")
-                    .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     .fixedSize(horizontal: false, vertical: true).textCase(nil)
                 if let chrono {
                     NunaChip(chronoLabel(chrono), systemImage: "moon", color: NunaPalette.restText).padding(.top, 4)
@@ -191,7 +191,7 @@ struct NunaBodyClockView: View {
                         Text(verbatim: t).frame(maxWidth: .infinity)
                     }
                 }
-                .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
         }
         NunaCard {
@@ -210,9 +210,9 @@ struct NunaBodyClockView: View {
                     Text("Hard to read"); Spacer(); Text("Wide range"); Spacer()
                     Text("Solid").foregroundStyle(est.confidence == .solid ? NunaPalette.restText : NunaPalette.textSecondary)
                 }
-                .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 Text("It needs at least 7 days of data for a first estimate. More days narrow the range.")
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
         }
         planLink
@@ -228,7 +228,7 @@ struct NunaBodyClockView: View {
                     NunaIconTile("clock", tint: NunaPalette.restText)
                     Text("Your body clock is hard to read right now").font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Text("It needs at least 7 days of heart-rate data with a clear day and night pattern. Wear your strap day and night and check back.")
-                        .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
             planLink
@@ -274,7 +274,7 @@ struct NunaBodyClockView: View {
                     legend(AnyView(Circle().strokeBorder(NunaPalette.ink, lineWidth: 2.5).frame(width: 10, height: 10)), "Lowest point")
                 }
                 Text(verbatim: String(localized: "Your sleep was \(mins) minutes \(off <= 0 ? String(localized: "earlier") : String(localized: "later")) than the ideal window (\(NunaClockHour.text(ideal.bed)) to \(NunaClockHour.text(ideal.wake))). The night has the same length, so this is about timing, not duration."))
-                    .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center)
+                    .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center).textCase(nil)
             }
         }
     }
@@ -345,7 +345,7 @@ struct NunaBodyClockPlanView: View {
                 ForEach(plan.days, id: \.dayIndex) { day in dayCard(day) }
             }
             Text("Light and sleep timing guidance only. Not medical advice.")
-                .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).multilineTextAlignment(.center)
+                .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).multilineTextAlignment(.center).textCase(nil)
         }
         .task(id: repo.refreshSeq) { await sleep.load(repo: repo) }
     }
@@ -365,7 +365,7 @@ struct NunaBodyClockPlanView: View {
                 Text(verbatim: forward
                      ? String(localized: "Move your body clock \(hours) hours earlier, about 1 hour a day.")
                      : String(localized: "Move your body clock \(hours) hours later, about 1 hour a day."))
-                    .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 HStack(spacing: 3) {
                     ForEach(plan.days, id: \.dayIndex) { _ in RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.rest).frame(height: 10) }
                 }
@@ -386,7 +386,7 @@ struct NunaBodyClockPlanView: View {
                 row("timer", NunaPalette.charge, "Sleep window", "\(NunaClockHour.text(d.targetSleepHour)) – \(NunaClockHour.text(d.targetWakeHour))")
                 Text(forward ? "Get bright light soon after waking and keep the evening dim. This moves your clock earlier."
                              : "Get bright light in the evening and go easy on bright morning light. This moves your clock later.")
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
         }
     }

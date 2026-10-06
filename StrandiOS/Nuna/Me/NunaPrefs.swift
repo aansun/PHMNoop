@@ -165,7 +165,7 @@ struct NunaLanguageView: View {
                     VStack(alignment: .leading, spacing: 3) {
                         Text(verbatim: l == .system ? String(localized: "Follow iPhone") : l.autonym).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         Text(verbatim: l == .system ? String(localized: "Now: \(AppLanguage.systemResolved.autonym). If the iPhone uses a language the app does not have, the app uses English.") : l.say("All screens, notifications, and Anya replies"))
-                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }
                     Spacer(minLength: 8)
                     Image(systemName: on ? "checkmark.circle.fill" : "circle").font(.nuna(size: 22)).foregroundStyle(on ? NunaPalette.accent : NunaPalette.textMuted)
@@ -210,6 +210,7 @@ struct NunaFeaturesView: View {
     @AppStorage(HydrationStore.enabledKey) private var hydration = false
     @AppStorage(PuffinExperiment.autoDetectWorkoutsKey) private var autoDetect = false
     @AppStorage(PuffinExperiment.journalReminderKey) private var journal = true
+    @AppStorage(JournalReminderNotifier.minuteKey) private var journalMinute = JournalReminderNotifier.defaultMinute
     @AppStorage("workoutKeepScreenOn") private var keepOn = false
     @AppStorage(ScreenIdle.strapSyncKeepAwakeKey) private var syncKeepOn = false
     @AppStorage(UnitPrefs.liveActivityKey) private var liveActivity = true
@@ -225,7 +226,18 @@ struct NunaFeaturesView: View {
                 NunaDivider()
                 NunaToggleRow("Auto-detect workouts", subtitle: "Only suggests, never saves on its own", systemImage: "figure.run", isOn: $autoDetect).padding(.vertical, 8)
                 NunaDivider()
-                NunaToggleRow("Journal reminder", subtitle: "A reminder card in Today", systemImage: "book", isOn: $journal).padding(.vertical, 8)
+                NunaToggleRow("Journal reminder", subtitle: "A notification in the evening and a card in Today", systemImage: "book", isOn: $journal).padding(.vertical, 8)
+                if journal {
+                    NunaDivider()
+                    HStack {
+                        Text("Reminder time").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                        Spacer()
+                        DatePicker("", selection: Binding(
+                            get: { Calendar.current.date(bySettingHour: journalMinute / 60, minute: journalMinute % 60, second: 0, of: Date()) ?? Date() },
+                            set: { let c = Calendar.current.dateComponents([.hour, .minute], from: $0); journalMinute = (c.hour ?? 21) * 60 + (c.minute ?? 0) }),
+                                   displayedComponents: .hourAndMinute).labelsHidden()
+                    }.padding(.vertical, 8)
+                }
                 NunaDivider()
                 NunaToggleRow("Screen on during workouts", subtitle: "Heart rate stays visible while recording", systemImage: "sun.max", isOn: $keepOn).padding(.vertical, 8)
                 NunaDivider()

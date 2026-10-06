@@ -169,7 +169,7 @@ struct NunaTimeAxis: View {
             Spacer()
             Text(verbatim: NunaSleepFormat.clock(end))
         }
-        .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+        .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
     }
 }
 

@@ -100,7 +100,7 @@ struct NunaQuickSheet: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Water today").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Text(verbatim: String(localized: "\(liters(waterML)) of \(liters(goalML)) L"))
-                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 Spacer(minLength: 4)
                 Button { Task { await undoWater() } } label: {

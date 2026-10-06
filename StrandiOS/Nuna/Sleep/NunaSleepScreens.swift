@@ -23,7 +23,7 @@ struct NunaSleepHost<Content: View>: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("No sleep data yet").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         Text("Wear your strap overnight and your first night will show up here.")
-                            .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -154,7 +154,7 @@ struct NunaSleepView: View {
                         Text(verbatim: NunaSleepFormat.duration(nap.asleepMin))
                             .font(.nuna(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         Text(verbatim: "\(NunaSleepFormat.clock(nap.start)) – \(NunaSleepFormat.clock(nap.end))")
-                            .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer()
                     NunaChip(nap.manual ? "Added by you" : "Detected automatically", color: nap.manual ? nil : NunaPalette.charge)
@@ -224,11 +224,11 @@ struct NunaSleepStagesView: View {
                             Spacer()
                         }
                         Text(verbatim: String(localized: "In bed \(NunaSleepFormat.duration(night.inBedMin))"))
-                            .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         if night.intervals.isEmpty {
                             NunaStageSplitBar(stages: night.stages)
                             Text("The order of stages is not available for this night. The split below comes from the daily totals.")
-                                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         } else {
                             NunaHypnogramStrip(intervals: night.intervals, height: 140)
                             if night.motion.count >= 10 {
@@ -253,7 +253,7 @@ struct NunaSleepStagesView: View {
                     }
                 }
                 Text("Stages are estimated from heart rate and movement. Movement counts are relative to this strap and are not a medical sleep study.")
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
             }
         }
     }
@@ -265,7 +265,7 @@ struct NunaSleepStagesView: View {
                 Text(stage.nunaName).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 if let typical {
                     Text(verbatim: String(localized: "Usually \(NunaSleepFormat.duration(typical))"))
-                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
             Spacer()
@@ -273,7 +273,7 @@ struct NunaSleepStagesView: View {
                 Text(verbatim: NunaSleepFormat.duration(minutes)).font(.nuna(size: 17, weight: .bold, design: NunaType.design))
                     .foregroundStyle(NunaPalette.textPrimary)
                 Text(verbatim: "\(total > 0 ? Int((minutes / total * 100).rounded()) : 0)%")
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
         }
         .frame(minHeight: 62)
@@ -297,7 +297,7 @@ struct NunaSleepVitalsView: View {
                     vital("Skin Temp", "skin_temp", night.daily?.skinTempDevC, others.compactMap(\.skinTempDevC), "°C", 1)
                 }
                 Text("Compared with your average of the previous nights. Tap a vital to see its history.")
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
             }
         }
     }
@@ -316,7 +316,7 @@ struct NunaSleepVitalsView: View {
                 if let value, let avg {
                     let d = value - avg
                     Text(verbatim: (d >= 0 ? "+" : "−") + String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, abs(d)) + String(localized: " vs average"))
-                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -417,7 +417,7 @@ private struct NunaNapContent: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("No nap this day").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         Text("A nap is any sleep that is not your main night. It is detected automatically when you rest without moving for a while.")
-                            .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
@@ -451,7 +451,7 @@ private struct NunaNapContent: View {
                     Text("min").font(.nuna(size: 22, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 Text(verbatim: "\(NunaSleepFormat.clock(nap.start)) – \(NunaSleepFormat.clock(nap.end))")
-                    .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 if !nap.intervals.isEmpty {
                     HStack(alignment: .top, spacing: 10) {
                         VStack(alignment: .leading, spacing: 0) {
@@ -473,7 +473,7 @@ private struct NunaNapContent: View {
                         Text(verbatim: NunaSleepFormat.clock(nap.start.addingTimeInterval(total / 2))); Spacer()
                         Text(verbatim: NunaSleepFormat.clock(nap.end))
                     }
-                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     NunaStageLegend(showsMovement: nap.motion.count >= 4)
                 } else {
                     Text("The order of stages is not available for this nap.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
@@ -501,7 +501,7 @@ private struct NunaNapContent: View {
                 line("Counted toward your need", "+" + NunaSleepFormat.duration(napMin))
                 line("Tonight's need", NunaSleepFormat.duration(model.need(night)))
                 Text("A nap counts toward your sleep need but does not change last night's Rest score.")
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
         }
     }
@@ -529,7 +529,7 @@ private struct NunaNapContent: View {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(verbatim: weekday(pair.1.start)).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                                     Text(verbatim: "\(NunaSleepFormat.clock(pair.1.start)) – \(NunaSleepFormat.clock(pair.1.end))")
-                                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                                 }
                                 Spacer()
                                 Text(verbatim: "\(Int(pair.1.asleepMin.rounded()))m").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
@@ -571,7 +571,7 @@ private struct NunaAddNapSheet: View {
                 }
             }
             Text("The nap is staged from your strap's heart rate and movement when it has data for that time.")
-                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             Button {
                 Task {
                     await repo.addManualNap(startTs: Int(start.timeIntervalSince1970), endTs: Int(end.timeIntervalSince1970))

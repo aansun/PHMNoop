@@ -15,7 +15,7 @@ struct NunaAnyaConnectView: View {
     var body: some View {
         NunaDetailScreen("Connect Anya") {
             Text("Anya uses the AI provider you choose. Your key is kept in the Keychain and does not leave this iPhone.")
-                .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             group("No key") {
                 Button { choose(.appleIntelligence) } label: {
                     row(icon: "apple.intelligence", title: "Apple Intelligence", subtitle: coach.appleIntelligenceUnavailableReason ?? String(localized: "On this iPhone. No account, no key, no network."),
@@ -45,7 +45,7 @@ struct NunaAnyaConnectView: View {
                 NunaToggleRow("Let Anya use my numbers", subtitle: "Summaries of your computed scores, not raw data", systemImage: "lock.open", isOn: $coach.dataConsent).padding(.vertical, 8)
             }
             Text("Only a text summary of numbers already computed on this iPhone is sent to your chosen provider, and only after you allow it and ask. Raw heartbeat intervals, PPG and motion are never sent.")
-                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
         }
         .onChange(of: coach.isConfigured) { _, ok in if ok { dismiss() } }
     }
@@ -122,7 +122,7 @@ struct NunaAnyaKeyView: View {
                 NunaToggleRow("Let Anya use my numbers", subtitle: "Summaries of computed scores, not raw data", systemImage: "lock.open", isOn: $coach.dataConsent).padding(.vertical, 8)
             }
             Text("Usage is billed by the provider to your account. The key only leaves this iPhone to reach this provider.")
-                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
             if let e = coach.errorText, !e.isEmpty {
                 Text(verbatim: e).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.alertText).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
@@ -198,7 +198,7 @@ struct NunaAnyaCustomView: View {
     var body: some View {
         NunaDetailScreen("Your own server") {
             Text("Any OpenAI-compatible server: Ollama, LM Studio, llama.cpp or your own gateway. It stays on your network.")
-                .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             NunaFormField("Server URL") {
                 TextField("", text: $coach.customBaseURL, prompt: Text("http://192.168.1.20:11434/v1").foregroundStyle(NunaPalette.textMuted))
                     .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
@@ -210,7 +210,7 @@ struct NunaAnyaCustomView: View {
                 Text("Key header").font(.nuna(size: 11, weight: .heavy)).tracking(0.9).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 NunaSegmented([(value: CustomAIAuthHeader.bearer, title: "Bearer"), (value: .xAPIKey, title: "x-api-key")], selection: $coach.customAuthHeader)
                 Text("Bearer for most local servers. x-api-key for gateways that want the key in that header.")
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
             }
             NunaFormField("Model") {
                 TextField("", text: $coach.model, prompt: Text("llama3.1:8b").foregroundStyle(NunaPalette.textMuted)).textInputAutocapitalization(.never).autocorrectionDisabled()
@@ -294,7 +294,7 @@ struct NunaAnyaChatGPTView: View {
                         nunaTrendsCap("Device code")
                         Text(verbatim: code.userCode).font(.nuna(size: 38, weight: .bold, design: .monospaced)).tracking(nunaTrackingLabel).foregroundStyle(NunaPalette.textPrimary).textSelection(.enabled)
                         Text("Open the ChatGPT sign-in page in your browser and enter this code. It is valid for 15 minutes.")
-                            .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                            .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }
                 Button { auth.openVerificationPage() } label: {
@@ -314,7 +314,7 @@ struct NunaAnyaChatGPTView: View {
                 NunaCard {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Sign in with your ChatGPT account using a one-time device code, without pasting an API key.")
-                            .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
+                            .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                         Button { auth.startLogin() } label: {
                             Text(auth.isBusy ? "Getting a code…" : "Get a device code").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                         }.buttonStyle(.plain).disabled(auth.isBusy)
@@ -325,7 +325,7 @@ struct NunaAnyaChatGPTView: View {
                 Text(verbatim: e).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.alertText).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
             Text("The token is kept in Apple's Keychain and refreshed automatically. Sign out any time from Anya settings.")
-                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true)
+                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
         }
         .onAppear { if coach.provider != .chatGPT { coach.provider = .chatGPT }; auth.refreshConnection() }
         .onChange(of: auth.isConnected) { _, ok in if ok { dismiss() } }

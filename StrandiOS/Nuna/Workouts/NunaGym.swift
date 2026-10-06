@@ -186,7 +186,7 @@ struct NunaGymView: View {
                         Text(verbatim: p.name).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2)
                         Text(verbatim: String(localized: "\(c?.exercises ?? 0) exercises") + " · " + String(localized: "\(c?.sets ?? 0) sets")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         Text(verbatim: lastUsed[p.id].map { String(localized: "Last \(NunaWorkoutFormat.day($0))") } ?? String(localized: "Never run"))
-                            .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                            .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                         Text("Tap to edit").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
