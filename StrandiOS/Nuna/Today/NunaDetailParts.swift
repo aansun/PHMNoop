@@ -293,37 +293,33 @@ struct NunaPlainList<Content: View>: View {
     }
 }
 
-// MARK: - Collapsible "How it's calculated" row
+// MARK: - Footnote: "What affects it" and "How it's calculated"
 
 struct NunaExpandRow: View {
     let title: LocalizedStringKey
-    let subtitle: LocalizedStringKey
-    var systemImage = "sparkles"
+    /// Kept so the call sites read the same; a footnote has no second line.
+    var subtitle: LocalizedStringKey = ""
+    var systemImage = "info.circle"
     let text: LocalizedStringKey
-    @State private var open = false
 
+    init(title: LocalizedStringKey, subtitle: LocalizedStringKey = "", systemImage: String = "info.circle", text: LocalizedStringKey) {
+        self.title = title; self.subtitle = subtitle; self.systemImage = systemImage; self.text = text
+    }
+
+    /// A footnote, not a card: an info mark and a title, then the explanation, in a darker grey straight on the screen's background. It is
+    /// background reading (what affects it, how it is worked out), so it is always open and never competes with the figures above it.
     var body: some View {
-        NunaCard(small: true, padding: EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)) {
-            VStack(alignment: .leading, spacing: 12) {
-                Button { withAnimation(.easeInOut(duration: 0.2)) { open.toggle() } } label: {
-                    HStack(spacing: 12) {
-                        NunaIconTile(systemImage)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            Text(subtitle).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        }
-                        Spacer(minLength: 8)
-                        Image(systemName: "chevron.down").font(.nuna(size: 13, weight: .bold))
-                            .foregroundStyle(NunaPalette.textMuted).rotationEffect(.degrees(open ? 180 : 0))
-                    }
-                }
-                .buttonStyle(.plain)
-                if open {
-                    Text(text).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        .fixedSize(horizontal: false, vertical: true).textCase(nil)
-                }
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 8) {
+                Image(systemName: "info.circle").font(.nuna(size: 14, weight: .semibold))
+                Text(title).font(.nuna(size: 14.5, weight: .bold)).textCase(nil)
             }
+            Text(text).font(.nuna(size: 13.5, weight: .medium)).lineSpacing(3).fixedSize(horizontal: false, vertical: true).textCase(nil)
         }
+        .foregroundStyle(NunaPalette.textMuted)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.horizontal, 4)
+        .accessibilityElement(children: .combine)
     }
 }
 
