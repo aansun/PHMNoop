@@ -28,6 +28,8 @@ struct NunaRootView: View {
     @State private var paths: [NavigationPath] = Array(repeating: NavigationPath(), count: Tab.allCases.count)
     @State private var showDevices = false
     @State private var routed: NavRouter.Destination?
+    /// While the keyboard is up the tab bar steps aside: it floats over the content, so above a keyboard it would sit on top of whatever is being typed.
+    @State private var keyboardUp = false
 
     private var items: [NunaTabItem] {
         var out = [
@@ -49,14 +51,20 @@ struct NunaRootView: View {
             stack(.me) { NunaMeView() }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            VStack(spacing: 0) {
-                NunaLiftBar()
-                NunaTabBar(items: items, selection: $selection) { id in
-                    // Re-tapping the active tab pops it to its root.
-                    if id < paths.count { paths[id] = NavigationPath() }
+            if !keyboardUp {
+                VStack(spacing: 0) {
+                    NunaLiftBar()
+                    NunaTabBar(items: items, selection: $selection) { id in
+                        // Re-tapping the active tab pops it to its root.
+                        if id < paths.count { paths[id] = NavigationPath() }
+                    }
                 }
+                .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
+        .animation(.easeOut(duration: 0.2), value: keyboardUp)
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in keyboardUp = true }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in keyboardUp = false }
         .nunaScreenBackground()
         // WHP sets every label in capitals; sentences and Anya opt out with `.textCase(nil)` where they are drawn.
         .textCase(skinRaw == NunaThemePrefs.Skin.whp.rawValue ? .uppercase : nil)
