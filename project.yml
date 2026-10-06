@@ -389,6 +389,7 @@ targets:
     # Widget and Live Activity are a separate bundle, so they need their own compact locale table.
     resources:
       - path: StrandiOSWidgets/Resources/id.lproj
+      - path: StrandiOSWidgets/Resources/Assets.xcassets
     info:
       path: StrandiOSWidgets/Info.plist
       properties:

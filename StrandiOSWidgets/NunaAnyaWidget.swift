@@ -57,8 +57,7 @@ private struct NunaAnyaView: View {
     private var home: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 6) {
-                Text("AN").font(.system(size: 8, weight: .black)).foregroundStyle(NunaPalette.onAccent)
-                    .frame(width: 18, height: 18).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                Image("AnyaLogo").resizable().scaledToFit().frame(width: 22, height: 22)
                 NunaWCap(text: Text("Anya"))
             }
             if let text = entry.text {
@@ -73,7 +72,8 @@ private struct NunaAnyaView: View {
 
     private var lock: some View {
         VStack(alignment: .leading, spacing: 2) {
-            HStack {
+            HStack(spacing: 5) {
+                Image("AnyaGlyph").renderingMode(.template).resizable().scaledToFit().frame(width: 14, height: 14).widgetAccentable()
                 Text("Anya").font(.system(size: 12, weight: .heavy))
                 Spacer()
                 if let w = entry.written { Text(w, style: .time).font(.system(size: 10, weight: .semibold)).opacity(0.7) }
