@@ -91,6 +91,7 @@ struct NunaWorkoutsView: View {
             suggestion = autoDetect ? await repo.autoDetectSuggestion() : nil
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "workouts") }
+        .environment(\.nunaAnyaCardContext, "workouts")
     }
 
     // MARK: Header

@@ -73,6 +73,7 @@ struct NunaTrendsView: View {
         .task(id: repo.refreshSeq) { await m.load(repo: repo) }
         .sheet(isPresented: $showReport) { TrendsReportSheet(days: repo.days).environmentObject(repo).preferredColorScheme(NunaTheme.colorScheme) }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "trends") }
+        .environment(\.nunaAnyaCardContext, "trends")
     }
 
     // MARK: Header
