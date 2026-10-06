@@ -46,6 +46,13 @@ final class NunaTodayModel: ObservableObject {
 
     var isToday: Bool { dayOffset == 0 }
 
+    /// Re-reads today's stress curve on its own, so the Stress card and screen follow the day without a full reload. Cheap when no new
+    /// heart rate has arrived: the curve is memoised on a fingerprint of today's samples.
+    func refreshStress(repo: Repository) async {
+        guard isToday, let r = await StressDayCurve.today(repo: repo, now: Date())?.result else { return }
+        if r != stressCurve { stressCurve = r }
+    }
+
     private var selectedLogicalDay: Date {
         let base = Repository.logicalDay(Date())
         return Calendar.current.date(byAdding: .day, value: -dayOffset, to: base) ?? base

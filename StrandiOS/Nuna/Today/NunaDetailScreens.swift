@@ -285,7 +285,7 @@ struct NunaMetricDetailView: View {
                     : (d > 0 ? String(localized: "Up \(fmt(abs(d))) from yesterday") : String(localized: "Down \(fmt(abs(d))) from yesterday"))
             } },
             series: series, lineColor: lineColor, decimals: metric.decimals,
-            higherIsBetter: metric.higherIsBetter ?? true, range: $range, page: $page)
+            higherIsBetter: metric.higherIsBetter ?? true, bars: isColumns, range: $range, page: $page)
         if ["spo2", "resp_rate", "hrv", "rhr"].contains(metric.key) {
             NavigationLink(value: NunaTodayRoute.earlyWarning) {
                 NunaCard(small: true) { NunaListRow("Part of the early warning", subtitle: "Breathing, SpO₂, HRV and resting heart rate are watched too", systemImage: "bell", showsChevron: true) }
@@ -428,12 +428,22 @@ struct NunaStressDetailView: View {
             })
     }
 
+    /// What the gauge shows: the latest reading on today's curve (it moves through the day), or the day's mean for a past day. The
+    /// day-level score from the baseline model is only the fallback when there is no curve.
+    private var gaugeValue: Double? {
+        if let curve = day.stressCurve {
+            if day.isToday, let now = StressDayCurve.latestLevel(curve) { return now }
+            if !day.isToday, let mean = curve.dayMean { return min(max(mean, 0), 3) }
+        }
+        return day.stress.map { min(max($0, 0), 3) }
+    }
+
     var body: some View {
-        let score = day.stress
+        let score = gaugeValue
         let tint: Color = score.map(color) ?? NunaPalette.textPrimary
         NunaDetailScreen("Stress monitor") {
             VStack(spacing: 10) {
-                Text(day.isToday ? "Day average" : "Day average").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                Text(day.isToday ? "Right now" : "Day average").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading)
                 NunaStressGauge(value: score, level: score.map { $0 < 1 ? "Low" : ($0 < 2 ? "Medium" : "High") },
                                 levelColor: tint, time: gaugeTime, onInfo: { withAnimation { showInfo.toggle() } })
@@ -509,6 +519,13 @@ struct NunaStressDetailView: View {
         .task(id: repo.refreshSeq) {
             await series.load(repo: repo, key: "stress", source: "my-whoop")
             await day.load(repo: repo, profile: profile)
+        }
+        // Follows the day: the gauge and the line are re-read every minute while this screen is up.
+        .task(id: day.dayOffset) {
+            while !Task.isCancelled {
+                try? await Task.sleep(nanoseconds: 60_000_000_000)
+                await day.refreshStress(repo: repo)
+            }
         }
         .sheet(isPresented: $showBreathing) {
             NavigationStack { NunaBreathView().toolbar(.hidden, for: .navigationBar) }

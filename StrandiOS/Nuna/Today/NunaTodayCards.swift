@@ -254,7 +254,9 @@ struct NunaStressCard: View {
     var isToday = true
 
     private var scored: Bool { curve?.hours.contains { $0.level != nil } ?? false }
-    private var highMin: Int? { scored ? curve?.highStressMinutes : nil }
+    private var highMin: Int? { scored ? curve.map(StressDayCurve.highMinutes) : nil }
+    /// The level right now, never above the scale's 3.
+    private var nowLevel: Double? { isToday ? curve.flatMap(StressDayCurve.latestLevel) : nil }
 
     var body: some View {
         NavigationLink(value: stressRoute) {
@@ -264,6 +266,10 @@ struct NunaStressCard: View {
                         Text("Stress monitor").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel)
                             .textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         Spacer(minLength: 8)
+                        if let nowLevel {
+                            Text(verbatim: String(format: String(localized: "Now %@ / 3"), String(format: "%.1f", locale: AppLanguage.activeLocale, nowLevel)))
+                                .font(.nuna(size: 12.5, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        }
                         Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     HStack(alignment: .center, spacing: 14) {
