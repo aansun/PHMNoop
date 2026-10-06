@@ -1,4 +1,5 @@
 import Foundation
+import WhoopStore
 import StrandAnalytics
 
 /// Scores today's stress for the surfaces that draw it, and does it as rarely as it can get away with.
@@ -129,6 +130,22 @@ enum StressDayCurve {
     /// The newest scored reading on the timeline, 0 to 3, for "now" read-outs. Nil when nothing was scored.
     static func latestLevel(_ r: DaytimeStress.Result) -> Double? {
         r.timeline.last(where: { $0.level != nil })?.level.map { min(max($0, 0), 3) }
+    }
+
+    /// The wearer's own usual stress, 0 to 3: the mean of the daily proxy over the 30 days before the latest one, the same baseline the Stress
+    /// screen compares against. Nil with fewer than 3 days to average.
+    static func baseline(days: [DailyMetric], stored: [(day: String, value: Double)]) -> Double? {
+        guard let model = StressModel(days: days, stored: stored) else { return nil }
+        let prior = model.fullTrend.dropLast().suffix(30).map(\.value)
+        guard prior.count >= 3 else { return nil }
+        return min(max(prior.reduce(0, +) / Double(prior.count), 0), 3)
+    }
+
+    /// The level to put in the big number: the latest scored reading for today (each reading is an average over the hour before it), the
+    /// day's mean for a day that is over. Always 0 to 3.
+    static func headlineLevel(_ r: DaytimeStress.Result, isToday: Bool) -> Double? {
+        if isToday { return latestLevel(r) }
+        return r.dayMean.map { min(max($0, 0), 3) }
     }
 
     /// Drops the memo so a test starts from a known state.

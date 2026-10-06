@@ -38,6 +38,8 @@ final class NunaTodayModel: ObservableObject {
     @Published private(set) var stressCurve: DaytimeStress.Result?
     /// Typical high-stress minutes for today's weekday, for the Stress card's comparison; today only, and only once it has been worked out.
     @Published private(set) var stressTypicalMin: Int?
+    /// The wearer's usual stress, 0 to 3, for the Stress card's arrow.
+    @Published private(set) var stressBaseline: Double?
     /// Change against the previous day that has a value: HRV in ms, resting HR in bpm.
     @Published private(set) var hrvDelta: Double?
     @Published private(set) var restingHrDelta: Double?
@@ -134,9 +136,11 @@ final class NunaTodayModel: ObservableObject {
 
         let stored = await stressA
         let daysSnapshot = repo.days
-        stress = await Task.detached(priority: .utility) {
-            StressModel(days: daysSnapshot, stored: stored)?.score
+        let scored = await Task.detached(priority: .utility) {
+            (StressModel(days: daysSnapshot, stored: stored)?.score, StressDayCurve.baseline(days: daysSnapshot, stored: stored))
         }.value
+        stress = scored.0
+        stressBaseline = scored.1
 
         // Steps and calories: measured on the strap first, then Apple Health, then the on-device estimate.
         let stepsSeries = await stepsA

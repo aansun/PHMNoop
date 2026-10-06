@@ -250,13 +250,13 @@ struct NunaAnyaCard: View {
 struct NunaStressCard: View {
     let score: Double?                       // day score, 0-3
     let curve: DaytimeStress.Result?         // the day's curve
-    var typicalMin: Int?                     // typical high-stress minutes for this weekday
+    var baseline: Double?                    // the wearer's usual stress, 0-3
     var isToday = true
 
     private var scored: Bool { curve?.hours.contains { $0.level != nil } ?? false }
     private var highMin: Int? { scored ? curve.map(StressDayCurve.highMinutes) : nil }
-    /// The level right now, never above the scale's 3.
-    private var nowLevel: Double? { isToday ? curve.flatMap(StressDayCurve.latestLevel) : nil }
+    /// The big number: the average over the latest hour (today) or over the day, never above the scale's 3.
+    private var level: Double? { curve.flatMap { StressDayCurve.headlineLevel($0, isToday: isToday) } ?? score.map { min(max($0, 0), 3) } }
 
     var body: some View {
         NavigationLink(value: stressRoute) {
@@ -266,26 +266,26 @@ struct NunaStressCard: View {
                         Text("Stress monitor").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel)
                             .textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         Spacer(minLength: 8)
-                        if let nowLevel {
-                            Text(verbatim: String(format: String(localized: "Now %@ / 3"), String(format: "%.1f", locale: AppLanguage.activeLocale, nowLevel)))
+                        if let highMin {
+                            Text(verbatim: String(format: String(localized: "High %@ hrs"), StressTrace.clock(minutes: highMin)))
                                 .font(.nuna(size: 12.5, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                         Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     HStack(alignment: .center, spacing: 14) {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text(isToday ? "Today's high stress" : "High stress").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel)
+                            Text(isToday ? "Last hour average" : "Day average").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel)
                                 .textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
                             HStack(alignment: .firstTextBaseline, spacing: 5) {
-                                Text(verbatim: highMin.map { StressTrace.clock(minutes: $0) } ?? "–")
+                                Text(verbatim: level.map(Self.format) ?? "–")
                                     .font(.nuna(size: NunaTypeSize.numberL, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(NunaTypeSize.numberL))
                                     .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.7).lineLimit(1)
-                                if highMin != nil { Text("hrs").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
+                                if level != nil { Text(verbatim: "/ 3").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                             }
                             comparison
                         }
                         .frame(width: 160, alignment: .leading)
-                        NunaStressDayChart(points: curve?.timeline ?? []).frame(height: 116)
+                        NunaStressDayChart(points: curve?.timeline ?? [], showsValue: isToday).frame(height: 116)
                     }
                 }
             }
@@ -293,27 +293,25 @@ struct NunaStressCard: View {
         .buttonStyle(.plain)
     }
 
-    /// "vs. typical Thu": below a typical day is the good way (green), above it is not (amber).
+    static func format(_ v: Double) -> String { String(format: "%.1f", locale: AppLanguage.activeLocale, v) }
+
+    /// The arrow against the wearer's own baseline: below it is the good way (green), above it is not (amber).
     @ViewBuilder private var comparison: some View {
-        if isToday, let highMin, let typicalMin {
-            let diff = highMin - typicalMin
-            let tint: Color = diff < 0 ? NunaPalette.charge : (diff > 0 ? NunaPalette.warning : NunaPalette.textSecondary)
+        if let level, let baseline {
+            let diff = level - baseline
+            let flat = abs(diff) < 0.05
+            let tint: Color = flat ? NunaPalette.textSecondary : (diff < 0 ? NunaPalette.charge : NunaPalette.warning)
             // One line whatever the language: the text shrinks a little before it would wrap.
             HStack(spacing: 5) {
-                Image(systemName: diff < 0 ? "arrowtriangle.down.fill" : (diff > 0 ? "arrowtriangle.up.fill" : "equal")).font(.nuna(size: 9, weight: .bold))
-                Text(verbatim: String(format: String(localized: "vs. typical %@"), Self.weekday)).font(.nuna(size: 11.5, weight: .bold))
-                    .lineLimit(1).minimumScaleFactor(0.65)
+                Image(systemName: flat ? "equal" : (diff < 0 ? "arrowtriangle.down.fill" : "arrowtriangle.up.fill")).font(.nuna(size: 9, weight: .bold))
+                Text(verbatim: flat ? String(localized: "At your baseline") : String(format: String(localized: "%@ vs baseline"), Self.format(abs(diff))))
+                    .font(.nuna(size: 11.5, weight: .bold)).lineLimit(1).minimumScaleFactor(0.65)
             }
             .foregroundStyle(tint).padding(.horizontal, 10).frame(height: 28)
             .background(tint.opacity(0.16), in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous).strokeBorder(tint.opacity(0.35), lineWidth: 1))
             .fixedSize(horizontal: false, vertical: true)
         }
-    }
-
-    private static var weekday: String {
-        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE")
-        return f.string(from: Date())
     }
 
     private var stressRoute: NunaTodayRoute {
@@ -325,6 +323,8 @@ struct NunaStressCard: View {
 /// the line. A dashed line and a dot mark the latest reading, which sits at the right edge.
 struct NunaStressDayChart: View {
     let points: [DaytimeStress.HourPoint]
+    /// The latest reading as a number beside the dot. Only for today, where it is the figure that is moving.
+    var showsValue = false
 
     var body: some View {
         GeometryReader { geo in
@@ -357,6 +357,15 @@ struct NunaStressDayChart: View {
                         Path { p in p.move(to: CGPoint(x: end.x, y: 0)); p.addLine(to: CGPoint(x: end.x, y: h)) }
                             .stroke(NunaPalette.textSecondary, style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
                         Circle().fill(NunaPalette.textPrimary).frame(width: 12, height: 12).position(end)
+                        if showsValue, let latest = last.level {
+                            let valueText = String(format: "%.1f", locale: AppLanguage.activeLocale, min(max(latest, 0), 3))
+                            // The latest reading as a number on the chart, so it reads without opening the screen. Beside the dot, on the side with room, and kept inside the chart.
+                            Text(verbatim: valueText).font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                                .padding(.horizontal, 8).frame(height: 22)
+                                .background(NunaPalette.card.opacity(0.92), in: Capsule())
+                                .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                                .position(x: max(end.x - 26, 22), y: min(max(end.y - 22, 12), h - 12))
+                        }
                     }
                 } else {
                     Text("Not enough data yet").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
