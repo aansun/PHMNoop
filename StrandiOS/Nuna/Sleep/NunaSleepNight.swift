@@ -170,7 +170,6 @@ struct NunaSleepStageSection: View {
                         .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 } else {
                     nightChart
-                    NunaSleepChartStylePicker(selection: $chartStyleRaw)
                     stageChart
                 }
             }

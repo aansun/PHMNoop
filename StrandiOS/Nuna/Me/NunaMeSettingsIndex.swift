@@ -184,6 +184,7 @@ enum NunaMeSettingsIndex {
         .init(route: .persona, title: "Date of birth", note: "Age, used for your heart-rate zones"),
         .init(route: .persona, title: "Sex", note: "Male, female or non-binary"),
         .init(route: .persona, title: "The day starts", note: "With main sleep or at 00:00"),
+        .init(route: .appearance, title: "Sleep chart", note: "Classic, Fitbit, Fill, Garmin or Ribbon"),
     ]
 }
 #endif
