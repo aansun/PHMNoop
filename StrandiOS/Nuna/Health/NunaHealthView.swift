@@ -13,8 +13,6 @@ struct NunaHealthView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var router: NavRouter
     @EnvironmentObject private var profile: ProfileStore
-    @EnvironmentObject private var live: LiveState
-    @EnvironmentObject private var appModel: AppModel
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @StateObject private var day = NunaTodayModel()
     @StateObject private var sleep = NunaSleepModel()
@@ -103,12 +101,14 @@ struct NunaHealthView: View {
                     case .breathing: NunaBreathView().toolbar(.hidden, for: .navigationBar)
                     case .mood: ScrollView { MindSection().padding() }
                     case .cycle:
-                        if let cycle = appModel.cyclePhase { CycleTrackerView(result: cycle, curve: appModel.cycleCurve) }
+                        NunaWithApp { appModel in
+                            if let cycle = appModel.cyclePhase { CycleTrackerView(result: cycle, curve: appModel.cycleCurve) }
+                        }
                     }
                 }
                 .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { legacy = nil } } }
             }
-            .environmentObject(repo).environmentObject(appModel)
+            .environmentObject(repo)
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "health") }
     }
@@ -252,7 +252,9 @@ struct NunaHealthView: View {
         return d <= 0 ? LocalizedStringKey("Down \(t) kg in 30 days") : LocalizedStringKey("Up \(t) kg in 30 days")
     }
 
-    private var strapCard: some View {
+    private var strapCard: some View { NunaWithLive { strapCardBody($0) } }
+
+    private func strapCardBody(_ live: LiveState) -> some View {
         Button { router.openDevices() } label: {
             NunaCard(small: true) {
                 HStack(spacing: 12) {
@@ -461,7 +463,9 @@ struct NunaHealthView: View {
         return text.isEmpty ? nil : text
     }
 
-    private var earlyWarningCard: some View {
+    private var earlyWarningCard: some View { NunaWithApp { earlyWarningBody($0) } }
+
+    private func earlyWarningBody(_ appModel: AppModel) -> some View {
         let raised = appModel.illnessSignal.map { $0.level != .quiet } ?? false
         let fired = (appModel.illnessSignal?.firedSignals ?? []).map { $0.lowercased() }
         func hit(_ keys: [String]) -> Bool { fired.contains { f in keys.contains { f.contains($0) } } }
@@ -514,9 +518,11 @@ struct NunaHealthView: View {
                     link(.labBook, "Lab Book", "Your records", "cross.vial.fill")
                     NunaDivider()
                     link(.mood, "Mood check-in", "How are you feeling", "face.smiling")
-                    if appModel.cyclePhase != nil {
-                        NunaDivider()
-                        link(.cycle, "Menstrual cycle", "Cycle awareness", "drop.fill")
+                    NunaWithApp { appModel in
+                        if appModel.cyclePhase != nil {
+                            NunaDivider()
+                            link(.cycle, "Menstrual cycle", "Cycle awareness", "drop.fill")
+                        }
                     }
                 }
             }

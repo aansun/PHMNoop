@@ -25,14 +25,77 @@ enum NunaTodayDefaults {
     static let hidden: [TodaySection] = [.workouts, .heartRate, .liveSession, .yourCards, .menstrualCycle, .addedCards]
 }
 
+// The small views below each observe one fast-changing object, so a heart-rate tick or a strap update redraws a chip, not the whole screen.
+
+/// Shows `content` with the live heart rate while it is today and a reading exists.
+private struct NunaLiveHR<Content: View>: View {
+    @EnvironmentObject private var live: LiveState
+    let isToday: Bool
+    @ViewBuilder let content: (Int) -> Content
+    var body: some View {
+        if isToday, let hr = live.heartRate { content(hr) }
+    }
+}
+
+/// Hands the shared app model to `content`, so only this small view is redrawn when it changes.
+struct NunaWithApp<Content: View>: View {
+    @EnvironmentObject private var appModel: AppModel
+    @ViewBuilder let content: (AppModel) -> Content
+    var body: some View { content(appModel) }
+}
+
+/// The same for the live strap state.
+struct NunaWithLive<Content: View>: View {
+    @EnvironmentObject private var live: LiveState
+    @ViewBuilder let content: (LiveState) -> Content
+    var body: some View { content(live) }
+}
+
+private struct NunaLiveStrapChip: View {
+    @EnvironmentObject private var live: LiveState
+    var body: some View { NunaStrapChip(connected: live.connected, battery: live.batteryPct) }
+}
+
+private struct NunaIllnessGate: View {
+    @EnvironmentObject private var appModel: AppModel
+    var body: some View {
+        if let warn = appModel.illnessSignal, warn.level != .quiet { NunaEarlyWarningCard(result: warn) }
+    }
+}
+
+private struct NunaCycleGate<Content: View>: View {
+    @EnvironmentObject private var appModel: AppModel
+    @ViewBuilder let content: () -> Content
+    var body: some View {
+        if appModel.cyclePhase != nil { content() }
+    }
+}
+
+final class NunaCollapse: ObservableObject {
+    @Published var t: CGFloat = 0
+}
+
+/// The score rings, redrawn on their own while the page scrolls.
+private struct NunaPinnedRings: View {
+    @ObservedObject var state: NunaCollapse
+    let charge: LiquidTodayView.ChargeDisplay
+    let effort: Double?
+    let rest: Double?
+    let effortScale: EffortScale
+    var body: some View { NunaScoreRings(charge: charge, effort: effort, rest: rest, effortScale: effortScale, collapse: state.t) }
+}
+
+private struct NunaPinnedHairline: View {
+    @ObservedObject var state: NunaCollapse
+    var body: some View { Rectangle().fill(NunaPalette.hairline).frame(height: 1).opacity(Double(state.t)) }
+}
+
 struct NunaTodayView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var router: NavRouter
     @EnvironmentObject private var liftSession: LiftSessionController
     @EnvironmentObject private var profile: ProfileStore
     @EnvironmentObject private var updateStore: UpdateStore
-    @EnvironmentObject private var live: LiveState
-    @EnvironmentObject private var appModel: AppModel
     @EnvironmentObject private var intelligence: IntelligenceEngine
 
     @AppStorage("noop.coachEnabled") var coachEnabled = true
@@ -58,7 +121,9 @@ struct NunaTodayView: View {
     @AppStorage("nuna.keyMetricsLayout") private var metricsLayoutRaw = NunaMetricsLayout.cards.rawValue
     @State private var showAddCard = false
     /// 0 when Today is at the top, 1 once the pinned score rings have shrunk to their small size.
-    @State private var collapse: CGFloat = 0
+    /// How far the page has scrolled, 0 to 1. Held in a small object that only the rings and the hairline observe, so a scroll
+    /// frame redraws those two instead of re-evaluating the whole Today screen.
+    @State private var collapse = NunaCollapse()
     /// Today's suggested session, the same one the plan screen shows. Nil until Charge exists.
     @State private var dayPlan: NunaDayPlanResult?
     @State private var addAfter: TodaySection?
@@ -100,7 +165,7 @@ struct NunaTodayView: View {
                         .padding(.bottom, 160)
                         .background(NunaScrollOffsetReader { offset in
                         let t = min(max(offset / max(pinnedHeight(collapse: 0) - pinnedHeight(collapse: 1), 1), 0), 1)
-                        if abs(t - collapse) > 0.004 { collapse = t }
+                        if abs(t - collapse.t) > 0.004 { collapse.t = t }
                     })
                     }
                     .scrollIndicators(.hidden)
@@ -187,14 +252,14 @@ struct NunaTodayView: View {
                 dayNav
                 Spacer(minLength: 0)
                 Button { router.openDevices() } label: {
-                    NunaStrapChip(connected: live.connected, battery: live.batteryPct)
+                    NunaLiveStrapChip()
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text("WHOOP strap"))
             }
             .frame(height: 46)
             if showsRings {
-                NunaScoreRings(charge: model.charge, effort: model.effort, rest: model.rest, effortScale: effortScale, collapse: collapse)
+                NunaPinnedRings(state: collapse, charge: model.charge, effort: model.effort, rest: model.rest, effortScale: effortScale)
                     .padding(.horizontal, 4)
             }
         }
@@ -202,7 +267,7 @@ struct NunaTodayView: View {
         .padding(.top, 2).padding(.bottom, 8)
         .background(
             NunaPalette.canvas.ignoresSafeArea(edges: .top)
-                .overlay(alignment: .bottom) { Rectangle().fill(NunaPalette.hairline).frame(height: 1).opacity(Double(collapse)) }
+                .overlay(alignment: .bottom) { NunaPinnedHairline(state: collapse) }
         )
     }
 
@@ -540,13 +605,11 @@ struct NunaTodayView: View {
         case .hero:
             // The rings themselves are pinned at the top; what belongs with them stays here.
             VStack(spacing: NunaSpacing.section) {
-                if readyLine != nil || model.charge.pct != nil || (model.isToday && live.heartRate != nil) {
+                if readyLine != nil || model.charge.pct != nil {
                     // Readiness, Charge state and heart rate: three chips of one shape on one line.
                     HStack(spacing: 8) { synthesisChips; heartRatePill; Spacer(minLength: 0) }
                 }
-                if model.isToday, let warn = appModel.illnessSignal, warn.level != .quiet {
-                    NunaEarlyWarningCard(result: warn)
-                }
+                if model.isToday { NunaIllnessGate() }
             }
         case .synthesis:
             if coachEnabled && model.isToday {
@@ -593,7 +656,7 @@ struct NunaTodayView: View {
                 }
             }
         case .heartRate:
-            if model.isToday, let hr = live.heartRate {
+            NunaLiveHR(isToday: model.isToday) { hr in
                 NavigationLink(value: TabRoute.fullDayChart) {
                     NunaCard(small: true) {
                         NunaListRow("Heart Rate", systemImage: "heart.fill", tint: NunaPalette.alertText, showsChevron: true) {
@@ -631,7 +694,7 @@ struct NunaTodayView: View {
             let rows = addedCardRows()
             if !rows.isEmpty { NunaRowsCard(rows: rows) { showCoach = true } }
         case .menstrualCycle:
-            if appModel.cyclePhase != nil {
+            NunaCycleGate {
                 NavigationLink(value: NunaTodayRoute.cycle) {
                     NunaCard(small: true) {
                         NunaListRow("Menstrual Cycle", subtitle: "Cycle awareness", systemImage: "drop.fill",
@@ -687,7 +750,7 @@ struct NunaTodayView: View {
     }
 
     @ViewBuilder private var heartRatePill: some View {
-        if model.isToday, let hr = live.heartRate {
+        NunaLiveHR(isToday: model.isToday) { hr in
             NavigationLink(value: TabRoute.fullDayChart) {
                 todayChip(icon: .symbol("heart.fill"), text: Text(verbatim: "\(hr) bpm"), tint: nil)
             }
