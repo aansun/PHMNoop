@@ -59,6 +59,8 @@ struct StrandiOSApp: App {
     @AppStorage(UnitPrefs.distanceSystemKey) private var distanceSystemRaw = ""
 
     init() {
+        // PHMN: before anything reads a preference, drop what an older NOOP/PHMN install left behind and open in Nuna.
+        PHMNLegacyMigration.runIfNeeded()
         // #1008: pin the pre-change Overnight-only default for existing installs before
         // anything reads it. Idempotent; a no-op on fresh installs and after the first launch.
         PuffinExperiment.migrateContinuousHrvOvernightDefault()
@@ -616,7 +618,7 @@ struct StrandiOSApp: App {
 private struct iOSRootView: View {
     @AppStorage("noop.onboarded") private var onboarded = false
     /// Which look the app uses. Default keeps `RootTabView`; Nuna uses `NunaRootView` (docs/nuna).
-    @AppStorage(ExperienceMode.storageKey) private var experienceRaw = ExperienceMode.standard.rawValue
+    @AppStorage(ExperienceMode.storageKey) private var experienceRaw = ExperienceMode.nuna.rawValue
     @AppStorage("noop.lastSeenChangelogVersion") private var lastSeenChangelog = ""
     @AppStorage("noop.acceptedTermsVersion") private var acceptedTerms = ""
     @State private var showWhatsNew = false

@@ -10,7 +10,7 @@ struct NunaMeView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var coach: AICoachEngine
     @EnvironmentObject private var behavior: BehaviorStore
-    @AppStorage(ExperienceMode.storageKey) private var experienceRaw = ExperienceMode.standard.rawValue
+    @AppStorage(ExperienceMode.storageKey) private var experienceRaw = ExperienceMode.nuna.rawValue
     @AppStorage(UnitPrefs.systemKey) private var unitSystem = UnitSystem.metric.rawValue
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScale = EffortScale.hundred.rawValue
     @AppStorage(AppLanguage.storageKey) private var language = AppLanguage.system.rawValue
