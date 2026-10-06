@@ -1,6 +1,18 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "High %@ hrs": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Tinggi %@ jam"}}
+    } },
+    "Last hour average": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Rata-rata sejam terakhir"}}
+    } },
+    "%@ vs baseline": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "%@ dari baseline"}}
+    } },
+    "At your baseline": { "localizations": {
+      "id": {"stringUnit": {"state": "translated", "value": "Sesuai baselinemu"}}
+    } },
     "Right now": { "localizations": {
       "id": {"stringUnit": {"state": "translated", "value": "Saat ini"}}
     } },
