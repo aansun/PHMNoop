@@ -658,7 +658,7 @@ struct NunaTodayView: View {
             }
         case .heartRate:
             NunaLiveHR(isToday: model.isToday) { hr in
-                NavigationLink(value: TabRoute.fullDayChart) {
+                NavigationLink(value: NunaTodayRoute.deepTimeline) {
                     NunaCard(small: true) {
                         NunaListRow("Heart Rate", systemImage: "heart.fill", tint: NunaPalette.alertText, showsChevron: true) {
                             Text(verbatim: "\(hr)").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
@@ -752,7 +752,7 @@ struct NunaTodayView: View {
 
     @ViewBuilder private var heartRatePill: some View {
         NunaLiveHR(isToday: model.isToday) { hr in
-            NavigationLink(value: TabRoute.fullDayChart) {
+            NavigationLink(value: NunaTodayRoute.deepTimeline) {
                 todayChip(icon: .symbol("heart.fill"), text: Text(verbatim: "\(hr)"), tint: nil)
             }
             .buttonStyle(.plain)
