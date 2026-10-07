@@ -4,8 +4,8 @@ import StrandDesign
 import StrandAnalytics
 
 /// Water, in the Nuna look. The same data and the same rules as the Default screen (the day total and the drinks are the local hydration
-/// store, the goal is `HydrationGoal` from sex and today's Effort); only the drawing is new: a hero with the litres against the goal,
-/// quick log buttons, today's drinks, and the last seven days as columns.
+/// store, the goal is `HydrationGoal` from sex and today's Effort); only the drawing is new: the same W / M / 6M trend card as the Steps
+/// detail, with the goal as a dashed line, and the quick log buttons below it.
 struct NunaHydrationView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
@@ -13,13 +13,10 @@ struct NunaHydrationView: View {
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
 
     @State private var totalML: Double = 0
-    @State private var importedML: Double = 0
     @StateObject private var series = NunaSeriesModel()
     @State private var range = 7
     @State private var page = 0
-    @State private var entries: [HydrationEntry] = []
     @State private var reloadTick = 0
-    @State private var editing: HydrationEntry?
     @State private var settingCustom = false
 
     private var goalML: Int { repo.hydrationGoalML(profileSex: profile.sex) }
@@ -31,18 +28,10 @@ struct NunaHydrationView: View {
         NunaDetailScreen("Water") {
             trendCard
             logCard
-            drinksCard
             NunaExpandRow(title: "How the goal is set", subtitle: "Your sex and today's Effort", systemImage: "drop",
                           text: "A simple goal that starts from your sex and rises with the Effort you add during the day. It is a guide, not a prescription.")
-            nunaFootnote("A simple goal that adjusts to your effort. General wellness guidance, not medical advice.")
         }
         .task(id: reloadTick) { await reload() }
-        .sheet(item: $editing) { entry in
-            NunaHydrationAmountSheet(title: "Edit drink", initialML: entry.amountMl) { ml in
-                editing = nil
-                Task { _ = await repo.updateHydrationEntry(id: entry.id, amountMl: ml); repo.noteHydrationChanged(); reloadTick &+= 1 }
-            } onCancel: { editing = nil }
-        }
         .sheet(isPresented: $settingCustom) {
             NunaHydrationAmountSheet(title: "Custom size", initialML: customSizeML) { ml in
                 customSizeML = ml; settingCustom = false
@@ -103,51 +92,6 @@ struct NunaHydrationView: View {
         }.buttonStyle(.plain)
     }
 
-    // MARK: Today's drinks
-
-    @ViewBuilder private var drinksCard: some View {
-        if !entries.isEmpty || importedML > 0 {
-            NunaCard(small: true, padding: EdgeInsets(top: 12, leading: 18, bottom: 6, trailing: 18)) {
-                VStack(spacing: 0) {
-                    NunaTitleRow(title: "Today's drinks") { EmptyView() }.padding(.bottom, 6)
-                    if importedML > 0 {
-                        HStack(spacing: 12) {
-                            NunaIconTile("heart.text.square")
-                            Text("From Apple Health").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            Spacer(minLength: 8)
-                            Text(verbatim: "\(Int(importedML.rounded())) ml").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        }
-                        .frame(minHeight: 56)
-                        if !entries.isEmpty { NunaDivider() }
-                    }
-                    ForEach(Array(entries.enumerated()), id: \.element.id) { idx, entry in
-                        if idx > 0 { NunaDivider() }
-                        HStack(spacing: 4) {
-                            Button { editing = entry } label: {
-                                HStack(spacing: 12) {
-                                    NunaIconTile("drop.fill", tint: NunaPalette.restText)
-                                    Text(verbatim: AppClock.hourMinuteFormatter().string(from: entry.loggedAt))
-                                        .font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                    Spacer(minLength: 8)
-                                    Text(verbatim: "\(entry.amountMl) ml").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                                }
-                                .frame(minHeight: 56).contentShape(Rectangle())
-                            }.buttonStyle(.plain)
-                            Button(role: .destructive) { Task { _ = await repo.deleteHydrationEntry(id: entry.id); repo.noteHydrationChanged(); reloadTick &+= 1 } } label: {
-                                Image(systemName: "trash").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
-                                    .frame(width: 40, height: 40).contentShape(Rectangle())
-                            }.buttonStyle(.plain).accessibilityLabel(Text("Delete"))
-                        }
-                    }
-                    if !entries.isEmpty {
-                        Text("Tap a drink to edit it, or use the trash to delete.").font(.nuna(size: 12, weight: .semibold))
-                            .foregroundStyle(NunaPalette.textMuted).textCase(nil).frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 10)
-                    }
-                }
-            }
-        }
-    }
-
     // MARK: Data
 
     private func add(_ ml: Int) async {
@@ -160,14 +104,12 @@ struct NunaHydrationView: View {
     private func reload() async {
         let key = Repository.localDayKey(Date())
         totalML = await repo.hydrationTotal(day: key)
-        // Litres per day over the last six months, for the same W / M / 6M card the Steps detail uses.
-        series.set((await repo.hydrationHistory(days: 190)).map { ($0.day, $0.value / 1000) })
-        entries = repo.hydrationEntries()
-        importedML = await repo.hydrationImportedTotal(day: key)
+        // Litres per day over the last six months (a day nothing was logged on has no reading, so it stays empty rather than 0), for the same W / M / 6M card the Steps detail uses.
+        series.set((await repo.hydrationHistory(days: 190)).filter { $0.value > 0 }.map { ($0.day, $0.value / 1000) })
     }
 }
 
-/// A stepper in a sheet for an amount in ml: editing a drink, or setting the custom size.
+/// A stepper in a sheet for an amount in ml: setting the custom size.
 private struct NunaHydrationAmountSheet: View {
     let title: LocalizedStringKey
     let initialML: Int
