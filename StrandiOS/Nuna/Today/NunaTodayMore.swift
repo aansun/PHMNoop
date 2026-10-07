@@ -125,7 +125,7 @@ extension NunaTodayView {
             case .calories:    made = (num(model.calories), desc("energy_kcal"), "flame.fill", nil)
             case .hydration:
                 guard hydrationEnabled else { return nil }
-                made = (nil, NunaRowTarget(kind: .tab(.hydration)), "drop.fill", NunaPalette.effortText)
+                made = (nil, NunaRowTarget(kind: .nuna(.hydration)), "drop.fill", NunaPalette.effortText)
             case .coupled:     made = (nil, NunaRowTarget(kind: .tab(.coupled)), "square.split.2x1.fill", nil)
             case .coach:
                 guard coachEnabled else { return nil }
