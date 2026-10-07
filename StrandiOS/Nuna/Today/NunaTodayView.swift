@@ -730,7 +730,10 @@ struct NunaTodayView: View {
             .buttonStyle(.nuna(.primary, height: 52, fullWidth: true))
         case .yourCards:
             let rows = yourCardRows()
-            if !rows.isEmpty { NunaRowsCard(rows: rows) { showCoach = true } }
+            if !rows.isEmpty {
+                NunaRowsCard(rows: rows, onCoach: { showCoach = true }, title: "Your cards",
+                             onEdit: { customizeDestination = .yourCards; showCustomize = true })
+            }
         case .addedCards:
             let rows = addedCardRows()
             if !rows.isEmpty { NunaRowsCard(rows: rows) { showCoach = true } }
