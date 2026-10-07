@@ -37,23 +37,24 @@ struct NunaTodayActivities: View {
     var body: some View {
         let rows = items
         VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("Today's activities").font(.nuna(size: 12, weight: .heavy)).tracking(1.1).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-                Spacer()
+            // The heading of Key Metrics, in the same place inside its card, with the same chevron.
+            NunaTitleRow(title: "Today's activities") {
                 Button { router.requestedDestination = .workouts } label: {
-                    // The same glyph the Key Metrics heading uses for "All".
-                    Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(width: 32, height: 28, alignment: .trailing).contentShape(Rectangle())
+                    Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .heavy))
+                        .frame(width: 40, height: 40).contentShape(Rectangle())
                 }
                 .buttonStyle(.plain).accessibilityLabel(Text("All workouts"))
+                .padding(.trailing, -13)
             }
+            .padding(.horizontal, 6)
             VStack(spacing: 7) {
                 ForEach(rows) { item in row(item) }
             }
         }
-        .padding(.horizontal, 12).padding(.top, 12).padding(.bottom, 12)
-        .background(NunaPalette.glass, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+        .padding(.horizontal, 12).padding(.top, 10).padding(.bottom, 12)
+        // The same surface as every other card, so it follows the active look (Default or WHP) with them.
+        .background(NunaPalette.card, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous).strokeBorder(NunaPalette.hairlineSoft, lineWidth: 1))
         .task(id: "\(repo.refreshSeq)-\(dayStart.timeIntervalSince1970)") { await loadNight() }
     }
 

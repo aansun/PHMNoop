@@ -668,7 +668,7 @@ struct NunaTodayView: View {
         case .keyMetrics:
             let tiles = metricTiles
             if !tiles.isEmpty {
-                VStack(spacing: 12) {
+                NunaMetricsGrid(tiles: tiles, layout: metricsLayout, header: AnyView(
                     NunaTitleRow(title: "Key metrics") {
                         // Three separate targets, each 40 pt wide, so a thumb lands on the one it means.
                         HStack(spacing: 0) {
@@ -693,8 +693,7 @@ struct NunaTodayView: View {
                         // The last glyph still lines up with the card edge below.
                         .padding(.trailing, -13)
                     }
-                    NunaMetricsGrid(tiles: tiles, layout: metricsLayout)
-                }
+                ))
             }
         case .workouts:
             // Sleep and every workout of the day, in the order they happened.

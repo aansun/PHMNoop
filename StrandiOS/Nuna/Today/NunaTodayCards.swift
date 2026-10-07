@@ -479,13 +479,19 @@ enum NunaMetricsLayout: String { case cards, list }
 struct NunaMetricsGrid: View {
     let tiles: [NunaMetricTile]
     var layout: NunaMetricsLayout = .cards
+    /// A heading with its buttons, drawn inside the card above the figures instead of floating over it.
+    var header: AnyView?
     var body: some View {
-        if layout == .list { list } else { grid }
+        if layout == .list { list } else if header != nil { framedGrid } else { grid }
     }
 
     private var list: some View {
-        NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
+        NunaCard(small: true, padding: EdgeInsets(top: header == nil ? 4 : 10, leading: 18, bottom: 4, trailing: 18)) {
             VStack(spacing: 0) {
+                if let header {
+                    header.padding(.bottom, 4)
+                    NunaDivider()
+                }
                 ForEach(Array(tiles.enumerated()), id: \.element.id) { idx, tile in
                     if idx > 0 { NunaDivider() }
                     if let route = tile.route { NavigationLink(value: route) { row(tile) }.buttonStyle(.plain) } else { row(tile) }
@@ -566,8 +572,35 @@ struct NunaMetricsGrid: View {
         }
     }
 
-    private func content(_ tile: NunaMetricTile) -> some View {
-        NunaCard(small: true, padding: EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16)) {
+    /// The card layout with its heading: one card holds the heading and the tiles, each tile a lighter panel inside it.
+    private var framedGrid: some View {
+        NunaCard(small: true, padding: EdgeInsets(top: 10, leading: 12, bottom: 12, trailing: 12)) {
+            VStack(spacing: 8) {
+                if let header { header.padding(.horizontal, 6) }
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+                    ForEach(tiles) { tile in
+                        if let route = tile.route {
+                            NavigationLink(value: route) { content(tile, inCard: true) }.buttonStyle(.plain)
+                        } else {
+                            content(tile, inCard: true)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private func content(_ tile: NunaMetricTile, inCard: Bool = false) -> some View {
+        if inCard {
+            tileBody(tile).padding(14).frame(maxWidth: .infinity, alignment: .leading)
+                .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        } else {
+            NunaCard(small: true, padding: EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16)) { tileBody(tile) }
+        }
+    }
+
+    private func tileBody(_ tile: NunaMetricTile) -> some View {
+        Group {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .center) {
                     Text(tile.label)
