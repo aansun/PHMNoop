@@ -24,7 +24,7 @@ struct NunaTrainingLoadView: View {
 
     var body: some View {
         NunaDetailScreen("Training load", onAnya: tab == 1 ? { showCoach = true } : nil) {
-            NunaSegmented([(value: 0, title: "Summary"), (value: 1, title: "Cardio"), (value: 2, title: "Strength")], selection: $tab)
+            NunaPageTabs([(value: 0, title: "Summary"), (value: 1, title: "Cardio"), (value: 2, title: "Strength")], selection: $tab)
             switch tab {
             case 1: cardio
             case 2: muscle

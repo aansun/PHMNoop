@@ -55,7 +55,7 @@ struct NunaHealthView: View {
                 Text("Health").font(.nuna(size: NunaTypeSize.h1, weight: .bold, design: NunaType.design))
                     .foregroundStyle(NunaPalette.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                NunaSegmented([(value: 0, title: "All"), (value: 1, title: "Vital"), (value: 2, title: "Body"), (value: 3, title: "Sleep")],
+                NunaPageTabs([(value: 0, title: "All"), (value: 1, title: "Vital"), (value: 2, title: "Body"), (value: 3, title: "Sleep")],
                               selection: $tab)
                 switch tab {
                 case 1: vitalTab

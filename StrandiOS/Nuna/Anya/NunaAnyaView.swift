@@ -157,7 +157,7 @@ struct NunaAnyaView: View {
                     round("square.and.pencil", "New conversation", enabled: !coach.messages.isEmpty && !coach.sending) { coach.startNewConversation() }
                     NavigationLink(value: NunaAnyaRoute.history) { roundLabel("clock.arrow.circlepath") }.buttonStyle(.plain).accessibilityLabel(Text("History"))
                 }
-                NavigationLink(value: NunaAnyaRoute.settings) { roundLabel("slider.horizontal.3") }.buttonStyle(.plain).accessibilityLabel(Text("Anya settings"))
+                NavigationLink(value: NunaAnyaRoute.settings) { NunaBareIcon("slider.horizontal.3", target: 42) }.buttonStyle(.plain).accessibilityLabel(Text("Anya settings"))
             }
             if coach.isConfigured { readsRow }
         }

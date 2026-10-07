@@ -60,9 +60,7 @@ struct NunaBreathView: View {
 
     private var settingsButton: some View {
         Button { showSettings = true } label: {
-            Image(systemName: "slider.horizontal.3").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                .frame(width: 44, height: 44)
-                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+            NunaBareIcon("slider.horizontal.3")
         }.buttonStyle(.plain).accessibilityLabel(Text("Breathing settings"))
     }
 

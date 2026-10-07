@@ -70,7 +70,7 @@ struct NunaWorkoutsView: View {
         ScrollView {
             VStack(spacing: NunaSpacing.section) {
                 header
-                NunaSegmented([(value: 0, title: "Workout"), (value: 1, title: "Gym"), (value: 2, title: "Insight")], selection: $tab)
+                NunaPageTabs([(value: 0, title: "Workout"), (value: 1, title: "Gym"), (value: 2, title: "Insight")], selection: $tab)
                 NunaActiveWorkoutBanner()
                 if tab == 1 {
                     NunaGymView()
@@ -120,8 +120,7 @@ struct NunaWorkoutsView: View {
 
     private func roundLink(_ r: NunaWorkoutRoute, _ icon: String, _ label: LocalizedStringKey) -> some View {
         NavigationLink(value: r) {
-            Image(systemName: icon).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+            NunaBareIcon(icon)
         }.buttonStyle(.plain).accessibilityLabel(Text(label))
     }
 
@@ -330,9 +329,8 @@ struct NunaWorkoutsView: View {
                     nunaTrendsCap("Start a workout")
                     Spacer()
                     Button { withAnimation(.easeInOut(duration: 0.2)) { editingPins.toggle(); limitHit = false } } label: {
-                        Text(editingPins ? "Done" : "Edit").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            .padding(.horizontal, 14).frame(height: 32).background(NunaPalette.glassStrong, in: Capsule())
-                    }.buttonStyle(.plain)
+                        NunaBareIcon(editingPins ? "checkmark" : "pencil", tint: editingPins ? NunaPalette.charge : NunaPalette.textPrimary, target: 36)
+                    }.buttonStyle(.plain).accessibilityLabel(Text(editingPins ? "Done" : "Edit"))
                 }
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)

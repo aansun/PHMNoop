@@ -290,6 +290,67 @@ public struct NunaSegmented<Value: Hashable>: View {
     }
 }
 
+// MARK: Bare icon
+
+/// The glyph of a settings or edit control: just the symbol, no card behind it, with a target around it that is still easy to hit.
+public struct NunaBareIcon: View {
+    private let symbol: String
+    private let tint: Color
+    private let target: CGFloat
+    public init(_ symbol: String, tint: Color = NunaPalette.textPrimary, target: CGFloat = 44) {
+        self.symbol = symbol; self.tint = tint; self.target = target
+    }
+    public var body: some View {
+        Image(systemName: symbol).font(.nuna(size: 17, weight: .bold)).foregroundStyle(tint)
+            .frame(width: target, height: target).contentShape(Rectangle())
+    }
+}
+
+// MARK: Page tabs
+
+/// The tabs at the top of a page (Health: All, Vital, Body, Sleep): plain capital labels, the chosen one in the main text colour with a
+/// short underline that slides to the next, the others dimmed. Use it to switch what the page shows; keep `NunaSegmented` for choosing
+/// a value (a range, a unit).
+public struct NunaPageTabs<Value: Hashable>: View {
+    private let options: [(value: Value, title: LocalizedStringKey)]
+    @Binding private var selection: Value
+    @Namespace private var underline
+
+    public init(_ options: [(value: Value, title: LocalizedStringKey)], selection: Binding<Value>) {
+        self.options = options; self._selection = selection
+    }
+
+    public var body: some View {
+        HStack(spacing: 0) {
+            ForEach(options.indices, id: \.self) { i in
+                let option = options[i]
+                let selected = option.value == selection
+                Button {
+                    withAnimation(.easeInOut(duration: 0.22)) { selection = option.value }
+                } label: {
+                    VStack(spacing: 7) {
+                        Text(option.title)
+                            .font(.nuna(size: 12.5, weight: .heavy)).tracking(0.9).textCase(.uppercase)
+                            .foregroundStyle(selected ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+                            .lineLimit(1).minimumScaleFactor(0.75)
+                        ZStack {
+                            Color.clear.frame(height: 2)
+                            if selected {
+                                Capsule().fill(NunaPalette.textPrimary).frame(height: 2).matchedGeometryEffect(id: "underline", in: underline)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 6)
+                    .frame(maxWidth: .infinity).frame(height: 40)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(selected ? .isSelected : [])
+            }
+        }
+    }
+}
+
 // MARK: Dashed add card
 
 /// "Add a card / Add WHOOP" affordance.

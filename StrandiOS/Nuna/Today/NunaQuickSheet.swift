@@ -35,9 +35,7 @@ struct NunaQuickSheet: View {
                     .foregroundStyle(NunaPalette.textPrimary)
                 Spacer()
                 Button { editing = true } label: {
-                    Image(systemName: "slider.horizontal.3").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(width: 40, height: 40)
-                        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                    NunaBareIcon("slider.horizontal.3", target: 40)
                 }
                 .buttonStyle(.plain).accessibilityLabel(Text("Customize quick actions"))
             }
