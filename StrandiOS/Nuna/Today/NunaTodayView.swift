@@ -188,7 +188,8 @@ struct NunaTodayView: View {
         .sheet(isPresented: $showBreath) {
             NavigationStack { NunaBreathView().toolbar(.hidden, for: .navigationBar) }.preferredColorScheme(NunaTheme.colorScheme)
         }
-        .task(id: "\(repo.refreshSeq)-\(model.dayOffset)") {
+        // A saved gym session adds a workout without changing the caches `refreshSeq` follows, so it is a reason to reload on its own.
+        .task(id: "\(repo.refreshSeq)-\(model.dayOffset)-\(liftSession.savedSessions)") {
             await model.load(repo: repo, profile: profile)
             dayPlan = model.isToday ? await NunaDayPlanResult.load(repo: repo, profile: profile) : nil
         }

@@ -87,9 +87,9 @@ struct NunaAnyaTodayCard: View {
         if let running {
             // 1. A session is running.
             RunningSessionCard(running: running, effort: shown(running.liveStrain), onResume: { router.requestedDestination = .activeWorkout }, onCoach: onCoach)
-        } else if justFinished(now) != nil {
-            // 2. A session has just ended: its own screen already carries Anya's read of it, so Today says nothing for the hour.
-            EmptyView()
+        } else if let done = justFinished(now) {
+            // 2. A session has just ended: the card stays, and says what it added and where the day stands.
+            finishedCard(done, now: now)
         } else if hourNow >= 19 {
             // 3. Evening: whether to breathe, sleep early or go straight to bed, with the journal as a second thing to do while it is open.
             eveningCard(now: now, bpm: bpm, hour: hourNow)
@@ -107,6 +107,21 @@ struct NunaAnyaTodayCard: View {
                              router.requestedDestination = .activeWorkout
                          }, action: onCoach)
         }
+    }
+
+    /// The hour after a session: its length and Effort, how long ago it ended, and today's Effort against the target. The detail of the
+    /// session itself is on its own screen; this keeps Anya on Today without repeating it.
+    private func finishedCard(_ row: WorkoutRow, now: Date) -> some View {
+        let minutesAgo = max(0, Int(now.timeIntervalSince1970 - Double(row.endTs)) / 60)
+        var parts = [NunaWorkoutFormat.duration(row.durationS ?? Double(row.endTs - row.startTs))]
+        if let s = row.strain { parts.append(String(format: String(localized: "Effort +%@"), shown(s))) }
+        parts.append(String(localized: "Your session ended \(minutesAgo) min ago"))
+        if let effort {
+            if let t = target { parts.append(String(format: String(localized: "Effort %@ of %@ today"), shown(effort), targetText(t))) }
+            else { parts.append(String(format: String(localized: "Effort %@ today"), shown(effort))) }
+        }
+        let title = String(format: String(localized: "%@ done"), WorkoutSource.displaySport(row.sport))
+        return NunaAnyaCard(verbatim: title, detail: parts.joined(separator: " · "), progress: progress, action: onCoach)
     }
 
     private func eveningCard(now: Date, bpm: Int?, hour: Int) -> some View {
