@@ -1,6 +1,9 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "Open Gym": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Buka Gym" } } } },
+        "Programs, sessions and the muscle map": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Program, sesi, dan peta otot" } } } },
+        "Open Gym to run a program or a freehand session": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Buka Gym untuk menjalankan program atau sesi bebas" } } } },
         "Rest-end tone played": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Nada akhir istirahat diputar" } } } },
         "Sound when rest ends": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Bunyi saat istirahat selesai" } } } },
         "A short rising tone; music is lowered for it": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Nada naik yang pendek; musik diturunkan sebentar" } } } },

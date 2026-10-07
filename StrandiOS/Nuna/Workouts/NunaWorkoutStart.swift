@@ -64,7 +64,7 @@ struct NunaWorkoutStartView: View {
             }.buttonStyle(.plain)
             if chosen == "Strength" || chosen == "Weightlifting" || chosen == "Powerlifting" || chosen == "Bodybuilding" {
                 NavigationLink(value: NunaWorkoutRoute.gym) {
-                    NunaCard(highlight: true) { NunaListRow("Log sets and weights", subtitle: "Open the Lift Log to run a program or a freehand session", systemImage: "dumbbell", showsChevron: true) }
+                    NunaCard(highlight: true) { NunaListRow("Log sets and weights", subtitle: "Open Gym to run a program or a freehand session", systemImage: "dumbbell", showsChevron: true) }
                 }.buttonStyle(.plain)
             }
             Button { begin() } label: {

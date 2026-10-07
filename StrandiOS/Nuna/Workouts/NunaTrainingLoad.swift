@@ -416,13 +416,13 @@ struct NunaTrainingLoadView: View {
                 recoveryNote
                 recordsCard
             }
-            NavigationLink { LiftLogView() } label: {
+            NavigationLink(value: NunaWorkoutRoute.gym) {
                 NunaCard(small: true) {
                     HStack(spacing: 12) {
-                        NunaIconTile("books.vertical")
+                        NunaIconTile("dumbbell")
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Open Lift Log").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            Text("Sets, weights, rest and records").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                            Text("Open Gym").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            Text("Programs, sessions and the muscle map").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                         Spacer()
                         Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
