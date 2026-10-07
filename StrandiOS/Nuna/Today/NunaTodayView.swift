@@ -112,6 +112,7 @@ struct NunaTodayView: View {
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
 
     @StateObject var model = NunaTodayModel()
+    @StateObject private var sparks = NunaKeySparkModel()
     @State private var showCustomize = false
     @State private var showQuick = false
     @State private var showDate = false
@@ -214,6 +215,13 @@ struct NunaTodayView: View {
             }
         }
         // A saved gym session adds a workout without changing the caches `refreshSeq` follows, so it is a reason to reload on its own.
+        // "Detailed tiles": the trend lines under the Key Metrics, over the number of days chosen in their settings.
+        .task(id: "\(repo.refreshSeq)-\(keyMetricsDetailed)-\(keyMetricsWindowDays)-\(keyMetricsRaw)") {
+            guard keyMetricsDetailed else { return }
+            let chosen: [KeyMetric] = keyMetricsRaw.trimmingCharacters(in: .whitespaces).isEmpty
+                ? Self.nunaDefaultMetrics : KeyMetricPrefs.decodeEnabled(keyMetricsRaw)
+            await sparks.load(repo: repo, metrics: chosen, days: max(keyMetricsWindowDays, 2))
+        }
         .task(id: "\(repo.refreshSeq)-\(model.dayOffset)-\(liftSession.savedSessions)") {
             await model.load(repo: repo, profile: profile)
             dayPlan = model.isToday ? await NunaDayPlanResult.load(repo: repo, profile: profile) : nil
@@ -846,7 +854,8 @@ struct NunaTodayView: View {
         func tile(_ m: KeyMetric, _ label: LocalizedStringKey, _ value: String, _ unit: String, _ route: NunaTodayRoute?,
                   _ icon: String, _ tint: Color?, delta d: (String, Bool)? = nil) -> NunaMetricTile {
             NunaMetricTile(id: m.rawValue, label: label, value: value, unit: unit, route: route,
-                           delta: d?.0, deltaGood: d?.1, icon: icon, tint: tint)
+                           delta: d?.0, deltaGood: d?.1, icon: icon, tint: tint,
+                           spark: keyMetricsDetailed ? sparks.values[m.rawValue] : nil)
         }
         return enabled.map { m in
             switch m {
