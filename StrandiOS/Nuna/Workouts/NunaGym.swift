@@ -109,6 +109,7 @@ struct NunaGymView: View {
     @State private var lastUsed: [String: Int] = [:]
     @State private var history: [LiftSessionRow] = []
     @State private var weekCounts: [LiftMuscle: Double] = [:]
+    @State private var readiness: [LiftMuscle: Double] = [:]
     @State private var volumes: [String: Double] = [:]
     @State private var loaded = false
     @State private var picking = false
@@ -119,10 +120,14 @@ struct NunaGymView: View {
         NunaDetailScreen("Gym") {
             emptyCard
             programsSection
+            NunaMuscleReadinessCard(readings: readiness)
             weekSection
             sessionsSection
             NavigationLink(value: NunaWorkoutRoute.loadMuscle) {
                 NunaCard(small: true) { NunaListRow("Muscle load", subtitle: "Volume, recovery and personal records", systemImage: "chart.bar", showsChevron: true) }
+            }.buttonStyle(.plain)
+            NavigationLink(value: NunaWorkoutRoute.exerciseLibrary) {
+                NunaCard(small: true) { NunaListRow("Exercise library", subtitle: "Animated demos and the muscles each one works", systemImage: "figure.strengthtraining.traditional", showsChevron: true) }
             }.buttonStyle(.plain)
         }
         .nunaWorkoutDestinations()
@@ -289,6 +294,12 @@ struct NunaGymView: View {
         var vols: [String: Double] = [:]
         for s in all.prefix(3) { vols[s.id] = LiftMetrics.volumeLoadKg((try? await store.liftSets(sessionId: s.id)) ?? []) }
         weekCounts = (try? await store.liftSetCounts(deviceId: repo.deviceId, fromTs: now - 7 * 86_400, toTs: now).fractional) ?? [:]
+        // The sets of the last days, each with the time of its session, for the muscle map.
+        var dated: [(set: LiftSetRow, at: Int)] = []
+        for s in all where s.startTs >= now - NunaMuscleReadiness.horizonDays * 86_400 {
+            for set in (try? await store.liftSets(sessionId: s.id)) ?? [] { dated.append((set, set.endTs ?? set.startTs ?? (s.endTs ?? s.startTs))) }
+        }
+        readiness = NunaMuscleReadiness.readings(sets: dated, now: now)
         programs = ps; itemCounts = counts; lastUsed = last; history = all; volumes = vols; loaded = true
     }
 }

@@ -133,6 +133,9 @@ struct NunaAboutView: View {
                 NunaDivider()
                 Link(destination: URL(string: "https://github.com/aansun/PHMNoop")!) { NunaListRow("Report a problem", subtitle: "Open on GitHub", systemImage: "arrow.up.right.square", showsChevron: true) }.buttonStyle(.plain)
             }
+            NavigationLink { NunaLicensesView() } label: {
+                NunaCard(small: true) { NunaListRow("Open-source notices", subtitle: "MuscleMap, free-exercise-db, openGym and fonts", systemImage: "doc.plaintext", showsChevron: true) }
+            }.buttonStyle(.plain)
             NunaCard(small: true) {
                 VStack(alignment: .leading, spacing: 8) {
                     nunaTrendsCap("Credits")

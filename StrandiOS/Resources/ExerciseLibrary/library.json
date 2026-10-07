@@ -1,0 +1,263 @@
+[
+ {
+  "id": "Barbell_Bench_Press_-_Medium_Grip",
+  "name": "Barbell Bench Press - Medium Grip",
+  "level": "beginner",
+  "mechanic": "compound",
+  "force": "push",
+  "equipment": "barbell",
+  "category": "strength",
+  "primaryMuscles": [
+   "chest"
+  ],
+  "secondaryMuscles": [
+   "shoulders",
+   "triceps"
+  ],
+  "instructions": [
+   "Lie back on a flat bench. Using a medium width grip (a grip that creates a 90-degree angle in the middle of the movement between the forearms and the upper arms), lift the bar from the rack and hold it straight over you with your arms locked. This will be your starting position.",
+   "From the starting position, breathe in and begin coming down slowly until the bar touches your middle chest.",
+   "After a brief pause, push the bar back to the starting position as you breathe out. Focus on pushing the bar using your chest muscles. Lock your arms and squeeze your chest in the contracted position at the top of the motion, hold for a second and then start coming down slowly again. Tip: Ideally, lowering the weight should take about twice as long as raising it.",
+   "Repeat the movement for the prescribed amount of repetitions.",
+   "When you are done, place the bar back in the rack."
+  ],
+  "frames": [
+   "Barbell_Bench_Press_-_Medium_Grip_0.jpg",
+   "Barbell_Bench_Press_-_Medium_Grip_1.jpg"
+  ],
+  "aliases": [
+   "bench press",
+   "barbell bench press",
+   "flat bench press",
+   "bench"
+  ]
+ },
+ {
+  "id": "Barbell_Squat",
+  "name": "Barbell Squat",
+  "level": "beginner",
+  "mechanic": "compound",
+  "force": "push",
+  "equipment": "barbell",
+  "category": "strength",
+  "primaryMuscles": [
+   "quadriceps"
+  ],
+  "secondaryMuscles": [
+   "calves",
+   "glutes",
+   "hamstrings",
+   "lower back"
+  ],
+  "instructions": [
+   "This exercise is best performed inside a squat rack for safety purposes. To begin, first set the bar on a rack to just below shoulder level. Once the correct height is chosen and the bar is loaded, step under the bar and place the back of your shoulders (slightly below the neck) across it.",
+   "Hold on to the bar using both arms at each side and lift it off the rack by first pushing with your legs and at the same time straightening your torso.",
+   "Step away from the rack and position your legs using a shoulder width medium stance with the toes slightly pointed out. Keep your head up at all times and also maintain a straight back. This will be your starting position. (Note: For the purposes of this discussion we will use the medium stance described above which targets overall development; however you can choose any of the three stances discussed in the foot stances section).",
+   "Begin to slowly lower the bar by bending the knees and hips as you maintain a straight posture with the head up. Continue down until the angle between the upper leg and the calves becomes slightly less than 90-degrees. Inhale as you perform this portion of the movement. Tip: If you performed the exercise correctly, the front of the knees should make an imaginary straight line with the toes that is perpendicular to the front. If your knees are past that imaginary line (if they are past your toes) then you are placing undue stress on the knee and the exercise has been performed incorrectly.",
+   "Begin to raise the bar as you exhale by pushing the floor with the heel of your foot as you straighten the legs again and go back to the starting position.",
+   "Repeat for the recommended amount of repetitions."
+  ],
+  "frames": [
+   "Barbell_Squat_0.jpg",
+   "Barbell_Squat_1.jpg"
+  ],
+  "aliases": [
+   "squat",
+   "back squat",
+   "barbell squat",
+   "barbell back squat"
+  ]
+ },
+ {
+  "id": "Barbell_Deadlift",
+  "name": "Barbell Deadlift",
+  "level": "intermediate",
+  "mechanic": "compound",
+  "force": "pull",
+  "equipment": "barbell",
+  "category": "strength",
+  "primaryMuscles": [
+   "lower back"
+  ],
+  "secondaryMuscles": [
+   "calves",
+   "forearms",
+   "glutes",
+   "hamstrings",
+   "lats",
+   "middle back",
+   "quadriceps",
+   "traps"
+  ],
+  "instructions": [
+   "Stand in front of a loaded barbell.",
+   "While keeping the back as straight as possible, bend your knees, bend forward and grasp the bar using a medium (shoulder width) overhand grip. This will be the starting position of the exercise. Tip: If it is difficult to hold on to the bar with this grip, alternate your grip or use wrist straps.",
+   "While holding the bar, start the lift by pushing with your legs while simultaneously getting your torso to the upright position as you breathe out. In the upright position, stick your chest out and contract the back by bringing the shoulder blades back. Think of how the soldiers in the military look when they are in standing in attention.",
+   "Go back to the starting position by bending at the knees while simultaneously leaning the torso forward at the waist while keeping the back straight. When the weights on the bar touch the floor you are back at the starting position and ready to perform another repetition.",
+   "Perform the amount of repetitions prescribed in the program."
+  ],
+  "frames": [
+   "Barbell_Deadlift_0.jpg",
+   "Barbell_Deadlift_1.jpg"
+  ],
+  "aliases": [
+   "deadlift",
+   "barbell deadlift",
+   "conventional deadlift"
+  ]
+ },
+ {
+  "id": "Pullups",
+  "name": "Pullups",
+  "level": "beginner",
+  "mechanic": "compound",
+  "force": "pull",
+  "equipment": "body only",
+  "category": "strength",
+  "primaryMuscles": [
+   "lats"
+  ],
+  "secondaryMuscles": [
+   "biceps",
+   "middle back"
+  ],
+  "instructions": [
+   "Grab the pull-up bar with the palms facing forward using the prescribed grip. Note on grips: For a wide grip, your hands need to be spaced out at a distance wider than your shoulder width. For a medium grip, your hands need to be spaced out at a distance equal to your shoulder width and for a close grip at a distance smaller than your shoulder width.",
+   "As you have both arms extended in front of you holding the bar at the chosen grip width, bring your torso back around 30 degrees or so while creating a curvature on your lower back and sticking your chest out. This is your starting position.",
+   "Pull your torso up until the bar touches your upper chest by drawing the shoulders and the upper arms down and back. Exhale as you perform this portion of the movement. Tip: Concentrate on squeezing the back muscles once you reach the full contracted position. The upper torso should remain stationary as it moves through space and only the arms should move. The forearms should do no other work other than hold the bar.",
+   "After a second on the contracted position, start to inhale and slowly lower your torso back to the starting position when your arms are fully extended and the lats are fully stretched.",
+   "Repeat this motion for the prescribed amount of repetitions."
+  ],
+  "frames": [
+   "Pullups_0.jpg",
+   "Pullups_1.jpg"
+  ],
+  "aliases": [
+   "pull up",
+   "pull ups",
+   "pullup",
+   "pullups"
+  ]
+ },
+ {
+  "id": "Standing_Military_Press",
+  "name": "Standing Military Press",
+  "level": "beginner",
+  "mechanic": "compound",
+  "force": "push",
+  "equipment": "barbell",
+  "category": "strength",
+  "primaryMuscles": [
+   "shoulders"
+  ],
+  "secondaryMuscles": [
+   "triceps"
+  ],
+  "instructions": [
+   "Start by placing a barbell that is about chest high on a squat rack. Once you have selected the weights, grab the barbell using a pronated (palms facing forward) grip. Make sure to grip the bar wider than shoulder width apart from each other.",
+   "Slightly bend the knees and place the barbell on your collar bone. Lift the barbell up keeping it lying on your chest. Take a step back and position your feet shoulder width apart from each other.",
+   "Once you pick up the barbell with the correct grip length, lift the bar up over your head by locking your arms. Hold at about shoulder level and slightly in front of your head. This is your starting position.",
+   "Lower the bar down to the collarbone slowly as you inhale.",
+   "Lift the bar back up to the starting position as you exhale.",
+   "Repeat for the recommended amount of repetitions."
+  ],
+  "frames": [
+   "Standing_Military_Press_0.jpg",
+   "Standing_Military_Press_1.jpg"
+  ],
+  "aliases": [
+   "overhead press",
+   "military press",
+   "shoulder press",
+   "standing overhead press",
+   "ohp"
+  ]
+ },
+ {
+  "id": "Dumbbell_Bicep_Curl",
+  "name": "Dumbbell Bicep Curl",
+  "level": "beginner",
+  "mechanic": "isolation",
+  "force": "pull",
+  "equipment": "dumbbell",
+  "category": "strength",
+  "primaryMuscles": [
+   "biceps"
+  ],
+  "secondaryMuscles": [
+   "forearms"
+  ],
+  "instructions": [
+   "Stand up straight with a dumbbell in each hand at arm's length. Keep your elbows close to your torso and rotate the palms of your hands until they are facing forward. This will be your starting position.",
+   "Now, keeping the upper arms stationary, exhale and curl the weights while contracting your biceps. Continue to raise the weights until your biceps are fully contracted and the dumbbells are at shoulder level. Hold the contracted position for a brief pause as you squeeze your biceps.",
+   "Then, inhale and slowly begin to lower the dumbbells back to the starting position.",
+   "Repeat for the recommended amount of repetitions."
+  ],
+  "frames": [
+   "Dumbbell_Bicep_Curl_0.jpg",
+   "Dumbbell_Bicep_Curl_1.jpg"
+  ],
+  "aliases": [
+   "bicep curl",
+   "biceps curl",
+   "dumbbell curl",
+   "dumbbell biceps curl"
+  ]
+ },
+ {
+  "id": "Bent_Over_Barbell_Row",
+  "name": "Bent Over Barbell Row",
+  "level": "beginner",
+  "mechanic": "compound",
+  "force": "pull",
+  "equipment": "barbell",
+  "category": "strength",
+  "primaryMuscles": [
+   "middle back"
+  ],
+  "secondaryMuscles": [
+   "biceps",
+   "lats",
+   "shoulders"
+  ],
+  "instructions": [
+   "Holding a barbell with a pronated grip (palms facing down), bend your knees slightly and bring your torso forward, by bending at the waist, while keeping the back straight until it is almost parallel to the floor. Tip: Make sure that you keep the head up. The barbell should hang directly in front of you as your arms hang perpendicular to the floor and your torso. This is your starting position.",
+   "Now, while keeping the torso stationary, breathe out and lift the barbell to you. Keep the elbows close to the body and only use the forearms to hold the weight. At the top contracted position, squeeze the back muscles and hold for a brief pause.",
+   "Then inhale and slowly lower the barbell back to the starting position.",
+   "Repeat for the recommended amount of repetitions."
+  ],
+  "frames": [
+   "Bent_Over_Barbell_Row_0.jpg",
+   "Bent_Over_Barbell_Row_1.jpg"
+  ],
+  "aliases": [
+   "barbell row",
+   "bent over row",
+   "bent over barbell row"
+  ]
+ },
+ {
+  "id": "Plank",
+  "name": "Plank",
+  "level": "beginner",
+  "mechanic": "isolation",
+  "force": "static",
+  "equipment": "body only",
+  "category": "strength",
+  "primaryMuscles": [
+   "abdominals"
+  ],
+  "secondaryMuscles": [],
+  "instructions": [
+   "Get into a prone position on the floor, supporting your weight on your toes and your forearms. Your arms are bent and directly below the shoulder.",
+   "Keep your body straight at all times, and hold this position as long as possible. To increase difficulty, an arm or leg can be raised."
+  ],
+  "frames": [
+   "Plank_0.jpg",
+   "Plank_1.jpg"
+  ],
+  "aliases": [
+   "plank"
+  ]
+ }
+]

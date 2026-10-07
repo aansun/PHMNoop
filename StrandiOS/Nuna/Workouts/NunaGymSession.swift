@@ -147,6 +147,12 @@ struct NunaGymSessionView: View {
                     }
                     Spacer()
                     if records.contains(s.exercise) { NunaChip("PR") }
+                    if let lib = NunaExerciseLibrary.match(s.exercise) {
+                        NavigationLink(value: NunaWorkoutRoute.exercise(lib.id)) {
+                            Image(systemName: "play.rectangle.fill").font(.nuna(size: 18)).foregroundStyle(NunaPalette.textSecondary)
+                                .frame(width: 36, height: 36).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                        }.buttonStyle(.plain).accessibilityLabel(Text("Show the demo"))
+                    }
                 }
                 ForEach(Array(rows.enumerated()), id: \.element.id) { i, r in
                     HStack {

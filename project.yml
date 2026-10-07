@@ -46,6 +46,10 @@ packages:
   MarkdownUI:
     url: https://github.com/gonzalezreal/swift-markdown-ui
     exactVersion: 2.4.1
+  # The body map of the gym screens (MIT, Melih Colpan). iOS-only: it needs macOS 14 and the macOS app targets 13.
+  MuscleMap:
+    url: https://github.com/melihcolpan/MuscleMap
+    exactVersion: 1.6.4
   WhoopProtocol:
     path: Packages/WhoopProtocol
   WhoopStore:
@@ -240,6 +244,8 @@ targets:
     # Indonesian without changing the reference macOS surface.
     resources:
       - path: StrandiOS/Resources/id.lproj
+      # The exercise library: sample photos and library.json (free-exercise-db, The Unlicense). See Tools/build-exercise-library.py.
+      - path: StrandiOS/Resources/ExerciseLibrary
     # Same tracked wrapper as the macOS target (Strand/Oura/ is shared, not per-platform).
     configFiles:
       Debug: Strand/Oura/OuraConfig.xcconfig
@@ -372,6 +378,7 @@ targets:
       - package: MarkdownUI
       - package: ZIPFoundation
       - package: PolarProtocol
+      - package: MuscleMap
       - target: NOOPiOSWidgets
 
   # WidgetKit + Live Activity extension — the iOS analogue of the macOS menu-bar
