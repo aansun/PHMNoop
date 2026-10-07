@@ -55,7 +55,7 @@ struct NunaLiftSessionView: View {
                                 header(engine)
                                 if let name = session.programName {
                                     // The whole name, under the header, however long it is.
-                                    Text(verbatim: name).font(.nuna(size: 26, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                                    Text(verbatim: name).font(.nuna(size: NunaTypeSize.h2, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                                         .fixedSize(horizontal: false, vertical: true).textCase(nil)
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                 }
@@ -165,7 +165,7 @@ struct NunaLiftSessionView: View {
                     .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
             }.buttonStyle(.plain).accessibilityLabel(Text("Minimise"))
             Text(session.programName == nil ? "Gym" : "Program gym")
-                .font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
+                .font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
             Spacer(minLength: 8)
             if let bpm = model.bpm {
                 HStack(spacing: 5) {
