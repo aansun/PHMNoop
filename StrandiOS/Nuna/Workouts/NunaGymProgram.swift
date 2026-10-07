@@ -230,7 +230,7 @@ struct NunaProgramDetailView: View {
         NunaDetailScreen("Program gym", trailing: AnyView(menu)) {
             if let program {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(verbatim: program.name).font(.nuna(size: 26, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: program.name).font(.nuna(size: NunaTypeSize.h2, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         .fixedSize(horizontal: false, vertical: true).textCase(nil)
                     if let note = program.note, !note.isEmpty {
                         Text(verbatim: note).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
