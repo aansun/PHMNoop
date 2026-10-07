@@ -1,5 +1,8 @@
 import Foundation
 import Combine
+#if canImport(UIKit)
+import UIKit
+#endif
 import WhoopStore
 
 // The live session, owned ABOVE any screen.
@@ -30,6 +33,41 @@ final class LiftSessionController: ObservableObject {
     @Published private(set) var now = Int(Date().timeIntervalSince1970)
     /// True while the full sheet is presented; false when minimised to the bottom bar.
     @Published var isPresented = false
+    /// True from the moment the session is asked to show until it does. A sheet that is open (Gym opened from the quick actions, Devices)
+    /// watches this and closes itself, because a sheet cannot open over another one.
+    @Published private(set) var wantsPresent = false
+
+    /// Ask for the session sheet. It is shown once no other sheet is on screen: SwiftUI will start presenting over a sheet that is still
+    /// closing, and the session then goes down with it, leaving the flag set and nothing on screen.
+    func present() {
+        wantsPresent = true
+        waitForClearScreen(polls: 0)
+    }
+
+    private func waitForClearScreen(polls: Int) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) { [weak self] in
+            guard let self, self.wantsPresent else { return }
+            guard self.engine != nil else { self.wantsPresent = false; return }
+            if Self.anotherSheetIsUp(), polls < 40 { self.waitForClearScreen(polls: polls + 1); return }
+            self.wantsPresent = false
+            if self.isPresented {
+                self.isPresented = false
+                DispatchQueue.main.async { self.isPresented = true }
+            } else {
+                self.isPresented = true
+            }
+        }
+    }
+
+    private static func anotherSheetIsUp() -> Bool {
+        #if canImport(UIKit)
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        let window = scenes.flatMap(\.windows).first(where: \.isKeyWindow)
+        return window?.rootViewController?.presentedViewController != nil
+        #else
+        return false
+        #endif
+    }
 
     /// Bumped each time a finished session is written. The session sheet is presented above every
     /// screen, so its save cannot call back into the one listing sessions; that screen reloads on this.
@@ -113,7 +151,7 @@ final class LiftSessionController: ObservableObject {
         self.programName = programName
         warnedFor = nil
         now = stamp
-        isPresented = true
+        present()
         claimStrap()
         startTicking()
         persist()
