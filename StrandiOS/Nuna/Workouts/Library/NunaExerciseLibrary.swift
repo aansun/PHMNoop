@@ -138,6 +138,17 @@ enum NunaExerciseLibrary {
     static func normalized(_ name: String) -> String { words(name).joined(separator: " ") }
     private static func wordSet(_ name: String) -> String { words(name).sorted().joined(separator: " ") }
 
+    /// Equipment named inside a title, as in "Romanian Deadlift (Barbell)" or "Bench Press - Dumbbell": it says how, not which exercise.
+    private static let equipmentWords: Set<String> = ["barbell", "dumbbell", "cable", "machine", "kettlebell", "band", "smith", "bodyweight", "weighted", "ez", "bar"]
+
+    /// The words of a name without a trailing equipment word in brackets, so "Romanian Deadlift (Barbell)" reads "romanian deadlift".
+    private static func withoutBracketedEquipment(_ name: String) -> String {
+        guard let open = name.lastIndex(of: "("), let close = name.lastIndex(of: ")"), open < close else { return name }
+        let inside = words(String(name[name.index(after: open)..<close]))
+        guard !inside.isEmpty, inside.allSatisfy({ equipmentWords.contains($0) }) else { return name }
+        return String(name[..<open])
+    }
+
     private static let ordered: [String: NunaLibraryExercise] = index(by: normalized)
     private static let unordered: [String: NunaLibraryExercise] = index(by: wordSet)
 
@@ -153,6 +164,7 @@ enum NunaExerciseLibrary {
     /// known alias. Nil when the library has nothing by that name.
     static func match(_ name: String) -> NunaLibraryExercise? {
         ordered[normalized(name)] ?? unordered[wordSet(name)]
+            ?? { let bare = withoutBracketedEquipment(name); return bare == name ? nil : (ordered[normalized(bare)] ?? unordered[wordSet(bare)]) }()
     }
 
     // MARK: Searching

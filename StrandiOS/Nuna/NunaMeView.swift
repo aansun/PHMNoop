@@ -155,7 +155,7 @@ enum NunaMeRoute: Hashable {
     case persona, zones, goals, devices, anya, appearance, widgets, theme
     case units, language, features, notifications, privacy
     case automations, doubleTap, presence, sessionCues, sedentary, shortcuts, alarm
-    case data, backup, imports, appleHealth, strava
+    case data, backup, imports, appleHealth, strava, hevy
     case advanced, experiments, testCentre, about
     case search
 }
@@ -189,6 +189,7 @@ extension View {
             case .imports: NunaImportView()
             case .appleHealth: NunaAppleHealthView()
             case .strava: NunaStravaView()
+            case .hevy: NunaHevyView()
             case .advanced: NunaAdvancedView()
             case .experiments: NunaExperimentsView()
             case .testCentre: NunaTestCentreView()

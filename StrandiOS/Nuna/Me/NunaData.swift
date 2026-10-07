@@ -7,6 +7,7 @@ import StrandDesign
 struct NunaDataHubView: View {
     @EnvironmentObject private var repo: Repository
     @AppStorage(StravaExperiment.enabledKey) private var strava = false
+    @AppStorage(HevyExperiment.enabledKey) private var hevy = false
 
     var body: some View {
         NunaDetailScreen("Data and integrations") {
@@ -15,6 +16,8 @@ struct NunaDataHubView: View {
                 NavigationLink(value: NunaMeRoute.appleHealth) { NunaListRow("Apple Health", subtitle: "Permissions, what is read and written", systemImage: "heart.text.square", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
                 NavigationLink(value: NunaMeRoute.strava) { NunaListRow("Strava", subtitle: "Upload GPS and treadmill workouts · experimental", systemImage: "figure.run.circle", showsChevron: true) { NunaChip(strava ? "On" : "Off", color: strava ? NunaPalette.charge : nil) } }.buttonStyle(.plain)
+                NunaDivider()
+                NavigationLink(value: NunaMeRoute.hevy) { NunaListRow("Hevy", subtitle: "Bring your workouts and routines in with your own API key", systemImage: "dumbbell", showsChevron: true) { NunaChip(hevy ? "On" : "Off", color: hevy ? NunaPalette.charge : nil) } }.buttonStyle(.plain)
             }
             NunaSettingsGroup("Import once") {
                 NavigationLink(value: NunaMeRoute.imports) { NunaListRow("WHOOP export (.zip)", subtitle: "Recovery, strain, sleep and workouts", systemImage: "doc.zipper", showsChevron: true) }.buttonStyle(.plain)
