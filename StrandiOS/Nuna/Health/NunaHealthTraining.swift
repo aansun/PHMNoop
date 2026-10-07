@@ -5,8 +5,8 @@ import StrandAnalytics
 import WhoopStore
 
 /// The Training part of Health › Body: what the last seven days of workouts add up to, how cardio and strength share them, whether the
-/// load is in balance, and the way into Workouts, Gym and Training load. The figures are the ones the Workouts hub reads; this is the
-/// body-side view of them, not another source.
+/// load is in balance, and the way into Workouts and Training load. The figures are the ones the Workouts hub reads; this is the
+/// body-side view of them, not another source. One card opens Workouts (Gym is a tab in there); the heading link opens the full list of sessions.
 struct NunaHealthTraining: View {
     @ObservedObject var m: NunaWorkoutsModel
     let scale: EffortScale
@@ -14,7 +14,7 @@ struct NunaHealthTraining: View {
     var body: some View {
         VStack(spacing: NunaSpacing.section) {
             NunaTitleRow(title: "Training") {
-                NavigationLink(value: NunaWorkoutRoute.hub(0)) { NunaLinkLabel(text: "Workouts", chevron: true) }
+                NavigationLink(value: NunaWorkoutRoute.history) { NunaLinkLabel(text: "All sessions", chevron: true) }
             }
             if m.loaded {
                 weekCard
@@ -119,10 +119,6 @@ struct NunaHealthTraining: View {
             VStack(spacing: 0) {
                 NavigationLink(value: NunaWorkoutRoute.hub(0)) {
                     NunaListRow("Workouts", subtitle: lastText.map { LocalizedStringKey($0) } ?? "Start a workout and see your history", systemImage: "figure.run", showsChevron: true)
-                }.buttonStyle(.plain)
-                NunaDivider()
-                NavigationLink(value: NunaWorkoutRoute.gym) {
-                    NunaListRow("Gym", subtitle: "Programs, sessions and the muscle map", systemImage: "dumbbell", showsChevron: true)
                 }.buttonStyle(.plain)
                 NunaDivider()
                 NavigationLink(value: NunaWorkoutRoute.load) {
