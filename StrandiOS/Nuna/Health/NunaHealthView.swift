@@ -675,7 +675,7 @@ struct NunaHealthView: View {
         return NunaCard {
             VStack(alignment: .leading, spacing: 12) {
                 // The title row opens the water log and its history; the +250 and +500 below add a drink without leaving.
-                NavigationLink(value: TabRoute.hydration) {
+                NavigationLink(value: NunaTodayRoute.hydration) {
                     HStack {
                         Text("Water").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         Spacer()
