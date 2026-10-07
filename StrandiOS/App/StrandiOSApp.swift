@@ -368,6 +368,7 @@ struct StrandiOSApp: App {
                 // supported, so this is safe on every device/simulator combination.
                 .task {
                     audioCoaching.attach(to: model)
+                    liftSession.onRestEnded = { [weak audioCoaching] in audioCoaching?.playRestEndMarker() }
                     watch.activate()
                     // Rehydrate an in-flight workout after an OS relaunch and restore its activity
                     // without waiting for the next heart-rate event.

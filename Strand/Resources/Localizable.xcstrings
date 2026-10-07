@@ -1,6 +1,9 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "Rest-end tone played": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Nada akhir istirahat diputar" } } } },
+        "Sound when rest ends": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Bunyi saat istirahat selesai" } } } },
+        "A short rising tone; music is lowered for it": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Nada naik yang pendek; musik diturunkan sebentar" } } } },
         "Output: %@ \u00b7 volume %lld%%": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Keluaran: %1$@ · volume %2$lld%%" } } } },
         "The media volume is at zero. Raise it with the volume buttons.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Volume media nol. Naikkan dengan tombol volume." } } } },
         "The audio session would not start: %@": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Sesi audio tidak mau dimulai: %@" } } } },
