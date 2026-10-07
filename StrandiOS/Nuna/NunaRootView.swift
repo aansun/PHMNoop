@@ -84,6 +84,16 @@ struct NunaRootView: View {
         }
         .sheet(isPresented: $showDevices) { sheetStack { NunaDevicesView() } }
         .sheet(item: $routed) { dest in sheetStack { destinationView(dest) } }
+        // A gym session is a sheet too, and cannot open over another one. When it is asked to show while a screen of this shell is open as a
+        // sheet (Workouts and its Gym, Devices), that sheet closes first and the session follows it.
+        .onChange(of: liftSession.isPresented) { _, shown in
+            guard shown, routed != nil || showDevices else { return }
+            routed = nil; showDevices = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                liftSession.isPresented = false
+                DispatchQueue.main.async { liftSession.isPresented = true }
+            }
+        }
         .onChange(of: router.requestedDestination) { _, dest in handle(dest) }
         .onChange(of: router.openNotificationSettings) { _, on in
             guard on else { return }
