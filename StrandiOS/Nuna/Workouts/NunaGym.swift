@@ -115,6 +115,17 @@ struct NunaGymView: View {
     @State private var volumes: [String: Double] = [:]
     @State private var loaded = false
     @State private var picking = false
+    @ObservedObject private var groupsModel = NunaProgramGroupsModel.shared
+    @State private var groupDialog: GroupDialog?
+    @State private var groupName = ""
+    @State private var deletingGroup: NunaProgramGroup?
+
+    /// What the name box is for: a new group (and the program to put in it, if it came from a program's menu), or a rename.
+    private enum GroupDialog: Identifiable {
+        case new(programId: String?)
+        case rename(NunaProgramGroup)
+        var id: String { switch self { case .new(let p): "new-\(p ?? "")"; case .rename(let g): "rename-\(g.id)" } }
+    }
 
     private static let setsBarSpan = 20.0
 
@@ -134,6 +145,15 @@ struct NunaGymView: View {
         }
         .nunaWorkoutDestinations()
         .task(id: "\(repo.refreshSeq)-\(session.savedSessions)") { await load() }
+        .alert(groupDialogTitle, isPresented: Binding(get: { groupDialog != nil }, set: { if !$0 { groupDialog = nil } })) {
+            TextField("Group name", text: $groupName)
+            Button("Save") { saveGroupDialog() }
+            Button("Cancel", role: .cancel) {}
+        }
+        .confirmationDialog("Delete this group?", isPresented: Binding(get: { deletingGroup != nil }, set: { if !$0 { deletingGroup = nil } }), titleVisibility: .visible) {
+            Button("Delete group", role: .destructive) { if let g = deletingGroup { groupsModel.delete(g) }; deletingGroup = nil }
+            Button("Cancel", role: .cancel) { deletingGroup = nil }
+        } message: { Text("The programs in it are kept and become ungrouped.") }
         .sheet(isPresented: $picking) { NunaExercisePicker { picked in
             Task { await NunaGymStore.startFreehand(picked, repo: repo, session: session) }
         } }
@@ -159,20 +179,106 @@ struct NunaGymView: View {
 
     // MARK: Programs
 
+    private var groupDialogTitle: LocalizedStringKey {
+        if case .rename = groupDialog { return "Rename group" }
+        return "New group"
+    }
+
+    private func saveGroupDialog() {
+        guard let dialog = groupDialog else { return }
+        switch dialog {
+        case .new(let programId):
+            if let g = groupsModel.add(name: groupName), let programId { groupsModel.move(programId, to: g) }
+        case .rename(let g):
+            groupsModel.rename(g, to: groupName)
+        }
+        groupDialog = nil
+    }
+
+    private func askForGroup(_ dialog: GroupDialog) {
+        if case .rename(let g) = dialog { groupName = g.name } else { groupName = "" }
+        groupDialog = dialog
+    }
+
     private var programsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            NunaTitleRow(title: "Programs") { EmptyView() }
+        let loose = groupsModel.ungrouped(programs)
+        let suggestion = groupsModel.suggestions(for: programs).first
+        return VStack(alignment: .leading, spacing: 12) {
+            NunaTitleRow(title: "Programs") {
+                Button { askForGroup(.new(programId: nil)) } label: {
+                    HStack(spacing: 6) { Image(systemName: "folder.badge.plus").font(.nuna(size: 13, weight: .bold)); Text("New group").font(.nuna(size: 13.5, weight: .bold)) }
+                        .foregroundStyle(NunaPalette.textPrimary)
+                }.buttonStyle(.plain)
+            }
             if loaded, programs.isEmpty {
                 NunaCard(small: true) {
                     Text("No programs yet. A program is a named list of exercises with your targets for each.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
-            ForEach(programs, id: \.id) { p in programRow(p) }
+            if let suggestion { suggestionCard(suggestion) }
+            ForEach(groupsModel.groups) { g in groupSection(g) }
+            if !groupsModel.groups.isEmpty, !loose.isEmpty {
+                Text("Ungrouped").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).padding(.top, 4)
+            }
+            ForEach(loose, id: \.id) { p in programRow(p) }
             HStack(spacing: 10) {
                 NavigationLink(value: NunaWorkoutRoute.program("new")) { programButton("New program", "plus") }.buttonStyle(.plain)
                 NavigationLink(value: NunaWorkoutRoute.programImport) { programButton("Import", "tablecells") }.buttonStyle(.plain)
             }
         }
+    }
+
+    /// Programs named "Plan · Day A" and "Plan · Day B" can be put together in one tap.
+    private func suggestionCard(_ s: NunaProgramGroupsModel.Suggestion) -> some View {
+        NunaCard(small: true) {
+            HStack(spacing: 12) {
+                Image(systemName: "folder").font(.nuna(size: 18, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                    .frame(width: 40, height: 40).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(verbatim: String(localized: "Group \(s.programIds.count) programs as \"\(s.name)\"?")).font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                    Text("They share the start of their names.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                }
+                Spacer(minLength: 6)
+                Button { withAnimation(.easeInOut(duration: 0.2)) { groupsModel.apply(s) } } label: {
+                    Text("Group").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 16).frame(height: 38)
+                        .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                }.buttonStyle(.plain)
+            }
+        }
+    }
+
+    /// One folder: its name and count (tap to fold it), a menu to rename or delete it, and its programs.
+    @ViewBuilder private func groupSection(_ g: NunaProgramGroup) -> some View {
+        let inside = groupsModel.programs(in: g, from: programs)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
+                Button { withAnimation(.easeInOut(duration: 0.2)) { groupsModel.toggleCollapsed(g) } } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: g.collapsed ? "folder.fill" : "folder").font(.nuna(size: 17, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: g.name).font(.nuna(size: 17, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+                        Text(verbatim: "\(inside.count)").font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
+                        Spacer(minLength: 6)
+                        Image(systemName: "chevron.down").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted).rotationEffect(.degrees(g.collapsed ? -90 : 0))
+                    }.contentShape(Rectangle())
+                }.buttonStyle(.plain)
+                Menu {
+                    Button { askForGroup(.rename(g)) } label: { Label("Rename group", systemImage: "pencil") }
+                    Button(role: .destructive) { deletingGroup = g } label: { Label("Delete group", systemImage: "trash") }
+                } label: {
+                    Image(systemName: "ellipsis").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 34, height: 36).contentShape(Rectangle())
+                }
+            }
+            .padding(.horizontal, 4)
+            if !g.collapsed {
+                if inside.isEmpty {
+                    NunaCard(small: true) {
+                        Text("Empty. Use the menu of a program to move it here.").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                }
+                ForEach(inside, id: \.id) { p in programRow(p) }
+            }
+        }
+        .padding(.top, 4)
     }
 
     private func programButton(_ title: LocalizedStringKey, _ icon: String) -> some View {
@@ -181,6 +287,24 @@ struct NunaGymView: View {
             Text(title).font(.nuna(size: 14.5, weight: .bold))
         }
         .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 48).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+    }
+
+    /// Move a program into a group, out of one, or into a new one.
+    private func programMenu(_ p: LiftProgramRow) -> some View {
+        Menu {
+            Menu {
+                ForEach(groupsModel.groups) { g in
+                    Button { groupsModel.move(p.id, to: g) } label: {
+                        if groupsModel.group(of: p.id)?.id == g.id { Label(g.name, systemImage: "checkmark") } else { Text(verbatim: g.name) }
+                    }
+                }
+                if groupsModel.group(of: p.id) != nil { Button { groupsModel.move(p.id, to: nil) } label: { Label("No group", systemImage: "xmark") } }
+                Button { askForGroup(.new(programId: p.id)) } label: { Label("New group", systemImage: "folder.badge.plus") }
+            } label: { Label("Move to group", systemImage: "folder") }
+        } label: {
+            Image(systemName: "ellipsis").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 30, height: 42).contentShape(Rectangle())
+        }
+        .accessibilityLabel(Text("Program options"))
     }
 
     private func programRow(_ p: LiftProgramRow) -> some View {
@@ -197,6 +321,7 @@ struct NunaGymView: View {
                     }
                     .frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
                 }.buttonStyle(.plain)
+                programMenu(p)
                 Button { Task { await NunaGymStore.start(program: p, repo: repo, session: session) } } label: {
                     Text(session.isActive ? "Open" : "Start").font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
                         .padding(.horizontal, 20).frame(height: 42).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
@@ -301,6 +426,7 @@ struct NunaGymView: View {
             for set in (try? await store.liftSets(sessionId: s.id)) ?? [] { dated.append((set, set.endTs ?? set.startTs ?? (s.endTs ?? s.startTs))) }
         }
         readiness = NunaMuscleReadiness.readings(sets: dated, now: now)
+        groupsModel.prune(existing: Set(ps.map(\.id)))
         programs = ps; itemCounts = counts; lastUsed = last; history = all; volumes = vols; loaded = true
     }
 }
