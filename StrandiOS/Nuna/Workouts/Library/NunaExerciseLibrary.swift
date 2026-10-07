@@ -112,6 +112,7 @@ enum NunaExerciseLibrary {
         Bundle.main.url(forResource: base, withExtension: ext) ?? Bundle.main.url(forResource: base, withExtension: ext, subdirectory: folder)
     }
 
+    /// Every exercise, by name.
     static let all: [NunaLibraryExercise] = {
         guard let url = url("library", "json"),
               let data = try? Data(contentsOf: url),
@@ -119,26 +120,63 @@ enum NunaExerciseLibrary {
         return list
     }()
 
-    static func exercise(id: String) -> NunaLibraryExercise? { all.first { $0.id == id } }
+    private static let byId: [String: NunaLibraryExercise] = Dictionary(all.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
 
-    /// A name reduced to its words, so "Pull-up", "pull up" and "Pull Ups" read the same.
-    static func normalized(_ name: String) -> String {
-        let words = name.lowercased().split { !$0.isLetter && !$0.isNumber }.map(String.init)
-        return words.joined(separator: " ")
+    static func exercise(id: String) -> NunaLibraryExercise? { byId[id] }
+
+    // MARK: Matching a logged name to the library
+
+    /// The words of a name, lower case, with a plural "s" dropped ("Pull-ups", "pull up" and "Pullups" all read "pull up"/"pullup"), so
+    /// spelling and punctuation do not matter. "Bench Press (Barbell)" and "Barbell Bench Press" have the same words.
+    static func words(_ name: String) -> [String] {
+        name.lowercased().split { !$0.isLetter && !$0.isNumber }.map { w in
+            let s = String(w)
+            return s.count > 3 && s.hasSuffix("s") && !s.hasSuffix("ss") ? String(s.dropLast()) : s
+        }
     }
 
-    private static let index: [String: NunaLibraryExercise] = {
-        var out: [String: NunaLibraryExercise] = [:]
-        for e in all {
-            for n in [e.name] + e.aliases { out[normalized(n)] = out[normalized(n)] ?? e }
-        }
-        return out
-    }()
+    static func normalized(_ name: String) -> String { words(name).joined(separator: " ") }
+    private static func wordSet(_ name: String) -> String { words(name).sorted().joined(separator: " ") }
 
-    /// The library entry for an exercise the person logged under their own name, if one has the same name or a known alias.
-    static func match(_ name: String) -> NunaLibraryExercise? { index[normalized(name)] }
+    private static let ordered: [String: NunaLibraryExercise] = index(by: normalized)
+    private static let unordered: [String: NunaLibraryExercise] = index(by: wordSet)
+
+    /// Aliases first, so the name a person actually uses wins over a near-identical library name.
+    private static func index(by key: (String) -> String) -> [String: NunaLibraryExercise] {
+        var out: [String: NunaLibraryExercise] = [:]
+        for e in all { for a in e.aliases { let k = key(a); if out[k] == nil { out[k] = e } } }
+        for e in all { let k = key(e.name); if out[k] == nil { out[k] = e } }
+        return out
+    }
+
+    /// The library entry for an exercise logged under a person's own name: the same words, or the same words in another order, or a
+    /// known alias. Nil when the library has nothing by that name.
+    static func match(_ name: String) -> NunaLibraryExercise? {
+        ordered[normalized(name)] ?? unordered[wordSet(name)]
+    }
+
+    // MARK: Searching
+
+    /// Exercises whose name (or alias) has every word of the query, the ones that start with it first. Empty query: everything.
+    static func search(_ query: String, muscles: Set<String> = [], limit: Int = 2000) -> [NunaLibraryExercise] {
+        let q = words(query)
+        var pool = all
+        if !muscles.isEmpty { pool = pool.filter { e in e.primaryMuscles.contains { muscles.contains($0) } } }
+        guard !q.isEmpty else { return Array(pool.prefix(limit)) }
+        var starts: [NunaLibraryExercise] = [], contains: [NunaLibraryExercise] = []
+        for e in pool {
+            let names = [e.name] + e.aliases
+            let hit = names.contains { n in let w = words(n); return q.allSatisfy { qw in w.contains { $0.hasPrefix(qw) } } }
+            guard hit else { continue }
+            if names.contains(where: { words($0).first.map { f in f.hasPrefix(q[0]) } ?? false }) { starts.append(e) } else { contains.append(e) }
+        }
+        return Array((starts + contains).prefix(limit))
+    }
+
+    // MARK: Photos
 
     private static let cache = NSCache<NSString, UIImage>()
+    private static let thumbs = NSCache<NSString, UIImage>()
 
     static func image(_ file: String) -> UIImage? {
         if let hit = cache.object(forKey: file as NSString) { return hit }
@@ -146,6 +184,56 @@ enum NunaExerciseLibrary {
         guard let url = url(base, ext), let img = UIImage(contentsOfFile: url.path) else { return nil }
         cache.setObject(img, forKey: file as NSString)
         return img
+    }
+
+    /// A small version of the first photo for lists, drawn once.
+    static func thumbnail(_ e: NunaLibraryExercise) -> UIImage? {
+        guard let f = e.frames.first else { return nil }
+        if let hit = thumbs.object(forKey: f as NSString) { return hit }
+        guard let img = image(f) else { return nil }
+        let t = img.preparingThumbnail(of: CGSize(width: 180, height: 180 * img.size.height / max(img.size.width, 1))) ?? img
+        thumbs.setObject(t, forKey: f as NSString)
+        return t
+    }
+}
+
+extension NunaLibraryExercise {
+    /// The app's own muscle for the first main muscle, for an exercise added from the library. A shoulder is told apart by the name
+    /// (a press works the front, a fly or a face pull the rear, a raise the side); that is a guess, and the muscle map treats the
+    /// three heads as one part of the body anyway.
+    var liftPrimary: LiftMuscle? { primaryMuscles.first.flatMap { lift($0) } }
+
+    var liftSecondary: [LiftMuscle] {
+        var out: [LiftMuscle] = []
+        for m in secondaryMuscles { if let l = lift(m), l != liftPrimary, !out.contains(l) { out.append(l) } }
+        return out
+    }
+
+    private func lift(_ muscle: String) -> LiftMuscle? {
+        let n = name.lowercased()
+        switch muscle {
+        case "abdominals": return n.contains("twist") || n.contains("oblique") || n.contains("side bend") ? .obliques : .abs
+        case "abductors": return .abductors
+        case "adductors": return .adductors
+        case "biceps": return .biceps
+        case "calves": return .calves
+        case "chest": return .chest
+        case "forearms": return .forearms
+        case "glutes": return .glutes
+        case "hamstrings": return .hamstrings
+        case "lats": return .lats
+        case "lower back": return .lowerBack
+        case "middle back": return .upperBack
+        case "neck": return .neck
+        case "quadriceps": return .quads
+        case "shoulders":
+            if n.contains("rear") || n.contains("reverse") || n.contains("face pull") || n.contains("bent over") { return .rearDelts }
+            if n.contains("lateral") || n.contains("side raise") || n.contains("upright") { return .sideDelts }
+            return .frontDelts
+        case "traps": return .traps
+        case "triceps": return .triceps
+        default: return nil
+        }
     }
 }
 

@@ -389,6 +389,23 @@ struct LiftSessionEngine: Equatable {
         return true
     }
 
+    /// The most exercises a session may hold, for the same reason as `maxSetsPerExercise`.
+    static let maxExercises = 30
+
+    /// Append one exercise to the end of the plan, for the exercise a gym session turns to that nobody planned. It goes LAST on purpose:
+    /// every slot, recorded set and typed value is keyed by an exercise's position, so adding at the end moves none of them. Returns
+    /// false when the plan is full or the line has no name.
+    @discardableResult
+    mutating func addExercise(_ item: LiftPlanItem) -> Bool {
+        guard plan.count < LiftSessionEngine.maxExercises,
+              !item.exercise.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
+        pushHistory()
+        var line = item
+        line.targetSets = min(max(line.targetSets, 1), LiftSessionEngine.maxSetsPerExercise)
+        plan.append(line)
+        return true
+    }
+
     /// Whether the last set of a line can be dropped.
     ///
     /// Only the LAST one, and only while it is still pending. Set numbers are positions — the sheet

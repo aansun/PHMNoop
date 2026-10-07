@@ -547,6 +547,43 @@ final class LiftSessionEngineTests: XCTestCase {
         XCTAssertEqual(e.plannedWorkingSets, 3)
     }
 
+    // An exercise nobody planned, added in the gym. It goes at the END, so every slot and recorded set keyed by an
+    // exercise's position stays where it was.
+
+    func testAnAddedExerciseGoesLastAndLeavesTheRestAlone() {
+        var e = LiftSessionEngine(plan: twoExercisePlan(), startTs: t0)
+        e.advance(now: t0)                                        // working set 1 of the first exercise
+        XCTAssertTrue(e.addExercise(LiftPlanItem(exercise: "Face pull", primaryMuscle: .rearDelts, targetSets: 3, restSec: 60)))
+        XCTAssertEqual(e.plan.map(\.exercise), ["Incline dumbbell press", "Lat pulldown", "Face pull"])
+        XCTAssertEqual(e.stage, .working(slot(0, 1)), "the set being worked is not moved")
+        XCTAssertEqual(e.slots(forExercise: 2), [slot(2, 1), slot(2, 2), slot(2, 3)])
+        XCTAssertEqual(e.plannedWorkingSets, 6)
+        XCTAssertFalse(e.allCompleted)
+    }
+
+    func testAnAddedExerciseIsRecordable() {
+        var e = LiftSessionEngine(plan: [LiftPlanItem(exercise: "Curl", targetSets: 1, restSec: 60)], startTs: t0)
+        e.addExercise(LiftPlanItem(exercise: "Plank", targetSets: 1, restSec: 30))
+        e.start(slot(1, 1), now: t0)
+        e.advance(now: t0 + 40)
+        XCTAssertEqual(e.sets.last?.exerciseIndex, 1)
+        XCTAssertEqual(e.planItem(for: slot(1, 1))?.exercise, "Plank")
+    }
+
+    func testAnExerciseWithNoNameOrBeyondTheBoundIsNotAdded() {
+        var e = LiftSessionEngine(plan: twoExercisePlan(), startTs: t0)
+        XCTAssertFalse(e.addExercise(LiftPlanItem(exercise: "   ", targetSets: 3)))
+        while e.addExercise(LiftPlanItem(exercise: "Extra", targetSets: 1)) { }
+        XCTAssertEqual(e.plan.count, LiftSessionEngine.maxExercises)
+    }
+
+    func testUndoTakesBackAnAddedExercise() {
+        var e = LiftSessionEngine(plan: twoExercisePlan(), startTs: t0)
+        e.addExercise(LiftPlanItem(exercise: "Face pull", targetSets: 3))
+        e.undo()
+        XCTAssertEqual(e.plan.count, 2)
+    }
+
     func testDroppingTheLastSetTakesItOffTheSheet() {
         var e = LiftSessionEngine(plan: twoExercisePlan(), startTs: t0)
         XCTAssertTrue(e.canRemoveSet(fromExercise: 0))

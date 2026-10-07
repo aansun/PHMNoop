@@ -95,7 +95,8 @@ struct NunaProgramEditor: View {
                     if i > 0 { NunaDivider() }
                     HStack(spacing: 10) {
                         Button { editing = NunaItemTarget(id: item.id, item: item) } label: {
-                            HStack(spacing: 10) {
+                            HStack(spacing: 12) {
+                                NunaExerciseThumb(name: item.exercise, width: 50, height: 38)
                                 VStack(alignment: .leading, spacing: 3) {
                                     Text(verbatim: item.exercise).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2)
                                     if !detail(item).isEmpty { Text(verbatim: detail(item)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
@@ -224,6 +225,7 @@ struct NunaProgramItemView: View {
     @State private var loaded = false
     @State private var forgetting: LiftExerciseRow?
     @State private var vocabularyFull = false
+    @State private var choosingFromLibrary = false
 
     private var system: UnitSystem { UnitSystem(rawValue: unitSystemRaw) ?? .metric }
     private var trimmed: String { exercise.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -237,6 +239,18 @@ struct NunaProgramItemView: View {
     var body: some View {
         NavigationStack {
             NunaDetailScreen("Exercise", trailing: AnyView(saveButton)) {
+                Button { choosingFromLibrary = true } label: {
+                    HStack(spacing: 12) {
+                        NunaExerciseThumb(name: trimmed, width: 50, height: 38)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Choose from the library").font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.restText)
+                            Text("876 exercises with a demo and the muscles each works").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        }
+                        Spacer(minLength: 4)
+                        Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                    }
+                    .padding(12).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }.buttonStyle(.plain)
                 NunaFormField("Exercise name") { TextField("", text: $exercise, prompt: Text("Incline dumbbell press").foregroundStyle(NunaPalette.textMuted)).autocorrectionDisabled() }
                 if !suggestions.isEmpty { usedBefore }
                 primaryCard
@@ -257,6 +271,15 @@ struct NunaProgramItemView: View {
             .scrollDismissesKeyboard(.interactively)
             .toolbar(.hidden, for: .navigationBar)
             .nunaKeyboardDone()
+            .sheet(isPresented: $choosingFromLibrary) {
+                NunaExercisePicker(title: "Choose exercise", single: true) { picked in
+                    guard let p = picked.first else { return }
+                    exercise = p.name
+                    primary = p.primary
+                    primaryGroup = p.primary.map(NunaMuscleGroup.of)
+                    secondaries = Set(p.secondary)
+                }
+            }
         }
         .preferredColorScheme(NunaTheme.colorScheme)
         .task { await loadIfNeeded() }

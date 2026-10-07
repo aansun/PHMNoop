@@ -140,7 +140,8 @@ struct NunaGymSessionView: View {
         let first = rows.first
         return NunaCard(small: true) {
             VStack(alignment: .leading, spacing: 10) {
-                HStack {
+                HStack(spacing: 12) {
+                    NunaExerciseThumb(name: s.exercise, width: 50, height: 38)
                     VStack(alignment: .leading, spacing: 3) {
                         Text(verbatim: s.exercise).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         Text(verbatim: LiftMuscleSummary.line(primary: first?.primaryMuscle, secondaries: first?.secondaryMuscles ?? [])).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)

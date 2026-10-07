@@ -364,6 +364,14 @@ final class LiftSessionController: ObservableObject {
         return true
     }
 
+    /// Add an exercise nobody planned, at the end of the session. Returns whether it was added.
+    @discardableResult
+    func addExercise(_ item: LiftPlanItem) -> Bool {
+        guard engine?.addExercise(item) == true else { return false }
+        persist()
+        return true
+    }
+
     /// Drop the last pending set of an exercise. See `LiftSessionEngine.canRemoveSet(fromExercise:)`
     /// for what "can" means — a completed set is never removed this way.
     @discardableResult
