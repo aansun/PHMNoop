@@ -489,8 +489,8 @@ struct NunaMetricsGrid: View {
         NunaCard(small: true, padding: EdgeInsets(top: header == nil ? 4 : 10, leading: 18, bottom: 4, trailing: 18)) {
             VStack(spacing: 0) {
                 if let header {
-                    header.padding(.bottom, 4)
-                    NunaDivider()
+                    // No line under the heading: the space does the separating, as in Today's activities.
+                    header.padding(.bottom, 8)
                 }
                 ForEach(Array(tiles.enumerated()), id: \.element.id) { idx, tile in
                     if idx > 0 { NunaDivider() }
