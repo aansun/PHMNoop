@@ -28,6 +28,8 @@ struct NunaHealthView: View {
     @StateObject private var proteinS = NunaSeriesModel()
     @StateObject private var carbsS = NunaSeriesModel()
     @StateObject private var fatGS = NunaSeriesModel()
+    @StateObject private var trainingM = NunaWorkoutsModel()
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
     @State private var showWaist = false
     @AppStorage(HydrationStore.enabledKey) private var hydrationEnabled = false
     @State private var waterML = 0
@@ -70,6 +72,7 @@ struct NunaHealthView: View {
         .background(NunaPalette.canvas.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
         .nunaTodayDestinations()
+        .nunaWorkoutDestinations()
         .onAppear { if !didSetTab { tab = initialTab; didSetTab = true } }
         .task(id: repo.refreshSeq) {
             await day.load(repo: repo, profile: profile)
@@ -90,6 +93,7 @@ struct NunaHealthView: View {
             if let w = await repo.workoutRows().filter({ ($0.maxHr ?? 0) > 0 }).max(by: { $0.startTs < $1.startTs }), let m = w.maxHr {
                 lastMaxHR = (m, w.sport.replacingOccurrences(of: "_", with: " ").capitalized)
             }
+            await trainingM.load(repo: repo)
             await reloadWater()
         }
         .sheet(item: $legacy) { which in
@@ -513,11 +517,10 @@ struct NunaHealthView: View {
             waistCard
             nutritionCard
             if hydrationEnabled { waterCard }
+            NunaHealthTraining(m: trainingM, scale: UnitPrefs.resolveEffortScale(effortScaleRaw))
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
                     link(.labBook, "Lab Book", "Your records", "cross.vial.fill")
-                    NunaDivider()
-                    link(.mood, "Mood check-in", "How are you feeling", "face.smiling")
                     NunaWithApp { appModel in
                         if appModel.cyclePhase != nil {
                             NunaDivider()

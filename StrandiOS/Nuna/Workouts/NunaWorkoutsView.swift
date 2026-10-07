@@ -18,6 +18,7 @@ extension View {
             case .autoDetect: NunaAutoDetectView()
             case .settings: NunaWorkoutSettingsView()
             case .gym: NunaWorkoutsView(initialTab: 1)
+            case .hub(let tab): NunaWorkoutsView(initialTab: tab)
             case .program(let id): NunaProgramEditor(programId: id)
             case .programImport: NunaProgramImportView()
             case .gymSession(let id): NunaGymSessionView(sessionId: id)
