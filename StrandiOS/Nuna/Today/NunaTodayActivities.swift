@@ -6,7 +6,7 @@ import WhoopStore
 
 /// "Today's activities": one card with a row for the night's sleep and every workout of the day in the order they happened. Each row is a
 /// coloured tile with the figure that matters (sleep time, Effort), the name, and when it began and ended. A row opens its own detail; the
-/// icon at the top right opens all workouts. Nothing is cut off: a day with six activities shows six rows.
+/// chevron at the top right opens all workouts. Nothing is cut off: a day with six activities shows six rows.
 struct NunaTodayActivities: View {
     let workouts: [WorkoutRow]
     let effortScale: EffortScale
@@ -36,21 +36,22 @@ struct NunaTodayActivities: View {
 
     var body: some View {
         let rows = items
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack {
-                nunaTrendsCap("Today's activities")
+                Text("Today's activities").font(.nuna(size: 12, weight: .heavy)).tracking(1.1).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 Spacer()
                 Button { router.requestedDestination = .workouts } label: {
-                    Image(systemName: "arrow.up.left.and.arrow.down.right").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                        .frame(width: 36, height: 36).contentShape(Rectangle())
+                    // The same glyph the Key Metrics heading uses for "All".
+                    Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+                        .frame(width: 32, height: 28, alignment: .trailing).contentShape(Rectangle())
                 }
                 .buttonStyle(.plain).accessibilityLabel(Text("All workouts"))
             }
-            VStack(spacing: 8) {
+            VStack(spacing: 7) {
                 ForEach(rows) { item in row(item) }
             }
         }
-        .padding(.horizontal, 16).padding(.top, 10).padding(.bottom, 16)
+        .padding(.horizontal, 12).padding(.top, 12).padding(.bottom, 12)
         .background(NunaPalette.glass, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
         .task(id: "\(repo.refreshSeq)-\(dayStart.timeIntervalSince1970)") { await loadNight() }
@@ -65,33 +66,52 @@ struct NunaTodayActivities: View {
         case .workout(let w):
             let strength = NunaWorkoutKind.isStrength(w)
             NavigationLink(value: NunaWorkoutRoute.summary(NunaWorkoutKey(startTs: w.startTs, sport: w.sport, source: w.source))) {
-                rowBody(tint: strength ? NunaPalette.rest : NunaPalette.effort, icon: strength ? "dumbbell.fill" : sportSymbol(w.sport),
+                rowBody(tint: effortTint(w.strain), icon: strength ? "dumbbell.fill" : sportSymbol(w.sport),
                         figure: workoutFigure(w), name: Text(verbatim: WorkoutSource.displaySport(w.sport)), start: item.start, end: item.end)
             }.buttonStyle(.plain)
         }
     }
 
+    /// A tile in neutral grey (icon and figure), the name, when it began and ended, and a thin line with a dot at each end whose colour
+    /// follows the Effort of the workout (sleep keeps the Rest colour).
     private func rowBody(tint: Color, icon: String, figure: String, name: Text, start: Date, end: Date) -> some View {
-        HStack(spacing: 14) {
-            HStack(spacing: 8) {
-                Image(systemName: icon).font(.nuna(size: 16, weight: .bold))
-                Text(verbatim: figure).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).monospacedDigit()
+        HStack(spacing: 12) {
+            HStack(spacing: 7) {
+                Image(systemName: icon).font(.nuna(size: 15, weight: .semibold)).frame(width: 20)
+                Text(verbatim: figure).font(.nuna(size: 18, weight: .bold, design: NunaType.design)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.8)
             }
-            .foregroundStyle(Color.black.opacity(0.82))
-            .frame(width: 108, height: 46, alignment: .center)
-            .background(tint.opacity(0.88), in: RoundedRectangle(cornerRadius: 11, style: .continuous))
-            name.font(.nuna(size: 15, weight: .heavy)).tracking(0.6).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).minimumScaleFactor(0.85).multilineTextAlignment(.leading)
+            .foregroundStyle(NunaPalette.textPrimary)
+            .frame(width: 92, height: 40)
+            .background(NunaPalette.ink.opacity(0.12), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+            name.font(.nuna(size: 13, weight: .heavy)).tracking(0.8).foregroundStyle(NunaPalette.textPrimary)
+                .lineLimit(2).minimumScaleFactor(0.85).multilineTextAlignment(.leading)
             Spacer(minLength: 6)
-            VStack(alignment: .trailing, spacing: 4) {
-                Text(verbatim: NunaWorkoutFormat.clock(Int(start.timeIntervalSince1970))).font(.nuna(size: 13, weight: .bold)).monospacedDigit()
-                Text(verbatim: NunaWorkoutFormat.clock(Int(end.timeIntervalSince1970))).font(.nuna(size: 13, weight: .bold)).monospacedDigit()
+            VStack(alignment: .trailing, spacing: 3) {
+                Text(verbatim: NunaWorkoutFormat.clock(Int(start.timeIntervalSince1970)))
+                Text(verbatim: NunaWorkoutFormat.clock(Int(end.timeIntervalSince1970)))
             }
-            .foregroundStyle(NunaPalette.textSecondary)
-            Capsule().fill(tint).frame(width: 3, height: 34)
+            .font(.nuna(size: 11.5, weight: .bold)).monospacedDigit().foregroundStyle(NunaPalette.textSecondary)
+            VStack(spacing: 0) {
+                Circle().fill(NunaPalette.textPrimary.opacity(0.85)).frame(width: 3.5, height: 3.5)
+                Rectangle().fill(LinearGradient(colors: [tint.opacity(0.55), tint], startPoint: .top, endPoint: .bottom)).frame(width: 2.5, height: 24)
+                Circle().fill(NunaPalette.textPrimary.opacity(0.85)).frame(width: 3.5, height: 3.5)
+            }
+            .padding(.trailing, 2)
         }
-        .padding(.horizontal, 7).padding(.vertical, 6)
-        .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .padding(.horizontal, 6).padding(.vertical, 6)
+        .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .contentShape(Rectangle())
+    }
+
+    /// From light to heavy on the stored 0 to 100 Effort: Rest colour, Effort colour, amber, then red.
+    private func effortTint(_ stored: Double?) -> Color {
+        guard let stored else { return NunaPalette.textMuted }
+        switch stored {
+        case ..<10: return NunaPalette.rest
+        case ..<25: return NunaPalette.effort
+        case ..<40: return NunaPalette.warning
+        default: return NunaPalette.alert
+        }
     }
 
     /// Sleep as hours and minutes ("6:50"); the span of the night when the daily figure is not there.
