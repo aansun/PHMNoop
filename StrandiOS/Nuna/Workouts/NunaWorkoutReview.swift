@@ -340,14 +340,10 @@ enum NunaStravaState: Equatable {
 
 @MainActor
 enum NunaStravaCheck {
-    /// Only a GPS route or a treadmill session can go to Strava, as a FIT file.
-    static func eligible(_ r: WorkoutRow) -> Bool {
-        if StravaActivityType.isTreadmill(r.sport) { return true }
-        guard let route = RouteStore.load(startTs: r.startTs, sport: r.sport) else { return false }
-        return RouteMath.decode(route.polyline).count >= 2
-    }
+    /// Only a GPS route, a treadmill session or a gym session logged in PHMN can go to Strava, as a FIT file.
+    @MainActor static func eligible(_ r: WorkoutRow) -> Bool { StravaEligibility.canUpload(r) }
 
-    static func state(_ r: WorkoutRow) -> NunaStravaState {
+    @MainActor static func state(_ r: WorkoutRow) -> NunaStravaState {
         guard StravaExperiment.isEnabled else { return .off }
         guard StravaTokenStore.isConnected, StravaCredentials.current != nil else { return .notConnected }
         guard eligible(r) else { return .notEligible }
@@ -390,7 +386,7 @@ struct NunaWorkoutStravaCard: View {
         switch state {
         case .off: return String(localized: "Off. Turn it on in Me › Strava")
         case .notConnected: return String(localized: "Not connected. Connect it in Me › Strava")
-        case .notEligible: return String(localized: "Only GPS and treadmill workouts go to Strava")
+        case .notEligible: return String(localized: "Only GPS, treadmill and PHMN gym workouts go to Strava")
         case .uploaded: return String(localized: "On Strava")
         case .processing: return String(localized: "Strava is processing it")
         case .ready:

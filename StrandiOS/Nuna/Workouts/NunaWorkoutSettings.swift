@@ -27,7 +27,7 @@ struct NunaWorkoutSettingsView: View {
             }
             NunaSettingsGroup("Share") {
                 NavigationLink(value: NunaMeRoute.strava) {
-                    NunaListRow("Strava", subtitle: "Upload GPS and treadmill workouts. Off by default", systemImage: "figure.run.circle", showsChevron: true) {
+                    NunaListRow("Strava", subtitle: "Upload GPS, treadmill and gym workouts. Off by default", systemImage: "figure.run.circle", showsChevron: true) {
                         NunaChip(strava ? "On" : "Off", color: strava ? NunaPalette.charge : nil)
                     }
                 }.buttonStyle(.plain)

@@ -639,6 +639,16 @@ struct NunaLiftSessionView: View {
                                  durationS: Double(max(0, endTs - engine.startTs)), energyKcal: nil, avgHr: nil, maxHr: nil, strain: nil,
                                  distanceM: nil, zonesJSON: nil, notes: session.programName, steps: nil)
         await repo.saveManualWorkout(workout)
+        // A session logged here may go to Strava (one that came from Hevy or Apple Health never does, see `StravaOwnGym`). In automatic mode
+        // it goes now, from the workout as the lists read it, with the heart rate the strap measured filled in.
+        StravaOwnGym.add(startTs: workout.startTs, sport: workout.sport)
+        let repo = self.repo
+        Task {
+            await repo.refresh()
+            if let row = await repo.workoutRows().first(where: { $0.startTs == workout.startTs && $0.sport == workout.sport }) {
+                await StravaAutoUploadCoordinator.uploadIfNeeded(row)
+            }
+        }
         await finishAndDismiss()
     }
 
