@@ -16,13 +16,15 @@ enum NunaTodayDefaults {
     /// different defaults, so one must not leak into the other.
     static let orderKey = "nuna.today.sectionOrder"
     static let hiddenKey = "nuna.today.hiddenSections"
-    /// Rings and the synthesis chips, Anya, key metrics, the stress card, the journal with mood, then the add-or-arrange card.
-    /// Everything else (activity, heart rate, start session, your cards, cycle, added cards) stays out until the person adds it.
+    /// Rings and the synthesis chips, Anya, what was done today, key metrics, the stress card, the journal with mood, then the
+    /// add-or-arrange card. Everything else (heart rate, start session, your cards, cycle, added cards) stays out until the person adds it.
     static let order: [TodaySection] = [
-        .hero, .synthesis, .keyMetrics, .recoveryVitals, .journal,
-        .workouts, .heartRate, .liveSession, .yourCards, .menstrualCycle, .addedCards,
+        .hero, .synthesis, .workouts, .keyMetrics, .recoveryVitals, .journal,
+        .heartRate, .liveSession, .yourCards, .menstrualCycle, .addedCards,
     ]
-    static let hidden: [TodaySection] = [.workouts, .heartRate, .liveSession, .yourCards, .menstrualCycle, .addedCards]
+    static let hidden: [TodaySection] = [.heartRate, .liveSession, .yourCards, .menstrualCycle, .addedCards]
+    /// Set once the Activity card has been brought back on a layout saved while it was hidden by default.
+    static let activityShownKey = "nuna.today.activityShown.v1"
 }
 
 // The small views below each observe one fast-changing object, so a heart-rate tick or a strap update redraws a chip, not the whole screen.
@@ -187,6 +189,28 @@ struct NunaTodayView: View {
         .navigationDestination(isPresented: $showWindDown) { NunaWindDownView() }
         .sheet(isPresented: $showBreath) {
             NavigationStack { NunaBreathView().toolbar(.hidden, for: .navigationBar) }.preferredColorScheme(NunaTheme.colorScheme)
+        }
+        // The Activity card used to be hidden by default; a layout saved back then keeps it hidden, so it is opened once.
+        .task {
+            guard !UserDefaults.standard.bool(forKey: NunaTodayDefaults.activityShownKey) else { return }
+            UserDefaults.standard.set(true, forKey: NunaTodayDefaults.activityShownKey)
+            let raw = hiddenSectionsRaw.trimmingCharacters(in: .whitespaces)
+            if !raw.isEmpty {
+                var hidden = TodayLayoutPrefs.decodeHidden(raw)
+                if hidden.contains(.workouts) {
+                    hidden.removeAll { $0 == .workouts }
+                    hiddenSectionsRaw = hidden.isEmpty ? "none" : TodayLayoutPrefs.encodeHidden(hidden)
+                }
+            }
+            // And to just under Anya, where it was never placed on a layout saved back then (it sat at the very bottom).
+            if !sectionOrderRaw.trimmingCharacters(in: .whitespaces).isEmpty {
+                var order = TodayLayoutPrefs.decodeOrder(sectionOrderRaw)
+                if let from = order.firstIndex(of: .workouts), let anya = order.firstIndex(of: .synthesis), from > anya + 1 {
+                    order.remove(at: from)
+                    order.insert(.workouts, at: anya + 1)
+                    sectionOrderRaw = TodayLayoutPrefs.encode(order)
+                }
+            }
         }
         // A saved gym session adds a workout without changing the caches `refreshSeq` follows, so it is a reason to reload on its own.
         .task(id: "\(repo.refreshSeq)-\(model.dayOffset)-\(liftSession.savedSessions)") {
@@ -672,12 +696,18 @@ struct NunaTodayView: View {
                 }
             }
         case .workouts:
-            if let w = model.workouts.last {
+            // Everything done on the day shown, newest first; three rows at most, the rest counted in the link.
+            let done = model.workouts.sorted { $0.startTs > $1.startTs }
+            if !done.isEmpty {
                 VStack(spacing: 12) {
                     NunaTitleRow(title: "Activity") {
-                        Button { router.requestedDestination = .workouts } label: { NunaLinkLabel(text: "All workouts", chevron: true) }
+                        Button { router.requestedDestination = .workouts } label: {
+                            NunaLinkLabel(text: done.count > 3 ? LocalizedStringKey("All \(done.count) workouts") : "All workouts", chevron: true)
+                        }
                     }
-                    NunaActivityRow(workout: w, effortScale: effortScale)
+                    VStack(spacing: 10) {
+                        ForEach(Array(done.prefix(3)), id: \.startTs) { w in NunaActivityRow(workout: w, effortScale: effortScale) }
+                    }
                 }
             }
         case .heartRate:
