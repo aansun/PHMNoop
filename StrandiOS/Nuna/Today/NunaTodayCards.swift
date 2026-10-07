@@ -471,6 +471,8 @@ struct NunaMetricTile: Identifiable {
     var tint: Color?
     /// Small line under the label in the long layout, e.g. what the change is measured against.
     var caption: LocalizedStringKey?
+    /// The last days of this metric for the trend line of "Detailed tiles"; nil when the option is off or there is nothing to draw.
+    var spark: [Double]?
 }
 
 /// How the key metrics are laid out: two-column cards, or one long list.
@@ -508,6 +510,9 @@ struct NunaMetricsGrid: View {
                 if let c = tile.caption { Text(c).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8) }
             }
             Spacer(minLength: 8)
+            if let spark = tile.spark, spark.count >= 2 {
+                NunaSpark(values: spark, color: tile.tint ?? NunaPalette.charge).frame(width: 52, height: 30)
+            }
             // The figure on the right with its change as a small triangle (no unit), and what it was before underneath. The triangle's slot
             // is always there, so the figures of every row end on the same line.
             let trend = Self.trend(tile)
@@ -627,6 +632,9 @@ struct NunaMetricsGrid: View {
                     if !tile.unit.isEmpty && tile.value != "–" {
                         Text(verbatim: tile.unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
+                }
+                if let spark = tile.spark, spark.count >= 2 {
+                    NunaSpark(values: spark, color: tile.tint ?? NunaPalette.charge).frame(height: 38)
                 }
             }
         }
