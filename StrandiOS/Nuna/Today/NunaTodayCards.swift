@@ -193,6 +193,8 @@ struct NunaAnyaCard: View {
     var detail: String?
     var progress: Double?
     var progressColor: Color = NunaPalette.effort
+    /// More buttons for the sheet, after the one above (a second thing to do about the same line).
+    var moreActions: [NunaAnyaCardAction] = []
     let action: () -> Void
     /// The line itself, when it is already text; with a screen context it is what the sheet opens on.
     private var line: String?
@@ -206,7 +208,8 @@ struct NunaAnyaCard: View {
 
     /// For text that is already localized (the readiness one-liner).
     init(verbatim: String, detail: String? = nil, progress: Double? = nil, progressColor: Color = NunaPalette.effort, buttonTitle: LocalizedStringKey? = nil, onButton: (() -> Void)? = nil,
-         action: @escaping () -> Void) {
+         moreActions: [NunaAnyaCardAction] = [], action: @escaping () -> Void) {
+        self.moreActions = moreActions
         self.title = Text(verbatim: verbatim); self.line = verbatim; self.detail = detail; self.progress = progress; self.progressColor = progressColor
         self.buttonTitle = buttonTitle; self.onButton = onButton; self.action = action
     }
@@ -217,9 +220,22 @@ struct NunaAnyaCard: View {
     var body: some View {
         if cardsOn {
             content.sheet(isPresented: $showSheet) {
-                if let ctx = sheetContext, let line { NunaAnyaSheet(context: ctx, cardLine: .init(headline: line, detail: detail, read: NunaAnyaCardLine.signals(ctx))) }
+                if let ctx = sheetContext, let line {
+                    NunaAnyaSheet(context: ctx, cardLine: .init(headline: line, detail: detail, read: NunaAnyaCardLine.signals(ctx), actions: sheetActions))
+                }
             }
         }
+    }
+
+    /// The buttons the card would have carried, which the sheet shows instead when the card is kept short.
+    private var sheetActions: [NunaAnyaCardAction] {
+        (buttonTitle.flatMap { t in onButton.map { [NunaAnyaCardAction(title: t, perform: $0)] } } ?? []) + moreActions
+    }
+
+    /// On a screen that opens the sheet from its cards, a card that has more to say (a second line, a bar, a button) shows only its
+    /// headline; the rest is in the sheet.
+    private var compact: Bool {
+        sheetContext != nil && line != nil && (detail != nil || progress != nil || buttonTitle != nil || !moreActions.isEmpty)
     }
 
     /// A card with its own line opens the sheet about it; the others keep the screen's action.
@@ -228,7 +244,8 @@ struct NunaAnyaCard: View {
     }
 
     @ViewBuilder private var content: some View {
-        if let buttonTitle, let onButton { stacked(buttonTitle, onButton) } else { inline }
+        if compact { inline(compact: true) }
+        else if let buttonTitle, let onButton { stacked(buttonTitle, onButton) } else { inline(compact: false) }
     }
 
     private var label: some View {
@@ -237,32 +254,34 @@ struct NunaAnyaCard: View {
             .foregroundStyle(NunaPalette.textSecondary)
     }
 
-    private var body_: some View {
+    private var body_: some View { bodyView(compact: false) }
+
+    private func bodyView(compact: Bool) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             title
                 .font(.nuna(size: 16, weight: .bold))
                 .foregroundStyle(NunaPalette.textPrimary)
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true).textCase(nil)
-            if let detail {
+            if let detail, !compact {
                 Text(verbatim: detail).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.top, 2)
             }
-            if let progress {
+            if let progress, !compact {
                 NunaProgressBar(fraction: min(max(progress, 0), 1), color: progressColor).frame(height: 6).padding(.top, 6)
             }
         }
     }
 
-    /// No button: the icon, the words and a chevron in one row, the whole card opens Anya.
-    private var inline: some View {
+    /// The icon, the words and a chevron in one row; the whole card opens Anya.
+    private func inline(compact: Bool) -> some View {
         NunaCard(small: true, highlight: highlight, padding: EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)) {
             Button(action: tapped) {
                 HStack(spacing: 12) {
                     AnyaIconTile()
                     VStack(alignment: .leading, spacing: 2) {
                         label
-                        body_
+                        bodyView(compact: compact)
                     }
                     Spacer(minLength: 4)
                     Image(systemName: "chevron.right")

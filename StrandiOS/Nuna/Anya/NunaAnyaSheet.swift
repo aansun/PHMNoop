@@ -6,11 +6,23 @@ import StrandAnalytics
 /// The sheet every Anya card and header button opens (AnyaSheet*.dc). The top is always the local read: a line that cites
 /// its figures, computed on this iPhone. A provider adds a short explanation only after it is connected and data access is
 /// allowed; follow-up questions are answered inside the sheet, and "Open full conversation" hands over to the Anya tab.
+/// Something the card could do, offered in the sheet instead (start a session, breathe, open the journal).
+struct NunaAnyaCardAction: Identifiable {
+    let title: LocalizedStringKey
+    let perform: () -> Void
+    var id: String { "\(title)" }
+}
+
 /// The line of the card that opened the sheet, so the sheet talks about what was tapped.
 struct NunaAnyaCardLine: Equatable {
     var headline: String
     var detail: String?
     var read: [String]
+    var actions: [NunaAnyaCardAction] = []
+
+    static func == (a: NunaAnyaCardLine, b: NunaAnyaCardLine) -> Bool {
+        a.headline == b.headline && a.detail == b.detail && a.read == b.read && a.actions.map(\.id) == b.actions.map(\.id)
+    }
 
     /// The signals a card on this screen was drawn from.
     static func signals(_ context: String) -> [String] {
@@ -112,6 +124,21 @@ struct NunaAnyaSheet: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text(verbatim: r.headline).font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 if let d = r.detail { Text(verbatim: d).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil) }
+                if let acts = cardLine?.actions, !acts.isEmpty {
+                    HStack(spacing: 8) {
+                        ForEach(acts) { a in
+                            Button {
+                                dismiss()
+                                // Let the sheet go before the screen behind it moves on.
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { a.perform() }
+                            } label: {
+                                Text(a.title).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 18).frame(height: 40)
+                                    .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                            }.buttonStyle(.plain)
+                        }
+                        Spacer(minLength: 0)
+                    }
+                }
                 if explaining {
                     HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                 } else if let explanation {
