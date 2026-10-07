@@ -68,7 +68,7 @@ extension View {
 enum NunaGymStore {
     /// Flatten a program into the plan the session runs. The plan is a snapshot taken at start, the same as the Lift Log.
     static func start(program: LiftProgramRow, repo: Repository, session: LiftSessionController) async {
-        guard !session.isActive else { session.isPresented = true; return }
+        guard !session.isActive else { session.present(); return }
         guard let store = await repo.storeHandle() else { return }
         let items = (try? await store.liftProgramItems(programId: program.id)) ?? []
         guard !items.isEmpty else { return }
@@ -85,7 +85,7 @@ enum NunaGymStore {
 
     /// Start with exercises chosen on the spot and no program behind them.
     static func startFreehand(_ picked: [NunaPickedExercise], repo: Repository, session: LiftSessionController) async {
-        guard !session.isActive else { session.isPresented = true; return }
+        guard !session.isActive else { session.present(); return }
         let vocabulary: [LiftExerciseRow]
         if let store = await repo.storeHandle() { vocabulary = (try? await store.liftExercises(deviceId: repo.deviceId)) ?? [] } else { vocabulary = [] }
         // A name typed by hand takes its muscles from the exercises remembered from earlier, when it is one of them.
@@ -169,7 +169,7 @@ struct NunaGymView: View {
                     Text(session.isActive ? "Open it to keep logging sets" : "Pick the exercises you want to do").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 Spacer(minLength: 8)
-                Button { if session.isActive { session.isPresented = true } else { picking = true } } label: {
+                Button { if session.isActive { session.present() } else { picking = true } } label: {
                     Text(session.isActive ? "Open" : "Start").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
                         .padding(.horizontal, 22).frame(height: 44).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain)

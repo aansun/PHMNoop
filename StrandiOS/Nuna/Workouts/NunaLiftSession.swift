@@ -677,7 +677,7 @@ struct NunaLiftBar: View {
 
     var body: some View {
         if session.isActive, !session.isPresented, let e = session.engine {
-            Button { session.isPresented = true } label: {
+            Button { session.present() } label: {
                 HStack(spacing: 12) {
                     Image(systemName: "dumbbell").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                         .frame(width: 38, height: 38).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
