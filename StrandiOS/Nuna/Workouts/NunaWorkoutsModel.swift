@@ -22,6 +22,8 @@ enum NunaWorkoutRoute: Hashable {
     case program(String)
     case programImport
     case gymSession(String)
+    case exerciseLibrary
+    case exercise(String)
 }
 
 enum NunaWorkoutKind {
