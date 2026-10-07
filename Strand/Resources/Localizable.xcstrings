@@ -1,6 +1,13 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "%@ L to go": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "%@ L lagi" } } } },
+        "Goal reached": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Target tercapai" } } } },
+        "%lld ml to go": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "%lld ml lagi" } } } },
+        "Goal": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Target" } } } },
+        "How the goal is set": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Cara target ditentukan" } } } },
+        "Your sex and today's Effort": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Jenis kelamin dan Effort hari ini" } } } },
+        "A simple goal that starts from your sex and rises with the Effort you add during the day. It is a guide, not a prescription.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Target sederhana yang berawal dari jenis kelamin dan naik mengikuti Effort yang Anda tambah sepanjang hari. Ini panduan, bukan anjuran medis." } } } },
         "Today's activities": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Aktivitas hari ini" } } } },
         "All %lld workouts": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Semua %lld latihan" } } } },
         "%@ done": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "%@ selesai" } } } },
