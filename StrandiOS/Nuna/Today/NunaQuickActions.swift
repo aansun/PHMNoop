@@ -101,7 +101,7 @@ struct NunaQuickPanel<Root: Hashable>: View {
                 .nunaDeviceDestinations()
         }
         .onChange(of: path.count) { _, n in if n == 0 { dismiss() } }
-        // A gym session shows as a sheet over the whole app, and a sheet cannot open on top of this one. When a session asks to be shown
+        // A gym session shows as a full-screen cover over the whole app, and a cover cannot open on top of a sheet. When a session asks to be shown
         // from in here (starting one in Gym, or tapping Open), this panel closes and the session follows once the screen is clear.
         .onChange(of: liftSession.wantsPresent) { _, wants in if wants { dismiss() } }
         .preferredColorScheme(NunaTheme.colorScheme)

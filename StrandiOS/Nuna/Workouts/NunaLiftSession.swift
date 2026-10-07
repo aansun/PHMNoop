@@ -75,7 +75,6 @@ struct NunaLiftSessionView: View {
             }
         }
         .preferredColorScheme(NunaTheme.colorScheme)
-        .presentationDragIndicator(.visible)
         .toolbar { ToolbarItemGroup(placement: .keyboard) {
             Spacer()
             Button("Done") { focused = nil }
@@ -160,9 +159,10 @@ struct NunaLiftSessionView: View {
                     .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
             }.buttonStyle(.plain).accessibilityLabel(Text("Minimise"))
             VStack(alignment: .leading, spacing: 2) {
-                Text(verbatim: session.programName ?? String(localized: "Gym session"))
+                Text("Gym")
                     .font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1)
-                Text("Lift Log").font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: session.programName ?? String(localized: "Gym session"))
+                    .font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
             }
             Spacer(minLength: 8)
             if let bpm = model.bpm {
