@@ -1,6 +1,10 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "Training": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Latihan fisik" } } } },
+        "No workouts in the last 7 days. Start one from Workouts.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Belum ada workout dalam 7 hari terakhir. Mulai dari Workouts." } } } },
+        "Start a workout and see your history": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Mulai workout dan lihat riwayatmu" } } } },
+        "Cardio and strength, week by week": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Kardio dan kekuatan, minggu demi minggu" } } } },
         "Audio coach during sessions": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Pelatih audio saat sesi" } } } },
         "Anya's audio coach": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Pelatih audio Anya" } } } },
         "The audio coach is off. Turn it on below to hear cues during a workout; the test plays either way.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Pelatih audio mati. Nyalakan di bawah untuk mendengar arahan saat latihan; tesnya tetap berbunyi." } } } },
