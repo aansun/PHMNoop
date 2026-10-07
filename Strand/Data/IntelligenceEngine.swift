@@ -243,7 +243,7 @@ final class IntelligenceEngine: ObservableObject {
         /// day, computed off the main actor. nil when no session clears the coverage gate. Written to
         /// metricSeries as "rhr_primary_session" in pass 2; on iOS it also supplies the headline RHR.
         let primarySessionRHR: Double?
-        /// #1169 coverage inputs for the shadow mean above (valid-sample count + primary-session duration),
+        /// #1169 coverage inputs for the mean above (valid-sample count + primary-session duration),
         /// written as "rhr_primary_session_valid_samples" / "rhr_primary_session_duration_s" in pass 2. nil
         /// in lockstep with `primarySessionRHR`.
         let primarySessionRHRCoverage: PrimarySessionRestingHR.Coverage?
@@ -1666,11 +1666,12 @@ final class IntelligenceEngine: ObservableObject {
                 // ── RHR floor-vs-mean diagnostic (#691) ────────────────────────────────────────────────
                 // Make the recurring "NOOP's resting HR reads LOWER than my sleeping-HR app" reports
                 // explainable from the strap log instead of a guess. The two numbers measure different
-                // things BY DESIGN, not a bug: NOOP's `restingHr` is the WHOOP-style FLOOR (the lowest
+                // things BY DESIGN, not a bug: the engine's `restingHr` is the WHOOP-style FLOOR (the lowest
                 // sustained 5-min in-bed level , SleepStager picks the min 5-min rolling-mean HR per session,
                 // and the day takes the .min() across them), whereas a "sleeping HR" app reports the night
-                // MEAN over the whole asleep span. The mean always sits above the floor, so NOOP looking
-                // lower is correct. Log BOTH so a report ships proof of the gap. Mean is computed over the
+                // MEAN over the whole asleep span. The mean always sits above the floor. (On iOS the daily
+                // value the app shows is later replaced by the mean, see `primarySessionRHRByDay`; this line
+                // still logs the floor the engine computed.) Log BOTH so a report ships proof of the gap. Mean is computed over the
                 // SAME matched in-bed span the floor came from (so they're directly comparable); a night
                 // with no banked floor (no matched sleep) logs nil and the line is skipped. Logging only ,
                 // no scoring change. Counts/bpm only; no timestamps or PII (LiveState.append also scrubs).
