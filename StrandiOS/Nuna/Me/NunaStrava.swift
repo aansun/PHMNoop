@@ -18,11 +18,7 @@ struct NunaStravaView: View {
     @State private var editingCredentials = false
 
     private var uploadable: [WorkoutRow] {
-        workouts.filter { row in
-            if StravaActivityType.isTreadmill(row.sport) { return true }
-            guard let route = RouteStore.load(startTs: row.startTs, sport: row.sport) else { return false }
-            return RouteMath.decode(route.polyline).count >= 2
-        }
+        workouts.filter { StravaEligibility.canUpload($0) }
     }
     private var pending: [WorkoutRow] { uploadable.filter { model.record(for: $0) == nil } }
     private var done: [WorkoutRow] { uploadable.filter { model.record(for: $0)?.isComplete == true } }
@@ -49,7 +45,7 @@ struct NunaStravaView: View {
                 NunaDivider()
                 NunaListRow("Your own API app", subtitle: "A Client ID and Client Secret from Strava", systemImage: "key")
                 NunaDivider()
-                NunaListRow("A GPS or treadmill workout", subtitle: "Only these kinds can be uploaded", systemImage: "figure.run")
+                NunaListRow("A GPS, treadmill or gym workout", subtitle: "Gym counts only when logged in PHMN, not from Hevy or Apple Health", systemImage: "figure.run")
             }
             nunaFootnote("NOOP uses your own Strava API app. The Client ID and Secret are kept in this iPhone's Keychain and used only when you connect or upload. The activity goes to Strava as a FIT file.")
         }
@@ -132,13 +128,13 @@ struct NunaStravaView: View {
                 }
             }
             NunaCard(small: true) {
-                NunaToggleRow("Upload automatically", subtitle: "New GPS and treadmill workouts are uploaded when they finish", systemImage: "arrow.up.circle", isOn: $automatic).padding(.vertical, 8)
+                NunaToggleRow("Upload automatically", subtitle: "New GPS, treadmill and gym workouts are uploaded when they finish", systemImage: "arrow.up.circle", isOn: $automatic).padding(.vertical, 8)
             }
             VStack(alignment: .leading, spacing: 10) {
                 nunaRuledHeader("Waiting to upload")
                 NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                     VStack(spacing: 0) {
-                        if pending.isEmpty { Text(uploadable.isEmpty ? "No GPS or treadmill workouts yet." : "Everything recent is already on Strava.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 16) }
+                        if pending.isEmpty { Text(uploadable.isEmpty ? "No GPS, treadmill or gym workouts yet." : "Everything recent is already on Strava.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 16) }
                         ForEach(Array(pending.enumerated()), id: \.element.startTs) { i, r in
                             if i > 0 { NunaDivider() }
                             row(r) {
@@ -163,7 +159,7 @@ struct NunaStravaView: View {
                     }
                 }
             }
-            nunaFootnote("Uploaded as FIT files: GPS and treadmill workouts. Gym and sports without GPS are not included. Nothing is uploaded while the integration is off.")
+            nunaFootnote("Uploaded as FIT files: GPS and treadmill workouts, and gym sessions you logged in PHMN. Gym data from Hevy or Apple Health, and sports without GPS, are not included. Nothing is uploaded while the integration is off.")
         }
     }
 
@@ -190,7 +186,7 @@ struct NunaStravaView: View {
     private func load() async {
         guard enabled else { return }
         let rows = await repo.workoutRows(days: 4000)
-        workouts = Array(rows.filter { StravaActivityType.isTreadmill($0.sport) || RouteStore.load(startTs: $0.startTs, sport: $0.sport) != nil }.sorted { $0.startTs > $1.startTs }.prefix(50))
+        workouts = Array(rows.filter { StravaEligibility.canUpload($0) }.sorted { $0.startTs > $1.startTs }.prefix(50))
         await model.reconcileRecentUploads(rows: rows)
     }
 }

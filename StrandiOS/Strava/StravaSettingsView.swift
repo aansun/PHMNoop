@@ -20,11 +20,7 @@ struct StravaSettingsView: View {
     @State private var credentialsExpanded = false
 
     private var uploadableWorkouts: [WorkoutRow] {
-        workouts.filter { row in
-            if StravaActivityType.isTreadmill(row.sport) { return true }
-            guard let route = RouteStore.load(startTs: row.startTs, sport: row.sport) else { return false }
-            return RouteMath.decode(route.polyline).count >= 2
-        }
+        workouts.filter { StravaEligibility.canUpload($0) }
     }
 
     private var pendingUploadWorkouts: [WorkoutRow] {
@@ -301,10 +297,7 @@ struct StravaSettingsView: View {
     private func loadWorkouts() async {
         let rows = await repo.workoutRows(days: 4000)
         await MainActor.run {
-            workouts = Array(rows.filter {
-                StravaActivityType.isTreadmill($0.sport)
-                    || RouteStore.load(startTs: $0.startTs, sport: $0.sport) != nil
-            }
+            workouts = Array(rows.filter { StravaEligibility.canUpload($0) }
                 .sorted { $0.startTs > $1.startTs }.prefix(50))
         }
         await model.reconcileRecentUploads(rows: rows)

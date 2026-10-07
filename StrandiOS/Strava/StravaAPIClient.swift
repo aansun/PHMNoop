@@ -60,8 +60,10 @@ final class StravaAPIClient {
         }
     }
 
-    func upload(row: WorkoutRow, route: [RouteMath.LatLng], elevationGainM: Double? = nil) async throws -> StravaUploadResponse {
-        guard route.count >= 2 || StravaActivityType.isTreadmill(row.sport) else { throw StravaError.noRoute }
+    /// `allowWithoutRoute` is for a gym session logged in PHMN, which has no route by nature (the caller decides that, see `StravaOwnGym`).
+    func upload(row: WorkoutRow, route: [RouteMath.LatLng], elevationGainM: Double? = nil,
+                allowWithoutRoute: Bool = false) async throws -> StravaUploadResponse {
+        guard route.count >= 2 || StravaActivityType.isTreadmill(row.sport) || allowWithoutRoute else { throw StravaError.noRoute }
         let token = try await validAccessToken()
         let steps = await Self.stepsForUpload(row: row)
         let points = route.map { RoutePoint(lat: $0.lat, lon: $0.lon) }

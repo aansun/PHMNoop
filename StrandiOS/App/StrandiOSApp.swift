@@ -273,6 +273,9 @@ struct StrandiOSApp: App {
                 // `$engine` publishes before the new value is stored, so the push reads it one turn later. Read at once, an ended session still
                 // looked running: the Live Activity was updated instead of ended and stayed on the Lock Screen and in the Dynamic Island.
                 .onReceive(liftSession.$engine) { _ in DispatchQueue.main.async { pushLiftActivity() } }
+                // Which gym sessions were logged in PHMN (the only ones that may go to Strava), read at launch and after each saved session.
+                .task { await StravaOwnGym.refresh(repo: model.repo) }
+                .onReceive(liftSession.$savedSessions) { _ in Task { await StravaOwnGym.refresh(repo: model.repo) } }
                 // An activity left behind by an earlier run (the app was closed with a session going) is ended as soon as the app is up.
                 .task { pushLiftActivity() }
                 // #911/#759: republish the Home/Lock-Screen widget whenever the dashboard caches actually

@@ -1,6 +1,15 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "A GPS, treadmill or gym workout": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Workout GPS, treadmill, atau gym" } } } },
+        "Gym counts only when logged in PHMN, not from Hevy or Apple Health": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Gym hanya dihitung bila dicatat di PHMN, bukan dari Hevy atau Apple Health" } } } },
+        "New GPS, treadmill and gym workouts are uploaded when they finish": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Workout GPS, treadmill, dan gym yang baru diunggah saat selesai" } } } },
+        "No GPS, treadmill or gym workouts yet.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Belum ada workout GPS, treadmill, atau gym." } } } },
+        "Uploaded as FIT files: GPS and treadmill workouts, and gym sessions you logged in PHMN. Gym data from Hevy or Apple Health, and sports without GPS, are not included. Nothing is uploaded while the integration is off.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Diunggah sebagai file FIT: workout GPS dan treadmill, serta sesi gym yang Anda catat di PHMN. Data gym dari Hevy atau Apple Health, dan olahraga tanpa GPS, tidak ikut. Tidak ada yang diunggah selama integrasi mati." } } } },
+        "Only GPS, treadmill and PHMN gym workouts go to Strava": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Hanya workout GPS, treadmill, dan gym PHMN yang masuk ke Strava" } } } },
+        "Upload GPS, treadmill and gym workouts. Off by default": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Unggah workout GPS, treadmill, dan gym. Mati secara default" } } } },
+        "Upload GPS, treadmill and gym workouts · experimental": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Unggah workout GPS, treadmill, dan gym · eksperimental" } } } },
+        "Connected to Strava. New GPS, treadmill and gym workouts will upload automatically.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Terhubung ke Strava. Workout GPS, treadmill, dan gym yang baru akan diunggah otomatis." } } } },
         "Water added by +": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Air yang ditambah tombol +" } } } },
         "Used by the water button of the + sheet and by Health's water card.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Dipakai oleh tombol air di lembar + dan oleh kartu air di Health." } } } },
         "%@ L to go": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "%@ L lagi" } } } },
