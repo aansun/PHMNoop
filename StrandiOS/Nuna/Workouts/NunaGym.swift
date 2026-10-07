@@ -84,13 +84,15 @@ enum NunaGymStore {
     }
 
     /// Start with exercises chosen on the spot and no program behind them.
-    static func startFreehand(_ names: [String], repo: Repository, session: LiftSessionController) async {
+    static func startFreehand(_ picked: [NunaPickedExercise], repo: Repository, session: LiftSessionController) async {
         guard !session.isActive else { session.isPresented = true; return }
         let vocabulary: [LiftExerciseRow]
         if let store = await repo.storeHandle() { vocabulary = (try? await store.liftExercises(deviceId: repo.deviceId)) ?? [] } else { vocabulary = [] }
-        let plan = names.map { n -> LiftPlanItem in
-            let known = vocabulary.first { $0.name == n }
-            return LiftPlanItem(exercise: n, primaryMuscle: known?.primaryMuscle, secondaryMuscles: known?.secondaryMuscles ?? [], targetSets: 3)
+        // A name typed by hand takes its muscles from the exercises remembered from earlier, when it is one of them.
+        let plan = picked.map { p -> LiftPlanItem in
+            let known = p.primary == nil ? vocabulary.first { $0.name == p.name } : nil
+            return LiftPlanItem(exercise: p.name, primaryMuscle: p.primary ?? known?.primaryMuscle,
+                                secondaryMuscles: p.primary == nil ? (known?.secondaryMuscles ?? []) : p.secondary, targetSets: 3)
         }
         guard !plan.isEmpty else { return }
         session.start(plan: plan, programId: nil, programName: nil)
@@ -132,9 +134,8 @@ struct NunaGymView: View {
         }
         .nunaWorkoutDestinations()
         .task(id: "\(repo.refreshSeq)-\(session.savedSessions)") { await load() }
-        .sheet(isPresented: $picking) { NunaExercisePicker { names in
-            picking = false
-            Task { await NunaGymStore.startFreehand(names, repo: repo, session: session) }
+        .sheet(isPresented: $picking) { NunaExercisePicker { picked in
+            Task { await NunaGymStore.startFreehand(picked, repo: repo, session: session) }
         } }
     }
 
@@ -301,70 +302,6 @@ struct NunaGymView: View {
         }
         readiness = NunaMuscleReadiness.readings(sets: dated, now: now)
         programs = ps; itemCounts = counts; lastUsed = last; history = all; volumes = vols; loaded = true
-    }
-}
-
-// MARK: - Exercise picker for an empty session
-
-/// Choose exercises for a session with no program: the ones remembered from earlier, plus any name typed in.
-struct NunaExercisePicker: View {
-    let onStart: ([String]) -> Void
-    @EnvironmentObject private var repo: Repository
-    @Environment(\.dismiss) private var dismiss
-    @State private var vocabulary: [LiftExerciseRow] = []
-    @State private var chosen: [String] = []
-    @State private var typed = ""
-    @FocusState private var focused: Bool
-
-    var body: some View {
-        NavigationStack {
-            NunaDetailScreen("Choose exercises") {
-                NunaFormField("Exercise name") {
-                    HStack {
-                        TextField("", text: $typed, prompt: Text("Bench press").foregroundStyle(NunaPalette.textMuted)).focused($focused).submitLabel(.done).onSubmit(add)
-                        Button(action: add) { Image(systemName: "plus.circle.fill").font(.nuna(size: 22)).foregroundStyle(NunaPalette.textPrimary) }.buttonStyle(.plain)
-                            .disabled(typed.trimmingCharacters(in: .whitespaces).isEmpty)
-                    }
-                }
-                if !vocabulary.isEmpty {
-                    NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                        VStack(spacing: 0) {
-                            ForEach(Array(vocabulary.prefix(30).enumerated()), id: \.element.id) { i, e in
-                                if i > 0 { NunaDivider() }
-                                Button { toggle(e.name) } label: {
-                                    HStack {
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text(verbatim: e.name).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                            Text(verbatim: LiftMuscleSummary.line(primary: e.primaryMuscle, secondaries: e.secondaryMuscles)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                                        }
-                                        Spacer()
-                                        Image(systemName: chosen.contains(e.name) ? "checkmark.circle.fill" : "circle").font(.nuna(size: 20)).foregroundStyle(chosen.contains(e.name) ? NunaPalette.textPrimary : NunaPalette.textMuted)
-                                    }.padding(.vertical, 12).contentShape(Rectangle())
-                                }.buttonStyle(.plain)
-                            }
-                        }
-                    }
-                }
-                Button { onStart(chosen) } label: {
-                    Text(verbatim: chosen.isEmpty ? String(localized: "Pick at least one exercise") : String(localized: "Start with \(chosen.count) exercises"))
-                        .font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56)
-                        .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                }.buttonStyle(.plain).disabled(chosen.isEmpty).opacity(chosen.isEmpty ? 0.4 : 1)
-            }
-            .scrollDismissesKeyboard(.interactively)
-            .toolbar(.hidden, for: .navigationBar)
-            .nunaKeyboardDone()
-        }
-        .preferredColorScheme(NunaTheme.colorScheme)
-        .task { if let s = await repo.storeHandle() { vocabulary = ((try? await s.liftExercises(deviceId: repo.deviceId)) ?? []).sorted { ($0.lastUsedTs ?? 0) > ($1.lastUsedTs ?? 0) } } }
-    }
-
-    private func toggle(_ n: String) { if let i = chosen.firstIndex(of: n) { chosen.remove(at: i) } else { chosen.append(n) } }
-    private func add() {
-        let n = typed.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !n.isEmpty else { return }
-        if !chosen.contains(n) { chosen.append(n) }
-        typed = ""
     }
 }
 #endif

@@ -36,7 +36,8 @@ SOFTWARE.
 
 `https://github.com/yuhonas/free-exercise-db` by yuhonas, released into the public domain under **The Unlicense**. The app bundles
 its exercise names, muscles, equipment and instructions, and two photos per exercise (the start and the end of the movement,
-shrunk to 520 px wide). `Tools/build-exercise-library.py` builds the bundle in `StrandiOS/Resources/ExerciseLibrary/`.
+shrunk to 480 px wide) for all 876 exercises of the data set. `Tools/build-exercise-library.py` builds the bundle in
+`StrandiOS/Resources/ExerciseLibrary/` (about 36 MB).
 
 The data set says it is derived from the public-domain `wrkout/exercises.json`. The original photographer is not named upstream and
 this project could not verify the chain of rights beyond the dedication at the source.
