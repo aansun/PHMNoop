@@ -1361,11 +1361,11 @@ public enum AnalyticsEngine {
         return (mean: Int((Double(sum) / Double(kept)).rounded()), samples: kept)
     }
 
-    /// #1169 SHADOW METRIC: the primary-session MEAN resting HR — window each detected sleep session's HR
-    /// samples to `[start, end)` and delegate to the #1174-defined `PrimarySessionRestingHR.meanHR` (that
-    /// definition is UNCHANGED). `IntelligenceEngine` stores the result beside the shipped nightly HR FLOOR
-    /// (`daily.restingHr`) as "rhr_primary_session" — instrumentation only, never shown, never scored — so
-    /// the mean-vs-floor comparison #1169 asks for can be evaluated from exports without a headline switch.
+    /// #1169: the primary-session MEAN resting HR — window each detected sleep session's HR samples to
+    /// `[start, end)` and delegate to the #1174-defined `PrimarySessionRestingHR.meanHR` (that definition is
+    /// UNCHANGED). `IntelligenceEngine` stores the result beside the nightly HR FLOOR (`daily.restingHr`) as
+    /// "rhr_primary_session". The floor is still what this engine returns; on iOS the app layer then swaps
+    /// the mean in as the daily resting HR (see `PrimarySessionRestingHR`), while Android keeps the floor.
     /// Byte-parity twin of the Kotlin `primarySessionRestingHR`.
     public static func primarySessionRestingHR(
         sessions: [SleepSession], hr: [HRSample],
@@ -1375,8 +1375,8 @@ public enum AnalyticsEngine {
                                        validBpm: validBpm, minValidSamples: minValidSamples)
     }
 
-    /// #1169 coverage inputs for the shadow `rhr_primary_session` mean (valid-sample count + primary-session
-    /// duration). Builds the SAME per-session inputs as `primarySessionRestingHR` and delegates to
+    /// #1169 coverage inputs for the `rhr_primary_session` mean (valid-sample count + primary-session
+    /// duration), stored beside it for auditing; nothing gates on them yet. Builds the SAME per-session inputs as `primarySessionRestingHR` and delegates to
     /// `PrimarySessionRestingHR.coverage`, so it is `nil` in lockstep with the mean. Byte-parity twin of the
     /// Kotlin `primarySessionRestingHRCoverage`.
     public static func primarySessionRestingHRCoverage(

@@ -1,7 +1,7 @@
 import Foundation
 
-/// #1169: an alternative headline resting-HR definition — the arithmetic MEAN of valid HR samples in the
-/// LONGEST (primary) sleep session, rather than the lowest-per-session floor `AnalyticsEngine` ships today.
+/// #1169: the resting-HR definition the iOS app shows as the nightly figure — the arithmetic MEAN of valid HR samples in the
+/// LONGEST (primary) sleep session, rather than the lowest-per-session floor `AnalyticsEngine` computes.
 ///
 /// ## Why (issue #1169, artemc)
 /// The shipped daily RHR is `restingHRDaily = matched…restingHR.min()` (`AnalyticsEngine`) — a nightly HR
@@ -10,12 +10,19 @@ import Foundation
 /// references, a pre-declared dev/holdout split, no fitted offset) found the primary-session sample mean
 /// tracked both references far better: rounded MAE vs the official target 6.0→2.0 (dev) / 7.5→0.8 (holdout).
 ///
-/// ## Deliberately PURE and UNWIRED
-/// This computes the metric and is unit-tested, but **nothing consumes it yet**. The shipped headline AND the
-/// recovery / strain / workout-detection / energy inputs all read `restingHRDaily` (the floor) in
-/// `AnalyticsEngine`, so switching them is a re-baselining of core scores — which the issue itself says needs
-/// a larger multi-participant, pre-declared holdout first. That is out of scope here; this lands the
-/// transparent, testable definition so that validation and any later wiring have something concrete to use.
+/// ## Where it is used
+/// This type is pure and unit-tested; it knows nothing about the app. `AnalyticsEngine.restingHRDaily` (the floor) still feeds the shared
+/// core, and Android keeps showing the floor. On iOS only, `IntelligenceEngine` replaces the daily `restingHr` with this mean after the
+/// nights are scored (`primarySessionRHRByDay`), so the Today figure, the charts and the baselines the app builds from them are all
+/// the mean. The floor stays on each sleep session (`SleepSession.restingHR`) and in the diagnostic log.
+///
+/// What the number is: the average heart rate of the whole night, not its lowest stretch. It runs a few bpm above the floor (on one
+/// wearer's nights 4 to 13 bpm, and 4 to 7 bpm below a Fitbit that was worn the same nights), and it moves with how restless the
+/// night was. The case for it (issue #1169) rests on one participant over five nights.
+///
+/// Known limits, kept here so they are not rediscovered:
+/// - A night the stager splits in two is represented by its longer part only (the rest of the night is not averaged in).
+/// - `defaultMinValidSamples` counts samples, not time, so it is a floor against empty sessions, not a coverage requirement.
 ///
 /// ## Definition (documented per the issue)
 /// - **Primary session**: the LONGEST session by duration; ties resolve to the FIRST (stable). A shorter nap
