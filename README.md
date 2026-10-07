@@ -39,7 +39,12 @@ The strap protocol, storage, sleep staging and scoring underneath are NOOP's, un
 | **Settings** | A long settings screen | **Me**: grouped hub with search that reaches individual settings and a list of the ones you opened last |
 | **Widgets** | Rings and heart rate | Score, Vital sign, Heart rate, Stress, Anya, Steps and Rings |
 | **Live Activities** | Strap sync | Workout, lift session and strap sync, on the Lock Screen and in the Dynamic Island |
-| **Workouts** | Live screen | A target ring, heart-rate zones, sport-specific tiles and an audio coach that speaks check-ins and target reached |
+| **Workouts** | Live screen | A hub with three tabs (Workout, Gym, Insight), a target ring, heart-rate zones, sport-specific tiles, and a Today card listing the day's sleep and every workout |
+| **Gym** | A lift log | Its own tab: programs you can group into folders, a Hevy-style full-screen session (sets, weight, reps, RPE, rest timer, a tone when rest ends), and a library of 876 exercises with photos and the muscles each works. A body map shows which muscles are trained and which are still tired |
+| **Audio coach** | None | Spoken cues in a workout: heart-rate zone alerts, distance milestones and optional smart cues, at a speed you choose. Short tones for the rest end in the gym. It plays over your music and lowers it for a moment, and has a test button that says what the phone did |
+| **Sleep** | One night chart | The night now ends where the strap stopped recording, not where the session happened to close (a night that ended at 05:52 no longer reads 06:24). The stage chart has five styles to pick in Settings (Classic, Fitbit, Fill, Garmin, Ribbon), and the vitals charts label every hour |
+| **Strava** | Not included | Upload GPS and treadmill workouts, off by default. Bring your own key: you create a Strava API app and enter its Client ID and Secret, which stay in the Keychain. Needs a Strava premium account |
+| **Hevy** | Not included | Import your workouts and routines from Hevy with your own API key, read only: the app never writes to Hevy. The Hevy API is part of Hevy Pro. Off by default, one tap to import, nothing runs in the background |
 | **Language** | English first | Indonesian is a first-class language |
 
 ## Screens
@@ -108,7 +113,15 @@ Pairing a WHOOP 5.0 / MG needs the strap freed from the official WHOOP app first
 
 ## Credit and license
 
-Everything underneath is **NOOP** and its contributors: [github.com/ryanbr/noop](https://github.com/ryanbr/noop). NOOP builds on
+**Gym.** The gym screens stand on other people's work, all of it open:
+
+- **[MuscleMap](https://github.com/melihcolpan/MuscleMap)** by Melih Colpan, MIT licence: the body map.
+- **[free-exercise-db](https://github.com/yuhonas/free-exercise-db)** by yuhonas, The Unlicense (public domain): the 876 exercises, their muscles and instructions, and the two photos of each.
+- **[openGym](https://github.com/DuarteSantos8/openGym)** by Duarte Santos, GNU AGPL-3.0: the idea of a body map of trained and tired muscles came from it. No openGym code, data, photos or animations are in PHMN; the readings here are written from your logged sets.
+
+The full licence texts are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) and in the app under **Me › About and help › Open-source notices**.
+
+**NOOP.** Everything underneath is **NOOP** and its contributors: [github.com/ryanbr/noop](https://github.com/ryanbr/noop). NOOP builds on
 [johnmiddleton12/my-whoop](https://github.com/johnmiddleton12/my-whoop) and [b-nnett/goose](https://github.com/b-nnett/goose); see
 [ATTRIBUTION.md](ATTRIBUTION.md) and [NOTICE](NOTICE). NOOP's own README is kept as [docs/NOOP_README.md](docs/NOOP_README.md), and the documents
 in [`docs/`](docs/) and [CHANGELOG.md](CHANGELOG.md) describe NOOP. Fonts: D-DIN-PRO and Montserrat, under the SIL Open Font License.
@@ -117,5 +130,5 @@ PHMN stays under NOOP's license, [PolyForm Noncommercial 1.0.0](LICENSE): free f
 
 Required Notice: Copyright 2026 NoopApp
 
-PHMN is not affiliated with, endorsed by, or connected to WHOOP, Inc. or the NOOP project. "WHOOP" is used only to identify the hardware the app
-works with.
+PHMN is not affiliated with, endorsed by, or connected to WHOOP, Inc., Strava, Inc., Hevy or the NOOP project. "WHOOP", "Strava" and "Hevy" are used
+only to identify the hardware and services the app works with.
