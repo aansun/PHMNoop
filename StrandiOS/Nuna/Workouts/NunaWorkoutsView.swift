@@ -61,7 +61,7 @@ struct NunaWorkoutsView: View {
 
     private let starts: [(String, String, String)] = [
         ("Running", "Run", "figure.run"), ("Walking", "Walk", "figure.walk"), ("Cycling", "Cycle", "bicycle"),
-        ("Strength", "Gym", "dumbbell"), ("Pool swim", "Swim", "figure.pool.swim"),
+        ("Pool swim", "Swim", "figure.pool.swim"),
         ("HIIT", "HIIT", "bolt.heart"), ("Yoga", "Yoga", "figure.mind.and.body"),
     ]
 
@@ -317,9 +317,12 @@ struct NunaWorkoutsView: View {
         }
     }
 
+    /// Every sport of the catalogue that can be started from here.
+    private var catalogNames: [String] { WorkoutCatalog.all.map(\.name).filter { !NunaPinnedSports.hidden.contains($0) } }
+
     private var startSection: some View {
         let q = query.trimmingCharacters(in: .whitespaces)
-        let matches = WorkoutCatalog.matching(q)
+        let matches = WorkoutCatalog.matching(q).filter { !NunaPinnedSports.hidden.contains($0.name) }
         let pins = pinned
         return NunaCard {
             VStack(alignment: .leading, spacing: 14) {
@@ -348,7 +351,7 @@ struct NunaWorkoutsView: View {
                         Text(limitHit ? "You can pin up to 8 workouts." : "Tap a workout to pin or unpin it.").font(.nuna(size: 12, weight: .semibold)).textCase(nil).multilineTextAlignment(.trailing)
                     }
                     .foregroundStyle(limitHit ? NunaPalette.alertText : NunaPalette.textSecondary)
-                    let rest = (q.isEmpty ? WorkoutCatalog.all : matches).map(\.name).filter { !pins.contains($0) }
+                    let rest = (q.isEmpty ? catalogNames : matches.map(\.name)).filter { !pins.contains($0) }
                     let shown = (q.isEmpty ? pins : pins.filter { p in matches.contains { $0.name == p } }) + rest
                     if shown.isEmpty {
                         Text("No workouts match").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
@@ -362,7 +365,7 @@ struct NunaWorkoutsView: View {
                         sportGrid(matches.map(\.name))
                     }
                 } else if showAllSports {
-                    sportGrid(WorkoutCatalog.all.map(\.name))
+                    sportGrid(catalogNames)
                     moreButton(expanded: true)
                 } else {
                     if pins.isEmpty {
@@ -418,7 +421,7 @@ struct NunaWorkoutsView: View {
                 if editingPins {
                     Button { togglePin(sport) } label: { cell(sport) }.buttonStyle(.plain)
                 } else {
-                    sportLink(sport)
+                    NavigationLink(value: NunaWorkoutRoute.start(sport)) { cell(sport) }.buttonStyle(.plain)
                         .contextMenu {
                             Button { togglePin(sport) } label: {
                                 Label(pinned.contains(sport) ? "Unpin" : "Pin", systemImage: pinned.contains(sport) ? "pin.slash" : "pin")
@@ -426,15 +429,6 @@ struct NunaWorkoutsView: View {
                         }
                 }
             }
-        }
-    }
-
-    /// Strength work is logged in the Gym tab, so its cell switches there; every other sport opens the start screen.
-    @ViewBuilder private func sportLink(_ sport: String) -> some View {
-        if sport == "Strength" {
-            Button { withAnimation(.easeInOut(duration: 0.2)) { tab = 1 } } label: { cell(sport) }.buttonStyle(.plain)
-        } else {
-            NavigationLink(value: NunaWorkoutRoute.start(sport)) { cell(sport) }.buttonStyle(.plain)
         }
     }
 

@@ -6,7 +6,9 @@ import Foundation
 enum NunaPinnedSports {
     static let key = "nuna.workouts.pinnedSports"
     static let maxCount = 8
-    static let defaults = ["Running", "Walking", "Cycling", "Strength", "Pool swim", "HIIT", "Yoga"]
+    static let defaults = ["Running", "Walking", "Cycling", "Pool swim", "HIIT", "Yoga"]
+    /// Left out of the "Start a workout" lists: lifting is started from the Gym tab, which has its own programs and session screen.
+    static let hidden: Set<String> = ["Strength"]
 
     /// "default" until the first change, then the comma-joined names (empty once everything is unpinned).
     static let unset = "default"
@@ -15,7 +17,7 @@ enum NunaPinnedSports {
         if raw == unset { return defaults }
         let known = Set(WorkoutCatalog.all.map(\.name))
         var seen = Set<String>()
-        return raw.split(separator: ",").map { String($0) }.filter { known.contains($0) && seen.insert($0).inserted }.prefix(maxCount).map { $0 }
+        return raw.split(separator: ",").map { String($0) }.filter { known.contains($0) && !hidden.contains($0) && seen.insert($0).inserted }.prefix(maxCount).map { $0 }
     }
 
     static func encode(_ names: [String]) -> String { names.joined(separator: ",") }

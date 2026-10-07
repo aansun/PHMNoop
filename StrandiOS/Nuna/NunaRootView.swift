@@ -76,7 +76,9 @@ struct NunaRootView: View {
         .onChange(of: themeRaw) { _, _ in Self.applyWindowStyle() }
         .onChange(of: skinRaw) { _, _ in Self.applyWindowStyle() }
         .onDisappear { Self.applyWindowStyle(reset: true) }
-        .sheet(isPresented: $liftSession.isPresented) { NunaLiftSessionView() }
+        // The gym session is full screen, like the live workout of every other sport, and never a sheet that a swipe could close by accident:
+        // it is put away with the chevron in its header.
+        .fullScreenCover(isPresented: $liftSession.isPresented) { NunaLiftSessionView() }
         // A session left running by a previous launch comes back as the bar, not as a sheet thrown in the user's face.
         .task {
             guard !liftSession.isActive, let snapshot = LiftSessionPersistence.load() else { return }
@@ -84,7 +86,7 @@ struct NunaRootView: View {
         }
         .sheet(isPresented: $showDevices) { sheetStack { NunaDevicesView() } }
         .sheet(item: $routed) { dest in sheetStack { destinationView(dest) } }
-        // A gym session is a sheet too, and cannot open over another one. When it is asked to show while a screen of this shell is open as a
+        // A gym session is a full-screen cover, and cannot open over a sheet. When it is asked to show while a screen of this shell is open as a
         // sheet (Workouts and its Gym, Devices), that sheet closes and the session follows once the screen is clear.
         .onChange(of: liftSession.wantsPresent) { _, wants in
             guard wants else { return }
