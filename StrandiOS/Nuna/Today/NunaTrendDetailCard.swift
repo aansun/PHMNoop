@@ -20,6 +20,8 @@ struct NunaTrendDetailCard: View {
     var loaded = true
     var band: ClosedRange<Double>?
     var reference: Double?
+    /// What the dashed reference line is called in the legend over a bar chart.
+    var referenceLabel: LocalizedStringKey = "Target"
     var lineColor: Color = NunaPalette.charge
     var decimals = 0
     var higherIsBetter = true
@@ -37,7 +39,8 @@ struct NunaTrendDetailCard: View {
 
     /// The card for a single stored series (`NunaSeriesModel`).
     init(caption: LocalizedStringKey, valueText: String?, unit: String = "", chip: (text: LocalizedStringKey, color: Color)? = nil, note: String? = nil,
-         series: NunaSeriesModel, showsBand: Bool = true, reference: Double? = nil, lineColor: Color = NunaPalette.charge, decimals: Int = 0,
+         series: NunaSeriesModel, showsBand: Bool = true, reference: Double? = nil, referenceLabel: LocalizedStringKey = "Target",
+         lineColor: Color = NunaPalette.charge, decimals: Int = 0,
          higherIsBetter: Bool = true, directional: Bool = true, bars: Bool = false, range: Binding<Int>, page: Binding<Int>) {
         self.bars = bars
         self.caption = caption; self.valueText = valueText; self.unit = unit; self.chip = chip; self.note = note
@@ -45,7 +48,7 @@ struct NunaTrendDetailCard: View {
         self.hasOlder = { start in series.byDay.keys.min().map { Repository.localDayKey(start) > $0 } ?? false }
         self.loaded = series.loaded
         self.band = showsBand ? series.band.map { $0.lo...$0.hi } : nil
-        self.reference = reference; self.lineColor = lineColor; self.decimals = decimals
+        self.reference = reference; self.referenceLabel = referenceLabel; self.lineColor = lineColor; self.decimals = decimals
         self.higherIsBetter = higherIsBetter; self.directional = directional
         self._range = range; self._page = page
     }
@@ -92,6 +95,7 @@ struct NunaTrendDetailCard: View {
                     Text(loaded ? "No data in this period" : " ").font(.nuna(size: 14, weight: .semibold))
                         .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 160).textCase(nil)
                 } else {
+                    if bars, reference != nil { referenceLegend }
                     if bars { barChart(pts) } else {
                         NunaSegmentedChart(points: pts, color: lineColor, decimals: decimals, band: band, reference: reference,
                                            higherIsBetter: higherIsBetter, directional: directional)
@@ -109,23 +113,50 @@ struct NunaTrendDetailCard: View {
 
     // MARK: Bars
 
+    /// "- - - Goal 3.7": what the dashed line over the bars is, with its figure.
+    private var referenceLegend: some View {
+        HStack(spacing: 8) {
+            Spacer(minLength: 0)
+            NunaTargetLine().frame(width: 22, height: 2)
+            Text(referenceLabel).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            if let reference {
+                Text(verbatim: fmt(reference) + (unit.isEmpty ? "" : " " + unit)).font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            }
+        }
+    }
+
+    /// A label over a column: thousands shortened (12.3k), small figures with the card's own decimals (a litre and a half is 1.5).
+    private static func shortValue(_ v: Double, decimals: Int) -> String {
+        if v >= 10_000 { return String(format: "%.1fk", locale: AppLanguage.activeLocale, v / 1000) }
+        return String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, v)
+    }
+
     /// A week is one labelled column per day; a month or six months is one thin bar per day on a time axis.
     @ViewBuilder private func barChart(_ pts: [(date: Date, value: Double)]) -> some View {
         let cal = Calendar.current
         if range <= 7 {
             let days: [Date] = (0..<7).compactMap { cal.date(byAdding: .day, value: $0, to: cal.startOfDay(for: windowStart)) }
             let byDay = Dictionary(pts.map { (cal.startOfDay(for: $0.date), $0.value) }, uniquingKeysWith: { _, l in l })
-            let top = max(vals(pts).max() ?? 1, 1)
+            // With a target the columns are scaled to it, so the dashed line sits inside the track and a day over it reaches the top.
+            let top = max(vals(pts).max() ?? 1, reference ?? 0, 1)
             NunaColumns(items: days.map { d in
                 let v = byDay[d]
                 return NunaColumns.Item(weekday: Self.weekday(d), date: d, fraction: v.map { $0 / top },
-                                        valueText: v.map { Self.short($0) }, highlight: cal.isDateInToday(d))
-            }, color: lineColor.opacity(0.85), highlightColor: NunaPalette.textPrimary)
+                                        valueText: v.map { Self.shortValue($0, decimals: decimals) }, highlight: cal.isDateInToday(d))
+            }, color: lineColor.opacity(0.85), highlightColor: NunaPalette.textPrimary, target: reference.map { $0 / top })
         } else {
-            Chart(Array(pts.enumerated()), id: \.offset) { _, p in
-                BarMark(x: .value("Day", p.date, unit: .day), y: .value("Value", p.value), width: .automatic)
-                    .foregroundStyle(lineColor.opacity(0.85)).cornerRadius(1.5)
+            Chart {
+                ForEach(Array(pts.enumerated()), id: \.offset) { _, p in
+                    BarMark(x: .value("Day", p.date, unit: .day), y: .value("Value", p.value), width: .automatic)
+                        .foregroundStyle(lineColor.opacity(0.85)).cornerRadius(1.5)
+                }
+                if let reference {
+                    RuleMark(y: .value("Target", reference))
+                        .lineStyle(StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [5, 4]))
+                        .foregroundStyle(NunaPalette.textPrimary.opacity(0.75))
+                }
             }
+            .chartYScale(domain: 0...(max(vals(pts).max() ?? 1, reference ?? 0, 1) * 1.08))
             .chartXScale(domain: cal.startOfDay(for: windowStart)...cal.date(byAdding: .day, value: 1, to: cal.startOfDay(for: windowEnd))!)
             .chartXAxis {
                 AxisMarks(values: .automatic(desiredCount: 5)) { _ in

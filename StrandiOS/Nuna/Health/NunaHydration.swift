@@ -14,7 +14,9 @@ struct NunaHydrationView: View {
 
     @State private var totalML: Double = 0
     @State private var importedML: Double = 0
-    @State private var history: [(day: String, value: Double)] = []
+    @StateObject private var series = NunaSeriesModel()
+    @State private var range = 7
+    @State private var page = 0
     @State private var entries: [HydrationEntry] = []
     @State private var reloadTick = 0
     @State private var editing: HydrationEntry?
@@ -27,10 +29,11 @@ struct NunaHydrationView: View {
 
     var body: some View {
         NunaDetailScreen("Water") {
-            hero
+            trendCard
             logCard
             drinksCard
-            weekCard
+            NunaExpandRow(title: "How the goal is set", subtitle: "Your sex and today's Effort", systemImage: "drop",
+                          text: "A simple goal that starts from your sex and rises with the Effort you add during the day. It is a guide, not a prescription.")
             nunaFootnote("A simple goal that adjusts to your effort. General wellness guidance, not medical advice.")
         }
         .task(id: reloadTick) { await reload() }
@@ -47,26 +50,17 @@ struct NunaHydrationView: View {
         }
     }
 
-    // MARK: Hero
+    // MARK: Trend (the same card as the Steps detail)
 
-    private var hero: some View {
-        NunaCard(padding: EdgeInsets(top: 20, leading: 22, bottom: 20, trailing: 22)) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Text("Today").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                    Spacer()
-                    NunaChip(verbatim: "\(percent)%", color: percent >= 100 ? NunaPalette.charge : nil)
-                }
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(verbatim: litres(totalML)).font(.nuna(size: 56, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(56))
-                        .foregroundStyle(NunaPalette.textPrimary)
-                    Text(verbatim: "/ \(litres(Double(goalML))) L").font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
-                }
-                NunaProgressBar(fraction: fraction, color: NunaPalette.rest)
-                Text(verbatim: String(localized: "\(percent)% of today's goal")).font(.nuna(size: 13, weight: .semibold))
-                    .foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            }
-        }
+    /// Litres today with the way the week or month went, as columns, and the goal as a dashed line across them.
+    private var trendCard: some View {
+        let togo = max(goalML - Int(totalML.rounded()), 0)
+        return NunaTrendDetailCard(
+            caption: "Today", valueText: litres(totalML), unit: "L",
+            chip: percent >= 100 ? (text: "Goal reached", color: NunaPalette.charge) : (text: LocalizedStringKey("\(percent)% of today's goal"), color: NunaPalette.restText),
+            note: percent >= 100 ? nil : String(localized: "\(litres(Double(togo))) L to go"),
+            series: series, showsBand: false, reference: Double(goalML) / 1000, referenceLabel: "Goal",
+            lineColor: NunaPalette.rest, decimals: 1, higherIsBetter: true, directional: false, bars: true, range: $range, page: $page)
     }
 
     // MARK: Quick log
@@ -154,29 +148,6 @@ struct NunaHydrationView: View {
         }
     }
 
-    // MARK: Last 7 days
-
-    private var weekCard: some View {
-        let cal = Calendar.current
-        let top = max(Double(max(goalML, 1)), history.map(\.value).max() ?? 0, 1)
-        let parser = DateFormatter(); parser.locale = Locale(identifier: "en_US_POSIX"); parser.dateFormat = "yyyy-MM-dd"
-        let wd = DateFormatter(); wd.locale = AppLanguage.activeLocale; wd.setLocalizedDateFormatFromTemplate("EEE")
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 14) {
-                nunaTrendsCap("Last 7 days")
-                if history.isEmpty {
-                    Text("No history yet.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                } else {
-                    NunaColumns(items: history.compactMap { bar in
-                        guard let d = parser.date(from: bar.day) else { return nil }
-                        return NunaColumns.Item(weekday: wd.string(from: d), date: d, fraction: bar.value > 0 ? bar.value / top : nil,
-                                                valueText: bar.value > 0 ? litres(bar.value) : nil, highlight: cal.isDateInToday(d))
-                    }, color: NunaPalette.rest, highlightColor: NunaPalette.restText, showsDates: false)
-                }
-            }
-        }
-    }
-
     // MARK: Data
 
     private func add(_ ml: Int) async {
@@ -189,7 +160,8 @@ struct NunaHydrationView: View {
     private func reload() async {
         let key = Repository.localDayKey(Date())
         totalML = await repo.hydrationTotal(day: key)
-        history = await repo.hydrationHistory(days: 7)
+        // Litres per day over the last six months, for the same W / M / 6M card the Steps detail uses.
+        series.set((await repo.hydrationHistory(days: 190)).map { ($0.day, $0.value / 1000) })
         entries = repo.hydrationEntries()
         importedML = await repo.hydrationImportedTotal(day: key)
     }

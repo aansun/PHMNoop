@@ -428,6 +428,8 @@ struct NunaColumns: View {
     let color: Color
     var highlightColor: Color?
     var showsDates = true
+    /// Where a target sits on the columns, 0 to 1 of their height: a dashed line across them.
+    var target: Double?
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 4) {
@@ -441,6 +443,14 @@ struct NunaColumns: View {
                         RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(item.color ?? (item.highlight ? (highlightColor ?? color) : color))
                             .frame(width: 30, height: max(14, 110 * CGFloat(min(max(item.fraction ?? 0, 0), 1))))
                             .opacity(item.fraction == nil ? 0 : 1)
+                    }
+                    .frame(maxWidth: .infinity).frame(height: 110)
+                    .overlay(alignment: .bottom) {
+                        if let target {
+                            // One dash per column, wider than the column by the gap on each side, so they read as one line across the week.
+                            NunaTargetLine().frame(height: 1.5).padding(.horizontal, -2)
+                                .offset(y: -110 * CGFloat(min(max(target, 0), 1)))
+                        }
                     }
                     VStack(spacing: 1) {
                         Text(verbatim: item.weekday).font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textPrimary.opacity(item.highlight ? 1 : 0.8))
@@ -608,6 +618,12 @@ final class NunaSeriesModel: ObservableObject {
     @Published private(set) var byDay: [String: Double] = [:]
     @Published private(set) var loaded = false
 
+    /// Fills the series from values the caller already has (the water log, which is not a metric series), one value per day key.
+    func set(_ points: [(day: String, value: Double)]) {
+        byDay = Dictionary(points.map { ($0.day, $0.value) }, uniquingKeysWith: { _, last in last })
+        loaded = true
+    }
+
     /// `also` is a second source merged on top (a value typed in by hand wins over the imported one for that day).
     func load(repo: Repository, key: String, source: String, days: Int = 190, also: String? = nil) async {
         let s = await repo.exploreSeries(key: key, source: source, days: days)
@@ -677,6 +693,20 @@ final class NunaSeriesModel: ObservableObject {
         let keys = byDay.keys.sorted().dropLast().suffix(30)
         let v = keys.compactMap { byDay[$0] }
         return v.isEmpty ? nil : v.reduce(0, +) / Double(v.count)
+    }
+}
+#endif
+
+#if os(iOS)
+/// A dashed horizontal line, the mark of a target on a chart.
+struct NunaTargetLine: View {
+    var color: Color = NunaPalette.textPrimary.opacity(0.75)
+    var body: some View {
+        GeometryReader { geo in
+            Path { p in p.move(to: CGPoint(x: 0, y: geo.size.height / 2)); p.addLine(to: CGPoint(x: geo.size.width, y: geo.size.height / 2)) }
+                .stroke(color, style: StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [5, 4]))
+        }
+        .accessibilityHidden(true)
     }
 }
 #endif

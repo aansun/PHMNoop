@@ -284,7 +284,8 @@ struct NunaMetricDetailView: View {
                 return d == 0 ? String(localized: "Same as yesterday")
                     : (d > 0 ? String(localized: "Up \(fmt(abs(d))) from yesterday") : String(localized: "Down \(fmt(abs(d))) from yesterday"))
             } },
-            series: series, lineColor: lineColor, decimals: metric.decimals,
+            series: series, reference: (metric.key == "steps" || metric.key == "steps_est") ? 10_000 : nil, referenceLabel: "Target",
+            lineColor: lineColor, decimals: metric.decimals,
             higherIsBetter: metric.higherIsBetter ?? true, bars: isColumns, range: $range, page: $page)
         if ["spo2", "resp_rate", "hrv", "rhr"].contains(metric.key) {
             NavigationLink(value: NunaTodayRoute.earlyWarning) {
