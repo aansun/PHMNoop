@@ -119,7 +119,6 @@ struct NunaTodayView: View {
     @State private var showManual = false
     @State private var showMood = false
     /// The saved session the Anya card opens straight to.
-    @State private var summaryKey: NunaWorkoutKey?
     @State private var showBreath = false
     @State private var showWindDown = false
     @AppStorage("nuna.keyMetricsLayout") private var metricsLayoutRaw = NunaMetricsLayout.cards.rawValue
@@ -185,7 +184,6 @@ struct NunaTodayView: View {
         }
         .background(NunaPalette.canvas.ignoresSafeArea())
         .nunaTodayDestinations()
-        .navigationDestination(item: $summaryKey) { NunaWorkoutSummaryView(key: $0) }
         .navigationDestination(isPresented: $showWindDown) { NunaWindDownView() }
         .sheet(isPresented: $showBreath) {
             NavigationStack { NunaBreathView().toolbar(.hidden, for: .navigationBar) }.preferredColorScheme(NunaTheme.colorScheme)
@@ -630,7 +628,7 @@ struct NunaTodayView: View {
         case .synthesis:
             if coachEnabled && model.isToday {
                 NunaAnyaTodayCard(plan: dayPlan, fallbackLine: synthLine, workouts: model.workouts, effort: model.effort,
-                                  charge: model.charge.pct, onCoach: { showCoach = true }, onViewWorkout: { summaryKey = $0 },
+                                  charge: model.charge.pct, onCoach: { showCoach = true },
                                   onBreathe: { showBreath = true }, onWindDown: { showWindDown = true },
                                   stressNow: model.stressCurve.flatMap(StressDayCurve.latestLevel),
                                   stressHighMin: model.stressCurve.map(StressDayCurve.highMinutes),

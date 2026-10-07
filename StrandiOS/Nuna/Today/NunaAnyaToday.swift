@@ -21,8 +21,6 @@ struct NunaAnyaTodayCard: View {
     let effort: Double?
     let charge: Double?
     let onCoach: () -> Void
-    /// Opens one saved session's detail.
-    let onViewWorkout: (NunaWorkoutKey) -> Void
     /// Opens the breathing exercise.
     let onBreathe: () -> Void
     /// Opens the wind-down screen.
@@ -83,33 +81,18 @@ struct NunaAnyaTodayCard: View {
         workouts.last { now.timeIntervalSince1970 - Double($0.endTs) <= Self.afterWorkoutWindow && now.timeIntervalSince1970 >= Double($0.endTs) }
     }
 
+    /// One card, never two. It carries only the headline; the rest of the line and what to do about it are in the Anya sheet.
     @ViewBuilder private func content(running: AppModel.ActiveWorkout?, bpm: Int?, now: Date) -> some View {
         let hourNow = Calendar.current.component(.hour, from: now)
         if let running {
-            // 1. A session is running: how long, the heart rate now, and a way straight back into it.
+            // 1. A session is running.
             RunningSessionCard(running: running, effort: shown(running.liveStrain), onResume: { router.requestedDestination = .activeWorkout }, onCoach: onCoach)
-        } else if let last = justFinished(now) {
-            // 2. A session ended within the hour: what it earned, a way to its detail and, if the target is still open, what to do next.
-            //    Once the target is reached, or it is late, the day's read takes the second place instead.
-            VStack(spacing: 10) {
-                doneCard(last)
-                if targetMet || hourNow >= 19, let v = evening(now: now, bpm: bpm, hour: hourNow, last: last) {
-                    verdictCard(v)
-                } else if let next = nextSession(after: last, hour: hourNow) {
-                    suggestionCard(next)
-                }
-            }
+        } else if justFinished(now) != nil {
+            // 2. A session has just ended: its own screen already carries Anya's read of it, so Today says nothing for the hour.
+            EmptyView()
         } else if hourNow >= 19 {
-            // 3. Evening: whether to breathe, sleep early or go straight to bed, and the journal after it while it is still open.
-            VStack(spacing: 10) {
-                if let v = evening(now: now, bpm: bpm, hour: hourNow, last: workouts.last) { verdictCard(v) }
-                else { NunaAnyaCard(verbatim: String(localized: "Wind down for tonight"), detail: String(localized: "An earlier night is the best thing for tomorrow's Charge."), progress: nil, action: onCoach) }
-                if hourNow >= 20 && !journalDone {
-                    NunaAnyaCard(verbatim: String(localized: "How was today? Fill in your journal and mood"),
-                                 detail: eveningDetail, progress: nil,
-                                 buttonTitle: "Journal", onButton: { router.requestedDestination = .journal }, action: onCoach)
-                }
-            }
+            // 3. Evening: whether to breathe, sleep early or go straight to bed, with the journal as a second thing to do while it is open.
+            eveningCard(now: now, bpm: bpm, hour: hourNow)
         } else if targetMet, let v = reached(now: now, bpm: bpm, hour: hourNow, last: workouts.last) {
             verdictCard(v, progress: progress)
         } else if !workouts.isEmpty, let next = nextSession(after: workouts.last, hour: hourNow) {
@@ -123,6 +106,27 @@ struct NunaAnyaTodayCard: View {
                              if let r = plan { router.plannedSession = .init(title: r.title, minutes: r.plan.totalMinutes, zone: r.plan.mainZone) }
                              router.requestedDestination = .activeWorkout
                          }, action: onCoach)
+        }
+    }
+
+    private func eveningCard(now: Date, bpm: Int?, hour: Int) -> some View {
+        let v = evening(now: now, bpm: bpm, hour: hour, last: workouts.last)
+        let title = v?.title ?? String(localized: "Wind down for tonight")
+        var detail = v?.detail ?? String(localized: "An earlier night is the best thing for tomorrow's Charge.")
+        var more: [NunaAnyaCardAction] = []
+        if hour >= 20 && !journalDone {
+            let prompt = String(localized: "How was today? Fill in your journal and mood")
+            detail += "\n\n" + [prompt, eveningDetail].compactMap { $0 }.joined(separator: " · ")
+            more = [NunaAnyaCardAction(title: "Journal", perform: { router.requestedDestination = .journal })]
+        }
+        switch v?.action {
+        case .breathe?:
+            return NunaAnyaCard(verbatim: title, detail: detail, buttonTitle: "Breathe", onButton: onBreathe, moreActions: more, action: onCoach)
+        case .windDown?:
+            return NunaAnyaCard(verbatim: title, detail: detail, buttonTitle: "Wind down", onButton: onWindDown, moreActions: more, action: onCoach)
+        default:
+            return NunaAnyaCard(verbatim: title, detail: detail, buttonTitle: more.isEmpty ? nil : "Journal",
+                                onButton: more.isEmpty ? nil : { router.requestedDestination = .journal }, action: onCoach)
         }
     }
 
@@ -203,30 +207,6 @@ struct NunaAnyaTodayCard: View {
                                 router.plannedSession = .init(title: title, minutes: n.minutes, zone: n.zone)
                                 router.requestedDestination = .activeWorkout
                             }, action: onCoach)
-    }
-
-    @ViewBuilder private func doneCard(_ w: WorkoutRow) -> some View {
-        let minutes = Int(((w.durationS ?? Double(w.endTs - w.startTs)) / 60).rounded())
-        let title = String(format: String(localized: "%@ · %d min done"), WorkoutSource.displaySport(w.sport), minutes)
-        let earned = w.strain.map { String(format: String(localized: "Effort +%@"), shown($0)) }
-        let felt = NunaWorkoutReviewStore.load(startTs: w.startTs, sport: w.sport).feelingValue?.plain
-        let key = NunaWorkoutKey(startTs: w.startTs, sport: w.sport, source: w.source)
-        if let t = target, let effort {
-            if targetMet {
-                // The plan is fulfilled: only recovery, and a way to the detail.
-                NunaAnyaCard(verbatim: title,
-                             detail: [earned, felt, String(format: String(localized: "Target %@ reached"), targetText(t))].compactMap { $0 }.joined(separator: " · "),
-                             progress: min(effort / t.high, 1), progressColor: NunaPalette.charge,
-                             buttonTitle: "View", onButton: { onViewWorkout(key) }, action: onCoach)
-            } else {
-                NunaAnyaCard(verbatim: title,
-                             detail: [earned, felt, String(format: String(localized: "%@ of %@ target"), shown(effort), targetText(t))].compactMap { $0 }.joined(separator: " · "),
-                             progress: effort / t.high, buttonTitle: "View", onButton: { onViewWorkout(key) }, action: onCoach)
-            }
-        } else {
-            NunaAnyaCard(verbatim: title, detail: [earned, felt].compactMap { $0 }.joined(separator: " · "), progress: nil,
-                         buttonTitle: "View", onButton: { onViewWorkout(key) }, action: onCoach)
-        }
     }
 
     private var planDetail: String? {
