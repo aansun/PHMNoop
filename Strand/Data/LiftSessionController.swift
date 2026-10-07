@@ -40,6 +40,11 @@ final class LiftSessionController: ObservableObject {
     /// Rest period the five-second warning has already fired for. Lives HERE, not in a view, so
     /// re-opening the sheet mid-rest cannot re-fire it.
     private var warnedFor: Int?
+    /// Rest period whose end has already been announced, for the same reason as `warnedFor`.
+    private var endedFor: Int?
+    /// Called once when a rest period runs out, while the session is open: the platform plays its marker sound here. A rest that ended
+    /// long ago (the app was asleep, or the session was reopened afterwards) is not announced late.
+    var onRestEnded: (() -> Void)?
 
     /// Slots the user marked as a warm-up BEFORE performing them. You know a set is a warm-up on the
     /// way in, not afterwards, but an unperformed set has no record to carry the flag — and inventing
@@ -508,7 +513,17 @@ final class LiftSessionController: ObservableObject {
 
     // MARK: - The rest warning
 
+    /// How long after its end a rest can still be announced.
+    static let restEndGraceSec = 10
+
+    private func fireRestEndIfDue() {
+        guard let engine, case .resting(_, let endsAt) = engine.stage, endedFor != endsAt, now >= endsAt else { return }
+        endedFor = endsAt
+        if now - endsAt <= Self.restEndGraceSec { onRestEnded?() }
+    }
+
     private func fireRestWarningIfDue() {
+        fireRestEndIfDue()
         guard let engine, case .resting(_, let endsAt) = engine.stage else { return }
         guard warnedFor != endsAt else { return }
         guard endsAt - now <= LiftSessionController.restWarningLeadSec else { return }

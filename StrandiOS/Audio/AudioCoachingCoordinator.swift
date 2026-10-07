@@ -137,6 +137,14 @@ final class AudioCoachingCoordinator: ObservableObject {
         logger.debug("Queued audio coaching test prompt")
     }
 
+    /// The sound that marks the end of a rest in a gym session. It belongs to the session, not to the voice coach, so it plays whether or
+    /// not the coach is switched on; it has its own switch in the session settings.
+    func playRestEndMarker() {
+        guard AudioCoachingPreferences.restEndSoundEnabled else { return }
+        logger.debug("Rest ended: marker sound")
+        scheduler.playMarker()
+    }
+
     private func handleWorkoutChange(_ next: AppModel.ActiveWorkout?) {
         let previous = workout
         workout = next

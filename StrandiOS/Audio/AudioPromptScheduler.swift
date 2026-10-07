@@ -37,6 +37,8 @@ final class AudioPromptScheduler: NSObject, @preconcurrency AVSpeechSynthesizerD
     private var chime: AVAudioPlayer?
     private var awaitingChime = false
     private var chimedThisBurst = false
+    /// The sound of a finished rest. It shares the session with the cues but is not one: nothing is spoken.
+    private var marker: AVAudioPlayer?
 
     private var speechLanguage: String {
         let preferred = Bundle.main.preferredLocalizations.first?.lowercased() ?? ""
@@ -117,6 +119,19 @@ final class AudioPromptScheduler: NSObject, @preconcurrency AVSpeechSynthesizerD
         finishAfterQueue = false
         synthesizer.stopSpeaking(at: .immediate)
         deactivate()
+    }
+
+    /// A short rising tone to mark something that needs no words (a gym rest period ending). Music is lowered for it and returns.
+    /// A cue being spoken already makes sound, so the tone waits for no one and is simply skipped then.
+    func playMarker() {
+        guard !interrupted, current == nil, !awaitingChime, marker == nil else { return }
+        releaseTask?.cancel()
+        guard activate(), let player = Self.makeMarker() else { return }
+        marker = player
+        player.delegate = self
+        player.volume = 1
+        if player.play() { onDetail?(String(localized: "Rest-end tone played")) }
+        else { marker = nil; scheduleRelease() }
     }
 
     // MARK: Audio session
@@ -311,6 +326,11 @@ final class AudioPromptScheduler: NSObject, @preconcurrency AVSpeechSynthesizerD
     }
 
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        if player === marker {
+            marker = nil
+            if current == nil && !awaitingChime { speakNextIfPossible() }   // anything that queued meanwhile, else the session is released
+            return
+        }
         chime = nil
         awaitingChime = false
         guard let prompt = current else { speakNextIfPossible(); return }
@@ -363,17 +383,21 @@ final class AudioPromptScheduler: NSObject, @preconcurrency AVSpeechSynthesizerD
 
     // MARK: The tone
 
-    private static let chimeData: Data = {
-        let rate = 44_100.0
-        func tone(_ hz: Double, _ seconds: Double) -> [Int16] {
-            (0..<Int(rate * seconds)).map { i in
-                let t = Double(i) / rate
-                // A quick attack and a soft release, so it does not click.
-                let envelope = min(1, t / 0.01) * min(1, (seconds - t) / 0.05)
-                return Int16(sin(2 * .pi * hz * t) * envelope * 0.4 * Double(Int16.max))
-            }
+    private static let rate = 44_100.0
+
+    /// A sine note with a quick attack and a soft release, so it does not click.
+    private static func note(_ hz: Double, _ seconds: Double, gain: Double = 0.4) -> [Int16] {
+        (0..<Int(rate * seconds)).map { i in
+            let t = Double(i) / rate
+            let envelope = min(1, t / 0.01) * min(1, (seconds - t) / 0.05)
+            return Int16(sin(2 * .pi * hz * t) * envelope * gain * Double(Int16.max))
         }
-        let samples = tone(880, 0.12) + [Int16](repeating: 0, count: Int(rate * 0.03)) + tone(1174.66, 0.16)
+    }
+
+    private static func silence(_ seconds: Double) -> [Int16] { [Int16](repeating: 0, count: Int(rate * seconds)) }
+
+    /// 16-bit mono PCM as a WAV file in memory.
+    private static func wav(_ samples: [Int16]) -> Data {
         var d = Data()
         func put<T: FixedWidthInteger>(_ v: T) { var x = v.littleEndian; d.append(Data(bytes: &x, count: MemoryLayout<T>.size)) }
         let bytes = samples.count * 2
@@ -383,7 +407,18 @@ final class AudioPromptScheduler: NSObject, @preconcurrency AVSpeechSynthesizerD
         d.append(contentsOf: Array("data".utf8)); put(UInt32(bytes))
         for s in samples { put(s) }
         return d
-    }()
+    }
+
+    /// Two notes, a step up: "a cue is coming".
+    private static let chimeData = wav(note(880, 0.12) + silence(0.03) + note(1174.66, 0.16))
+    /// Three notes climbing: "rest is over". Longer and brighter than the cue tone, so the two are never confused.
+    private static let markerData = wav(note(784, 0.12) + silence(0.02) + note(988, 0.12) + silence(0.02) + note(1318.5, 0.26, gain: 0.5))
+
+    private static func makeMarker() -> AVAudioPlayer? {
+        let player = try? AVAudioPlayer(data: markerData)
+        player?.prepareToPlay()
+        return player
+    }
 
     private static func makeChime() -> AVAudioPlayer? {
         let player = try? AVAudioPlayer(data: chimeData)

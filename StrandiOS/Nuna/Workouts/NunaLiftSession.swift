@@ -31,6 +31,8 @@ struct NunaLiftSessionView: View {
     @State private var confirmingDiscardNow = false
     /// The RPE column is hidden until asked for, as in most logs; the typed values are kept either way.
     @AppStorage("nuna.gym.showRpe") private var showRpe = false
+    /// A sound when a rest period ends.
+    @AppStorage(AudioCoachingPreferences.restEndSoundKey) private var restEndSound = true
     @State private var draft: [FocusTarget: String] = [:]
     @FocusState private var focused: FocusTarget?
 
@@ -111,6 +113,9 @@ struct NunaLiftSessionView: View {
     private var settingsSheet: some View {
         NavigationStack {
             NunaDetailScreen("Session settings") {
+                NunaCard(small: true) {
+                    NunaToggleRow("Sound when rest ends", subtitle: "A short rising tone; music is lowered for it", systemImage: "speaker.wave.2", isOn: $restEndSound)
+                }
                 NunaCard(small: true) {
                     NunaToggleRow("RPE column", subtitle: "How hard each set felt, from 1 to 10", systemImage: "gauge.with.needle", isOn: $showRpe)
                 }

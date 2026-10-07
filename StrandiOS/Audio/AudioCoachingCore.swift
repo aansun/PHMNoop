@@ -684,6 +684,7 @@ enum AudioCoachingPreferences {
     static let coachingFrequencyKey = "noop.audioCoaching.coachingFrequency"
     static let speechRateKey = "noop.audioCoaching.speechRate"
     static let chimeKey = "noop.audioCoaching.chime"
+    static let restEndSoundKey = "nuna.gym.restEndSound"
 
     static func policy(from defaults: UserDefaults = .standard) -> AudioPromptPolicy {
         let frequency = AudioPromptFrequency(rawValue: defaults.string(forKey: frequencyKey) ?? "") ?? .normal
@@ -711,6 +712,9 @@ enum AudioCoachingPreferences {
 
     /// A short tone before a cue, so it is noticed over music or wind. On unless switched off.
     static var chimeEnabled: Bool { UserDefaults.standard.object(forKey: chimeKey) as? Bool ?? true }
+
+    /// The sound when a gym rest period ends. On unless switched off.
+    static var restEndSoundEnabled: Bool { UserDefaults.standard.object(forKey: restEndSoundKey) as? Bool ?? true }
 
     static var speechRate: AudioSpeechRate {
         AudioSpeechRate(rawValue: UserDefaults.standard.string(forKey: speechRateKey) ?? "") ?? .normal
