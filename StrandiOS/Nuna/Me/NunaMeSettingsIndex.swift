@@ -48,7 +48,7 @@ enum NunaMeSettingsIndex {
         .init(route: .anya, title: "Model and key", note: ""),
         .init(route: .anya, title: "Anya's instructions", note: "Shape how it thinks and talks"),
         .init(route: .anya, title: "Morning brief", note: ""),
-        .init(route: .anya, title: "Voice coach during sessions", note: ""),
+        .init(route: .anya, title: "Audio coach during sessions", note: ""),
         .init(route: .anya, title: "Memory", note: ""),
         .init(route: .anya, title: "Conversation history", note: ""),
         .init(route: .appearance, title: "Language", note: ""),
