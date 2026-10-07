@@ -53,6 +53,12 @@ struct NunaLiftSessionView: View {
                         ScrollView {
                             VStack(spacing: NunaSpacing.section) {
                                 header(engine)
+                                if let name = session.programName {
+                                    // The whole name, under the header, however long it is.
+                                    Text(verbatim: name).font(.nuna(size: 26, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                                        .fixedSize(horizontal: false, vertical: true).textCase(nil)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                }
                                 statsCard(engine)
                                 statusCard(engine)
                                 ForEach(Array(engine.plan.enumerated()), id: \.offset) { i, item in exerciseCard(engine, index: i, item: item).id(i) }
@@ -158,12 +164,8 @@ struct NunaLiftSessionView: View {
                     .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
             }.buttonStyle(.plain).accessibilityLabel(Text("Minimise"))
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Gym")
-                    .font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1)
-                Text(verbatim: session.programName ?? String(localized: "Gym session"))
-                    .font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
-            }
+            Text(session.programName == nil ? "Gym" : "Program gym")
+                .font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
             Spacer(minLength: 8)
             if let bpm = model.bpm {
                 HStack(spacing: 5) {

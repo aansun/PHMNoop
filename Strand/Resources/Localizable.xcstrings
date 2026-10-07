@@ -1,6 +1,11 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "Tap to see the exercises": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Ketuk untuk melihat latihan" } } } },
+        "Program gym": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Program gym" } } } },
+        "Program menu": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Menu program" } } } },
+        "This program is no longer there.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Program ini sudah tidak ada." } } } },
+        "No exercises yet. Choose Edit program to add some.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Belum ada latihan. Pilih Ubah program untuk menambah." } } } },
         "Training": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Latihan fisik" } } } },
         "No workouts in the last 7 days. Start one from Workouts.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Belum ada workout dalam 7 hari terakhir. Mulai dari Workouts." } } } },
         "Start a workout and see your history": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Mulai workout dan lihat riwayatmu" } } } },

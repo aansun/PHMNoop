@@ -19,7 +19,8 @@ extension View {
             case .settings: NunaWorkoutSettingsView()
             case .gym: NunaWorkoutsView(initialTab: 1)
             case .hub(let tab): NunaWorkoutsView(initialTab: tab)
-            case .program(let id): NunaProgramEditor(programId: id)
+            case .program(let id): if id == "new" { NunaProgramEditor(programId: id) } else { NunaProgramDetailView(programId: id) }
+            case .programEdit(let id): NunaProgramEditor(programId: id)
             case .programImport: NunaProgramImportView()
             case .gymSession(let id): NunaGymSessionView(sessionId: id)
             case .exerciseLibrary: NunaExerciseLibraryView()
