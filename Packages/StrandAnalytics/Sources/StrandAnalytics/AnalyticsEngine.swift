@@ -499,9 +499,14 @@ public enum AnalyticsEngine {
         // night-window stream the caller passed for the rest of this analysis; the pass self-gates on its
         // observed density, so an empty/sparse `steps` (e.g. a WHOOP 4.0, which never emits StepSample at
         // all) is a no-op regardless of `useMotionAwareWake`.
-        let refinedSessions = useMotionAwareWake
+        let motionRefined = useMotionAwareWake
             ? detectedSessions.map { WakeMotionRefinement.refine($0, grav: gravity, steps: steps) }
             : detectedSessions
+        // End each detected night where the strap stopped recording: a stretch with no recording right after the last sleep is not
+        // wake (see `SleepTailTrim`). Sessions with no gravity grid are left as they are.
+        let refinedSessions = motionRefined.map { s in
+            SleepTailTrim.trimmed(s, motion: SleepStager.sessionEpochMotion(start: s.start, end: s.end, grav: gravity))
+        }
         // #804 Fix A: fold in the caller's device-provided hypnogram (see `providedSleep`). Empty = the
         // byte-identical motion-only path. Otherwise enrich each provided session's nightly restingHR/avgHRV
         // from THIS day's hr/rr over its window (the stored ring row carries neither), using the SAME helpers
