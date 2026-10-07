@@ -101,11 +101,9 @@ enum NunaGymStore {
 
 // MARK: - Gym hub (WorkoutGym.dc)
 
-/// Gym: start an empty session, run or edit a saved program, the sets each muscle group got this week and the latest
+/// Gym, the middle tab of Workouts (header and scroll view come from the hub): start an empty session, run or edit a saved program, the sets each muscle group got this week and the latest
 /// sessions. Reads and writes the same Lift Log tables as the Default screens, so programs and sessions are shared.
 struct NunaGymView: View {
-    /// True when shown as the Gym tab of Workouts, which already has its own header and scroll view.
-    var embedded = false
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var session: LiftSessionController
     @State private var programs: [LiftProgramRow] = []
@@ -146,13 +144,7 @@ struct NunaGymView: View {
     }
 
     var body: some View {
-        Group {
-            if embedded {
-                VStack(spacing: NunaSpacing.section) { content }
-            } else {
-                NunaDetailScreen("Gym") { content }
-            }
-        }
+        VStack(spacing: NunaSpacing.section) { content }
         .nunaWorkoutDestinations()
         .task(id: "\(repo.refreshSeq)-\(session.savedSessions)") { await load() }
         .alert(groupDialogTitle, isPresented: Binding(get: { groupDialog != nil }, set: { if !$0 { groupDialog = nil } })) {

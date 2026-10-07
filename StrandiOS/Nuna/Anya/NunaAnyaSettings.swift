@@ -77,7 +77,7 @@ struct NunaAnyaSettingsView: View {
                 }.buttonStyle(.plain)
                 NunaDivider()
                 NavigationLink(value: NunaAnyaRoute.voiceCoach) {
-                    NunaListRow("Voice coach during sessions", subtitle: LocalizedStringKey(voiceOn ? String(localized: "On") : String(localized: "Off")), systemImage: "speaker.wave.2", showsChevron: true)
+                    NunaListRow("Audio coach during sessions", subtitle: LocalizedStringKey(voiceOn ? String(localized: "On") : String(localized: "Off")), systemImage: "speaker.wave.2", showsChevron: true)
                 }.buttonStyle(.plain)
                 NunaDivider()
                 NunaToggleRow("Suggestion cards on each screen", subtitle: "One short card per module, always with figures", systemImage: "rectangle.on.rectangle", isOn: $cards).padding(.vertical, 8)
@@ -460,7 +460,7 @@ struct NunaAnyaVoiceCoachView: View {
                         .fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
                 if !enabled {
-                    Text("The voice coach is off. Turn it on below to hear cues during a workout; the test plays either way.").font(.nuna(size: 12.5, weight: .semibold))
+                    Text("The audio coach is off. Turn it on below to hear cues during a workout; the test plays either way.").font(.nuna(size: 12.5, weight: .semibold))
                         .foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }.frame(maxWidth: .infinity, alignment: .leading)
@@ -468,9 +468,9 @@ struct NunaAnyaVoiceCoachView: View {
     }
 
     var body: some View {
-        NunaDetailScreen("Voice coach") {
+        NunaDetailScreen("Audio coach") {
             NunaCard(highlight: enabled) {
-                NunaToggleRow("Anya's voice coach", subtitle: "Short spoken cues during a session, through earphones", systemImage: "speaker.wave.2", isOn: $enabled).padding(.vertical, 8)
+                NunaToggleRow("Anya's audio coach", subtitle: "Short spoken cues during a session, through earphones", systemImage: "speaker.wave.2", isOn: $enabled).padding(.vertical, 8)
             }
             testCard
             if enabled {

@@ -17,7 +17,7 @@ extension View {
             case .loadMuscle: NunaTrainingLoadView(tab: 2)
             case .autoDetect: NunaAutoDetectView()
             case .settings: NunaWorkoutSettingsView()
-            case .gym: NunaGymView()
+            case .gym: NunaWorkoutsView(initialTab: 1)
             case .program(let id): NunaProgramEditor(programId: id)
             case .programImport: NunaProgramImportView()
             case .gymSession(let id): NunaGymSessionView(sessionId: id)
@@ -44,12 +44,17 @@ struct NunaWorkoutsView: View {
     @StateObject private var m = NunaWorkoutsModel()
     @State private var suggestion: AutoWorkoutSuggestion?
     @State private var showCoach = false
-    @State private var tab = 0
+    @State private var tab: Int
     @State private var query = ""
     @State private var showAllSports = false
     @State private var editingPins = false
     @State private var limitHit = false
     @AppStorage(NunaPinnedSports.key) private var pinnedRaw = NunaPinnedSports.unset
+
+    init(autoOpenStart: Bool = false, initialTab: Int = 0) {
+        self.autoOpenStart = autoOpenStart
+        _tab = State(initialValue: initialTab)
+    }
 
     private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
     private var system: UnitSystem { UnitPrefs.resolveDistance(system: UnitSystem(rawValue: unitSystemRaw) ?? .metric, override: distanceRaw) }
@@ -67,7 +72,7 @@ struct NunaWorkoutsView: View {
                 NunaSegmented([(value: 0, title: "Workout"), (value: 1, title: "Gym"), (value: 2, title: "Insight")], selection: $tab)
                 NunaActiveWorkoutBanner()
                 if tab == 1 {
-                    NunaGymView(embedded: true)
+                    NunaGymView()
                 } else if !m.loaded {
                     ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 160)
                 } else if tab == 0 {
@@ -413,7 +418,7 @@ struct NunaWorkoutsView: View {
                 if editingPins {
                     Button { togglePin(sport) } label: { cell(sport) }.buttonStyle(.plain)
                 } else {
-                    NavigationLink(value: sport == "Strength" ? NunaWorkoutRoute.gym : NunaWorkoutRoute.start(sport)) { cell(sport) }.buttonStyle(.plain)
+                    sportLink(sport)
                         .contextMenu {
                             Button { togglePin(sport) } label: {
                                 Label(pinned.contains(sport) ? "Unpin" : "Pin", systemImage: pinned.contains(sport) ? "pin.slash" : "pin")
@@ -421,6 +426,15 @@ struct NunaWorkoutsView: View {
                         }
                 }
             }
+        }
+    }
+
+    /// Strength work is logged in the Gym tab, so its cell switches there; every other sport opens the start screen.
+    @ViewBuilder private func sportLink(_ sport: String) -> some View {
+        if sport == "Strength" {
+            Button { withAnimation(.easeInOut(duration: 0.2)) { tab = 1 } } label: { cell(sport) }.buttonStyle(.plain)
+        } else {
+            NavigationLink(value: NunaWorkoutRoute.start(sport)) { cell(sport) }.buttonStyle(.plain)
         }
     }
 
