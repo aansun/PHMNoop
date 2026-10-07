@@ -97,7 +97,7 @@ struct NunaLiftSessionView: View {
         }
         .sheet(isPresented: $showingSettings) { settingsSheet }
         .confirmationDialog("Discard this session?", isPresented: $confirmingDiscardNow, titleVisibility: .visible) {
-            Button("Discard", role: .destructive) { session.discard() }
+            Button("Discard", role: .destructive) { Task { await closeScreen(); session.discard() } }
             Button("Keep going", role: .cancel) {}
         } message: { Text("\(engine?.completedWorkingSets ?? 0) recorded sets will be thrown away. Nothing is saved and no workout is created.") }
     }
@@ -599,7 +599,7 @@ struct NunaLiftSessionView: View {
         .preferredColorScheme(NunaTheme.colorScheme)
         .task { await loadSetCountChanges() }
         .confirmationDialog("Discard this session?", isPresented: $confirmingDiscard, titleVisibility: .visible) {
-            Button("Discard", role: .destructive) { session.discard(); showingFinish = false }
+            Button("Discard", role: .destructive) { Task { await closeScreen(); session.discard(); showingFinish = false } }
             Button("Keep going", role: .cancel) {}
         } message: { Text("\(engine?.completedWorkingSets ?? 0) recorded sets will be thrown away. Nothing is saved and no workout is created.") }
     }
@@ -652,7 +652,16 @@ struct NunaLiftSessionView: View {
         await finishAndDismiss()
     }
 
+    /// Starts the screen's slide down and waits for it to end.
+    private func closeScreen() async {
+        session.isPresented = false
+        try? await Task.sleep(nanoseconds: 550_000_000)
+    }
+
     private func finishAndDismiss() async {
+        // The screen slides away with its content still on it; only then is the session taken down. Taken down first, the page read
+        // "No session running" for the whole slide, and for as long as the refresh below kept the main thread busy.
+        await closeScreen()
         session.finishedSaving()
         await repo.refresh()
         showingFinish = false

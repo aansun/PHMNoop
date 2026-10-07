@@ -270,7 +270,11 @@ struct StrandiOSApp: App {
                 // reaches the Lock Screen promptly; the controller decides what is actually worth
                 // pushing, since the widget's clocks tick on their own.
                 .onReceive(liftSession.$now) { _ in pushLiftActivity() }
-                .onReceive(liftSession.$engine) { _ in pushLiftActivity() }
+                // `$engine` publishes before the new value is stored, so the push reads it one turn later. Read at once, an ended session still
+                // looked running: the Live Activity was updated instead of ended and stayed on the Lock Screen and in the Dynamic Island.
+                .onReceive(liftSession.$engine) { _ in DispatchQueue.main.async { pushLiftActivity() } }
+                // An activity left behind by an earlier run (the app was closed with a session going) is ended as soon as the app is up.
+                .task { pushLiftActivity() }
                 // #911/#759: republish the Home/Lock-Screen widget whenever the dashboard caches actually
                 // change mid-session. The only other publish site is the scenePhase .active handler, so
                 // during a long foreground session the widget froze at the last-foreground snapshot while
