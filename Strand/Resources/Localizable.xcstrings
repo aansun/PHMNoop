@@ -1,6 +1,7 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "All %lld workouts": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Semua %lld latihan" } } } },
         "%@ done": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "%@ selesai" } } } },
         "Tap to see the exercises": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Ketuk untuk melihat latihan" } } } },
         "Program gym": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Program gym" } } } },
