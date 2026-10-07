@@ -16,6 +16,7 @@ struct NunaQuickSheet: View {
     @State private var goalML = 2500
 
     @AppStorage(NunaQuickActions.storageKey) private var actionsRaw = ""
+    @AppStorage(NunaQuickActions.waterAmountKey) private var waterAdd = NunaQuickActions.waterAmountDefault
     @State private var editing = false
     @State private var todayPanel: NunaTodayRoute?
     @State private var mePanel: NunaMeRoute?
@@ -88,7 +89,7 @@ struct NunaQuickSheet: View {
                         .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
                 }
                 .buttonStyle(.plain).accessibilityLabel(Text("Remove last drink"))
-                Button { Task { await addWater(250) } } label: { Text("+250") }
+                Button { Task { await addWater(waterAdd) } } label: { Text(verbatim: "+\(waterAdd)") }
                     .buttonStyle(.nuna(.primary, height: 44)).fixedSize()
             }
         }

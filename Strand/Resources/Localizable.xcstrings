@@ -1,6 +1,8 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "Water added by +": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Air yang ditambah tombol +" } } } },
+        "Used by the water button of the + sheet and by Health's water card.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Dipakai oleh tombol air di lembar + dan oleh kartu air di Health." } } } },
         "%@ L to go": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "%@ L lagi" } } } },
         "Goal reached": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Target tercapai" } } } },
         "%lld ml to go": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "%lld ml lagi" } } } },

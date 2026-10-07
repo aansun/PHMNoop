@@ -23,6 +23,11 @@ struct NunaQuickAction: Identifiable, Hashable {
 
 enum NunaQuickActions {
     static let storageKey = "nuna.quickActions"
+    /// How much the water button of the "+" sheet (and the first one on Health's water card) adds, in ml. Set in Customize quick actions.
+    static let waterAmountKey = "nuna.quickWaterML"
+    static let waterAmountDefault = 250
+    static let waterAmountRange = 50...1000
+    static let waterAmountStep = 50
     static let maxCount = 6
     static let defaultIDs = ["start", "breathing", "nap", "gym", "add", "theme"]
 
@@ -109,6 +114,7 @@ struct NunaQuickActionsEditor: View {
     @Binding var raw: String
     @Environment(\.dismiss) private var dismiss
     @State private var ids: [String] = []
+    @AppStorage(NunaQuickActions.waterAmountKey) private var waterML = NunaQuickActions.waterAmountDefault
 
     private var available: [NunaQuickAction] { NunaQuickActions.all.filter { !ids.contains($0.id) } }
     private var full: Bool { ids.count >= NunaQuickActions.maxCount }
@@ -140,6 +146,23 @@ struct NunaQuickActionsEditor: View {
                     Text("Six is the most. Remove one to add another.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
+            Section {
+                HStack(spacing: 12) {
+                    NunaIconTile("drop", tint: NunaPalette.effortText)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Water added by +").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: "+\(waterML) ml").font(.nuna(size: 13, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary).monospacedDigit()
+                    }
+                    Spacer(minLength: 8)
+                    Stepper("", value: $waterML, in: NunaQuickActions.waterAmountRange, step: NunaQuickActions.waterAmountStep).labelsHidden()
+                        .accessibilityLabel(Text("Water added by +")).accessibilityValue(Text(verbatim: "\(waterML) ml"))
+                }
+                .listRowBackground(NunaPalette.card)
+            } header: {
+                Text("Water").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            } footer: {
+                Text("Used by the water button of the + sheet and by Health's water card.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            }
             ForEach(Array(Dictionary(grouping: available, by: \.group).keys).sorted { groupOrder($0) < groupOrder($1) }, id: \.self) { group in
                 Section {
                     ForEach(available.filter { $0.group == group }) { a in
@@ -167,7 +190,7 @@ struct NunaQuickActionsEditor: View {
             HStack {
                 Text("Customize quick actions").font(.nuna(size: NunaTypeSize.h2, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 Spacer()
-                Button { ids = NunaQuickActions.defaultIDs; save() } label: {
+                Button { ids = NunaQuickActions.defaultIDs; waterML = NunaQuickActions.waterAmountDefault; save() } label: {
                     Text("Reset").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         .padding(.horizontal, 14).frame(height: 38)
                         .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))

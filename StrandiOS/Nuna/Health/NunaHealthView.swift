@@ -32,6 +32,7 @@ struct NunaHealthView: View {
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
     @State private var showWaist = false
     @AppStorage(HydrationStore.enabledKey) private var hydrationEnabled = false
+    @AppStorage(NunaQuickActions.waterAmountKey) private var quickWaterML = NunaQuickActions.waterAmountDefault
     @State private var waterML = 0
     @State private var weightRange = 30
     @State private var weightPage = 0
@@ -693,8 +694,8 @@ struct NunaHealthView: View {
                 }
                 NunaProgressBar(fraction: Double(waterML) / Double(max(goal, 1)), color: NunaPalette.effort)
                 HStack(spacing: 10) {
-                    Button("+250") { Task { await addWater(250) } }.buttonStyle(.nuna(.ghost, height: 44, fullWidth: true))
-                    Button("+500") { Task { await addWater(500) } }.buttonStyle(.nuna(.ghost, height: 44, fullWidth: true))
+                    Button(String("+\(quickWaterML)")) { Task { await addWater(quickWaterML) } }.buttonStyle(.nuna(.ghost, height: 44, fullWidth: true))
+                    Button(String("+\(quickWaterML * 2)")) { Task { await addWater(quickWaterML * 2) } }.buttonStyle(.nuna(.ghost, height: 44, fullWidth: true))
                 }
             }
         }
