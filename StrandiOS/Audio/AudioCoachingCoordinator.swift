@@ -14,6 +14,8 @@ final class AudioCoachingCoordinator: ObservableObject {
     @Published private(set) var promptHistory: [AudioPrompt] = []
     /// The audio or speech failure behind a silent prompt, in plain words, for the settings screen. Nil when nothing is wrong.
     @Published private(set) var lastAudioError: String?
+    /// What the audio did during the last test or cue, step by step: the output, the voice, whether it started and finished.
+    @Published private(set) var audioDetails: [String] = []
 
     private let activityEngine = AudioActivityEngine()
     private let trendEngine = AudioTrendEngine()
@@ -47,6 +49,10 @@ final class AudioCoachingCoordinator: ObservableObject {
         AudioAICoachingProvider.bootstrapDefaults()
         scheduler.setSpeechRate(AudioCoachingPreferences.speechRate)
         scheduler.onStatus = { [weak self] message in self?.lastAudioError = message }
+        scheduler.onDetail = { [weak self] line in
+            guard let self else { return }
+            audioDetails = Array((audioDetails + [line]).suffix(8))
+        }
         model.$activeWorkout
             .receive(on: DispatchQueue.main)
             .sink { [weak self] workout in self?.handleWorkoutChange(workout) }
@@ -124,9 +130,10 @@ final class AudioCoachingCoordinator: ObservableObject {
         lastPromptText = prompt.text
         promptHistory = Array(([prompt] + promptHistory).prefix(10))
         lastDecision = "Test audio queued using current settings"
+        audioDetails = []
+        lastAudioError = nil
         scheduler.enqueue([prompt])
-        // Whatever the session or the voice refused is reported by the scheduler right away.
-        lastAudioError = scheduler.lastError
+        // Whatever the session or the voice refused is reported by the scheduler as it happens, in `lastAudioError` and `audioDetails`.
         logger.debug("Queued audio coaching test prompt")
     }
 

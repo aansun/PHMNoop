@@ -4,9 +4,19 @@ import Foundation
 import OSLog
 
 /// iOS delivery boundary. It knows TTS/audio routing, but never decides whether an activity event exists.
+///
+/// It behaves like the spoken prompts of a navigation or sports app (Garmin, Apple Maps), not like a music player:
+///  - The audio session is brought up only when a cue is about to be spoken and released shortly after the last one, so music is lowered
+///    (ducked) for the length of the cue and comes back at full volume, instead of staying quiet through the whole workout.
+///  - The mode is "voice prompt", which lowers music and pauses spoken-word audio (a podcast) rather than talking over it.
+///  - A short tone comes first, so a cue is noticed over music or wind; it can be switched off.
+///  - A plain playback session: the silent switch does not mute it, a Bluetooth headset keeps its normal stereo route (no hands-free
+///    profile), and with the app's audio background mode it keeps speaking with the screen locked.
+///  - Nothing is assumed to have worked. The scheduler listens for the voice actually starting and finishing, and when it does not start it
+///    says so and tries once more with a fresh synthesizer and the system voice.
 @MainActor
-final class AudioPromptScheduler: NSObject, @preconcurrency AVSpeechSynthesizerDelegate {
-    private let synthesizer = AVSpeechSynthesizer()
+final class AudioPromptScheduler: NSObject, @preconcurrency AVSpeechSynthesizerDelegate, @preconcurrency AVAudioPlayerDelegate {
+    private var synthesizer = AVSpeechSynthesizer()
     private let session = AVAudioSession.sharedInstance()
     private let logger = Logger(subsystem: "com.phm.noop", category: "AudioCoaching")
     private var queue: [AudioPrompt] = []
@@ -17,6 +27,16 @@ final class AudioPromptScheduler: NSObject, @preconcurrency AVSpeechSynthesizerD
     private var speechRateMultiplier = AudioSpeechRate.normal.multiplier
     private var routeRecoveryTask: Task<Void, Never>?
     private var routeRecoveryInProgress = false
+
+    /// Whether the voice of the current cue has begun, and whether it already got its one retry.
+    private var started = false
+    private var retried = false
+    private var watchdog: Task<Void, Never>?
+    private var releaseTask: Task<Void, Never>?
+    /// The tone plays once at the start of a burst of cues, not before each of a queue.
+    private var chime: AVAudioPlayer?
+    private var awaitingChime = false
+    private var chimedThisBurst = false
 
     private var speechLanguage: String {
         let preferred = Bundle.main.preferredLocalizations.first?.lowercased() ?? ""
@@ -38,6 +58,8 @@ final class AudioPromptScheduler: NSObject, @preconcurrency AVSpeechSynthesizerD
 
     deinit {
         routeRecoveryTask?.cancel()
+        releaseTask?.cancel()
+        watchdog?.cancel()
         NotificationCenter.default.removeObserver(self)
     }
 
@@ -45,46 +67,26 @@ final class AudioPromptScheduler: NSObject, @preconcurrency AVSpeechSynthesizerD
         speechRateMultiplier = rate.multiplier
     }
 
-    /// The last thing that went wrong getting the audio session (or speech) going, for the test screen to show. Nil when all is well.
+    /// The last thing that went wrong getting the audio session or the voice going, for the test screen to show. Nil when all is well.
     private(set) var lastError: String?
     var onStatus: ((String?) -> Void)?
+    /// What happened, step by step ("Output: iPhone Speaker", "Speech started"), for the test screen.
+    var onDetail: ((String) -> Void)?
 
+    private func report(_ message: String?) {
+        lastError = message
+        onStatus?(message)
+    }
+
+    // MARK: Public
+
+    /// A workout begins or the coach is switched on. Nothing is held: the audio session comes up when a cue is spoken.
     func beginSession(resetFinishAfterQueue: Bool = true) {
         if resetFinishAfterQueue { finishAfterQueue = false }
-        // Spoken cues over the music: ducked, not stopped. The first attempt is the full set of options; if iOS refuses that combination the
-        // session is brought up with fewer, rather than being left off with the coach silent. A plain playback session still routes to
-        // a Bluetooth headset (A2DP) by itself.
-        let attempts: [(AVAudioSession.Category, AVAudioSession.CategoryOptions)] = [
-            (.playback, [.duckOthers, .allowBluetoothHFP, .allowBluetoothA2DP]),
-            (.playback, [.duckOthers]),
-            (.playback, []),
-        ]
-        var failure: Error?
-        for (category, options) in attempts {
-            do {
-                try session.setCategory(category, mode: .spokenAudio, options: options)
-                try session.setActive(true, options: [])
-                isSessionActive = true
-                failure = nil
-                lastError = nil
-                onStatus?(nil)
-                return
-            } catch {
-                failure = error
-            }
-        }
-        // A Bluetooth route can disappear while the old session still looks active. Keep the
-        // queue intact and mark it inactive so the next route callback can retry activation.
-        isSessionActive = false
-        let message = failure.map { String(describing: $0) } ?? "unknown"
-        lastError = "Audio session: \(message)"
-        onStatus?(lastError)
-        logger.error("Unable to activate audio session: \(message, privacy: .public)")
     }
 
     func enqueue(_ prompts: [AudioPrompt]) {
         guard !prompts.isEmpty else { return }
-        beginSession()
         recoverIfSpeechStoppedUnexpectedly()
         let now = Date()
         queue.removeAll { $0.isExpired(at: now) }
@@ -101,11 +103,15 @@ final class AudioPromptScheduler: NSObject, @preconcurrency AVSpeechSynthesizerD
 
     func endAfterQueue() {
         finishAfterQueue = true
-        if current == nil && queue.isEmpty { deactivate() }
+        if current == nil && queue.isEmpty && !awaitingChime { deactivate() }
     }
 
     func stopImmediately() {
         routeRecoveryTask?.cancel()
+        releaseTask?.cancel()
+        watchdog?.cancel()
+        chime?.stop(); chime = nil
+        awaitingChime = false
         queue.removeAll()
         self.current = nil
         finishAfterQueue = false
@@ -113,39 +119,156 @@ final class AudioPromptScheduler: NSObject, @preconcurrency AVSpeechSynthesizerD
         deactivate()
     }
 
+    // MARK: Audio session
+
+    /// Bring the session up for a cue. Voice-prompt mode first; if iOS refuses it the plainer modes follow, so the coach is not left silent.
+    @discardableResult
+    private func activate() -> Bool {
+        if isSessionActive { return true }
+        let attempts: [(AVAudioSession.Mode, AVAudioSession.CategoryOptions)] = [
+            (.voicePrompt, [.duckOthers, .interruptSpokenAudioAndMixWithOthers]),
+            (.spokenAudio, [.duckOthers]),
+            (.default, []),
+        ]
+        var failure: Error?
+        for (mode, options) in attempts {
+            do {
+                try session.setCategory(.playback, mode: mode, options: options)
+                try session.setActive(true, options: [])
+                isSessionActive = true
+                report(nil)
+                let route = session.currentRoute.outputs.first?.portName ?? "?"
+                let volume = Int((session.outputVolume * 100).rounded())
+                onDetail?(String(localized: "Output: \(route) · volume \(volume)%"))
+                if volume == 0 { report(String(localized: "The media volume is at zero. Raise it with the volume buttons.")) }
+                return true
+            } catch {
+                failure = error
+            }
+        }
+        let message = failure.map { String(describing: $0) } ?? "unknown"
+        report(String(localized: "The audio session would not start: \(message)"))
+        logger.error("Unable to activate audio session: \(message, privacy: .public)")
+        return false
+    }
+
+    private func deactivate() {
+        releaseTask?.cancel()
+        chimedThisBurst = false
+        guard isSessionActive else { return }
+        do { try session.setActive(false, options: [.notifyOthersOnDeactivation]) }
+        catch { logger.debug("Audio session deactivation skipped: \(String(describing: error), privacy: .public)") }
+        isSessionActive = false
+    }
+
+    /// Give the session back shortly after the last cue, so the music returns to full volume.
+    private func scheduleRelease() {
+        if finishAfterQueue { deactivate(); return }
+        releaseTask?.cancel()
+        releaseTask = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 700_000_000)
+            guard !Task.isCancelled, let self, self.current == nil, self.queue.isEmpty, !self.awaitingChime else { return }
+            self.deactivate()
+        }
+    }
+
+    // MARK: Speaking
+
     private func speakNextIfPossible() {
         recoverIfSpeechStoppedUnexpectedly()
-        guard !interrupted, !routeRecoveryInProgress, isSessionActive, current == nil else { return }
+        guard !interrupted, !routeRecoveryInProgress, current == nil, !awaitingChime else { return }
         let now = Date()
         queue.removeAll { $0.isExpired(at: now) }
-        guard !queue.isEmpty else {
-            if finishAfterQueue { deactivate() }
-            return
-        }
+        guard !queue.isEmpty else { scheduleRelease(); return }
+        releaseTask?.cancel()
+        guard activate() else { return }   // the queue stays; a route change or the next cue tries again
         let prompt = queue.removeFirst()
         current = prompt
-        let utterance = AVSpeechUtterance(string: prompt.text)
-        utterance.voice = AVSpeechSynthesisVoice(language: speechLanguage)
-            ?? AVSpeechSynthesisVoice(language: "en-US")
-        if utterance.voice == nil {
-            lastError = "No speech voice is installed for \(speechLanguage)"
-            onStatus?(lastError)
+        started = false; retried = false
+
+        if !chimedThisBurst, AudioCoachingPreferences.chimeEnabled, let player = Self.makeChime() {
+            chimedThisBurst = true
+            awaitingChime = true
+            chime = player
+            player.delegate = self
+            player.volume = 1
+            if player.play() { onDetail?(String(localized: "Tone played")); return }
+            awaitingChime = false
+        }
+        speak(prompt.text, voiceFallback: false)
+    }
+
+    /// The best installed voice for the language: an exact match first, higher quality first, never a novelty voice.
+    private func chooseVoice() -> (voice: AVSpeechSynthesisVoice?, note: String) {
+        let language = speechLanguage
+        let voices = AVSpeechSynthesisVoice.speechVoices().filter { !$0.identifier.lowercased().contains("eloquence") && !$0.identifier.contains("synthesis.voice.") }
+        func best(_ list: [AVSpeechSynthesisVoice]) -> AVSpeechSynthesisVoice? { list.max { $0.quality.rawValue < $1.quality.rawValue } }
+        if let v = best(voices.filter { $0.language == language }) ?? AVSpeechSynthesisVoice(language: language) {
+            return (v, "\(v.name) (\(v.language))")
+        }
+        let prefix = language.split(separator: "-").first.map(String.init) ?? language
+        if let v = best(voices.filter { $0.language.hasPrefix(prefix) }) { return (v, "\(v.name) (\(v.language))") }
+        if let v = AVSpeechSynthesisVoice(language: "en-US") {
+            return (v, String(localized: "\(v.name) (English: no \(language) voice is installed)"))
+        }
+        return (nil, String(localized: "the system voice"))
+    }
+
+    private func speak(_ text: String, voiceFallback: Bool) {
+        let utterance = AVSpeechUtterance(string: text)
+        if voiceFallback {
+            onDetail?(String(localized: "Voice: the system voice"))
+        } else {
+            let choice = chooseVoice()
+            utterance.voice = choice.voice
+            onDetail?(String(localized: "Voice: \(choice.note)"))
         }
         utterance.rate = AVSpeechUtteranceDefaultSpeechRate * speechRateMultiplier
         utterance.pitchMultiplier = 1.0
-        logger.debug("Speaking \(prompt.templateName, privacy: .public)")
+        utterance.volume = 1.0
+        utterance.preUtteranceDelay = 0.05
+        logger.debug("Speaking \(self.current?.templateName ?? "", privacy: .public)")
         synthesizer.speak(utterance)
+        armWatchdog(text: text)
+    }
+
+    /// A voice that never starts is the usual cause of a silent coach. Say so, and try once more with a fresh synthesizer.
+    private func armWatchdog(text: String) {
+        watchdog?.cancel()
+        watchdog = Task { [weak self] in
+            try? await Task.sleep(nanoseconds: 3_000_000_000)
+            guard !Task.isCancelled, let self, self.current != nil, !self.started else { return }
+            self.speechDidNotStart(text: text)
+        }
+    }
+
+    private func speechDidNotStart(text: String) {
+        if !retried {
+            retried = true
+            onDetail?(String(localized: "The voice did not start. Trying again."))
+            synthesizer.stopSpeaking(at: .immediate)
+            synthesizer = AVSpeechSynthesizer()
+            synthesizer.delegate = self
+            speak(text, voiceFallback: true)
+        } else {
+            report(String(localized: "The voice did not start. Check Settings › Accessibility › Spoken Content › Voices for a downloaded voice, and that the volume is up."))
+            current = nil
+            started = false
+            speakNextIfPossible()
+        }
     }
 
     /// A speech synthesizer can lose its current utterance during an audio-route change without
     /// delivering `didCancel`. Do not let that stale `current` value permanently block every later
     /// milestone. The next enqueue/tick can safely recover the queue and continue speaking.
     private func recoverIfSpeechStoppedUnexpectedly() {
-        guard let current, !synthesizer.isSpeaking else { return }
+        // Only a cue that had begun can be lost this way; one that never began is the watchdog's.
+        guard let current, !awaitingChime, started, !synthesizer.isSpeaking else { return }
         if !queue.contains(where: { $0.fingerprint == current.fingerprint }) {
             queue.insert(current, at: 0)
         }
         self.current = nil
+        started = false
     }
 
     /// Preserve an in-flight sentence before resetting the audio route. AVSpeechSynthesizer can stop
@@ -156,24 +279,42 @@ final class AudioPromptScheduler: NSObject, @preconcurrency AVSpeechSynthesizerD
             queue.insert(current, at: 0)
         }
         current = nil
+        started = false
+        awaitingChime = false
+        chime?.stop(); chime = nil
+        watchdog?.cancel()
         synthesizer.stopSpeaking(at: .immediate)
     }
 
-    private func deactivate() {
-        guard isSessionActive else { return }
-        do { try session.setActive(false, options: [.notifyOthersOnDeactivation]) }
-        catch { logger.debug("Audio session deactivation skipped: \(String(describing: error), privacy: .public)") }
-        isSessionActive = false
+    // MARK: Delegates
+
+    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
+        started = true
+        watchdog?.cancel()
+        report(nil)
+        onDetail?(String(localized: "Speech started"))
     }
 
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+        onDetail?(String(localized: "Speech finished"))
         current = nil
+        started = false
         speakNextIfPossible()
     }
 
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
+        // A cancel we caused while retrying is not the end of the cue.
+        guard self.synthesizer === synthesizer else { return }
         current = nil
+        started = false
         speakNextIfPossible()
+    }
+
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        chime = nil
+        awaitingChime = false
+        guard let prompt = current else { speakNextIfPossible(); return }
+        speak(prompt.text, voiceFallback: false)
     }
 
     @objc private func handleInterruption(_ notification: Notification) {
@@ -182,15 +323,12 @@ final class AudioPromptScheduler: NSObject, @preconcurrency AVSpeechSynthesizerD
         switch type {
         case .began:
             interrupted = true
-            if let current { queue.insert(current, at: 0); self.current = nil }
-            synthesizer.stopSpeaking(at: .immediate)
+            preserveCurrentPrompt()
+            isSessionActive = false
         case .ended:
             interrupted = false
-            if !queue.isEmpty || current != nil || isSessionActive {
-                // Do not depend on shouldResume: some route/interruption combinations omit it,
-                // even though speech must continue after the interruption ends.
-                beginSession(resetFinishAfterQueue: false)
-            }
+            isSessionActive = false
+            // Do not depend on shouldResume: some route/interruption combinations omit it, even though speech must continue.
             speakNextIfPossible()
         @unknown default:
             interrupted = false
@@ -202,9 +340,9 @@ final class AudioPromptScheduler: NSObject, @preconcurrency AVSpeechSynthesizerD
         let reason = (notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt)
             .flatMap(AVAudioSession.RouteChangeReason.init(rawValue:))
         logger.debug("Audio route changed: \(String(describing: reason), privacy: .public)")
-        guard isSessionActive || current != nil || !queue.isEmpty else { return }
+        guard current != nil || !queue.isEmpty else { return }
 
-        // The callback can arrive before the replacement route is ready. Reactivate after a short
+        // The callback can arrive before the replacement route is ready. Retry after a short
         // delay so headset disconnect → speaker and headset reconnect both resume automatically.
         routeRecoveryTask?.cancel()
         routeRecoveryTask = Task { [weak self] in
@@ -218,9 +356,39 @@ final class AudioPromptScheduler: NSObject, @preconcurrency AVSpeechSynthesizerD
         guard !interrupted else { return }
         routeRecoveryInProgress = true
         preserveCurrentPrompt()
-        beginSession(resetFinishAfterQueue: false)
+        isSessionActive = false
         routeRecoveryInProgress = false
         speakNextIfPossible()
+    }
+
+    // MARK: The tone
+
+    private static let chimeData: Data = {
+        let rate = 44_100.0
+        func tone(_ hz: Double, _ seconds: Double) -> [Int16] {
+            (0..<Int(rate * seconds)).map { i in
+                let t = Double(i) / rate
+                // A quick attack and a soft release, so it does not click.
+                let envelope = min(1, t / 0.01) * min(1, (seconds - t) / 0.05)
+                return Int16(sin(2 * .pi * hz * t) * envelope * 0.4 * Double(Int16.max))
+            }
+        }
+        let samples = tone(880, 0.12) + [Int16](repeating: 0, count: Int(rate * 0.03)) + tone(1174.66, 0.16)
+        var d = Data()
+        func put<T: FixedWidthInteger>(_ v: T) { var x = v.littleEndian; d.append(Data(bytes: &x, count: MemoryLayout<T>.size)) }
+        let bytes = samples.count * 2
+        d.append(contentsOf: Array("RIFF".utf8)); put(UInt32(36 + bytes)); d.append(contentsOf: Array("WAVE".utf8))
+        d.append(contentsOf: Array("fmt ".utf8)); put(UInt32(16)); put(UInt16(1)); put(UInt16(1))
+        put(UInt32(rate)); put(UInt32(rate) * 2); put(UInt16(2)); put(UInt16(16))
+        d.append(contentsOf: Array("data".utf8)); put(UInt32(bytes))
+        for s in samples { put(s) }
+        return d
+    }()
+
+    private static func makeChime() -> AVAudioPlayer? {
+        let player = try? AVAudioPlayer(data: chimeData)
+        player?.prepareToPlay()
+        return player
     }
 }
 #endif

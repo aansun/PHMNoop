@@ -426,6 +426,7 @@ struct NunaAnyaVoiceCoachView: View {
     @AppStorage(AudioCoachingPreferences.targetZoneKey) private var targetZone = 3
     @AppStorage(AudioCoachingPreferences.frequencyKey) private var frequency = AudioPromptFrequency.normal.rawValue
     @AppStorage(AudioCoachingPreferences.speechRateKey) private var speechRate = AudioSpeechRate.normal.rawValue
+    @AppStorage(AudioCoachingPreferences.chimeKey) private var chime = true
 
     /// The same test the standard screen has, kept visible whether or not the coach is on: it plays a sample cue with the current settings
     /// and says what happened, so a silent workout can be told apart from a setting that is off or an audio session that did not start.
@@ -443,6 +444,13 @@ struct NunaAnyaVoiceCoachView: View {
                 if let error = audio.lastAudioError {
                     Label { Text(verbatim: error).textCase(nil) } icon: { Image(systemName: "exclamationmark.triangle.fill") }
                         .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.warning).fixedSize(horizontal: false, vertical: true)
+                }
+                if !audio.audioDetails.isEmpty {
+                    VStack(alignment: .leading, spacing: 3) {
+                        ForEach(Array(audio.audioDetails.enumerated()), id: \.offset) { _, line in
+                            Text(verbatim: line).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        }
+                    }
                 }
                 if let decision = audio.lastDecision {
                     Text(verbatim: decision).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
@@ -513,6 +521,7 @@ struct NunaAnyaVoiceCoachView: View {
                     nunaRuledHeader("Voice")
                     NunaCard { NunaSegmented(AudioSpeechRate.allCases.map { (value: $0.rawValue, title: LocalizedStringKey($0.title)) }, selection: $speechRate) }
                 }
+                NunaCard(small: true) { NunaToggleRow("Tone before each cue", subtitle: "A short beep, so a cue is noticed over music or wind", systemImage: "bell", isOn: $chime) }
             }
             Text("Spoken on this iPhone with the system voice. Music is lowered briefly and returns to normal. Silent strap vibrations are set under strap automations.")
                 .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
