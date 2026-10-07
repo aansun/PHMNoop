@@ -104,6 +104,8 @@ enum NunaGymStore {
 /// Gym: start an empty session, run or edit a saved program, the sets each muscle group got this week and the latest
 /// sessions. Reads and writes the same Lift Log tables as the Default screens, so programs and sessions are shared.
 struct NunaGymView: View {
+    /// True when shown as the Gym tab of Workouts, which already has its own header and scroll view.
+    var embedded = false
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var session: LiftSessionController
     @State private var programs: [LiftProgramRow] = []
@@ -129,19 +131,27 @@ struct NunaGymView: View {
 
     private static let setsBarSpan = 20.0
 
+    @ViewBuilder private var content: some View {
+        emptyCard
+        programsSection
+        NunaMuscleReadinessCard(readings: readiness)
+        weekSection
+        sessionsSection
+        NavigationLink(value: NunaWorkoutRoute.loadMuscle) {
+            NunaCard(small: true) { NunaListRow("Muscle load", subtitle: "Volume, recovery and personal records", systemImage: "chart.bar", showsChevron: true) }
+        }.buttonStyle(.plain)
+        NavigationLink(value: NunaWorkoutRoute.exerciseLibrary) {
+            NunaCard(small: true) { NunaListRow("Exercise library", subtitle: "Animated demos and the muscles each one works", systemImage: "figure.strengthtraining.traditional", showsChevron: true) }
+        }.buttonStyle(.plain)
+    }
+
     var body: some View {
-        NunaDetailScreen("Gym") {
-            emptyCard
-            programsSection
-            NunaMuscleReadinessCard(readings: readiness)
-            weekSection
-            sessionsSection
-            NavigationLink(value: NunaWorkoutRoute.loadMuscle) {
-                NunaCard(small: true) { NunaListRow("Muscle load", subtitle: "Volume, recovery and personal records", systemImage: "chart.bar", showsChevron: true) }
-            }.buttonStyle(.plain)
-            NavigationLink(value: NunaWorkoutRoute.exerciseLibrary) {
-                NunaCard(small: true) { NunaListRow("Exercise library", subtitle: "Animated demos and the muscles each one works", systemImage: "figure.strengthtraining.traditional", showsChevron: true) }
-            }.buttonStyle(.plain)
+        Group {
+            if embedded {
+                VStack(spacing: NunaSpacing.section) { content }
+            } else {
+                NunaDetailScreen("Gym") { content }
+            }
         }
         .nunaWorkoutDestinations()
         .task(id: "\(repo.refreshSeq)-\(session.savedSessions)") { await load() }

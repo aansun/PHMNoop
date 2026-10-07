@@ -64,9 +64,11 @@ struct NunaWorkoutsView: View {
         ScrollView {
             VStack(spacing: NunaSpacing.section) {
                 header
-                NunaSegmented([(value: 0, title: "Workout"), (value: 1, title: "Insight")], selection: $tab)
+                NunaSegmented([(value: 0, title: "Workout"), (value: 1, title: "Gym"), (value: 2, title: "Insight")], selection: $tab)
                 NunaActiveWorkoutBanner()
-                if !m.loaded {
+                if tab == 1 {
+                    NunaGymView(embedded: true)
+                } else if !m.loaded {
                     ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 160)
                 } else if tab == 0 {
                     startSection
