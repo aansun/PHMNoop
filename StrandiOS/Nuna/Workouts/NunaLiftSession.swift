@@ -23,6 +23,8 @@ struct NunaLiftSessionView: View {
     @State private var setCountChanges: [LiftSessionController.SetCountChange] = []
     /// Exercises the user opened by hand, on top of the one being worked.
     @State private var opened: Set<Int> = []
+    /// The library entry whose demo is open in a sheet.
+    @State private var demo: NunaLibraryExercise?
     @State private var draft: [FocusTarget: String] = [:]
     @FocusState private var focused: FocusTarget?
 
@@ -72,6 +74,20 @@ struct NunaLiftSessionView: View {
         .task { await loadLastTime() }
         .onChange(of: focused) { now in draft = draft.filter { $0.key == now } }
         .sheet(isPresented: $showingFinish) { finishSheet }
+        .sheet(item: $demo) { e in
+            NavigationStack { NunaExerciseDetailView(exerciseId: e.id) }
+                .preferredColorScheme(NunaTheme.colorScheme).presentationDragIndicator(.visible)
+        }
+    }
+
+    /// The demo button of an exercise that has a library entry (a name match, with a few known aliases).
+    @ViewBuilder private func demoButton(_ name: String) -> some View {
+        if let lib = NunaExerciseLibrary.match(name) {
+            Button { demo = lib } label: {
+                Image(systemName: "play.rectangle.fill").font(.nuna(size: 18)).foregroundStyle(NunaPalette.textPrimary)
+                    .frame(width: 40, height: 40).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+            }.buttonStyle(.plain).accessibilityLabel(Text("Show the demo"))
+        }
     }
 
     // MARK: Header, figures, status
@@ -181,16 +197,19 @@ struct NunaLiftSessionView: View {
         if isOpen(engine, index) {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
-                    Button { opened.remove(index) } label: {
-                        HStack(alignment: .top) {
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(verbatim: item.exercise).font(.nuna(size: 19, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).multilineTextAlignment(.leading)
-                                Text(verbatim: LiftMuscleSummary.line(primary: item.primaryMuscle, secondaries: item.secondaryMuscles)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                            }
-                            Spacer()
-                            Text(verbatim: "\(done)/\(slots.count)").font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
-                        }.contentShape(Rectangle())
-                    }.buttonStyle(.plain)
+                    HStack(alignment: .top, spacing: 10) {
+                        Button { opened.remove(index) } label: {
+                            HStack(alignment: .top) {
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(verbatim: item.exercise).font(.nuna(size: 19, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).multilineTextAlignment(.leading)
+                                    Text(verbatim: LiftMuscleSummary.line(primary: item.primaryMuscle, secondaries: item.secondaryMuscles)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                                }
+                                Spacer()
+                                Text(verbatim: "\(done)/\(slots.count)").font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
+                            }.contentShape(Rectangle())
+                        }.buttonStyle(.plain)
+                        demoButton(item.exercise)
+                    }
                     if let note = item.note, !note.isEmpty {
                         Text(verbatim: note).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(4).padding(10)
                             .frame(maxWidth: .infinity, alignment: .leading).background(NunaPalette.warning.opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
@@ -209,18 +228,21 @@ struct NunaLiftSessionView: View {
                 }
             }
         } else {
-            Button { opened.insert(index) } label: {
-                NunaCard(small: true) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(verbatim: item.exercise).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            Text(verbatim: collapsedLine(item, done: done, total: slots.count)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        }
-                        Spacer()
-                        Image(systemName: "chevron.down").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                    }
+            NunaCard(small: true) {
+                HStack(spacing: 10) {
+                    Button { opened.insert(index) } label: {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(verbatim: item.exercise).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                Text(verbatim: collapsedLine(item, done: done, total: slots.count)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.down").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                        }.contentShape(Rectangle())
+                    }.buttonStyle(.plain)
+                    demoButton(item.exercise)
                 }
-            }.buttonStyle(.plain)
+            }
         }
     }
 
