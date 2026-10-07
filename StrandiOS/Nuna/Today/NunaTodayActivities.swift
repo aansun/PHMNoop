@@ -83,7 +83,7 @@ struct NunaTodayActivities: View {
             }
             .foregroundStyle(NunaPalette.textPrimary)
             .frame(width: 92, height: 40)
-            .background(NunaPalette.ink.opacity(0.12), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+            .background(NunaPalette.ink.opacity(0.11), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
             name.font(.nuna(size: 13, weight: .heavy)).tracking(0.8).foregroundStyle(NunaPalette.textPrimary)
                 .lineLimit(2).minimumScaleFactor(0.85).multilineTextAlignment(.leading)
             Spacer(minLength: 6)
@@ -100,7 +100,8 @@ struct NunaTodayActivities: View {
             .padding(.trailing, 2)
         }
         .padding(.horizontal, 6).padding(.vertical, 6)
-        .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        // A step lighter than the card it sits on (a thin wash of the text colour), not a dark well: it follows the active look.
+        .background(NunaPalette.ink.opacity(0.07), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .contentShape(Rectangle())
     }
 
