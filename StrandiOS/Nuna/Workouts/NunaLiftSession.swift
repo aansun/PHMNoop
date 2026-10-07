@@ -28,7 +28,6 @@ struct NunaLiftSessionView: View {
     @State private var demo: NunaLibraryExercise?
     @State private var pickingExercise = false
     @State private var showingSettings = false
-    @State private var confirmingDiscardNow = false
     /// The RPE column is hidden until asked for, as in most logs; the typed values are kept either way.
     @AppStorage("nuna.gym.showRpe") private var showRpe = false
     /// A sound when a rest period ends.
@@ -86,6 +85,9 @@ struct NunaLiftSessionView: View {
             Button("Done") { focused = nil }
         } }
         .task { await loadLastTime() }
+        // A screen with no session behind it has nothing to show: it closes itself, in case the presenter's own dismissal was ignored
+        // (UIKit drops a dismissal asked for while another one is still running).
+        .onChange(of: session.engine == nil) { _, gone in if gone { dismiss() } }
         .onChange(of: focused) { now in draft = draft.filter { $0.key == now } }
         .sheet(isPresented: $showingFinish) { finishSheet }
         .sheet(item: $demo) { e in
@@ -96,10 +98,6 @@ struct NunaLiftSessionView: View {
             NunaExercisePicker(confirm: { $0 == 1 ? String(localized: "Add 1 exercise") : String(localized: "Add \($0) exercises") }, title: "Add exercise") { picked in addExercises(picked) }
         }
         .sheet(isPresented: $showingSettings) { settingsSheet }
-        .confirmationDialog("Discard this session?", isPresented: $confirmingDiscardNow, titleVisibility: .visible) {
-            Button("Discard", role: .destructive) { Task { await closeScreen(); session.discard() } }
-            Button("Keep going", role: .cancel) {}
-        } message: { Text("\(engine?.completedWorkingSets ?? 0) recorded sets will be thrown away. Nothing is saved and no workout is created.") }
     }
 
     /// Exercises added in the gym go to the end of the session, three sets each, and open so the first set can be typed.
@@ -141,16 +139,6 @@ struct NunaLiftSessionView: View {
                 .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54)
                 .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }.buttonStyle(.plain)
-            HStack(spacing: 12) {
-                Button { showingSettings = true } label: {
-                    Text("Settings").font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 50)
-                        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                }.buttonStyle(.plain)
-                Button { confirmingDiscardNow = true } label: {
-                    Text("Discard workout").font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.alertText).frame(maxWidth: .infinity).frame(height: 50)
-                        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                }.buttonStyle(.plain)
-            }
         }
         .padding(.top, 6)
     }
@@ -175,6 +163,8 @@ struct NunaLiftSessionView: View {
                 .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 10).frame(height: 36)
                 .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }
+            Button { showingSettings = true } label: { NunaBareIcon("slider.horizontal.3", target: 40) }
+                .buttonStyle(.plain).accessibilityLabel(Text("Settings"))
             Button {
                 unfinishedChoice = nil; programChoice = nil; setCountChanges = []
                 showingFinish = true

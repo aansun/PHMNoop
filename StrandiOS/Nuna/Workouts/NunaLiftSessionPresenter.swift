@@ -33,8 +33,15 @@ final class NunaLiftSessionPresenter {
         generation += 1
         // Asked of the controller below, so the session goes with anything open above it (the finish sheet); asked of the session itself it
         // would close only that sheet.
-        host?.presentingViewController?.dismiss(animated: true)
+        let leaving = host
+        leaving?.presentingViewController?.dismiss(animated: true)
         host = nil
+        // UIKit ignores a dismissal asked for while another (an alert closing) is still running: ask again if the screen is still up.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
+            if let leaving, leaving.presentingViewController != nil, !leaving.isBeingDismissed {
+                leaving.presentingViewController?.dismiss(animated: true)
+            }
+        }
     }
 
     private func attempt(generation: Int, tries: Int, repo: Repository, model: AppModel, session: LiftSessionController, router: NavRouter) {
