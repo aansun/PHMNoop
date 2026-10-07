@@ -186,6 +186,7 @@ struct NunaTodayView: View {
         }
         .background(NunaPalette.canvas.ignoresSafeArea())
         .nunaTodayDestinations()
+        .nunaWorkoutDestinations()
         .navigationDestination(isPresented: $showWindDown) { NunaWindDownView() }
         .sheet(isPresented: $showBreath) {
             NavigationStack { NunaBreathView().toolbar(.hidden, for: .navigationBar) }.preferredColorScheme(NunaTheme.colorScheme)
@@ -696,19 +697,10 @@ struct NunaTodayView: View {
                 }
             }
         case .workouts:
-            // Everything done on the day shown, newest first; three rows at most, the rest counted in the link.
-            let done = model.workouts.sorted { $0.startTs > $1.startTs }
-            if !done.isEmpty {
-                VStack(spacing: 12) {
-                    NunaTitleRow(title: "Activity") {
-                        Button { router.requestedDestination = .workouts } label: {
-                            NunaLinkLabel(text: done.count > 3 ? LocalizedStringKey("All \(done.count) workouts") : "All workouts", chevron: true)
-                        }
-                    }
-                    VStack(spacing: 10) {
-                        ForEach(Array(done.prefix(3)), id: \.startTs) { w in NunaActivityRow(workout: w, effortScale: effortScale) }
-                    }
-                }
+            // Sleep and every workout of the day, in the order they happened.
+            if !model.workouts.isEmpty {
+                NunaTodayActivities(workouts: model.workouts.sorted { $0.startTs < $1.startTs }, effortScale: effortScale,
+                                    dayStart: Calendar.current.startOfDay(for: model.displayDate), sleepMinutes: model.sleepMinutes, isToday: model.isToday)
             }
         case .heartRate:
             NunaLiveHR(isToday: model.isToday) { hr in
