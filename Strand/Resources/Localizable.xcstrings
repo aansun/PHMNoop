@@ -1,6 +1,9 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "Audio coach": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Pelatih audio" } } } },
+        "Audio": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Audio" } } } },
+        "Spoken cues in workouts and gym sessions: heart-rate zones, distance, rest": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Isyarat suara saat latihan dan sesi gym: zona detak jantung, jarak, istirahat" } } } },
         "Open Gym": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Buka Gym" } } } },
         "Programs, sessions and the muscle map": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Program, sesi, dan peta otot" } } } },
         "Open Gym to run a program or a freehand session": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Buka Gym untuk menjalankan program atau sesi bebas" } } } },
