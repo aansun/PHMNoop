@@ -81,7 +81,6 @@ enum NunaQuickActions {
 struct NunaQuickPanel<Root: Hashable>: View {
     let route: Root
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var liftSession: LiftSessionController
     @State private var path: NavigationPath
 
     init(route: Root) {
@@ -101,9 +100,6 @@ struct NunaQuickPanel<Root: Hashable>: View {
                 .nunaDeviceDestinations()
         }
         .onChange(of: path.count) { _, n in if n == 0 { dismiss() } }
-        // A gym session shows as a full-screen cover over the whole app, and a cover cannot open on top of a sheet. When a session asks to be shown
-        // from in here (starting one in Gym, or tapping Open), this panel closes and the session follows once the screen is clear.
-        .onChange(of: liftSession.wantsPresent) { _, wants in if wants { dismiss() } }
         .preferredColorScheme(NunaTheme.colorScheme)
     }
 }

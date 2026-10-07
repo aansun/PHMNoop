@@ -16,6 +16,8 @@ struct NunaRootView: View {
     @EnvironmentObject private var router: NavRouter
     /// The live gym session, owned at the app root. Both shells present it; this one with its own face.
     @EnvironmentObject private var liftSession: LiftSessionController
+    @EnvironmentObject private var model: AppModel
+    @State private var sessionPresenter = NunaLiftSessionPresenter()
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     /// The theme choices. The palette reads them from UserDefaults, so a change rebuilds the tabs (the navigation paths are kept).
     @AppStorage(NunaTheme.storageKey) private var themeRaw = NunaTheme.Mode.dark.rawValue
@@ -77,8 +79,11 @@ struct NunaRootView: View {
         .onChange(of: skinRaw) { _, _ in Self.applyWindowStyle() }
         .onDisappear { Self.applyWindowStyle(reset: true) }
         // The gym session is full screen, like the live workout of every other sport, and never a sheet that a swipe could close by accident:
-        // it is put away with the chevron in its header.
-        .fullScreenCover(isPresented: $liftSession.isPresented) { NunaLiftSessionView() }
+        // it is put away with the chevron in its header. It is presented by UIKit over whatever is on top, so starting it from a sheet
+        // (Gym in Quick actions) does not close the sheet first.
+        .onChange(of: liftSession.isPresented) { _, on in
+            if on { sessionPresenter.present(repo: model.repo, model: model, session: liftSession, router: router) } else { sessionPresenter.dismiss() }
+        }
         // A session left running by a previous launch comes back as the bar, not as a sheet thrown in the user's face.
         .task {
             guard !liftSession.isActive, let snapshot = LiftSessionPersistence.load() else { return }
@@ -86,12 +91,6 @@ struct NunaRootView: View {
         }
         .sheet(isPresented: $showDevices) { sheetStack { NunaDevicesView() } }
         .sheet(item: $routed) { dest in sheetStack { destinationView(dest) } }
-        // A gym session is a full-screen cover, and cannot open over a sheet. When it is asked to show while a screen of this shell is open as a
-        // sheet (Workouts and its Gym, Devices), that sheet closes and the session follows once the screen is clear.
-        .onChange(of: liftSession.wantsPresent) { _, wants in
-            guard wants else { return }
-            routed = nil; showDevices = false
-        }
         .onChange(of: router.requestedDestination) { _, dest in handle(dest) }
         .onChange(of: router.openNotificationSettings) { _, on in
             guard on else { return }
