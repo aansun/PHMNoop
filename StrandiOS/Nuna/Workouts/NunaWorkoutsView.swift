@@ -114,7 +114,6 @@ struct NunaWorkoutsView: View {
             }.buttonStyle(.plain).accessibilityLabel(Text("Back"))
             Text("Workouts").font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             Spacer()
-            roundLink(.history, "line.3.horizontal.decrease", "All sessions")
             roundLink(.settings, "slider.horizontal.3", "Workout settings")
         }
     }
