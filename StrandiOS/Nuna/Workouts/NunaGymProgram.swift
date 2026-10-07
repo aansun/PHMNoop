@@ -203,6 +203,152 @@ struct NunaProgramEditor: View {
     }
 }
 
+// MARK: - Program page
+
+/// A program as it is opened from the Gym list or a shortcut: its name in full, the note, the exercises and what they add up to, with
+/// Start at the bottom and the menu at the top right for editing or deleting. Editing is its own screen, reached from the menu.
+struct NunaProgramDetailView: View {
+    let programId: String
+    @EnvironmentObject private var repo: Repository
+    @EnvironmentObject private var session: LiftSessionController
+    @Environment(\.dismiss) private var dismiss
+    @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
+    @State private var program: LiftProgramRow?
+    @State private var items: [LiftProgramItemRow] = []
+    @State private var loaded = false
+    @State private var confirmDelete = false
+    @State private var starting = false
+
+    private var system: UnitSystem { UnitSystem(rawValue: unitSystemRaw) ?? .metric }
+    private var totalSets: Int { items.reduce(0) { $0 + ($1.targetSets ?? 1) } }
+    private var estimatedMinutes: Int {
+        let secs = items.reduce(0) { $0 + ($1.targetSets ?? 1) * (45 + ($1.restSec ?? LiftPlanItem.defaultRestSec)) }
+        return Int((Double(secs) / 60).rounded())
+    }
+
+    var body: some View {
+        NunaDetailScreen("Program gym", trailing: AnyView(menu)) {
+            if let program {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(verbatim: program.name).font(.nuna(size: 26, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    if let note = program.note, !note.isEmpty {
+                        Text(verbatim: note).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                summaryCard
+                NunaTitleRow(title: "Exercises") { EmptyView() }
+                exerciseList
+            } else if loaded {
+                Text("This program is no longer there.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            }
+        }
+        .task(id: repo.refreshSeq) { await load() }
+        .safeAreaInset(edge: .bottom, spacing: 0) { startBar }
+        .confirmationDialog("Delete this program?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Delete", role: .destructive) { Task { await deleteProgram() } }
+            Button("Cancel", role: .cancel) {}
+        } message: { Text("Sessions you already logged from it are kept.") }
+    }
+
+    private var menu: some View {
+        Menu {
+            NavigationLink(value: NunaWorkoutRoute.programEdit(programId)) { Label("Edit program", systemImage: "pencil") }
+            Button(role: .destructive) { confirmDelete = true } label: { Label("Delete program", systemImage: "trash") }
+        } label: { NunaBareIcon("ellipsis") }
+        .accessibilityLabel(Text("Program menu"))
+    }
+
+    private var summaryCard: some View {
+        NunaCard {
+            HStack {
+                tile("Exercises", "\(items.count)", nil)
+                tile("Sets", "\(totalSets)", nil)
+                tile("Estimated", "\(estimatedMinutes)", "min")
+            }
+        }
+    }
+
+    private func tile(_ l: LocalizedStringKey, _ v: String, _ unit: String?) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text(verbatim: v).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                if let unit { Text(verbatim: unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+            }
+        }.frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    @ViewBuilder private var exerciseList: some View {
+        NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
+            VStack(spacing: 0) {
+                if items.isEmpty {
+                    Text("No exercises yet. Choose Edit program to add some.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        .frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 16)
+                }
+                ForEach(Array(items.enumerated()), id: \.element.id) { i, item in
+                    if i > 0 { NunaDivider() }
+                    HStack(spacing: 12) {
+                        NunaExerciseThumb(name: item.exercise, width: 50, height: 38)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(verbatim: item.exercise).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2)
+                            if !detail(item).isEmpty { Text(verbatim: detail(item)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
+                        }
+                        Spacer(minLength: 6)
+                        if let s = item.targetSets {
+                            Text(verbatim: item.targetRepsLow.map { "\(s) × \($0)" } ?? "\(s)").font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        }
+                    }.padding(.vertical, 12)
+                }
+            }
+        }
+    }
+
+    private func detail(_ item: LiftProgramItemRow) -> String {
+        var parts: [String] = []
+        if let kg = item.targetWeightKg { parts.append(LiftFormat.weight(kg, system: system)) }
+        if let rest = item.restSec { parts.append(String(localized: "rest \(rest) s")) }
+        return parts.joined(separator: " · ")
+    }
+
+    private var startBar: some View {
+        let running = session.isActive
+        return Button { Task { await start() } } label: {
+            HStack(spacing: 8) {
+                Image(systemName: running ? "arrow.up.forward" : "play.fill").font(.nuna(size: 14, weight: .bold))
+                Text(running ? "Open the running session" : "Start").font(.nuna(size: 17, weight: .bold))
+            }
+            .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56)
+            .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+        }
+        .buttonStyle(.plain).disabled(program == nil || (items.isEmpty && !running) || starting).opacity(program == nil || (items.isEmpty && !running) ? 0.4 : 1)
+        .padding(.horizontal, NunaSpacing.screenH).padding(.top, 10).padding(.bottom, 10)
+        .background(LinearGradient(colors: [NunaPalette.canvas.opacity(0), NunaPalette.canvas], startPoint: .top, endPoint: .center))
+    }
+
+    private func load() async {
+        guard let store = await repo.storeHandle() else { return }
+        program = ((try? await store.liftPrograms(deviceId: repo.deviceId)) ?? []).first { $0.id == programId }
+        items = (try? await store.liftProgramItems(programId: programId)) ?? []
+        loaded = true
+    }
+
+    private func start() async {
+        guard let program else { return }
+        starting = true; defer { starting = false }
+        await NunaGymStore.start(program: program, repo: repo, session: session)
+    }
+
+    private func deleteProgram() async {
+        guard let store = await repo.storeHandle() else { return }
+        _ = try? await store.deleteLiftProgram(id: programId)
+        await repo.refresh()
+        dismiss()
+    }
+}
+
 // MARK: - One exercise line (WorkoutProgramItem.dc)
 
 /// Which exercise and the targets for it, plus the muscles it counts towards. Opens as a sheet from the program editor.

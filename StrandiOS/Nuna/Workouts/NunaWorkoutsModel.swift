@@ -21,7 +21,9 @@ enum NunaWorkoutRoute: Hashable {
     case gym
     /// The Workouts hub itself, on the given tab (0 Workout, 1 Gym, 2 Insight), for screens outside it that push it on their own stack.
     case hub(Int)
+    /// A program: its page with Start and the menu (`"new"` goes straight to the editor).
     case program(String)
+    case programEdit(String)
     case programImport
     case gymSession(String)
     case exerciseLibrary
