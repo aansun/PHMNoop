@@ -208,8 +208,9 @@ struct NunaGymSessionView: View {
         guard let s = all.first(where: { $0.id == sessionId }) else { session = nil; loaded = true; return }
         session = s
         sets = (try? await store.liftSets(sessionId: s.id)) ?? []
-        let rows = (try? await store.workouts(deviceId: repo.deviceId, from: s.startTs - 1, to: s.startTs + 1, limit: 10)) ?? []
-        workout = rows.first { $0.startTs == s.startTs && $0.sport == s.sport }
+        // The same list Today and the Workouts hub read, not the raw stored row: the stored row has no Effort for a gym session (it is
+        // filled in at read time from the measured heart rate), so reading it here showed a different figure, or none.
+        workout = await repo.workoutRows().first { $0.startTs == s.startTs && $0.sport == s.sport }
         if let w = workout { await data.load(startTs: w.startTs, endTs: w.endTs, sport: w.sport, source: w.source, repo: repo, zoneSet: profile.hrZoneSet) }
         // The heaviest working set of each exercise across every earlier session: a record means beating all of them.
         var prev: [String: Double] = [:]
