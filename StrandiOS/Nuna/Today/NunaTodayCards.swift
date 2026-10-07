@@ -598,7 +598,7 @@ struct NunaMetricsGrid: View {
     @ViewBuilder private func content(_ tile: NunaMetricTile, inCard: Bool = false) -> some View {
         if inCard {
             tileBody(tile).padding(14).frame(maxWidth: .infinity, alignment: .leading)
-                .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .background(NunaPalette.ink.opacity(0.07), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         } else {
             NunaCard(small: true, padding: EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16)) { tileBody(tile) }
         }
