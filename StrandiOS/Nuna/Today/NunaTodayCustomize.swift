@@ -315,9 +315,8 @@ struct NunaLayoutList<Item: Identifiable & Equatable, Extra: View>: View {
             Spacer(minLength: 6)
             if shown, configure(item) {
                 Button { onConfigure(item) } label: {
-                    Text("Edit").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        .padding(.horizontal, 12).frame(height: 32).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                }.buttonStyle(.plain)
+                    NunaBareIcon("pencil", target: 36)
+                }.buttonStyle(.plain).accessibilityLabel(Text("Edit"))
             }
             Toggle("", isOn: Binding(
                 get: { shown },

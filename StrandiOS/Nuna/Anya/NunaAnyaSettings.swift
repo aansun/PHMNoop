@@ -305,8 +305,8 @@ struct NunaAnyaHistoryView: View {
 
     private var editButton: some View {
         Button { withAnimation { editing.toggle() } } label: {
-            Text(editing ? "Done" : "Edit").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 38).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-        }.buttonStyle(.plain)
+            NunaBareIcon(editing ? "checkmark" : "pencil", tint: editing ? NunaPalette.charge : NunaPalette.textPrimary)
+        }.buttonStyle(.plain).accessibilityLabel(Text(editing ? "Done" : "Edit"))
     }
 
     private struct Group { let title: String; let items: [CoachConversationHistoryItem] }

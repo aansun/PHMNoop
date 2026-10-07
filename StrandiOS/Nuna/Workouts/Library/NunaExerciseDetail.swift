@@ -47,17 +47,7 @@ struct NunaExerciseDetailView: View {
     }
 
     private var tabs: some View {
-        HStack(spacing: 0) {
-            ForEach(Tab.allCases, id: \.self) { t in
-                Button { withAnimation(.easeInOut(duration: 0.2)) { tab = t } } label: {
-                    VStack(spacing: 8) {
-                        Text(t.title).font(.nuna(size: 15, weight: .bold)).foregroundStyle(tab == t ? NunaPalette.textPrimary : NunaPalette.textSecondary)
-                        Rectangle().fill(tab == t ? NunaPalette.textPrimary : Color.clear).frame(height: 2)
-                    }.frame(maxWidth: .infinity).contentShape(Rectangle())
-                }.buttonStyle(.plain).accessibilityAddTraits(tab == t ? .isSelected : [])
-            }
-        }
-        .overlay(alignment: .bottom) { Rectangle().fill(NunaPalette.hairline).frame(height: 1) }
+        NunaPageTabs(Tab.allCases.map { (value: $0, title: $0.title) }, selection: $tab)
     }
 
     // MARK: Summary

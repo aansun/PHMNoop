@@ -757,9 +757,7 @@ private struct NunaAllMetricsScaffold<Content: View>: View {
                     }
                     Text("All metrics").font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Spacer()
-                    Button(action: onEdit) { Text("Edit").font(.nuna(size: 13.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
-                        .padding(.horizontal, 14).frame(height: 34).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1)) }
+                    Button(action: onEdit) { NunaBareIcon("pencil") }.buttonStyle(.plain).accessibilityLabel(Text("Edit"))
                 }
                 content
             }

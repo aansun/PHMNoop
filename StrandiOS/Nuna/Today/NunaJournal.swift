@@ -73,10 +73,7 @@ struct NunaJournalView: View {
     /// A pencil, like the reference: it switches the list into edit mode and back.
     private var editButton: some View {
         Button { withAnimation { editing.toggle() } } label: {
-            Image(systemName: editing ? "checkmark" : "pencil").font(.nuna(size: 15, weight: .bold))
-                .foregroundStyle(editing ? NunaPalette.onAccent : NunaPalette.textPrimary)
-                .frame(width: 44, height: 44)
-                .background(editing ? NunaPalette.accent : NunaPalette.glassStrong, in: Circle())
+            NunaBareIcon(editing ? "checkmark" : "pencil", tint: editing ? NunaPalette.charge : NunaPalette.textPrimary)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text(editing ? "Done" : "Edit"))
@@ -272,8 +269,7 @@ struct NunaJournalView: View {
                     if item.kind.isNumeric { Button("Change to Yes/No") { catalog.setKind(item.canonical, to: .bool) } }
                     else { Button("Change to Number") { catalog.setKind(item.canonical, to: .numeric(unitLabel: nil)) } }
                 } label: {
-                    Image(systemName: "slider.horizontal.3").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(width: 36, height: 36).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                    NunaBareIcon("slider.horizontal.3", target: 36)
                 }
                 Button { catalog.remove(item.canonical) } label: {
                     Image(systemName: "minus").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.alertText)
