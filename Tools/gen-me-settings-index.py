@@ -15,7 +15,7 @@ VIEWS = {
     "doubleTap": "NunaDoubleTapView", "presence": "NunaPresenceView", "sessionCues": "NunaSessionCuesView",
     "sedentary": "NunaSedentaryView", "shortcuts": "NunaShortcutsView", "alarm": "NunaSmartAlarmView",
     "data": "NunaDataHubView", "backup": "NunaBackupView", "imports": "NunaImportView", "appleHealth": "NunaAppleHealthView",
-    "strava": "NunaStravaView", "advanced": "NunaAdvancedView", "experiments": "NunaExperimentsView",
+    "strava": "NunaStravaView", "hevy": "NunaHevyView", "advanced": "NunaAdvancedView", "experiments": "NunaExperimentsView",
     "testCentre": "NunaTestCentreView", "about": "NunaAboutView",
 }
 STR = r'"((?:[^"\\]|\\.)*)"'

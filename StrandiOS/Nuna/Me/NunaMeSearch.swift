@@ -39,6 +39,7 @@ enum NunaMeIndex {
         .init(route: .imports, title: "Import data", icon: "square.and.arrow.down", group: "Data", keywords: "whoop export csv nutrition lifting"),
         .init(route: .appleHealth, title: "Apple Health", icon: "heart.text.square", group: "Data", keywords: "healthkit steps weight"),
         .init(route: .strava, title: "Strava", icon: "figure.run", group: "Data", keywords: "upload activities"),
+        .init(route: .hevy, title: "Hevy", icon: "dumbbell", group: "Data", keywords: "import workouts routines gym api key"),
         .init(route: .privacy, title: "Privacy", icon: "lock.shield.fill", group: "Data", keywords: "data local on device"),
         .init(route: .advanced, title: "Advanced", icon: "flame.fill", group: "More", keywords: "baseline hrv"),
         .init(route: .experiments, title: "Experiments", icon: "flask", group: "More", keywords: "experimental flags"),

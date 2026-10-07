@@ -237,7 +237,7 @@ public enum HevyAPI {
 
     /// Fold a `{ page, page_count, <key>: [...] }` envelope. A bare array is accepted as well, so a
     /// caller that already unwrapped a page is not forced back into the envelope.
-    private static func parsePage<Element>(
+    static func parsePage<Element: Sendable>(
         _ data: Data,
         key: String,
         element: ([String: Any]) -> Element?
