@@ -79,7 +79,7 @@ private struct NunaDevicesContent: View {
             if tab == 0 { statusTab } else { advancedTab }
         }
         .sheet(isPresented: $showAdd) {
-            AddDeviceWizard(live: live) { showAdd = false }.environmentObject(model).environmentObject(live)
+            NunaAddDeviceSheet { showAdd = false }.environmentObject(model).environmentObject(live).nunaSheetChrome(detents: [.large])
         }
         .alert("Make this your active strap?", isPresented: Binding(get: { switchTarget != nil }, set: { if !$0 { switchTarget = nil } }), presenting: switchTarget) { d in
             Button("Cancel", role: .cancel) { switchTarget = nil }

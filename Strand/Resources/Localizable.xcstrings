@@ -1,6 +1,17 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Add a WHOOP": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tambah WHOOP"}}}},
+    "Which strap are you adding?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Strap mana yang kamu tambahkan?"}}}},
+    "Search nearby": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Cari di sekitar"}}}},
+    "Looking for your strap…": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Mencari strapmu…"}}}},
+    "Pick your strap": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pilih strapmu"}}}},
+    "Search again": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Cari lagi"}}}},
+    "Keep the strap close to this iPhone, awake and out of the WHOOP app.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Dekatkan strap ke iPhone ini, pastikan aktif dan tidak sedang terhubung ke aplikasi WHOOP."}}}},
+    "Very close": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Sangat dekat"}}}},
+    "Far": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Jauh"}}}},
+    "Found": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ditemukan"}}}},
+    "It will provide your live data from now on. You can change this any time.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Perangkat ini akan menyediakan datamu secara langsung mulai sekarang. Kamu bisa mengubahnya kapan saja."}}}},
     "Nothing to delete": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidak ada yang bisa dihapus"}}}},
     "Delete 1 paused memory?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Hapus 1 memori yang dijeda?"}}}},
     "Delete %lld paused memories?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Hapus %lld memori yang dijeda?"}}}},
