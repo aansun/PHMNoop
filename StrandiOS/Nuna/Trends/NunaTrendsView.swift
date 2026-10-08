@@ -94,14 +94,6 @@ struct NunaTrendsView: View {
                 Text("Trends").font(.nuna(size: NunaTypeSize.h1, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             }
             Spacer()
-            NavigationLink(value: NunaTrendsRoute.compare) {
-                HStack(spacing: 6) {
-                    Image(systemName: "slider.horizontal.3").font(.nuna(size: 12, weight: .bold))
-                    Text("Compare").font(.nuna(size: 13, weight: .heavy))
-                }
-                .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 38)
-                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)).overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
-            }.buttonStyle(.plain)
         }
     }
 
