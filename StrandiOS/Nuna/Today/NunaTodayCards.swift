@@ -183,7 +183,15 @@ extension EnvironmentValues {
     }
 }
 
-/// Highlighted Anya card: icon tile, caption, one-line advice and an optional white action button.
+/// Anya's suggestion has no card of its own: it sits on the page background, so it reads as a line of the page rather than one more box.
+struct NunaAnyaPlain<Content: View>: View {
+    let padding: EdgeInsets
+    let content: Content
+    init(padding: EdgeInsets, @ViewBuilder content: () -> Content) { self.padding = padding; self.content = content() }
+    var body: some View { content.padding(padding).frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle()) }
+}
+
+/// Anya's suggestion: icon tile, caption, one-line advice and an optional white action button.
 struct NunaAnyaCard: View {
     let title: Text
     var buttonTitle: LocalizedStringKey?
@@ -275,7 +283,7 @@ struct NunaAnyaCard: View {
 
     /// The icon, the words and a chevron in one row; the whole card opens Anya.
     private func inline(compact: Bool) -> some View {
-        NunaCard(small: true, highlight: highlight, padding: EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)) {
+        NunaAnyaPlain(padding: EdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 4)) {
             Button(action: tapped) {
                 HStack(spacing: 12) {
                     AnyaIconTile()
@@ -294,7 +302,7 @@ struct NunaAnyaCard: View {
 
     /// With an action: the icon and "Anya" on top, the words across the full width under them, and a small translucent button under that, on the left.
     private func stacked(_ buttonTitle: LocalizedStringKey, _ onButton: @escaping () -> Void) -> some View {
-        NunaCard(small: true, highlight: highlight, padding: EdgeInsets(top: 14, leading: 16, bottom: 16, trailing: 16)) {
+        NunaAnyaPlain(padding: EdgeInsets(top: 8, leading: 4, bottom: 8, trailing: 4)) {
             VStack(alignment: .leading, spacing: 14) {
                 Button(action: tapped) {
                     VStack(alignment: .leading, spacing: 12) {
