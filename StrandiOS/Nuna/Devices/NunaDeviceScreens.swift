@@ -216,7 +216,7 @@ struct NunaDeviceRepairView: View {
             step(3, "Add it again", "Turn the strap on and follow the pairing steps.", "Add WHOOP") { showAdd = true }
             Text("The last 14 days are pulled from the strap again if they are still on it.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
         }
-        .sheet(isPresented: $showAdd) { AddDeviceWizard(live: live) { showAdd = false }.environmentObject(model).environmentObject(live) }
+        .sheet(isPresented: $showAdd) { NunaAddDeviceSheet { showAdd = false }.environmentObject(model).environmentObject(live).nunaSheetChrome(detents: [.large]) }
         .alert("Remove this device?", isPresented: $confirmRemove) {
             Button("Cancel", role: .cancel) {}
             Button("Remove", role: .destructive) { if let id = model.deviceRegistry?.activeDeviceId { model.deviceRegistry?.archive(id) } }
