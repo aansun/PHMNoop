@@ -1,6 +1,12 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Off. Nothing is uploaded": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Mati. Tidak ada yang diunggah"}}}},
+    "On. GPS, treadmill and your own gym workouts upload automatically": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Aktif. Latihan GPS, treadmill, dan gym yang kamu catat sendiri diunggah otomatis"}}}},
+    "On. A workout uploads only when you choose": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Aktif. Latihan diunggah hanya saat kamu memilih"}}}},
+    "On. Steps, heart rate, vitals, sleep and workouts are written to Health on this iPhone": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Aktif. Langkah, detak jantung, tanda vital, tidur, dan latihan ditulis ke Health di iPhone ini"}}}},
+    "Off. Nothing is written to Health": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Mati. Tidak ada yang ditulis ke Health"}}}},
+    "No other app receives your data": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidak ada aplikasi lain yang menerima datamu"}}}},
     "Personalize": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Personalisasi"}}}},
     "You slept %@ a night over the last %lld nights.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu tidur %1$@ per malam selama %2$lld malam terakhir."}}}},
     "You slept %@ a night over the last %lld nights, close to what you need.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu tidur %1$@ per malam selama %2$lld malam terakhir, mendekati kebutuhanmu."}}}},
