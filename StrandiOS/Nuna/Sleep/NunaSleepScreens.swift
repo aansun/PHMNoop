@@ -427,7 +427,7 @@ private struct NunaNapContent: View {
             NunaNightPicker(model: model, caption: isToday ? "Today" : "Earlier day", date: night.wakeDate)
             if let nap = naps.first(where: { Int($0.start.timeIntervalSince1970) == selectedStart }) ?? naps.first {
                 hero(nap, count: naps.count, number: (naps.firstIndex(where: { $0.id == nap.id }) ?? 0) + 1)
-                tiles(nap)
+                stagesCard(nap)
                 impact(night)
                 if coachEnabled { NunaAnyaCard(title: "A nap under 30 minutes is safest for your night's sleep", highlight: false) { showCoach = true } }
             } else {
@@ -462,8 +462,7 @@ private struct NunaNapContent: View {
     }
 
     private func hero(_ nap: NunaNap, count: Int, number: Int = 1) -> some View {
-        let total = max(nap.end.timeIntervalSince(nap.start), 1)
-        return NunaCard(padding: EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20)) {
+        NunaCard(padding: EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20)) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     Text(count > 1 ? LocalizedStringKey("Nap \(number) of \(count)") : LocalizedStringKey("Nap")).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
@@ -482,56 +481,39 @@ private struct NunaNapContent: View {
                 }
                 Text(verbatim: "\(NunaSleepFormat.clock(nap.start)) – \(NunaSleepFormat.clock(nap.end))")
                     .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                if !nap.intervals.isEmpty {
-                    HStack(alignment: .top, spacing: 10) {
-                        VStack(alignment: .leading, spacing: 0) {
-                            ForEach(["Awake", "REM", "Light sleep", "Deep"], id: \.self) { l in
-                                Text(LocalizedStringKey(l)).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                                    .frame(maxHeight: .infinity, alignment: .center)
-                            }
-                        }
-                        .frame(width: 48, height: 110, alignment: .leading)
-                        VStack(spacing: 6) {
-                            NunaHypnogramStrip(intervals: nap.intervals, height: 110)
-                            if nap.motion.count >= 4 { NunaMotionStrip(epochs: nap.motion, total: total, height: 30) }
-                        }
-                    }
-                    .padding(.top, 8)
-                    HStack {
-                        Spacer().frame(width: 58)
-                        Text(verbatim: NunaSleepFormat.clock(nap.start)); Spacer()
-                        Text(verbatim: NunaSleepFormat.clock(nap.start.addingTimeInterval(total / 2))); Spacer()
-                        Text(verbatim: NunaSleepFormat.clock(nap.end))
-                    }
-                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    NunaStageLegend(showsMovement: nap.motion.count >= 4)
-                } else {
-                    Text("The order of stages is not available for this nap.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                }
             }
         }
     }
 
-    private func tiles(_ nap: NunaNap) -> some View {
-        let moves = NunaMovementSummary(nap.motion, hours: max(nap.spanMin / 60, 0.05))?.movements
-        return LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-            NunaStatTile(label: "Light sleep", value: "\(Int(nap.minutes(.light).rounded()))", unit: "min")
-            NunaStatTile(label: "Deep", value: "\(Int(nap.minutes(.deep).rounded()))", unit: "min")
-            NunaStatTile(label: "REM", value: "\(Int(nap.minutes(.rem).rounded()))", unit: "min")
-            NunaStatTile(label: "Movement", value: moves.map(String.init) ?? "–", unit: moves == nil ? "" : "×")
-        }
+    /// The nap shaped as a night, so it is drawn by the very same Sleep stages card: the stage chart in the chosen style, the heart rate and
+    /// the movement through it.
+    private func stagesCard(_ nap: NunaNap) -> some View {
+        let night = NunaNight(dayKey: "nap-\(Int(nap.start.timeIntervalSince1970))", wakeDate: nap.end, onset: nap.start, wake: nap.end,
+                              stages: Stages(awake: nap.minutes(.awake), light: nap.minutes(.light), deep: nap.minutes(.deep), rem: nap.minutes(.rem)),
+                              intervals: nap.intervals, naps: [], daily: nil, proportional: nap.intervals.isEmpty, motion: nap.motion)
+        return NunaSleepStageSection(model: model, night: night, title: "Nap stages", compareWithNights: false)
     }
 
+    /// The same Need and debt card as the Sleep page, with what this day's naps add to it.
     private func impact(_ night: NunaNight) -> some View {
         let napMin = naps.reduce(0) { $0 + $1.asleepMin }
+        let need = model.need(night)
+        let total = night.asleepMin + napMin
+        let debt = model.debtMin
         return NunaCard {
             VStack(alignment: .leading, spacing: 12) {
-                Text("Effect on tonight").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                line("Total sleep this day", NunaSleepFormat.duration(night.asleepMin + napMin))
+                Text("Need and debt").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.textSecondary)
+                HStack {
+                    Text(verbatim: NunaSleepFormat.duration(need))
+                        .font(.nuna(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("needed").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    Spacer()
+                    if let debt, debt > 0 { NunaChip(verbatim: String(localized: "Debt \(Int(debt.rounded())) min"), color: NunaPalette.warning) }
+                }
+                if need > 0 { NunaProgressBar(fraction: total / need) }
+                line("Total sleep this day", NunaSleepFormat.duration(total))
                 line("Counted toward your need", "+" + NunaSleepFormat.duration(napMin))
-                line("Tonight's need", NunaSleepFormat.duration(model.need(night)))
-                Text("A nap counts toward your sleep need but does not change last night's Rest score.")
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
         }
     }
