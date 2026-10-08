@@ -1,6 +1,7 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Waiting for a waist measurement from Apple Health.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Menunggu pengukuran pinggang dari Apple Health."}}}},
     "Explain": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Jelaskan"}}}},
     "Show the bottom bar": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tampilkan bilah bawah"}}}},
     "Nap stages": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Fase tidur siang"}}}},

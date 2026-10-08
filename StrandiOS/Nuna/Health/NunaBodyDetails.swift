@@ -181,60 +181,46 @@ struct NunaWeightView: View {
 
 // MARK: - Waist
 
-struct NunaWaistView: View {
+/// Waist and the waist to height ratio in one card on Health > Body. Both come from Apple Health (waist) and the profile (height); nothing is
+/// typed in here.
+struct NunaWaistRatioCard: View {
     @EnvironmentObject private var profile: ProfileStore
-    @State private var showAdd = false
 
     var body: some View {
         let waist = profile.waistCm
         let ratio: Double? = (waist > 0 && profile.heightCm > 0) ? waist / profile.heightCm : nil
-        NunaDetailScreen("Waist") {
-            NunaCard {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack { nunaCap("Latest"); Spacer(); NunaChip("Profile") }
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(verbatim: waist > 0 ? nbFmt(waist) : "–").font(.nuna(size: 68, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(68)).foregroundStyle(NunaPalette.textPrimary)
-                        if waist > 0 { Text("cm").font(.nuna(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+        NunaCard {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    nunaCap("Waist to height ratio")
+                    Spacer()
+                    if let ratio {
+                        Text(ratio < 0.5 ? "Healthy" : (ratio < 0.6 ? "Above" : "High")).font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                            .foregroundStyle(ratio < 0.5 ? NunaPalette.charge : NunaPalette.warning)
                     }
-                    Text(waist > 0 ? "Read from Apple Health when it has one, or typed in here" : "Not set yet")
-                        .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
-            }
-            if let ratio {
-                NunaCard {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            nunaCap("Waist to height ratio")
-                            Spacer()
-                            NunaChip(ratio < 0.5 ? "Healthy" : (ratio < 0.6 ? "Above" : "High"), color: ratio < 0.5 ? NunaPalette.charge : NunaPalette.warning)
+                HStack(alignment: .firstTextBaseline) {
+                    Text(verbatim: ratio.map { nbFmt($0, 2) } ?? "–").font(.nuna(size: 40, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(40)).foregroundStyle(NunaPalette.textPrimary)
+                    Spacer()
+                    if waist > 0 {
+                        HStack(alignment: .firstTextBaseline, spacing: 3) {
+                            Text(verbatim: nbFmt(waist)).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            Text("cm").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         }
-                        Text(verbatim: nbFmt(ratio, 2)).font(.nuna(size: 40, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(40)).foregroundStyle(NunaPalette.textPrimary)
-                        NunaScaleBar(parts: [(3, NunaPalette.rest), (3, NunaPalette.charge), (2, NunaPalette.warning), (3, NunaPalette.alert)],
-                                     position: min(max((ratio - 0.35) / 0.3, 0), 1))
-                        HStack { Text(verbatim: "0,4"); Spacer(); Text(verbatim: "0,6") }
-                            .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        Text(verbatim: String(localized: "Below 0.5 is generally considered healthy for a height of \(Int(profile.heightCm.rounded())) cm."))
-                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }
                 }
-            }
-            NavigationLink(value: NunaTodayRoute.fitnessAge) {
-                NunaCard(small: true) { NunaListRow("Used for VO₂max", description: "Opens the fitness age screen", systemImage: "waveform.path.ecg", showsChevron: true) }
-            }.buttonStyle(.plain)
-            Button { showAdd = true } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "plus").font(.nuna(size: 14, weight: .bold))
-                    Text("Add a manual measurement").font(.nuna(size: 16, weight: .bold))
+                if let ratio {
+                    NunaScaleBar(parts: [(3, NunaPalette.rest), (3, NunaPalette.charge), (2, NunaPalette.warning), (3, NunaPalette.alert)],
+                                 position: min(max((ratio - 0.35) / 0.3, 0), 1))
+                    HStack { Text(verbatim: "0,4"); Spacer(); Text(verbatim: "0,6") }
+                        .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    Text(verbatim: String(localized: "Below 0.5 is generally considered healthy for a height of \(Int(profile.heightCm.rounded())) cm."))
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                } else {
+                    Text("Waiting for a waist measurement from Apple Health.")
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
-                .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52)
-                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-            }.buttonStyle(.plain)
-            NunaCard(small: true) {
-                NunaListRow("Fill the profile from Apple Health", description: "The latest value is read automatically. Manage it in Me › Apple Health.", systemImage: "heart.text.square")
             }
-        }
-        .sheet(isPresented: $showAdd) {
-            NunaNumberSheet(title: "Waist", unit: "cm", initial: waist > 0 ? waist : 80, range: 50...180, step: 1, decimals: 0) { v in profile.waistCm = v }
         }
     }
 }
