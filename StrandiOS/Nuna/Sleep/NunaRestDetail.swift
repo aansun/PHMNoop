@@ -66,8 +66,9 @@ struct NunaRestDetailView: View {
     }
 
     private var hero: some View {
-        NunaScoreHero(caption: "Last night", chip: rest.map { Self.word($0).0 }, chipColor: rest.map { Self.word($0).1 },
-                      fraction: (rest ?? 0) / 100, number: rest.map { "\(Int($0.rounded()))" } ?? "–", unit: "%", name: "Rest",
+        NunaScoreHero(caption: "Last night",
+                      fraction: (rest ?? 0) / 100, number: rest.map { "\(Int($0.rounded()))" } ?? "–", unit: "%",
+                      name: rest.map { Self.word($0).0 } ?? "Rest", nameColor: rest.map { Self.word($0).1 },
                       color: NunaPalette.rest, hasNote: againstRecent != nil) {
             if let d = againstRecent {
                 Text(verbatim: comparison(d)).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
