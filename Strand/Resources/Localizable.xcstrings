@@ -1,6 +1,17 @@
 {
   "sourceLanguage": "en",
   "strings": {
+        "Connected to": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Terhubung ke" } } } },
+        "Not connected to": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Tidak terhubung ke" } } } },
+        "Strap disconnected": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Strap terputus" } } } },
+        "Syncing history": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Menyinkronkan riwayat" } } } },
+        "Pulling what the strap recorded while it was away": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Mengambil yang direkam strap selagi terputus" } } } },
+        "Live heart rate and history are coming in": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Detak jantung langsung dan riwayat sedang masuk" } } } },
+        "Bring the strap close to the phone, then reconnect": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Dekatkan strap ke ponsel, lalu sambungkan lagi" } } } },
+        "No reading yet. It appears once the strap is connected.": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Belum ada pembacaan. Muncul setelah strap terhubung." } } } },
+        "Pair another strap": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Pasangkan strap lain" } } } },
+        "Manage this strap": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Kelola strap ini" } } } },
+        "Rename, remove, or delete its data": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Ganti nama, hapus, atau hapus datanya" } } } },
         "A GPS, treadmill or gym workout": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Workout GPS, treadmill, atau gym" } } } },
         "Gym counts only when logged in PHMN, not from Hevy or Apple Health": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Gym hanya dihitung bila dicatat di PHMN, bukan dari Hevy atau Apple Health" } } } },
         "New GPS, treadmill and gym workouts are uploaded when they finish": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Workout GPS, treadmill, dan gym yang baru diunggah saat selesai" } } } },
