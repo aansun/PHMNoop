@@ -514,8 +514,8 @@ public struct NunaTabBar: View {
 
     @ViewBuilder private func glyph(_ item: NunaTabItem, size: CGFloat) -> some View {
         if item.systemImage == NunaGlyph.anya {
-            // Anya keeps her own colours in the bar; the page you are on is shown by how bright she is.
-            Image("AnyaLogo").resizable().scaledToFit().frame(width: size * 1.05, height: size * 1.05)
+            // Anya keeps her own colours in the bar (the ring too is drawn in the wing teal); the page you are on is shown by how bright she is.
+            Image("AnyaLogoTeal").resizable().scaledToFit().frame(width: size * 1.45, height: size * 1.45)
         } else if item.usesAssetImage {
             Image(item.systemImage).resizable().scaledToFit().frame(width: size, height: size)
         } else {
