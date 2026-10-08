@@ -58,9 +58,7 @@ private struct NunaDevicesContent: View {
     @ObservedObject var registry: DeviceRegistry
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var live: LiveState
-    @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @State private var showAdd = false
-    @State private var showCoach = false
     @State private var switchTarget: PairedDevice?
 
     private var devices: [PairedDevice] { registry.devices.filter { $0.status != .archived } }
@@ -69,7 +67,7 @@ private struct NunaDevicesContent: View {
     private var removed: [PairedDevice] { registry.devices.filter { $0.status == .archived } }
 
     var body: some View {
-        NunaDetailScreen("Devices", onAnya: coachEnabled ? { showCoach = true } : nil) {
+        NunaDetailScreen("Devices") {
             if let guide = live.reconnectGuide { repairBanner(guide) }
             if let d = active { activeCard(d) } else { emptyCard }
             if live.lastSyncedAt != nil || live.backfilling { syncRow }
@@ -119,7 +117,6 @@ private struct NunaDevicesContent: View {
         .sheet(isPresented: $showAdd) {
             AddDeviceWizard(live: live) { showAdd = false }.environmentObject(model).environmentObject(live)
         }
-        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "devices") }
         .alert("Make this your active strap?", isPresented: Binding(get: { switchTarget != nil }, set: { if !$0 { switchTarget = nil } }), presenting: switchTarget) { d in
             Button("Cancel", role: .cancel) { switchTarget = nil }
             Button("Make active") { registry.setActive(d.id); switchTarget = nil }
