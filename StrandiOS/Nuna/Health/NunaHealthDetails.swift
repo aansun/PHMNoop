@@ -238,10 +238,7 @@ struct NunaSkinTempView: View {
                         if latest != nil { Text("°C").font(.nuna(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                     }
                     Text("Compared with your personal baseline").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                }
-            }
-            NunaCard {
-                VStack(alignment: .leading, spacing: 12) {
+                    NunaDivider().padding(.vertical, 8)
                     HStack {
                         nunaCap("14 nights")
                         Spacer()
