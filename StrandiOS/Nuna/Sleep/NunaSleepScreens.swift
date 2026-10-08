@@ -58,8 +58,7 @@ struct NunaSleepView: View {
                 NunaNightPicker(model: model)
                 hero(model, night)
                 NunaSleepStageSection(model: model, night: night,
-                                      onEdit: night.editTarget.map { block in { edit = NunaSleepEditTarget(block, isNap: false) } },
-                                      rangeText: "\(NunaSleepFormat.clock(night.onset)) – \(NunaSleepFormat.clock(night.wake))")
+                                      onEdit: night.editTarget.map { block in { edit = NunaSleepEditTarget(block, isNap: false) } })
                 NunaStageCompare(model: model, night: night)
                 if !night.naps.isEmpty { napCard(night) }
                 tiles(model, night)
