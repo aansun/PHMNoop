@@ -137,11 +137,9 @@ struct NunaScoreRings: View {
         let route: String
     }
 
-    /// Charge and Effort open the Nuna metric screen; Rest opens the Nuna sleep screen.
+    /// Each ring opens its own metric screen; Rest's has a way into last night's sleep.
     @ViewBuilder private func ringLink<C: View>(_ key: String, @ViewBuilder _ content: () -> C) -> some View {
-        if key == HeroRingMetric.rest {
-            NavigationLink(value: NunaTodayRoute.sleep(0)) { content() }.buttonStyle(.plain)
-        } else if let m = MetricCatalog.metric(key: key, source: "my-whoop") {
+        if let m = MetricCatalog.metric(key: key, source: "my-whoop") {
             NavigationLink(value: NunaTodayRoute.metric(m)) { content() }.buttonStyle(.plain)
         } else {
             content()
