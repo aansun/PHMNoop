@@ -425,13 +425,6 @@ struct NunaHealthView: View {
                 caption: "Weight", valueText: fmt(latest, 1), unit: "kg",
                 chip: delta.map { (text: LocalizedStringKey((($0 <= 0 ? "−" : "+") + String(format: "%.1f", locale: AppLanguage.activeLocale, abs($0))) + " kg"), color: NunaPalette.textPrimary) },
                 series: weightS, showsBand: false, lineColor: NunaPalette.charge, decimals: 1, directional: false, range: $weightRange, page: $weightPage)
-            NavigationLink(value: NunaTodayRoute.weight) {
-                HStack(spacing: 6) {
-                    Text("Details").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    Image(systemName: "chevron.right").font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                    Spacer()
-                }
-            }.buttonStyle(.plain)
         }
     }
 
