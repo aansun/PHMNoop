@@ -76,7 +76,7 @@ struct NunaTrendsReportSheet: View {
     private func export(_ doc: TrendsReportDocument) {
         guard !exporting else { return }
         exporting = true
-        let name = "NOOP-trends-\(doc.report.start)_to_\(doc.report.end).pdf"
+        let name = "PHMN-trends-\(doc.report.start)_to_\(doc.report.end).pdf"
         TrendsReportRenderer.exportPDF(pages: doc.pages(), size: TrendsReportDocument.pageSize, suggestedName: name)
         exporting = false
         // The share sheet sits on top of this one; dismissing here would take it down with it (#455).
