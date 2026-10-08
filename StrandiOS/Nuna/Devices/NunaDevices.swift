@@ -7,7 +7,7 @@ import WhoopStore
 
 enum NunaDeviceRoute: Hashable {
     case detail(String)      // PairedDevice.id
-    case battery, sync, help, repair, log, models
+    case battery, sync, help, helpHub, repair, log, models
 }
 
 extension View {
@@ -18,6 +18,7 @@ extension View {
             case .battery: NunaDeviceBatteryView()
             case .sync: NunaDeviceSyncView()
             case .help: NunaDeviceHelpView()
+            case .helpHub: NunaDeviceHelpHubView()
             case .repair: NunaDeviceRepairView()
             case .log: NunaDeviceLogView()
             case .models: NunaDeviceModelsView()
@@ -72,7 +73,7 @@ private struct NunaDevicesContent: View {
     private var removed: [PairedDevice] { registry.devices.filter { $0.status == .archived } }
 
     var body: some View {
-        NunaDetailScreen("Devices") {
+        NunaDetailScreen("Devices", trailing: AnyView(NavigationLink(value: NunaDeviceRoute.helpHub) { NunaBareIcon("questionmark.circle") }.buttonStyle(.plain).accessibilityLabel(Text("Help")))) {
             NunaPageTabs([(value: 0, title: "Status"), (value: 1, title: "Advanced")], selection: $tab)
             if tab == 0 { statusTab } else { advancedTab }
         }
@@ -291,7 +292,6 @@ private struct NunaDevicesContent: View {
                 }
             }
         }
-        help
     }
 
     private func idTile(_ label: LocalizedStringKey, _ value: String, _ symbol: String) -> some View {
@@ -372,9 +372,12 @@ private struct NunaDevicesContent: View {
         }.buttonStyle(.plain)
     }
 
-    private var help: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            nunaRuledHeader("Help")
+}
+
+/// The four ways to get unstuck, behind the question mark at the top right of Devices.
+struct NunaDeviceHelpHubView: View {
+    var body: some View {
+        NunaDetailScreen("Help") {
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
                     NavigationLink(value: NunaDeviceRoute.battery) { NunaListRow("Battery", subtitle: "Level, trend and care", systemImage: "battery.75percent", showsChevron: true) }.buttonStyle(.plain)
