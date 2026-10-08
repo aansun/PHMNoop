@@ -17,6 +17,9 @@ struct NunaAppearanceView: View {
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScale = EffortScale.hundred.rawValue
     @AppStorage(NunaSleepChartStyle.storageKey) private var sleepChartRaw = NunaSleepChartStyle.classic.rawValue
     @State private var iconError: String?
+    @AppStorage(NunaTabBarPrefs.autoHideKey) private var barAutoHide = false
+    @AppStorage(NunaTabBarPrefs.glassKey) private var barGlass = true
+    @AppStorage(NunaTabBarPrefs.transparencyKey) private var barTransparency = NunaTabBarPrefs.defaultTransparency
 
     private var experience: ExperienceMode { ExperienceMode(rawValue: experienceRaw) ?? .nuna }
 
@@ -40,6 +43,7 @@ struct NunaAppearanceView: View {
                 skinSection
                 if skinRaw != NunaThemePrefs.Skin.whp.rawValue { themeSection }
                 densityCard
+                barCard
                 sleepChartCard
                 #if os(iOS)
                 iconCard
@@ -197,6 +201,29 @@ struct NunaAppearanceView: View {
         VStack(alignment: .leading, spacing: 10) {
             nunaRuledHeader("Density")
             NunaSegmented([(value: NunaThemePrefs.Density.roomy.rawValue, title: "Roomy"), (value: NunaThemePrefs.Density.standard.rawValue, title: "Standard"), (value: NunaThemePrefs.Density.compact.rawValue, title: "Compact")], selection: $densityRaw)
+        }
+    }
+
+    /// The floating bar at the bottom: whether it steps away while scrolling, and how much glass it has.
+    private var barCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            nunaRuledHeader("Bottom bar")
+            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 14, trailing: 18)) {
+                VStack(spacing: 0) {
+                    NunaToggleRow("Hide bar when scrolling", systemImage: "arrow.down.to.line", isOn: $barAutoHide).padding(.vertical, 8)
+                    NunaDivider()
+                    NunaToggleRow("Glass effect", systemImage: "square.on.square.dashed", isOn: $barGlass).padding(.vertical, 8)
+                    NunaDivider()
+                    HStack {
+                        Text("Transparency").font(.nuna(size: 14.5, weight: .heavy)).tracking(nunaTrackingLabel).foregroundStyle(NunaPalette.textPrimary)
+                        Spacer()
+                        Text(verbatim: "\(barTransparency)%").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    }
+                    .padding(.top, 14)
+                    Slider(value: Binding(get: { Double(barTransparency) }, set: { barTransparency = Int($0.rounded()) }), in: 0...100, step: 1)
+                        .tint(NunaPalette.textPrimary)
+                }
+            }
         }
     }
 

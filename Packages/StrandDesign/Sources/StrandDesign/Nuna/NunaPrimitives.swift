@@ -404,55 +404,101 @@ public struct NunaTabItem: Identifiable, Hashable {
     public func hash(into h: inout Hasher) { h.combine(id) }
 }
 
-/// Floating, pill-shaped tab bar. Hosts place it with `.safeAreaInset(edge: .bottom)`.
+/// The preferences behind the floating bar. Shared by the bar and by Appearance, which edits them.
+public enum NunaTabBarPrefs {
+    /// Hide the bar while the page is scrolled up, show it again on the way back. The same preference NOOP's own Settings use.
+    public static let autoHideKey = "noop.bottomBarAutoHide"
+    /// Frosted glass behind the bar (on) or a solid surface (off).
+    public static let glassKey = "nuna.tabBar.glass"
+    /// How see-through the bar is: 0 solid, 100 clear.
+    public static let transparencyKey = "nuna.tabBar.transparency"
+    public static let defaultTransparency = 45
+}
+
+/// Floating tab bar: a rounded glass bar for the main tabs and, apart from it on the right, one round button for the trailing tab (Anya).
+/// Hosts place it with `.safeAreaInset(edge: .bottom)`.
 public struct NunaTabBar: View {
     private let items: [NunaTabItem]
+    private let trailing: NunaTabItem?
     @Binding private var selection: Int
     private let onReselect: (Int) -> Void
+    @AppStorage(NunaTabBarPrefs.glassKey) private var glass = true
+    @AppStorage(NunaTabBarPrefs.transparencyKey) private var transparency = NunaTabBarPrefs.defaultTransparency
 
-    public init(items: [NunaTabItem], selection: Binding<Int>, onReselect: @escaping (Int) -> Void = { _ in }) {
-        self.items = items; self._selection = selection; self.onReselect = onReselect
+    public init(items: [NunaTabItem], trailing: NunaTabItem? = nil, selection: Binding<Int>, onReselect: @escaping (Int) -> Void = { _ in }) {
+        self.items = items; self.trailing = trailing; self._selection = selection; self.onReselect = onReselect
     }
 
+    private let radius: CGFloat = 28
+
     public var body: some View {
-        HStack(spacing: 0) {
-            ForEach(items) { item in
-                let on = item.id == selection
+        HStack(spacing: 10) {
+            HStack(spacing: 0) { ForEach(items) { tab($0) } }
+                .padding(.horizontal, 6)
+                .frame(height: 64)
+                .background { surface(cornerRadius: radius) }
+            if let trailing {
                 Button {
-                    if on { onReselect(item.id) } else { selection = item.id }
+                    if selection == trailing.id { onReselect(trailing.id) } else { selection = trailing.id }
                 } label: {
-                    VStack(spacing: 4) {
-                        // Every icon sits in the same box, so they line up whatever they are drawn with.
-                        Group {
-                            if item.systemImage == NunaGlyph.anya {
-                                NunaGlyph(NunaGlyph.anya, pointSize: 20)
-                            } else if item.usesAssetImage {
-                                Image(item.systemImage).resizable().scaledToFit().frame(width: 26, height: 26)
-                            } else {
-                                Image(systemName: item.systemImage).font(.nuna(size: 22, weight: .semibold))
+                    glyph(trailing, size: 30)
+                        .foregroundStyle(selection == trailing.id ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+                        .frame(width: 64, height: 64)
+                        .background { surface(cornerRadius: radius) }
+                        .overlay {
+                            if selection == trailing.id {
+                                RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(NunaPalette.textPrimary.opacity(0.55), lineWidth: 1.5)
                             }
                         }
-                        .frame(width: 32, height: 28)
-                        // WHP sets the label in capitals, so it is a size smaller and never wider than its tab: the icon always stays.
-                        Text(verbatim: item.title).font(.nuna(size: NunaThemePrefs.skin == .whp ? 9.5 : 11, weight: .bold)).lineLimit(1)
-                            .minimumScaleFactor(0.6).tracking(NunaThemePrefs.skin == .whp ? -0.2 : 0).allowsTightening(true)
-                    }
-                    .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
-                    .frame(minWidth: 58, minHeight: 58)
-                    .frame(maxWidth: .infinity)
-                    .background(on ? NunaPalette.glassStrong : .clear, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }
                 .buttonStyle(.plain)
-                .accessibilityAddTraits(on ? .isSelected : [])
+                .accessibilityLabel(Text(verbatim: trailing.title))
+                .accessibilityAddTraits(selection == trailing.id ? .isSelected : [])
             }
         }
-        .padding(.horizontal, 8)
-        .frame(height: 72)
-        .background(NunaPalette.card, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-        .shadow(color: NunaPalette.shade.opacity(0.45), radius: 12, y: 4)
-        .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
         .padding(.horizontal, 14)
         .padding(.bottom, 6)
+    }
+
+    /// Frosted glass over whatever is behind, tinted with the card colour; how much of that tint shows is the transparency setting.
+    @ViewBuilder private func surface(cornerRadius r: CGFloat) -> some View {
+        let t = Double(min(max(transparency, 0), 100)) / 100
+        let shape = RoundedRectangle(cornerRadius: r, style: .continuous)
+        ZStack {
+            if glass { shape.fill(.ultraThinMaterial) }
+            shape.fill(NunaPalette.card.opacity(glass ? 0.9 * (1 - t) : 1 - 0.85 * t))
+        }
+        .overlay(shape.strokeBorder(NunaPalette.ink.opacity(glass ? 0.14 : 0.08), lineWidth: 1))
+        .shadow(color: NunaPalette.shade.opacity(0.35), radius: 14, y: 5)
+    }
+
+    @ViewBuilder private func glyph(_ item: NunaTabItem, size: CGFloat) -> some View {
+        if item.systemImage == NunaGlyph.anya {
+            NunaGlyph(NunaGlyph.anya, pointSize: size * 0.72)
+        } else if item.usesAssetImage {
+            Image(item.systemImage).resizable().scaledToFit().frame(width: size, height: size)
+        } else {
+            Image(systemName: item.systemImage).font(.nuna(size: size * 0.74, weight: .semibold))
+        }
+    }
+
+    private func tab(_ item: NunaTabItem) -> some View {
+        let on = item.id == selection
+        return Button {
+            if on { onReselect(item.id) } else { selection = item.id }
+        } label: {
+            VStack(spacing: 4) {
+                glyph(item, size: 28).frame(width: 32, height: 28)
+                Text(verbatim: item.title).font(.nuna(size: NunaThemePrefs.skin == .whp ? 9.5 : 11, weight: .bold)).lineLimit(1)
+                    .minimumScaleFactor(0.6).tracking(NunaThemePrefs.skin == .whp ? -0.2 : 0).allowsTightening(true)
+            }
+            .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+            .frame(minWidth: 52, minHeight: 52)
+            .frame(maxWidth: .infinity)
+            .background(on ? NunaPalette.ink.opacity(0.10) : .clear, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(on ? .isSelected : [])
     }
 }
 
