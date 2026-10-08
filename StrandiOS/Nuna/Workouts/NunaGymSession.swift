@@ -73,10 +73,10 @@ struct NunaGymSessionView: View {
         NunaWorkoutReviewSection(startTs: s.startTs, sport: s.sport)
         if let w = workout { NunaWorkoutStravaCard(row: w, afterWorkout: false, checked: .constant(false)) }
         Button { saveProgram = true } label: {
-            NunaCard(small: true) { NunaListRow("Save as program", subtitle: "Repeat this session later with the same weights", systemImage: "square.and.arrow.down", showsChevron: true) }
+            NunaCard(small: true) { NunaListRow("Save as program", description: "Repeat this session later with the same weights", systemImage: "square.and.arrow.down", showsChevron: true) }
         }.buttonStyle(.plain)
         NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-            NunaListRow("Apple Health", subtitle: "Strength workout, duration and energy are written by the sync. Manage it in Me", systemImage: "heart.text.square")
+            NunaListRow("Apple Health", description: "Strength workout, duration and energy are written by the sync. Manage it in Me", systemImage: "heart.text.square")
         }
         Button { editing = true } label: {
             Text("Edit sets").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))

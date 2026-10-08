@@ -82,7 +82,7 @@ struct NunaRowsCard: View {
     }
 
     @ViewBuilder private func link(_ row: NunaLinkRow) -> some View {
-        let content = NunaListRow(LocalizedStringKey(row.title), subtitle: LocalizedStringKey(row.subtitle),
+        let content = NunaListRow(LocalizedStringKey(row.title), description: LocalizedStringKey(row.subtitle),
                                   systemImage: row.icon, tint: row.tint, showsChevron: true) {
             if let v = row.value { figure(v, row) }
         }

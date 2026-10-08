@@ -588,7 +588,7 @@ struct NunaTodayView: View {
                         ForEach(Array(hiddenSections.enumerated()), id: \.element.id) { idx, sec in
                             if idx > 0 { NunaDivider() }
                             Button { add(sec, after: addAfter); showAddCard = false } label: {
-                                NunaListRow(LocalizedStringKey(sec.nunaName), subtitle: LocalizedStringKey(sec.nunaNote), systemImage: sec.customizationIcon) { addLabel }
+                                NunaListRow(LocalizedStringKey(sec.nunaName), description: LocalizedStringKey(sec.nunaNote), systemImage: sec.customizationIcon) { addLabel }
                             }.buttonStyle(.plain)
                         }
                     }
@@ -749,7 +749,7 @@ struct NunaTodayView: View {
             NunaCycleGate {
                 NavigationLink(value: NunaTodayRoute.cycle) {
                     NunaCard(small: true) {
-                        NunaListRow("Menstrual Cycle", subtitle: "Cycle awareness", systemImage: "drop.fill",
+                        NunaListRow("Menstrual Cycle", description: "Cycle awareness", systemImage: "drop.fill",
                                     tint: NunaPalette.alertText, showsChevron: true)
                     }
                 }

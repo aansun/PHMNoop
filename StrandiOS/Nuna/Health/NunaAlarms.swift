@@ -349,7 +349,7 @@ struct NunaWindDownView: View {
     private var settingsCard: some View {
         NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 14, trailing: 18)) {
             VStack(alignment: .leading, spacing: 0) {
-                NunaListRow("Remind me to wind down", subtitle: "A calm evening reminder, timed from your wake time and usual sleep need. It's a suggestion, not an alarm.",
+                NunaListRow("Remind me to wind down", description: "A calm evening reminder, timed from your wake time and usual sleep need. It's a suggestion, not an alarm.",
                             systemImage: "moon.zzz.fill") {
                     Toggle("", isOn: Binding(get: { wind.isOn }, set: { wind.setOn($0) })).labelsHidden().tint(NunaPalette.charge)
                 }
@@ -382,7 +382,7 @@ struct NunaWindDownView: View {
     private var perDayCard: some View {
         NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 14, trailing: 18)) {
             VStack(alignment: .leading, spacing: 0) {
-                NunaListRow("Different wake time per day", subtitle: "A lie-in at the weekend, say. These times move your strap alarm AND the evening reminder on those days.") {
+                NunaListRow("Different wake time per day", description: "A lie-in at the weekend, say. These times move your strap alarm AND the evening reminder on those days.") {
                     Toggle("", isOn: Binding(get: { wind.perDayOn }, set: { on in
                         wind.perDayOn = on
                         if !on {

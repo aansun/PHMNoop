@@ -230,7 +230,7 @@ struct NunaBreathView: View {
 
     private var advancedRow: some View {
         Button { showAdvanced = true } label: {
-            NunaCard(small: true) { NunaListRow("Resonance and Calm me", subtitle: "Find your own pace, or let the strap lead you down", systemImage: "waveform.path", showsChevron: true) }
+            NunaCard(small: true) { NunaListRow("Resonance and Calm me", description: "Find your own pace, or let the strap lead you down", systemImage: "waveform.path", showsChevron: true) }
         }.buttonStyle(.plain)
     }
 

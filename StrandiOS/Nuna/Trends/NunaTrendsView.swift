@@ -409,7 +409,7 @@ struct NunaTrendsView: View {
 
     private var exportRow: some View {
         Button { showReport = true } label: {
-            NunaCard(small: true) { NunaListRow("Export report", subtitle: "A PDF summary of your trends", systemImage: "square.and.arrow.up", showsChevron: true) }
+            NunaCard(small: true) { NunaListRow("Export report", description: "A PDF summary of your trends", systemImage: "square.and.arrow.up", showsChevron: true) }
         }.buttonStyle(.plain)
     }
 }

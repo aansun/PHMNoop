@@ -105,9 +105,9 @@ struct NunaHevyView: View {
     private var needs: some View {
         VStack(spacing: NunaSpacing.section) {
             NunaSettingsGroup("What you need") {
-                NunaListRow("Hevy with API access", subtitle: "The API is part of Hevy Pro", systemImage: "person.crop.circle")
+                NunaListRow("Hevy with API access", description: "The API is part of Hevy Pro", systemImage: "person.crop.circle")
                 NunaDivider()
-                NunaListRow("Your own API key", subtitle: "Made in Hevy, in its developer settings", systemImage: "key")
+                NunaListRow("Your own API key", description: "Made in Hevy, in its developer settings", systemImage: "key")
             }
             nunaFootnote("PHMN only reads from Hevy: your workouts and your routines. Nothing is written to Hevy, and nothing happens unless you tap an import button.")
         }
@@ -187,7 +187,7 @@ struct NunaHevyView: View {
 
     private func importRow(_ title: LocalizedStringKey, _ subtitle: LocalizedStringKey, _ icon: String, _ job: NunaHevyModel.Job) -> some View {
         Button { model.run(job, repo: repo) } label: {
-            NunaListRow(title, subtitle: subtitle, systemImage: icon, showsChevron: true)
+            NunaListRow(title, description: subtitle, systemImage: icon, showsChevron: true)
         }.buttonStyle(.plain).disabled(model.busy).opacity(model.busy ? 0.5 : 1)
     }
 

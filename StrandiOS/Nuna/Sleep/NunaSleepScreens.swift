@@ -66,7 +66,7 @@ struct NunaSleepView: View {
                 needCard(model, night)
                 if let d = night.daily?.disturbances, d > 0 {
                     NunaCard(small: true) {
-                        NunaListRow("Woke up \(d) times", subtitle: "Brief awakenings during the night", systemImage: "moon.fill", tint: NunaPalette.restText)
+                        NunaListRow("Woke up \(d) times", description: "Brief awakenings during the night", systemImage: "moon.fill", tint: NunaPalette.restText)
                     }
                 }
                 bodyClockCard

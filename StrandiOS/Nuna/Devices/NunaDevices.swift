@@ -193,10 +193,10 @@ private struct NunaDevicesContent: View {
             Text(verbatim: NunaDeviceFormat.family(d) + (live.strapRange?.firmwareLayout.map { " · " + String(localized: "History format") + " v\($0)" } ?? ""))
                 .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).frame(maxWidth: .infinity)
             VStack(alignment: .leading, spacing: 22) {
-                actionButton("Add a device", "Pair another strap. It is added next to this one and its history stays separate.", "plus.circle") { showAdd = true }
+                actionButton("Add a device", nil, "plus.circle") { showAdd = true }
                 if SourceCoordinator.isWhoop(d) {
-                    actionButton("Reconnect", "Disconnect, then scan for the strap again.", "dot.radiowaves.left.and.right") { model.disconnect(); model.ble.connect() }
-                    actionButton("Test vibration", buzzed ? String(localized: "Sent") : String(localized: "The strap vibrates once to confirm."), "waveform", enabled: live.connected && live.bonded) {
+                    actionButton("Reconnect", nil, "dot.radiowaves.left.and.right") { model.disconnect(); model.ble.connect() }
+                    actionButton("Test vibration", buzzed ? String(localized: "Sent") : nil, "waveform", enabled: live.connected && live.bonded) {
                         model.buzzStrapOnce(); buzzed = true
                         DispatchQueue.main.asyncAfter(deadline: .now() + 3) { buzzed = false }
                     }
@@ -206,7 +206,7 @@ private struct NunaDevicesContent: View {
                     }
                 }
                 NavigationLink(value: NunaDeviceRoute.detail(d.id)) {
-                    actionLabel("Manage this strap", "Rename it, remove it, or delete its data.", "slider.horizontal.3", enabled: true)
+                    actionLabel("Manage this strap", nil, "slider.horizontal.3", enabled: true)
                 }.buttonStyle(.plain)
             }
             .padding(.top, 10).padding(.bottom, 10)
@@ -244,7 +244,7 @@ private struct NunaDevicesContent: View {
                     ForEach(Array(removed.enumerated()), id: \.element.id) { i, d in
                         if i > 0 { NunaDivider() }
                         NavigationLink(value: NunaDeviceRoute.detail(d.id)) {
-                            NunaListRow(LocalizedStringKey(d.displayName), subtitle: "Data kept. Tap to add it back", systemImage: "archivebox", showsChevron: true)
+                            NunaListRow(LocalizedStringKey(d.displayName), description: "Data kept. Tap to add it back", systemImage: "archivebox", showsChevron: true)
                         }.buttonStyle(.plain)
                     }
                 }
@@ -265,22 +265,24 @@ private struct NunaDevicesContent: View {
     }
 
     /// A button with its explanation underneath.
-    private func actionButton(_ title: LocalizedStringKey, _ subtitle: String, _ icon: String, enabled: Bool = true, _ run: @escaping () -> Void) -> some View {
+    private func actionButton(_ title: LocalizedStringKey, _ subtitle: String?, _ icon: String, enabled: Bool = true, _ run: @escaping () -> Void) -> some View {
         Button(action: run) { actionLabel(title, subtitle, icon, enabled: enabled) }
             .buttonStyle(.plain).disabled(!enabled)
     }
 
-    private func actionLabel(_ title: LocalizedStringKey, _ subtitle: String, _ icon: String, enabled: Bool) -> some View {
+    private func actionLabel(_ title: LocalizedStringKey, _ subtitle: String?, _ icon: String, enabled: Bool) -> some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 14) {
-                Image(systemName: icon).font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).frame(width: 26)
+                Image(systemName: icon).font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 26)
                 Text(title).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, 18).frame(height: 56)
-            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-            Text(verbatim: subtitle).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                .fixedSize(horizontal: false, vertical: true).padding(.horizontal, 4)
+            .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
+            if let subtitle {
+                Text(verbatim: subtitle).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    .fixedSize(horizontal: false, vertical: true).padding(.horizontal, 4)
+            }
         }
         .opacity(enabled ? 1 : 0.4)
         .contentShape(Rectangle())
@@ -346,13 +348,13 @@ struct NunaDeviceHelpHubView: View {
         NunaDetailScreen("Help") {
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
-                    NavigationLink(value: NunaDeviceRoute.battery) { NunaListRow("Battery", subtitle: "Level, trend and care", systemImage: "battery.75percent", showsChevron: true) }.buttonStyle(.plain)
+                    NavigationLink(value: NunaDeviceRoute.battery) { NunaListRow("Battery", description: "Level, trend and care", systemImage: "battery.75percent", showsChevron: true) }.buttonStyle(.plain)
                     NunaDivider()
-                    NavigationLink(value: NunaDeviceRoute.help) { NunaListRow("Strap not found?", subtitle: "Steps to check, one by one", systemImage: "questionmark.circle", showsChevron: true) }.buttonStyle(.plain)
+                    NavigationLink(value: NunaDeviceRoute.help) { NunaListRow("Strap not found?", description: "Steps to check, one by one", systemImage: "questionmark.circle", showsChevron: true) }.buttonStyle(.plain)
                     NunaDivider()
-                    NavigationLink(value: NunaDeviceRoute.models) { NunaListRow("Models and support", subtitle: "WHOOP 4.0, 5.0 and MG", systemImage: "square.stack.3d.up", showsChevron: true) }.buttonStyle(.plain)
+                    NavigationLink(value: NunaDeviceRoute.models) { NunaListRow("Models and support", description: "WHOOP 4.0, 5.0 and MG", systemImage: "square.stack.3d.up", showsChevron: true) }.buttonStyle(.plain)
                     NunaDivider()
-                    NavigationLink(value: NunaDeviceRoute.log) { NunaListRow("Strap log", subtitle: "Copy it when reporting a problem", systemImage: "doc.text", showsChevron: true) }.buttonStyle(.plain)
+                    NavigationLink(value: NunaDeviceRoute.log) { NunaListRow("Strap log", description: "Copy it when reporting a problem", systemImage: "doc.text", showsChevron: true) }.buttonStyle(.plain)
                 }
             }
         }
@@ -512,17 +514,17 @@ struct NunaDeviceDetailView: View {
                     } else if !isActive && !d.isImportSource {
                         action("Make active", "It provides your live data", "bolt", enabled: true) { registry?.setActive(d.id) }
                     } else if isActive {
-                        NunaListRow("Active device", subtitle: "It provides your live data", systemImage: "bolt.fill") { NunaChip("Active", color: NunaPalette.charge) }.padding(.vertical, 2)
+                        NunaListRow("Active device", description: "It provides your live data", systemImage: "bolt.fill") { NunaChip("Active", color: NunaPalette.charge) }.padding(.vertical, 2)
                     }
                     if d.status != .archived {
                         NunaDivider()
-                        Button { confirmRemove = true } label: { NunaListRow("Remove from the list", subtitle: "Data stays and it can be added again", systemImage: "archivebox", showsChevron: true) }.buttonStyle(.plain)
+                        Button { confirmRemove = true } label: { NunaListRow("Remove from the list", description: "Data stays and it can be added again", systemImage: "archivebox", showsChevron: true) }.buttonStyle(.plain)
                     }
                     NunaDivider()
                     Button { confirmDeleteData = true } label: { NunaListRow("Delete all data of this device", subtitle: "Permanent and cannot be undone", systemImage: "trash", showsChevron: true) }.buttonStyle(.plain)
                     if d.status == .archived {
                         NunaDivider()
-                        Button { confirmForget = true } label: { NunaListRow("Remove for good", subtitle: "Takes it out of the list entirely", systemImage: "xmark.bin", showsChevron: true) }.buttonStyle(.plain)
+                        Button { confirmForget = true } label: { NunaListRow("Remove for good", description: "Takes it out of the list entirely", systemImage: "xmark.bin", showsChevron: true) }.buttonStyle(.plain)
                     }
                 }
             }

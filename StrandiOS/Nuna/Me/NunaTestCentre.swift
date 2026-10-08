@@ -36,7 +36,7 @@ struct NunaTestCentreView: View {
                 }
             }
             NunaSettingsGroup("Diagnostics") {
-                NavigationLink(value: NunaDeviceRoute.log) { NunaListRow("Strap log", subtitle: "Connection and sync notes", systemImage: "doc.text", showsChevron: true) }.buttonStyle(.plain)
+                NavigationLink(value: NunaDeviceRoute.log) { NunaListRow("Strap log", description: "Connection and sync notes", systemImage: "doc.text", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
                 Button { confirmRecalibrate = true } label: { NunaListRow("Recalibrate", subtitle: LocalizedStringKey(recalibrated ? String(localized: "Restarted from tonight") : String(localized: "Restart the baseline from scratch")), systemImage: "arrow.triangle.2.circlepath", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
@@ -53,7 +53,7 @@ struct NunaTestCentreView: View {
                 }
             }
             NunaSettingsGroup("Report a problem") {
-                NavigationLink { TestCentreView() } label: { NunaListRow("Report and strap probes", subtitle: "The bug-report bundle with its review step, and the probes that talk to the strap", systemImage: "ladybug", showsChevron: true) }.buttonStyle(.plain)
+                NavigationLink { TestCentreView() } label: { NunaListRow("Report and strap probes", description: "The bug-report bundle with its review step, and the probes that talk to the strap", systemImage: "ladybug", showsChevron: true) }.buttonStyle(.plain)
             }
             nunaFootnote("Switch on one test, wear the strap, then open Report and strap probes to bundle it. The probes that write to the strap keep their own confirmation there.")
         }

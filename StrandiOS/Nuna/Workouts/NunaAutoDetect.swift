@@ -20,7 +20,7 @@ struct NunaAutoDetectView: View {
                 }
             }
             NunaCard(small: true) {
-                NunaListRow("Never saves on its own", subtitle: "Detection only suggests, through one card in Workouts. You decide: Save or Not a workout.", systemImage: "checkmark")
+                NunaListRow("Never saves on its own", description: "Detection only suggests, through one card in Workouts. You decide: Save or Not a workout.", systemImage: "checkmark")
             }
             if !on {
                 NunaCard(highlight: true) {
@@ -30,13 +30,13 @@ struct NunaAutoDetectView: View {
             NunaTitleRow(title: "How it works") { EmptyView() }
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
-                    NunaListRow("Minimum length", subtitle: "Heart rate must stay up", systemImage: "timer") { value("\(Int(AutoWorkoutDetector.minSustainedMin)) min") }
+                    NunaListRow("Minimum length", description: "Heart rate must stay up", systemImage: "timer") { value("\(Int(AutoWorkoutDetector.minSustainedMin)) min") }
                     NunaDivider()
-                    NunaListRow("Heart-rate threshold", subtitle: "Above your resting heart rate", systemImage: "heart") { value("+\(AutoWorkoutDetector.elevatedMarginBPM) bpm") }
+                    NunaListRow("Heart-rate threshold", description: "Above your resting heart rate", systemImage: "heart") { value("+\(AutoWorkoutDetector.elevatedMarginBPM) bpm") }
                     NunaDivider()
-                    NunaListRow("Tolerated dip", subtitle: "A short drop does not end the session", systemImage: "bolt") { value("\(AutoWorkoutDetector.maxDipS) s") }
+                    NunaListRow("Tolerated dip", description: "A short drop does not end the session", systemImage: "bolt") { value("\(AutoWorkoutDetector.maxDipS) s") }
                     NunaDivider()
-                    NunaListRow("Motion", subtitle: "Used as confirmation when it exists", systemImage: "figure.walk") { value(String(localized: "Automatic")) }
+                    NunaListRow("Motion", description: "Used as confirmation when it exists", systemImage: "figure.walk") { value(String(localized: "Automatic")) }
                 }
             }
             Text("The rules are deliberately conservative so stress, caffeine or climbing stairs are not counted as workouts. Short or light sessions can be missed.")

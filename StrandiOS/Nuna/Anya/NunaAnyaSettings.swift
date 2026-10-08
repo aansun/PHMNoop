@@ -66,7 +66,7 @@ struct NunaAnyaSettingsView: View {
                 }
                 NunaCard(small: true) {
                     NavigationLink(value: NunaAnyaRoute.instructions) {
-                        NunaListRow("Anya's instructions", subtitle: "Shape how it thinks and talks", systemImage: "text.alignleft", showsChevron: true)
+                        NunaListRow("Anya's instructions", description: "Shape how it thinks and talks", systemImage: "text.alignleft", showsChevron: true)
                     }.buttonStyle(.plain)
                 }
             }
@@ -169,7 +169,7 @@ struct NunaAnyaInstructionsView: View {
 
     private func example(_ title: String, _ subtitle: String, _ body: String) -> some View {
         Button { text = String(body.prefix(limit)) } label: {
-            NunaCard(small: true) { NunaListRow(LocalizedStringKey(title), subtitle: LocalizedStringKey(subtitle), systemImage: "text.badge.plus", showsChevron: true) }
+            NunaCard(small: true) { NunaListRow(LocalizedStringKey(title), description: LocalizedStringKey(subtitle), systemImage: "text.badge.plus", showsChevron: true) }
         }.buttonStyle(.plain)
     }
 }

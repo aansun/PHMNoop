@@ -122,7 +122,7 @@ struct NunaHealthTraining: View {
                 }.buttonStyle(.plain)
                 NunaDivider()
                 NavigationLink(value: NunaWorkoutRoute.load) {
-                    NunaListRow("Training load", subtitle: "Cardio and strength, week by week", systemImage: "chart.bar", showsChevron: true)
+                    NunaListRow("Training load", description: "Cardio and strength, week by week", systemImage: "chart.bar", showsChevron: true)
                 }.buttonStyle(.plain)
             }
         }

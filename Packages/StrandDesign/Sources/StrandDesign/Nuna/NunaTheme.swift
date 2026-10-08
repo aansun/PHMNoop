@@ -31,6 +31,8 @@ public enum NunaPalette {
     /// inset on a light card would make the text in it hard to read).
     public static var field: Color { skinned(light: "#F1F3F5", dark: "#00000047", whp: "#0000004D") }
     public static var glass: Color { skinned(light: "#0A0D100D", dark: "#FFFFFF0D", whp: "#FFFFFF0D") }
+    /// The surface of every card and tile: the ink at a low opacity over the canvas, so it follows the skin and the light or dark theme.
+    public static var tile: Color { skinned(light: "#0A0D1014", dark: "#FFFFFF17", whp: "#FFFFFF17") }
     public static var glassStrong: Color { skinned(light: "#0A0D1014", dark: "#FFFFFF17", whp: "#FFFFFF17") }
     // Lines are opaque tones a step off the card colour, so a card edge reads as part of the card instead of a drawn outline.
     // The card itself stays clearly apart from the canvas (#121214 on #000000, white on #E9ECEF).
@@ -251,10 +253,15 @@ public struct NunaCard<Content: View>: View {
                                            bottom: small ? NunaSpacing.cardInnerSmall : NunaSpacing.cardInner,
                                            trailing: small ? NunaSpacing.cardInnerSmall : NunaSpacing.cardInner))
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(highlight ? NunaPalette.cardHighlight : NunaPalette.card,
+            // One flat tile: a soft lift off the canvas, no outline. Only the highlighted card (Anya, the selected one) keeps an edge.
+            .background(highlight ? NunaPalette.cardHighlight : NunaPalette.tile,
                         in: RoundedRectangle(cornerRadius: small ? NunaRadius.cardSmall : NunaRadius.card, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: small ? NunaRadius.cardSmall : NunaRadius.card, style: .continuous)
-                .strokeBorder(highlight ? NunaPalette.cardBorderHighlight : NunaPalette.hairlineSoft, lineWidth: 1))
+            .overlay {
+                if highlight {
+                    RoundedRectangle(cornerRadius: small ? NunaRadius.cardSmall : NunaRadius.card, style: .continuous)
+                        .strokeBorder(NunaPalette.cardBorderHighlight, lineWidth: 1)
+                }
+            }
     }
 }
 

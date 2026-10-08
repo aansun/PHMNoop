@@ -132,7 +132,7 @@ struct NunaHowItWorksView: View {
                 }
             }
             NavigationLink { NunaScoringGuideView() } label: {
-                NunaCard(small: true) { NunaListRow("How scores are worked out", subtitle: "Charge, Effort and Rest", systemImage: "chart.bar.doc.horizontal", showsChevron: true) }
+                NunaCard(small: true) { NunaListRow("How scores are worked out", description: "Charge, Effort and Rest", systemImage: "chart.bar.doc.horizontal", showsChevron: true) }
             }.buttonStyle(.plain)
             nunaFootnote("NOOP never makes up a number. When it can't compute one honestly it tells you what's missing and what to do, rather than showing a fake value.")
         }

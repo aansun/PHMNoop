@@ -238,7 +238,7 @@ struct NunaAnyaView: View {
                 }
             }
             NavigationLink(value: NunaAnyaRoute.plan) {
-                NunaCard(small: true) { NunaListRow("Today's plan", subtitle: "Built on this iPhone from your Charge, no provider needed", systemImage: "list.bullet.rectangle", showsChevron: true) }
+                NunaCard(small: true) { NunaListRow("Today's plan", description: "Built on this iPhone from your Charge, no provider needed", systemImage: "list.bullet.rectangle", showsChevron: true) }
             }.buttonStyle(.plain)
         }
     }
@@ -286,7 +286,7 @@ struct NunaAnyaView: View {
                     }
                 }
                 NavigationLink(value: NunaAnyaRoute.memory) {
-                    NunaCard(small: true) { NunaListRow("Give Anya a memory", subtitle: "Your goals, events and preferences", systemImage: "brain", showsChevron: true) }
+                    NunaCard(small: true) { NunaListRow("Give Anya a memory", description: "Your goals, events and preferences", systemImage: "brain", showsChevron: true) }
                 }.buttonStyle(.plain)
             }
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 24)

@@ -295,7 +295,7 @@ struct NunaTrendsMetricView: View {
                 }.buttonStyle(.plain)
             } else {
                 NavigationLink(value: NunaTrendsRoute.chargeEffort) {
-                    NunaCard(small: true) { NunaListRow("Compare with Effort", subtitle: "The link between load and recovery", systemImage: "chart.line.uptrend.xyaxis", showsChevron: true) }
+                    NunaCard(small: true) { NunaListRow("Compare with Effort", description: "The link between load and recovery", systemImage: "chart.line.uptrend.xyaxis", showsChevron: true) }
                 }.buttonStyle(.plain)
             }
             if let md = MetricCatalog.metric(key: kind == .charge ? "recovery" : (kind == .effort ? "strain" : "sleep_performance"), source: "my-whoop") {

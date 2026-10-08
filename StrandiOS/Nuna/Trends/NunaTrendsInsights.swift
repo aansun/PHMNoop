@@ -358,7 +358,7 @@ struct NunaCompareView: View {
         NunaCard {
             VStack(alignment: .leading, spacing: 12) {
                 nunaTrendsCap("Shift the period")
-                NunaListRow(LocalizedStringKey(String(localized: "Compare with the previous \(range) days")), subtitle: "Draws the first metric from the period before as a faint line") {
+                NunaListRow(LocalizedStringKey(String(localized: "Compare with the previous \(range) days")), description: "Draws the first metric from the period before as a faint line") {
                     Toggle("", isOn: $shiftBack).labelsHidden().tint(NunaPalette.charge)
                 }
                 Button {
