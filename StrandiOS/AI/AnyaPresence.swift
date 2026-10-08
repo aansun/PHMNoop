@@ -28,9 +28,9 @@ struct AnyaIconTile: View {
     var size: CGFloat = 40
 
     var body: some View {
-        AnyaMark(size: size * 0.82)
+        // The mark alone, with no tile behind it.
+        AnyaMark(size: size * 0.9)
             .frame(width: size, height: size)
-            .background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
             .accessibilityHidden(true)
     }
 }
