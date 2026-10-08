@@ -10,7 +10,7 @@ import UIKit
 
 // MARK: - Trends Report Renderer (#436)
 //
-// Renders a `TrendsReportPage` (a plain SwiftUI view) to a single-page PDF entirely
+// Renders the report pages (plain SwiftUI views) to a PDF entirely
 // on-device, then hands the file to the shared `FileExport` so the user saves it to
 // Files / shares it via the system share sheet. No network, no temp account — the PDF
 // is written to the app's temporary directory and offered through the OS.
@@ -66,6 +66,37 @@ enum TrendsReportRenderer {
         }
 
         return didRender ? url : nil
+    }
+
+    /// Render a multi-page document (each page exactly `size`) to one PDF and present the share sheet / save panel.
+    @MainActor
+    static func exportPDF(pages: [AnyView], size: CGSize, suggestedName: String) {
+        guard let url = makePDF(pages: pages, size: size, fileName: suggestedName) else { return }
+        FileExport.exportFile(at: url, suggestedName: suggestedName)
+    }
+
+    /// Render `pages` into one multi-page vector PDF. Text stays text (selectable and searchable) and the charts stay paths.
+    @MainActor
+    static func makePDF(pages: [AnyView], size: CGSize, fileName: String) -> URL? {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
+        var mediaBox = CGRect(origin: .zero, size: size)
+        guard !pages.isEmpty, let consumer = CGDataConsumer(url: url as CFURL),
+              let pdf = CGContext(consumer: consumer, mediaBox: &mediaBox, nil) else { return nil }
+        var rendered = 0
+        for page in pages {
+            let renderer = ImageRenderer(content: page)
+            renderer.proposedSize = ProposedViewSize(size)
+            renderer.render { _, draw in
+                pdf.beginPDFPage(nil)
+                pdf.setFillColor(CGColor(gray: 1, alpha: 1))
+                pdf.fill(mediaBox)
+                draw(pdf)
+                pdf.endPDFPage()
+                rendered += 1
+            }
+        }
+        pdf.closePDF()
+        return rendered == pages.count ? url : nil
     }
 
     /// Render `page` to a PNG in the temp directory and present the share sheet / save panel via
