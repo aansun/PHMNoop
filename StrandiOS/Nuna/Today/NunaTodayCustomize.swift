@@ -213,7 +213,7 @@ struct NunaTodayCustomizeSheet: View {
                         .padding(.vertical, 6)
                 }
             } header: { cap("Display") }
-            .listRowBackground(NunaPalette.card)
+            .listRowBackground(Color.clear)
         }
     }
 
@@ -271,21 +271,21 @@ struct NunaLayoutList<Item: Identifiable & Equatable, Extra: View>: View {
                 ForEach(draft.visible) { item in row(item, shown: true) }
                     .onMove { draft.moveVisible(from: $0, to: $1) }
             } header: { cap(shownTitle) }
-            .listRowBackground(NunaPalette.card)
+            .listRowBackground(Color.clear)
 
             if draft.hidden.isEmpty {
                 Section {
                     Text("Nothing hidden").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                 } header: { cap(hiddenTitle) }
-                .listRowBackground(NunaPalette.card)
+                .listRowBackground(Color.clear)
             } else if let group {
                 ForEach(groups(group), id: \.name) { g in
                     Section { ForEach(g.items) { row($0, shown: false) } } header: { cap(LocalizedStringKey(g.name)) }
-                        .listRowBackground(NunaPalette.card)
+                        .listRowBackground(Color.clear)
                 }
             } else {
                 Section { ForEach(draft.hidden) { row($0, shown: false) } } header: { cap(hiddenTitle) }
-                    .listRowBackground(NunaPalette.card)
+                    .listRowBackground(Color.clear)
             }
 
             Section {
@@ -293,7 +293,7 @@ struct NunaLayoutList<Item: Identifiable & Equatable, Extra: View>: View {
                     Text("Reset this layout").font(.nuna(size: 15.5, weight: .bold)).frame(maxWidth: .infinity)
                 }
             }
-            .listRowBackground(NunaPalette.card)
+            .listRowBackground(Color.clear)
         }
         .listStyle(.insetGrouped)
         .listSectionSpacing(.compact)

@@ -293,15 +293,14 @@ public struct NunaSegmented<Value: Hashable>: View {
                         .foregroundStyle(selected ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                         .frame(maxWidth: .infinity)
                         .frame(height: 36)
-                        .background(selected ? NunaPalette.glassStrong : .clear, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                        .background(selected ? NunaPalette.ink.opacity(0.14) : .clear, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(selected ? .isSelected : [])
             }
         }
         .padding(4)
-        .background(NunaPalette.glass, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+        .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
     }
 }
 
@@ -570,7 +569,7 @@ struct NunaSheetChrome: ViewModifier {
                 .presentationDetents(detents)
                 .presentationDragIndicator(.visible)
                 .presentationCornerRadius(NunaRadius.sheet)
-                .presentationBackground(NunaPalette.card)
+                .presentationBackground(NunaPalette.canvas)
         } else {
             content
                 .presentationDetents(detents)

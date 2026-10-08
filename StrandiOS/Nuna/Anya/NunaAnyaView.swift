@@ -140,7 +140,8 @@ struct NunaAnyaView: View {
 
     private var header: some View {
         VStack(spacing: 12) {
-            HStack(spacing: 10) {
+            HStack(spacing: 12) {
+                AnyaMark(size: 40)
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Anya").font(.nuna(size: 30, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     if coach.isConfigured {
@@ -218,7 +219,6 @@ struct NunaAnyaView: View {
         VStack(spacing: NunaSpacing.section) {
             NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
                 VStack(alignment: .leading, spacing: 14) {
-                    AnyaIconTile(size: 44)
                     Text("Connect Anya").font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text("Anya uses the AI provider you choose. Your key stays in the Keychain on this iPhone, and nothing is sent until you allow it and ask a question.")
                         .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
@@ -249,7 +249,6 @@ struct NunaAnyaView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: NunaSpacing.section) {
                 VStack(alignment: .leading, spacing: 10) {
-                    AnyaIconTile(size: 44)
                     Text("I'm here with you").font(.nuna(size: 26, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Text("Anya reads your baseline, load and sleep together, then picks the next small step.")
                         .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)

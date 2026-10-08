@@ -223,12 +223,12 @@ struct NunaTrendDetailCard: View {
                     Text(verbatim: r.title).font(.nuna(size: 13, weight: .bold))
                         .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                         .frame(width: 48, height: 34)
-                        .background(on ? NunaPalette.glassStrong : Color.clear, in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
+                        .background(on ? NunaPalette.ink.opacity(0.14) : Color.clear, in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
                 }.buttonStyle(.plain)
             }
         }
         .padding(3)
-        .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+        .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
     }
 
     private var dateStepper: some View {
