@@ -70,10 +70,9 @@ struct NunaBreathReportView: View {
 
     private var verdictCard: some View {
         let v = Self.verdict(record)
-        return NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
+        return NunaAnyaNote {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    AnyaMark(size: 18).foregroundStyle(NunaPalette.textSecondary)
                     Text("Anya's reading").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     if let p = record.rmssdChangePct { NunaChip(verbatim: String(format: "%+.0f%% HRV", locale: AppLanguage.activeLocale, p), color: p >= 5 ? NunaPalette.charge : nil) }

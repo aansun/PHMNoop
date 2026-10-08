@@ -272,10 +272,9 @@ struct NunaWorkoutsView: View {
     @ViewBuilder private var suggestionCard: some View {
         if let s = suggestion {
             let w = s.workout
-            NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
+            NunaAnyaNote {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(spacing: 10) {
-                        AnyaMark(size: 18).foregroundStyle(NunaPalette.textPrimary)
                         nunaTrendsCap("Detected automatically")
                     }
                     Text(verbatim: "\(NunaWorkoutFormat.clock(s.startSec)) · \(s.sport) · \(w.durationMin) min")
