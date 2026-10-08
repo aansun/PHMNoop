@@ -81,7 +81,7 @@ struct NunaAddDeviceSheet: View {
     }
 
     private func modelRow(_ m: WhoopModel, _ title: String) -> some View {
-        Button { whoopModel = m; step = .prep } label: {
+        Button { whoopModel = m; ticked = []; step = .prep } label: {
             HStack(spacing: 14) {
                 Image(systemName: "applewatch").font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
                 Text(verbatim: title).font(.nuna(size: 14.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
@@ -96,27 +96,56 @@ struct NunaAddDeviceSheet: View {
 
     // MARK: 2. Prepare
 
-    private var prepSteps: [String] {
-        whoopModel == .whoop4
-            ? [String(localized: "Put your WHOOP 4.0 on your wrist and make sure it's awake."),
-               String(localized: "Make sure it's not connected to the official WHOOP app right now.")]
-            : [String(localized: "WHOOP 5.0 / MG bonds to one device at a time. Unpair it from the official WHOOP app first."),
-               String(localized: "Put the band into pairing mode, on your wrist and awake.")]
+    /// What has to be true before the search can find the strap: a strap bonded to another phone or app never shows up here, because a WHOOP
+    /// talks to one device at a time. Each line is ticked by the person, and the search starts only when all are.
+    private var checks: [(title: String, detail: String)] {
+        if whoopModel == .whoop4 {
+            return [
+                (String(localized: "Close the WHOOP app"), String(localized: "Swipe it away on this iPhone and on any other phone that has it.")),
+                (String(localized: "Unpair it from the WHOOP app"), String(localized: "WHOOP app > your profile > Device Settings > Advanced > Unpair Device.")),
+                (String(localized: "Wake the strap"), String(localized: "Wear it, or tap the sensor, so it is awake and close to this iPhone.")),
+            ]
+        }
+        return [
+            (String(localized: "Unpair it from the WHOOP app"), String(localized: "WHOOP app > your profile > Device Settings > Advanced > Unpair Device. Then close the app, here and on any other phone.")),
+            (String(localized: "Forget it in iPhone Bluetooth"), String(localized: "Settings > Bluetooth > tap the i beside the WHOOP > Forget This Device. Skip this if it is not listed.")),
+            (String(localized: "Put the strap in pairing mode"), String(localized: "Take it off your wrist. If it is asleep, put it on the charger for a few minutes first. Then tap the top of the sensor firmly with two fingers until only blue lights flash.")),
+        ]
     }
 
+    @State private var ticked: Set<Int> = []
+
     private var prepStep: some View {
-        VStack(alignment: .leading, spacing: 22) {
-            Text(verbatim: modelTitle).font(.nuna(size: 26, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(26)).foregroundStyle(NunaPalette.textPrimary)
-            VStack(alignment: .leading, spacing: 16) {
-                ForEach(Array(prepSteps.enumerated()), id: \.offset) { i, text in
-                    HStack(alignment: .firstTextBaseline, spacing: 14) {
-                        Text(verbatim: "\(i + 1)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary).frame(width: 18)
-                        Text(verbatim: text).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                    }
+        let list = checks
+        return VStack(alignment: .leading, spacing: 22) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text(verbatim: modelTitle).font(.nuna(size: 26, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(26)).foregroundStyle(NunaPalette.textPrimary)
+                Text("A WHOOP pairs with one device at a time. It will not show up here while another app or phone holds it.")
+                    .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+            }
+            VStack(spacing: 0) {
+                ForEach(Array(list.enumerated()), id: \.offset) { i, item in
+                    if i > 0 { NunaDivider() }
+                    Button {
+                        if ticked.contains(i) { ticked.remove(i) } else { ticked.insert(i) }
+                    } label: {
+                        HStack(alignment: .top, spacing: 14) {
+                            Image(systemName: ticked.contains(i) ? "checkmark.square.fill" : "square")
+                                .font(.nuna(size: 20, weight: .regular)).foregroundStyle(ticked.contains(i) ? NunaPalette.charge : NunaPalette.textMuted).frame(width: 26)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(verbatim: item.title).font(.nuna(size: 14.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).multilineTextAlignment(.leading)
+                                Text(verbatim: item.detail).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                                    .fixedSize(horizontal: false, vertical: true).multilineTextAlignment(.leading)
+                            }
+                            Spacer(minLength: 0)
+                        }
+                        .padding(.vertical, 14).contentShape(Rectangle())
+                    }.buttonStyle(.plain)
                 }
             }
             Button { model.presentWhoopScan(model: whoopModel); step = .pick } label: { Text("Search nearby") }
                 .buttonStyle(.nuna(.primary, fullWidth: true))
+                .disabled(ticked.count < list.count).opacity(ticked.count < list.count ? 0.4 : 1)
         }
     }
 
@@ -171,8 +200,18 @@ private struct NunaWhoopPickStep: View {
                 }.buttonStyle(.plain)
             }
             if found.isEmpty {
-                Text("Keep the strap close to this iPhone, awake and out of the WHOOP app.")
-                    .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Nothing yet? Check these:").font(.nuna(size: 13, weight: .heavy)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    ForEach([String(localized: "The strap shows only blue lights. Tap the top of the sensor again if it went back to sleep."),
+                             String(localized: "It is within a metre of this iPhone."),
+                             String(localized: "The WHOOP app is closed and the strap is unpaired from it."),
+                             String(localized: "Bluetooth is on for PHMN in Settings.")], id: \.self) { line in
+                        HStack(alignment: .firstTextBaseline, spacing: 10) {
+                            Text(verbatim: "·").foregroundStyle(NunaPalette.textMuted)
+                            Text(verbatim: line).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                        }
+                    }
+                }
             } else {
                 VStack(spacing: 10) {
                     ForEach(found, id: \.uuid) { strap in
