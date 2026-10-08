@@ -1,6 +1,8 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Your Charge is %lld%%, %@.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Charge kamu %lld%%, %@."}}}},
+    "Your Effort is %@ of %@ so far today.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Effort kamu %@ dari %@ sejauh ini hari ini."}}}},
     "Journal logged today": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Jurnal hari ini sudah diisi"}}}},
     "Yes: %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ya: %@"}}}},
     "No: %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidak: %@"}}}},
