@@ -1,6 +1,9 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Delete this nap": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Hapus tidur siang ini"}}}},
+    "It is removed from your sleep and every score that uses it is recalculated.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur ini dihapus dari data tidurmu dan semua skor yang memakainya dihitung ulang."}}}},
+    "It is removed and every score that uses it is recalculated. It will not be detected again.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur ini dihapus dan semua skor yang memakainya dihitung ulang. Tidak akan terdeteksi lagi."}}}},
         "Connected to": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Terhubung ke" } } } },
         "Not connected to": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Tidak terhubung ke" } } } },
         "Strap disconnected": { "localizations": { "id": { "stringUnit": { "state": "translated", "value": "Strap terputus" } } } },
