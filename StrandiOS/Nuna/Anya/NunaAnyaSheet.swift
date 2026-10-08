@@ -223,7 +223,7 @@ struct NunaAnyaSheet: View {
             }.buttonStyle(.plain).disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty || sending || !coach.isConfigured)
                 .opacity(draft.trimmingCharacters(in: .whitespaces).isEmpty ? 0.4 : 1).padding(.trailing, 5)
         }
-        .frame(minHeight: 48).overlay(alignment: .bottom) { NunaDivider() }
+        .frame(minHeight: 48).background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)).overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
     }
 
     // MARK: Actions
