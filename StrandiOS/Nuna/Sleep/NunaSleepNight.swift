@@ -290,31 +290,35 @@ struct NunaSleepStageSection: View {
         return Self.clock(minutes: on.reduce(0, +) / Double(on.count)) + " – " + Self.clock(minutes: off.reduce(0, +) / Double(off.count))
     }
 
+    /// One line of the summary: the name and what is usual for this person on the left, the night's own figure on the right.
     private func figure(_ value: String, _ label: LocalizedStringKey, _ typically: String?, color: Color = NunaPalette.textPrimary) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(verbatim: value).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(color).lineLimit(1).minimumScaleFactor(0.7)
-            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                .lineLimit(2).fixedSize(horizontal: false, vertical: true)
-            if let typically {
-                Text(verbatim: String(localized: "typically \(typically)")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-                    .fixedSize(horizontal: false, vertical: true)
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text(label).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                if let typically {
+                    Text(verbatim: String(localized: "typically \(typically)")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                }
             }
+            Spacer(minLength: 8)
+            Text(verbatim: value).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(color)
+                .lineLimit(1).minimumScaleFactor(0.7)
         }
+        .padding(.vertical, 12)
     }
 
-    /// Sleep time, hours of sleep and restorative sleep, side by side, each with what is usual for this person underneath.
+    /// Sleep time, hours of sleep and restorative sleep as three plain rows, each with its usual figure underneath its name.
     private var headline: some View {
         let restorative = night.stages.deep + night.stages.rem
         let tAsleep = typical { $0.stages.asleep }
         let tRest = typical { $0.stages.deep + $0.stages.rem }
-        return HStack(alignment: .top, spacing: 16) {
+        return VStack(spacing: 0) {
             if compareWithNights {
-                figure("\(NunaSleepFormat.clock(night.onset)) – \(NunaSleepFormat.clock(night.wake))", "Sleep time", typicalTimes).fixedSize(horizontal: true, vertical: false)
+                figure("\(NunaSleepFormat.clock(night.onset)) – \(NunaSleepFormat.clock(night.wake))", "Sleep time", typicalTimes)
+                NunaDivider()
             }
             figure(NunaSleepFormat.duration(night.asleepMin), "Hours of sleep", tAsleep.map { NunaSleepFormat.duration($0.mean) })
-                .frame(maxWidth: .infinity, alignment: .leading)
+            NunaDivider()
             figure(NunaSleepFormat.duration(restorative), "Restorative sleep", tRest.map { NunaSleepFormat.duration($0.mean) }, color: SleepStage.rem.nunaColor)
-                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
