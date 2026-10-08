@@ -246,7 +246,8 @@ struct NunaTodayView: View {
         .sheet(isPresented: $showQuick) {
             NunaQuickSheet(hydrationEnabled: hydrationEnabled,
                            onAddActivity: { DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { showManual = true } })
-                .nunaSheetChrome(detents: [.medium, .large])
+                // One fixed height: the sheet does not stretch up, whatever the finger does.
+                .nunaSheetChrome(detents: [.height(380)])
         }
         .sheet(isPresented: $showDate) {
             NunaDateSheet(dayOffset: $model.dayOffset).nunaSheetChrome(detents: [.large])

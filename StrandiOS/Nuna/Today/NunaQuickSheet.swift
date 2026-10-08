@@ -75,7 +75,7 @@ struct NunaQuickSheet: View {
     }
 
     private var waterRow: some View {
-        NunaCard(small: true, padding: EdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 14)) {
+        NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
             HStack(spacing: 12) {
                 NunaIconTile("drop", tint: NunaPalette.effortText)
                 VStack(alignment: .leading, spacing: 2) {
@@ -130,7 +130,6 @@ struct NunaQuickSheet: View {
                 NunaGlyph(icon, pointSize: 22, weight: .semibold)
                     .foregroundStyle(NunaPalette.textPrimary)
                     .frame(width: 60, height: 60)
-                    .background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 Text(title).font(.nuna(size: 12.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
                     .multilineTextAlignment(.center).lineLimit(2).minimumScaleFactor(0.8)
             }
