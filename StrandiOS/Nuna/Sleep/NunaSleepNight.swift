@@ -117,6 +117,8 @@ struct NunaNightLineChart: View {
 struct NunaSleepStageSection: View {
     let model: NunaSleepModel
     let night: NunaNight
+    /// Opens the sleep-time editor; the pencil at the end of the header shows when it is set.
+    var onEdit: (() -> Void)?
     @EnvironmentObject private var repo: Repository
     @State private var selected: SleepStage?
     @State private var series: [String: [(date: Date, value: Double)]] = [:]
@@ -161,7 +163,17 @@ struct NunaSleepStageSection: View {
     var body: some View {
         NunaCard {
             VStack(alignment: .leading, spacing: 14) {
-                nunaTrendsCap("Sleep stages")
+                HStack {
+                    nunaTrendsCap("Sleep stages")
+                    Spacer(minLength: 8)
+                    if let onEdit {
+                        Button(action: onEdit) {
+                            NunaBareIcon(night.editTarget?.userEdited == true ? "pencil.circle.fill" : "pencil.circle", tint: NunaPalette.restText, target: 32)
+                        }
+                        .buttonStyle(.plain).accessibilityLabel(Text("Edit sleep times"))
+                        .padding(.trailing, -6).padding(.vertical, -8)
+                    }
+                }
                 headline
                 if night.intervals.isEmpty {
                     NunaStageSplitBar(stages: night.stages)

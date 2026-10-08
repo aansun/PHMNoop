@@ -57,7 +57,8 @@ struct NunaSleepView: View {
             if let night = model.night {
                 NunaNightPicker(model: model)
                 hero(model, night)
-                NunaSleepStageSection(model: model, night: night)
+                NunaSleepStageSection(model: model, night: night,
+                                      onEdit: night.editTarget.map { block in { edit = NunaSleepEditTarget(block, isNap: false) } })
                 NunaStageCompare(model: model, night: night)
                 if !night.naps.isEmpty { napCard(night) }
                 tiles(model, night)
@@ -137,12 +138,6 @@ struct NunaSleepView: View {
             }
             HStack(spacing: 6) {
                 NunaChip(verbatim: "\(NunaSleepFormat.clock(night.onset)) – \(NunaSleepFormat.clock(night.wake))")
-                if let block = night.editTarget {
-                    Button { edit = NunaSleepEditTarget(block, isNap: false) } label: {
-                        NunaBareIcon(block.userEdited ? "pencil.circle.fill" : "pencil.circle", tint: NunaPalette.restText, target: 32)
-                    }
-                    .buttonStyle(.plain).accessibilityLabel(Text("Edit sleep times"))
-                }
                 if let eff { NunaChip(verbatim: String(localized: "Efficiency \(Int(eff.rounded()))%"), color: NunaPalette.restText) }
                 if let nap = night.naps.first {
                     NavigationLink(value: NunaTodayRoute.sleepNaps(model.index)) {
