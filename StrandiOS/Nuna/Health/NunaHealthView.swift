@@ -515,6 +515,7 @@ struct NunaHealthView: View {
         VStack(spacing: NunaSpacing.section) {
             weightHero
             compositionCard
+            if let bmi = bodyBMI { NunaBMICard(bmi: bmi) }
             waistCard
             nutritionCard
             if hydrationEnabled { waterCard }
@@ -548,10 +549,15 @@ struct NunaHealthView: View {
                     Text("Details").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Image(systemName: "chevron.right").font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                     Spacer()
-                    Text("Read from Apple Health, or typed in under Details.").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }.buttonStyle(.plain)
         }
+    }
+
+    private var bodyBMI: Double? {
+        let w = weightS.latest?.value ?? (profile.weightKg > 0 ? profile.weightKg : nil)
+        guard let w, profile.heightCm > 0 else { return nil }
+        return w / pow(profile.heightCm / 100, 2)
     }
 
     private var compositionCard: some View {
