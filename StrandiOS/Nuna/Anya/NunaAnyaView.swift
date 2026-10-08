@@ -260,8 +260,8 @@ struct NunaAnyaView: View {
                             Text(verbatim: reading.headline).font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                             if let d = reading.detail { Text(verbatim: d).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil) }
                             NavigationLink(value: NunaAnyaRoute.plan) {
-                                Text("Build today's plan").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                                    .padding(.horizontal, 22).frame(height: 44).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                                Text("Build today's plan").font(.nuna(size: 13.5, weight: .heavy)).foregroundStyle(NunaPalette.onAccent)
+                                    .padding(.horizontal, 20).frame(height: 40).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                             }.buttonStyle(.plain)
                         }
                     }
@@ -274,8 +274,8 @@ struct NunaAnyaView: View {
                             Button { send(q.prompt) } label: {
                                 HStack(spacing: 12) {
                                     VStack(alignment: .leading, spacing: 3) {
-                                        Text(verbatim: q.title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                        Text(verbatim: q.subtitle).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                                        Text(verbatim: q.title).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                        Text(verbatim: q.subtitle).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                                     }
                                     Spacer()
                                     Image(systemName: "arrow.up.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
@@ -376,8 +376,8 @@ struct NunaAnyaView: View {
         Button { send(prompt) } label: { chipLabel(title) }.buttonStyle(.plain)
     }
     private func chipLabel(_ t: String) -> some View {
-        Text(verbatim: t).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-            .padding(.trailing, 14).frame(height: 38)
+        Text(verbatim: t).font(.nuna(size: 12.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            .padding(.trailing, 12).frame(height: 36)
     }
 
     private func errorBanner(_ text: String) -> some View {
