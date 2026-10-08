@@ -55,7 +55,7 @@ struct NunaDetailSwitcher: View {
 
 /// The metrics the dropdown moves between (Sleep keeps its own multi-night screen).
 enum NunaDetailSet {
-    static let metricKeys = ["recovery", "strain", "hrv", "rhr", "resp_rate", "spo2", "skin_temp", "stress"]
+    static let metricKeys = ["recovery", "strain", "sleep_performance", "hrv", "rhr", "resp_rate", "spo2", "skin_temp", "stress"]
 
     static func items() -> [NunaDetailSwitch.Item] {
         metricKeys.compactMap { k in
@@ -87,7 +87,7 @@ struct NunaMetricHost: View {
         case ("recovery", _): NunaChargeDetailView()
         case ("strain", _): NunaEffortDetailView()
         case ("stress", "my-whoop"): NunaStressDetailView()
-        case ("sleep_performance", _): NunaSleepView()
+        case ("sleep_performance", _): NunaRestDetailView()
         case ("skin_temp", _): NunaSkinTempView()
         case ("fitness_age", _): NunaFitnessAgeView()
         default: NunaMetricDetailView(metric: m)
