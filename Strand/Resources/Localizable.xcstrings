@@ -1,6 +1,7 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Show the bottom bar": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tampilkan bilah bawah"}}}},
     "Nap stages": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Fase tidur siang"}}}},
     "Nap %lld of %lld": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur siang %1$lld dari %2$lld"}}}},
     "Bottom bar": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Bilah bawah"}}}},

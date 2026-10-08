@@ -63,12 +63,10 @@ struct NunaRootView: View {
             if !keyboardUp {
                 VStack(spacing: 0) {
                     NunaLiftBar()
-                    if !(autoHide && barHidden) {
-                        NunaTabBar(items: items, trailing: anyaItem, selection: $selection) { id in
-                            // Re-tapping the active tab pops it to its root.
-                            if id < paths.count { paths[id] = NavigationPath() }
-                        }
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                    NunaTabBar(items: items, trailing: anyaItem, selection: $selection, minimized: autoHide && barHidden,
+                               onExpand: { barHidden = false }) { id in
+                        // Re-tapping the active tab pops it to its root.
+                        if id < paths.count { paths[id] = NavigationPath() }
                     }
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
