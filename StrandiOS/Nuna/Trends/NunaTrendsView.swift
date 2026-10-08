@@ -38,6 +38,7 @@ struct NunaTrendsView: View {
     @State private var range = 30
     @State private var showReport = false
     @State private var showCoach = false
+    @AppStorage("noop.coachEnabled") private var coachEnabled = true
 
     private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
 
@@ -55,6 +56,7 @@ struct NunaTrendsView: View {
                     }
                 } else {
                     summaryCard
+                    rangeReadCard
                     comparisonSection
                     signalsSection
                     heatmapCard
@@ -129,6 +131,27 @@ struct NunaTrendsView: View {
                     }
                 }
             }
+        }
+    }
+
+    /// Anya's read of the trends in view, from the same figures as the summary: how Charge moved against the period before, and what Effort
+    /// and Rest did. Tapping it opens her with that line, ready to explain.
+    @ViewBuilder private var rangeReadCard: some View {
+        let c = m.means(m.charge, days: range), e = m.means(m.effort, days: range), r = m.means(m.rest, days: range)
+        if coachEnabled, let now = c.now {
+            let line: String = {
+                guard let before = c.before else { return String(localized: "Charge averaged \(Int(now.rounded()))% over these \(range) days.") }
+                let d = Int((now - before).rounded())
+                let word = d == 0 ? String(localized: "level with") : (d > 0 ? String(localized: "\(d) points above") : String(localized: "\(-d) points below"))
+                return String(localized: "Charge averaged \(Int(now.rounded()))% over these \(range) days, \(word) the period before.")
+            }()
+            let detail: String? = {
+                var parts: [String] = []
+                if let eNow = e.now { parts.append(String(localized: "Effort \(UnitFormatter.effortDisplay(eNow, scale: scale))")) }
+                if let rNow = r.now { parts.append(String(localized: "Rest \(Int(rNow.rounded()))%")) }
+                return parts.isEmpty ? nil : parts.joined(separator: " · ")
+            }()
+            NunaAnyaCard(verbatim: line, detail: detail) { showCoach = true }
         }
     }
 
