@@ -40,8 +40,30 @@ struct NunaTrendDetailCard: View {
     var columnTop: Double?
     /// What the colours of the bars mean, drawn under the week's bars.
     var columnLegend: AnyView?
+    /// A different set of ranges (Stress adds a "Today" one that is not a window of days).
+    var rangeChoices: [(value: Int, title: String)]?
+    /// The view for range 1, when `rangeChoices` has it: the card drops the figure, the sentence, the stepper and the figures row.
+    var dayView: AnyView?
+    var dayCaption: LocalizedStringKey = "All day"
+    var dayNote: LocalizedStringKey = "By time of day"
+    /// Under the chart at every range (a colour key).
+    var chartFooter: AnyView?
     @Binding var range: Int
     @Binding var page: Int
+
+    /// Lower readings are better (Stress), so the moves between stretches read green when they fall.
+    func lowerIsBetter() -> Self { var c = self; c.higherIsBetter = false; return c }
+
+    /// A "Today" range that draws `view`, beside the day windows in `choices`.
+    func ranges(_ choices: [(value: Int, title: String)], dayView: AnyView, caption: LocalizedStringKey = "All day", note: LocalizedStringKey = "By time of day") -> Self {
+        var c = self
+        c.rangeChoices = choices; c.dayView = dayView; c.dayCaption = caption; c.dayNote = note
+        return c
+    }
+
+    func footer(_ view: AnyView) -> Self { var c = self; c.chartFooter = view; return c }
+
+    private var showsDay: Bool { dayView != nil && range == 1 }
 
     /// Draws the week as labelled columns instead of the line.
     func columns(color: ((Double) -> Color)? = nil, top: Double? = nil, legend: AnyView? = nil) -> Self {
@@ -96,34 +118,40 @@ struct NunaTrendDetailCard: View {
     private func average(_ v: [Double]) -> Double? { v.isEmpty ? nil : v.reduce(0, +) / Double(v.count) }
 
     var body: some View {
-        let pts = readings(range, page * range)
+        let pts = showsDay ? [] : readings(range, page * range)
         let vals = pts.map(\.value)
         let avg = average(vals)
         let prev = average(readings(range, (page + 1) * range).map(\.value))
         NunaCard {
             VStack(alignment: .leading, spacing: 14) {
                 header(avg: avg, prev: prev)
-                if let s = (sentence?(avg, prev)) ?? summary(avg: avg, prev: prev) {
-                    Text(verbatim: s).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        .fixedSize(horizontal: false, vertical: true).textCase(nil)
-                }
-                if pts.isEmpty {
-                    Text(loaded ? "No data in this period" : " ").font(.nuna(size: 14, weight: .semibold))
-                        .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 160).textCase(nil)
+                if showsDay, let dayView {
+                    dayView
+                    if let chartFooter { chartFooter }
                 } else {
-                    if bars, reference != nil { referenceLegend }
-                    if bars && (!columnsWeekOnly || range <= 7) {
-                        barChart(pts)
-                        if range <= 7, let columnLegend { columnLegend }
-                    } else {
-                        NunaSegmentedChart(points: pts, color: lineColor, decimals: decimals, band: band, reference: reference,
-                                           higherIsBetter: higherIsBetter, directional: directional)
+                    if let s = (sentence?(avg, prev)) ?? summary(avg: avg, prev: prev) {
+                        Text(verbatim: s).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                            .fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }
-                }
-                if let avg, let lo = vals.min(), let hi = vals.max() {
-                    NunaDivider()
-                    HStack(alignment: .top, spacing: 0) {
-                        stat("Average", fmt(avg)); stat("Lowest", fmt(lo)); stat("Highest", fmt(hi))
+                    if pts.isEmpty {
+                        Text(loaded ? "No data in this period" : " ").font(.nuna(size: 14, weight: .semibold))
+                            .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 160).textCase(nil)
+                    } else {
+                        if bars, reference != nil { referenceLegend }
+                        if bars && (!columnsWeekOnly || range <= 7) {
+                            barChart(pts)
+                            if range <= 7, let columnLegend { columnLegend }
+                        } else {
+                            NunaSegmentedChart(points: pts, color: lineColor, decimals: decimals, band: band, reference: reference,
+                                               higherIsBetter: higherIsBetter, directional: directional)
+                        }
+                        if let chartFooter { chartFooter }
+                    }
+                    if let avg, let lo = vals.min(), let hi = vals.max() {
+                        NunaDivider()
+                        HStack(alignment: .top, spacing: 0) {
+                            stat("Average", fmt(avg)); stat("Lowest", fmt(lo)); stat("Highest", fmt(hi))
+                        }
                     }
                 }
             }
@@ -206,11 +234,21 @@ struct NunaTrendDetailCard: View {
         v >= 10_000 ? String(format: "%.1fk", locale: AppLanguage.activeLocale, v / 1000) : String(format: "%.0f", locale: AppLanguage.activeLocale, v)
     }
 
-    private func header(avg: Double?, prev: Double?) -> some View {
+    private func header(avg: Double?, prev: Double?) -> AnyView {
         let shownValue: String = averageHero ? (avg.map(fmt) ?? "–") : (valueText ?? "–")
         let shownChip: (text: LocalizedStringKey, color: Color)? = averageHero ? avg.flatMap { levelChip?($0) } : chip
         let shownNote: String? = averageHero ? prev.map { String(localized: "Previous period \(fmt($0))\(unit)") } : note
-        return HStack(alignment: .top, spacing: 12) {
+        if showsDay {
+            return AnyView(HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(dayCaption).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Text(dayNote).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                }
+                Spacer(minLength: 0)
+                rangeSwitch
+            })
+        }
+        return AnyView(HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
                 Text(caption).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textSecondary)
@@ -232,17 +270,17 @@ struct NunaTrendDetailCard: View {
                 rangeSwitch
                 dateStepper
             }
-        }
+        })
     }
 
     private var rangeSwitch: some View {
         HStack(spacing: 2) {
-            ForEach(Self.ranges, id: \.value) { r in
+            ForEach(rangeChoices ?? Self.ranges, id: \.value) { r in
                 let on = range == r.value
                 Button { range = r.value; page = 0 } label: {
-                    Text(verbatim: r.title).font(.nuna(size: 13, weight: .bold))
+                    Text(verbatim: r.title).font(.nuna(size: 13, weight: .bold)).lineLimit(1).fixedSize(horizontal: true, vertical: false)
                         .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
-                        .frame(width: 48, height: 34)
+                        .padding(.horizontal, 10).frame(minWidth: 48, minHeight: 34)
                         .background(on ? NunaPalette.ink.opacity(0.14) : Color.clear, in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
                 }.buttonStyle(.plain)
             }

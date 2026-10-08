@@ -446,6 +446,7 @@ struct NunaStressDetailView: View {
     @StateObject private var series = NunaSeriesModel()
     @StateObject private var day = NunaTodayModel()
     @State private var range = 1
+    @State private var page = 0
     @State private var showBreathing = false
     @State private var showCoach = false
     @State private var showInfo = false
@@ -583,67 +584,71 @@ struct NunaStressDetailView: View {
         return level + " · " + vs
     }
 
+    /// The one trend card, as on Charge and the other metrics: Today is the line through the day, W and M the days before.
     private var chartCard: some View {
-        NunaCard {
-            VStack(alignment: .leading, spacing: 16) {
-                NunaSegmented([(value: 1, title: "Today"), (value: 7, title: "W\u{2060}"), (value: 30, title: "M")], selection: $range)
-                if range == 1 {
-                    HStack {
-                        Text("All day").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                        Spacer()
-                        Text("By time of day").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    }
-                    if let curve = day.stressCurve, let pts = chartPoints(curve) {
-                        // The same line NOOP draws on Default Today and in the widget.
-                        HStack(alignment: .top, spacing: 8) {
-                            VStack(alignment: .trailing, spacing: 0) {
-                                ForEach([3, 2, 1, 0], id: \.self) { t in
-                                    Text(verbatim: "\(t)").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-                                    if t > 0 { Spacer(minLength: 0) }
-                                }
-                            }
-                            .frame(width: 14, height: 110)
-                            NunaStressReadout(points: pts, isToday: day.isToday).frame(height: 110)
-                        }
-                        HStack {
-                            if let f = pts.first(where: { $0.level != nil }) { Text(verbatim: NunaSleepFormat.clock(Date(timeIntervalSince1970: TimeInterval(f.startTs)))) }
-                            Spacer()
-                            Text("Now")
-                        }
-                        .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        .padding(.leading, 22)
-                    } else {
-                        Text("Calibrating").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                            .frame(maxWidth: .infinity, minHeight: 110)
-                    }
-                } else {
-                    NunaLine2Chart(points: series.readings(range), color: NunaPalette.charge, decimals: 1, baseline: series.baseline, band: series.band.map { $0.lo...$0.hi })
-                }
-                HStack(spacing: 14) {
-                    legend(NunaPalette.charge, "Low"); legend(NunaPalette.warning, "Medium"); legend(NunaPalette.alert, "High")
-                    Spacer()
-                }
-            }
+        NunaTrendDetailCard(
+            caption: "Average", unit: "",
+            readings: { days, back in series.readings(days, endingDaysAgo: back) },
+            hasOlder: { start in series.byDay.keys.min().map { Repository.localDayKey(start) > $0 } ?? false },
+            loaded: series.loaded, band: series.band.map { $0.lo...$0.hi },
+            lineColor: NunaPalette.charge, decimals: 1, directional: true,
+            levelChip: { v in (text: v < 1 ? "Low" : (v < 2 ? "Medium" : "High"), color: color(v)) },
+            sentence: nil, range: $range, page: $page)
+            .ranges([(1, "Today"), (7, "W\u{2060}"), (30, "M")], dayView: AnyView(dayChart))
+            .lowerIsBetter()
+            .footer(AnyView(stressKey))
+    }
+
+    private var stressKey: some View {
+        HStack(spacing: 14) {
+            legend(NunaPalette.charge, "Low"); legend(NunaPalette.warning, "Medium"); legend(NunaPalette.alert, "High")
+            Spacer()
         }
     }
 
-    /// HRV and resting heart rate, the two signals the stress read leans on. The same tile as Key metrics on
-    /// Today, with the change from the night before.
-    private var recoveryTiles: some View {
-        func delta(_ d: Double?, downIsGood: Bool) -> (String, Bool)? {
-            guard let d, abs(d.rounded()) >= 1 else { return nil }
-            return ((d > 0 ? "▲ " : "▼ ") + "\(Int(abs(d).rounded()))", downIsGood ? d < 0 : d > 0)
+    /// Today's curve: the same line NOOP draws on Default Today and in the widget, hour by hour.
+    @ViewBuilder private var dayChart: some View {
+        if let curve = day.stressCurve, let pts = chartPoints(curve) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top, spacing: 8) {
+                    VStack(alignment: .trailing, spacing: 0) {
+                        ForEach([3, 2, 1, 0], id: \.self) { t in
+                            Text(verbatim: "\(t)").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                            if t > 0 { Spacer(minLength: 0) }
+                        }
+                    }
+                    .frame(width: 14, height: 110)
+                    NunaStressReadout(points: pts, isToday: day.isToday).frame(height: 110)
+                }
+                HStack {
+                    if let f = pts.first(where: { $0.level != nil }) { Text(verbatim: NunaSleepFormat.clock(Date(timeIntervalSince1970: TimeInterval(f.startTs)))) }
+                    Spacer()
+                    Text("Now")
+                }
+                .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                .padding(.leading, 22)
+            }
+        } else {
+            Text("Calibrating").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                .frame(maxWidth: .infinity, minHeight: 110)
         }
-        func num(_ v: Double?) -> String { v.map { String(format: "%.0f", locale: AppLanguage.activeLocale, $0) } ?? "–" }
-        let h = delta(day.hrvDelta, downIsGood: false), r = delta(day.restingHrDelta, downIsGood: true)
-        return NunaMetricsGrid(tiles: [
-            NunaMetricTile(id: "hrv", label: "HRV", value: num(day.hrv), unit: "ms",
-                           route: MetricCatalog.metric(key: "hrv", source: "my-whoop").map { .metric($0) },
-                           delta: h?.0, deltaGood: h?.1, icon: "waveform.path.ecg"),
-            NunaMetricTile(id: "rhr", label: "Resting HR", value: num(day.restingHr), unit: "bpm",
-                           route: MetricCatalog.metric(key: "rhr", source: "my-whoop").map { .metric($0) },
-                           delta: r?.0, deltaGood: r?.1, icon: "heart"),
-        ], layout: .list)
+    }
+
+    /// HRV and resting heart rate, the two signals the stress read leans on: the same plain rows as the signals under Charge, with the
+    /// change from the night before.
+    private var recoveryTiles: some View {
+        NunaPlainList {
+            signal("Heart rate variability", "waveform.path.ecg", day.hrv, day.hrvDelta, false, key: "hrv")
+            NunaDivider()
+            signal("Resting heart rate", "heart", day.restingHr, day.restingHrDelta, true, key: "rhr")
+        }
+    }
+
+    @ViewBuilder private func signal(_ title: LocalizedStringKey, _ icon: String, _ value: Double?, _ delta: Double?, _ downIsGood: Bool, key: String) -> some View {
+        let row = NunaContributorRow(title: title, icon: icon, value: value.map { String(format: "%.0f", $0) }, unit: "", delta: delta, downIsGood: downIsGood, decimals: 0)
+        if let m = MetricCatalog.metric(key: key, source: "my-whoop") {
+            NavigationLink(value: NunaTodayRoute.metric(m)) { row }.buttonStyle(.plain)
+        } else { row }
     }
 
     /// The finer 30-minute timeline when it has scored points, otherwise the hourly read the Today card uses.
