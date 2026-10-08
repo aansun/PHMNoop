@@ -188,7 +188,7 @@ struct NunaAnyaView: View {
                     NavigationLink(value: NunaAnyaRoute.settings) {
                         HStack(spacing: 6) { Image(systemName: "lock").font(.nuna(size: 11, weight: .bold)); Text("Anya only sees your question. Allow data access") }
                             .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                            .padding(.horizontal, 12).frame(height: 32).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                            .padding(.trailing, 6).frame(height: 32)
                     }.buttonStyle(.plain)
                 }
                 let active = memory.memories.filter(\.isActive).count
@@ -196,7 +196,7 @@ struct NunaAnyaView: View {
                     NavigationLink(value: NunaAnyaRoute.memory) {
                         HStack(spacing: 5) { Image(systemName: "brain").font(.nuna(size: 11, weight: .bold)); Text(verbatim: String(localized: "Memory active · \(active)")) }
                             .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                            .padding(.horizontal, 12).frame(height: 32).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                            .padding(.trailing, 6).frame(height: 32)
                     }.buttonStyle(.plain)
                 }
             }
@@ -209,14 +209,14 @@ struct NunaAnyaView: View {
 
     private func chip(_ t: String) -> some View {
         Text(verbatim: t).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-            .padding(.horizontal, 12).frame(height: 32).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+            .padding(.trailing, 6).frame(height: 32)
     }
 
     // MARK: Not connected
 
     private var connectPrompt: some View {
         VStack(spacing: NunaSpacing.section) {
-            NunaCard(highlight: true) {
+            NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
                 VStack(alignment: .leading, spacing: 14) {
                     AnyaIconTile(size: 44)
                     Text("Connect Anya").font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
@@ -229,7 +229,7 @@ struct NunaAnyaView: View {
                 }
             }
             if let reading {
-                NunaCard(small: true) {
+                NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Your day, without a provider").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         Text(verbatim: reading.headline).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
@@ -238,7 +238,7 @@ struct NunaAnyaView: View {
                 }
             }
             NavigationLink(value: NunaAnyaRoute.plan) {
-                NunaCard(small: true) { NunaListRow("Today's plan", description: "Built on this iPhone from your Charge, no provider needed", systemImage: "list.bullet.rectangle", showsChevron: true) }
+                NunaListRow("Today's plan", description: "Built on this iPhone from your Charge, no provider needed", systemImage: "list.bullet.rectangle", showsChevron: true)
             }.buttonStyle(.plain)
         }
     }
@@ -255,7 +255,7 @@ struct NunaAnyaView: View {
                         .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
                 if let reading {
-                    NunaCard(highlight: true) {
+                    NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
                         VStack(alignment: .leading, spacing: 12) {
                             nunaTrendsCap("Recommendation for today")
                             Text(verbatim: reading.headline).font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
@@ -268,7 +268,7 @@ struct NunaAnyaView: View {
                     }
                 }
                 NunaTitleRow(title: "Try asking") { EmptyView() }
-                NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
+                NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
                     VStack(spacing: 0) {
                         ForEach(Array(starters.enumerated()), id: \.offset) { i, q in
                             if i > 0 { NunaDivider() }
@@ -286,7 +286,7 @@ struct NunaAnyaView: View {
                     }
                 }
                 NavigationLink(value: NunaAnyaRoute.memory) {
-                    NunaCard(small: true) { NunaListRow("Give Anya a memory", description: "Your goals, events and preferences", systemImage: "brain", showsChevron: true) }
+                    NunaListRow("Give Anya a memory", description: "Your goals, events and preferences", systemImage: "brain", showsChevron: true)
                 }.buttonStyle(.plain)
             }
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 24)
@@ -346,9 +346,7 @@ struct NunaAnyaView: View {
             }
         case .assistant:
             VStack(alignment: .leading, spacing: 10) {
-                NunaCard(small: true, padding: EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)) {
-                    NunaAnyaReply(text: m.text)
-                }
+                NunaAnyaReply(text: m.text).frame(maxWidth: .infinity, alignment: .leading)
                 HStack(spacing: 8) {
                     if coach.dataConsent {
                         Text("Read:").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
@@ -380,11 +378,11 @@ struct NunaAnyaView: View {
     }
     private func chipLabel(_ t: String) -> some View {
         Text(verbatim: t).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-            .padding(.horizontal, 14).frame(height: 38).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)).overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+            .padding(.trailing, 14).frame(height: 38)
     }
 
     private func errorBanner(_ text: String) -> some View {
-        NunaCard(small: true) {
+        NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(verbatim: text).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.alertText).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 if coach.keyRejected {
@@ -410,7 +408,7 @@ struct NunaAnyaView: View {
                     Spacer()
                     Button { attachment = nil } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(NunaPalette.textMuted) }.buttonStyle(.plain).accessibilityLabel(Text("Remove attachment"))
                 }
-                .padding(.horizontal, 14).frame(height: 40).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                .frame(height: 40)
                 Text("The file is read on this iPhone and only its text is sent with your question.").font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
             }
             HStack(spacing: 10) {
