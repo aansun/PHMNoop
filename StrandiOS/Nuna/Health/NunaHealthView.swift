@@ -44,6 +44,7 @@ struct NunaHealthView: View {
     @State private var didSetTab = false
     @State private var legacy: Legacy?
     @State private var showCoach = false
+    @State private var showSleepCoach = false
     @State private var fitSeries: [(day: String, value: Double)] = []
     @State private var lastMaxHR: (bpm: Int, sport: String)?
 
@@ -114,6 +115,7 @@ struct NunaHealthView: View {
             .environmentObject(repo)
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "health") }
+        .sheet(isPresented: $showSleepCoach) { NunaAnyaSheet(context: "sleep") }
     }
 
     // MARK: Tabs
@@ -577,6 +579,7 @@ struct NunaHealthView: View {
                 }.buttonStyle(.plain)
             } else {
                 weekCard(recent)
+                sleepRead(recent)
                 needCard(recent)
                 bedtimeCard(recent)
                 stagesAverageCard(recent)
@@ -621,6 +624,26 @@ struct NunaHealthView: View {
                 }
                 .padding(.top, 4)
             }
+        }
+    }
+
+    /// Anya's read of the last seven nights: how long and how well you slept on average, against what you need.
+    @ViewBuilder private func sleepRead(_ nights: [NunaNight]) -> some View {
+        if coachEnabled, !nights.isEmpty {
+            let avg = nights.map(\.asleepMin).reduce(0, +) / Double(nights.count)
+            let need = nights.last.map { sleep.need($0) }
+            let rest = nights.compactMap { sleep.value("sleep_performance", $0) }
+            let line: String = {
+                let dur = NunaSleepFormat.duration(avg)
+                guard let need, need > 0 else { return String(localized: "You slept \(dur) a night over the last \(nights.count) nights.") }
+                let gap = Int((avg - need).rounded())
+                if abs(gap) < 10 { return String(localized: "You slept \(dur) a night over the last \(nights.count) nights, close to what you need.") }
+                let diff = NunaSleepFormat.duration(abs(Double(gap)))
+                return gap < 0 ? String(localized: "You slept \(dur) a night over the last \(nights.count) nights, \(diff) short of what you need.")
+                               : String(localized: "You slept \(dur) a night over the last \(nights.count) nights, \(diff) more than you need.")
+            }()
+            let detail: String? = rest.isEmpty ? nil : String(localized: "Average Rest \(Int((rest.reduce(0, +) / Double(rest.count)).rounded()))%")
+            NunaAnyaCard(verbatim: line, detail: detail) { showSleepCoach = true }
         }
     }
 
