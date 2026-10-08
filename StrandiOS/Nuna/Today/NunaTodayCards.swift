@@ -157,11 +157,11 @@ struct NunaScoreRings: View {
         case .effort:
             let text = effort.map { UnitFormatter.effortDisplay($0, scale: effortScale) } ?? "–"
             let state: LocalizedStringKey = effort.map { $0 < 33 ? "Light" : ($0 < 66 ? "Moderate" : "High") } ?? "No data"
-            return RingValues(fraction: (effort ?? 0) / 100, color: NunaPalette.effort, textColor: NunaPalette.effortText,
+            return RingValues(fraction: (effort ?? 0) / 100, color: effort.map(nunaEffortColor) ?? NunaPalette.effort, textColor: effort.map(nunaEffortTextColor) ?? NunaPalette.effortText,
                               number: text, unit: "", label: "Effort", state: state, route: HeroRingMetric.effort)
         case .rest:
-            let state: LocalizedStringKey = rest.map { $0 >= 80 ? "Good" : ($0 >= 65 ? "Fair" : "Low") } ?? "No data"
-            return RingValues(fraction: (rest ?? 0) / 100, color: NunaPalette.rest, textColor: NunaPalette.restText,
+            let state: LocalizedStringKey = rest.map(nunaRestWord) ?? "No data"
+            return RingValues(fraction: (rest ?? 0) / 100, color: rest.map(nunaRestColor) ?? NunaPalette.rest, textColor: rest.map(nunaRestTextColor) ?? NunaPalette.restText,
                               number: rest.map { "\(Int($0.rounded()))" } ?? "–", unit: "%",
                               label: "Rest", state: state, route: HeroRingMetric.rest)
         }

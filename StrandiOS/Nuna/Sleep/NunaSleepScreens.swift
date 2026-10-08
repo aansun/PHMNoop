@@ -129,8 +129,8 @@ struct NunaSleepView: View {
         return VStack(spacing: 14) {
             // The word for the night sits in the ring, where the metric's name would be; the hours are on the stages card.
             NunaScoreHero(caption: "Last night", fraction: (rest ?? 0) / 100,
-                          number: rest.map { "\(Int($0.rounded()))" } ?? "–", unit: "%", name: v?.word ?? "Rest", nameColor: v?.color,
-                          color: NunaPalette.rest, hasNote: v != nil) {
+                          number: rest.map { "\(Int($0.rounded()))" } ?? "–", unit: "%", name: v?.word ?? "Rest", nameColor: rest.map(nunaRestTextColor),
+                          color: rest.map(nunaRestColor) ?? NunaPalette.rest, hasNote: v != nil) {
                 if let v {
                     Text(verbatim: v.line).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         .fixedSize(horizontal: false, vertical: true).textCase(nil)
