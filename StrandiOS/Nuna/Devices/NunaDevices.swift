@@ -370,11 +370,9 @@ struct NunaDeviceDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var renaming = false
     @State private var nameDraft = ""
-    @State private var confirmRestart = false
     @State private var confirmRemove = false
     @State private var confirmDeleteData = false
     @State private var confirmForget = false
-    @State private var buzzed = false
 
     private var registry: DeviceRegistry? { model.deviceRegistry }
     private var device: PairedDevice? { registry?.devices.first { $0.id == deviceId } }
@@ -385,9 +383,13 @@ struct NunaDeviceDetailView: View {
     var body: some View {
         NunaDetailScreen(LocalizedStringKey(device?.displayName ?? String(localized: "Device"))) {
             if let d = device {
-                header(d)
-                info(d)
-                if isActive && isWhoop { actions(d) }
+                if isActive {
+                    // The active strap's name, state, battery, ids and actions are already on the Devices screen: only what it does not show is here.
+                    addedLine(d)
+                } else {
+                    header(d)
+                    info(d)
+                }
                 manage(d)
             } else {
                 NunaCard(small: true) { Text("This device is no longer in the list.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
@@ -398,10 +400,6 @@ struct NunaDeviceDetailView: View {
             Button("Cancel", role: .cancel) {}
             Button("Save") { registry?.rename(deviceId, to: nameDraft) }
         }
-        .alert("Restart this strap?", isPresented: $confirmRestart) {
-            Button("Cancel", role: .cancel) {}
-            Button("Restart") { model.rebootStrap() }
-        } message: { Text("It disconnects for about 30 seconds, then reconnects on its own. Your recorded data is kept.") }
         .alert("Remove this device?", isPresented: $confirmRemove) {
             Button("Cancel", role: .cancel) {}
             Button("Remove", role: .destructive) { registry?.archive(deviceId); dismiss() }
@@ -418,6 +416,15 @@ struct NunaDeviceDetailView: View {
                 Task { guard let store = await model.repo.storeHandle() else { return }; await registry?.forget(deviceId, store: store); dismiss() }
             }
         } message: { Text("The device leaves the list completely. Data already recorded is kept.") }
+    }
+
+    /// When the strap was added, the one fact the Devices screen does not carry.
+    private func addedLine(_ d: PairedDevice) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Added").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(verbatim: Self.date(d.addedAt)).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func header(_ d: PairedDevice) -> some View {
@@ -476,29 +483,6 @@ struct NunaDeviceDetailView: View {
         if let action { Button(action: action) { content }.buttonStyle(.plain) } else { content }
     }
 
-    private func actions(_ d: PairedDevice) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            nunaRuledHeader("Actions")
-            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                VStack(spacing: 0) {
-                    action("Sync now", live.lastSyncedAt.map { String(localized: "Last at \(NunaDeviceFormat.clock($0))") } ?? String(localized: "Not synced yet"), "arrow.triangle.2.circlepath", enabled: live.connected && !live.backfilling) { model.ble.syncNow() }
-                    NunaDivider()
-                    action("Reconnect", "Disconnect, then scan again", "dot.radiowaves.left.and.right", enabled: true) { model.disconnect(); model.ble.connect() }
-                    NunaDivider()
-                    action("Test vibration", buzzed ? String(localized: "Sent") : String(localized: "The strap vibrates once to confirm"), "waveform", enabled: live.connected && live.bonded) {
-                        model.buzzStrapOnce(); buzzed = true
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { buzzed = false }
-                    }
-                    // A 4.0 has no safe restart frame, so the entry only exists for the 5/MG family (same rule as the Default screen).
-                    if live.connected && !model.ble.isWhoop4 {
-                        NunaDivider()
-                        action("Restart strap", "Disconnects for about 30 seconds", "arrow.clockwise", enabled: true) { confirmRestart = true }
-                    }
-                }
-            }
-        }
-    }
-
     private func action(_ title: LocalizedStringKey, _ subtitle: String, _ icon: String, enabled: Bool, _ run: @escaping () -> Void) -> some View {
         Button(action: run) { NunaListRow(title, subtitle: LocalizedStringKey(subtitle), systemImage: icon, showsChevron: true) }
             .buttonStyle(.plain).disabled(!enabled).opacity(enabled ? 1 : 0.4)
@@ -513,11 +497,9 @@ struct NunaDeviceDetailView: View {
                         action("Add it back", "Make it an active device again", "plus.circle", enabled: true) { registry?.setActive(d.id) }
                     } else if !isActive && !d.isImportSource {
                         action("Make active", "It provides your live data", "bolt", enabled: true) { registry?.setActive(d.id) }
-                    } else if isActive {
-                        NunaListRow("Active device", description: "It provides your live data", systemImage: "bolt.fill") { NunaChip("Active", color: NunaPalette.charge) }.padding(.vertical, 2)
                     }
                     if d.status != .archived {
-                        NunaDivider()
+                        if !isActive { NunaDivider() }
                         Button { confirmRemove = true } label: { NunaListRow("Remove from the list", description: "Data stays and it can be added again", systemImage: "archivebox", showsChevron: true) }.buttonStyle(.plain)
                     }
                     NunaDivider()
