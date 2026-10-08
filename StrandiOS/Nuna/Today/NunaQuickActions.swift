@@ -37,7 +37,6 @@ enum NunaQuickActions {
         .init(id: "journal", title: "Journal", icon: "bookmark", group: "Log", kind: .route(.journal)),
         .init(id: "mood", title: "Mood", icon: "face.smiling", group: "Log", kind: .today(.mood)),
         .init(id: "weight", title: "Weight", icon: "scalemass", group: "Log", kind: .today(.weight)),
-        .init(id: "waist", title: "Waist", icon: "ruler", group: "Log", kind: .today(.waist)),
         .init(id: "nutrition", title: "Nutrition", icon: "fork.knife", group: "Log", kind: .today(.nutrition)),
         .init(id: "cycle", title: "Menstrual cycle", icon: "calendar", group: "Log", kind: .today(.cycle)),
         // Train

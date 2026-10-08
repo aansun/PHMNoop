@@ -30,7 +30,6 @@ struct NunaHealthView: View {
     @StateObject private var fatGS = NunaSeriesModel()
     @StateObject private var trainingM = NunaWorkoutsModel()
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
-    @State private var showWaist = false
     @AppStorage(HydrationStore.enabledKey) private var hydrationEnabled = false
     @AppStorage(NunaQuickActions.waterAmountKey) private var quickWaterML = NunaQuickActions.waterAmountDefault
     @State private var waterML = 0
@@ -516,7 +515,7 @@ struct NunaHealthView: View {
             weightHero
             compositionCard
             if let bmi = bodyBMI { NunaBMICard(bmi: bmi) }
-            waistCard
+            NunaWaistRatioCard()
             nutritionCard
             if hydrationEnabled { waterCard }
             NunaHealthTraining(m: trainingM, scale: UnitPrefs.resolveEffortScale(effortScaleRaw))
@@ -532,7 +531,6 @@ struct NunaHealthView: View {
                 }
             }
         }
-        .sheet(isPresented: $showWaist) { NunaWaistSheet() }
     }
 
     private var weightHero: some View {
@@ -597,37 +595,6 @@ struct NunaHealthView: View {
         .padding(12).frame(maxWidth: .infinity, alignment: .leading)
         .background(NunaPalette.glass, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(NunaPalette.hairlineSoft, lineWidth: 1))
-    }
-
-    private var waistCard: some View {
-        NunaCard {
-            VStack(alignment: .leading, spacing: 12) {
-                NavigationLink(value: NunaTodayRoute.waist) {
-                    HStack(spacing: 12) {
-                        NunaIconTile("ruler")
-                        VStack(alignment: .leading, spacing: 2) {
-                            cardTitle("Waist")
-                            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                                Text(verbatim: profile.waistCm > 0 ? fmt(profile.waistCm) : "–").font(.nuna(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                                if profile.waistCm > 0 { Text("cm").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
-                            }
-                        }
-                        Spacer()
-                        Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                    }
-                }.buttonStyle(.plain)
-                Text("Reads the latest value from Apple Health and fills your profile for the VO₂max estimate.")
-                    .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                Button { showWaist = true } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: "plus").font(.nuna(size: 13, weight: .bold))
-                        Text("Add a manual measurement").font(.nuna(size: 15, weight: .bold))
-                    }
-                    .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 46)
-                    .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
-                }.buttonStyle(.plain)
-            }
-        }
     }
 
     private var nutritionCard: some View {
