@@ -74,6 +74,7 @@ private struct NunaDevicesContent: View {
 
     var body: some View {
         NunaDetailScreen("Devices", trailing: AnyView(NavigationLink(value: NunaDeviceRoute.helpHub) { NunaBareIcon("questionmark.circle") }.buttonStyle(.plain).accessibilityLabel(Text("Help")))) {
+            if let d = active { deviceHeader(d) }
             NunaPageTabs([(value: 0, title: "Status"), (value: 1, title: "Advanced")], selection: $tab)
             if tab == 0 { statusTab } else { advancedTab }
         }
@@ -108,12 +109,10 @@ private struct NunaDevicesContent: View {
         }
     }
 
-    /// The strap at a glance, without a card: the name and whether it is connected, when it last synced, and the strap itself with its
-    /// battery beside it (or, when it is not connected, the broken line to the phone and a button to reconnect).
-    private func hero(_ d: PairedDevice) -> some View {
+    /// Who the strap is and whether it is connected, and when it last synced. Shown above both tabs.
+    private func deviceHeader(_ d: PairedDevice) -> some View {
         let connected = live.connected
-        let family = NunaDeviceFormat.family(d)
-        return VStack(alignment: .leading, spacing: 8) {
+        return VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 5) {
                     Text(connected ? "Connected to" : "Not connected to").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
@@ -135,6 +134,15 @@ private struct NunaDevicesContent: View {
                     }
                 }
             }
+        }
+    }
+
+    /// The strap at a glance, without a card: the name and whether it is connected, when it last synced, and the strap itself with its
+    /// battery beside it (or, when it is not connected, the broken line to the phone and a button to reconnect).
+    private func hero(_ d: PairedDevice) -> some View {
+        let connected = live.connected
+        let family = NunaDeviceFormat.family(d)
+        return VStack(alignment: .leading, spacing: 8) {
             NunaDeviceStage(connected: connected, batteryPct: live.batteryPct, charging: live.charging == true,
                             model: family, estimate: live.batteryEstimate.map { "~" + NunaDeviceFormat.remaining($0.remainingHours) })
                 .padding(.horizontal, -NunaSpacing.screenH)
@@ -177,40 +185,31 @@ private struct NunaDevicesContent: View {
 
     @ViewBuilder private var advancedTab: some View {
         if let d = active {
-            HStack(spacing: 12) {
-                idTile("Device ID", Self.deviceID(d), "number")
+            HStack(alignment: .top, spacing: 0) {
+                idTile("Device ID", Self.deviceID(d), "applewatch")
                 idTile("Firmware", live.strapFirmware ?? "–", "cpu")
             }
-            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                VStack(spacing: 0) {
-                    infoRow("Model", NunaDeviceFormat.family(d))
-                    if let layout = live.strapRange?.firmwareLayout { NunaDivider(); infoRow("History format", "v\(layout)") }
-                }
-            }
-            nunaRuledHeader("Actions")
-            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                VStack(spacing: 0) {
-                    actionRow("Add a device", "Pair another strap", "plus", enabled: true) { showAdd = true }
-                    if SourceCoordinator.isWhoop(d) {
-                        NunaDivider()
-                        actionRow("Reconnect", "Disconnect, then scan again", "dot.radiowaves.left.and.right", enabled: true) { model.disconnect(); model.ble.connect() }
-                        NunaDivider()
-                        actionRow("Test vibration", buzzed ? String(localized: "Sent") : String(localized: "The strap vibrates once to confirm"), "waveform", enabled: live.connected && live.bonded) {
-                            model.buzzStrapOnce(); buzzed = true
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) { buzzed = false }
-                        }
-                        // A 4.0 has no safe restart frame, so the entry only exists for the 5/MG family (same rule as the strap's own detail screen).
-                        if live.connected && !model.ble.isWhoop4 {
-                            NunaDivider()
-                            actionRow("Restart strap", "Disconnects for about 30 seconds", "arrow.clockwise", enabled: true) { confirmRestart = true }
-                        }
+            .padding(.top, 8)
+            Text(verbatim: NunaDeviceFormat.family(d) + (live.strapRange?.firmwareLayout.map { " · " + String(localized: "History format") + " v\($0)" } ?? ""))
+                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).frame(maxWidth: .infinity)
+            VStack(alignment: .leading, spacing: 22) {
+                actionButton("Add a device", "Pair another strap. It is added next to this one and its history stays separate.", "plus.circle") { showAdd = true }
+                if SourceCoordinator.isWhoop(d) {
+                    actionButton("Reconnect", "Disconnect, then scan for the strap again.", "dot.radiowaves.left.and.right") { model.disconnect(); model.ble.connect() }
+                    actionButton("Test vibration", buzzed ? String(localized: "Sent") : String(localized: "The strap vibrates once to confirm."), "waveform", enabled: live.connected && live.bonded) {
+                        model.buzzStrapOnce(); buzzed = true
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 3) { buzzed = false }
                     }
-                    NunaDivider()
-                    NavigationLink(value: NunaDeviceRoute.detail(d.id)) {
-                        NunaListRow("Manage this strap", subtitle: "Rename, remove, or delete its data", systemImage: "slider.horizontal.3", showsChevron: true)
-                    }.buttonStyle(.plain)
+                    // A 4.0 has no safe restart frame, so the entry only exists for the 5/MG family (same rule as the strap's own detail screen).
+                    if live.connected && !model.ble.isWhoop4 {
+                        actionButton("Restart strap", "Disconnects for about 30 seconds, then reconnects on its own.", "power") { confirmRestart = true }
+                    }
                 }
+                NavigationLink(value: NunaDeviceRoute.detail(d.id)) {
+                    actionLabel("Manage this strap", "Rename it, remove it, or delete its data.", "slider.horizontal.3", enabled: true)
+                }.buttonStyle(.plain)
             }
+            .padding(.top, 10).padding(.bottom, 10)
         } else {
             addButton
         }
@@ -253,30 +252,38 @@ private struct NunaDevicesContent: View {
         }
     }
 
+    /// A centred fact about the strap: a quiet icon, its name and the value.
     private func idTile(_ label: LocalizedStringKey, _ value: String, _ symbol: String) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Image(systemName: symbol).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-            VStack(alignment: .leading, spacing: 4) {
+        VStack(spacing: 10) {
+            Image(systemName: symbol).font(.nuna(size: 22, weight: .regular)).foregroundStyle(NunaPalette.textMuted).frame(height: 28)
+            VStack(spacing: 4) {
                 Text(label).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 Text(verbatim: value).font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
             }
         }
-        .padding(16).frame(maxWidth: .infinity, alignment: .leading)
-        .background(NunaPalette.card, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous).strokeBorder(NunaPalette.hairlineSoft, lineWidth: 1))
+        .frame(maxWidth: .infinity)
     }
 
-    private func infoRow(_ l: LocalizedStringKey, _ v: String) -> some View {
-        HStack {
-            Text(l).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            Spacer(minLength: 12)
-            Text(verbatim: v).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
-        }.padding(.vertical, 14)
+    /// A button with its explanation underneath.
+    private func actionButton(_ title: LocalizedStringKey, _ subtitle: String, _ icon: String, enabled: Bool = true, _ run: @escaping () -> Void) -> some View {
+        Button(action: run) { actionLabel(title, subtitle, icon, enabled: enabled) }
+            .buttonStyle(.plain).disabled(!enabled)
     }
 
-    private func actionRow(_ title: LocalizedStringKey, _ subtitle: String, _ icon: String, enabled: Bool, _ run: @escaping () -> Void) -> some View {
-        Button(action: run) { NunaListRow(title, subtitle: LocalizedStringKey(subtitle), systemImage: icon, showsChevron: true) }
-            .buttonStyle(.plain).disabled(!enabled).opacity(enabled ? 1 : 0.4)
+    private func actionLabel(_ title: LocalizedStringKey, _ subtitle: String, _ icon: String, enabled: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 14) {
+                Image(systemName: icon).font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).frame(width: 26)
+                Text(title).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 18).frame(height: 56)
+            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            Text(verbatim: subtitle).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                .fixedSize(horizontal: false, vertical: true).padding(.horizontal, 4)
+        }
+        .opacity(enabled ? 1 : 0.4)
+        .contentShape(Rectangle())
     }
 
     private static func deviceID(_ d: PairedDevice) -> String {
