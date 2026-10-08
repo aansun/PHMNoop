@@ -47,7 +47,7 @@ struct NunaBreathReportView: View {
                     Text("This session ran without strap haptics, so the pace was followed by sight only.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 Button { showAnya = true } label: {
-                    NunaCard(small: true) { HStack(spacing: 12) { AnyaIconTile(); NunaListRow("Ask Anya about this session", description: "She remembers your sessions in Breathing", showsChevron: true) } }
+                    HStack(spacing: 12) { AnyaIconTile(); NunaListRow("Ask Anya about this session", description: "She remembers your sessions in Breathing", showsChevron: true) }
                 }.buttonStyle(.plain)
                 if let onAgain {
                     Button(action: onAgain) {
@@ -70,7 +70,7 @@ struct NunaBreathReportView: View {
 
     private var verdictCard: some View {
         let v = Self.verdict(record)
-        return NunaCard(highlight: true) {
+        return NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     AnyaMark(size: 18).foregroundStyle(NunaPalette.textSecondary)

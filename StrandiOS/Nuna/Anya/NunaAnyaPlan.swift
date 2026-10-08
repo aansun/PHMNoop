@@ -91,7 +91,7 @@ struct NunaAnyaPlanView: View {
     // MARK: Cards
 
     private func header(_ plan: DayPlan.Plan, _ charge: Int) -> some View {
-        NunaCard(highlight: true) {
+        NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
                     nunaTrendsCap("Planned for you")

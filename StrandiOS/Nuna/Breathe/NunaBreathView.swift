@@ -92,7 +92,7 @@ struct NunaBreathView: View {
     }
 
     private var anyaCard: some View {
-        NunaCard(highlight: true) {
+        NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 10) {
                     AnyaIconTile()
