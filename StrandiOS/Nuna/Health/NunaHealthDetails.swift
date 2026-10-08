@@ -218,6 +218,16 @@ struct NunaLiveHeartView: View {
 // MARK: - Skin temperature
 
 struct NunaSkinTempView: View {
+    /// How the figure is worked out, with what moves it, as one footnote.
+    private var howText: String {
+        var out = String(localized: "The strap measures skin temperature at the wrist while you sleep and compares it with your own recent nights. The figure is a deviation from your baseline, not your core body temperature.")
+        out += "\n\n" + String(localized: "What affects it")
+        out += "\n• " + String(localized: "Room temperature") + ": " + String(localized: "A warm room can raise it a little")
+        out += "\n• " + String(localized: "Alcohol") + ": " + String(localized: "Log it in your journal to see the link")
+        if appModel.cyclePhase != nil { out += "\n• " + String(localized: "Cycle phase") + ": " + String(localized: "The luteal phase can raise your baseline") }
+        return out
+    }
+
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var appModel: AppModel
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
@@ -255,36 +265,24 @@ struct NunaSkinTempView: View {
                     } else {
                         Text("Not enough data yet").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
+                    if let latest {
+                        NunaDivider().padding(.vertical, 8)
+                        VStack(spacing: 8) {
+                            NunaDeviationScale(value: latest)
+                            HStack { Text("−1 °C"); Spacer(); Text("+1 °C") }
+                                .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        }
+                    }
                 }
             }
             if coachEnabled, let latest {
                 let small = abs(latest) < 0.5
                 NunaAnyaCard(verbatim: String(localized: "Skin temperature") + " " + nunaSigned(latest) + " °C · " + (small ? String(localized: "Small deviation") : String(localized: "Larger deviation"))) { showCoach = true }
             }
-            if let latest {
-                VStack(spacing: 8) {
-                    NunaDeviationScale(value: latest)
-                    HStack { Text("−1 °C"); Spacer(); Text("+1 °C") }
-                        .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                }
-            }
-            NunaTitleRow(title: "What affects it") { EmptyView() }
-            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                VStack(spacing: 0) {
-                    NunaListRow("Room temperature", description: "A warm room can raise it a little", systemImage: "thermometer.medium")
-                    NunaDivider()
-                    NunaListRow("Alcohol", description: "Log it in your journal to see the link", systemImage: "drop")
-                    if appModel.cyclePhase != nil {
-                        NunaDivider()
-                        NunaListRow("Cycle phase", description: "The luteal phase can raise your baseline", systemImage: "moon")
-                    }
-                }
-            }
             NavigationLink(value: NunaTodayRoute.earlyWarning) {
                 NunaCard(small: true) { NunaListRow("Early warning", description: "It takes two signals away from your range", systemImage: "bell", showsChevron: true) }
             }.buttonStyle(.plain)
-            NunaExpandRow(title: "How it's calculated", subtitle: "A deviation, not core body temperature", systemImage: "sparkles",
-                          text: "The strap measures skin temperature at the wrist while you sleep and compares it with your own recent nights. The figure is a deviation from your baseline, not your core body temperature.")
+            NunaExpandRow(title: "How it's calculated", systemImage: "sparkles", plain: howText)
         }
         .task { await skinS.load(repo: repo, key: "skin_temp", source: "my-whoop") }
         .sheet(isPresented: $showCoach) {

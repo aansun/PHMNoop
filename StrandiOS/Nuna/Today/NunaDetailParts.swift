@@ -297,9 +297,15 @@ struct NunaExpandRow: View {
     var subtitle: LocalizedStringKey = ""
     var systemImage = "info.circle"
     let text: LocalizedStringKey
+    /// Text already put together in code (an explanation with a list of what affects the figure); it replaces `text`.
+    var plain: String?
 
     init(title: LocalizedStringKey, subtitle: LocalizedStringKey = "", systemImage: String = "info.circle", text: LocalizedStringKey) {
         self.title = title; self.subtitle = subtitle; self.systemImage = systemImage; self.text = text
+    }
+
+    init(title: LocalizedStringKey, systemImage: String = "info.circle", plain: String) {
+        self.title = title; self.systemImage = systemImage; self.text = ""; self.plain = plain
     }
 
     /// A footnote, not a card: an info mark and a title, then the explanation, in a darker grey straight on the screen's background. It is
@@ -310,7 +316,8 @@ struct NunaExpandRow: View {
                 Image(systemName: "info.circle").font(.nuna(size: 14, weight: .semibold))
                 Text(title).font(.nuna(size: 14.5, weight: .bold)).textCase(nil)
             }
-            Text(text).font(.nuna(size: 13.5, weight: .medium)).lineSpacing(3).fixedSize(horizontal: false, vertical: true).textCase(nil)
+            Group { if let plain { Text(verbatim: plain) } else { Text(text) } }
+                .font(.nuna(size: 13.5, weight: .medium)).lineSpacing(3).fixedSize(horizontal: false, vertical: true).textCase(nil)
         }
         .foregroundStyle(NunaPalette.textMuted)
         .frame(maxWidth: .infinity, alignment: .leading)
