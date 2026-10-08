@@ -426,7 +426,6 @@ private struct NunaNapContent: View {
         if let night {
             NunaNightPicker(model: model, caption: isToday ? "Today" : "Earlier day", date: night.wakeDate)
             if let nap = naps.first(where: { Int($0.start.timeIntervalSince1970) == selectedStart }) ?? naps.first {
-                hero(nap, count: naps.count, number: (naps.firstIndex(where: { $0.id == nap.id }) ?? 0) + 1)
                 stagesCard(nap)
                 impact(night)
                 if coachEnabled { NunaAnyaCard(title: "A nap under 30 minutes is safest for your night's sleep", highlight: false) { showCoach = true } }
@@ -451,7 +450,6 @@ private struct NunaNapContent: View {
                     .strokeBorder(NunaPalette.ink.opacity(0.22), style: StrokeStyle(lineWidth: 1.5, dash: [6, 5])))
             }
             .buttonStyle(.plain)
-            history
         }
     }
 
@@ -461,37 +459,20 @@ private struct NunaNapContent: View {
         if let napStart { selectedStart = napStart }
     }
 
-    private func hero(_ nap: NunaNap, count: Int, number: Int = 1) -> some View {
-        NunaCard(padding: EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20)) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack {
-                    Text(count > 1 ? LocalizedStringKey("Nap \(number) of \(count)") : LocalizedStringKey("Nap")).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                    Spacer()
-                    NunaChip(nap.manual ? "Added by you" : "Detected automatically", color: nap.manual ? nil : NunaPalette.charge)
-                    if let block = nap.block {
-                        Button { edit = NunaSleepEditTarget(block, isNap: true) } label: {
-                            NunaBareIcon(nap.manual ? "pencil.circle.fill" : "pencil.circle", tint: NunaPalette.restText, target: 32)
-                        }
-                        .buttonStyle(.plain).accessibilityLabel(Text("Edit nap times"))
-                    }
-                }
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Text(verbatim: "\(Int(nap.asleepMin.rounded()))").font(.nuna(size: 60, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(60)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("min").font(.nuna(size: 22, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                }
-                Text(verbatim: "\(NunaSleepFormat.clock(nap.start)) – \(NunaSleepFormat.clock(nap.end))")
-                    .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            }
-        }
-    }
-
     /// The nap shaped as a night, so it is drawn by the very same Sleep stages card: the stage chart in the chosen style, the heart rate and
     /// the movement through it.
     private func stagesCard(_ nap: NunaNap) -> some View {
         let night = NunaNight(dayKey: "nap-\(Int(nap.start.timeIntervalSince1970))", wakeDate: nap.end, onset: nap.start, wake: nap.end,
                               stages: Stages(awake: nap.minutes(.awake), light: nap.minutes(.light), deep: nap.minutes(.deep), rem: nap.minutes(.rem)),
                               intervals: nap.intervals, naps: [], daily: nil, proportional: nap.intervals.isEmpty, motion: nap.motion)
-        return NunaSleepStageSection(model: model, night: night, title: "Nap stages", compareWithNights: false)
+        let count = naps.count
+        let number = (naps.firstIndex(where: { $0.id == nap.id }) ?? 0) + 1
+        return NunaSleepStageSection(model: model, night: night,
+                                     onEdit: nap.block.map { block in { edit = NunaSleepEditTarget(block, isNap: true) } },
+                                     title: count > 1 ? LocalizedStringKey("Nap \(number) of \(count)") : "Nap stages", compareWithNights: false,
+                                     rangeText: "\(NunaSleepFormat.clock(nap.start)) – \(NunaSleepFormat.clock(nap.end))",
+                                     badge: nap.manual ? "Added by you" : "Detected automatically", badgeColor: nap.manual ? nil : NunaPalette.charge,
+                                     edited: nap.manual)
     }
 
     /// The same Need and debt card as the Sleep page, with what this day's naps add to it.
@@ -526,39 +507,6 @@ private struct NunaNapContent: View {
         }
     }
 
-    private var history: some View {
-        let recent = model.nights.prefix(14).flatMap { n in n.naps.map { (n, $0) } }
-        return VStack(alignment: .leading, spacing: 12) {
-            NunaTitleRow(title: "Nap history") { EmptyView() }
-            if recent.isEmpty {
-                NunaCard(small: true) { NunaListRow("No naps in the last 14 days", systemImage: "zzz", tint: NunaPalette.restText) }
-            } else {
-                NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                    VStack(spacing: 0) {
-                        ForEach(Array(recent.enumerated()), id: \.offset) { idx, pair in
-                            if idx > 0 { NunaDivider() }
-                            HStack(spacing: 12) {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(verbatim: weekday(pair.1.start)).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                    Text(verbatim: "\(NunaSleepFormat.clock(pair.1.start)) – \(NunaSleepFormat.clock(pair.1.end))")
-                                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                                }
-                                Spacer()
-                                Text(verbatim: "\(Int(pair.1.asleepMin.rounded()))m").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                                NunaChip(pair.1.manual ? "Manual" : "Auto", color: pair.1.manual ? nil : NunaPalette.charge)
-                            }
-                            .frame(minHeight: 56)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private func weekday(_ d: Date) -> String {
-        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEEE")
-        return f.string(from: d)
-    }
 }
 
 /// Add a nap by hand: pick the day and the start and end. Staged from the strap's raw data when there is any.
