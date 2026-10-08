@@ -65,6 +65,32 @@ private extension Double {
     func rounded(toPlaces p: Int) -> Double { let m = pow(10.0, Double(p)); return (self * m).rounded() / m }
 }
 
+/// The BMI band: where the number sits between under, normal, over and high (WHO adult bands). Shown on Health > Body, under body composition.
+struct NunaBMICard: View {
+    let bmi: Double
+
+    var body: some View {
+        // Scale in thirds: under 18.5, 18.5 to 25, 25 to 30, over 30 (WHO adult bands).
+        func pos(_ b: Double) -> Double {
+            if b < 18.5 { return max(0, (b - 14) / 4.5) * (2.0 / 12) }
+            if b < 25 { return 2.0 / 12 + (b - 18.5) / 6.5 * (5.0 / 12) }
+            if b < 30 { return 7.0 / 12 + (b - 25) / 5 * (2.0 / 12) }
+            return 9.0 / 12 + min((b - 30) / 10, 1) * (3.0 / 12)
+        }
+        let label: LocalizedStringKey = bmi < 18.5 ? "Under" : (bmi < 25 ? "Normal" : (bmi < 30 ? "Over" : "High"))
+        return NunaCard {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack { nunaCap("BMI"); Spacer(); NunaChip(label, color: bmi >= 18.5 && bmi < 25 ? NunaPalette.charge : NunaPalette.warning) }
+                NunaScaleBar(parts: [(2, NunaPalette.zoneBase), (5, NunaPalette.charge), (2, NunaPalette.warning), (3, NunaPalette.alert)], position: pos(bmi))
+                HStack { Text(verbatim: "18,5"); Spacer(); Text(verbatim: "25"); Spacer(); Text(verbatim: "30") }
+                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                HStack { Text("Under"); Spacer(); Text("Normal").foregroundStyle(NunaPalette.charge).fontWeight(.heavy); Spacer(); Text("Over") }
+                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            }
+        }
+    }
+}
+
 /// A coloured scale bar with a white marker. `parts` are (weight, colour); `position` is 0...1.
 struct NunaScaleBar: View {
     let parts: [(Double, Color)]
@@ -124,7 +150,6 @@ struct NunaWeightView: View {
                 NunaStatTile(label: "Lean mass", value: nbFmt(leanS.latest?.value, 1), unit: leanS.latest == nil ? "" : "kg")
                 NunaStatTile(label: "BMI", value: nbFmt(bmi, 1))
             }
-            if let bmi { bmiCard(bmi) }
             NunaExpandRow(title: "About body composition", subtitle: "From a smart scale via Apple Health", systemImage: "sparkles",
                           text: "Body fat and lean mass appear only when Apple Health has them, for example from a smart scale. NOOP never estimates them.")
         }
@@ -139,26 +164,6 @@ struct NunaWeightView: View {
         .task(id: repo.refreshSeq) { await load() }
     }
 
-    private func bmiCard(_ bmi: Double) -> some View {
-        // Scale in thirds: under 18.5, 18.5 to 25, 25 to 30, over 30 (WHO adult bands).
-        func pos(_ b: Double) -> Double {
-            if b < 18.5 { return max(0, (b - 14) / 4.5) * (2.0 / 12) }
-            if b < 25 { return 2.0 / 12 + (b - 18.5) / 6.5 * (5.0 / 12) }
-            if b < 30 { return 7.0 / 12 + (b - 25) / 5 * (2.0 / 12) }
-            return 9.0 / 12 + min((b - 30) / 10, 1) * (3.0 / 12)
-        }
-        let label: LocalizedStringKey = bmi < 18.5 ? "Under" : (bmi < 25 ? "Normal" : (bmi < 30 ? "Over" : "High"))
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack { nunaCap("BMI"); Spacer(); NunaChip(label, color: bmi >= 18.5 && bmi < 25 ? NunaPalette.charge : NunaPalette.warning) }
-                NunaScaleBar(parts: [(2, NunaPalette.zoneBase), (5, NunaPalette.charge), (2, NunaPalette.warning), (3, NunaPalette.alert)], position: pos(bmi))
-                HStack { Text(verbatim: "18,5"); Spacer(); Text(verbatim: "25"); Spacer(); Text(verbatim: "30") }
-                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                HStack { Text("Under"); Spacer(); Text("Normal").foregroundStyle(NunaPalette.charge).fontWeight(.heavy); Spacer(); Text("Over") }
-                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            }
-        }
-    }
 
     private func saveWeight(_ v: Double) async {
         guard let store = await repo.storeHandle() else { return }
