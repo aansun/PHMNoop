@@ -1,6 +1,9 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Charge averaged %lld%% over these %lld days.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Charge rata-rata %1$lld%% selama %2$lld hari ini."}}}},
+    "Charge averaged %1$lld%% over these %2$lld days, %3$@ the period before.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Charge rata-rata %1$lld%% selama %2$lld hari ini, %3$@ periode sebelumnya."}}}},
+    "Effort %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Effort %@"}}}},
     "Waiting for a waist measurement from Apple Health.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Menunggu pengukuran pinggang dari Apple Health."}}}},
     "Explain": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Jelaskan"}}}},
     "Show the bottom bar": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tampilkan bilah bawah"}}}},
