@@ -15,9 +15,7 @@ import Foundation
 // This file owns three things:
 //   • `TrendsReportData` — pulls the five metric series out of the Repository's
 //     DailyMetric history and calls RangeReportEngine.build for a range.
-//   • `TrendsReportPage` — the laid-out SwiftUI page (the thing rendered to PDF),
-//     built ENTIRELY from the locked StrandDesign component system (NoopCard,
-//     SectionHeader, Sparkline, the colour worlds) so it matches every other surface.
+//   • `TrendsReportDocument` (its own file) — the laid-out multi-page A4 document rendered to PDF.
 //   • `TrendsReportSheet` — the in-app range picker + "Export" CTA presented from Trends.
 //
 // Honesty: an empty range (no metric carried a reading) renders a friendly
@@ -141,6 +139,45 @@ enum TrendsReportData {
                                        start: start, end: end, units: units)
     }
 
+    /// The user's display preferences (°C/°F, Effort axis) resolved from the same three keys every other screen reads, so the
+    /// exported figures agree with what they have been looking at all month (#1637). Handed to the engine AND the document, so the
+    /// headline sentences and the tables can never disagree.
+    static func units(systemRaw: String, temperatureRaw: String, effortScaleRaw: String) -> ReportDisplayUnits {
+        let system = UnitSystem(rawValue: systemRaw) ?? .metric
+        let temp = UnitPrefs.resolveTemperature(system: system, override: temperatureRaw)
+        let scale = UnitPrefs.resolveEffortScale(effortScaleRaw)
+        // Name the canonical constant rather than deriving it from `effortValue(1.0,)`: the report multiplies by this factor,
+        // which is only equivalent while the mapping stays linear.
+        return ReportDisplayUnits(fahrenheit: temp == .fahrenheit,
+                                  effortFactor: scale == .whoop ? UnitFormatter.effortScaleFactor : 1.0)
+    }
+
+    /// The whole document for a range: the engine's report, the readings behind it, and the label for when it was made.
+    @MainActor
+    static func document(range: ReportRange, days: [DailyMetric], stressByDay: [String: Double],
+                         units: ReportDisplayUnits) -> TrendsReportDocument {
+        let rpt = report(for: range, days: days, today: Repository.localDayKey(Date()), stressByDay: stressByDay, units: units)
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        f.timeStyle = .none
+        return TrendsReportDocument(report: rpt, range: range,
+                                    points: points(from: days, start: rpt.start, end: rpt.end, stressByDay: stressByDay),
+                                    generatedOn: f.string(from: Date()), units: units)
+    }
+
+    /// The in-range readings of every metric with the day each fell on, oldest first, for the document's charts and daily table.
+    static func points(from days: [DailyMetric], start: String, end: String,
+                       stressByDay: [String: Double] = [:]) -> [ReportMetric: [ReportPoint]] {
+        var out: [ReportMetric: [ReportPoint]] = [:]
+        for (metric, map) in metricMaps(from: days, stressByDay: stressByDay) {
+            let pts = map.filter { $0.key >= start && $0.key <= end }
+                .sorted { $0.key < $1.key }
+                .map { ReportPoint(day: $0.key, value: $0.value) }
+            if !pts.isEmpty { out[metric] = pts }
+        }
+        return out
+    }
+
     /// The in-range sparkline series (chronological values) for one metric — the same
     /// window the engine summarised, so the line and the stats agree.
     static func series(_ metric: ReportMetric, from days: [DailyMetric],
@@ -149,288 +186,6 @@ enum TrendsReportData {
         return map.filter { $0.key >= start && $0.key <= end }
             .sorted { $0.key < $1.key }
             .map(\.value)
-    }
-}
-
-// MARK: - Metric → colour world
-
-/// The line/accent hue for each report metric — drives the card tint + sparkline gradient
-/// so each metric reads in its established colour world (Charge green, Effort blue, Rest/HRV
-/// blue, Resting-HR burnt-orange) — WHOOP score tokens, no gold.
-private extension ReportMetric {
-    /// The line/accent colour for the metric, keeping each its long-standing hue.
-    var accent: Color {
-        switch self {
-        case .workouts:    return StrandPalette.effortColor  // activity → the Effort world
-        case .stress:      return StrandPalette.stressColor  // the Stress world hue
-        case .recovery:    return StrandPalette.chargeColor
-        case .strain:      return StrandPalette.effortColor
-        case .sleepHours:  return StrandPalette.restColor
-        case .hrv:         return StrandPalette.metricPurple
-        case .restingHr:   return StrandPalette.metricRose
-        case .respRate:    return StrandPalette.metricCyan   // breath / air — teal
-        case .skinTempDev: return StrandPalette.metricRose   // temperature — warm (shares RHR's hue)
-        }
-    }
-
-    /// The sparkline gradient (deep → bright in the metric's hue).
-    var sparkGradient: Gradient {
-        Gradient(colors: [accent.opacity(0.45), accent])
-    }
-}
-
-// MARK: - The rendered page
-
-/// The laid-out one-page report — the exact view handed to the renderer. A fixed-width
-/// column (A4-ish portrait proportions) so the PDF reads as a clean printed sheet on
-/// both platforms. Built only from StrandDesign primitives.
-struct TrendsReportPage: View {
-    let report: RangeReport
-    let range: ReportRange
-    /// Per-metric sparkline series, looked up by metric. Only present metrics are drawn.
-    let series: [ReportMetric: [Double]]
-    /// Generated-on label (e.g. "Jun 15, 2026").
-    let generatedOn: String
-    /// The user's resolved °C/°F + Effort-axis preferences (#1637). Passed in rather than read from
-    /// `@AppStorage` because the page is rendered OFF-SCREEN by `ImageRenderer` for the PDF, where a
-    /// SwiftUI environment lookup is not guaranteed to carry the live value. Defaults to `.stored`
-    /// so a preview or a caller that has not resolved them still renders.
-    var units: ReportDisplayUnits = .stored
-
-    /// The fixed page width used for the PDF render. ~ A4 portrait at 72dpi-ish density.
-    static let pageWidth: CGFloat = 612
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: NoopMetrics.sectionSpacing) {
-            header
-            if report.isEmpty {
-                emptyState
-            } else {
-                headlines
-                metricCards
-            }
-            footer
-        }
-        .padding(NoopMetrics.space8)
-        .frame(width: Self.pageWidth, alignment: .leading)
-        .background(StrandPalette.surfaceBase)
-        .environment(\.colorScheme, .dark)
-    }
-
-    // MARK: Header
-
-    private var header: some View {
-        // Report chrome uses the same shared panel surface as the in-app cards.
-        ZStack(alignment: .leading) {
-            NoopPanelSurface(tint: StrandPalette.accent,
-                             cornerRadius: NoopMetrics.cardRadius,
-                             elevated: true)
-            VStack(alignment: .leading, spacing: NoopMetrics.space1) {
-                HStack(alignment: .firstTextBaseline) {
-                    BrandMark(size: 22)
-                    Text("NOOP").font(StrandFont.overline).tracking(StrandFont.overlineTracking)
-                        .foregroundStyle(StrandPalette.accent)
-                    Spacer()
-                    Text(range.longName).strandOverline()
-                }
-                Text("Trends report")
-                    .font(StrandFont.title1)
-                    .foregroundStyle(StrandPalette.textPrimary)
-                Text(rangeLabel)
-                    .font(StrandFont.subhead)
-                    .foregroundStyle(StrandPalette.textSecondary)
-            }
-            .padding(NoopMetrics.cardPadding)
-        }
-    }
-
-    private var rangeLabel: String {
-        let span = report.totalDays
-        return span == 1
-            ? String(localized: "\(prettyDate(report.start))-\(prettyDate(report.end))  ·  1 day")
-            : String(localized: "\(prettyDate(report.start))-\(prettyDate(report.end))  ·  \(span) days")
-    }
-
-    // MARK: Headlines
-
-    private var headlines: some View {
-        NoopCard(tint: StrandPalette.chargeColor) {
-            VStack(alignment: .leading, spacing: NoopMetrics.rowSpacing) {
-                SectionHeader("What changed", overline: "Summary")
-                ForEach(Array(report.headlines.enumerated()), id: \.offset) { _, line in
-                    HStack(alignment: .top, spacing: NoopMetrics.space2) {
-                        Image(systemName: "sparkles")
-                            .font(StrandFont.footnote)
-                            .foregroundStyle(StrandPalette.accent)
-                        Text(line)
-                            .font(StrandFont.subhead)
-                            .foregroundStyle(StrandPalette.textPrimary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                }
-            }
-        }
-    }
-
-    // MARK: Per-metric cards
-
-    private var metricCards: some View {
-        VStack(alignment: .leading, spacing: NoopMetrics.gap) {
-            SectionHeader("Metrics", overline: "By the numbers")
-            ForEach(report.metrics, id: \.metric) { stat in
-                metricCard(stat)
-            }
-        }
-    }
-
-    private func metricCard(_ stat: MetricRangeStat) -> some View {
-        let metric = stat.metric
-        let spark = series[metric] ?? []
-        return NoopCard(tint: metric.accent) {
-            VStack(alignment: .leading, spacing: NoopMetrics.rowSpacing) {
-                // Title + mean read-out + trend chip.
-                HStack(alignment: .firstTextBaseline) {
-                    Text(metric.label).strandOverline()
-                    Spacer()
-                    Text(meanText(stat))
-                        .font(StrandFont.bodyNumber)
-                        .foregroundStyle(StrandPalette.textPrimary)
-                    trendChip(stat)
-                }
-
-                // Sparkline over the window (decorative; the numbers below are the read).
-                if spark.count >= 2 {
-                    Sparkline(values: spark, gradient: metric.sparkGradient)
-                        .frame(height: 34)
-                        .accessibilityHidden(true)
-                } else {
-                    Text("Single reading in range")
-                        .font(StrandFont.footnote)
-                        .foregroundStyle(StrandPalette.textTertiary)
-                }
-
-                Divider().overlay(StrandPalette.hairline)
-
-                // The numbers: min / max (with the day each fell on) + readings count.
-                ChartFooter([
-                    ("Avg", valueText(stat.mean, metric)),
-                    ("Min", "\(valueText(stat.min.value, metric)) · \(prettyDate(stat.min.day))"),
-                    ("Max", "\(valueText(stat.max.value, metric)) · \(prettyDate(stat.max.day))"),
-                    ("Days", "\(stat.n)"),
-                ])
-            }
-        }
-    }
-
-    /// A trend chip coloured good/bad for the metric (neutral when flat or valence-free).
-    ///
-    /// The chip sits directly beside the mean read-out, so its magnitude must be on the SAME axis as
-    /// the numbers around it (#1637) — a °C delta next to °F values reads as a contradiction. Both
-    /// conversions are pure multiplications, so `displayValue` is correct for a delta as well as a
-    /// level (a °F offset would NOT be, which is why this metric never adds one).
-    ///
-    /// The steady/moving decision and the good/bad colour stay on the STORED delta, matching the
-    /// trend verdict itself — a cosmetic toggle must not turn a "steady" chip into a moving one.
-    @ViewBuilder
-    private func trendChip(_ stat: MetricRangeStat) -> some View {
-        let d = stat.halfDelta
-        if stat.trend == .flat || abs(d) < 0.05 {
-            TrendChip(text: String(localized: "steady"), color: StrandPalette.textTertiary)
-        } else {
-            let up = d > 0
-            // Signed-deviation metric (skin-temp Δ): show the move, no good/bad verdict.
-            let color: Color = stat.metric.framesGoodBad
-                ? (up == stat.metric.higherIsBetter ? StrandPalette.statusPositive : StrandPalette.metricRose)
-                : StrandPalette.textTertiary
-            let sign = up ? "+" : "−"
-            let shown = abs(RangeReportEngine.displayValue(d, metric: stat.metric, units: units))
-            TrendChip(text: "\(sign)\(round1Text(shown))", color: color)
-        }
-    }
-
-    // MARK: Empty state
-
-    private var emptyState: some View {
-        NoopCard {
-            HStack(alignment: .top, spacing: NoopMetrics.space3) {
-                Image(systemName: "calendar.badge.exclamationmark")
-                    .font(StrandFont.headline)
-                    .foregroundStyle(StrandPalette.accent)
-                VStack(alignment: .leading, spacing: NoopMetrics.space2) {
-                    Text("Not enough data in this range yet")
-                        .font(StrandFont.headline)
-                        .foregroundStyle(StrandPalette.textPrimary)
-                    Text("No workout, stress, recovery, sleep, HRV, resting-HR, strain, respiratory-rate or skin-temp readings fell inside \(range.longName.lowercased()). Wear your strap a few more days, or pick a wider range, then export again.")
-                        .font(StrandFont.subhead)
-                        .foregroundStyle(StrandPalette.textSecondary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-        }
-    }
-
-    // MARK: Footer
-
-    private var footer: some View {
-        VStack(alignment: .leading, spacing: NoopMetrics.space1) {
-            Divider().overlay(StrandPalette.hairline)
-            // Provenance legend (#457): a clinician (or anyone) reading this needs to know which numbers
-            // are directly measured vs. NOOP's own derived scores. HRV / Resting HR come off the strap;
-            // Recovery and Strain are computed on-device and are NOT clinical measures.
-            Text("How to read this: HRV, Resting HR, Sleep duration, Respiratory rate and Skin temperature are measured from the strap (skin temp is shown as the deviation from your own baseline). Workouts is the count of activities you logged or that were detected. Recovery, Strain and Stress are NOOP's own on-device scores, not clinical measures: Recovery is a daily readiness composite (HRV, resting HR, sleep and skin-temp trend), Strain is cardiovascular load derived from heart rate, and Stress is a 0-3 autonomic-load index from resting HR and HRV.")
-                .font(StrandFont.footnote)
-                .foregroundStyle(StrandPalette.textTertiary)
-                .fixedSize(horizontal: false, vertical: true)
-            Text("Generated by NOOP on \(generatedOn) · all on-device, no account, no cloud.")
-                .font(StrandFont.footnote)
-                .foregroundStyle(StrandPalette.textTertiary)
-            Text("Informational only, not medical advice.")
-                .font(StrandFont.footnote)
-                .foregroundStyle(StrandPalette.textTertiary)
-        }
-    }
-
-    // MARK: Formatting
-
-    /// Whole-number for the 0–100 scores + bpm + ms + workout count; one decimal for sleep
-    /// hours, respiratory rate, skin-temp Δ and the 0–3 stress score (`metric.usesOneDecimal`).
-    /// Skin-temp is a signed deviation from baseline, so a positive reading gets an explicit
-    /// "+" to keep it from reading as an absolute temp.
-    ///
-    /// Both the value and its unit go through `RangeReportEngine` (#1637) — the same conversion the
-    /// headline sentences above use — so the exported page cannot print a unit the app disagrees
-    /// with. Effort gains a decimal once rescaled to the 0–21 axis, where a whole number would throw
-    /// away most of the resolution the 0–100 value carried.
-    func valueText(_ v: Double, _ metric: ReportMetric) -> String {
-        let unit = RangeReportEngine.displayUnit(metric, units: units)
-        let shown = RangeReportEngine.displayValue(v, metric: metric, units: units)
-        let oneDecimal = metric.usesOneDecimal
-            || (metric == .strain && units.effortFactor != 1.0)
-        // Workouts is a fractional rate in the AVG read-out but a whole count at min/max; one
-        // decimal keeps the averaged cadence honest (e.g. "0.4 /day") without faking precision.
-        var num = oneDecimal ? round1Text(shown) : "\(Int(shown.rounded()))"
-        if metric == .skinTempDev && shown > 0 { num = "+\(num)" }
-        return unit.isEmpty ? num : "\(num) \(unit)"
-    }
-
-    private func meanText(_ stat: MetricRangeStat) -> String {
-        valueText(stat.mean, stat.metric)
-    }
-
-    func round1Text(_ x: Double) -> String {
-        String(format: "%.1f", (x * 10).rounded() / 10)
-    }
-
-    /// "Jun 15" from "2026-06-15", via a pure ISO parse (no Calendar/locale). Reuses the
-    /// public WeeklyDigestEngine parser — both engines emit identical "yyyy-MM-dd" keys.
-    private func prettyDate(_ ymd: String) -> String {
-        guard let (_, m, d) = WeeklyDigestEngine.parseYMD(ymd) else { return ymd }
-        let months = [String(localized: "Jan"), String(localized: "Feb"), String(localized: "Mar"),
-                      String(localized: "Apr"), String(localized: "May"), String(localized: "Jun"),
-                      String(localized: "Jul"), String(localized: "Aug"), String(localized: "Sep"),
-                      String(localized: "Oct"), String(localized: "Nov"), String(localized: "Dec")]
-        let name = (1...12).contains(m) ? months[m - 1] : "\(m)"
-        return "\(name) \(d)"
     }
 }
 
@@ -454,58 +209,24 @@ struct TrendsReportSheet: View {
     @AppStorage(UnitPrefs.temperatureKey) private var temperatureRaw = ""
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
 
-    private var today: String { Repository.localDayKey(Date()) }
-
-    /// The user's display preferences, resolved once for both the headline sentences (built inside
-    /// the engine) and the metric cards (rendered by the page). Both surfaces must be handed the
-    /// SAME value or the document contradicts itself.
     private var units: ReportDisplayUnits {
-        let system = UnitSystem(rawValue: unitSystemRaw) ?? .metric
-        let temp = UnitPrefs.resolveTemperature(system: system, override: temperatureRaw)
-        let scale = UnitPrefs.resolveEffortScale(effortScaleRaw)
-        // Name the canonical constant rather than deriving it from `effortValue(1.0,)`: the report
-        // multiplies by this factor, which is only equivalent while the mapping stays linear.
-        return ReportDisplayUnits(
-            fahrenheit: temp == .fahrenheit,
-            effortFactor: scale == .whoop ? UnitFormatter.effortScaleFactor : 1.0)
+        TrendsReportData.units(systemRaw: unitSystemRaw, temperatureRaw: temperatureRaw, effortScaleRaw: effortScaleRaw)
     }
 
-    private var report: RangeReport {
-        TrendsReportData.report(for: range, days: days, today: today,
-                                stressByDay: stressByDay, units: units)
-    }
-
-    private func seriesMap(start: String, end: String) -> [ReportMetric: [Double]] {
-        var out: [ReportMetric: [Double]] = [:]
-        for metric in ReportMetric.allCases {
-            out[metric] = TrendsReportData.series(metric, from: days, start: start, end: end,
-                                                  stressByDay: stressByDay)
-        }
-        return out
-    }
-
-    private var generatedOn: String {
-        let f = DateFormatter()
-        f.dateStyle = .medium
-        f.timeStyle = .none
-        return f.string(from: Date())
-    }
-
-    private func page(for report: RangeReport) -> TrendsReportPage {
-        TrendsReportPage(report: report, range: range,
-                         series: seriesMap(start: report.start, end: report.end),
-                         generatedOn: generatedOn, units: units)
+    private func document() -> TrendsReportDocument {
+        TrendsReportData.document(range: range, days: days, stressByDay: stressByDay, units: units)
     }
 
     var body: some View {
-        let rpt = report
+        let doc = document()
+        let pageCount = doc.pageCount
         ScrollView {
             VStack(alignment: .leading, spacing: NoopMetrics.sectionSpacing) {
                 VStack(alignment: .leading, spacing: NoopMetrics.space2) {
                     Text("Export trends report")
                         .font(StrandFont.title2)
                         .foregroundStyle(StrandPalette.textPrimary)
-                    Text("A clean, shareable one-page PDF of your recovery, sleep, HRV, resting heart rate and strain over a date range. Saved on your \(Platform.deviceNoun). Nothing leaves the device.")
+                    Text("A readable PDF of your trends over a date range: a summary table, a chart for each metric and a day-by-day table of every reading, so you can analyse it further. Saved on your \(Platform.deviceNoun). Nothing leaves the device.")
                         .font(StrandFont.subhead)
                         .foregroundStyle(StrandPalette.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -523,10 +244,12 @@ struct TrendsReportSheet: View {
                 // they'll get before exporting.
                 VStack(alignment: .leading, spacing: NoopMetrics.space2) {
                     Text("Preview").strandOverline()
-                    page(for: rpt)
-                        .scaleEffect(0.46, anchor: .topLeading)
-                        .frame(width: TrendsReportPage.pageWidth * 0.46,
-                               height: 760 * 0.46, alignment: .topLeading)
+                    Text(verbatim: String(localized: "\(pageCount) pages · first page shown"))
+                        .font(StrandFont.footnote).foregroundStyle(StrandPalette.textTertiary)
+                    (doc.pages().first ?? AnyView(EmptyView()))
+                        .scaleEffect(0.5, anchor: .topLeading)
+                        .frame(width: TrendsReportDocument.pageSize.width * 0.5,
+                               height: TrendsReportDocument.pageSize.height * 0.5, alignment: .topLeading)
                         .clipped()
                         .frame(maxWidth: .infinity, alignment: .center)
                         .overlay(
@@ -539,7 +262,7 @@ struct TrendsReportSheet: View {
                 // white ink, no glow). The label swaps to "Preparing…" while a PDF is being written.
                 NoopButton(exporting ? "Preparing…" : "Export PDF",
                            systemImage: "square.and.arrow.up", kind: .primary, fullWidth: true) {
-                    export(rpt)
+                    export(doc)
                 }
                 .disabled(exporting)
 
@@ -555,7 +278,9 @@ struct TrendsReportSheet: View {
         .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
         #endif
         .background(StrandPalette.surfaceBase)
+        #if os(macOS)
         .frame(width: 460, height: 640)
+        #endif
         #if os(iOS)
         .noopSheetPresentation(largeFirst: true)
         #endif
@@ -568,11 +293,11 @@ struct TrendsReportSheet: View {
     }
 
     @MainActor
-    private func export(_ report: RangeReport) {
+    private func export(_ doc: TrendsReportDocument) {
         guard !exporting else { return }
         exporting = true
-        let name = "NOOP-trends-\(report.start)_to_\(report.end).pdf"
-        TrendsReportRenderer.exportPDF(page: page(for: report), suggestedName: name)
+        let name = "NOOP-trends-\(doc.report.start)_to_\(doc.report.end).pdf"
+        TrendsReportRenderer.exportPDF(pages: doc.pages(), size: TrendsReportDocument.pageSize, suggestedName: name)
         exporting = false
         #if os(macOS)
         // macOS NSSavePanel is modal and has already returned by now, so closing the report sheet is fine.
@@ -607,29 +332,6 @@ private func previewDays() -> [DailyMetric] {
             exerciseCount: 1))
     }
     return out
-}
-
-#Preview("Trends report — page") {
-    ScrollView {
-        TrendsReportPage(
-            report: TrendsReportData.report(for: .days90, days: previewDays(),
-                                            today: Repository.localDayKey(Date())),
-            range: .days90,
-            series: {
-                var m: [ReportMetric: [Double]] = [:]
-                let r = TrendsReportData.report(for: .days90, days: previewDays(),
-                                                today: Repository.localDayKey(Date()))
-                for metric in ReportMetric.allCases {
-                    m[metric] = TrendsReportData.series(metric, from: previewDays(),
-                                                        start: r.start, end: r.end)
-                }
-                return m
-            }(),
-            generatedOn: "Jun 15, 2026")
-    }
-    .frame(width: 640, height: 900)
-    .background(StrandPalette.surfaceBase)
-    .preferredColorScheme(.dark)
 }
 
 #Preview("Trends report — sheet") {
