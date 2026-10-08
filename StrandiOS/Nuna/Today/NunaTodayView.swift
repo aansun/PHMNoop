@@ -669,6 +669,8 @@ struct NunaTodayView: View {
                                   stressHighMin: model.stressCurve.map(StressDayCurve.highMinutes),
                                   restingHr: model.restingHr, hrvDelta: model.hrvDelta, restingHrDelta: model.restingHrDelta,
                                   sleepMinutes: model.sleepMinutes)
+                    // The trial of the bordered note: Today only until it is approved.
+                    .environment(\.nunaAnyaBordered, true)
             }
         case .recoveryVitals:
             if model.stress != nil || model.stressCurve != nil {

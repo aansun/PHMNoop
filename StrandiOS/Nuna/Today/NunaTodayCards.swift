@@ -174,6 +174,16 @@ struct NunaScoreRings: View {
 
 private struct NunaAnyaCardContextKey: EnvironmentKey { static let defaultValue: String? = nil }
 
+private struct NunaAnyaBorderedKey: EnvironmentKey { static let defaultValue = false }
+
+extension EnvironmentValues {
+    /// Draws Anya's suggestion as a bordered note (a gradient outline in the wing colours, no icon, no fill) instead of the plain row.
+    var nunaAnyaBordered: Bool {
+        get { self[NunaAnyaBorderedKey.self] }
+        set { self[NunaAnyaBorderedKey.self] = newValue }
+    }
+}
+
 extension EnvironmentValues {
     /// The Anya context of the screen. When it is set, a card that carries its own line (a verdict, a zone read, a record) opens the
     /// Anya sheet about that very line instead of the screen's general read, so what is tapped and what opens always agree.
@@ -207,6 +217,7 @@ struct NunaAnyaCard: View {
     /// The line itself, when it is already text; with a screen context it is what the sheet opens on.
     private var line: String?
     @Environment(\.nunaAnyaCardContext) private var sheetContext
+    @Environment(\.nunaAnyaBordered) private var bordered
     @State private var showSheet = false
 
     init(title: LocalizedStringKey, highlight: Bool = true, buttonTitle: LocalizedStringKey? = nil, onButton: (() -> Void)? = nil,
@@ -252,8 +263,33 @@ struct NunaAnyaCard: View {
     }
 
     @ViewBuilder private var content: some View {
-        if compact { inline(compact: true) }
+        if bordered { borderedNote }
+        else if compact { inline(compact: true) }
         else if let buttonTitle, let onButton { stacked(buttonTitle, onButton) } else { inline(compact: false) }
+    }
+
+    /// The wing colours, light to deep, for the outline and the link.
+    private static let wing = [Color(red: 0.44, green: 0.90, blue: 0.83), Color(red: 0.15, green: 0.65, blue: 0.62), Color(red: 0.11, green: 0.56, blue: 0.53)]
+
+    /// A note in its own outline: the words, then "Learn more with Anya" with an arrow. No icon and no fill; the outline fades from the light
+    /// wing teal to the deep one.
+    private var borderedNote: some View {
+        Button(action: tapped) {
+            VStack(alignment: .leading, spacing: 14) {
+                bodyView(compact: compact)
+                HStack(spacing: 8) {
+                    Text("Learn more with Anya").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    Image(systemName: "arrow.right").font(.nuna(size: 13, weight: .bold))
+                }
+                .foregroundStyle(LinearGradient(colors: Self.wing, startPoint: .leading, endPoint: .trailing))
+            }
+            .padding(18)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .strokeBorder(LinearGradient(colors: Self.wing, startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1.5))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     private var label: some View {
