@@ -153,7 +153,7 @@ struct NunaScoreRings: View {
         case .charge:
             let pct = charge.pct
             let state: LocalizedStringKey = pct.map { $0 >= 67 ? "Ready" : ($0 >= 34 ? "Moderate" : "Low") } ?? "No data"
-            return RingValues(fraction: (pct ?? 0) / 100, color: NunaPalette.charge, textColor: NunaPalette.charge,
+            return RingValues(fraction: (pct ?? 0) / 100, color: pct.map(nunaChargeColor) ?? NunaPalette.charge, textColor: pct.map(nunaChargeTextColor) ?? NunaPalette.charge,
                               number: pct.map { "\(Int($0.rounded()))" } ?? "–", unit: "%",
                               label: "Charge", state: state, route: HeroRingMetric.charge)
         case .effort:

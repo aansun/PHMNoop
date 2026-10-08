@@ -771,7 +771,7 @@ struct NunaTodayView: View {
             todayChip(icon: .symbol("bolt.fill"), text: Text(verbatim: word), tint: tone)
         }
         if model.charge != .noData {
-            todayChip(icon: .dot(NunaPalette.charge), text: Text(verbatim: model.charge.stateLabel), tint: nil)
+            todayChip(icon: .dot(model.charge.pct.map(nunaChargeColor) ?? NunaPalette.charge), text: Text(verbatim: model.charge.stateLabel), tint: nil)
         }
     }
 

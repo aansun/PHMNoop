@@ -326,6 +326,11 @@ func nunaChargeColor(_ v: Double) -> Color {
     v >= 67 ? NunaPalette.charge : (v >= 34 ? NunaPalette.warning : NunaPalette.alert)
 }
 
+/// The same three zones for text, where the plain red is too hard to read.
+func nunaChargeTextColor(_ v: Double) -> Color {
+    v >= 67 ? NunaPalette.charge : (v >= 34 ? NunaPalette.warning : NunaPalette.alertText)
+}
+
 /// "5 Okt"-style date for chart axes (day and month, in the app language).
 func nunaAxisDate(_ d: Date) -> String {
     let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("d MMM")
