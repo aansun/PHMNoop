@@ -152,8 +152,9 @@ struct NunaAnyaSheet: View {
                 }
                 if coach.isConfigured, coach.dataConsent, explanation == nil, !explaining {
                     Button { Task { await explain() } } label: {
-                        Text("Ask Anya to explain")
-                            .font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.charge).frame(minHeight: 44)
+                        Text("Explain")
+                            .font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 18).frame(height: 40)
+                            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain)
                 }
             }
