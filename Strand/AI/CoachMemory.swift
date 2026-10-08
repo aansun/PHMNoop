@@ -152,6 +152,16 @@ final class CoachMemoryStore: ObservableObject {
         persist()
     }
 
+    /// Removes every PAUSED memory and keeps the active ones; returns how many went. Active memories are never touched here.
+    @discardableResult
+    func deleteInactive() -> Int {
+        let n = memories.filter { !$0.isActive }.count
+        guard n > 0 else { return 0 }
+        memories.removeAll { !$0.isActive }
+        persist()
+        return n
+    }
+
     func setActive(_ memory: CoachMemory, _ active: Bool) {
         guard let i = memories.firstIndex(where: { $0.id == memory.id }) else { return }
         memories[i].isActive = active
