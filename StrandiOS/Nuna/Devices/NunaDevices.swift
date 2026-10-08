@@ -58,8 +58,13 @@ private struct NunaDevicesContent: View {
     @ObservedObject var registry: DeviceRegistry
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var live: LiveState
+    @State private var tab = 0
     @State private var showAdd = false
     @State private var switchTarget: PairedDevice?
+    @State private var renaming = false
+    @State private var nameDraft = ""
+    @State private var confirmRestart = false
+    @State private var buzzed = false
 
     private var devices: [PairedDevice] { registry.devices.filter { $0.status != .archived } }
     private var active: PairedDevice? { devices.first { $0.status == .active } }
@@ -68,51 +73,8 @@ private struct NunaDevicesContent: View {
 
     var body: some View {
         NunaDetailScreen("Devices") {
-            if let guide = live.reconnectGuide { repairBanner(guide) }
-            if let d = active { activeCard(d) } else { emptyCard }
-            if live.lastSyncedAt != nil || live.backfilling { syncRow }
-            if !others.isEmpty {
-                nunaRuledHeader("Other WHOOP")
-                NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                    VStack(spacing: 0) {
-                        ForEach(Array(others.enumerated()), id: \.element.id) { i, d in
-                            if i > 0 { NunaDivider() }
-                            HStack(spacing: 12) {
-                                NavigationLink(value: NunaDeviceRoute.detail(d.id)) {
-                                    VStack(alignment: .leading, spacing: 3) {
-                                        Text(verbatim: d.displayName).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                        Text(verbatim: NunaDeviceFormat.family(d) + " · " + String(localized: "history kept")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                                    }.frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
-                                }.buttonStyle(.plain)
-                                if !d.isImportSource {
-                                    Button { switchTarget = d } label: {
-                                        Text("Make active").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 36).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                                    }.buttonStyle(.plain)
-                                }
-                            }.padding(.vertical, 12)
-                        }
-                    }
-                }
-            }
-            Button { showAdd = true } label: {
-                HStack(spacing: 8) { Image(systemName: "plus").font(.nuna(size: 14, weight: .bold)); Text("Add a device").font(.nuna(size: 15, weight: .bold)) }
-                    .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 54)
-                    .background(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(NunaPalette.hairline, style: StrokeStyle(lineWidth: 1, dash: [5, 5])))
-            }.buttonStyle(.plain)
-            if !removed.isEmpty {
-                nunaRuledHeader("Removed")
-                NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                    VStack(spacing: 0) {
-                        ForEach(Array(removed.enumerated()), id: \.element.id) { i, d in
-                            if i > 0 { NunaDivider() }
-                            NavigationLink(value: NunaDeviceRoute.detail(d.id)) {
-                                NunaListRow(LocalizedStringKey(d.displayName), subtitle: "Data kept. Tap to add it back", systemImage: "archivebox", showsChevron: true)
-                            }.buttonStyle(.plain)
-                        }
-                    }
-                }
-            }
-            help
+            NunaPageTabs([(value: 0, title: "Status"), (value: 1, title: "Advanced")], selection: $tab)
+            if tab == 0 { statusTab } else { advancedTab }
         }
         .sheet(isPresented: $showAdd) {
             AddDeviceWizard(live: live) { showAdd = false }.environmentObject(model).environmentObject(live)
@@ -121,60 +83,245 @@ private struct NunaDevicesContent: View {
             Button("Cancel", role: .cancel) { switchTarget = nil }
             Button("Make active") { registry.setActive(d.id); switchTarget = nil }
         } message: { d in Text("From now on \(d.displayName) provides your live data. The history of the other strap stays exactly as it is.") }
+        .alert("Rename device", isPresented: $renaming) {
+            TextField("Name", text: $nameDraft)
+            Button("Cancel", role: .cancel) {}
+            Button("Save") { if let d = active { registry.rename(d.id, to: nameDraft) } }
+        }
+        .alert("Restart this strap?", isPresented: $confirmRestart) {
+            Button("Cancel", role: .cancel) {}
+            Button("Restart") { model.rebootStrap() }
+        } message: { Text("It disconnects for about 30 seconds, then reconnects on its own. Your recorded data is kept.") }
     }
 
-    // MARK: Active strap
+    // MARK: Status
 
-    private func activeCard(_ d: PairedDevice) -> some View {
+    @ViewBuilder private var statusTab: some View {
+        if let guide = live.reconnectGuide { repairBanner(guide) }
+        if let d = active {
+            hero(d)
+            if live.lastSyncedAt != nil || live.backfilling { syncRow }
+        } else {
+            emptyCard
+            addButton
+        }
+    }
+
+    /// The strap at a glance: the name and whether it is connected, when it last synced, the link between the strap and the phone,
+    /// and the battery. A button appears only when the strap is not connected.
+    private func hero(_ d: PairedDevice) -> some View {
         let connected = live.connected
-        let pct = live.batteryPct
-        let est = live.batteryEstimate
-        return NavigationLink(value: NunaDeviceRoute.detail(d.id)) {
-            NunaCard(highlight: connected) {
-                VStack(alignment: .leading, spacing: 16) {
-                    HStack {
-                        nunaTrendsCap(connected ? "Connected" : "Active strap")
-                        Spacer()
-                        NunaChip(connected ? "Active" : "Not connected", color: connected ? NunaPalette.charge : nil)
+        return NunaCard(highlight: connected, padding: EdgeInsets(top: 18, leading: 20, bottom: 20, trailing: 20)) {
+            VStack(alignment: .leading, spacing: 22) {
+                HStack(alignment: .top, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 5) {
+                        Text(connected ? "Connected to" : "Not connected to").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                            .foregroundStyle(connected ? NunaPalette.charge : NunaPalette.textSecondary)
+                        Button { nameDraft = d.nickname ?? d.displayName; renaming = true } label: {
+                            HStack(spacing: 7) {
+                                Text(verbatim: d.displayName).font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                                    .lineLimit(1).minimumScaleFactor(0.7)
+                                Image(systemName: "pencil").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                            }
+                        }.buttonStyle(.plain).accessibilityLabel(Text("Rename device"))
+                        Text(verbatim: NunaDeviceFormat.family(d)).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
-                    HStack(alignment: .top, spacing: 14) {
-                        NunaIconTile("applewatch")
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(verbatim: d.displayName).font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            Text(verbatim: NunaDeviceFormat.family(d)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    Spacer(minLength: 8)
+                    VStack(alignment: .trailing, spacing: 5) {
+                        Text("Last sync").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        HStack(spacing: 6) {
+                            Text(verbatim: live.lastSyncedAt.map(NunaDeviceFormat.clock) ?? "–").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            Image(systemName: live.lastSyncedAt == nil ? "icloud.slash" : "checkmark.icloud").font(.nuna(size: 14, weight: .semibold))
+                                .foregroundStyle(live.lastSyncedAt == nil ? NunaPalette.textMuted : NunaPalette.textSecondary)
                         }
-                        Spacer()
-                        Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                    }
-                    NunaDivider()
-                    HStack {
-                        batteryTile(pct, est)
-                        stat("Last sync", live.lastSyncedAt.map(NunaDeviceFormat.clock) ?? "–", live.lastSyncedAt.map(NunaDeviceFormat.ago))
-                        stat("Firmware", live.strapFirmware ?? "–", nil)
                     }
                 }
+                linkDiagram(connected)
+                NavigationLink(value: NunaDeviceRoute.battery) { batteryBlock }.buttonStyle(.plain)
+                if !connected {
+                    Button { model.disconnect(); model.ble.connect() } label: {
+                        Text("Reconnect").font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 50)
+                            .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                    }.buttonStyle(.plain)
+                }
             }
+        }
+    }
+
+    /// strap ─── ✓ ─── phone, with one line under it about the state.
+    private func linkDiagram(_ connected: Bool) -> some View {
+        let tint = connected ? NunaPalette.charge : NunaPalette.alert
+        return VStack(spacing: 12) {
+            HStack(spacing: 0) {
+                endpoint("applewatch")
+                Rectangle().fill(connected ? NunaPalette.charge.opacity(0.6) : NunaPalette.hairline).frame(height: 2)
+                ZStack {
+                    Circle().fill(tint.opacity(0.14)).frame(width: 44, height: 44)
+                    Circle().strokeBorder(tint, lineWidth: 2).frame(width: 44, height: 44)
+                    if live.backfilling {
+                        Image(systemName: "arrow.triangle.2.circlepath").font(.nuna(size: 16, weight: .bold)).foregroundStyle(tint)
+                    } else {
+                        Image(systemName: connected ? "checkmark" : "xmark").font(.nuna(size: 17, weight: .bold)).foregroundStyle(tint)
+                    }
+                }
+                Rectangle().fill(connected ? NunaPalette.charge.opacity(0.6) : NunaPalette.hairline).frame(height: 2)
+                endpoint("iphone")
+            }
+            Text(connected ? (live.backfilling ? "Syncing history" : "Strap connected") : "Strap disconnected")
+                .font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+            Text(connected ? (live.backfilling ? "Pulling what the strap recorded while it was away" : "Live heart rate and history are coming in")
+                           : "Bring the strap close to the phone, then reconnect")
+                .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center).textCase(nil)
+        }.frame(maxWidth: .infinity)
+    }
+
+    private func endpoint(_ symbol: String) -> some View {
+        Image(systemName: symbol).font(.nuna(size: 22, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+            .frame(width: 52, height: 52).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    private var batteryBlock: some View {
+        let pct = live.batteryPct
+        let tint: Color = (pct ?? 100) <= 10 ? NunaPalette.alert : ((pct ?? 100) <= 20 ? NunaPalette.warning : NunaPalette.charge)
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Battery").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Spacer()
+                if live.charging == true { NunaChip("Charging", systemImage: "bolt.fill", color: NunaPalette.charge) }
+                else if let est = live.batteryEstimate {
+                    Text(verbatim: "~" + NunaDeviceFormat.remaining(est.remainingHours)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                }
+                Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+            }
+            if let pct {
+                HStack(alignment: .firstTextBaseline, spacing: 3) {
+                    Text(verbatim: "\(Int(pct.rounded()))").font(.nuna(size: 40, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("%").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                }
+                NunaProgressBar(fraction: pct / 100, color: tint)
+            } else {
+                Text("No reading yet. It appears once the strap is connected.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            }
+        }.contentShape(Rectangle())
+    }
+
+    private var addButton: some View {
+        Button { showAdd = true } label: {
+            HStack(spacing: 8) { Image(systemName: "plus").font(.nuna(size: 14, weight: .bold)); Text("Add a device").font(.nuna(size: 15, weight: .bold)) }
+                .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 54)
+                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(NunaPalette.hairline, style: StrokeStyle(lineWidth: 1, dash: [5, 5])))
         }.buttonStyle(.plain)
     }
 
-    private func batteryTile(_ pct: Double?, _ est: BatteryEstimator.Estimate?) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text("Battery").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text(verbatim: pct.map { "\(Int($0.rounded()))" } ?? "–").font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                if pct != nil { Text("%").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+    // MARK: Advanced
+
+    @ViewBuilder private var advancedTab: some View {
+        if let d = active {
+            HStack(spacing: 12) {
+                idTile("Device ID", Self.deviceID(d), "number")
+                idTile("Firmware", live.strapFirmware ?? "–", "cpu")
             }
-            if live.charging == true { Text("Charging").font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.charge) }
-            else if let est { Text(verbatim: "~" + NunaDeviceFormat.remaining(est.remainingHours)).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(2) }
-        }.frame(maxWidth: .infinity, alignment: .leading)
+            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
+                VStack(spacing: 0) {
+                    infoRow("Model", NunaDeviceFormat.family(d))
+                    if let layout = live.strapRange?.firmwareLayout { NunaDivider(); infoRow("History format", "v\(layout)") }
+                }
+            }
+            nunaRuledHeader("Actions")
+            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
+                VStack(spacing: 0) {
+                    actionRow("Add a device", "Pair another strap", "plus", enabled: true) { showAdd = true }
+                    if SourceCoordinator.isWhoop(d) {
+                        NunaDivider()
+                        actionRow("Reconnect", "Disconnect, then scan again", "dot.radiowaves.left.and.right", enabled: true) { model.disconnect(); model.ble.connect() }
+                        NunaDivider()
+                        actionRow("Test vibration", buzzed ? String(localized: "Sent") : String(localized: "The strap vibrates once to confirm"), "waveform", enabled: live.connected && live.bonded) {
+                            model.buzzStrapOnce(); buzzed = true
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 3) { buzzed = false }
+                        }
+                        // A 4.0 has no safe restart frame, so the entry only exists for the 5/MG family (same rule as the strap's own detail screen).
+                        if live.connected && !model.ble.isWhoop4 {
+                            NunaDivider()
+                            actionRow("Restart strap", "Disconnects for about 30 seconds", "arrow.clockwise", enabled: true) { confirmRestart = true }
+                        }
+                    }
+                    NunaDivider()
+                    NavigationLink(value: NunaDeviceRoute.detail(d.id)) {
+                        NunaListRow("Manage this strap", subtitle: "Rename, remove, or delete its data", systemImage: "slider.horizontal.3", showsChevron: true)
+                    }.buttonStyle(.plain)
+                }
+            }
+        } else {
+            addButton
+        }
+        if !others.isEmpty {
+            nunaRuledHeader("Other WHOOP")
+            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
+                VStack(spacing: 0) {
+                    ForEach(Array(others.enumerated()), id: \.element.id) { i, d in
+                        if i > 0 { NunaDivider() }
+                        HStack(spacing: 12) {
+                            NavigationLink(value: NunaDeviceRoute.detail(d.id)) {
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(verbatim: d.displayName).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                    Text(verbatim: NunaDeviceFormat.family(d) + " · " + String(localized: "history kept")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                                }.frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
+                            }.buttonStyle(.plain)
+                            if !d.isImportSource {
+                                Button { switchTarget = d } label: {
+                                    Text("Make active").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 36)
+                                        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                                }.buttonStyle(.plain)
+                            }
+                        }.padding(.vertical, 12)
+                    }
+                }
+            }
+        }
+        if !removed.isEmpty {
+            nunaRuledHeader("Removed")
+            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
+                VStack(spacing: 0) {
+                    ForEach(Array(removed.enumerated()), id: \.element.id) { i, d in
+                        if i > 0 { NunaDivider() }
+                        NavigationLink(value: NunaDeviceRoute.detail(d.id)) {
+                            NunaListRow(LocalizedStringKey(d.displayName), subtitle: "Data kept. Tap to add it back", systemImage: "archivebox", showsChevron: true)
+                        }.buttonStyle(.plain)
+                    }
+                }
+            }
+        }
+        help
     }
 
-    private func stat(_ l: LocalizedStringKey, _ v: String, _ note: String?) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: v).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
-            if let note { Text(verbatim: note).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
-        }.frame(maxWidth: .infinity, alignment: .leading)
+    private func idTile(_ label: LocalizedStringKey, _ value: String, _ symbol: String) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Image(systemName: symbol).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(label).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: value).font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+            }
+        }
+        .padding(16).frame(maxWidth: .infinity, alignment: .leading)
+        .background(NunaPalette.card, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous).strokeBorder(NunaPalette.hairlineSoft, lineWidth: 1))
+    }
+
+    private func infoRow(_ l: LocalizedStringKey, _ v: String) -> some View {
+        HStack {
+            Text(l).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            Spacer(minLength: 12)
+            Text(verbatim: v).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
+        }.padding(.vertical, 14)
+    }
+
+    private func actionRow(_ title: LocalizedStringKey, _ subtitle: String, _ icon: String, enabled: Bool, _ run: @escaping () -> Void) -> some View {
+        Button(action: run) { NunaListRow(title, subtitle: LocalizedStringKey(subtitle), systemImage: icon, showsChevron: true) }
+            .buttonStyle(.plain).disabled(!enabled).opacity(enabled ? 1 : 0.4)
+    }
+
+    private static func deviceID(_ d: PairedDevice) -> String {
+        d.id == "my-whoop" ? (d.peripheralId.map { String($0.prefix(8)).uppercased() } ?? d.id) : d.id
     }
 
     private var emptyCard: some View {
