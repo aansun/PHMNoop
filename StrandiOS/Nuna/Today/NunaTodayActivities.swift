@@ -55,8 +55,7 @@ struct NunaTodayActivities: View {
         }
         .padding(.horizontal, 12).padding(.top, 10).padding(.bottom, 12)
         // The same surface as every other card, so it follows the active look (Default or WHP) with them.
-        .background(NunaPalette.card, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous).strokeBorder(NunaPalette.hairlineSoft, lineWidth: 1))
+        .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
         .task(id: "\(repo.refreshSeq)-\(dayStart.timeIntervalSince1970)") { await loadNight() }
     }
 
