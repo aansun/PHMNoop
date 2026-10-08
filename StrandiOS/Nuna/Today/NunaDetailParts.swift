@@ -340,6 +340,56 @@ func nunaChargeTextColor(_ v: Double) -> Color {
     v >= 67 ? NunaPalette.charge : (v >= 34 ? NunaPalette.warning : NunaPalette.alertText)
 }
 
+/// Effort on the stored 0-100 axis, by how much load it is: light is the Effort lime, moderate amber, high red.
+func nunaEffortColor(_ stored: Double) -> Color {
+    stored < 33 ? NunaPalette.effort : (stored < 66 ? NunaPalette.warning : NunaPalette.alert)
+}
+
+func nunaEffortTextColor(_ stored: Double) -> Color {
+    stored < 33 ? NunaPalette.effortText : (stored < 66 ? NunaPalette.warning : NunaPalette.alertText)
+}
+
+/// Rest, by how well the night went: excellent green, good lime, fair amber, low red.
+func nunaRestColor(_ v: Double) -> Color {
+    v >= 85 ? NunaPalette.charge : (v >= 70 ? NunaPalette.effort : (v >= 50 ? NunaPalette.warning : NunaPalette.alert))
+}
+
+func nunaRestTextColor(_ v: Double) -> Color {
+    v >= 85 ? NunaPalette.charge : (v >= 70 ? NunaPalette.effortText : (v >= 50 ? NunaPalette.warning : NunaPalette.alertText))
+}
+
+/// The word for a Rest score, the same on every screen.
+func nunaRestWord(_ v: Double) -> LocalizedStringKey {
+    v >= 85 ? "Excellent" : (v >= 70 ? "Good" : (v >= 50 ? "Fair" : "Low"))
+}
+
+/// A row of colour keys: a swatch and "range word" for each zone. Three sit in one row; four go two by two.
+struct NunaZoneKey: View {
+    let zones: [(color: Color, range: String, word: LocalizedStringKey)]
+
+    private func item(_ i: Int) -> some View {
+        HStack(spacing: 6) {
+            RoundedRectangle(cornerRadius: 3, style: .continuous).fill(zones[i].color).frame(width: 10, height: 10)
+            (Text(verbatim: zones[i].range + " ") + Text(zones[i].word)).font(.nuna(size: 12, weight: .semibold))
+                .foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
+        }
+    }
+
+    var body: some View {
+        if zones.count > 3 {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 0) { item(0).frame(maxWidth: .infinity, alignment: .leading); item(1).frame(maxWidth: .infinity, alignment: .leading) }
+                HStack(spacing: 0) { item(2).frame(maxWidth: .infinity, alignment: .leading); item(3).frame(maxWidth: .infinity, alignment: .leading) }
+            }
+        } else {
+            HStack(spacing: 14) {
+                ForEach(zones.indices, id: \.self) { item($0) }
+                Spacer(minLength: 0)
+            }
+        }
+    }
+}
+
 /// "5 Okt"-style date for chart axes (day and month, in the app language).
 func nunaAxisDate(_ d: Date) -> String {
     let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("d MMM")

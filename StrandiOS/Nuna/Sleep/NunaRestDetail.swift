@@ -26,9 +26,9 @@ struct NunaRestDetailView: View {
                 hasOlder: { start in series.byDay.keys.min().map { Repository.localDayKey(start) > $0 } ?? false },
                 loaded: series.loaded, band: series.band.map { $0.lo...$0.hi },
                 lineColor: NunaPalette.rest, decimals: 0, directional: true,
-                levelChip: { v in (text: Self.word(v).0, color: Self.word(v).1) },
+                levelChip: { v in (text: nunaRestWord(v), color: nunaRestTextColor(v)) },
                 sentence: nil, range: $range, page: $page)
-                .columns(top: 100)
+                .columns(color: nunaRestColor, top: 100, legend: AnyView(restKey))
             if let night = model.night { lastNight(night) }
             NunaExpandRow(title: "How it's calculated", subtitle: "Four parts of the night",
                           text: "Rest adds up how long you slept against what you need (half of the score), how much of your time in bed you were asleep, the share of deep and REM sleep, and how regular your bedtime is. It is an estimate computed on this phone from your strap's data.")
@@ -41,16 +41,6 @@ struct NunaRestDetailView: View {
     }
 
     // MARK: Ring
-
-    /// A word for the night's Rest and its colour.
-    private static func word(_ v: Double) -> (LocalizedStringKey, Color) {
-        switch v {
-        case 85...: return ("Excellent", NunaPalette.charge)
-        case 70..<85: return ("Good", NunaPalette.charge)
-        case 50..<70: return ("Fair", NunaPalette.warning)
-        default: return ("Low", NunaPalette.alertText)
-        }
-    }
 
     /// Against the average of the 14 nights before, once there are at least three.
     private var againstRecent: Int? {
@@ -68,8 +58,8 @@ struct NunaRestDetailView: View {
     private var hero: some View {
         NunaScoreHero(caption: "Last night",
                       fraction: (rest ?? 0) / 100, number: rest.map { "\(Int($0.rounded()))" } ?? "–", unit: "%",
-                      name: rest.map { Self.word($0).0 } ?? "Rest", nameColor: rest.map { Self.word($0).1 },
-                      color: NunaPalette.rest, hasNote: againstRecent != nil) {
+                      name: rest.map(nunaRestWord) ?? "Rest", nameColor: rest.map(nunaRestTextColor),
+                      color: rest.map(nunaRestColor) ?? NunaPalette.rest, hasNote: againstRecent != nil) {
             if let d = againstRecent {
                 Text(verbatim: comparison(d)).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     .fixedSize(horizontal: false, vertical: true).textCase(nil)
@@ -83,6 +73,13 @@ struct NunaRestDetailView: View {
         let note = d == 0 ? String(localized: "in line with your last 14 nights")
             : (d > 0 ? String(localized: "\(d) points above your last 14 nights") : String(localized: "\(-d) points below your last 14 nights"))
         return String(localized: "Your Rest is \(Int(rest.rounded()))%, \(note).")
+    }
+
+    private var restKey: some View {
+        NunaZoneKey(zones: [
+            (nunaRestColor(100), "85–100", "Excellent"), (nunaRestColor(75), "70–84", "Good"),
+            (nunaRestColor(60), "50–69", "Fair"), (nunaRestColor(10), "0–49", "Low"),
+        ])
     }
 
     // MARK: What it is made of

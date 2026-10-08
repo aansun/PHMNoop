@@ -148,7 +148,7 @@ struct NunaEffortDetailView: View {
                           fraction: (day.effort ?? 0) / 100,
                           number: day.effort.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–",
                           suffix: String(localized: "of \(UnitFormatter.effortScaleMax(scale))"),
-                          name: level?.0 ?? "Effort", nameColor: level?.1, color: NunaPalette.effortText) {
+                          name: level?.0 ?? "Effort", nameColor: level?.1, color: day.effort.map(nunaEffortColor) ?? NunaPalette.effort) {
                 Text("Cardio load so far today").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     .fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
@@ -162,8 +162,11 @@ struct NunaEffortDetailView: View {
                 hasOlder: { start in series.byDay.keys.min().map { Repository.localDayKey(start) > $0 } ?? false },
                 loaded: series.loaded,
                 lineColor: NunaPalette.effort, decimals: 1, directional: false,
-                levelChip: nil, sentence: nil, range: $range, page: $page)
-                .columns()
+                levelChip: { v in
+                    let stored = scale == .whoop ? v / 21 * 100 : v
+                    return (text: stored < 33 ? "Light" : (stored < 66 ? "Moderate" : "High"), color: nunaEffortTextColor(stored))
+                }, sentence: nil, range: $range, page: $page)
+                .columns(color: { v in nunaEffortColor(scale == .whoop ? v / 21 * 100 : v) }, legend: AnyView(effortKey))
             NunaExpandRow(title: "How it's calculated", subtitle: "Cardio load across the day",
                           text: "Effort adds up how hard your heart worked during the day, weighted by heart rate zone. Workouts and everyday movement both count. It is shown on the scale you chose in Settings.")
         }
@@ -172,6 +175,17 @@ struct NunaEffortDetailView: View {
             await day.load(repo: repo, profile: profile)
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "Effort") }
+    }
+
+    /// What the colours of the bars mean, on the scale the wearer chose.
+    private var effortKey: some View {
+        func edge(_ stored: Double) -> Int { Int(UnitFormatter.effortValue(stored, scale: scale).rounded()) }
+        let top = UnitFormatter.effortScaleMax(scale)
+        return NunaZoneKey(zones: [
+            (NunaPalette.effort, "0–\(edge(33))", "Light"),
+            (NunaPalette.warning, "\(edge(33) + 1)–\(edge(66))", "Moderate"),
+            (NunaPalette.alert, "\(edge(66) + 1)–\(top)", "High"),
+        ])
     }
 
     // MARK: Today's sources
@@ -252,7 +266,7 @@ struct NunaEffortDetailView: View {
     }
 
     private var level: (LocalizedStringKey, Color)? {
-        day.effort.map { $0 < 33 ? ("Light", NunaPalette.effortText) : ($0 < 66 ? ("Moderate", NunaPalette.effortText) : ("High", NunaPalette.effortText)) }
+        day.effort.map { $0 < 33 ? ("Light", nunaEffortTextColor($0)) : ($0 < 66 ? ("Moderate", nunaEffortTextColor($0)) : ("High", nunaEffortTextColor($0))) }
     }
 
     private func weekday(_ d: Date) -> String {
