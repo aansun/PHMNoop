@@ -1,6 +1,9 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Sleep deleted": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur dihapus"}}}},
+    "It is removed from your sleep and every score that uses it is recalculated. You can undo it for a few seconds.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur ini dihapus dari data tidurmu dan semua skor yang memakainya dihitung ulang. Kamu bisa membatalkannya selama beberapa detik."}}}},
+    "It is removed and every score that uses it is recalculated. It will not be detected again. You can undo it for a few seconds.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur ini dihapus dan semua skor yang memakainya dihitung ulang. Tidak akan terdeteksi lagi. Kamu bisa membatalkannya selama beberapa detik."}}}},
     "Delete this nap": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Hapus tidur siang ini"}}}},
     "It is removed from your sleep and every score that uses it is recalculated.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur ini dihapus dari data tidurmu dan semua skor yang memakainya dihitung ulang."}}}},
     "It is removed and every score that uses it is recalculated. It will not be detected again.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur ini dihapus dan semua skor yang memakainya dihitung ulang. Tidak akan terdeteksi lagi."}}}},
