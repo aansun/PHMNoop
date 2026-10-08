@@ -18,7 +18,7 @@ struct NunaAppearanceView: View {
     @AppStorage(NunaSleepChartStyle.storageKey) private var sleepChartRaw = NunaSleepChartStyle.classic.rawValue
     @State private var iconError: String?
     @AppStorage(NunaTabBarPrefs.autoHideKey) private var barAutoHide = false
-    @AppStorage(NunaTabBarPrefs.glassKey) private var barGlass = true
+    @AppStorage(NunaTabBarPrefs.glassKey) private var barGlass = false
     @AppStorage(NunaTabBarPrefs.transparencyKey) private var barTransparency = NunaTabBarPrefs.defaultTransparency
 
     private var experience: ExperienceMode { ExperienceMode(rawValue: experienceRaw) ?? .nuna }
@@ -213,6 +213,7 @@ struct NunaAppearanceView: View {
                     NunaToggleRow("Hide bar when scrolling", systemImage: "arrow.down.to.line", isOn: $barAutoHide).padding(.vertical, 8)
                     NunaDivider()
                     NunaToggleRow("Glass effect", systemImage: "square.on.square.dashed", isOn: $barGlass).padding(.vertical, 8)
+                    if barGlass {
                     NunaDivider()
                     HStack {
                         Text("Transparency").font(.nuna(size: 14.5, weight: .heavy)).tracking(nunaTrackingLabel).foregroundStyle(NunaPalette.textPrimary)
@@ -222,6 +223,7 @@ struct NunaAppearanceView: View {
                     .padding(.top, 14)
                     Slider(value: Binding(get: { Double(barTransparency) }, set: { barTransparency = Int($0.rounded()) }), in: 0...100, step: 1)
                         .tint(NunaPalette.textPrimary)
+                    }
                 }
             }
         }

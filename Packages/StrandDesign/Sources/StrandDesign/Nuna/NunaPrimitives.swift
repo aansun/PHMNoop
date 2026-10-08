@@ -423,16 +423,55 @@ public struct NunaTabBar: View {
     private let trailing: NunaTabItem?
     @Binding private var selection: Int
     private let onReselect: (Int) -> Void
-    @AppStorage(NunaTabBarPrefs.glassKey) private var glass = true
+    private let minimized: Bool
+    private let onExpand: () -> Void
+    @AppStorage(NunaTabBarPrefs.glassKey) private var glass = false
     @AppStorage(NunaTabBarPrefs.transparencyKey) private var transparency = NunaTabBarPrefs.defaultTransparency
 
-    public init(items: [NunaTabItem], trailing: NunaTabItem? = nil, selection: Binding<Int>, onReselect: @escaping (Int) -> Void = { _ in }) {
+    /// `minimized` shrinks the bar to a small pill with the current tab, the way the system tab bar does while a page scrolls; tapping the pill calls `onExpand`.
+    public init(items: [NunaTabItem], trailing: NunaTabItem? = nil, selection: Binding<Int>, minimized: Bool = false,
+                onExpand: @escaping () -> Void = {}, onReselect: @escaping (Int) -> Void = { _ in }) {
         self.items = items; self.trailing = trailing; self._selection = selection; self.onReselect = onReselect
+        self.minimized = minimized; self.onExpand = onExpand
     }
 
     private let radius: CGFloat = 28
 
     public var body: some View {
+        Group {
+            if minimized { pill } else { full }
+        }
+        .animation(.easeInOut(duration: 0.25), value: minimized)
+    }
+
+    /// The bar folded down: the current tab as a small pill at the left, Anya as a small round button at the right.
+    private var pill: some View {
+        let current = items.first { $0.id == selection } ?? trailing
+        return HStack(spacing: 10) {
+            Button(action: onExpand) {
+                HStack(spacing: 8) {
+                    if let current { glyph(current, size: 22).frame(width: 26, height: 22) }
+                    if let current { Text(verbatim: current.title).font(.nuna(size: 12.5, weight: .bold)).lineLimit(1) }
+                }
+                .foregroundStyle(NunaPalette.textPrimary)
+                .padding(.horizontal, 16).frame(height: 44)
+                .background { surface(cornerRadius: 22) }
+            }
+            .buttonStyle(.plain).accessibilityLabel(Text("Show the bottom bar"))
+            Spacer(minLength: 0)
+            if let trailing {
+                Button { if selection == trailing.id { onReselect(trailing.id) } else { selection = trailing.id } } label: {
+                    glyph(trailing, size: 22).foregroundStyle(selection == trailing.id ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+                        .frame(width: 44, height: 44).background { surface(cornerRadius: 22) }
+                }
+                .buttonStyle(.plain).accessibilityLabel(Text(verbatim: trailing.title))
+            }
+        }
+        .padding(.horizontal, 14).padding(.bottom, 6)
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+    }
+
+    private var full: some View {
         HStack(spacing: 10) {
             HStack(spacing: 0) { ForEach(items) { tab($0) } }
                 .padding(.horizontal, 6)
@@ -467,7 +506,7 @@ public struct NunaTabBar: View {
         let shape = RoundedRectangle(cornerRadius: r, style: .continuous)
         ZStack {
             if glass { shape.fill(.ultraThinMaterial) }
-            shape.fill(NunaPalette.card.opacity(glass ? 0.9 * (1 - t) : 1 - 0.85 * t))
+            shape.fill(NunaPalette.card.opacity(glass ? 0.9 * (1 - t) : 1))
         }
         .overlay(shape.strokeBorder(NunaPalette.ink.opacity(glass ? 0.14 : 0.08), lineWidth: 1))
         .shadow(color: NunaPalette.shade.opacity(0.35), radius: 14, y: 5)
