@@ -25,7 +25,8 @@ struct NunaChargeDetailView: View {
 
     var body: some View {
         let latest = series.latest
-        NunaDetailScreen("Charge", onAnya: coachEnabled ? { showCoach = true } : nil) {
+        NunaDetailScreen("Charge") {
+            if coachEnabled, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
             NunaScoreHero(caption: "Today", chip: chip?.0, chipColor: NunaPalette.charge,
                           fraction: (day.charge.pct ?? latest?.value ?? 0) / 100,
                           number: (day.charge.pct ?? latest?.value).map { String(format: "%.0f", $0) } ?? "–",
@@ -74,6 +75,15 @@ struct NunaChargeDetailView: View {
         return f.string(from: d)
     }
 
+    /// Anya's one line about today's Charge: the figure against the 30-day average.
+    private var anyaLine: String? {
+        guard let v = day.charge.pct ?? series.latest?.value, let base = series.baseline else { return nil }
+        let d = Int((v - base).rounded())
+        let note = d == 0 ? String(localized: "In line with your 30-day average")
+            : (d > 0 ? String(localized: "\(d) points above your 30-day average") : String(localized: "\(-d) points below your 30-day average"))
+        return String(localized: "Your Charge is \(Int(v.rounded()))%, \(note).")
+    }
+
     /// What the colours of the bars mean: the three Charge zones.
     private var zoneKey: some View {
         HStack(spacing: 16) {
@@ -119,13 +129,18 @@ struct NunaEffortDetailView: View {
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
     @StateObject private var series = NunaSeriesModel()
     @StateObject private var day = NunaTodayModel()
+    @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @State private var range = 7
     @State private var page = 0
+    @State private var showCoach = false
 
     private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
 
     var body: some View {
         NunaDetailScreen("Effort") {
+            if coachEnabled, let e = day.effort {
+                NunaAnyaCard(verbatim: String(localized: "Your Effort is \(UnitFormatter.effortDisplay(e, scale: scale)) of \(UnitFormatter.effortScaleMax(scale)) so far today.")) { showCoach = true }
+            }
             NunaScoreHero(caption: "Today", chip: level.map { $0.0 }, chipColor: NunaPalette.effortText,
                           fraction: (day.effort ?? 0) / 100,
                           number: day.effort.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–",
@@ -150,6 +165,7 @@ struct NunaEffortDetailView: View {
             await series.load(repo: repo, key: "strain", source: "my-whoop")
             await day.load(repo: repo, profile: profile)
         }
+        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "Effort") }
     }
 
     // MARK: Today's sources
@@ -281,6 +297,7 @@ struct NunaMetricDetailView: View {
 
     @ViewBuilder private var trendCardBody: some View {
         let latest = series.latest
+        if coachEnabled, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
         NunaTrendDetailCard(
             caption: overnight ? "Last night" : "Today",
             valueText: latest.map { fmt($0.value) } ?? "–", unit: metric.unit,
@@ -308,7 +325,7 @@ struct NunaMetricDetailView: View {
         let slots = series.window(range)
         let present = slots.compactMap(\.value)
         let latest = series.latest
-        NunaDetailScreen(LocalizedStringKey(metric.title), onAnya: coachEnabled ? { showCoach = true } : nil) {
+        NunaDetailScreen(LocalizedStringKey(metric.title)) {
             if usesTrendCard { trendCardBody } else {
             NunaHeroCard(caption: overnight ? "Last night" : "Today", chip: status?.0, chipColor: status?.1,
                          number: latest.map { fmt($0.value) } ?? "–", unit: metric.unit, color: isColumns ? NunaPalette.textPrimary : (metric.key == "hrv" || metric.key == "rhr" ? NunaPalette.textPrimary : color)) {
@@ -370,16 +387,35 @@ struct NunaMetricDetailView: View {
     private func average(_ v: [Double]) -> Double? { v.isEmpty ? nil : v.reduce(0, +) / Double(v.count) }
 
     /// Compare the latest value with your own 30-day band (mean plus or minus one standard deviation).
-    private var status: (LocalizedStringKey, Color)? {
+    /// Anya's line on this metric: the latest figure and where it sits against the usual range (or against yesterday).
+    private var anyaLine: String? {
+        guard let latest = series.latest else { return nil }
+        var line = String(localized: String.LocalizationValue(metric.title)) + " " + fmt(latest.value) + (metric.unit.isEmpty ? "" : " " + metric.unit)
+        if let st = statusText { line += " · " + st }
+        else if let prev = previous {
+            let d = latest.value - prev
+            line += " · " + (d == 0 ? String(localized: "Same as yesterday")
+                : (d > 0 ? String(localized: "Up \(fmt(abs(d))) from yesterday") : String(localized: "Down \(fmt(abs(d))) from yesterday")))
+        }
+        return line
+    }
+
+    private var statusText: String? {
+        guard let st = status else { return nil }
+        return st.2
+    }
+
+    private var status: (LocalizedStringKey, Color, String)? {
         guard !isColumns, let latest = series.latest, let base = series.baseline else { return nil }
         let vals = series.byDay.keys.sorted().dropLast().suffix(30).compactMap { series.byDay[$0] }
         guard vals.count >= 5 else { return nil }
         let sd = (vals.map { ($0 - base) * ($0 - base) }.reduce(0, +) / Double(vals.count)).squareRoot()
-        if abs(latest.value - base) <= sd { return ("In range", NunaPalette.charge) }
+        if abs(latest.value - base) <= sd { return ("In range", NunaPalette.charge, String(localized: "In range")) }
         let above = latest.value > base
         let good = metric.higherIsBetter.map { $0 == above }
-        if good == nil { return (above ? "Above range" : "Below range", NunaPalette.textPrimary) }
-        return (above ? "Above range" : "Below range", good! ? NunaPalette.charge : NunaPalette.warning)
+        let word = above ? String(localized: "Above range") : String(localized: "Below range")
+        if good == nil { return (above ? "Above range" : "Below range", NunaPalette.textPrimary, word) }
+        return (above ? "Above range" : "Below range", good! ? NunaPalette.charge : NunaPalette.warning, word)
     }
 
     private func stat(_ label: LocalizedStringKey, _ value: String) -> some View {
@@ -452,6 +488,7 @@ struct NunaStressDetailView: View {
         let score = gaugeValue
         let tint: Color = score.map(color) ?? NunaPalette.textPrimary
         NunaDetailScreen("Stress monitor") {
+            if coachEnabled, let line = anyaLine(score) { NunaAnyaCard(verbatim: line) { showCoach = true } }
             VStack(spacing: 10) {
                 Text(day.isToday ? "Right now" : "Day average").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading)
@@ -461,16 +498,8 @@ struct NunaStressDetailView: View {
                     Text("0 to 3 against your own calm reference. Under 1 is low, 1 to 2 medium, above 2 high. Moments when you were moving are left out.")
                         .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
-                if let score, let base = series.baseline {
-                    let b = String(format: "%.1f", locale: AppLanguage.activeLocale, base)
-                    Text(verbatim: score < base - 0.05 ? String(localized: "Calmer than your baseline (\(b))")
-                         : (score > base + 0.05 ? String(localized: "Tenser than your baseline (\(b))")
-                            : String(localized: "About your usual baseline (\(b))")))
-                        .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center).textCase(nil)
-                }
             }
             recoveryTiles
-            NunaSegmented([(value: 1, title: "Today"), (value: 7, title: "W\u{2060}"), (value: 30, title: "M")], selection: $range)
             chartCard
             if range == 1, let curve = day.stressCurve {
                 let zones = zoneMinutes(curve)
@@ -519,7 +548,6 @@ struct NunaStressDetailView: View {
                     Button("Start") { showBreathing = true }.buttonStyle(.nuna(.primary, height: 40)).fixedSize()
                 }
             }
-            if coachEnabled { NunaAnyaCard(title: "Why is my stress changing today?", highlight: false) { showCoach = true } }
             NunaCard(small: true, padding: EdgeInsets(top: 6, leading: 18, bottom: 6, trailing: 18)) {
                 NunaToggleRow("Stress monitor", subtitle: "Shown as a card on Today", isOn: cardShown)
             }
@@ -545,9 +573,20 @@ struct NunaStressDetailView: View {
         }
     }
 
+    /// Anya's line on the stress: the level now, against the wearer's own baseline.
+    private func anyaLine(_ score: Double?) -> String? {
+        guard let score, let base = series.baseline else { return nil }
+        let b = String(format: "%.1f", locale: AppLanguage.activeLocale, base)
+        let level = score < 1 ? String(localized: "Low") : (score < 2 ? String(localized: "Medium") : String(localized: "High"))
+        let vs = score < base - 0.05 ? String(localized: "Calmer than your baseline (\(b))")
+            : (score > base + 0.05 ? String(localized: "Tenser than your baseline (\(b))") : String(localized: "About your usual baseline (\(b))"))
+        return level + " · " + vs
+    }
+
     private var chartCard: some View {
         NunaCard {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 16) {
+                NunaSegmented([(value: 1, title: "Today"), (value: 7, title: "W\u{2060}"), (value: 30, title: "M")], selection: $range)
                 if range == 1 {
                     HStack {
                         Text("All day").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
