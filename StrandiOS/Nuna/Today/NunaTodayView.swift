@@ -113,7 +113,8 @@ struct NunaTodayView: View {
 
     @StateObject var model = NunaTodayModel()
     @StateObject private var sparks = NunaKeySparkModel()
-    @State private var showCustomize = false
+    /// What the customize sheet opens on; set together with presenting it, so the sheet always gets the right page.
+    @State private var customize: TodayCustomizationDestination?
     @State private var showQuick = false
     @State private var showDate = false
     @State private var showInbox = false
@@ -133,7 +134,6 @@ struct NunaTodayView: View {
     /// Today's suggested session, the same one the plan screen shows. Nil until Charge exists.
     @State private var dayPlan: NunaDayPlanResult?
     @State private var addAfter: TodaySection?
-    @State private var customizeDestination: TodayCustomizationDestination = .today
 
     private var effortScale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
 
@@ -233,9 +233,9 @@ struct NunaTodayView: View {
                 await model.refreshStress(repo: repo)
             }
         }
-        .sheet(isPresented: $showCustomize) {
+        .sheet(item: $customize) { destination in
             NunaTodayCustomizeSheet(
-                initialDestination: customizeDestination,
+                initialDestination: destination,
                 order: effectiveOrder, hidden: effectiveHidden,
                 defaultHidden: Self.nunaDefaultHidden, defaultOrder: Self.nunaDefaultOrder,
                 sectionOrderRaw: $sectionOrderRaw, hiddenSectionsRaw: $hiddenSectionsRaw,
@@ -422,7 +422,7 @@ struct NunaTodayView: View {
                 NunaAddCard("Add a card here") { addAfter = nil; showAddCard = true }.moveDisabled(true).plainRow()
             }
             VStack(spacing: 10) {
-                Button { customizeDestination = .today; showCustomize = true } label: { Label("Card settings", systemImage: "slider.horizontal.3").lineLimit(1).minimumScaleFactor(0.8) }
+                Button { customize = .today } label: { Label("Card settings", systemImage: "slider.horizontal.3").lineLimit(1).minimumScaleFactor(0.8) }
                     .buttonStyle(.nuna(.ghost, height: 52, fullWidth: true))
                 Button { sectionOrderRaw = ""; hiddenSectionsRaw = ""; keyMetricsRaw = ""; dashboardCardsRaw = ""; hostedCardsRaw = "" } label: { Text("Restore defaults").lineLimit(1).minimumScaleFactor(0.8) }
                     .buttonStyle(.nuna(.ghost, height: 52, fullWidth: true))
@@ -616,7 +616,7 @@ struct NunaTodayView: View {
                         }
                     }
                 }
-                Button { showAddCard = false; customizeDestination = .today; DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { showCustomize = true } } label: {
+                Button { showAddCard = false; DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { customize = .today } } label: {
                     Text("Card settings").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain)
             }
@@ -690,7 +690,7 @@ struct NunaTodayView: View {
                                     .font(.nuna(size: 14, weight: .bold)).frame(width: 40, height: 40).contentShape(Rectangle())
                             }
                             .accessibilityLabel(Text(metricsLayout == .cards ? "Show as list" : "Show as cards"))
-                            Button { customizeDestination = .keyMetrics; showCustomize = true } label: {
+                            Button { customize = .keyMetrics } label: {
                                 Image(systemName: "slider.horizontal.3").font(.nuna(size: 14, weight: .bold)).frame(width: 40, height: 40).contentShape(Rectangle())
                             }
                             .accessibilityLabel(Text("Edit"))
@@ -741,7 +741,7 @@ struct NunaTodayView: View {
             let rows = yourCardRows()
             if !rows.isEmpty {
                 NunaRowsCard(rows: rows, onCoach: { showCoach = true }, title: "Your cards",
-                             onEdit: { customizeDestination = .yourCards; showCustomize = true })
+                             onEdit: { customize = .yourCards })
             }
         case .addedCards:
             let rows = addedCardRows()

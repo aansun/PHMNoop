@@ -69,6 +69,9 @@ struct NunaTodayCustomizeSheet: View {
     @State private var detailed: Bool
     @State private var windowDays: Int
     @State private var confirmDiscard = false
+    /// Opened straight on one page (from the pencil on a card): Back closes the sheet instead of showing the list of all cards.
+    private let direct: Bool
+    private let startRoute: Route?
 
     /// `order` and `hidden` are what Today is showing right now (including the Nuna defaults before anything is stored), so
     /// the editor opens on exactly what the person sees.
@@ -92,11 +95,17 @@ struct NunaTodayCustomizeSheet: View {
         initialDetailed = keyMetricsDetailed.wrappedValue; initialWindow = keyMetricsWindowDays.wrappedValue
         _sections = State(initialValue: s); _metrics = State(initialValue: m); _cards = State(initialValue: c); _hosted = State(initialValue: h)
         _detailed = State(initialValue: keyMetricsDetailed.wrappedValue); _windowDays = State(initialValue: keyMetricsWindowDays.wrappedValue)
+        direct = initialDestination != .today
+        switch initialDestination {
+        case .today: startRoute = nil
+        case .keyMetrics: startRoute = .keyMetrics
+        case .yourCards: startRoute = .yourCards
+        case .addedCards: startRoute = .addedCards
+        }
         switch initialDestination {
         case .today: _path = State(initialValue: [])
-        case .keyMetrics: _path = State(initialValue: [.keyMetrics])
-        case .yourCards: _path = State(initialValue: [.yourCards])
-        case .addedCards: _path = State(initialValue: [.addedCards])
+        // Opened on a page: it is the root of the sheet (see `body`), nothing is pushed.
+        case .keyMetrics, .yourCards, .addedCards: _path = State(initialValue: [])
         }
     }
 
@@ -107,14 +116,14 @@ struct NunaTodayCustomizeSheet: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            page(title: "Customize Today", back: nil) { sectionsPage }
+            root
                 .navigationBarHidden(true)
                 .navigationDestination(for: Route.self) { route in
                     Group {
                         switch route {
-                        case .keyMetrics: page(title: "Key metrics", back: { path.removeAll() }) { metricsPage }
-                        case .yourCards: page(title: "Your cards", back: { path.removeAll() }) { cardsPage }
-                        case .addedCards: page(title: "Added cards", back: { path.removeAll() }) { hostedPage }
+                        case .keyMetrics: page(title: "Key metrics", back: leave) { metricsPage }
+                        case .yourCards: page(title: "Your cards", back: leave) { cardsPage }
+                        case .addedCards: page(title: "Added cards", back: leave) { hostedPage }
                         }
                     }
                     .navigationBarHidden(true)
@@ -126,6 +135,20 @@ struct NunaTodayCustomizeSheet: View {
         .confirmationDialog("Discard your changes?", isPresented: $confirmDiscard, titleVisibility: .visible) {
             Button("Discard changes", role: .destructive) { dismiss() }
             Button("Keep editing", role: .cancel) {}
+        }
+    }
+
+    /// Back from a sub-page: to the list of cards, or, when the sheet was opened straight on this page, back to Today.
+    private func leave() {
+        if !direct { path.removeAll() } else if isDirty { confirmDiscard = true } else { dismiss() }
+    }
+
+    @ViewBuilder private var root: some View {
+        switch startRoute {
+        case .keyMetrics: page(title: "Key metrics", back: leave) { metricsPage }
+        case .yourCards: page(title: "Your cards", back: leave) { cardsPage }
+        case .addedCards: page(title: "Added cards", back: leave) { hostedPage }
+        case nil: page(title: "Customize Today", back: nil) { sectionsPage }
         }
     }
 
