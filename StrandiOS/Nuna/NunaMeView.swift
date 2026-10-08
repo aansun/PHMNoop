@@ -97,33 +97,48 @@ struct NunaMeView: View {
 
     private var profileCard: some View {
         NavigationLink(value: NunaMeRoute.persona) {
-            // On the page background, not in a card: the profile is the head of the page.
-            NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
-                VStack(alignment: .leading, spacing: 14) {
-                    HStack(spacing: 16) {
-                        ProfileAvatarView(imageData: profile.avatarImageData, size: 64)
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Persona").font(.nuna(size: NunaTypeSize.h2 - 1, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
-                            Text(verbatim: "\(profile.age) · \(Int(profile.heightCm.rounded())) cm · \(String(format: "%.1f", locale: AppLanguage.activeLocale, profile.weightKg)) kg").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        }
-                        Spacer(minLength: 8)
-                        Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+            // On the page background, not in a card: the profile heads the page. The avatar and name, then the four figures in one even row.
+            VStack(alignment: .leading, spacing: 18) {
+                HStack(spacing: 16) {
+                    ProfileAvatarView(imageData: profile.avatarImageData, size: 72)
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Persona").font(.nuna(size: 20, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: String(localized: "\(repo.days.count) days of data")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
-                    NunaDivider()
-                    HStack {
-                        stat("Max heart rate", "\(profile.hrMax)")
-                        stat("Data", String(localized: "\(repo.days.count) days"))
-                    }
+                    Spacer(minLength: 8)
+                    Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                 }
+                HStack(spacing: 0) {
+                    figure("Age", "\(profile.age)", "")
+                    figureDivider
+                    figure("Height", "\(Int(profile.heightCm.rounded()))", "cm")
+                    figureDivider
+                    figure("Weight", String(format: "%.1f", locale: AppLanguage.activeLocale, profile.weightKg), "kg")
+                    figureDivider
+                    figure("Max HR", "\(profile.hrMax)", "bpm")
+                }
+                .padding(.top, 14)
+                .overlay(alignment: .top) { NunaDivider() }
             }
+            .padding(.vertical, 4)
+            .contentShape(Rectangle())
         }.buttonStyle(.plain)
     }
 
-    private func stat(_ l: LocalizedStringKey, _ v: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: v).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-        }.frame(maxWidth: .infinity, alignment: .leading)
+    private var figureDivider: some View {
+        Rectangle().fill(NunaPalette.hairline).frame(width: 1, height: 32)
+    }
+
+    /// One figure: a small label over a large number with its unit, centred in an equal quarter of the row.
+    private func figure(_ label: LocalizedStringKey, _ value: String, _ unit: String) -> some View {
+        VStack(spacing: 5) {
+            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Text(verbatim: value).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
+                if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+            }
+        }
+        .frame(maxWidth: .infinity)
     }
 
     private func group<Rows: View>(_ title: LocalizedStringKey, count: Int, @ViewBuilder _ rows: () -> Rows) -> some View {

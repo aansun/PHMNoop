@@ -1,6 +1,7 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "%lld days of data": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "%lld hari data"}}}},
     "Off. Nothing is uploaded": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Mati. Tidak ada yang diunggah"}}}},
     "On. GPS, treadmill and your own gym workouts upload automatically": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Aktif. Latihan GPS, treadmill, dan gym yang kamu catat sendiri diunggah otomatis"}}}},
     "On. A workout uploads only when you choose": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Aktif. Latihan diunggah hanya saat kamu memilih"}}}},
@@ -36792,6 +36793,12 @@
     },
     "Age": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usia"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
