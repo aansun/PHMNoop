@@ -1,6 +1,18 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Your data": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Datamu"}}}},
+    "Backup and export": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Cadangan dan ekspor"}}}},
+    "WHOOP, Apple Health, nutrition, lifting and workout files": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "WHOOP, Apple Health, nutrisi, angkat beban, dan file latihan"}}}},
+    "Last backup %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Cadangan terakhir %@"}}}},
+    "Everything stays on this iPhone. Deleting an import never touches data recorded live from the strap.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Semuanya tetap di iPhone ini. Menghapus impor tidak pernah menyentuh data yang direkam langsung dari strap."}}}},
+    "Connected to Apple Health": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Terhubung ke Apple Health"}}}},
+    "Connect to Apple Health": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Hubungkan ke Apple Health"}}}},
+    "PHMN reads your steps, weight, waist, heart rate, water and workouts from Apple Health, and writes the strap's steps, heart rate, nightly vitals, sleep and workouts back, without counting a step twice.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "PHMN membaca langkah, berat badan, lingkar pinggang, detak jantung, air minum, dan latihanmu dari Apple Health, lalu menulis kembali langkah, detak jantung, tanda vital malam, tidur, dan latihan dari strap, tanpa menghitung satu langkah dua kali."}}}},
+    "What is read and written is set in Health under Sharing, Apps, PHMN. Turning it off there never deletes data.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Apa yang dibaca dan ditulis diatur di Health, pada Berbagi, Apps, PHMN. Mematikannya di sana tidak pernah menghapus data."}}}},
+    "Open Health permissions": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Buka izin Health"}}}},
+    "This install can't connect to Apple Health directly. It was signed with a profile that doesn't include Apple's Health permission. Bring your data in with a Health export under Import data.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pemasangan ini tidak bisa terhubung langsung ke Apple Health. Ia ditandatangani dengan profil yang tidak menyertakan izin Health dari Apple. Masukkan datamu lewat ekspor Health di Impor data."}}}},
+    "If you don't see the prompt, allow PHMN under Settings, Health, Data Access & Devices.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Jika permintaannya tidak muncul, izinkan PHMN di Pengaturan, Health, Akses Data & Perangkat."}}}},
     "A readable PDF of your trends: a summary table, a chart for each metric and a day-by-day table of every reading, so you can analyse it further. It is made on this iPhone and nothing leaves it until you share it.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "PDF tren yang mudah dibaca: tabel ringkasan, grafik tiap metrik, dan tabel harian setiap pembacaan, supaya bisa dianalisis lebih lanjut. Dibuat di iPhone ini dan tidak ada yang keluar sebelum kamu membagikannya."}}}},
     "The share sheet can save the PDF to Files, AirDrop it, or send it on.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lembar bagikan bisa menyimpan PDF ke Files, mengirimnya lewat AirDrop, atau meneruskannya."}}}},
     "Key findings": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Temuan utama"}}}},
