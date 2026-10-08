@@ -180,18 +180,23 @@ struct NunaAnyaMemoryView: View {
     @StateObject private var store = CoachMemoryStore()
     @AppStorage(CoachMemoryStore.autoCaptureKey) private var autoCapture = true
     @State private var draft = ""
+    @State private var editing: CoachMemory?
     @State private var confirmDeleteAll = false
 
     var body: some View {
         let all = store.memories
+        let active = all.filter(\.isActive), paused = all.filter { !$0.isActive }
         NunaDetailScreen("Memory") {
-            Text("What Anya remembers about you: goals, events and preferences. Delete or pause any of it at any time.")
-                .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-            HStack(spacing: 12) {
-                NunaStatTile(label: "Active", value: "\(all.filter(\.isActive).count)")
-                NunaStatTile(label: "From conversation", value: "\(all.filter(\.fromConversation).count)")
-                NunaStatTile(label: "Manual", value: "\(all.filter { !$0.fromConversation }.count)")
+            // How much Anya remembers and where it came from, as plain figures on the page.
+            HStack(spacing: 0) {
+                figure("Active", "\(active.count)")
+                figureDivider
+                figure("From chats", "\(all.filter(\.fromConversation).count)")
+                figureDivider
+                figure("Added by you", "\(all.filter { !$0.fromConversation }.count)")
             }
+            .padding(.vertical, 6)
+            NunaToggleRow("Save from conversations", systemImage: "brain", isOn: $autoCapture)
             NunaFormField("Add a memory") {
                 HStack {
                     TextField("", text: $draft, prompt: Text("For example: I don't eat dairy").foregroundStyle(NunaPalette.textMuted)).submitLabel(.done).onSubmit(add)
@@ -200,43 +205,101 @@ struct NunaAnyaMemoryView: View {
                 }
             }
             if all.isEmpty {
-                NunaCard(small: true) { Text("Nothing yet. Tell Anya things like “remember I race on 5 December”, or add one above.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) }
+                Text("Nothing yet. Tell Anya things like “remember I race on 5 December”, or add one above.")
+                    .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
+            }
+            if !active.isEmpty { section("Active", active) }
+            if !paused.isEmpty { section("Paused", paused) }
+            if !all.isEmpty {
+                Button { confirmDeleteAll = true } label: {
+                    Text("Delete all memory").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        .foregroundStyle(NunaPalette.alertText).frame(maxWidth: .infinity, minHeight: 44)
+                }.buttonStyle(.plain)
+            }
+            nunaFootnote("Memory is used with every AI provider and is stored only on this iPhone.")
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .sheet(item: $editing) { m in NunaMemoryEditSheet(memory: m) { store.update($0) } }
+        .alert(deleteTitle, isPresented: $confirmDeleteAll) {
+            if paused.isEmpty {
+                Button("OK", role: .cancel) {}
             } else {
-                NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                    VStack(spacing: 0) {
-                        ForEach(Array(all.enumerated()), id: \.element.id) { i, m in
-                            if i > 0 { NunaDivider() }
-                            HStack(spacing: 12) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(verbatim: m.title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(m.isActive ? NunaPalette.textPrimary : NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                                    Text(verbatim: (m.fromConversation ? String(localized: "From conversation") : String(localized: "Manual")) + " · " + (m.isActive ? String(localized: "Active") : String(localized: "Paused")))
-                                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                                }
-                                Spacer(minLength: 6)
-                                Toggle("", isOn: Binding(get: { m.isActive }, set: { store.setActive(m, $0) })).labelsHidden().tint(NunaPalette.charge)
-                                Menu {
-                                    Button(role: .destructive) { store.delete(m) } label: { Label("Delete", systemImage: "trash") }
-                                } label: { Image(systemName: "ellipsis").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 30, height: 40) }
-                            }.padding(.vertical, 12)
-                        }
+                Button(paused.count == 1 ? "Delete 1 memory" : "Delete \(paused.count) memories", role: .destructive) { store.deleteInactive() }
+                Button("Cancel", role: .cancel) {}
+            }
+        } message: { Text(deleteMessage) }
+    }
+
+    // MARK: Warning before deleting
+
+    private var deleteTitle: LocalizedStringKey {
+        let n = store.memories.filter { !$0.isActive }.count
+        switch n {
+        case 0: return "Nothing to delete"
+        case 1: return "Delete 1 paused memory?"
+        default: return "Delete \(n) paused memories?"
+        }
+    }
+
+    private var deleteMessage: LocalizedStringKey {
+        let paused = store.memories.filter { !$0.isActive }.count, active = store.memories.filter(\.isActive).count
+        if paused == 0 { return "Only paused memories can be deleted. Pause a memory first to delete it." }
+        switch active {
+        case 0: return "Only paused memories are deleted. This cannot be undone."
+        case 1: return "Only paused memories are deleted. The 1 active memory stays, and Anya keeps using it. This cannot be undone."
+        default: return "Only paused memories are deleted. The \(active) active memories stay, and Anya keeps using them. This cannot be undone."
+        }
+    }
+
+    // MARK: Pieces
+
+    private var figureDivider: some View { Rectangle().fill(NunaPalette.hairline).frame(width: 1, height: 30) }
+
+    private func figure(_ label: LocalizedStringKey, _ value: String) -> some View {
+        VStack(spacing: 5) {
+            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
+            Text(verbatim: value).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+        }.frame(maxWidth: .infinity)
+    }
+
+    private func section(_ title: LocalizedStringKey, _ items: [CoachMemory]) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            nunaRuledHeader(title, count: items.count)
+            // The lists of active and paused memories are cards; the rest of the page is on the background.
+            NunaCard(small: true, padding: EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 10)) {
+                VStack(spacing: 0) {
+                    ForEach(Array(items.enumerated()), id: \.element.id) { i, m in
+                        if i > 0 { NunaDivider() }
+                        row(m)
                     }
                 }
             }
-            NunaCard(small: true) {
-                NunaToggleRow("Save automatically from conversations", subtitle: "Anya offers, you can delete", systemImage: "brain", isOn: $autoCapture).padding(.vertical, 8)
-            }
-            if !all.isEmpty {
-                Button(role: .destructive) { confirmDeleteAll = true } label: {
-                    Text("Delete all memory").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                }.buttonStyle(.plain)
-            }
-            Text("Memory is used with every AI provider and is stored only on this iPhone.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
         }
-        .scrollDismissesKeyboard(.interactively)
-        .confirmationDialog("Delete all memory?", isPresented: $confirmDeleteAll, titleVisibility: .visible) {
-            Button("Delete", role: .destructive) { for m in store.memories { store.delete(m) } }
-            Button("Cancel", role: .cancel) {}
+    }
+
+    private func row(_ m: CoachMemory) -> some View {
+        HStack(spacing: 12) {
+            Button { editing = m } label: {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(verbatim: m.title).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(m.isActive ? NunaPalette.textPrimary : NunaPalette.textMuted)
+                        .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    if !m.detail.isEmpty && m.detail != m.title {
+                        Text(verbatim: m.detail).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(2)
+                            .multilineTextAlignment(.leading).textCase(nil)
+                    }
+                    Text(verbatim: m.category.displayName + " · " + (m.fromConversation ? String(localized: "From a chat") : String(localized: "Added by you")))
+                        .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
+            }.buttonStyle(.plain)
+            Toggle("", isOn: Binding(get: { m.isActive }, set: { store.setActive(m, $0) })).labelsHidden().tint(NunaPalette.charge)
+            Menu {
+                Button { editing = m } label: { Label("Edit", systemImage: "pencil") }
+                Button { store.setActive(m, !m.isActive) } label: { Label(m.isActive ? "Pause" : "Activate", systemImage: m.isActive ? "pause.circle" : "play.circle") }
+                Button(role: .destructive) { store.delete(m) } label: { Label("Delete", systemImage: "trash") }
+            } label: { Image(systemName: "ellipsis").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 34, height: 44) }
         }
+        .padding(.vertical, 12)
     }
 
     private func add() {
@@ -245,6 +308,51 @@ struct NunaAnyaMemoryView: View {
         if let found = CoachMemoryExtractor.extract(from: t) { store.add(title: found.title, detail: found.detail, category: found.category) }
         else { store.add(title: t, detail: "", category: .note) }
         draft = ""
+    }
+}
+
+/// Change a memory's words and kind. The memory keeps its id, its date and whether it is active.
+private struct NunaMemoryEditSheet: View {
+    let memory: CoachMemory
+    let onSave: (CoachMemory) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var title: String
+    @State private var detail: String
+    @State private var category: CoachMemoryCategory
+
+    init(memory: CoachMemory, onSave: @escaping (CoachMemory) -> Void) {
+        self.memory = memory; self.onSave = onSave
+        _title = State(initialValue: memory.title); _detail = State(initialValue: memory.detail); _category = State(initialValue: memory.category)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Edit memory").font(.nuna(size: 18, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary).padding(.top, 24)
+            NunaFormField("Memory") { TextField("", text: $title, axis: .vertical).lineLimit(1...3) }
+            NunaFormField("Detail") { TextField("", text: $detail, axis: .vertical).lineLimit(1...5) }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 18) {
+                    ForEach(CoachMemoryCategory.allCases) { c in
+                        Button { category = c } label: {
+                            Label(c.displayName, systemImage: c.symbol).font(.nuna(size: 13.5, weight: .bold)).labelStyle(.titleAndIcon)
+                                .foregroundStyle(category == c ? NunaPalette.textPrimary : NunaPalette.textMuted).frame(minHeight: 44)
+                        }.buttonStyle(.plain)
+                    }
+                }
+            }
+            Button {
+                var m = memory
+                m.title = title.trimmingCharacters(in: .whitespacesAndNewlines); m.detail = detail.trimmingCharacters(in: .whitespacesAndNewlines); m.category = category
+                onSave(m); dismiss()
+            } label: { Text("Save") }
+                .buttonStyle(.nuna(.primary, fullWidth: true))
+                .disabled(title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, NunaSpacing.screenH)
+        .background(NunaPalette.canvas.ignoresSafeArea())
+        .preferredColorScheme(NunaTheme.colorScheme)
+        .nunaSheetChrome(detents: [.height(470), .large])
     }
 }
 
