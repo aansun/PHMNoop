@@ -308,6 +308,8 @@ struct NunaNotificationsView: View {
 
 struct NunaPrivacyView: View {
     @EnvironmentObject private var coach: AICoachEngine
+    @EnvironmentObject private var health: HealthKitBridge
+    @AppStorage(StravaExperiment.enabledKey) private var stravaOn = false
     @State private var bluetooth = ""
     @State private var notifications = ""
     @State private var location = ""
@@ -339,9 +341,17 @@ struct NunaPrivacyView: View {
                     NunaListRow("Text summary to an AI provider", subtitle: LocalizedStringKey(coach.isConfigured && coach.dataConsent ? String(localized: "On, only when you ask") : String(localized: "Off. Only after you allow Anya and ask")), systemImage: NunaGlyph.anya, showsChevron: true)
                 }.buttonStyle(.plain)
                 NunaDivider()
+                NavigationLink(value: NunaMeRoute.strava) {
+                    NunaListRow("Strava", subtitle: LocalizedStringKey(stravaSubtitle), systemImage: "figure.run", showsChevron: true)
+                }.buttonStyle(.plain)
+                NunaDivider()
+                NavigationLink(value: NunaMeRoute.appleHealth) {
+                    NunaListRow("Apple Health", subtitle: LocalizedStringKey(health.auth == .authorized ? String(localized: "On. Steps, heart rate, vitals, sleep and workouts are written to Health on this iPhone") : String(localized: "Off. Nothing is written to Health")), systemImage: "heart.text.square", showsChevron: true)
+                }.buttonStyle(.plain)
+                NunaDivider()
                 NavigationLink(value: NunaMeRoute.backup) { NunaListRow("Export and backup", description: "Only when you ask for it", systemImage: "square.and.arrow.up", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
-                NunaListRow("Anything else", subtitle: "No health data is sent anywhere", systemImage: "nosign") { NunaChip("None") }
+                NunaListRow("Anything else", subtitle: "No other app receives your data", systemImage: "nosign") { NunaChip("None") }
             }
             nunaFootnote("Raw heartbeat intervals, PPG and motion are never sent to an AI provider.")
             NunaSettingsGroup("Delete data") {
@@ -349,6 +359,14 @@ struct NunaPrivacyView: View {
             }
         }
         .task { await refresh() }
+    }
+
+    /// What Strava gets, in words: workouts only, and only when it is connected.
+    private var stravaSubtitle: String {
+        guard stravaOn, StravaTokenStore.isConnected else { return String(localized: "Off. Nothing is uploaded") }
+        return StravaExperiment.isAutomaticUploadEnabled
+            ? String(localized: "On. GPS, treadmill and your own gym workouts upload automatically")
+            : String(localized: "On. A workout uploads only when you choose")
     }
 
     private func perm(_ title: LocalizedStringKey, _ sub: LocalizedStringKey, _ icon: String, _ state: String) -> some View {
