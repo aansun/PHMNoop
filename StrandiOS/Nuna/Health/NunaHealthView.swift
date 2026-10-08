@@ -55,13 +55,12 @@ struct NunaHealthView: View {
                 Text("Health").font(.nuna(size: NunaTypeSize.h1, weight: .bold, design: NunaType.design))
                     .foregroundStyle(NunaPalette.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                NunaPageTabs([(value: 0, title: "All"), (value: 1, title: "Vital"), (value: 2, title: "Body"), (value: 3, title: "Sleep")],
+                NunaPageTabs([(value: 0, title: "Vital"), (value: 1, title: "Body"), (value: 2, title: "Sleep")],
                               selection: $tab)
                 switch tab {
-                case 1: vitalTab
-                case 2: bodyTab
-                case 3: sleepTab
-                default: allTab
+                case 1: bodyTab
+                case 2: sleepTab
+                default: vitalTab
                 }
             }
             .padding(.horizontal, NunaSpacing.screenH)
@@ -118,20 +117,6 @@ struct NunaHealthView: View {
     }
 
     // MARK: Tabs
-    // MARK: All
-
-    private var allTab: some View {
-        VStack(spacing: NunaSpacing.section) {
-            rangeCard
-            if coachEnabled { NunaAnyaCard(title: "Are my vitals normal today?") { showCoach = true } }
-            vitalList
-            NunaTitleRow(title: "Body") { EmptyView() }
-            weightCard
-            bodyPair
-            strapCard
-        }
-    }
-
     /// "Your normal range": HRV and resting heart rate against the last 30 days, with the position on a bar.
     private var rangeCard: some View {
         let statusText: String = {
@@ -177,116 +162,12 @@ struct NunaHealthView: View {
         }
     }
 
-    /// The four vitals as long rows, each compared with the night before (up or down since yesterday).
-    private var vitalList: some View {
-        func change(_ d: Double?, decimals: Int, upIsGood: Bool?) -> (String, Bool?)? {
-            guard let d else { return nil }
-            let step = decimals == 0 ? 1.0 : 0.1
-            guard abs(d) >= step - 0.0001 else { return nil }
-            let shown = String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, abs(d))
-            return ((d > 0 ? "▲ " : "▼ ") + shown, upIsGood.map { d > 0 ? $0 : !$0 })
-        }
-        func route(_ key: String) -> NunaTodayRoute? { MetricCatalog.metric(key: key, source: "my-whoop").map { .metric($0) } }
-        let h = change(day.hrvDelta, decimals: 0, upIsGood: true)
-        let r = change(day.restingHrDelta, decimals: 0, upIsGood: false)
-        let o = change(day.spo2Delta, decimals: 0, upIsGood: true)
-        let b = change(day.respiratoryDelta, decimals: 1, upIsGood: nil)
-        let cap: LocalizedStringKey = "vs yesterday"
-        return NunaMetricsGrid(tiles: [
-            NunaMetricTile(id: "hrv", label: "HRV", value: fmt(day.hrv), unit: "ms", route: route("hrv"), delta: h?.0, deltaGood: h?.1, icon: "waveform.path.ecg", caption: cap),
-            NunaMetricTile(id: "rhr", label: "Resting HR", value: fmt(day.restingHr), unit: "bpm", route: route("rhr"), delta: r?.0, deltaGood: r?.1, icon: "heart", caption: cap),
-            NunaMetricTile(id: "spo2", label: "Blood Oxygen", value: fmt(day.spo2), unit: "%", route: route("spo2"), delta: o?.0, deltaGood: o?.1, icon: "drop", caption: cap),
-            NunaMetricTile(id: "resp", label: "Respiratory", value: fmt(day.respiratory, 1), unit: "/min", route: route("resp_rate"), delta: b?.0, deltaGood: b?.1, icon: "wind", caption: cap),
-        ], layout: .list)
-    }
-
-    /// "Stable" when the value sits inside the person's own recent range, otherwise up or down.
-    private func bandCaption(_ v: Double?, _ s: NunaSeriesModel) -> LocalizedStringKey? {
-        guard let v, let b = s.band else { return nil }
-        let tol = max(b.sd, 0.3)
-        return abs(v - b.mean) <= tol ? "Stable" : (v > b.mean ? "Above range" : "Below range")
-    }
-
-    /// Weight with its last 30 days, as on the Body tab but fixed to 30D.
-    private var weightCard: some View {
-        let pts = weightS.readings(30)
-        let latest = weightS.latest?.value ?? (profile.weightKg > 0 ? profile.weightKg : nil)
-        let delta: Double? = pts.count >= 2 ? pts.last!.value - pts.first!.value : nil
-        return NavigationLink(value: weightRoute) {
-            NunaCard {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Text("Weight").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                        Spacer()
-                        Text("30D").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    }
-                    HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Text(verbatim: fmt(latest, 1)).font(.nuna(size: 48, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(48)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("kg").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                        Spacer()
-                        if let delta {
-                            NunaChip(verbatim: (delta <= 0 ? "−" : "+") + String(format: "%.1f", locale: AppLanguage.activeLocale, abs(delta)) + " kg")
-                        }
-                    }
-                    NunaLine2Chart(points: pts, color: NunaPalette.charge, decimals: 1, height: 160)
-                }
-            }
-        }.buttonStyle(.plain)
-    }
-
-    private var weightRoute: NunaTodayRoute { .weight }
-
-    /// Waist and BMI side by side under the weight card.
-    private var bodyPair: some View {
-        let w = weightS.latest?.value ?? (profile.weightKg > 0 ? profile.weightKg : nil)
-        let h = profile.heightCm
-        let bmi: Double? = (w != nil && h > 0) ? w! / pow(h / 100, 2) : nil
-        return HStack(spacing: 12) {
-            NunaStatTile(label: "Waist", value: profile.waistCm > 0 ? fmt(profile.waistCm) : "–", unit: profile.waistCm > 0 ? "cm" : "")
-            NunaStatTile(label: "BMI", value: fmt(bmi, 1))
-        }
-    }
-
-    /// Change in weight over the last 30 days, from stored readings only.
-    private var weightDeltaCaption: LocalizedStringKey? {
-        let r = weightS.readings(30)
-        guard let first = r.first?.value, let last = r.last?.value, r.count >= 2 else { return nil }
-        let d = last - first
-        let t = String(format: "%.1f", locale: AppLanguage.activeLocale, abs(d))
-        return d <= 0 ? LocalizedStringKey("Down \(t) kg in 30 days") : LocalizedStringKey("Up \(t) kg in 30 days")
-    }
-
-    private var strapCard: some View { NunaWithLive { strapCardBody($0) } }
-
-    private func strapCardBody(_ live: LiveState) -> some View {
-        Button { router.openDevices() } label: {
-            NunaCard(small: true) {
-                HStack(spacing: 12) {
-                    NunaIconTile("applewatch")
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("WHOOP strap").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(live.connected ? "Connected" : "Not connected").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    }
-                    Spacer()
-                    VStack(alignment: .trailing, spacing: 2) {
-                        if let b = live.batteryPct {
-                            Text(verbatim: "\(Int(b.rounded()))%").font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        }
-                        if let t = live.lastSyncedAt {
-                            Text(verbatim: String(localized: "Synced \(NunaSleepFormat.clock(Date(timeIntervalSince1970: t)))"))
-                                .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        }
-                    }
-                    Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                }
-            }
-        }.buttonStyle(.plain)
-    }
-
     // MARK: Vital
 
     private var vitalTab: some View {
         VStack(spacing: NunaSpacing.section) {
+            rangeCard
+            if coachEnabled { NunaAnyaCard(title: "Are my vitals normal today?") { showCoach = true } }
             liveCard
             hrvHero
             rhrHero
