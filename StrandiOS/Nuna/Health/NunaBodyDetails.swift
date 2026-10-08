@@ -125,24 +125,6 @@ struct NunaWeightView: View {
                 NunaStatTile(label: "BMI", value: nbFmt(bmi, 1))
             }
             if let bmi { bmiCard(bmi) }
-            Button { showAdd = true } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "plus").font(.nuna(size: 14, weight: .bold))
-                    Text("Add a measurement").font(.nuna(size: 16, weight: .bold))
-                }
-                .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52)
-                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-            }.buttonStyle(.plain)
-            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                Button { showTarget = true } label: {
-                    NunaListRow("Weight target", subtitle: LocalizedStringKey(target > 0 ? "\(nbFmt(target, 1)) kg" : String(localized: "Not set")),
-                                systemImage: "scalemass", showsChevron: true)
-                }.buttonStyle(.plain)
-            }
-            NunaCard(small: true) {
-                NunaListRow("Read from Apple Health", description: "Read only. Manage it in Me › Apple Health. A weight you type in is kept on this phone and also used for calorie and VO₂max estimates.",
-                            systemImage: "heart.text.square")
-            }
             NunaExpandRow(title: "About body composition", subtitle: "From a smart scale via Apple Health", systemImage: "sparkles",
                           text: "Body fat and lean mass appear only when Apple Health has them, for example from a smart scale. NOOP never estimates them.")
         }
