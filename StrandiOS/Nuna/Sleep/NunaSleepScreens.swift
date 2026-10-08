@@ -48,6 +48,8 @@ struct NunaSleepView: View {
     var startIndex = 0
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @State private var showCoach = false
+    @State private var edit: NunaSleepEditTarget?
+    @EnvironmentObject private var repo: Repository
 
     var body: some View {
         NunaSleepHost(title: "Sleep", startIndex: startIndex) { model in
@@ -70,6 +72,7 @@ struct NunaSleepView: View {
             }
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "sleep") }
+        .sheet(item: $edit) { NunaSleepTimeSheet(target: $0) { await repo.refresh() } }
     }
 
     @EnvironmentObject private var appModel: AppModel
@@ -132,6 +135,12 @@ struct NunaSleepView: View {
             }
             HStack(spacing: 6) {
                 NunaChip(verbatim: "\(NunaSleepFormat.clock(night.onset)) – \(NunaSleepFormat.clock(night.wake))")
+                if let block = night.editTarget {
+                    Button { edit = NunaSleepEditTarget(block, isNap: false) } label: {
+                        NunaBareIcon(block.userEdited ? "pencil.circle.fill" : "pencil.circle", tint: NunaPalette.restText, target: 32)
+                    }
+                    .buttonStyle(.plain).accessibilityLabel(Text("Edit sleep times"))
+                }
                 if let eff { NunaChip(verbatim: String(localized: "Efficiency \(Int(eff.rounded()))%"), color: NunaPalette.restText) }
                 if let nap = night.naps.first {
                     NavigationLink(value: NunaTodayRoute.sleepNaps(model.index)) {
@@ -392,6 +401,7 @@ private struct NunaNapContent: View {
     @EnvironmentObject private var repo: Repository
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @State private var showAdd = false
+    @State private var edit: NunaSleepEditTarget?
     @State private var showCoach = false
 
     private var night: NunaNight? { model.night }
@@ -402,6 +412,7 @@ private struct NunaNapContent: View {
         Group { content }
             .sheet(isPresented: $showAdd) { NunaAddNapSheet(day: night?.wakeDate ?? Date()) { await repo.refresh(); await model.load(repo: repo) } }
             .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "nap") }
+            .sheet(item: $edit) { NunaSleepTimeSheet(target: $0) { await model.load(repo: repo) } }
     }
 
     @ViewBuilder private var content: some View {
@@ -445,6 +456,12 @@ private struct NunaNapContent: View {
                     Text(count > 1 ? "First nap" : "Nap").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     NunaChip(nap.manual ? "Added by you" : "Detected automatically", color: nap.manual ? nil : NunaPalette.charge)
+                    if let block = nap.block {
+                        Button { edit = NunaSleepEditTarget(block, isNap: true) } label: {
+                            NunaBareIcon(nap.manual ? "pencil.circle.fill" : "pencil.circle", tint: NunaPalette.restText, target: 32)
+                        }
+                        .buttonStyle(.plain).accessibilityLabel(Text("Edit nap times"))
+                    }
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(verbatim: "\(Int(nap.asleepMin.rounded()))").font(.nuna(size: 60, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(60)).foregroundStyle(NunaPalette.textPrimary)

@@ -22,6 +22,8 @@ struct NunaNight: Identifiable {
     let proportional: Bool
     /// Movement magnitude per 30 s epoch, placed in seconds from `onset`. Empty when the night has none.
     var motion: [NunaMotionEpoch] = []
+    /// The stored block a sleep-time edit writes against: the same main block `SleepView` edits.
+    var editTarget: CachedSleepSession?
 
     var asleepMin: Double { stages.asleep }
     var inBedMin: Double { stages.total }
@@ -102,6 +104,8 @@ struct NunaNap: Identifiable {
     var motion: [NunaMotionEpoch] = []
     /// Added or corrected by hand (otherwise detected from the strap).
     var manual = false
+    /// The stored block behind this nap, for editing its times.
+    var block: CachedSleepSession?
     var spanMin: Double { end.timeIntervalSince(start) / 60 }
 
     /// Minutes in a stage, from the timeline.
@@ -275,13 +279,14 @@ final class NunaSleepModel: ObservableObject {
                 let nm = (motions[b.startTs] ?? []).enumerated().map { NunaMotionEpoch(t: TimeInterval($0.offset) * 30, v: $0.element) }
                 return NunaNap(start: Date(timeIntervalSince1970: TimeInterval(start)),
                                end: Date(timeIntervalSince1970: TimeInterval(b.endTs)),
-                               asleepMin: asleep, intervals: seg?.intervals ?? [], motion: nm, manual: b.userEdited)
+                               asleepMin: asleep, intervals: seg?.intervals ?? [], motion: nm, manual: b.userEdited, block: b)
             }.sorted { $0.start < $1.start }
 
             out.append(NunaNight(dayKey: key, wakeDate: wakeDate,
                                  onset: Date(timeIntervalSince1970: TimeInterval(onsetTs)),
                                  wake: wakeAt, stages: stages, intervals: intervals, naps: naps,
-                                 daily: row, proportional: proportional, motion: motion))
+                                 daily: row, proportional: proportional, motion: motion,
+                                 editTarget: SleepView.mainNightSession(group, habitualMidsleepSec: hab)))
         }
         nights = out
 
