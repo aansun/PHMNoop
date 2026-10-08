@@ -154,9 +154,13 @@ struct NunaAnyaSheet: View {
                 }
                 if coach.isConfigured, coach.dataConsent, explanation == nil, !explaining {
                     Button { Task { await explain() } } label: {
-                        Text("Explain")
-                            .font(.nuna(size: 14, weight: .heavy)).foregroundStyle(NunaAnyaWing.ink).padding(.horizontal, 24).frame(height: 42)
-                            .background(NunaAnyaWing.gradient, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        // Text and an arrow in the wing gradient, like "Learn more with Anya": no fill.
+                        HStack(spacing: 8) {
+                            Text("Explain").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                            Image(systemName: "arrow.right").font(.nuna(size: 13, weight: .bold))
+                        }
+                        .foregroundStyle(LinearGradient(colors: NunaAnyaWing.colors, startPoint: .leading, endPoint: .trailing))
+                        .frame(minHeight: 44).contentShape(Rectangle())
                     }.buttonStyle(.plain)
                 }
             }
