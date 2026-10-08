@@ -41,9 +41,8 @@ struct NunaWorkoutStartView: View {
     var body: some View {
         NunaDetailScreen(LocalizedStringKey(chosen)) {
             if let planned {
-                NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
+                NunaAnyaNote {
                     HStack(spacing: 12) {
-                        AnyaIconTile()
                         VStack(alignment: .leading, spacing: 2) {
                             Text("From Anya's plan").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                             Text(verbatim: planned.title).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)

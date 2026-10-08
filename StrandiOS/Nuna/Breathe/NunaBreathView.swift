@@ -92,10 +92,9 @@ struct NunaBreathView: View {
     }
 
     private var anyaCard: some View {
-        NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
+        NunaAnyaNote {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 10) {
-                    AnyaIconTile()
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Anya suggests").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         Text(verbatim: suggestion?.headline ?? String(localized: "Reading your numbers…")).font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)

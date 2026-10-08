@@ -174,10 +174,10 @@ struct NunaScoreRings: View {
 
 private struct NunaAnyaCardContextKey: EnvironmentKey { static let defaultValue: String? = nil }
 
-private struct NunaAnyaBorderedKey: EnvironmentKey { static let defaultValue = false }
+private struct NunaAnyaBorderedKey: EnvironmentKey { static let defaultValue = true }
 
 extension EnvironmentValues {
-    /// Draws Anya's suggestion as a bordered note (a gradient outline in the wing colours, no icon, no fill) instead of the plain row.
+    /// On by default everywhere. Draws Anya's suggestion as a bordered note (a gradient outline in the wing colours, no icon, no fill) instead of the plain row.
     var nunaAnyaBordered: Bool {
         get { self[NunaAnyaBorderedKey.self] }
         set { self[NunaAnyaBorderedKey.self] = newValue }
@@ -193,7 +193,24 @@ extension EnvironmentValues {
     }
 }
 
+extension View {
+    /// The outline of Anya's notes: a thin gradient in the wing colours, no fill. Used by every note Anya writes on a screen.
+    func nunaAnyaOutline(padding: CGFloat = 18) -> some View {
+        self.padding(padding)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous)
+                .strokeBorder(LinearGradient(colors: [Color(red: 0.44, green: 0.90, blue: 0.83), Color(red: 0.15, green: 0.65, blue: 0.62), Color(red: 0.11, green: 0.56, blue: 0.53)],
+                                             startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1.5))
+    }
+}
+
 /// Anya's suggestion has no card of its own: it sits on the page background, so it reads as a line of the page rather than one more box.
+struct NunaAnyaNote<Content: View>: View {
+    let content: Content
+    init(@ViewBuilder content: () -> Content) { self.content = content() }
+    var body: some View { content.nunaAnyaOutline().contentShape(Rectangle()) }
+}
+
 struct NunaAnyaPlain<Content: View>: View {
     let padding: EdgeInsets
     let content: Content
@@ -277,6 +294,14 @@ struct NunaAnyaCard: View {
         Button(action: tapped) {
             VStack(alignment: .leading, spacing: 14) {
                 bodyView(compact: compact)
+                // A screen that does not open the sheet from its cards keeps its own button.
+                if !compact, let buttonTitle, let onButton {
+                    Button(action: onButton) {
+                        Text(buttonTitle).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            .padding(.horizontal, 20).frame(height: 40)
+                            .overlay(RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous).strokeBorder(NunaPalette.textPrimary.opacity(0.3), lineWidth: 1))
+                    }.buttonStyle(.plain)
+                }
                 HStack(spacing: 8) {
                     Text("Learn more with Anya").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                     Image(systemName: "arrow.right").font(.nuna(size: 13, weight: .bold))
