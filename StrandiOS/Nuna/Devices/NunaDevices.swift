@@ -108,102 +108,61 @@ private struct NunaDevicesContent: View {
         }
     }
 
-    /// The strap at a glance: the name and whether it is connected, when it last synced, the link between the strap and the phone,
-    /// and the battery. A button appears only when the strap is not connected.
+    /// The strap at a glance, without a card: the name and whether it is connected, when it last synced, and the strap itself with its
+    /// battery beside it (or, when it is not connected, the broken line to the phone and a button to reconnect).
     private func hero(_ d: PairedDevice) -> some View {
         let connected = live.connected
-        return NunaCard(highlight: connected, padding: EdgeInsets(top: 18, leading: 20, bottom: 20, trailing: 20)) {
-            VStack(alignment: .leading, spacing: 22) {
-                HStack(alignment: .top, spacing: 12) {
-                    VStack(alignment: .leading, spacing: 5) {
-                        Text(connected ? "Connected to" : "Not connected to").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                            .foregroundStyle(connected ? NunaPalette.charge : NunaPalette.textSecondary)
-                        Button { nameDraft = d.nickname ?? d.displayName; renaming = true } label: {
-                            HStack(spacing: 7) {
-                                Text(verbatim: d.displayName).font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                                    .lineLimit(1).minimumScaleFactor(0.7)
-                                Image(systemName: "pencil").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                            }
-                        }.buttonStyle(.plain).accessibilityLabel(Text("Rename device"))
-                        Text(verbatim: NunaDeviceFormat.family(d)).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    }
-                    Spacer(minLength: 8)
-                    VStack(alignment: .trailing, spacing: 5) {
-                        Text("Last sync").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                        HStack(spacing: 6) {
-                            Text(verbatim: live.lastSyncedAt.map(NunaDeviceFormat.clock) ?? "–").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            Image(systemName: live.lastSyncedAt == nil ? "icloud.slash" : "checkmark.icloud").font(.nuna(size: 14, weight: .semibold))
-                                .foregroundStyle(live.lastSyncedAt == nil ? NunaPalette.textMuted : NunaPalette.textSecondary)
+        let family = NunaDeviceFormat.family(d)
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(connected ? "Connected to" : "Not connected to").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        .foregroundStyle(connected ? NunaPalette.charge : NunaPalette.textSecondary)
+                    Button { nameDraft = d.nickname ?? d.displayName; renaming = true } label: {
+                        HStack(spacing: 7) {
+                            Text(verbatim: d.displayName).font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                                .lineLimit(1).minimumScaleFactor(0.7)
+                            Image(systemName: "pencil").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                         }
+                    }.buttonStyle(.plain).accessibilityLabel(Text("Rename device"))
+                }
+                Spacer(minLength: 8)
+                VStack(alignment: .trailing, spacing: 5) {
+                    Text("Last sync").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    HStack(spacing: 6) {
+                        Text(verbatim: live.lastSyncedAt.map(NunaDeviceFormat.clock) ?? "–").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        phoneSyncIcon
                     }
                 }
-                linkDiagram(connected)
-                NavigationLink(value: NunaDeviceRoute.battery) { batteryBlock }.buttonStyle(.plain)
-                if !connected {
-                    Button { model.disconnect(); model.ble.connect() } label: {
-                        Text("Reconnect").font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 50)
-                            .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                    }.buttonStyle(.plain)
-                }
+            }
+            NunaDeviceStage(connected: connected, batteryPct: live.batteryPct, charging: live.charging == true,
+                            model: family, estimate: live.batteryEstimate.map { "~" + NunaDeviceFormat.remaining($0.remainingHours) })
+                .padding(.horizontal, -NunaSpacing.screenH)
+            if !connected || live.backfilling {
+                VStack(spacing: 6) {
+                    Text(connected ? "Syncing history" : "Strap disconnected")
+                        .font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                    Text(connected ? "Pulling what the strap recorded while it was away" : "Bring the strap close to the phone, then reconnect")
+                        .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center).textCase(nil)
+                }.frame(maxWidth: .infinity)
+            }
+            if !connected {
+                Button { model.disconnect(); model.ble.connect() } label: {
+                    Text("Reconnect").font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 50)
+                        .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                }.buttonStyle(.plain).padding(.top, 10)
             }
         }
     }
 
-    /// strap ─── ✓ ─── phone, with one line under it about the state.
-    private func linkDiagram(_ connected: Bool) -> some View {
-        let tint = connected ? NunaPalette.charge : NunaPalette.alert
-        return VStack(spacing: 12) {
-            HStack(spacing: 0) {
-                endpoint("applewatch")
-                Rectangle().fill(connected ? NunaPalette.charge.opacity(0.6) : NunaPalette.hairline).frame(height: 2)
-                ZStack {
-                    Circle().fill(tint.opacity(0.14)).frame(width: 44, height: 44)
-                    Circle().strokeBorder(tint, lineWidth: 2).frame(width: 44, height: 44)
-                    if live.backfilling {
-                        Image(systemName: "arrow.triangle.2.circlepath").font(.nuna(size: 16, weight: .bold)).foregroundStyle(tint)
-                    } else {
-                        Image(systemName: connected ? "checkmark" : "xmark").font(.nuna(size: 17, weight: .bold)).foregroundStyle(tint)
-                    }
-                }
-                Rectangle().fill(connected ? NunaPalette.charge.opacity(0.6) : NunaPalette.hairline).frame(height: 2)
-                endpoint("iphone")
-            }
-            Text(connected ? (live.backfilling ? "Syncing history" : "Strap connected") : "Strap disconnected")
-                .font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-            Text(connected ? (live.backfilling ? "Pulling what the strap recorded while it was away" : "Live heart rate and history are coming in")
-                           : "Bring the strap close to the phone, then reconnect")
-                .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center).textCase(nil)
-        }.frame(maxWidth: .infinity)
-    }
-
-    private func endpoint(_ symbol: String) -> some View {
-        Image(systemName: symbol).font(.nuna(size: 22, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-            .frame(width: 52, height: 52).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-    }
-
-    private var batteryBlock: some View {
-        let pct = live.batteryPct
-        let tint: Color = (pct ?? 100) <= 10 ? NunaPalette.alert : ((pct ?? 100) <= 20 ? NunaPalette.warning : NunaPalette.charge)
-        return VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline) {
-                Text("Battery").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                Spacer()
-                if live.charging == true { NunaChip("Charging", systemImage: "bolt.fill", color: NunaPalette.charge) }
-                else if let est = live.batteryEstimate {
-                    Text(verbatim: "~" + NunaDeviceFormat.remaining(est.remainingHours)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                }
-                Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-            }
-            if let pct {
-                HStack(alignment: .firstTextBaseline, spacing: 3) {
-                    Text(verbatim: "\(Int(pct.rounded()))").font(.nuna(size: 40, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("%").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                }
-                NunaProgressBar(fraction: pct / 100, color: tint)
-            } else {
-                Text("No reading yet. It appears once the strap is connected.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            }
-        }.contentShape(Rectangle())
+    /// The phone the strap last synced to: a phone with a tick, or crossed out when it never has.
+    @ViewBuilder private var phoneSyncIcon: some View {
+        if live.lastSyncedAt == nil {
+            Image(systemName: "iphone.slash").font(.nuna(size: 17, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+        } else {
+            Image(systemName: "iphone").font(.nuna(size: 19, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
+                .overlay { Image(systemName: "checkmark").font(.nuna(size: 7, weight: .heavy)).foregroundStyle(NunaPalette.textSecondary).offset(y: -1) }
+        }
     }
 
     private var addButton: some View {
@@ -337,22 +296,22 @@ private struct NunaDevicesContent: View {
 
     private var syncRow: some View {
         NavigationLink(value: NunaDeviceRoute.sync) {
-            NunaCard(small: true) {
-                HStack(spacing: 12) {
-                    NunaIconTile(live.backfilling ? "arrow.triangle.2.circlepath" : "checkmark.circle")
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(live.backfilling ? "Syncing history…" : "Strap history pulled").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: live.backfilling ? String(localized: "\(live.syncChunksThisSession) packets so far")
-                                                         : (live.lastSyncedAt.map { String(localized: "Last at \(NunaDeviceFormat.clock($0))") } ?? "")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                    }
-                    Spacer()
-                    if live.connected && !live.backfilling {
-                        Button { model.ble.syncNow() } label: {
-                            Text("Sync now").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 16).frame(height: 36).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                        }.buttonStyle(.plain)
-                    } else { Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted) }
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(live.backfilling ? "Syncing history…" : "Strap history pulled").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: live.backfilling ? String(localized: "\(live.syncChunksThisSession) packets so far")
+                                                     : (live.lastSyncedAt.map { String(localized: "Last at \(NunaDeviceFormat.clock($0))") } ?? "")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
+                Spacer()
+                if live.connected && !live.backfilling {
+                    Button { model.ble.syncNow() } label: {
+                        Text("Sync now").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 16).frame(height: 36).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                    }.buttonStyle(.plain)
+                } else { Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted) }
             }
+            .padding(.vertical, 14)
+            .overlay(alignment: .top) { NunaDivider() }
+            .contentShape(Rectangle())
         }.buttonStyle(.plain)
     }
 
