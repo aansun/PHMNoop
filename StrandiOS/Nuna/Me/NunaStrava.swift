@@ -41,9 +41,9 @@ struct NunaStravaView: View {
     private var needs: some View {
         VStack(spacing: NunaSpacing.section) {
             NunaSettingsGroup("What you need") {
-                NunaListRow("A Strava account", subtitle: "With access to My API Application", systemImage: "person.crop.circle")
+                NunaListRow("A Strava account", description: "With access to My API Application", systemImage: "person.crop.circle")
                 NunaDivider()
-                NunaListRow("Your own API app", subtitle: "A Client ID and Client Secret from Strava", systemImage: "key")
+                NunaListRow("Your own API app", description: "A Client ID and Client Secret from Strava", systemImage: "key")
                 NunaDivider()
                 NunaListRow("A GPS, treadmill or gym workout", subtitle: "Gym counts only when logged in PHMN, not from Hevy or Apple Health", systemImage: "figure.run")
             }

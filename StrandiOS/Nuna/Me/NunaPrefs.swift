@@ -145,7 +145,7 @@ struct NunaLanguageView: View {
                         NunaListRow("Anya's reply language", subtitle: LocalizedStringKey(anyaLanguage == "id" ? String(localized: "Always Indonesian") : (anyaLanguage == "en" ? String(localized: "Always English") : String(localized: "Follows the app language"))), systemImage: NunaGlyph.anya, showsChevron: true)
                     }.buttonStyle(.plain)
                     NunaDivider()
-                    NavigationLink(value: NunaMeRoute.units) { NunaListRow("Units are set separately", subtitle: "Km or miles, kg or lb, °C or °F", systemImage: "ruler.fill", showsChevron: true) }.buttonStyle(.plain)
+                    NavigationLink(value: NunaMeRoute.units) { NunaListRow("Units are set separately", description: "Km or miles, kg or lb, °C or °F", systemImage: "ruler.fill", showsChevron: true) }.buttonStyle(.plain)
                 }
             }
             Button { openIOSSettings() } label: {
@@ -282,7 +282,7 @@ struct NunaNotificationsView: View {
             NunaSettingsGroup("Recovery and sleep") {
                 NavigationLink(value: NunaAnyaRoute.brief) { NunaListRow("Morning brief", subtitle: LocalizedStringKey(brief ? String(localized: "Every day at \(NunaAnyaSettingsView.clock(CoachBriefScheduler.timeMinutes))") : String(localized: "Off")), systemImage: "sunrise", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
-                NavigationLink(value: NunaMeRoute.alarm) { NunaListRow("Alarms and bedtime", subtitle: "Smart alarm and wind-down", systemImage: "alarm", showsChevron: true) }.buttonStyle(.plain)
+                NavigationLink(value: NunaMeRoute.alarm) { NunaListRow("Alarms and bedtime", description: "Smart alarm and wind-down", systemImage: "alarm", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
                 NunaToggleRow("Early-illness warning", subtitle: "When two signals drift together", systemImage: "waveform.path.ecg", isOn: Binding(get: { behavior.illnessWatch }, set: { behavior.illnessWatch = $0; if $0 { IllnessNotifier.requestAuthorization() } })).padding(.vertical, 8)
             }
@@ -332,14 +332,14 @@ struct NunaPrivacyView: View {
                 NunaDivider()
                 perm("Microphone and speech", "Voice input for Anya, recognised on the iPhone", "mic", microphone)
                 NunaDivider()
-                Button { openIOSSettings() } label: { NunaListRow("Open iOS Settings", subtitle: "Change any permission", systemImage: "gearshape", showsChevron: true) }.buttonStyle(.plain)
+                Button { openIOSSettings() } label: { NunaListRow("Open iOS Settings", description: "Change any permission", systemImage: "gearshape", showsChevron: true) }.buttonStyle(.plain)
             }
             NunaSettingsGroup("What can leave the iPhone") {
                 NavigationLink(value: NunaAnyaRoute.settings) {
                     NunaListRow("Text summary to an AI provider", subtitle: LocalizedStringKey(coach.isConfigured && coach.dataConsent ? String(localized: "On, only when you ask") : String(localized: "Off. Only after you allow Anya and ask")), systemImage: NunaGlyph.anya, showsChevron: true)
                 }.buttonStyle(.plain)
                 NunaDivider()
-                NavigationLink(value: NunaMeRoute.backup) { NunaListRow("Export and backup", subtitle: "Only when you ask for it", systemImage: "square.and.arrow.up", showsChevron: true) }.buttonStyle(.plain)
+                NavigationLink(value: NunaMeRoute.backup) { NunaListRow("Export and backup", description: "Only when you ask for it", systemImage: "square.and.arrow.up", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
                 NunaListRow("Anything else", subtitle: "No health data is sent anywhere", systemImage: "nosign") { NunaChip("None") }
             }
@@ -352,7 +352,7 @@ struct NunaPrivacyView: View {
     }
 
     private func perm(_ title: LocalizedStringKey, _ sub: LocalizedStringKey, _ icon: String, _ state: String) -> some View {
-        NunaListRow(title, subtitle: sub, systemImage: icon) { if !state.isEmpty { NunaChip(verbatim: state) } }
+        NunaListRow(title, description: sub, systemImage: icon) { if !state.isEmpty { NunaChip(verbatim: state) } }
     }
 
     private func refresh() async {

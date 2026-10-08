@@ -224,7 +224,7 @@ struct NunaChargeRestView: View {
             }
             restParts
             NavigationLink(value: NunaTodayRoute.sleepPerformance(0)) {
-                NunaCard(small: true) { NunaListRow("Sleep performance", subtitle: "Need and sleep debt", systemImage: "moon", showsChevron: true) }
+                NunaCard(small: true) { NunaListRow("Sleep performance", description: "Need and sleep debt", systemImage: "moon", showsChevron: true) }
             }.buttonStyle(.plain)
             NunaAnyaCard(verbatim: anyaLine(b)) { showCoach = true }
             NunaExpandRow(title: "How to read this", subtitle: "Rest affects Charge, but is not the only thing", systemImage: "sparkles",

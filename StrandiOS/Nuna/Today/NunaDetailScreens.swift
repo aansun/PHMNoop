@@ -289,7 +289,7 @@ struct NunaMetricDetailView: View {
             higherIsBetter: metric.higherIsBetter ?? true, bars: isColumns, range: $range, page: $page)
         if ["spo2", "resp_rate", "hrv", "rhr"].contains(metric.key) {
             NavigationLink(value: NunaTodayRoute.earlyWarning) {
-                NunaCard(small: true) { NunaListRow("Part of the early warning", subtitle: "Breathing, SpO₂, HRV and resting heart rate are watched too", systemImage: "bell", showsChevron: true) }
+                NunaCard(small: true) { NunaListRow("Part of the early warning", description: "Breathing, SpO₂, HRV and resting heart rate are watched too", systemImage: "bell", showsChevron: true) }
             }.buttonStyle(.plain)
         }
         NunaExpandRow(title: "What affects it", subtitle: "Common factors", systemImage: "chart.line.uptrend.xyaxis",

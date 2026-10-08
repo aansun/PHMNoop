@@ -297,7 +297,7 @@ struct NunaHealthView: View {
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
                     NavigationLink(value: NunaTodayRoute.rhythm) {
-                        NunaListRow("Rhythm", subtitle: "Beat-to-beat view", systemImage: "waveform.path.ecg.rectangle", showsChevron: true) {
+                        NunaListRow("Rhythm", description: "Beat-to-beat view", systemImage: "waveform.path.ecg.rectangle", showsChevron: true) {
                             NunaChip("Experimental")
                         }
                     }.buttonStyle(.plain)
@@ -719,7 +719,7 @@ struct NunaHealthView: View {
         return VStack(spacing: NunaSpacing.section) {
             if recent.isEmpty {
                 NavigationLink(value: NunaTodayRoute.sleep(0)) {
-                    NunaCard { NunaListRow("Sleep", subtitle: "No night recorded yet", systemImage: "moon.zzz.fill", showsChevron: true) }
+                    NunaCard { NunaListRow("Sleep", description: "No night recorded yet", systemImage: "moon.zzz.fill", showsChevron: true) }
                 }.buttonStyle(.plain)
             } else {
                 weekCard(recent)
@@ -931,12 +931,12 @@ struct NunaHealthView: View {
     }
 
     private func link(_ route: NunaTodayRoute, _ title: LocalizedStringKey, _ subtitle: LocalizedStringKey, _ icon: String) -> some View {
-        NavigationLink(value: route) { NunaListRow(title, subtitle: subtitle, systemImage: icon, showsChevron: true) }.buttonStyle(.plain)
+        NavigationLink(value: route) { NunaListRow(title, description: subtitle, systemImage: icon, showsChevron: true) }.buttonStyle(.plain)
     }
 
     private func row(_ title: LocalizedStringKey, _ subtitle: LocalizedStringKey, _ icon: String,
                      _ tint: Color? = nil, action: @escaping () -> Void) -> some View {
-        Button(action: action) { NunaListRow(title, subtitle: subtitle, systemImage: icon, tint: tint, showsChevron: true) }
+        Button(action: action) { NunaListRow(title, description: subtitle, systemImage: icon, tint: tint, showsChevron: true) }
             .buttonStyle(.plain)
     }
 

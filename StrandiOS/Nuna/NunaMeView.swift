@@ -35,7 +35,7 @@ struct NunaMeView: View {
                 }
                 profileCard
                 group("Account and device", count: 3) {
-                    row(.persona, "Persona", "Profile, heart-rate zones, targets", "person.fill")
+                    row(.persona, "Persona", nil, "person.fill")
                     NunaDivider()
                     row(.devices, "Devices", LocalizedStringKey(deviceSubtitle), "applewatch")
                     NunaDivider()
@@ -44,7 +44,7 @@ struct NunaMeView: View {
                 group("Appearance", count: 2) {
                     row(.appearance, "Appearance", LocalizedStringKey(appearanceSubtitle), "slider.horizontal.3")
                     NunaDivider()
-                    row(.widgets, "Widgets and Lock Screen", "Home and lock screen widgets", "square.grid.2x2.fill")
+                    row(.widgets, "Widgets and Lock Screen", nil, "square.grid.2x2.fill")
                 }
                 group("Notifications and automation", count: 3) {
                     row(.notifications, "Notifications", LocalizedStringKey(notificationsSubtitle), "bell.fill")
@@ -54,16 +54,16 @@ struct NunaMeView: View {
                     row(.features, "Optional features", LocalizedStringKey(featuresSubtitle), "checkmark.circle.fill")
                 }
                 group("Data", count: 3) {
-                    row(.data, "Data and integrations", "Apple Health, Strava, import, export", "square.and.arrow.up")
+                    row(.data, "Data and integrations", nil, "square.and.arrow.up")
                     NunaDivider()
                     row(.backup, "Backup", LocalizedStringKey(FolderBackup.lastBackupMs > 0 ? String(localized: "Last \(NunaDataHubView.when(FolderBackup.lastBackupMs))") : String(localized: "Not backed up yet")), "clock.arrow.circlepath")
                     NunaDivider()
-                    row(.privacy, "Privacy", "Everything stays on this iPhone", "lock.shield.fill")
+                    row(.privacy, "Privacy", nil, "lock.shield.fill")
                 }
                 group("More", count: 2) {
-                    row(.advanced, "Advanced and experiments", "Baseline, HRV, Test Centre", "flame.fill")
+                    row(.advanced, "Advanced and experiments", nil, "flame.fill")
                     NunaDivider()
-                    row(.about, "About and help", "Version, how it works, credits", "info.circle.fill")
+                    row(.about, "About and help", nil, "info.circle.fill")
                 }
                 Text("PHMN · a fork of NOOP. Not a medical device.")
                     .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).frame(maxWidth: .infinity).multilineTextAlignment(.center).textCase(nil)
@@ -139,7 +139,7 @@ struct NunaMeView: View {
         }
     }
 
-    @ViewBuilder private func row(_ route: NunaMeRoute, _ title: LocalizedStringKey, _ subtitle: LocalizedStringKey, _ icon: String) -> some View {
+    @ViewBuilder private func row(_ route: NunaMeRoute, _ title: LocalizedStringKey, _ subtitle: LocalizedStringKey?, _ icon: String) -> some View {
         if route == .anya {
             // Anya's name is never set in capitals.
             NavigationLink(value: route) { NunaListRow(title, subtitle: subtitle, systemImage: icon, showsChevron: true).textCase(nil) }.buttonStyle(.plain)

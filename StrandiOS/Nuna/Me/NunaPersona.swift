@@ -140,13 +140,13 @@ struct NunaPersonaView: View {
                             onMinus: { profile.hrMaxOverride = max(100, profile.hrMax - 1) }, onPlus: { profile.hrMaxOverride = min(230, profile.hrMax + 1) })
                 if profile.hrMaxOverride > 0 {
                     NunaDivider()
-                    Button { profile.hrMaxOverride = 0 } label: { NunaListRow("Back to automatic", subtitle: "Use the estimate from your age", systemImage: "arrow.uturn.backward", showsChevron: true) }.buttonStyle(.plain)
+                    Button { profile.hrMaxOverride = 0 } label: { NunaListRow("Back to automatic", description: "Use the estimate from your age", systemImage: "arrow.uturn.backward", showsChevron: true) }.buttonStyle(.plain)
                 }
                 NunaDivider()
                 NavigationLink(value: NunaMeRoute.zones) { NunaListRow("Heart-rate zones", subtitle: LocalizedStringKey(profile.hasCustomHRZones ? String(localized: "Your own limits") : String(localized: "5 zones, percentages of your maximum")), systemImage: "heart.text.square", showsChevron: true) }.buttonStyle(.plain)
             }
             NunaSettingsGroup("Targets") {
-                NavigationLink(value: NunaMeRoute.goals) { NunaListRow("Targets", subtitle: "Weekly and daily goals", systemImage: "target", showsChevron: true) }.buttonStyle(.plain)
+                NavigationLink(value: NunaMeRoute.goals) { NunaListRow("Targets", description: "Weekly and daily goals", systemImage: "target", showsChevron: true) }.buttonStyle(.plain)
             }
             NunaSettingsGroup("Day and steps") {
                 VStack(alignment: .leading, spacing: 10) {

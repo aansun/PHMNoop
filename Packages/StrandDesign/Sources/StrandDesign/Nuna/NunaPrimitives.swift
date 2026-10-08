@@ -164,12 +164,10 @@ public struct NunaIconTile: View {
         self.systemImage = systemImage; self.tint = tint
     }
     public var body: some View {
-        NunaGlyph(systemImage, pointSize: 17)
-            // Icons are neutral by design: colour is kept for scores and status, never for symbols.
-            .foregroundStyle(NunaPalette.textPrimary)
-            .frame(width: 40, height: 40)
-            .background(NunaPalette.ink.opacity(0.08),
-                        in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
+        // A bare, quiet icon: no tile behind it, so the title carries the row.
+        NunaGlyph(systemImage, pointSize: 18)
+            .foregroundStyle(NunaPalette.textSecondary)
+            .frame(width: 30, height: 30)
             .accessibilityHidden(true)
     }
 }
@@ -191,11 +189,12 @@ public struct NunaListRow<Trailing: View>: View {
     }
 
     public var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 14) {
             if let systemImage { NunaIconTile(systemImage, tint: tint) }
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.nuna(size: NunaTypeSize.h3 - 1, weight: .bold))
+                    .font(.nuna(size: 14.5, weight: .heavy))
+                    .tracking(nunaTrackingLabel)
                     .foregroundStyle(NunaPalette.textPrimary)
                 if let subtitle {
                     Text(subtitle)
@@ -214,12 +213,27 @@ public struct NunaListRow<Trailing: View>: View {
                     .accessibilityHidden(true)
             }
         }
-        .frame(minHeight: 58)
+        .frame(minHeight: 56)
         .contentShape(Rectangle())
     }
 }
 
+public extension NunaListRow {
+    /// A row with an explanation the screen does not need to show: the line is accepted so the wording stays with the row, and left
+    /// out of the picture. Text under a title is kept for state (On, Off, a time, a count) and for the few warnings that matter; use
+    /// `subtitle:` for those.
+    init(_ title: LocalizedStringKey, description: LocalizedStringKey, systemImage: String? = nil,
+         tint: Color? = nil, showsChevron: Bool = false, @ViewBuilder trailing: () -> Trailing) {
+        self.init(title, subtitle: nil, systemImage: systemImage, tint: tint, showsChevron: showsChevron, trailing: trailing)
+    }
+}
+
 public extension NunaListRow where Trailing == EmptyView {
+    init(_ title: LocalizedStringKey, description: LocalizedStringKey, systemImage: String? = nil,
+         tint: Color? = nil, showsChevron: Bool = false) {
+        self.init(title, subtitle: nil, systemImage: systemImage, tint: tint, showsChevron: showsChevron) { EmptyView() }
+    }
+
     init(_ title: LocalizedStringKey, subtitle: LocalizedStringKey? = nil, systemImage: String? = nil,
          tint: Color? = nil, showsChevron: Bool = false) {
         self.init(title, subtitle: subtitle, systemImage: systemImage, tint: tint, showsChevron: showsChevron) { EmptyView() }

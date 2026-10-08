@@ -52,7 +52,7 @@ struct NunaBreathSettingsView: View {
                     }.buttonStyle(.plain).disabled(sessionCount == 0).opacity(sessionCount == 0 ? 0.5 : 1)
                     NunaDivider()
                     Button(action: onAdvanced) {
-                        NunaListRow("Resonance and Calm me", subtitle: "The strap-led modes", systemImage: "waveform.path", showsChevron: true)
+                        NunaListRow("Resonance and Calm me", description: "The strap-led modes", systemImage: "waveform.path", showsChevron: true)
                     }.buttonStyle(.plain)
                 }
                 nunaFootnote("Sessions, reports and Anya's notes stay on this iPhone. Anya's notes reach a provider only inside a question you ask in Breathing, and only if you allowed data access.")

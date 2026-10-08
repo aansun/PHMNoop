@@ -136,10 +136,10 @@ struct NunaGymView: View {
         weekSection
         sessionsSection
         NavigationLink(value: NunaWorkoutRoute.loadMuscle) {
-            NunaCard(small: true) { NunaListRow("Muscle load", subtitle: "Volume, recovery and personal records", systemImage: "chart.bar", showsChevron: true) }
+            NunaCard(small: true) { NunaListRow("Muscle load", description: "Volume, recovery and personal records", systemImage: "chart.bar", showsChevron: true) }
         }.buttonStyle(.plain)
         NavigationLink(value: NunaWorkoutRoute.exerciseLibrary) {
-            NunaCard(small: true) { NunaListRow("Exercise library", subtitle: "Animated demos and the muscles each one works", systemImage: "figure.strengthtraining.traditional", showsChevron: true) }
+            NunaCard(small: true) { NunaListRow("Exercise library", description: "Animated demos and the muscles each one works", systemImage: "figure.strengthtraining.traditional", showsChevron: true) }
         }.buttonStyle(.plain)
     }
 

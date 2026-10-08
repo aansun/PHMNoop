@@ -174,7 +174,7 @@ struct NunaAnyaSheet: View {
     @ViewBuilder private var connectState: some View {
         if !coach.isConfigured {
             NavigationLink(value: NunaAnyaRoute.connect) {
-                NunaCard(small: true) { NunaListRow("Connect Anya", subtitle: "Get advice from your own data", systemImage: "link", showsChevron: true) }
+                NunaCard(small: true) { NunaListRow("Connect Anya", description: "Get advice from your own data", systemImage: "link", showsChevron: true) }
             }.buttonStyle(.plain)
         } else if !coach.dataConsent {
             NunaCard(small: true) {

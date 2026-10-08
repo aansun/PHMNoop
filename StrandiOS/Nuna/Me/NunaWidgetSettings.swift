@@ -46,7 +46,7 @@ struct NunaWidgetSettingsView: View {
             NunaSettingsGroup("Available widgets") {
                 ForEach(Array(items.enumerated()), id: \.element.id) { i, it in
                     if i > 0 { NunaDivider() }
-                    NunaListRow(it.title, subtitle: it.note, systemImage: it.icon) { Text(it.sizes).font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+                    NunaListRow(it.title, description: it.note, systemImage: it.icon) { Text(it.sizes).font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                 }
             }
             NunaSettingsGroup("How to add one") {

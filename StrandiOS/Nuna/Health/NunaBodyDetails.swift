@@ -140,7 +140,7 @@ struct NunaWeightView: View {
                 }.buttonStyle(.plain)
             }
             NunaCard(small: true) {
-                NunaListRow("Read from Apple Health", subtitle: "Read only. Manage it in Me › Apple Health. A weight you type in is kept on this phone and also used for calorie and VO₂max estimates.",
+                NunaListRow("Read from Apple Health", description: "Read only. Manage it in Me › Apple Health. A weight you type in is kept on this phone and also used for calorie and VO₂max estimates.",
                             systemImage: "heart.text.square")
             }
             NunaExpandRow(title: "About body composition", subtitle: "From a smart scale via Apple Health", systemImage: "sparkles",
@@ -232,7 +232,7 @@ struct NunaWaistView: View {
                 }
             }
             NavigationLink(value: NunaTodayRoute.fitnessAge) {
-                NunaCard(small: true) { NunaListRow("Used for VO₂max", subtitle: "Opens the fitness age screen", systemImage: "waveform.path.ecg", showsChevron: true) }
+                NunaCard(small: true) { NunaListRow("Used for VO₂max", description: "Opens the fitness age screen", systemImage: "waveform.path.ecg", showsChevron: true) }
             }.buttonStyle(.plain)
             Button { showAdd = true } label: {
                 HStack(spacing: 8) {
@@ -243,7 +243,7 @@ struct NunaWaistView: View {
                 .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
             }.buttonStyle(.plain)
             NunaCard(small: true) {
-                NunaListRow("Fill the profile from Apple Health", subtitle: "The latest value is read automatically. Manage it in Me › Apple Health.", systemImage: "heart.text.square")
+                NunaListRow("Fill the profile from Apple Health", description: "The latest value is read automatically. Manage it in Me › Apple Health.", systemImage: "heart.text.square")
             }
         }
         .sheet(isPresented: $showAdd) {
@@ -620,12 +620,12 @@ struct NunaCycleView: View {
     private var settingsCard: some View {
         NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
             VStack(spacing: 0) {
-                NunaListRow("Track my cycle", subtitle: "Optional, only on this phone") {
+                NunaListRow("Track my cycle", description: "Optional, only on this phone") {
                     Toggle("", isOn: $tracking).labelsHidden().tint(NunaPalette.charge)
                         .onChange(of: tracking) { _, _ in Task { await model.refreshV5Signals() } }
                 }
                 NunaDivider()
-                NunaListRow("Effect on Charge", subtitle: "HRV baseline adjusted per phase") {
+                NunaListRow("Effect on Charge", description: "HRV baseline adjusted per phase") {
                     NunaChip(tracking ? "On" : "Off", color: tracking ? NunaPalette.charge : nil)
                 }
             }

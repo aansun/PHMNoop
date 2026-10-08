@@ -64,7 +64,7 @@ struct NunaWorkoutStartView: View {
             }.buttonStyle(.plain)
             if chosen == "Strength" || chosen == "Weightlifting" || chosen == "Powerlifting" || chosen == "Bodybuilding" {
                 NavigationLink(value: NunaWorkoutRoute.gym) {
-                    NunaCard(highlight: true) { NunaListRow("Log sets and weights", subtitle: "Open Gym to run a program or a freehand session", systemImage: "dumbbell", showsChevron: true) }
+                    NunaCard(highlight: true) { NunaListRow("Log sets and weights", description: "Open Gym to run a program or a freehand session", systemImage: "dumbbell", showsChevron: true) }
                 }.buttonStyle(.plain)
             }
             Button { begin() } label: {
@@ -199,7 +199,7 @@ struct NunaWorkoutStartView: View {
                     NunaChip(isDistance ? "On" : "Off", color: isDistance ? NunaPalette.charge : nil)
                 }
                 NunaDivider()
-                NunaListRow("Silent buzz on the strap", subtitle: "When you leave the target zone or reach the target", systemImage: "applewatch.radiowaves.left.and.right") {
+                NunaListRow("Silent buzz on the strap", description: "When you leave the target zone or reach the target", systemImage: "applewatch.radiowaves.left.and.right") {
                     Toggle("", isOn: $zoneBuzz).labelsHidden().tint(NunaPalette.charge)
                 }
             }

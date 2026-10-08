@@ -54,11 +54,11 @@ struct NunaDeviceBatteryView: View {
                 nunaRuledHeader("Looking after the battery")
                 NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                     VStack(spacing: 0) {
-                        NunaListRow("Charge while you are awake", subtitle: "In the shower or at your desk, so no sleep data is lost", systemImage: "moon.zzz")
+                        NunaListRow("Charge while you are awake", description: "In the shower or at your desk, so no sleep data is lost", systemImage: "moon.zzz")
                         NunaDivider()
-                        NunaListRow("Avoid heat", subtitle: "Do not charge in direct sunlight", systemImage: "sun.max")
+                        NunaListRow("Avoid heat", description: "Do not charge in direct sunlight", systemImage: "sun.max")
                         NunaDivider()
-                        NunaListRow("Dry the contacts", subtitle: "Clean and dry them before charging", systemImage: "drop")
+                        NunaListRow("Dry the contacts", description: "Clean and dry them before charging", systemImage: "drop")
                     }
                 }
             }
@@ -114,11 +114,11 @@ struct NunaDeviceSyncView: View {
                 nunaRuledHeader("How sync happens")
                 NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                     VStack(spacing: 0) {
-                        NunaListRow("Manual", subtitle: "Tap Sync now at any time", systemImage: "hand.tap")
+                        NunaListRow("Manual", description: "Tap Sync now at any time", systemImage: "hand.tap")
                         NunaDivider()
-                        NunaListRow("In the background", subtitle: "Whenever the strap is detected", systemImage: "arrow.triangle.2.circlepath")
+                        NunaListRow("In the background", description: "Whenever the strap is detected", systemImage: "arrow.triangle.2.circlepath")
                         NunaDivider()
-                        NunaListRow("Siri or Shortcuts", subtitle: "The Sync Strap command", systemImage: "mic")
+                        NunaListRow("Siri or Shortcuts", description: "The Sync Strap command", systemImage: "mic")
                     }
                 }
                 NunaCard(small: true) {
@@ -156,11 +156,11 @@ struct NunaDeviceHelpView: View {
                 nunaRuledHeader("Connection states")
                 NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                     VStack(spacing: 0) {
-                        NunaListRow("Connected", subtitle: "Data arrives live", systemImage: "checkmark.circle")
+                        NunaListRow("Connected", description: "Data arrives live", systemImage: "checkmark.circle")
                         NunaDivider()
-                        NunaListRow("Reconnecting", subtitle: "Trying again on its own", systemImage: "arrow.triangle.2.circlepath")
+                        NunaListRow("Reconnecting", description: "Trying again on its own", systemImage: "arrow.triangle.2.circlepath")
                         NunaDivider()
-                        NunaListRow("Disconnected", subtitle: "Tap Scan again", systemImage: "wifi.slash")
+                        NunaListRow("Disconnected", description: "Tap Scan again", systemImage: "wifi.slash")
                     }
                 }
             }

@@ -29,13 +29,13 @@ struct NunaAutomationsView: View {
                 NavigationLink(value: NunaMeRoute.doubleTap) { NunaListRow("Double tap", subtitle: LocalizedStringKey(behavior.doubleTapAction.label), systemImage: "hand.tap", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
                 NavigationLink(value: NunaMeRoute.presence) {
-                    NunaListRow("Strap on and off", subtitle: "Run a Shortcut when it is put on or taken off", systemImage: "figure.walk.motion", showsChevron: true) {
+                    NunaListRow("Strap on and off", description: "Run a Shortcut when it is put on or taken off", systemImage: "figure.walk.motion", showsChevron: true) {
                         NunaChip(!behavior.wristOnShortcut.isEmpty || !behavior.wristOffShortcut.isEmpty ? "On" : "Off")
                     }
                 }.buttonStyle(.plain)
             }
             NunaSettingsGroup("Vibration during activity") {
-                NavigationLink(value: NunaMeRoute.sessionCues) { NunaListRow("Session cues", subtitle: "Breathing, intervals, live session, workout start and end", systemImage: "waveform.path", showsChevron: true) { NunaChip(verbatim: String(localized: "\(sessionCues) on")) } }.buttonStyle(.plain)
+                NavigationLink(value: NunaMeRoute.sessionCues) { NunaListRow("Session cues", description: "Breathing, intervals, live session, workout start and end", systemImage: "waveform.path", showsChevron: true) { NunaChip(verbatim: String(localized: "\(sessionCues) on")) } }.buttonStyle(.plain)
                 NunaDivider()
                 NunaToggleRow("Heart-rate zone coaching", subtitle: "Vibrates in the top zone and when you recover", systemImage: "heart", isOn: $behavior.zoneCoaching).padding(.vertical, 8)
                 NunaDivider()
@@ -46,10 +46,10 @@ struct NunaAutomationsView: View {
                     NunaListRow("Sitting too long", subtitle: LocalizedStringKey(inactivity.enabled ? String(localized: "Vibrates after \(inactivity.thresholdMinutes) minutes") : String(localized: "Off")), systemImage: "chair", showsChevron: true)
                 }.buttonStyle(.plain)
                 NunaDivider()
-                NavigationLink(value: NunaMeRoute.notifications) { NunaListRow("Battery, Effort target and reports", subtitle: "Under Notifications", systemImage: "bell", showsChevron: true) }.buttonStyle(.plain)
+                NavigationLink(value: NunaMeRoute.notifications) { NunaListRow("Battery, Effort target and reports", description: "Under Notifications", systemImage: "bell", showsChevron: true) }.buttonStyle(.plain)
             }
             NunaSettingsGroup("Siri and Shortcuts") {
-                NavigationLink(value: NunaMeRoute.shortcuts) { NunaListRow("Available shortcuts", subtitle: "Sync Strap, breathe, mark a moment, export", systemImage: "square.stack.3d.up", showsChevron: true) }.buttonStyle(.plain)
+                NavigationLink(value: NunaMeRoute.shortcuts) { NunaListRow("Available shortcuts", description: "Sync Strap, breathe, mark a moment, export", systemImage: "square.stack.3d.up", showsChevron: true) }.buttonStyle(.plain)
             }
             nunaFootnote("Every vibration is off until you turn it on. Locking the screen when the strap comes off exists only on Mac, because iPhone does not allow it.")
         }
@@ -212,13 +212,13 @@ struct NunaShortcutsView: View {
         NunaDetailScreen("Siri and Shortcuts") {
             Text("Run NOOP actions by voice or from the Shortcuts app. Good for Focus, Sleep mode or the Action button.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             NunaSettingsGroup {
-                NunaListRow("Sync Strap", subtitle: "Pulls the history from the strap", systemImage: "arrow.triangle.2.circlepath")
+                NunaListRow("Sync Strap", description: "Pulls the history from the strap", systemImage: "arrow.triangle.2.circlepath")
                 NunaDivider()
-                NunaListRow("Start breathing", subtitle: "Opens Breathe with vibration", systemImage: "wind")
+                NunaListRow("Start breathing", description: "Opens Breathe with vibration", systemImage: "wind")
                 NunaDivider()
-                NunaListRow("Mark a moment", subtitle: "Marks the current time", systemImage: "mappin.and.ellipse")
+                NunaListRow("Mark a moment", description: "Marks the current time", systemImage: "mappin.and.ellipse")
                 NunaDivider()
-                NunaListRow("Export my data", subtitle: "Saves your data to a file", systemImage: "square.and.arrow.up")
+                NunaListRow("Export my data", description: "Saves your data to a file", systemImage: "square.and.arrow.up")
             }
             ShortcutsLink().shortcutsLinkStyle(.dark).frame(maxWidth: .infinity, alignment: .leading)
             nunaFootnote("Shortcuts run on this iPhone and send no data out. Add them, and choose Siri phrases, in the Shortcuts app.")

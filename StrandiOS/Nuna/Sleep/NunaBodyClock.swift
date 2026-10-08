@@ -238,7 +238,7 @@ struct NunaBodyClockView: View {
     private var planLink: some View {
         NavigationLink(value: NunaTodayRoute.bodyClockPlan) {
             NunaCard(small: true) {
-                NunaListRow("Plan a trip or shift", subtitle: "Shift your clock with light and sleep timing", systemImage: "timer",
+                NunaListRow("Plan a trip or shift", description: "Shift your clock with light and sleep timing", systemImage: "timer",
                             tint: NunaPalette.restText, showsChevron: true)
             }
         }

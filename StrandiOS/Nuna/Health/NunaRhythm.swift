@@ -185,7 +185,7 @@ struct NunaRhythmView: View {
             numbers
             if let exportURL {
                 ShareLink(item: exportURL) {
-                    NunaCard(small: true) { NunaListRow("Share", subtitle: "A neutral CSV of the numbers, never a verdict", systemImage: "square.and.arrow.up", showsChevron: true) }
+                    NunaCard(small: true) { NunaListRow("Share", description: "A neutral CSV of the numbers, never a verdict", systemImage: "square.and.arrow.up", showsChevron: true) }
                 }.buttonStyle(.plain)
             }
         }

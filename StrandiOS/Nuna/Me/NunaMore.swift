@@ -18,7 +18,7 @@ struct NunaAdvancedView: View {
         NunaDetailScreen("Advanced") {
             Text("For fine tuning. Daily settings are on the Me page.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             NunaSettingsGroup("Recovery") {
-                NavigationLink(value: NunaMeRoute.persona) { NunaListRow("Restart the baseline", subtitle: "Under Persona. History stays", systemImage: "arrow.triangle.2.circlepath", showsChevron: true) }.buttonStyle(.plain)
+                NavigationLink(value: NunaMeRoute.persona) { NunaListRow("Restart the baseline", description: "Under Persona. History stays", systemImage: "arrow.triangle.2.circlepath", showsChevron: true) }.buttonStyle(.plain)
             }
             NunaSettingsGroup("HRV") {
                 NunaToggleRow("Continuous HRV", subtitle: "Record R-R all day", systemImage: "waveform.path.ecg", isOn: Binding(get: { continuous }, set: { continuous = $0; model.ble.setKeepRealtimeForData($0) })).padding(.vertical, 8)
@@ -42,11 +42,11 @@ struct NunaAdvancedView: View {
                 NunaToggleRow("Power saving", subtitle: "Pauses extra capture when the phone or strap battery is low", systemImage: "leaf", isOn: $powerSaving).padding(.vertical, 8)
             }
             NunaSettingsGroup("Tools") {
-                NavigationLink(value: NunaMeRoute.experiments) { NunaListRow("Experiments", subtitle: "Trial and beta features", systemImage: "flask", showsChevron: true) }.buttonStyle(.plain)
+                NavigationLink(value: NunaMeRoute.experiments) { NunaListRow("Experiments", description: "Trial and beta features", systemImage: "flask", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
-                NavigationLink(value: NunaMeRoute.testCentre) { NunaListRow("Test Centre", subtitle: "Probes and diagnostics for developers", systemImage: "stethoscope", showsChevron: true) }.buttonStyle(.plain)
+                NavigationLink(value: NunaMeRoute.testCentre) { NunaListRow("Test Centre", description: "Probes and diagnostics for developers", systemImage: "stethoscope", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
-                NavigationLink(value: NunaDeviceRoute.log) { NunaListRow("Strap log", subtitle: "Connection and sync notes", systemImage: "doc.text", showsChevron: true) }.buttonStyle(.plain)
+                NavigationLink(value: NunaDeviceRoute.log) { NunaListRow("Strap log", description: "Connection and sync notes", systemImage: "doc.text", showsChevron: true) }.buttonStyle(.plain)
             }
             NunaSettingsGroup("Delete data") {
                 NavigationLink(value: NunaMeRoute.imports) { NunaListRow("Apple Health imports or all data", subtitle: "Permanent", systemImage: "trash", showsChevron: true) }.buttonStyle(.plain)
@@ -78,7 +78,7 @@ struct NunaExperimentsView: View {
                 }
             }
             NunaSettingsGroup("Daily features") {
-                Button { router.requestedDestination = .rhythm } label: { NunaListRow("Rhythm", subtitle: "A look at the timing between beats. Off until you agree", systemImage: "waveform.path", showsChevron: true) { NunaChip(rhythm ? "On" : "Off") } }.buttonStyle(.plain)
+                Button { router.requestedDestination = .rhythm } label: { NunaListRow("Rhythm", description: "A look at the timing between beats. Off until you agree", systemImage: "waveform.path", showsChevron: true) { NunaChip(rhythm ? "On" : "Off") } }.buttonStyle(.plain)
                 NunaDivider()
                 NunaToggleRow("Live Sessions", subtitle: "A quiet coach during a workout. The strap only vibrates to correct you · beta", systemImage: "figure.run", isOn: $liveSessions).padding(.vertical, 8)
                 NunaDivider()
@@ -91,7 +91,7 @@ struct NunaExperimentsView: View {
                 NunaToggleRow("Personal stress baseline", subtitle: "Scores the day's stress against your own baseline", systemImage: "waveform.path.ecg", isOn: $stressBaseline).padding(.vertical, 8)
             }
             NunaSettingsGroup("Device research") {
-                NavigationLink(value: NunaMeRoute.testCentre) { NunaListRow("Test Centre", subtitle: "WHOOP 5/MG probes, ECG and diagnostics", systemImage: "stethoscope", showsChevron: true) }.buttonStyle(.plain)
+                NavigationLink(value: NunaMeRoute.testCentre) { NunaListRow("Test Centre", description: "WHOOP 5/MG probes, ECG and diagnostics", systemImage: "stethoscope", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
                 NavigationLink(value: NunaMeRoute.strava) { NunaListRow("Strava", subtitle: "Upload GPS and treadmill workouts. Off by default", systemImage: "figure.run.circle", showsChevron: true) }.buttonStyle(.plain)
             }
@@ -120,21 +120,21 @@ struct NunaAboutView: View {
                 }
             }
             NunaSettingsGroup("How it works") {
-                NavigationLink { NunaHowItWorksView() } label: { NunaListRow("How the app works", subtitle: "Sleep detection, scores, recording and where numbers come from", systemImage: "questionmark.circle", showsChevron: true) }.buttonStyle(.plain)
+                NavigationLink { NunaHowItWorksView() } label: { NunaListRow("How the app works", description: "Sleep detection, scores, recording and where numbers come from", systemImage: "questionmark.circle", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
-                NavigationLink { NunaScoringGuideView() } label: { NunaListRow("How scores are worked out", subtitle: "Charge, Effort and Rest", systemImage: "chart.bar.doc.horizontal", showsChevron: true) }.buttonStyle(.plain)
+                NavigationLink { NunaScoringGuideView() } label: { NunaListRow("How scores are worked out", description: "Charge, Effort and Rest", systemImage: "chart.bar.doc.horizontal", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
-                NavigationLink(value: NunaDeviceRoute.models) { NunaListRow("Models and support", subtitle: "WHOOP 4.0, 5.0 and MG", systemImage: "square.stack.3d.up", showsChevron: true) }.buttonStyle(.plain)
+                NavigationLink(value: NunaDeviceRoute.models) { NunaListRow("Models and support", description: "WHOOP 4.0, 5.0 and MG", systemImage: "square.stack.3d.up", showsChevron: true) }.buttonStyle(.plain)
             }
             NunaSettingsGroup("Help") {
-                NavigationLink(value: NunaDeviceRoute.log) { NunaListRow("Strap log", subtitle: "Copy it when reporting a problem", systemImage: "doc.text", showsChevron: true) }.buttonStyle(.plain)
+                NavigationLink(value: NunaDeviceRoute.log) { NunaListRow("Strap log", description: "Copy it when reporting a problem", systemImage: "doc.text", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
-                NavigationLink(value: NunaDeviceRoute.help) { NunaListRow("Connection help", subtitle: "Strap not found", systemImage: "questionmark.circle", showsChevron: true) }.buttonStyle(.plain)
+                NavigationLink(value: NunaDeviceRoute.help) { NunaListRow("Connection help", description: "Strap not found", systemImage: "questionmark.circle", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
-                Link(destination: URL(string: "https://github.com/aansun/PHMNoop")!) { NunaListRow("Report a problem", subtitle: "Open on GitHub", systemImage: "arrow.up.right.square", showsChevron: true) }.buttonStyle(.plain)
+                Link(destination: URL(string: "https://github.com/aansun/PHMNoop")!) { NunaListRow("Report a problem", description: "Open on GitHub", systemImage: "arrow.up.right.square", showsChevron: true) }.buttonStyle(.plain)
             }
             NavigationLink { NunaLicensesView() } label: {
-                NunaCard(small: true) { NunaListRow("Open-source notices", subtitle: "MuscleMap, free-exercise-db, openGym and fonts", systemImage: "doc.plaintext", showsChevron: true) }
+                NunaCard(small: true) { NunaListRow("Open-source notices", description: "MuscleMap, free-exercise-db, openGym and fonts", systemImage: "doc.plaintext", showsChevron: true) }
             }.buttonStyle(.plain)
             NunaCard(small: true) {
                 VStack(alignment: .leading, spacing: 8) {

@@ -15,12 +15,12 @@ struct NunaWorkoutSettingsView: View {
                 NunaToggleRow("Auto-detect workouts", subtitle: "Only suggests, never saves on its own", systemImage: "sparkles", isOn: $autoDetect).padding(.vertical, 8)
                 NunaDivider()
                 NavigationLink(value: NunaWorkoutRoute.autoDetect) {
-                    NunaListRow("How detection works", subtitle: "Rules, thresholds and the latest suggestion", systemImage: "info.circle", showsChevron: true)
+                    NunaListRow("How detection works", description: "Rules, thresholds and the latest suggestion", systemImage: "info.circle", showsChevron: true)
                 }.buttonStyle(.plain)
             }
             NunaSettingsGroup("Audio") {
                 NavigationLink(value: NunaAnyaRoute.voiceCoach) {
-                    NunaListRow("Audio coach", subtitle: "Spoken cues in workouts and gym sessions: heart-rate zones, distance, rest", systemImage: "speaker.wave.2", showsChevron: true) {
+                    NunaListRow("Audio coach", description: "Spoken cues in workouts and gym sessions: heart-rate zones, distance, rest", systemImage: "speaker.wave.2", showsChevron: true) {
                         NunaChip(audioCoach ? "On" : "Off", color: audioCoach ? NunaPalette.charge : nil)
                     }
                 }.buttonStyle(.plain)

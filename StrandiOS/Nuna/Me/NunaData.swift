@@ -38,7 +38,7 @@ struct NunaDataHubView: View {
             nunaRuledHeader("Your data")
             VStack(spacing: 10) {
                 NavigationLink(value: NunaMeRoute.imports) {
-                    NunaTileRow(icon: "square.and.arrow.down", title: "Import data", subtitle: "WHOOP, Apple Health, nutrition, lifting and workout files")
+                    NunaTileRow(icon: "square.and.arrow.down", title: "Import data", subtitle: nil)
                 }.buttonStyle(.plain)
                 NavigationLink(value: NunaMeRoute.backup) {
                     NunaTileRow(icon: "square.and.arrow.up", title: "Backup and export",
@@ -122,7 +122,7 @@ struct NunaTileRow: View {
             }
         }
         .padding(.horizontal, 16).padding(.vertical, 15).frame(minHeight: 60)
-        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
         .contentShape(Rectangle())
     }
 }
@@ -156,10 +156,10 @@ struct NunaBackupView: View {
             NunaSettingsGroup("Folder") {
                 NunaListRow("Backup folder", subtitle: LocalizedStringKey(folder ?? String(localized: "Not chosen")), systemImage: "folder")
                 NunaDivider()
-                Button { chooseFolder() } label: { NunaListRow("Change folder", subtitle: "Pick one in Files or iCloud Drive", systemImage: "folder.badge.gearshape", showsChevron: true) }.buttonStyle(.plain)
+                Button { chooseFolder() } label: { NunaListRow("Change folder", description: "Pick one in Files or iCloud Drive", systemImage: "folder.badge.gearshape", showsChevron: true) }.buttonStyle(.plain)
                 if !FolderBackup.useInternalFolder {
                     NunaDivider()
-                    Button { _ = FolderBackup.useNoopFolder(); folder = FolderBackup.folderLabel() } label: { NunaListRow("Use NOOP's own folder", subtitle: "Inside Files > On My iPhone > NOOP", systemImage: "iphone", showsChevron: true) }.buttonStyle(.plain)
+                    Button { _ = FolderBackup.useNoopFolder(); folder = FolderBackup.folderLabel() } label: { NunaListRow("Use NOOP's own folder", description: "Inside Files > On My iPhone > NOOP", systemImage: "iphone", showsChevron: true) }.buttonStyle(.plain)
                 }
             }
             NunaSettingsGroup("Schedule") {

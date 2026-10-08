@@ -65,7 +65,7 @@ struct NunaLiveHeartView: View {
             zonesCard
             togglesCard
             NavigationLink(value: NunaTodayRoute.deepTimeline) {
-                NunaCard(small: true) { NunaListRow("Deep timeline", subtitle: "Every second of your day, zoomable.", systemImage: "waveform.path.ecg", showsChevron: true) }
+                NunaCard(small: true) { NunaListRow("Deep timeline", description: "Every second of your day, zoomable.", systemImage: "waveform.path.ecg", showsChevron: true) }
             }.buttonStyle(.plain)
             Button { router.requestedDestination = .activeWorkout } label: {
                 HStack(spacing: 8) {
@@ -177,7 +177,7 @@ struct NunaLiveHeartView: View {
     private var togglesCard: some View {
         NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
             VStack(spacing: 0) {
-                NunaListRow("Show on the Dynamic Island", subtitle: "Live heart rate while the strap is connected") {
+                NunaListRow("Show on the Dynamic Island", description: "Live heart rate while the strap is connected") {
                     Toggle("", isOn: $islandOn).labelsHidden().tint(NunaPalette.charge)
                 }
                 if model.whoop5Detected || broadcastOn {
@@ -268,17 +268,17 @@ struct NunaSkinTempView: View {
             NunaTitleRow(title: "What affects it") { EmptyView() }
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
-                    NunaListRow("Room temperature", subtitle: "A warm room can raise it a little", systemImage: "thermometer.medium")
+                    NunaListRow("Room temperature", description: "A warm room can raise it a little", systemImage: "thermometer.medium")
                     NunaDivider()
-                    NunaListRow("Alcohol", subtitle: "Log it in your journal to see the link", systemImage: "drop")
+                    NunaListRow("Alcohol", description: "Log it in your journal to see the link", systemImage: "drop")
                     if appModel.cyclePhase != nil {
                         NunaDivider()
-                        NunaListRow("Cycle phase", subtitle: "The luteal phase can raise your baseline", systemImage: "moon")
+                        NunaListRow("Cycle phase", description: "The luteal phase can raise your baseline", systemImage: "moon")
                     }
                 }
             }
             NavigationLink(value: NunaTodayRoute.earlyWarning) {
-                NunaCard(small: true) { NunaListRow("Early warning", subtitle: "It takes two signals away from your range", systemImage: "bell", showsChevron: true) }
+                NunaCard(small: true) { NunaListRow("Early warning", description: "It takes two signals away from your range", systemImage: "bell", showsChevron: true) }
             }.buttonStyle(.plain)
             NunaExpandRow(title: "How it's calculated", subtitle: "A deviation, not core body temperature", systemImage: "sparkles",
                           text: "The strap measures skin temperature at the wrist while you sleep and compares it with your own recent nights. The figure is a deviation from your baseline, not your core body temperature.")

@@ -345,7 +345,7 @@ struct NunaFitnessAgeView: View {
             }
             Button { showWaist = true } label: {
                 NunaCard(small: true) {
-                    NunaListRow("Unlock VO₂max", subtitle: "Weight, height and waist. Does not change the fitness age.", systemImage: "ruler", showsChevron: true)
+                    NunaListRow("Unlock VO₂max", description: "Weight, height and waist. Does not change the fitness age.", systemImage: "ruler", showsChevron: true)
                 }
             }.buttonStyle(.plain)
         }
@@ -356,11 +356,11 @@ struct NunaFitnessAgeView: View {
             NunaTitleRow(title: "How to lower it") { EmptyView() }
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
-                    NunaListRow("Zone 2 runs", subtitle: "3× per week, 30 minutes", systemImage: "figure.run")
+                    NunaListRow("Zone 2 runs", description: "3× per week, 30 minutes", systemImage: "figure.run")
                     NunaDivider()
-                    NunaListRow("Short intervals", subtitle: "1× per week, 4 × 4 minutes", systemImage: "bolt")
+                    NunaListRow("Short intervals", description: "1× per week, 4 × 4 minutes", systemImage: "bolt")
                     NunaDivider()
-                    NunaListRow("Enough sleep", subtitle: "Resting heart rate falls when Rest is high", systemImage: "moon")
+                    NunaListRow("Enough sleep", description: "Resting heart rate falls when Rest is high", systemImage: "moon")
                 }
             }
         }
