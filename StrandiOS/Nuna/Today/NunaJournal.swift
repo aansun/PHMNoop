@@ -273,7 +273,7 @@ struct NunaJournalView: View {
                 }
                 Button { catalog.remove(item.canonical) } label: {
                     Image(systemName: "minus").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.alertText)
-                        .frame(width: 36, height: 36).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                        .frame(width: 36, height: 36)
                 }.buttonStyle(.plain).accessibilityLabel(Text(item.custom ? "Delete this custom item" : "Hide this item"))
             }
         }

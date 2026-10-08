@@ -1,6 +1,7 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Nap %lld of %lld": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur siang %1$lld dari %2$lld"}}}},
     "Bottom bar": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Bilah bawah"}}}},
     "Glass effect": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Efek kaca"}}}},
     "Transparency": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Transparansi"}}}},

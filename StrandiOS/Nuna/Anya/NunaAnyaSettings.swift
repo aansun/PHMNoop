@@ -289,7 +289,7 @@ struct NunaAnyaHistoryView: View {
                                     }.buttonStyle(.plain)
                                     if editing {
                                         Button { withAnimation { coach.deleteConversation(item) } } label: {
-                                            Image(systemName: "trash").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.alertText).frame(width: 36, height: 36).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                                            Image(systemName: "trash").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.alertText).frame(width: 36, height: 36)
                                         }.buttonStyle(.plain).accessibilityLabel(Text("Delete"))
                                     }
                                 }

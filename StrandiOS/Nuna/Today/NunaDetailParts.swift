@@ -21,8 +21,6 @@ struct NunaDetailHeader: View {
                 Image(systemName: "chevron.left").font(.nuna(size: 16, weight: .bold))
                     .foregroundStyle(NunaPalette.textPrimary)
                     .frame(width: 44, height: 44)
-                    .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
             }
             .accessibilityLabel(Text("Back"))
             if switcher == nil {
@@ -186,7 +184,6 @@ struct NunaInfoButton: View {
             Image(systemName: "info").font(.nuna(size: 14, weight: .bold)).foregroundStyle(isOn ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                 .frame(width: 32, height: 32)
                 .background(isOn ? NunaPalette.glassStrong : .clear, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(isOn ? NunaPalette.textPrimary : NunaPalette.textSecondary, lineWidth: 1.6))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text("About this score"))

@@ -386,15 +386,22 @@ struct NunaSleepPerformanceView: View {
 
 struct NunaNapView: View {
     var startIndex = 0
+    /// Open on a given nap: the day it belongs to and when it started (unix seconds).
+    var dayKey: String?
+    var napStart: Int?
     var body: some View {
         NunaSleepHost(title: "Naps", startIndex: startIndex) { model in
-            NunaNapContent(model: model)
+            NunaNapContent(model: model, dayKey: dayKey, napStart: napStart)
         }
     }
 }
 
 private struct NunaNapContent: View {
     @ObservedObject var model: NunaSleepModel
+    var dayKey: String?
+    var napStart: Int?
+    /// The nap in view when the day has more than one; the one asked for, else the first.
+    @State private var selectedStart: Int?
     @EnvironmentObject private var repo: Repository
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @State private var showAdd = false
@@ -408,6 +415,7 @@ private struct NunaNapContent: View {
 
     var body: some View {
         Group { content }
+            .onAppear { select() }
             .sheet(isPresented: $showAdd) { NunaAddNapSheet(day: night?.wakeDate ?? Date()) { await repo.refresh(); await model.load(repo: repo) } }
             .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "nap") }
             .sheet(item: $edit) { NunaSleepTimeSheet(target: $0) { snap in await model.load(repo: repo); if let snap { undo = snap } } }
@@ -417,8 +425,8 @@ private struct NunaNapContent: View {
     @ViewBuilder private var content: some View {
         if let night {
             NunaNightPicker(model: model, caption: isToday ? "Today" : "Earlier day", date: night.wakeDate)
-            if let nap = naps.first {
-                hero(nap, count: naps.count)
+            if let nap = naps.first(where: { Int($0.start.timeIntervalSince1970) == selectedStart }) ?? naps.first {
+                hero(nap, count: naps.count, number: (naps.firstIndex(where: { $0.id == nap.id }) ?? 0) + 1)
                 tiles(nap)
                 impact(night)
                 if coachEnabled { NunaAnyaCard(title: "A nap under 30 minutes is safest for your night's sleep", highlight: false) { showCoach = true } }
@@ -447,12 +455,18 @@ private struct NunaNapContent: View {
         }
     }
 
-    private func hero(_ nap: NunaNap, count: Int) -> some View {
+    /// Go to the night and the nap the caller asked for.
+    private func select() {
+        if let dayKey, let i = model.nights.firstIndex(where: { $0.dayKey == dayKey }) { model.index = i }
+        if let napStart { selectedStart = napStart }
+    }
+
+    private func hero(_ nap: NunaNap, count: Int, number: Int = 1) -> some View {
         let total = max(nap.end.timeIntervalSince(nap.start), 1)
         return NunaCard(padding: EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20)) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
-                    Text(count > 1 ? "First nap" : "Nap").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Text(count > 1 ? LocalizedStringKey("Nap \(number) of \(count)") : LocalizedStringKey("Nap")).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
                     NunaChip(nap.manual ? "Added by you" : "Detected automatically", color: nap.manual ? nil : NunaPalette.charge)
                     if let block = nap.block {

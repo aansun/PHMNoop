@@ -51,8 +51,7 @@ struct NunaDateSheet: View {
         HStack {
             Button { dismiss() } label: {
                 Image(systemName: "xmark").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                    .frame(width: 44, height: 44)
             }
             .accessibilityLabel(Text("Close"))
             Spacer()
@@ -104,7 +103,7 @@ struct NunaDateSheet: View {
         Button(action: action) {
             Image(systemName: symbol).font(.nuna(size: 14, weight: .bold))
                 .foregroundStyle(enabled ? NunaPalette.textPrimary : NunaPalette.textMuted.opacity(0.4))
-                .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                .frame(width: 44, height: 44)
         }
         .disabled(!enabled)
     }

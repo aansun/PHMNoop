@@ -189,7 +189,7 @@ struct NunaWorkoutStartView: View {
     }
 
     private func stepBtn(_ s: String, _ a: @escaping () -> Void) -> some View {
-        Button(action: a) { Image(systemName: s).font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 52, height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous)) }.buttonStyle(.plain)
+        Button(action: a) { Image(systemName: s).font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 52, height: 52) }.buttonStyle(.plain)
     }
 
     private var optionsCard: some View {
@@ -343,7 +343,7 @@ struct NunaLiveWorkoutView: View {
         return HStack(alignment: .center) {
             Button(action: onClose) {
                 Image(systemName: "chevron.down").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                    .frame(width: 44, height: 44)
             }.buttonStyle(.plain).accessibilityLabel(Text("Minimise"))
             Spacer(minLength: 8)
             VStack(spacing: 2) {

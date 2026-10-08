@@ -75,8 +75,9 @@ public struct NunaIconButton: View {
             NunaGlyph(systemImage, pointSize: 16)
                 .foregroundStyle(filled ? NunaPalette.onAccent : NunaPalette.textPrimary)
                 .frame(width: 44, height: 44)
-                .background(filled ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: filled ? 0 : 1))
+                // Only a filled (primary) button keeps its surface; every other icon button is the bare icon.
+                .background(filled ? NunaPalette.accent : .clear, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)

@@ -454,7 +454,7 @@ struct NunaTodayView: View {
                 Spacer()
                 Button { withAnimation { toggleHidden(section) } } label: {
                     Image(systemName: "xmark").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(width: 34, height: 34).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                        .frame(width: 34, height: 34)
                 }
                 .accessibilityLabel(Text("Hide"))
             }

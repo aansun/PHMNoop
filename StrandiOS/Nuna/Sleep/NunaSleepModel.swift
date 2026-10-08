@@ -210,6 +210,29 @@ final class NunaSleepModel: ObservableObject {
         return slice.map { series[key]?[$0.dayKey] }
     }
 
+    /// The naps that started inside a stretch of time, each with the night it is filed under (the key the nap detail opens on), without loading
+    /// everything else the sleep screens need. A nap is a block that is not part of its day's main night.
+    static func naps(from lo: Date, to hi: Date, repo: Repository) async -> [(dayKey: String, nap: NunaNap)] {
+        let hab = await repo.habitualMidsleepSec()
+        let sessions = await repo.allSleepSessions(days: 10)
+        var out: [(dayKey: String, nap: NunaNap)] = []
+        for group in SleepModel.navDays(navSessions: sessions) {
+            let main = SleepView.mainNightGroup(group, habitualMidsleepSec: hab)
+            guard let last = main.last else { continue }
+            let key = Repository.localDayKey(Date(timeIntervalSince1970: TimeInterval(last.endTs)))
+            let mainStarts = Set(main.map(\.startTs))
+            for b in group where !mainStarts.contains(b.startTs) {
+                let start = Date(timeIntervalSince1970: TimeInterval(b.effectiveStartTs))
+                guard start >= lo, start < hi else { continue }
+                let asleep = SleepView.decodeSegments(b.stagesJSON, sessionStart: b.effectiveStartTs)?.stages.asleep
+                    ?? SleepView.decodedAsleepMinutes(b.stagesJSON, effectiveStartTs: b.effectiveStartTs)
+                out.append((key, NunaNap(start: start, end: Date(timeIntervalSince1970: TimeInterval(b.endTs)),
+                                         asleepMin: asleep, intervals: [], manual: b.userEdited, block: b)))
+            }
+        }
+        return out.sorted { $0.nap.start < $1.nap.start }
+    }
+
     func load(repo: Repository) async {
         let hab = await repo.habitualMidsleepSec()
         let sessions = await repo.allSleepSessions(days: 60)

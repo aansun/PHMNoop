@@ -91,7 +91,6 @@ struct NunaMoodView: View {
                                 Text(verbatim: MoodStore.face(for: v)).font(.nuna(size: 26))
                                     .frame(width: 52, height: 52)
                                     .background(on ? NunaPalette.accent : NunaPalette.ink.opacity(0.07), in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
-                                    .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: on ? 0 : 1))
                                 Text(verbatim: MoodStore.label(for: v)).font(.nuna(size: 11, weight: .bold))
                                     .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                                     .multilineTextAlignment(.center).lineLimit(2)

@@ -128,7 +128,7 @@ struct NunaBreathSessionView: View {
         HStack(spacing: 10) {
             Button { seconds >= 20 ? (confirmEnd = true) : cancel() } label: {
                 Image(systemName: "xmark").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                    .frame(width: 44, height: 44)
             }.buttonStyle(.plain).accessibilityLabel(Text("Close"))
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: title).font(.nuna(size: 18, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
@@ -137,7 +137,7 @@ struct NunaBreathSessionView: View {
             Spacer()
             Button { audioCues.toggle(); audioCues ? tone.activate() : tone.deactivate() } label: {
                 Image(systemName: audioCues ? "speaker.wave.2" : "speaker.slash").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                    .frame(width: 44, height: 44)
             }.buttonStyle(.plain).accessibilityLabel(Text("Audio cues"))
         }
     }

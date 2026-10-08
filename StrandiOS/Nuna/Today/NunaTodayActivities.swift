@@ -16,9 +16,10 @@ struct NunaTodayActivities: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var router: NavRouter
     @State private var night: (onset: Date, wake: Date)?
+    @State private var naps: [(dayKey: String, nap: NunaNap)] = []
 
     private struct Item: Identifiable {
-        enum Kind { case sleep, workout(WorkoutRow) }
+        enum Kind { case sleep, workout(WorkoutRow), nap(String, NunaNap) }
         let id: String
         let kind: Kind
         let start: Date
@@ -31,6 +32,7 @@ struct NunaTodayActivities: View {
                  start: Date(timeIntervalSince1970: TimeInterval(w.startTs)), end: Date(timeIntervalSince1970: TimeInterval(w.endTs)))
         }
         if let night { out.append(Item(id: "sleep", kind: .sleep, start: night.onset, end: night.wake)) }
+        out += naps.map { Item(id: "nap-\(Int($0.nap.start.timeIntervalSince1970))", kind: .nap($0.dayKey, $0.nap), start: $0.nap.start, end: $0.nap.end) }
         return out.sorted { $0.start < $1.start }
     }
 
@@ -47,14 +49,16 @@ struct NunaTodayActivities: View {
                 .padding(.trailing, -13)
             }
             .padding(.horizontal, 6)
-            VStack(spacing: 7) {
-                ForEach(rows) { item in row(item) }
+            VStack(spacing: 0) {
+                ForEach(Array(rows.enumerated()), id: \.element.id) { i, item in
+                    if i > 0 { NunaDivider() }
+                    row(item)
+                }
             }
         }
         .padding(.horizontal, 12).padding(.top, 10).padding(.bottom, 12)
         // The same surface as every other card, so it follows the active look (Default or WHP) with them.
-        .background(NunaPalette.card, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous).strokeBorder(NunaPalette.hairlineSoft, lineWidth: 1))
+        .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
         .task(id: "\(repo.refreshSeq)-\(dayStart.timeIntervalSince1970)") { await loadNight() }
     }
 
@@ -63,6 +67,10 @@ struct NunaTodayActivities: View {
         case .sleep:
             NavigationLink(value: NunaTodayRoute.sleep(0)) {
                 rowBody(tint: NunaPalette.rest, icon: "moon.fill", figure: sleepFigure(item), name: Text("Sleep"), start: item.start, end: item.end)
+            }.buttonStyle(.plain)
+        case .nap(let dayKey, let nap):
+            NavigationLink(value: NunaTodayRoute.nap(dayKey, Int(nap.start.timeIntervalSince1970))) {
+                rowBody(tint: NunaPalette.rest, icon: "moon.zzz.fill", figure: String(localized: "\(Int(nap.asleepMin.rounded())) min"), name: Text("Nap"), start: item.start, end: item.end)
             }.buttonStyle(.plain)
         case .workout(let w):
             let strength = NunaWorkoutKind.isStrength(w)
@@ -82,8 +90,7 @@ struct NunaTodayActivities: View {
                 Text(verbatim: figure).font(.nuna(size: 18, weight: .bold, design: NunaType.design)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.8)
             }
             .foregroundStyle(NunaPalette.textPrimary)
-            .frame(width: 92, height: 40)
-            .background(NunaPalette.ink.opacity(0.11), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+            .frame(width: 92, height: 40, alignment: .leading)
             name.font(.nuna(size: 13, weight: .heavy)).tracking(0.8).foregroundStyle(NunaPalette.textPrimary)
                 .lineLimit(2).minimumScaleFactor(0.85).multilineTextAlignment(.leading)
             Spacer(minLength: 6)
@@ -100,8 +107,6 @@ struct NunaTodayActivities: View {
             .padding(.trailing, 2)
         }
         .padding(.horizontal, 6).padding(.vertical, 6)
-        // A step lighter than the card it sits on (a thin wash of the text colour), not a dark well: it follows the active look.
-        .background(NunaPalette.ink.opacity(0.07), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .contentShape(Rectangle())
     }
 
@@ -132,6 +137,7 @@ struct NunaTodayActivities: View {
 
     /// The night that ended on this day: the sessions of at least three hours that woke inside it, from the first onset to the last wake.
     private func loadNight() async {
+        naps = await NunaSleepModel.naps(from: dayStart, to: dayStart.addingTimeInterval(86_400), repo: repo)
         let lo = Int(dayStart.timeIntervalSince1970)
         let hi = lo + 86_400
         let sessions = await repo.allSleepSessions(days: 4).filter { $0.endTs >= lo && $0.endTs < hi && ($0.endTs - $0.effectiveStartTs) >= 3 * 3600 }

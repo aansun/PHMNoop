@@ -126,7 +126,7 @@ struct NunaAnyaPlanView: View {
                     ForEach(Array(plan.steps.enumerated()), id: \.offset) { i, s in
                         if i > 0 { NunaDivider() }
                         HStack(alignment: .top, spacing: 14) {
-                            Text(verbatim: "\(i + 1)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 30, height: 30).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                            Text(verbatim: "\(i + 1)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 30, height: 30)
                             VStack(alignment: .leading, spacing: 4) {
                                 HStack { Text(phaseName(s.phase)).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary); Spacer()
                                     Text(verbatim: String(localized: "\(s.minutes) min")).font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary) }
