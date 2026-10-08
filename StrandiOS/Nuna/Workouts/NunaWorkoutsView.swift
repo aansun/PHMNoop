@@ -272,7 +272,7 @@ struct NunaWorkoutsView: View {
     @ViewBuilder private var suggestionCard: some View {
         if let s = suggestion {
             let w = s.workout
-            NunaCard(highlight: true) {
+            NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(spacing: 10) {
                         AnyaMark(size: 18).foregroundStyle(NunaPalette.textPrimary)

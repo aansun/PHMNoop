@@ -41,7 +41,7 @@ struct NunaWorkoutStartView: View {
     var body: some View {
         NunaDetailScreen(LocalizedStringKey(chosen)) {
             if let planned {
-                NunaCard(small: true, highlight: true) {
+                NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
                     HStack(spacing: 12) {
                         AnyaIconTile()
                         VStack(alignment: .leading, spacing: 2) {
@@ -50,7 +50,7 @@ struct NunaWorkoutStartView: View {
                         }
                         Spacer(minLength: 6)
                         Button { withAnimation { self.planned = nil; goal = NunaWorkoutGoal() } } label: {
-                            Text("Clear").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 34).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                            Text("Clear").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(minHeight: 44)
                         }.buttonStyle(.plain)
                     }
                 }
