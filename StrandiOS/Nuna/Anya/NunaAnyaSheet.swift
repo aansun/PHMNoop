@@ -81,8 +81,8 @@ struct NunaAnyaSheet: View {
                     if let read { questions(read) }
                     composer
                     Button { openFull() } label: {
-                        Text("Open full conversation").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            .frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                        Text("Open full conversation").font(.nuna(size: 15, weight: .heavy)).foregroundStyle(NunaAnyaWing.ink)
+                            .frame(maxWidth: .infinity).frame(height: 50).background(NunaAnyaWing.gradient, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }.buttonStyle(.plain)
                 }
                 .padding(.horizontal, NunaSpacing.screenH).padding(.top, 20).padding(.bottom, 24)
@@ -111,7 +111,15 @@ struct NunaAnyaSheet: View {
             AnyaIconTile(size: 44)
             VStack(alignment: .leading, spacing: 2) {
                 Text("Anya").font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                Text("Anya sees").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                // What she looked at, next to who she is, instead of a "Read:" line further down.
+                HStack(spacing: 5) {
+                    Text("Anya sees").foregroundStyle(NunaPalette.textSecondary)
+                    ForEach(read?.read ?? [], id: \.self) { n in
+                        Text(verbatim: "·").foregroundStyle(NunaPalette.textMuted)
+                        Text(LocalizedStringKey(n)).foregroundStyle(NunaPalette.textPrimary)
+                    }
+                }
+                .font(.nuna(size: 12.5, weight: .semibold)).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
             }
             Spacer()
             Text(metric.map { LocalizedStringKey($0.title) } ?? module.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
@@ -131,8 +139,8 @@ struct NunaAnyaSheet: View {
                                 // Let the sheet go before the screen behind it moves on.
                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { a.perform() }
                             } label: {
-                                Text(a.title).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 18).frame(height: 40)
-                                    .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                                Text(a.title).font(.nuna(size: 14, weight: .heavy)).foregroundStyle(NunaAnyaWing.ink).padding(.horizontal, 20).frame(height: 42)
+                                    .background(NunaAnyaWing.gradient, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                             }.buttonStyle(.plain)
                         }
                         Spacer(minLength: 0)
@@ -144,17 +152,11 @@ struct NunaAnyaSheet: View {
                     NunaDivider()
                     Text(Self.markdown(AnyaActions.proseOnly(explanation))).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
-                if !r.read.isEmpty {
-                    HStack(spacing: 6) {
-                        Text("Read:").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        ForEach(r.read, id: \.self) { Text(LocalizedStringKey($0)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
-                    }
-                }
                 if coach.isConfigured, coach.dataConsent, explanation == nil, !explaining {
                     Button { Task { await explain() } } label: {
                         Text("Explain")
-                            .font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 18).frame(height: 40)
-                            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                            .font(.nuna(size: 14, weight: .heavy)).foregroundStyle(NunaAnyaWing.ink).padding(.horizontal, 24).frame(height: 42)
+                            .background(NunaAnyaWing.gradient, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }.buttonStyle(.plain)
                 }
             }
@@ -189,7 +191,7 @@ struct NunaAnyaSheet: View {
                     if q.kind == .plan { path.append(NunaAnyaRoute.plan) } else { Task { await ask(q.prompt, shown: q.title) } }
                 } label: {
                     HStack {
-                        Text(verbatim: q.title).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: q.title).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         Spacer()
                         Image(systemName: q.kind == .plan ? "chevron.right" : "arrow.up.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                     }

@@ -193,6 +193,14 @@ extension EnvironmentValues {
     }
 }
 
+/// Anya's colours, taken from her wings: light teal, teal and deep teal.
+enum NunaAnyaWing {
+    static let colors = [Color(red: 0.44, green: 0.90, blue: 0.83), Color(red: 0.15, green: 0.65, blue: 0.62), Color(red: 0.11, green: 0.56, blue: 0.53)]
+    static var gradient: LinearGradient { LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing) }
+    /// Dark ink for text on the gradient.
+    static let ink = Color(red: 0.02, green: 0.13, blue: 0.12)
+}
+
 extension View {
     /// The outline of Anya's notes: a thin gradient in the wing colours, no fill. Used by every note Anya writes on a screen.
     func nunaAnyaOutline(padding: CGFloat = 18) -> some View {
