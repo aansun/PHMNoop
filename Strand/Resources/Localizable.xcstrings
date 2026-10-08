@@ -1,6 +1,11 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Pair another strap. It is added next to this one and its history stays separate.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pasangkan strap lain. Strap itu ditambahkan di samping yang ini dan riwayatnya tetap terpisah."}}}},
+    "Disconnect, then scan for the strap again.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Putuskan koneksi, lalu cari strap lagi."}}}},
+    "The strap vibrates once to confirm.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Strap bergetar sekali sebagai tanda."}}}},
+    "Disconnects for about 30 seconds, then reconnects on its own.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Terputus sekitar 30 detik, lalu tersambung lagi sendiri."}}}},
+    "Rename it, remove it, or delete its data.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ganti nama, lepas, atau hapus datanya."}}}},
     "Current sleep": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur saat ini"}}}},
     "Current nap": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur siang saat ini"}}}},
     "Sleep deleted": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur dihapus"}}}},
