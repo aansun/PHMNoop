@@ -29,7 +29,7 @@ struct NunaChargeDetailView: View {
             NunaScoreHero(caption: "Today", chip: chip?.0, chipColor: NunaPalette.charge,
                           fraction: (day.charge.pct ?? latest?.value ?? 0) / 100,
                           number: (day.charge.pct ?? latest?.value).map { String(format: "%.0f", $0) } ?? "–",
-                          unit: "%", name: "Charge", color: NunaPalette.charge,
+                          unit: "%", name: "Charge", color: (day.charge.pct ?? latest?.value).map(nunaChargeColor) ?? NunaPalette.charge,
                           hasNote: (day.charge.pct ?? latest?.value) != nil && series.baseline != nil) {
                 if let v = day.charge.pct ?? latest?.value, let base = series.baseline {
                     let d = Int((v - base).rounded())
@@ -50,15 +50,16 @@ struct NunaChargeDetailView: View {
                     NunaContributorRow(title: "Sleep performance", icon: "moon", value: day.rest.map { String(format: "%.0f%%", $0) }, delta: nil)
                 }.buttonStyle(.plain)
             }
-            NunaSegmented(rangeOptions(), selection: $range)
             NunaCard {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 16) {
+                    NunaSegmented(rangeOptions(), selection: $range)
                     if range == 7 {
                         NunaColumns(items: slots.map { s in
                             NunaColumns.Item(weekday: weekday(s.date), date: s.date, fraction: s.value.map { $0 / 100 },
                                              valueText: s.value.map { String(format: "%.0f", $0) },
                                              highlight: Calendar.current.isDateInToday(s.date), color: s.value.map(nunaChargeColor))
                         }, color: NunaPalette.charge)
+                        zoneKey
                     } else {
                         NunaLine2Chart(points: series.readings(range), color: NunaPalette.charge, decimals: 0, baseline: series.baseline, band: series.band.map { $0.lo...$0.hi })
                     }
@@ -77,6 +78,23 @@ struct NunaChargeDetailView: View {
     private func weekday(_ d: Date) -> String {
         let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE")
         return f.string(from: d)
+    }
+
+    /// What the colours of the bars mean: the three Charge zones.
+    private var zoneKey: some View {
+        HStack(spacing: 16) {
+            key(NunaPalette.charge, "67–100", "Ready")
+            key(NunaPalette.warning, "34–66", "Moderate")
+            key(NunaPalette.alert, "0–33", "Low")
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func key(_ color: Color, _ range: String, _ label: LocalizedStringKey) -> some View {
+        HStack(spacing: 6) {
+            RoundedRectangle(cornerRadius: 3, style: .continuous).fill(color).frame(width: 10, height: 10)
+            (Text(verbatim: range + " ") + Text(label)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+        }
     }
 
     private var chip: (LocalizedStringKey, Bool)? {
