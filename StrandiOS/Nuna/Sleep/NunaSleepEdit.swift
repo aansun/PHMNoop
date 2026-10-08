@@ -67,6 +67,20 @@ struct NunaSleepTimeSheet: View {
                 .font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design))
                 .foregroundStyle(NunaPalette.textPrimary).padding(.top, 22)
             NunaCard(small: true) {
+                HStack(alignment: .firstTextBaseline) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(target.isNap ? "Current nap" : "Current sleep")
+                            .font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: "\(NunaSleepFormat.clock(Date(timeIntervalSince1970: TimeInterval(target.bedTs)))) – \(NunaSleepFormat.clock(Date(timeIntervalSince1970: TimeInterval(target.wakeTs))))")
+                            .font(.nuna(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    }
+                    Spacer(minLength: 8)
+                    Text(verbatim: NunaSleepFormat.duration(Double(target.wakeTs - target.bedTs) / 60))
+                        .font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.restText)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+            }
+            NunaCard(small: true) {
                 VStack(spacing: 0) {
                     DatePicker(target.isNap ? "Nap started" : "Asleep", selection: $bed, in: ...Date(),
                                displayedComponents: [.date, .hourAndMinute])
