@@ -115,12 +115,11 @@ struct NunaAnyaSheet: View {
             }
             Spacer()
             Text(metric.map { LocalizedStringKey($0.title) } ?? module.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                .padding(.horizontal, 12).frame(height: 30).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
         }
     }
 
     private func card(_ r: NunaAnyaRead) -> some View {
-        NunaCard(highlight: true) {
+        NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
             VStack(alignment: .leading, spacing: 12) {
                 Text(verbatim: r.headline).font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 if let d = r.detail { Text(verbatim: d).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil) }
@@ -154,7 +153,7 @@ struct NunaAnyaSheet: View {
                 if coach.isConfigured, coach.dataConsent, explanation == nil, !explaining {
                     Button { Task { await explain() } } label: {
                         Text("Ask Anya to explain")
-                            .font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(height: 40).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                            .font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.charge).frame(minHeight: 44)
                     }.buttonStyle(.plain)
                 }
             }
@@ -162,7 +161,7 @@ struct NunaAnyaSheet: View {
     }
 
     private var empty: some View {
-        NunaCard(small: true) {
+        NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Nothing to read yet").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 Text("Anya shows a line only when it has figures to cite. Wear the strap and sync, then ask again.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
@@ -174,18 +173,17 @@ struct NunaAnyaSheet: View {
     @ViewBuilder private var connectState: some View {
         if !coach.isConfigured {
             NavigationLink(value: NunaAnyaRoute.connect) {
-                NunaCard(small: true) { NunaListRow("Connect Anya", description: "Get advice from your own data", systemImage: "link", showsChevron: true) }
+                NunaListRow("Connect Anya", description: "Get advice from your own data", systemImage: "link", showsChevron: true)
             }.buttonStyle(.plain)
         } else if !coach.dataConsent {
-            NunaCard(small: true) {
-                NunaToggleRow("Let Anya use my numbers", subtitle: "Without this, Anya sees only your question", systemImage: "lock.open", isOn: $coach.dataConsent)
-            }
+            NunaToggleRow("Let Anya use my numbers", subtitle: "Without this, Anya sees only your question", systemImage: "lock.open", isOn: $coach.dataConsent)
         }
     }
 
     private func questions(_ r: NunaAnyaRead) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            ForEach(r.questions) { q in
+        VStack(alignment: .leading, spacing: 0) {
+            ForEach(Array(r.questions.enumerated()), id: \.element.id) { i, q in
+                if i > 0 { NunaDivider() }
                 Button {
                     if q.kind == .plan { path.append(NunaAnyaRoute.plan) } else { Task { await ask(q.prompt, shown: q.title) } }
                 } label: {
@@ -194,7 +192,7 @@ struct NunaAnyaSheet: View {
                         Spacer()
                         Image(systemName: q.kind == .plan ? "chevron.right" : "arrow.up.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                     }
-                    .padding(.horizontal, 18).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                    .frame(height: 52).contentShape(Rectangle())
                 }.buttonStyle(.plain).disabled(sending || (q.kind == .ask && !(coach.isConfigured)))
                     .opacity(q.kind == .ask && !coach.isConfigured ? 0.45 : 1)
             }
@@ -208,7 +206,7 @@ struct NunaAnyaSheet: View {
                     HStack { Spacer(minLength: 40)
                         Text(verbatim: t.text).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 14).padding(.vertical, 9).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: 12, style: .continuous)) }
                 } else {
-                    NunaCard(small: true) { Text(Self.markdown(AnyaActions.proseOnly(t.text))).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) }
+                    Text(Self.markdown(AnyaActions.proseOnly(t.text))).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
             if sending { HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) } }
@@ -225,7 +223,7 @@ struct NunaAnyaSheet: View {
             }.buttonStyle(.plain).disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty || sending || !coach.isConfigured)
                 .opacity(draft.trimmingCharacters(in: .whitespaces).isEmpty ? 0.4 : 1).padding(.trailing, 5)
         }
-        .frame(minHeight: 48).background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)).overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+        .frame(minHeight: 48).overlay(alignment: .bottom) { NunaDivider() }
     }
 
     // MARK: Actions
