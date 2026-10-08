@@ -86,7 +86,7 @@ struct NunaQuickSheet: View {
                 Spacer(minLength: 4)
                 Button { Task { await undoWater() } } label: {
                     Image(systemName: "minus").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                        .frame(width: 44, height: 44)
                 }
                 .buttonStyle(.plain).accessibilityLabel(Text("Remove last drink"))
                 Button { Task { await addWater(waterAdd) } } label: { Text(verbatim: "+\(waterAdd)") }

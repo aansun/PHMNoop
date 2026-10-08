@@ -407,8 +407,7 @@ struct NunaBodyClockPlanView: View {
         Button(action: action) {
             Image(systemName: symbol).font(.nuna(size: 20, weight: .bold))
                 .foregroundStyle(enabled ? NunaPalette.textPrimary : NunaPalette.textMuted.opacity(0.4))
-                .frame(width: 52, height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                .frame(width: 52, height: 52)
         }
         .buttonStyle(.plain).disabled(!enabled)
     }

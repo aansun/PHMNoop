@@ -14,6 +14,8 @@ enum NunaTodayRoute: Hashable {
     case sleepVitals(Int)
     case sleepPerformance(Int)
     case sleepNaps(Int)
+    /// One nap: the day it belongs to (the day the night before it ended) and when it started.
+    case nap(String, Int)
     case fitnessAge
     case bodyClock
     case bodyClockPlan
@@ -43,6 +45,7 @@ extension View {
             case .sleepVitals(let i): NunaSleepVitalsView(startIndex: i)
             case .sleepPerformance(let i): NunaSleepPerformanceView(startIndex: i)
             case .sleepNaps(let i): NunaNapView(startIndex: i)
+            case .nap(let day, let start): NunaNapView(dayKey: day, napStart: start)
             case .fitnessAge: NunaFitnessAgeView()
             case .bodyClock: NunaBodyClockView()
             case .bodyClockPlan: NunaBodyClockPlanView()

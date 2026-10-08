@@ -149,8 +149,7 @@ struct NunaLiftSessionView: View {
         HStack(spacing: 10) {
             Button { dismiss() } label: {
                 Image(systemName: "chevron.down").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                    .frame(width: 44, height: 44)
             }.buttonStyle(.plain).accessibilityLabel(Text("Minimise"))
             Text(session.programName == nil ? "Gym" : "Program gym")
                 .font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
@@ -422,7 +421,7 @@ struct NunaLiftSessionView: View {
 
     private func stepButton(_ icon: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: icon).font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 28, height: 28).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+            Image(systemName: icon).font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 28, height: 28)
         }.buttonStyle(.plain)
     }
 
@@ -474,7 +473,7 @@ struct NunaLiftSessionView: View {
             Button { session.undo() } label: {
                 Image(systemName: "arrow.uturn.backward").font(.nuna(size: 16, weight: .bold))
                     .foregroundStyle(engine.canUndo ? NunaPalette.textPrimary : NunaPalette.textMuted)
-                    .frame(width: 56, height: 56).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                    .frame(width: 56, height: 56)
             }.buttonStyle(.plain).disabled(!engine.canUndo).accessibilityLabel(Text("Undo"))
             Button { session.advance() } label: {
                 Text(actionLabel(engine)).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
@@ -691,7 +690,7 @@ struct NunaLiftBar: View {
             Button { session.present() } label: {
                 HStack(spacing: 12) {
                     Image(systemName: "dumbbell").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(width: 38, height: 38).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                        .frame(width: 38, height: 38)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(verbatim: session.programName ?? String(localized: "Gym session")).font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
                         Text(verbatim: "\(e.completedWorkingSets)/\(e.plannedWorkingSets) · " + LiftFormat.duration(max(0, session.now - e.startTs)))

@@ -170,7 +170,7 @@ struct NunaAnyaView: View {
 
     private func roundLabel(_ symbol: String) -> some View {
         Image(systemName: symbol).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-            .frame(width: 42, height: 42).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous)).overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+            .frame(width: 42, height: 42)
     }
 
     /// "Anya reads: Charge · Sleep · Workouts 7 days", and the memory chip. Honest: only what the settings allow.
@@ -416,7 +416,7 @@ struct NunaAnyaView: View {
             HStack(spacing: 10) {
                 Button { showAttach = true } label: {
                     Image(systemName: "plus").font(.nuna(size: 18, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(width: 48, height: 48).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous)).overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                        .frame(width: 48, height: 48)
                 }.buttonStyle(.plain).accessibilityLabel(Text("Add attachment"))
                 HStack(spacing: 6) {
                     TextField("", text: $draft, prompt: Text("Ask Anya about your data").foregroundStyle(NunaPalette.textMuted), axis: .vertical)

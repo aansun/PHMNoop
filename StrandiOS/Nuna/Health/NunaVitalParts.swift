@@ -145,7 +145,7 @@ struct NunaWaistSheet: View {
     private func stepButton(_ symbol: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol).font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                .frame(width: 64, height: 64).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                .frame(width: 64, height: 64)
         }.buttonStyle(.plain)
     }
 }
@@ -369,7 +369,7 @@ struct NunaStressGauge: View {
             if let onInfo {
                 Button(action: onInfo) {
                     Image(systemName: "info").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                        .frame(width: 34, height: 34).overlay(RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous).strokeBorder(NunaPalette.textSecondary, lineWidth: 1.6))
+                        .frame(width: 34, height: 34)
                 }.buttonStyle(.plain).accessibilityLabel(Text("About this score"))
             }
         }

@@ -410,7 +410,7 @@ struct NunaHealthView: View {
                     }.buttonStyle(.plain)
                     NavigationLink(value: NunaTodayRoute.mood) {
                         Image(systemName: "face.smiling").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            .frame(width: 48, height: 48).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                            .frame(width: 48, height: 48)
                     }
                     .buttonStyle(.plain).accessibilityLabel(Text("Mood check-in"))
                 }
@@ -894,7 +894,8 @@ struct NunaHealthView: View {
     }
 
     private func napsWeekCard(_ nights: [NunaNight]) -> some View {
-        let naps = nights.flatMap(\.naps)
+        let napItems: [(night: NunaNight, nap: NunaNap)] = nights.flatMap { n in n.naps.map { (n, $0) } }
+        let naps = napItems.map(\.nap)
         return NunaCard(small: true, padding: EdgeInsets(top: 14, leading: 18, bottom: 6, trailing: 18)) {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
@@ -906,11 +907,13 @@ struct NunaHealthView: View {
                 if naps.isEmpty {
                     Text("No naps this week").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).padding(.vertical, 12)
                 }
-                ForEach(Array(naps.enumerated()), id: \.offset) { idx, nap in
+                ForEach(Array(napItems.enumerated()), id: \.offset) { idx, item in
                     if idx > 0 { NunaDivider() }
-                    NunaListRow(LocalizedStringKey(napTitle(nap)), subtitle: LocalizedStringKey(NunaSleepFormat.duration(nap.asleepMin)), systemImage: "moon") {
-                        NunaChip(nap.manual ? "Manual" : "Auto")
-                    }
+                    NavigationLink(value: NunaTodayRoute.nap(item.night.dayKey, Int(item.nap.start.timeIntervalSince1970))) {
+                        NunaListRow(LocalizedStringKey(napTitle(item.nap)), subtitle: LocalizedStringKey(NunaSleepFormat.duration(item.nap.asleepMin)), systemImage: "moon", showsChevron: true) {
+                            NunaChip(item.nap.manual ? "Manual" : "Auto")
+                        }
+                    }.buttonStyle(.plain)
                 }
             }
         }

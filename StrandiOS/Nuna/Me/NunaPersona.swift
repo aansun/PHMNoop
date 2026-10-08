@@ -29,7 +29,7 @@ struct NunaStepRow: View {
     }
 
     private func glyph(_ name: String) -> some View {
-        Image(systemName: name).font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 34, height: 34).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+        Image(systemName: name).font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 34, height: 34)
     }
 }
 
@@ -95,7 +95,7 @@ struct NunaPersonaView: View {
                                 Text(profile.hasAvatar ? "Change photo" : "Choose photo").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 36).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                             }
                             if profile.hasAvatar {
-                                Button { profile.clearAvatar() } label: { Image(systemName: "trash").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 36, height: 36).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous)) }.buttonStyle(.plain).accessibilityLabel(Text("Remove photo"))
+                                Button { profile.clearAvatar() } label: { Image(systemName: "trash").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 36, height: 36) }.buttonStyle(.plain).accessibilityLabel(Text("Remove photo"))
                             }
                         }
                     }

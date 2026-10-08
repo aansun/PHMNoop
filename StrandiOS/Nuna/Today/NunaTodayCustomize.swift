@@ -137,7 +137,7 @@ struct NunaTodayCustomizeSheet: View {
                 if let back {
                     Button(action: back) {
                         Image(systemName: "chevron.left").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                            .frame(width: 44, height: 44)
                     }.accessibilityLabel(Text("Back"))
                 } else {
                     Button { if isDirty { confirmDiscard = true } else { dismiss() } } label: {

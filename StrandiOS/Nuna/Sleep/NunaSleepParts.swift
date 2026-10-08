@@ -274,7 +274,7 @@ struct NunaNightPicker: View {
         Button(action: action) {
             Image(systemName: symbol).font(.nuna(size: 15, weight: .bold))
                 .foregroundStyle(enabled ? NunaPalette.textPrimary : NunaPalette.textMuted.opacity(0.4))
-                .frame(width: 44, height: 44).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                .frame(width: 44, height: 44)
         }
         .disabled(!enabled)
     }

@@ -277,15 +277,13 @@ public struct NunaChip: View {
         self.text = Text(verbatim: verbatim); self.systemImage = systemImage; self.color = color
     }
     public var body: some View {
-        HStack(spacing: 6) {
-            if let systemImage { Image(systemName: systemImage).font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textPrimary) }
+        // Information inside a card is plain text: no pill, no outline. Colour still carries the meaning.
+        HStack(spacing: 5) {
+            if let systemImage { Image(systemName: systemImage).font(.system(size: 12, weight: .bold)) }
             text.font(.system(size: 12.5, weight: .bold))
         }
-        .foregroundStyle(color ?? NunaPalette.textPrimary)
-        .padding(.horizontal, 12)
-        .frame(height: 30)
-        .background(color.map { NunaPalette.tint($0) } ?? NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(color?.opacity(0.35) ?? NunaPalette.hairline, lineWidth: 1))
+        .foregroundStyle(color ?? NunaPalette.textSecondary)
+        .frame(minHeight: 30)
     }
 }
 

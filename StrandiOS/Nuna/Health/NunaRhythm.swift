@@ -20,7 +20,7 @@ struct NunaRhythmConsentView: View {
                 HStack {
                     Button(action: onCancel) {
                         Image(systemName: "xmark").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                            .frame(width: 44, height: 44)
                     }.buttonStyle(.plain).accessibilityLabel(Text("Close"))
                     Spacer()
                     NunaChip("Experimental")
@@ -36,7 +36,7 @@ struct NunaRhythmConsentView: View {
                     ForEach(Array(RhythmConsent.points.enumerated()), id: \.offset) { i, p in
                         HStack(alignment: .top, spacing: 14) {
                             Text(verbatim: "\(i + 1)").font(.nuna(size: 14, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                                .frame(width: 30, height: 30).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                                .frame(width: 30, height: 30)
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(verbatim: p.0).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                                 Text(verbatim: p.1).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)

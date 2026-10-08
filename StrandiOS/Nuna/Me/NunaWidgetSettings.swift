@@ -71,7 +71,7 @@ struct NunaWidgetSettingsView: View {
 
     private func step(_ n: Int, _ t: LocalizedStringKey) -> some View {
         HStack(alignment: .top, spacing: 14) {
-            Text(verbatim: "\(n)").font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 30, height: 30).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+            Text(verbatim: "\(n)").font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 30, height: 30)
             Text(t).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             Spacer(minLength: 0)
         }.padding(.vertical, 12)

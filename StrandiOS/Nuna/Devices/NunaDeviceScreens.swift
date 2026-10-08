@@ -177,7 +177,7 @@ struct NunaDeviceHelpView: View {
     @ViewBuilder private func step<C: View>(_ n: Int, _ title: LocalizedStringKey, _ detail: LocalizedStringKey, @ViewBuilder _ action: () -> C = { EmptyView() }) -> some View {
         NunaCard(small: true) {
             HStack(alignment: .top, spacing: 14) {
-                Text(verbatim: "\(n)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 32, height: 32).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                Text(verbatim: "\(n)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 32, height: 32)
                 VStack(alignment: .leading, spacing: 6) {
                     Text(title).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Text(detail).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
@@ -226,7 +226,7 @@ struct NunaDeviceRepairView: View {
     private func step(_ n: Int, _ title: LocalizedStringKey, _ detail: LocalizedStringKey, _ button: LocalizedStringKey, _ run: @escaping () -> Void) -> some View {
         NunaCard(small: true) {
             HStack(alignment: .top, spacing: 14) {
-                Text(verbatim: "\(n)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 32, height: 32).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                Text(verbatim: "\(n)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 32, height: 32)
                 VStack(alignment: .leading, spacing: 6) {
                     Text(title).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Text(detail).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
