@@ -1,6 +1,9 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Bottom bar": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Bilah bawah"}}}},
+    "Glass effect": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Efek kaca"}}}},
+    "Transparency": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Transparansi"}}}},
     "Your data": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Datamu"}}}},
     "Backup and export": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Cadangan dan ekspor"}}}},
     "WHOOP, Apple Health, nutrition, lifting and workout files": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "WHOOP, Apple Health, nutrisi, angkat beban, dan file latihan"}}}},
@@ -209208,6 +209211,12 @@
     },
     "Hide bar when scrolling": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sembunyikan bilah saat menggulir"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",

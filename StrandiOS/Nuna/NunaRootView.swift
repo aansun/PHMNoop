@@ -32,6 +32,9 @@ struct NunaRootView: View {
     @State private var routed: NavRouter.Destination?
     /// While the keyboard is up the tab bar steps aside: it floats over the content, so above a keyboard it would sit on top of whatever is being typed.
     @State private var keyboardUp = false
+    /// "Hide bar when scrolling": the bar steps down while the page is scrolled and returns on the way back (same preference as the Default design).
+    @AppStorage(NunaTabBarPrefs.autoHideKey) private var autoHide = false
+    @State private var barHidden = false
 
     private var items: [NunaTabItem] {
         var out = [
@@ -39,9 +42,13 @@ struct NunaRootView: View {
             NunaTabItem(id: Tab.health.rawValue, title: "Health", systemImage: "heart.text.square.fill"),
             NunaTabItem(id: Tab.trends.rawValue, title: "Trends", systemImage: "chart.line.uptrend.xyaxis"),
         ]
-        if coachEnabled { out.append(NunaTabItem(id: Tab.anya.rawValue, title: "Anya", systemImage: NunaGlyph.anya)) }
         out.append(NunaTabItem(id: Tab.me.rawValue, title: "Me", systemImage: "person.fill"))
         return out
+    }
+
+    /// Anya sits apart from the bar, on its right.
+    private var anyaItem: NunaTabItem? {
+        coachEnabled ? NunaTabItem(id: Tab.anya.rawValue, title: "Anya", systemImage: NunaGlyph.anya) : nil
     }
 
     var body: some View {
@@ -56,15 +63,27 @@ struct NunaRootView: View {
             if !keyboardUp {
                 VStack(spacing: 0) {
                     NunaLiftBar()
-                    NunaTabBar(items: items, selection: $selection) { id in
-                        // Re-tapping the active tab pops it to its root.
-                        if id < paths.count { paths[id] = NavigationPath() }
+                    if !(autoHide && barHidden) {
+                        NunaTabBar(items: items, trailing: anyaItem, selection: $selection) { id in
+                            // Re-tapping the active tab pops it to its root.
+                            if id < paths.count { paths[id] = NavigationPath() }
+                        }
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         .animation(.easeOut(duration: 0.2), value: keyboardUp)
+        .animation(.easeInOut(duration: 0.22), value: barHidden)
+        // Scrolling a page moves a finger up (content goes up) or down; read it beside the page's own scroll, never instead of it.
+        .simultaneousGesture(DragGesture(minimumDistance: 14).onChanged { v in
+            guard autoHide, abs(v.translation.height) > abs(v.translation.width) else { return }
+            if v.translation.height < -14, !barHidden { barHidden = true }
+            else if v.translation.height > 14, barHidden { barHidden = false }
+        })
+        .onChange(of: selection) { _, _ in barHidden = false }
+        .onChange(of: autoHide) { _, on in if !on { barHidden = false } }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in keyboardUp = true }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in keyboardUp = false }
         .nunaScreenBackground()
