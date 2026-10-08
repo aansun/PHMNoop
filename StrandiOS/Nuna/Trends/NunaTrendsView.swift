@@ -56,12 +56,11 @@ struct NunaTrendsView: View {
                     }
                 } else {
                     summaryCard
-                    rangeReadCard
+                    anyaCard
                     comparisonSection
                     signalsSection
                     heatmapCard
                     sinceCard
-                    anyaCard
                     exploreSection
                     exportRow
                 }
@@ -131,27 +130,6 @@ struct NunaTrendsView: View {
                     }
                 }
             }
-        }
-    }
-
-    /// Anya's read of the trends in view, from the same figures as the summary: how Charge moved against the period before, and what Effort
-    /// and Rest did. Tapping it opens her with that line, ready to explain.
-    @ViewBuilder private var rangeReadCard: some View {
-        let c = m.means(m.charge, days: range), e = m.means(m.effort, days: range), r = m.means(m.rest, days: range)
-        if coachEnabled, let now = c.now {
-            let line: String = {
-                guard let before = c.before else { return String(localized: "Charge averaged \(Int(now.rounded()))% over these \(range) days.") }
-                let d = Int((now - before).rounded())
-                let word = d == 0 ? String(localized: "level with") : (d > 0 ? String(localized: "\(d) points above") : String(localized: "\(-d) points below"))
-                return String(localized: "Charge averaged \(Int(now.rounded()))% over these \(range) days, \(word) the period before.")
-            }()
-            let detail: String? = {
-                var parts: [String] = []
-                if let eNow = e.now { parts.append(String(localized: "Effort \(UnitFormatter.effortDisplay(eNow, scale: scale))")) }
-                if let rNow = r.now { parts.append(String(localized: "Rest \(Int(rNow.rounded()))%")) }
-                return parts.isEmpty ? nil : parts.joined(separator: " · ")
-            }()
-            NunaAnyaCard(verbatim: line, detail: detail) { showCoach = true }
         }
     }
 
@@ -396,7 +374,7 @@ struct NunaTrendsView: View {
                                       outcome: m.charge, edges: [effortEdges[0], effortEdges[1]], lag: 1)
         let best = b.filter { $0.meanOutcome != nil && $0.n >= 3 }.max { $0.meanOutcome! < $1.meanOutcome! }
         return Group {
-            if let best, let mean = best.meanOutcome {
+            if coachEnabled, let best, let mean = best.meanOutcome {
                 let band = [String(localized: "light"), String(localized: "moderate"), String(localized: "high")][min(best.band, 2)]
                 NunaAnyaCard(verbatim: String(localized: "Your Charge is highest the morning after a \(band) Effort day (\(Int(mean.rounded()))%).")) { showCoach = true }
             }
