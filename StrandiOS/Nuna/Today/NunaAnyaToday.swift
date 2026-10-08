@@ -34,7 +34,8 @@ struct NunaAnyaTodayCard: View {
     var sleepMinutes: Double?
     @AppStorage(NunaGoals.sleepMinutes) private var sleepGoal = 0
 
-    @State private var journalDone = false
+    /// What today's journal holds, as one line; nil until something is logged. Anya stops asking for the journal once it is set.
+    @State private var journalLine: String?
 
     private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
 
@@ -70,8 +71,36 @@ struct NunaAnyaTodayCard: View {
         }
         .task(id: repo.refreshSeq) {
             let key = Repository.localDayKey(Date())
-            journalDone = await repo.nativeJournalDays(from: key, to: key).contains(key)
+            journalLine = await journalSummary(day: key)
         }
+    }
+
+    /// The day's journal in a sentence: what was answered yes (numbers with their value) and the mood. Nil when nothing is logged.
+    private func journalSummary(day: String) async -> String? {
+        guard await repo.nativeJournalDays(from: day, to: day).contains(day) else { return nil }
+        let answers = await repo.nativeJournalAnswers(day: day)
+        let numbers = await repo.nativeJournalNumeric(day: day)
+        let display = Dictionary(JournalCatalogStore().items.map { ($0.canonical, $0.display) }, uniquingKeysWith: { a, _ in a })
+        // Anya's own saved advice is not something the user logged.
+        func name(_ q: String) -> String {
+            var t = display[q] ?? q
+            for lead in ["Did you ", "Do you ", "Have you ", "Are you ", "Were you "] where t.hasPrefix(lead) { t = String(t.dropFirst(lead.count)); break }
+            if t.hasSuffix("?") { t.removeLast() }
+            if let n = numbers[q] { t += " " + (n.truncatingRemainder(dividingBy: 1) == 0 ? String(Int(n)) : String(format: "%.1f", n)) }
+            return t
+        }
+        func list(_ qs: [String]) -> String {
+            let shown = qs.prefix(3).map(name).joined(separator: ", ")
+            return qs.count > 3 ? shown + " " + String(format: String(localized: "+%lld more"), qs.count - 3) : shown
+        }
+        let logged = answers.filter { $0.key != "Coach advice" }
+        let yes = logged.filter { $0.value }.keys.sorted(), no = logged.filter { !$0.value }.keys.sorted()
+        var parts: [String] = []
+        if !yes.isEmpty { parts.append(String(format: String(localized: "Yes: %@"), list(yes))) }
+        if !no.isEmpty { parts.append(String(format: String(localized: "No: %@"), list(no))) }
+        if let mood = await repo.mood(day: day) { parts.append(String(format: String(localized: "Mood %@"), MoodStore.label(for: mood))) }
+        guard !parts.isEmpty else { return String(localized: "Your journal for today is filled in") }
+        return String(localized: "Journal logged today") + "\n" + parts.joined(separator: "\n")
     }
 
     // MARK: States
@@ -129,7 +158,9 @@ struct NunaAnyaTodayCard: View {
         let title = v?.title ?? String(localized: "Wind down for tonight")
         var detail = v?.detail ?? String(localized: "An earlier night is the best thing for tomorrow's Charge.")
         var more: [NunaAnyaCardAction] = []
-        if hour >= 20 && !journalDone {
+        if let journalLine {
+            detail += "\n\n" + journalLine
+        } else if hour >= 20 {
             let prompt = String(localized: "How was today? Fill in your journal and mood")
             detail += "\n\n" + [prompt, eveningDetail].compactMap { $0 }.joined(separator: " · ")
             more = [NunaAnyaCardAction(title: "Journal", perform: { router.requestedDestination = .journal })]

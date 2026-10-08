@@ -1,6 +1,12 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Journal logged today": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Jurnal hari ini sudah diisi"}}}},
+    "Yes: %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ya: %@"}}}},
+    "No: %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidak: %@"}}}},
+    "Mood %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Suasana hati %@"}}}},
+    "+%lld more": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "+%lld lagi"}}}},
+    "Your journal for today is filled in": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Jurnal hari ini sudah kamu isi"}}}},
     "Close the WHOOP app": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tutup aplikasi WHOOP"}}}},
     "Swipe it away on this iPhone and on any other phone that has it.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Geser tutup di iPhone ini dan di ponsel lain yang memilikinya."}}}},
     "Unpair it from the WHOOP app": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lepas pairing dari aplikasi WHOOP"}}}},
