@@ -20,11 +20,11 @@ struct NunaChargeDetailView: View {
     @StateObject private var series = NunaSeriesModel()
     @StateObject private var day = NunaTodayModel()
     @State private var range = 7
+    @State private var page = 0
     @State private var showCoach = false
 
     var body: some View {
         let latest = series.latest
-        let slots = series.window(range)
         NunaDetailScreen("Charge", onAnya: coachEnabled ? { showCoach = true } : nil) {
             NunaScoreHero(caption: "Today", chip: chip?.0, chipColor: NunaPalette.charge,
                           fraction: (day.charge.pct ?? latest?.value ?? 0) / 100,
@@ -50,21 +50,15 @@ struct NunaChargeDetailView: View {
                     NunaContributorRow(title: "Sleep performance", icon: "moon", value: day.rest.map { String(format: "%.0f%%", $0) }, delta: nil)
                 }.buttonStyle(.plain)
             }
-            NunaCard {
-                VStack(alignment: .leading, spacing: 16) {
-                    NunaSegmented(rangeOptions(), selection: $range)
-                    if range == 7 {
-                        NunaColumns(items: slots.map { s in
-                            NunaColumns.Item(weekday: weekday(s.date), date: s.date, fraction: s.value.map { $0 / 100 },
-                                             valueText: s.value.map { String(format: "%.0f", $0) },
-                                             highlight: Calendar.current.isDateInToday(s.date), color: s.value.map(nunaChargeColor))
-                        }, color: NunaPalette.charge)
-                        zoneKey
-                    } else {
-                        NunaLine2Chart(points: series.readings(range), color: NunaPalette.charge, decimals: 0, baseline: series.baseline, band: series.band.map { $0.lo...$0.hi })
-                    }
-                }
-            }
+            NunaTrendDetailCard(
+                caption: "Average", unit: "%",
+                readings: { days, back in series.readings(days, endingDaysAgo: back) },
+                hasOlder: { start in series.byDay.keys.min().map { Repository.localDayKey(start) > $0 } ?? false },
+                loaded: series.loaded, band: series.band.map { $0.lo...$0.hi },
+                lineColor: NunaPalette.charge, decimals: 0, directional: true,
+                levelChip: { v in (text: v >= 67 ? "Ready" : (v >= 34 ? "Moderate" : "Low"), color: nunaChargeTextColor(v)) },
+                sentence: nil, range: $range, page: $page)
+                .columns(color: nunaChargeColor, top: 100, legend: AnyView(zoneKey))
             NunaExpandRow(title: "How it's calculated", subtitle: "Three signals, against your own baseline",
                           text: "Charge compares last night's heart rate variability, resting heart rate and sleep with your own baseline from the last 30 days. It is an estimate computed on this phone from your strap's data.")
         }
@@ -126,11 +120,11 @@ struct NunaEffortDetailView: View {
     @StateObject private var series = NunaSeriesModel()
     @StateObject private var day = NunaTodayModel()
     @State private var range = 7
+    @State private var page = 0
 
     private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
 
     var body: some View {
-        let slots = series.window(range)
         NunaDetailScreen("Effort") {
             NunaScoreHero(caption: "Today", chip: level.map { $0.0 }, chipColor: NunaPalette.effortText,
                           fraction: (day.effort ?? 0) / 100,
@@ -141,20 +135,14 @@ struct NunaEffortDetailView: View {
                     .fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
             sourcesSection
-            NunaSegmented(rangeOptions(), selection: $range)
-            NunaCard {
-                if range == 7 {
-                    let top = max(slots.compactMap(\.value).max() ?? 1, 1)
-                    NunaColumns(items: slots.map { s in
-                        NunaColumns.Item(weekday: weekday(s.date), date: s.date, fraction: s.value.map { $0 / top },
-                                         valueText: s.value.map { UnitFormatter.effortDisplay($0, scale: scale) },
-                                         highlight: Calendar.current.isDateInToday(s.date))
-                    }, color: NunaPalette.effort, highlightColor: NunaPalette.effortText)
-                } else {
-                    NunaLine2Chart(points: series.readings(range).map { ($0.date, UnitFormatter.effortValue($0.value, scale: scale)) },
-                                   color: NunaPalette.effort, decimals: 1, baseline: series.baseline.map { UnitFormatter.effortValue($0, scale: scale) })
-                }
-            }
+            NunaTrendDetailCard(
+                caption: "Average", unit: "",
+                readings: { days, back in series.readings(days, endingDaysAgo: back).map { ($0.date, UnitFormatter.effortValue($0.value, scale: scale)) } },
+                hasOlder: { start in series.byDay.keys.min().map { Repository.localDayKey(start) > $0 } ?? false },
+                loaded: series.loaded,
+                lineColor: NunaPalette.effort, decimals: 1, directional: false,
+                levelChip: nil, sentence: nil, range: $range, page: $page)
+                .columns()
             NunaExpandRow(title: "How it's calculated", subtitle: "Cardio load across the day",
                           text: "Effort adds up how hard your heart worked during the day, weighted by heart rate zone. Workouts and everyday movement both count. It is shown on the scale you chose in Settings.")
         }

@@ -32,8 +32,23 @@ struct NunaTrendDetailCard: View {
     var levelChip: ((Double) -> (text: LocalizedStringKey, color: Color)?)?
     /// Replaces the generic sentence about the period (average and the average before it).
     var sentence: ((_ avg: Double?, _ prev: Double?) -> String?)?
+    /// A column's own colour (Charge's three zones); nil draws them all in `lineColor`.
+    var columnColor: ((Double) -> Color)?
+    /// Bars only for the week; a month and six months stay a line.
+    var columnsWeekOnly = false
+    /// What the bars are scaled to (100 for Charge); nil scales them to the tallest in view.
+    var columnTop: Double?
+    /// What the colours of the bars mean, drawn under the week's bars.
+    var columnLegend: AnyView?
     @Binding var range: Int
     @Binding var page: Int
+
+    /// Draws the week as labelled columns instead of the line.
+    func columns(color: ((Double) -> Color)? = nil, top: Double? = nil, legend: AnyView? = nil) -> Self {
+        var c = self
+        c.bars = true; c.columnsWeekOnly = true; c.columnColor = color; c.columnTop = top; c.columnLegend = legend
+        return c
+    }
 
     private static let ranges: [(value: Int, title: String)] = [(7, "W\u{2060}"), (30, "M"), (180, "6M")]
 
@@ -55,11 +70,12 @@ struct NunaTrendDetailCard: View {
 
     /// The card for the Trends screens, which hold their own daily series.
     init(caption: LocalizedStringKey, unit: String = "", readings: @escaping (Int, Int) -> [(date: Date, value: Double)],
-         hasOlder: @escaping (Date) -> Bool, lineColor: Color, decimals: Int, directional: Bool,
+         hasOlder: @escaping (Date) -> Bool, loaded: Bool = true, band: ClosedRange<Double>? = nil,
+         lineColor: Color, decimals: Int, directional: Bool,
          levelChip: ((Double) -> (text: LocalizedStringKey, color: Color)?)?, sentence: ((Double?, Double?) -> String?)?,
          range: Binding<Int>, page: Binding<Int>) {
         self.caption = caption; self.valueText = nil; self.unit = unit
-        self.readings = readings; self.hasOlder = hasOlder
+        self.readings = readings; self.hasOlder = hasOlder; self.loaded = loaded; self.band = band
         self.lineColor = lineColor; self.decimals = decimals; self.directional = directional
         self.averageHero = true; self.levelChip = levelChip; self.sentence = sentence
         self._range = range; self._page = page
@@ -96,7 +112,10 @@ struct NunaTrendDetailCard: View {
                         .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 160).textCase(nil)
                 } else {
                     if bars, reference != nil { referenceLegend }
-                    if bars { barChart(pts) } else {
+                    if bars && (!columnsWeekOnly || range <= 7) {
+                        barChart(pts)
+                        if range <= 7, let columnLegend { columnLegend }
+                    } else {
                         NunaSegmentedChart(points: pts, color: lineColor, decimals: decimals, band: band, reference: reference,
                                            higherIsBetter: higherIsBetter, directional: directional)
                     }
@@ -138,11 +157,12 @@ struct NunaTrendDetailCard: View {
             let days: [Date] = (0..<7).compactMap { cal.date(byAdding: .day, value: $0, to: cal.startOfDay(for: windowStart)) }
             let byDay = Dictionary(pts.map { (cal.startOfDay(for: $0.date), $0.value) }, uniquingKeysWith: { _, l in l })
             // With a target the columns are scaled to it, so the dashed line sits inside the track and a day over it reaches the top.
-            let top = max(vals(pts).max() ?? 1, reference ?? 0, 1)
+            let top = columnTop ?? max(vals(pts).max() ?? 1, reference ?? 0, 1)
             NunaColumns(items: days.map { d in
                 let v = byDay[d]
                 return NunaColumns.Item(weekday: Self.weekday(d), date: d, fraction: v.map { $0 / top },
-                                        valueText: v.map { Self.shortValue($0, decimals: decimals) }, highlight: cal.isDateInToday(d))
+                                        valueText: v.map { Self.shortValue($0, decimals: decimals) }, highlight: cal.isDateInToday(d),
+                                        color: v.flatMap { columnColor?($0) })
             }, color: lineColor.opacity(0.85), highlightColor: NunaPalette.textPrimary, target: reference.map { $0 / top })
         } else {
             Chart {
