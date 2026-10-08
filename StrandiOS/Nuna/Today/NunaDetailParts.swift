@@ -32,8 +32,7 @@ struct NunaDetailHeader: View {
             if let trailing { trailing }
             if let onAnya {
                 Button(action: onAnya) {
-                    AnyaMark(size: 26).foregroundStyle(NunaPalette.onAccent)
-                        .frame(width: 44, height: 44).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                    AnyaMark(size: 32).frame(width: 44, height: 44)
                 }
                 .accessibilityLabel(Text("Ask Anya"))
             }

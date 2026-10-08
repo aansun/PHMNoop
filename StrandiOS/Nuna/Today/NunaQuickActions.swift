@@ -132,7 +132,7 @@ struct NunaQuickActionsEditor: View {
                                 Image(systemName: "minus.circle.fill").font(.nuna(size: 20, weight: .semibold)).foregroundStyle(NunaPalette.alert)
                             }.buttonStyle(.plain).accessibilityLabel(Text("Remove"))
                         }
-                        .listRowBackground(NunaPalette.card)
+                        .listRowBackground(Color.clear)
                     }
                 }
                 .onMove { ids.move(fromOffsets: $0, toOffset: $1); save() }
@@ -157,7 +157,7 @@ struct NunaQuickActionsEditor: View {
                     Stepper("", value: $waterML, in: NunaQuickActions.waterAmountRange, step: NunaQuickActions.waterAmountStep).labelsHidden()
                         .accessibilityLabel(Text("Water added by +")).accessibilityValue(Text(verbatim: "\(waterML) ml"))
                 }
-                .listRowBackground(NunaPalette.card)
+                .listRowBackground(Color.clear)
             } header: {
                 Text("Water").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             } footer: {
@@ -175,7 +175,7 @@ struct NunaQuickActionsEditor: View {
                             }
                         }
                         .buttonStyle(.plain).disabled(full).opacity(full ? 0.4 : 1)
-                        .listRowBackground(NunaPalette.card)
+                        .listRowBackground(Color.clear)
                     }
                 } header: {
                     Text(LocalizedStringKey(group)).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)

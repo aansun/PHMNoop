@@ -48,7 +48,6 @@ struct NunaQuickSheet: View {
             Spacer(minLength: 0)
         }
         .padding(.horizontal, NunaSpacing.screenH)
-        .background(NunaPalette.card.ignoresSafeArea())
         .preferredColorScheme(NunaTheme.colorScheme)
         .task { await reloadWater() }
         .sheet(isPresented: $editing) { NunaQuickActionsEditor(raw: $actionsRaw).nunaSheetChrome(detents: [.large]) }

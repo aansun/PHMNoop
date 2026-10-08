@@ -46,9 +46,7 @@ struct NunaDetailSwitcher: View {
                     Spacer(minLength: 8)
                     Image(systemName: "chevron.down").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 }
-                .padding(.horizontal, inHeader ? 12 : 16).frame(height: inHeader ? 44 : 54)
-                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous).strokeBorder(NunaPalette.hairlineSoft, lineWidth: 1))
+                .padding(.horizontal, inHeader ? 4 : 2).frame(height: inHeader ? 44 : 54)
             }
             .accessibilityLabel(Text("Switch metric"))
         }
