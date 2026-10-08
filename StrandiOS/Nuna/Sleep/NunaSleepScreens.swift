@@ -58,7 +58,8 @@ struct NunaSleepView: View {
                 NunaNightPicker(model: model)
                 hero(model, night)
                 NunaSleepStageSection(model: model, night: night,
-                                      onEdit: night.editTarget.map { block in { edit = NunaSleepEditTarget(block, isNap: false) } })
+                                      onEdit: night.editTarget.map { block in { edit = NunaSleepEditTarget(block, isNap: false) } },
+                                      rangeText: "\(NunaSleepFormat.clock(night.onset)) – \(NunaSleepFormat.clock(night.wake))")
                 NunaStageCompare(model: model, night: night)
                 if !night.naps.isEmpty { napCard(night) }
                 tiles(model, night)
@@ -125,27 +126,22 @@ struct NunaSleepView: View {
 
     private func hero(_ model: NunaSleepModel, _ night: NunaNight) -> some View {
         let rest = model.value("sleep_performance")
-        let eff = model.efficiency(night)
         let v = verdict(rest, model)
         return VStack(spacing: 14) {
-            NunaScoreHero(caption: "Last night", chip: v?.word, chipColor: v?.color, fraction: (rest ?? 0) / 100,
-                          number: rest.map { "\(Int($0.rounded()))" } ?? "–", unit: "%", name: "Rest", color: NunaPalette.rest,
-                          hasNote: v != nil) {
+            // The word for the night sits in the ring, where the metric's name would be; the hours are on the stages card.
+            NunaScoreHero(caption: "Last night", fraction: (rest ?? 0) / 100,
+                          number: rest.map { "\(Int($0.rounded()))" } ?? "–", unit: "%", name: v?.word ?? "Rest", nameColor: v?.color,
+                          color: NunaPalette.rest, hasNote: v != nil) {
                 if let v {
                     Text(verbatim: v.line).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         .fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
-            HStack(spacing: 6) {
-                NunaChip(verbatim: "\(NunaSleepFormat.clock(night.onset)) – \(NunaSleepFormat.clock(night.wake))")
-                if let eff { NunaChip(verbatim: String(localized: "Efficiency \(Int(eff.rounded()))%"), color: NunaPalette.restText) }
-                if let nap = night.naps.first {
-                    NavigationLink(value: NunaTodayRoute.sleepNaps(model.index)) {
-                        NunaChip(verbatim: String(localized: "Nap \(Int(nap.asleepMin.rounded()))m"), systemImage: "plus")
-                    }.buttonStyle(.plain)
-                }
+            if let nap = night.naps.first {
+                NavigationLink(value: NunaTodayRoute.sleepNaps(model.index)) {
+                    NunaChip(verbatim: String(localized: "Nap \(Int(nap.asleepMin.rounded()))m"), systemImage: "plus")
+                }.buttonStyle(.plain)
             }
-            .frame(maxWidth: .infinity)
         }
     }
 

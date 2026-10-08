@@ -201,14 +201,16 @@ struct NunaScoreHero<Note: View>: View {
     let name: LocalizedStringKey
     let color: Color
     let note: Note
+    /// Colour of the word in the ring (a verdict in place of the metric name); nil keeps the ink colour.
+    var nameColor: Color?
     /// Whether there is anything to explain; without it the info button is left out.
     var hasNote = true
     @State private var showInfo = false
 
     init(caption: LocalizedStringKey, chip: LocalizedStringKey? = nil, chipColor: Color? = nil, fraction: Double, number: String,
-         unit: String = "", suffix: String = "", name: LocalizedStringKey, color: Color, hasNote: Bool = true, @ViewBuilder note: () -> Note) {
+         unit: String = "", suffix: String = "", name: LocalizedStringKey, nameColor: Color? = nil, color: Color, hasNote: Bool = true, @ViewBuilder note: () -> Note) {
         self.caption = caption; self.chip = chip; self.chipColor = chipColor; self.fraction = fraction; self.number = number
-        self.unit = unit; self.suffix = suffix; self.name = name; self.color = color; self.hasNote = hasNote; self.note = note()
+        self.unit = unit; self.suffix = suffix; self.name = name; self.nameColor = nameColor; self.color = color; self.hasNote = hasNote; self.note = note()
     }
 
     var body: some View {
@@ -229,7 +231,7 @@ struct NunaScoreHero<Note: View>: View {
                         }
                     }
                     if !suffix.isEmpty { Text(verbatim: suffix).font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
-                    Text(name).font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                    Text(name).font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(nameColor ?? NunaPalette.textPrimary)
                 }
             }
             .frame(maxWidth: .infinity)
