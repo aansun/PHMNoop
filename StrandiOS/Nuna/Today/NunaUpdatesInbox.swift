@@ -27,9 +27,14 @@ struct NunaUpdatesInbox: View {
                     empty
                 } else {
                     ForEach(groups, id: \.id) { g in
-                        VStack(alignment: .leading, spacing: 10) {
+                        VStack(alignment: .leading, spacing: 4) {
                             nunaTrendsCap(g.title)
-                            ForEach(g.items) { row($0) }
+                            VStack(spacing: 0) {
+                                ForEach(Array(g.items.enumerated()), id: \.element.id) { i, item in
+                                    if i > 0 { NunaDivider() }
+                                    row(item)
+                                }
+                            }
                         }
                     }
                     Button { onClose(); router.openNotificationSettings = true } label: {
@@ -37,7 +42,7 @@ struct NunaUpdatesInbox: View {
                             .frame(maxWidth: .infinity).frame(height: 50).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain)
                     Button { withAnimation { updateStore.clearAll() } } label: {
-                        Text("Clear all").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity).frame(height: 40)
+                        Text("Clear all").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity).frame(height: 44)
                     }.buttonStyle(.plain)
                 }
             }
@@ -49,16 +54,17 @@ struct NunaUpdatesInbox: View {
     }
 
     private var header: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Notifications").font(.nuna(size: NunaTypeSize.h1, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                Text(verbatim: subtitle).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            VStack(alignment: .leading, spacing: 3) {
+                Text("Notifications").font(.nuna(size: 18, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
+                Text(verbatim: subtitle).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             Spacer(minLength: 8)
             Button { withAnimation { updateStore.markAllRead() } } label: {
-                Text("Mark all read").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 38)
-                    .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-            }.buttonStyle(.plain).disabled(updateStore.unreadCount == 0).opacity(updateStore.unreadCount == 0 ? 0.4 : 1)
+                Text("Mark all read").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.charge).frame(minHeight: 44)
+            }.buttonStyle(.plain).disabled(updateStore.unreadCount == 0).opacity(updateStore.unreadCount == 0 ? 0.35 : 1)
         }
     }
 
@@ -68,31 +74,29 @@ struct NunaUpdatesInbox: View {
     }
 
     private var empty: some View {
-        NunaCard {
-            VStack(spacing: 10) {
-                Image(systemName: "bell.slash").font(.nuna(size: 30, weight: .regular)).foregroundStyle(NunaPalette.textMuted)
-                Text("You're all caught up.").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                Text("New release notes and fresh data will land here.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).multilineTextAlignment(.center)
-                Button { onClose(); router.openNotificationSettings = true } label: {
-                    Text("Notification settings").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 18).frame(height: 40).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                }.buttonStyle(.plain).padding(.top, 6)
-            }.frame(maxWidth: .infinity).padding(.vertical, 12)
-        }
+        VStack(spacing: 10) {
+            Image(systemName: "bell.slash").font(.nuna(size: 28, weight: .regular)).foregroundStyle(NunaPalette.textMuted)
+            Text("You're all caught up.").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            Text("New release notes and fresh data will land here.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).multilineTextAlignment(.center)
+            Button { onClose(); router.openNotificationSettings = true } label: {
+                Text("Notification settings").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 18).frame(height: 40).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+            }.buttonStyle(.plain).padding(.top, 6)
+        }.frame(maxWidth: .infinity).padding(.vertical, 28)
     }
 
     private func row(_ item: UpdateItem) -> some View {
-        NunaCard(small: true, highlight: !item.read) {
+        VStack(alignment: .leading, spacing: 10) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(alignment: .top, spacing: 12) {
                     NunaIconTile(symbol(item.kind))
                     VStack(alignment: .leading, spacing: 3) {
-                        Text(verbatim: item.title).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                        Text(verbatim: item.title).font(.nuna(size: 15, weight: item.read ? .semibold : .heavy)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                         Text(verbatim: item.message).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(3).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }
                     Spacer(minLength: 6)
                     VStack(alignment: .trailing, spacing: 6) {
                         Text(verbatim: time(item.date)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-                        if !item.read { Circle().fill(NunaPalette.alert).frame(width: 8, height: 8) }
+                        if !item.read { Circle().fill(NunaPalette.charge).frame(width: 8, height: 8) }
                     }
                 }
                 if item.kind == .dismissedCard {
@@ -103,6 +107,7 @@ struct NunaUpdatesInbox: View {
                 }
             }
         }
+        .padding(.vertical, 14)
         .contentShape(Rectangle())
         .onTapGesture { tap(item) }
         .accessibilityElement(children: .combine)
