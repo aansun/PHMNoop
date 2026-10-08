@@ -122,6 +122,11 @@ struct NunaSleepStageSection: View {
     /// The card's name, and whether it sets the figures against the person's earlier nights ("typically ...") - a nap is not a night.
     var title: LocalizedStringKey = "Sleep stages"
     var compareWithNights = true
+    /// A nap shows when it ran and how it was found under the title, in the one card, instead of a card of its own.
+    var rangeText: String?
+    var badge: LocalizedStringKey?
+    var badgeColor: Color?
+    var edited: Bool?
     @EnvironmentObject private var repo: Repository
     @State private var selected: SleepStage?
     @State private var series: [String: [(date: Date, value: Double)]] = [:]
@@ -169,13 +174,18 @@ struct NunaSleepStageSection: View {
                 HStack {
                     nunaTrendsCap(title)
                     Spacer(minLength: 8)
+                    if let badge { Text(badge).font(.nuna(size: 12.5, weight: .bold)).foregroundStyle(badgeColor ?? NunaPalette.textSecondary).textCase(nil) }
                     if let onEdit {
                         Button(action: onEdit) {
-                            NunaBareIcon(night.editTarget?.userEdited == true ? "pencil.circle.fill" : "pencil.circle", tint: NunaPalette.restText, target: 32)
+                            NunaBareIcon((edited ?? (night.editTarget?.userEdited == true)) ? "pencil.circle.fill" : "pencil.circle", tint: NunaPalette.restText, target: 32)
                         }
                         .buttonStyle(.plain).accessibilityLabel(Text("Edit sleep times"))
                         .padding(.trailing, -6).padding(.vertical, -8)
                     }
+                }
+                if let rangeText {
+                    Text(verbatim: rangeText).font(.nuna(size: 26, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(26))
+                        .foregroundStyle(NunaPalette.textPrimary).padding(.top, -4)
                 }
                 headline
                 if night.intervals.isEmpty {
