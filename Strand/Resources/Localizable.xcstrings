@@ -1,6 +1,7 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Personalize": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Personalisasi"}}}},
     "You slept %@ a night over the last %lld nights.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu tidur %1$@ per malam selama %2$lld malam terakhir."}}}},
     "You slept %@ a night over the last %lld nights, close to what you need.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu tidur %1$@ per malam selama %2$lld malam terakhir, mendekati kebutuhanmu."}}}},
     "You slept %@ a night over the last %lld nights, %@ short of what you need.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu tidur %1$@ per malam selama %2$lld malam terakhir, kurang %3$@ dari kebutuhanmu."}}}},

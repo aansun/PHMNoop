@@ -32,17 +32,12 @@ struct NunaMeView: View {
                     .buttonStyle(.plain).accessibilityLabel(Text("Search"))
                 }
                 profileCard
-                group("Account and device", count: 3) {
-                    row(.persona, "Persona", nil, "person.fill")
-                    NunaDivider()
+                group("Personalize", count: 3) {
                     row(.devices, "Devices", LocalizedStringKey(deviceSubtitle), "applewatch")
                     NunaDivider()
                     row(.anya, "Anya", LocalizedStringKey(anyaSubtitle), NunaGlyph.anya)
-                }
-                group("Appearance", count: 2) {
-                    row(.appearance, "Appearance", LocalizedStringKey(appearanceSubtitle), "slider.horizontal.3")
                     NunaDivider()
-                    row(.widgets, "Widgets and Lock Screen", nil, "square.grid.2x2.fill")
+                    row(.appearance, "Appearance", LocalizedStringKey(appearanceSubtitle), "slider.horizontal.3")
                 }
                 group("Notifications and automation", count: 3) {
                     row(.notifications, "Notifications", LocalizedStringKey(notificationsSubtitle), "bell.fill")
@@ -102,12 +97,13 @@ struct NunaMeView: View {
 
     private var profileCard: some View {
         NavigationLink(value: NunaMeRoute.persona) {
-            NunaCard {
+            // On the page background, not in a card: the profile is the head of the page.
+            NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
                 VStack(alignment: .leading, spacing: 14) {
                     HStack(spacing: 16) {
                         ProfileAvatarView(imageData: profile.avatarImageData, size: 64)
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Profile").font(.nuna(size: NunaTypeSize.h2 - 1, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+                            Text("Persona").font(.nuna(size: NunaTypeSize.h2 - 1, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
                             Text(verbatim: "\(profile.age) · \(Int(profile.heightCm.rounded())) cm · \(String(format: "%.1f", locale: AppLanguage.activeLocale, profile.weightKg)) kg").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                         Spacer(minLength: 8)
