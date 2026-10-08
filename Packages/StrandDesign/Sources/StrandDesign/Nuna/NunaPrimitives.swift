@@ -461,7 +461,7 @@ public struct NunaTabBar: View {
             Spacer(minLength: 0)
             if let trailing {
                 Button { if selection == trailing.id { onReselect(trailing.id) } else { selection = trailing.id } } label: {
-                    glyph(trailing, size: 22).foregroundStyle(selection == trailing.id ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+                    glyph(trailing, size: 22).opacity(selection == trailing.id ? 1 : 0.62)
                         .frame(width: 44, height: 44).background { surface(cornerRadius: 22) }
                 }
                 .buttonStyle(.plain).accessibilityLabel(Text(verbatim: trailing.title))
@@ -482,14 +482,9 @@ public struct NunaTabBar: View {
                     if selection == trailing.id { onReselect(trailing.id) } else { selection = trailing.id }
                 } label: {
                     glyph(trailing, size: 30)
-                        .foregroundStyle(selection == trailing.id ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+                        .opacity(selection == trailing.id ? 1 : 0.62)
                         .frame(width: 64, height: 64)
                         .background { surface(cornerRadius: radius) }
-                        .overlay {
-                            if selection == trailing.id {
-                                RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(NunaPalette.textPrimary.opacity(0.55), lineWidth: 1.5)
-                            }
-                        }
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text(verbatim: trailing.title))
@@ -500,21 +495,28 @@ public struct NunaTabBar: View {
         .padding(.bottom, 6)
     }
 
-    /// Frosted glass over whatever is behind, tinted with the card colour; how much of that tint shows is the transparency setting.
+    /// Glass: the page shows through, softened only a little, with a faint tint and a bright hairline on the edge. How much of the tint is
+    /// left is the transparency setting. Off, the bar is a solid surface.
     @ViewBuilder private func surface(cornerRadius r: CGFloat) -> some View {
         let t = Double(min(max(transparency, 0), 100)) / 100
         let shape = RoundedRectangle(cornerRadius: r, style: .continuous)
         ZStack {
-            if glass { shape.fill(.ultraThinMaterial) }
-            shape.fill(NunaPalette.card.opacity(glass ? 0.9 * (1 - t) : 1))
+            if glass {
+                shape.fill(.ultraThinMaterial).opacity(0.8)
+                shape.fill(NunaPalette.card.opacity(0.55 * (1 - t)))
+            } else {
+                shape.fill(NunaPalette.card)
+            }
         }
-        .overlay(shape.strokeBorder(NunaPalette.ink.opacity(glass ? 0.14 : 0.08), lineWidth: 1))
-        .shadow(color: NunaPalette.shade.opacity(0.35), radius: 14, y: 5)
+        .overlay(shape.strokeBorder(glass ? LinearGradient(colors: [NunaPalette.ink.opacity(0.28), NunaPalette.ink.opacity(0.06)], startPoint: .top, endPoint: .bottom)
+                                          : LinearGradient(colors: [NunaPalette.ink.opacity(0.08)], startPoint: .top, endPoint: .bottom), lineWidth: 1))
+        .shadow(color: NunaPalette.shade.opacity(glass ? 0.22 : 0.35), radius: 14, y: 5)
     }
 
     @ViewBuilder private func glyph(_ item: NunaTabItem, size: CGFloat) -> some View {
         if item.systemImage == NunaGlyph.anya {
-            NunaGlyph(NunaGlyph.anya, pointSize: size * 0.72)
+            // Anya keeps her own colours in the bar; the page you are on is shown by how bright she is.
+            Image("AnyaLogo").resizable().scaledToFit().frame(width: size * 1.05, height: size * 1.05)
         } else if item.usesAssetImage {
             Image(item.systemImage).resizable().scaledToFit().frame(width: size, height: size)
         } else {
@@ -529,13 +531,14 @@ public struct NunaTabBar: View {
         } label: {
             VStack(spacing: 4) {
                 glyph(item, size: 28).frame(width: 32, height: 28)
-                Text(verbatim: item.title).font(.nuna(size: NunaThemePrefs.skin == .whp ? 9.5 : 11, weight: .bold)).lineLimit(1)
-                    .minimumScaleFactor(0.6).tracking(NunaThemePrefs.skin == .whp ? -0.2 : 0).allowsTightening(true)
+                Text(verbatim: item.title).font(.nuna(size: NunaThemePrefs.skin == .whp ? 10.5 : 12, weight: .bold)).lineLimit(1)
+                    .textCase(nil).minimumScaleFactor(0.7).allowsTightening(true)
             }
-            .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+            // The active tab is lit; the others are dimmed. No card behind either.
+            .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textPrimary.opacity(0.52))
             .frame(minWidth: 52, minHeight: 52)
             .frame(maxWidth: .infinity)
-            .background(on ? NunaPalette.ink.opacity(0.10) : .clear, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(on ? .isSelected : [])
