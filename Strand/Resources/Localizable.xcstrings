@@ -1,6 +1,7 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Sleep time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Waktu tidur"}}}},
     "Last night's sleep": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur semalam"}}}},
     "Four parts of the night": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Empat bagian dari malam"}}}},
     "Rest adds up how long you slept against what you need (half of the score), how much of your time in bed you were asleep, the share of deep and REM sleep, and how regular your bedtime is. It is an estimate computed on this phone from your strap's data.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Rest menjumlahkan berapa lama kamu tidur dibanding kebutuhanmu (separuh dari skor), seberapa besar waktu di tempat tidur yang benar-benar kamu tidur, porsi tidur deep dan REM, dan seberapa teratur jam tidurmu. Ini perkiraan yang dihitung di ponsel ini dari data strapmu."}}}},

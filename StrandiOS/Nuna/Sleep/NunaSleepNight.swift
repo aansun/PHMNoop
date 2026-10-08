@@ -267,22 +267,54 @@ struct NunaSleepStageSection: View {
 
     // MARK: Parts
 
+    /// Minutes after midnight of a clock time, with the small hours counted after the evening (so 00:30 is 24:30), for averaging bedtimes.
+    private static func nightMinutes(_ d: Date) -> Double {
+        let c = Calendar.current.dateComponents([.hour, .minute], from: d)
+        var m = Double((c.hour ?? 0) * 60 + (c.minute ?? 0))
+        if m < 12 * 60 { m += 24 * 60 }
+        return m
+    }
+
+    private static func clock(minutes: Double) -> String {
+        let m = Int(minutes.rounded()) % (24 * 60)
+        let d = Calendar.current.date(byAdding: .minute, value: m, to: Calendar.current.startOfDay(for: Date())) ?? Date()
+        return NunaSleepFormat.clock(d)
+    }
+
+    /// The usual bedtime and wake time of the earlier nights, or nil under five nights.
+    private var typicalTimes: String? {
+        let nights = others
+        guard nights.count >= 5 else { return nil }
+        let on = nights.map { Self.nightMinutes($0.onset) }
+        let off = nights.map { Self.nightMinutes($0.wake) }
+        return Self.clock(minutes: on.reduce(0, +) / Double(on.count)) + " – " + Self.clock(minutes: off.reduce(0, +) / Double(off.count))
+    }
+
+    private func figure(_ value: String, _ label: LocalizedStringKey, _ typically: String?, color: Color = NunaPalette.textPrimary) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(verbatim: value).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(color).lineLimit(1).minimumScaleFactor(0.7)
+            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+            if let typically {
+                Text(verbatim: String(localized: "typically \(typically)")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    /// Sleep time, hours of sleep and restorative sleep, side by side, each with what is usual for this person underneath.
     private var headline: some View {
         let restorative = night.stages.deep + night.stages.rem
         let tAsleep = typical { $0.stages.asleep }
         let tRest = typical { $0.stages.deep + $0.stages.rem }
-        return HStack(alignment: .top, spacing: 22) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(verbatim: NunaSleepFormat.duration(night.asleepMin)).font(.nuna(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                Text("Hours of sleep").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                if let tAsleep { Text(verbatim: String(localized: "typically \(NunaSleepFormat.duration(tAsleep.mean))")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil) }
+        return HStack(alignment: .top, spacing: 16) {
+            if compareWithNights {
+                figure("\(NunaSleepFormat.clock(night.onset)) – \(NunaSleepFormat.clock(night.wake))", "Sleep time", typicalTimes).fixedSize(horizontal: true, vertical: false)
             }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(verbatim: NunaSleepFormat.duration(restorative)).font(.nuna(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(SleepStage.rem.nunaColor)
-                Text("Restorative sleep").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                if let tRest { Text(verbatim: String(localized: "typically \(NunaSleepFormat.duration(tRest.mean))")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil) }
-            }
-            Spacer(minLength: 0)
+            figure(NunaSleepFormat.duration(night.asleepMin), "Hours of sleep", tAsleep.map { NunaSleepFormat.duration($0.mean) })
+                .frame(maxWidth: .infinity, alignment: .leading)
+            figure(NunaSleepFormat.duration(restorative), "Restorative sleep", tRest.map { NunaSleepFormat.duration($0.mean) }, color: SleepStage.rem.nunaColor)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
