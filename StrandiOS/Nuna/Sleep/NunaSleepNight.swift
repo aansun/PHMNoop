@@ -119,6 +119,9 @@ struct NunaSleepStageSection: View {
     let night: NunaNight
     /// Opens the sleep-time editor; the pencil at the end of the header shows when it is set.
     var onEdit: (() -> Void)?
+    /// The card's name, and whether it sets the figures against the person's earlier nights ("typically ...") - a nap is not a night.
+    var title: LocalizedStringKey = "Sleep stages"
+    var compareWithNights = true
     @EnvironmentObject private var repo: Repository
     @State private var selected: SleepStage?
     @State private var series: [String: [(date: Date, value: Double)]] = [:]
@@ -146,7 +149,7 @@ struct NunaSleepStageSection: View {
 
     /// Earlier nights (up to 30) that carry a real stage split.
     private var others: [NunaNight] {
-        model.nights.dropFirst(model.index + 1).prefix(30).filter { $0.stages.total > 0 }
+        compareWithNights ? model.nights.dropFirst(model.index + 1).prefix(30).filter { $0.stages.total > 0 } : []
     }
 
     /// The middle half of the earlier nights and their mean, or nil under five nights.
@@ -164,7 +167,7 @@ struct NunaSleepStageSection: View {
         NunaCard {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
-                    nunaTrendsCap("Sleep stages")
+                    nunaTrendsCap(title)
                     Spacer(minLength: 8)
                     if let onEdit {
                         Button(action: onEdit) {
@@ -186,7 +189,7 @@ struct NunaSleepStageSection: View {
                 }
             }
         }
-        .task(id: "\(night.dayKey)-\(temperatureRaw)-\(unitSystemRaw)") {
+        .task(id: "\(night.dayKey)-\(Int(night.onset.timeIntervalSince1970))-\(temperatureRaw)-\(unitSystemRaw)") {
             selected = nil
             await loadSeries()
         }
