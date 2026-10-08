@@ -1,6 +1,10 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "You slept %@ a night over the last %lld nights.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu tidur %1$@ per malam selama %2$lld malam terakhir."}}}},
+    "You slept %@ a night over the last %lld nights, close to what you need.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu tidur %1$@ per malam selama %2$lld malam terakhir, mendekati kebutuhanmu."}}}},
+    "You slept %@ a night over the last %lld nights, %@ short of what you need.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu tidur %1$@ per malam selama %2$lld malam terakhir, kurang %3$@ dari kebutuhanmu."}}}},
+    "You slept %@ a night over the last %lld nights, %@ more than you need.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu tidur %1$@ per malam selama %2$lld malam terakhir, lebih %3$@ dari kebutuhanmu."}}}},
     "Charge averaged %lld%% over these %lld days.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Charge rata-rata %1$lld%% selama %2$lld hari ini."}}}},
     "Charge averaged %1$lld%% over these %2$lld days, %3$@ the period before.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Charge rata-rata %1$lld%% selama %2$lld hari ini, %3$@ periode sebelumnya."}}}},
     "Effort %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Effort %@"}}}},
