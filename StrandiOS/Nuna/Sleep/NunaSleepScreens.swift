@@ -49,6 +49,7 @@ struct NunaSleepView: View {
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @State private var showCoach = false
     @State private var edit: NunaSleepEditTarget?
+    @State private var undo: SleepDeletionSnapshot?
     @EnvironmentObject private var repo: Repository
 
     var body: some View {
@@ -72,7 +73,8 @@ struct NunaSleepView: View {
             }
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "sleep") }
-        .sheet(item: $edit) { NunaSleepTimeSheet(target: $0) { await repo.refresh() } }
+        .sheet(item: $edit) { NunaSleepTimeSheet(target: $0) { snap in await repo.refresh(); if let snap { undo = snap } } }
+        .nunaSleepUndo($undo) { await repo.refresh() }
     }
 
     @EnvironmentObject private var appModel: AppModel
@@ -402,6 +404,7 @@ private struct NunaNapContent: View {
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @State private var showAdd = false
     @State private var edit: NunaSleepEditTarget?
+    @State private var undo: SleepDeletionSnapshot?
     @State private var showCoach = false
 
     private var night: NunaNight? { model.night }
@@ -412,7 +415,8 @@ private struct NunaNapContent: View {
         Group { content }
             .sheet(isPresented: $showAdd) { NunaAddNapSheet(day: night?.wakeDate ?? Date()) { await repo.refresh(); await model.load(repo: repo) } }
             .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "nap") }
-            .sheet(item: $edit) { NunaSleepTimeSheet(target: $0) { await model.load(repo: repo) } }
+            .sheet(item: $edit) { NunaSleepTimeSheet(target: $0) { snap in await model.load(repo: repo); if let snap { undo = snap } } }
+            .nunaSleepUndo($undo) { await model.load(repo: repo) }
     }
 
     @ViewBuilder private var content: some View {

@@ -30,7 +30,8 @@ struct NunaSleepEditTarget: Identifiable {
 /// data asks first, and a sleep can be deleted.
 struct NunaSleepTimeSheet: View {
     let target: NunaSleepEditTarget
-    let onDone: () async -> Void
+    /// Called once the edit or delete is saved. A delete hands back the snapshot the host offers to restore.
+    let onDone: (SleepDeletionSnapshot?) async -> Void
 
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var repo: Repository
@@ -42,7 +43,7 @@ struct NunaSleepTimeSheet: View {
     @State private var confirmDelete = false
     @State private var confirmDisjoint = false
 
-    init(target: NunaSleepEditTarget, onDone: @escaping () async -> Void) {
+    init(target: NunaSleepEditTarget, onDone: @escaping (SleepDeletionSnapshot?) async -> Void) {
         self.target = target; self.onDone = onDone
         let seed = Date(timeIntervalSince1970: TimeInterval(min(target.bedTs, Int(Date().timeIntervalSince1970))))
         _bed = State(initialValue: seed)
@@ -115,8 +116,8 @@ struct NunaSleepTimeSheet: View {
             Button("Delete", role: .destructive) { delete() }
         } message: {
             Text(target.userEdited
-                 ? "It is removed from your sleep and every score that uses it is recalculated."
-                 : "It is removed and every score that uses it is recalculated. It will not be detected again.")
+                 ? "It is removed from your sleep and every score that uses it is recalculated. You can undo it for a few seconds."
+                 : "It is removed and every score that uses it is recalculated. It will not be detected again. You can undo it for a few seconds.")
         }
     }
 
@@ -137,7 +138,7 @@ struct NunaSleepTimeSheet: View {
                                       storedStagesJSON: target.stagesJSON, newStartTs: start, newEndTs: end)
             await intelligence.analyzeRecent()
             await repo.refresh()
-            await onDone()
+            await onDone(nil)
             dismiss()
         }
     }
@@ -145,12 +146,75 @@ struct NunaSleepTimeSheet: View {
     private func delete() {
         saving = true
         Task {
-            _ = await repo.deleteSleepSession(detectedStartTs: target.detectedStartTs, endTs: target.wakeTs)
+            let snapshot = await repo.deleteSleepSession(detectedStartTs: target.detectedStartTs, endTs: target.wakeTs)
             await intelligence.analyzeRecent()
             await repo.refresh()
-            await onDone()
+            await onDone(snapshot)
             dismiss()
         }
+    }
+}
+
+/// The strip shown after a delete: what was removed and an Undo that puts the sleep back where it came from.
+private struct NunaSleepUndoModifier: ViewModifier {
+    @Binding var snapshot: SleepDeletionSnapshot?
+    let onRestored: () async -> Void
+    @EnvironmentObject private var repo: Repository
+    @EnvironmentObject private var intelligence: IntelligenceEngine
+    @State private var timer: Task<Void, Never>?
+
+    func body(content: Content) -> some View {
+        content
+            .overlay(alignment: .bottom) {
+                if let snap = snapshot {
+                    HStack(spacing: 12) {
+                        Image(systemName: "trash").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Sleep deleted").font(.nuna(size: 14.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: "\(NunaSleepFormat.clock(Date(timeIntervalSince1970: TimeInterval(snap.session.effectiveStartTs)))) – \(NunaSleepFormat.clock(Date(timeIntervalSince1970: TimeInterval(snap.session.endTs))))")
+                                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        }
+                        Spacer(minLength: 8)
+                        Button { restore(snap) } label: {
+                            Text("Undo").font(.nuna(size: 14.5, weight: .heavy)).foregroundStyle(NunaPalette.charge)
+                                .padding(.horizontal, 10).frame(minHeight: 44)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(.horizontal, 16).padding(.vertical, 6)
+                    .background(NunaPalette.canvas, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous).strokeBorder(NunaPalette.ink.opacity(0.18), lineWidth: 1))
+                    .padding(.horizontal, NunaSpacing.screenH).padding(.bottom, 110)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+                }
+            }
+            .animation(.easeOut(duration: 0.2), value: snapshot)
+            .onChange(of: snapshot) { _, snap in
+                timer?.cancel()
+                guard snap != nil else { return }
+                timer = Task {
+                    try? await Task.sleep(nanoseconds: 10_000_000_000)
+                    if !Task.isCancelled { snapshot = nil }
+                }
+            }
+    }
+
+    private func restore(_ snap: SleepDeletionSnapshot) {
+        timer?.cancel()
+        Task {
+            await repo.undoDeleteSleepSession(snap)
+            await intelligence.analyzeRecent()
+            await repo.refresh()
+            await onRestored()
+            snapshot = nil
+        }
+    }
+}
+
+extension View {
+    /// Offers to put a just-deleted sleep back for a few seconds.
+    func nunaSleepUndo(_ snapshot: Binding<SleepDeletionSnapshot?>, onRestored: @escaping () async -> Void) -> some View {
+        modifier(NunaSleepUndoModifier(snapshot: snapshot, onRestored: onRestored))
     }
 }
 #endif
