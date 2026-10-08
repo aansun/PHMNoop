@@ -220,7 +220,9 @@ struct NunaLiveHeartView: View {
 struct NunaSkinTempView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var appModel: AppModel
+    @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @StateObject private var skinS = NunaSeriesModel()
+    @State private var showCoach = false
 
     var body: some View {
         let nights = skinS.readings(14)
@@ -255,6 +257,10 @@ struct NunaSkinTempView: View {
                     }
                 }
             }
+            if coachEnabled, let latest {
+                let small = abs(latest) < 0.5
+                NunaAnyaCard(verbatim: String(localized: "Skin temperature") + " " + nunaSigned(latest) + " °C · " + (small ? String(localized: "Small deviation") : String(localized: "Larger deviation"))) { showCoach = true }
+            }
             if let latest {
                 VStack(spacing: 8) {
                     NunaDeviationScale(value: latest)
@@ -281,6 +287,9 @@ struct NunaSkinTempView: View {
                           text: "The strap measures skin temperature at the wrist while you sleep and compares it with your own recent nights. The figure is a deviation from your baseline, not your core body temperature.")
         }
         .task { await skinS.load(repo: repo, key: "skin_temp", source: "my-whoop") }
+        .sheet(isPresented: $showCoach) {
+            NunaAnyaSheet(context: "Skin temperature", metric: NunaAnyaMetric(key: "skin_temp", source: "my-whoop", title: String(localized: "Skin temperature"), unit: "°C", decimals: 1, higherIsBetter: nil))
+        }
     }
 }
 

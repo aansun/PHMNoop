@@ -26,7 +26,6 @@ struct NunaChargeDetailView: View {
     var body: some View {
         let latest = series.latest
         NunaDetailScreen("Charge") {
-            if coachEnabled, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
             NunaScoreHero(caption: "Today", chip: chip?.0, chipColor: NunaPalette.charge,
                           fraction: (day.charge.pct ?? latest?.value ?? 0) / 100,
                           number: (day.charge.pct ?? latest?.value).map { String(format: "%.0f", $0) } ?? "–",
@@ -51,6 +50,7 @@ struct NunaChargeDetailView: View {
                     NunaContributorRow(title: "Sleep performance", icon: "moon", value: day.rest.map { String(format: "%.0f%%", $0) }, delta: nil)
                 }.buttonStyle(.plain)
             }
+            if coachEnabled, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
             NunaTrendDetailCard(
                 caption: "Average", unit: "%",
                 readings: { days, back in series.readings(days, endingDaysAgo: back) },
@@ -138,9 +138,6 @@ struct NunaEffortDetailView: View {
 
     var body: some View {
         NunaDetailScreen("Effort") {
-            if coachEnabled, let e = day.effort {
-                NunaAnyaCard(verbatim: String(localized: "Your Effort is \(UnitFormatter.effortDisplay(e, scale: scale)) of \(UnitFormatter.effortScaleMax(scale)) so far today.")) { showCoach = true }
-            }
             NunaScoreHero(caption: "Today", chip: level.map { $0.0 }, chipColor: NunaPalette.effortText,
                           fraction: (day.effort ?? 0) / 100,
                           number: day.effort.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–",
@@ -150,6 +147,9 @@ struct NunaEffortDetailView: View {
                     .fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
             sourcesSection
+            if coachEnabled, let e = day.effort {
+                NunaAnyaCard(verbatim: String(localized: "Your Effort is \(UnitFormatter.effortDisplay(e, scale: scale)) of \(UnitFormatter.effortScaleMax(scale)) so far today.")) { showCoach = true }
+            }
             NunaTrendDetailCard(
                 caption: "Average", unit: "",
                 readings: { days, back in series.readings(days, endingDaysAgo: back).map { ($0.date, UnitFormatter.effortValue($0.value, scale: scale)) } },
@@ -297,7 +297,6 @@ struct NunaMetricDetailView: View {
 
     @ViewBuilder private var trendCardBody: some View {
         let latest = series.latest
-        if coachEnabled, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
         NunaTrendDetailCard(
             caption: overnight ? "Last night" : "Today",
             valueText: latest.map { fmt($0.value) } ?? "–", unit: metric.unit,
@@ -310,6 +309,7 @@ struct NunaMetricDetailView: View {
             series: series, reference: (metric.key == "steps" || metric.key == "steps_est") ? 10_000 : nil, referenceLabel: "Target",
             lineColor: lineColor, decimals: metric.decimals,
             higherIsBetter: metric.higherIsBetter ?? true, bars: isColumns, range: $range, page: $page)
+        if coachEnabled, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
         if ["spo2", "resp_rate", "hrv", "rhr"].contains(metric.key) {
             NavigationLink(value: NunaTodayRoute.earlyWarning) {
                 NunaCard(small: true) { NunaListRow("Part of the early warning", description: "Breathing, SpO₂, HRV and resting heart rate are watched too", systemImage: "bell", showsChevron: true) }
@@ -488,7 +488,6 @@ struct NunaStressDetailView: View {
         let score = gaugeValue
         let tint: Color = score.map(color) ?? NunaPalette.textPrimary
         NunaDetailScreen("Stress monitor") {
-            if coachEnabled, let line = anyaLine(score) { NunaAnyaCard(verbatim: line) { showCoach = true } }
             VStack(spacing: 10) {
                 Text(day.isToday ? "Right now" : "Day average").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading)
@@ -500,6 +499,7 @@ struct NunaStressDetailView: View {
                 }
             }
             recoveryTiles
+            if coachEnabled, let line = anyaLine(score) { NunaAnyaCard(verbatim: line) { showCoach = true } }
             chartCard
             if range == 1, let curve = day.stressCurve {
                 let zones = zoneMinutes(curve)
