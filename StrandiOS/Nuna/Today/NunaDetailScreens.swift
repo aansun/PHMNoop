@@ -26,15 +26,16 @@ struct NunaChargeDetailView: View {
     var body: some View {
         let latest = series.latest
         NunaDetailScreen("Charge") {
-            NunaScoreHero(caption: "Today", chip: chip?.0, chipColor: NunaPalette.charge,
+            NunaScoreHero(caption: "Today",
                           fraction: (day.charge.pct ?? latest?.value ?? 0) / 100,
                           number: (day.charge.pct ?? latest?.value).map { String(format: "%.0f", $0) } ?? "–",
-                          unit: "%", name: "Charge", color: (day.charge.pct ?? latest?.value).map(nunaChargeColor) ?? NunaPalette.charge,
+                          unit: "%", name: chargeWord ?? "Charge", nameColor: (day.charge.pct ?? latest?.value).map(nunaChargeTextColor), color: (day.charge.pct ?? latest?.value).map(nunaChargeColor) ?? NunaPalette.charge,
                           hasNote: (day.charge.pct ?? latest?.value) != nil && series.baseline != nil) {
                 if let v = day.charge.pct ?? latest?.value, let base = series.baseline {
                     let d = Int((v - base).rounded())
-                    Text(verbatim: d == 0 ? String(localized: "In line with your 30-day average")
-                         : (d > 0 ? String(localized: "\(d) points above your 30-day average") : String(localized: "\(-d) points below your 30-day average")))
+                    let readiness = chip.map { $0.0 + ". " } ?? ""
+                    Text(verbatim: readiness + (d == 0 ? String(localized: "In line with your 30-day average")
+                         : (d > 0 ? String(localized: "\(d) points above your 30-day average") : String(localized: "\(-d) points below your 30-day average"))))
                         .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         .fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
@@ -101,12 +102,17 @@ struct NunaChargeDetailView: View {
         }
     }
 
-    private var chip: (LocalizedStringKey, Bool)? {
+    /// The word for today's Charge, which sits in the ring in place of the name.
+    private var chargeWord: LocalizedStringKey? {
+        (day.charge.pct ?? series.latest?.value).map { $0 >= 67 ? "Ready" : ($0 >= 34 ? "Moderate" : "Low") }
+    }
+
+    private var chip: (String, Bool)? {
         guard let level = day.readiness?.level else { return nil }
         switch level {
-        case .primed: return ("Ready for a hard session", true)
-        case .balanced: return ("Ready for a moderate load", true)
-        case .strained, .rundown: return ("Take it easy today", false)
+        case .primed: return (String(localized: "Ready for a hard session"), true)
+        case .balanced: return (String(localized: "Ready for a moderate load"), true)
+        case .strained, .rundown: return (String(localized: "Take it easy today"), false)
         case .insufficient: return nil
         }
     }
@@ -138,11 +144,11 @@ struct NunaEffortDetailView: View {
 
     var body: some View {
         NunaDetailScreen("Effort") {
-            NunaScoreHero(caption: "Today", chip: level.map { $0.0 }, chipColor: NunaPalette.effortText,
+            NunaScoreHero(caption: "Today",
                           fraction: (day.effort ?? 0) / 100,
                           number: day.effort.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–",
                           suffix: String(localized: "of \(UnitFormatter.effortScaleMax(scale))"),
-                          name: "Effort", color: NunaPalette.effortText) {
+                          name: level?.0 ?? "Effort", nameColor: level?.1, color: NunaPalette.effortText) {
                 Text("Cardio load so far today").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     .fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
