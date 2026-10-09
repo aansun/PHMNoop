@@ -109,6 +109,7 @@ struct NunaRootView: View {
         .sheet(isPresented: $showDevices) { sheetStack { NunaDevicesView() } }
         .sheet(item: $routed) { dest in sheetStack { destinationView(dest) } }
         .onChange(of: router.requestedDestination) { _, dest in handle(dest) }
+        .onChange(of: router.pendingMetricKey) { _, key in openMetric(key) }
         .onChange(of: router.openNotificationSettings) { _, on in
             guard on else { return }
             selection = Tab.me.rawValue
@@ -181,6 +182,24 @@ struct NunaRootView: View {
     }
 
     // MARK: Router
+
+    /// A widget asked for one metric: switch to Today and push its detail. Charge, Effort and Rest open their own screens (the metric host
+    /// swaps in the right one); heart rate opens the live screen.
+    private func openMetric(_ key: String?) {
+        guard let key else { return }
+        defer { router.pendingMetricKey = nil }
+        let route: NunaTodayRoute?
+        switch key {
+        case "heartrate": route = .liveHeart
+        case "steps":
+            route = MetricCatalog.todayStepsMetric(hasMeasuredSteps: true).map { .metric($0) }
+        default:
+            route = MetricCatalog.metric(key: key, source: "my-whoop").map { .metric($0) }
+        }
+        guard let route else { return }
+        selection = Tab.today.rawValue
+        paths[Tab.today.rawValue] = NavigationPath([route])
+    }
 
     private func handle(_ dest: NavRouter.Destination?) {
         guard let dest else { return }

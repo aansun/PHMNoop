@@ -48,6 +48,11 @@ final class NavRouter: ObservableObject {
         }
     }
 
+    /// A metric detail a widget asked for (its key, e.g. "recovery", "strain", "hrv", "steps", "energy_kcal", "heartrate"). The Nuna shell opens that
+    /// detail on the Today tab, then clears it.
+    @Published var pendingMetricKey: String?
+    func openMetric(_ key: String) { pendingMetricKey = key }
+
     /// The destination a screen has asked the shell to open, or nil once handled. Published so the
     /// active shell (macOS sidebar / iOS tab) reacts and routes itself, then resets this to nil.
     @Published var requestedDestination: Destination?
