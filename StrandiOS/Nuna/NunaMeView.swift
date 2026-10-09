@@ -32,8 +32,10 @@ struct NunaMeView: View {
                     .buttonStyle(.plain).accessibilityLabel(Text("Search"))
                 }
                 profileCard
-                group("Personalize", count: 3) {
+                group("Personalize", count: 4) {
                     row(.devices, "Devices", LocalizedStringKey(deviceSubtitle), "applewatch")
+                    NunaDivider()
+                    row(.achievements, "Achievements", LocalizedStringKey(achievementsSubtitle), "trophy")
                     NunaDivider()
                     row(.anya, "Anya", LocalizedStringKey(anyaSubtitle), NunaGlyph.anya)
                     NunaDivider()
@@ -71,6 +73,10 @@ struct NunaMeView: View {
     private var deviceSubtitle: String {
         if live.connected, let pct = live.batteryPct { return String(localized: "Connected · \(Int(pct.rounded()))%") }
         return live.connected ? String(localized: "Connected") : String(localized: "Not connected")
+    }
+    private var achievementsSubtitle: String {
+        let n = repo.days.filter { $0.recovery != nil }.count
+        return String(localized: "Level \(1 + n / 30)")
     }
     private var anyaSubtitle: String {
         guard coach.isConfigured else { return String(localized: "Not connected") }
@@ -161,7 +167,7 @@ struct NunaMeView: View {
 }
 
 enum NunaMeRoute: Hashable {
-    case persona, zones, goals, devices, anya, appearance, widgets, theme
+    case persona, zones, goals, devices, anya, appearance, widgets, theme, achievements
     case units, language, features, notifications, privacy
     case automations, doubleTap, presence, sessionCues, sedentary, shortcuts, alarm
     case data, backup, imports, appleHealth, strava, hevy
@@ -174,6 +180,7 @@ extension View {
         navigationDestination(for: NunaMeRoute.self) { r in
             switch r {
             case .persona: NunaPersonaView()
+            case .achievements: NunaAchievementsView()
             case .zones: NunaZonesView()
             case .goals: NunaGoalsView()
             case .devices: NunaDevicesView()
