@@ -358,8 +358,9 @@ struct NunaSleepPerformanceView: View {
                     }
                 }
                 trend("Hours vs needed, last 14 nights", model.recentPoints { model.hoursVsNeeded($0) })
-                trend("Consistency, last 14 nights", model.recentPoints { model.consistency($0) })
                 trend("Efficiency, last 14 nights", model.recentPoints { model.efficiency($0) })
+                trend("Restorative sleep, last 14 nights", model.recentPoints { model.restorative($0) })
+                trend("Consistency, last 14 nights", model.recentPoints { model.consistency($0) })
             }
         }
     }

@@ -94,9 +94,6 @@ struct NunaScoreRings: View {
                         ringView(v, size: size)
                         Text(v.label).font(.nuna(size: NunaTypeSize.caption, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                             .foregroundStyle(NunaPalette.textSecondary)
-                        Text(v.state).font(.nuna(size: 13, weight: .heavy))
-                            .foregroundStyle(v.number == "–" ? NunaPalette.textMuted : v.textColor)
-                            .opacity(Double(1 - collapse * 2.2))
                     }
                 } else {
                     HStack(spacing: 8) {
