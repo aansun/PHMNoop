@@ -11,6 +11,7 @@ import WhoopStore
 struct NunaLiveHRCard: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var live: LiveState
+    @EnvironmentObject private var profile: ProfileStore
     @State private var banked: [(ts: Int, bpm: Double)] = []
     @State private var samples: [Double] = []
     private let maxSamples = 90
@@ -36,43 +37,49 @@ struct NunaLiveHRCard: View {
         return live.connected ? "Waiting for the strap" : "Strap not connected"
     }
 
+    private var zoneText: String? {
+        guard let hr = bigBpm else { return nil }
+        return String(localized: "Zone \(profile.hrZoneSet.zoneNumber(forBPM: Double(hr)))")
+    }
+
+    /// No card: the title, then the reading on the left and its line on the right, like a quiet strip of the page.
     var body: some View {
         NavigationLink(value: NunaTodayRoute.liveHeart) {
-            NunaCard {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        HStack(spacing: 6) {
-                            Text("Beats per minute").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                                .foregroundStyle(NunaPalette.textSecondary)
-                            Image(systemName: "chevron.right").font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                        }
-                        Spacer()
-                        NunaChip(isLive ? "Live" : (live.connected ? "Strap connected" : "Not connected"),
-                                 color: isLive ? NunaPalette.charge : (live.connected ? nil : NunaPalette.warning))
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    HStack(spacing: 6) {
+                        Text("Beats per minute").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                            .foregroundStyle(NunaPalette.textSecondary)
+                        Image(systemName: "chevron.right").font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                     }
-                    HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Image(systemName: "heart.fill").font(.nuna(size: 20)).foregroundStyle(NunaPalette.alert)
+                    Spacer()
+                    Text(isLive ? "Live" : (live.connected ? "Strap connected" : "Not connected")).font(.nuna(size: 12, weight: .heavy))
+                        .tracking(nunaTrackingLabel).textCase(.uppercase)
+                        .foregroundStyle(isLive ? NunaPalette.charge : (live.connected ? NunaPalette.textSecondary : NunaPalette.warning))
+                }
+                HStack(alignment: .center, spacing: 14) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Image(systemName: "heart.fill").font(.nuna(size: 18)).foregroundStyle(NunaPalette.alert)
                         Text(verbatim: bigBpm.map(String.init) ?? "–")
-                            .font(.nuna(size: 52, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(52)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("bpm").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                            .font(.nuna(size: 44, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(44)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("bpm").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        if let zoneText { Text(verbatim: zoneText).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).padding(.top, 4) }
                     }
-                    Text(subtitle).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    .frame(width: 96, alignment: .leading)
                     if isLive || banked.count >= 2 {
                         NunaHRTrace(values: isLive ? samples : banked.map(\.bpm),
                                     segments: isLive ? nil : hrGapSegments(bucketTs: banked.map(\.ts), bucketSeconds: 300),
-                                    xLabels: isLive ? [String(localized: "Earlier"), String(localized: "Now")] : dayLabels)
-                            .frame(height: 110)
-                        let vals = isLive ? samples : banked.map(\.bpm)
-                        HStack {
-                            stat("Min", vals.min()); Spacer(); stat("Avg", vals.reduce(0, +) / Double(vals.count)); Spacer(); stat("Max", vals.max())
-                        }
+                                    compact: true)
+                            .frame(height: 96)
                     } else {
                         Text(live.connected ? "Waiting for a live heartbeat…" : "Connect your strap to see live heart rate")
                             .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                            .frame(maxWidth: .infinity, minHeight: 60, alignment: .leading).textCase(nil)
+                            .frame(maxWidth: .infinity, alignment: .leading)
                     }
                 }
             }
+            .padding(.vertical, 4)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .task(id: repo.refreshSeq) {
@@ -103,6 +110,8 @@ struct NunaHRTrace: View {
     /// Labels spread evenly under the baseline (for example 00:00, 06:00, 12:00, Now). Empty draws none.
     var xLabels: [String] = []
     var color: Color = NunaPalette.alert
+    /// Drops the bpm scale on the left and marks the latest reading with a dot, for the card beside the big number.
+    var compact = false
 
     private var scale: (lo: Double, hi: Double)? {
         guard let lo = values.min(), let hi = values.max() else { return nil }
@@ -115,14 +124,14 @@ struct NunaHRTrace: View {
         VStack(spacing: 6) {
             HStack(alignment: .top, spacing: 8) {
                 // The scale, top to bottom, at the three guides.
-                VStack {
+                if !compact { VStack {
                     ForEach([0, 1, 2], id: \.self) { i in
                         if i > 0 { Spacer(minLength: 0) }
                         Text(verbatim: sc.map { String(Int(($0.hi - ($0.hi - $0.lo) * Double(i) / 2).rounded())) } ?? "")
                             .font(.system(size: 11, weight: .medium)).foregroundStyle(NunaPalette.textMuted).monospacedDigit()
                     }
                 }
-                .frame(width: 26, alignment: .trailing)
+                .frame(width: 26, alignment: .trailing) }
                 Canvas { ctx, size in
                     guard values.count >= 2, let sc else { return }
                     let span = max(sc.hi - sc.lo, 1)
@@ -132,7 +141,7 @@ struct NunaHRTrace: View {
                         ctx.stroke(g, with: .color(NunaPalette.ink.opacity(i == 2 ? 0.22 : 0.08)), lineWidth: i == 2 ? 1.2 : 1)
                     }
                     func pt(_ i: Int) -> CGPoint {
-                        CGPoint(x: size.width * CGFloat(i) / CGFloat(values.count - 1),
+                        CGPoint(x: (compact ? 6 : 0) + (size.width - (compact ? 12 : 0)) * CGFloat(i) / CGFloat(values.count - 1),
                                 y: size.height * CGFloat(1 - (values[i] - sc.lo) / span))
                     }
                     let runs: [ClosedRange<Int>] = (segments.map { hrGapRuns(segments: $0) } ?? [0...(values.count - 1)])
@@ -146,11 +155,16 @@ struct NunaHRTrace: View {
                         for i in (run.lowerBound + 1)...run.upperBound { p.addLine(to: pt(i)) }
                         ctx.stroke(p, with: .color(color), style: StrokeStyle(lineWidth: 2.4, lineCap: .round, lineJoin: .round))
                     }
+                    if compact, let last = runs.last?.upperBound {
+                        let c = pt(last)
+                        ctx.fill(Path(ellipseIn: CGRect(x: c.x - 5, y: c.y - 5, width: 10, height: 10)), with: .color(NunaPalette.textPrimary))
+                        ctx.stroke(Path(ellipseIn: CGRect(x: c.x - 5, y: c.y - 5, width: 10, height: 10)), with: .color(color), lineWidth: 2)
+                    }
                 }
             }
             if !xLabels.isEmpty {
                 HStack(spacing: 0) {
-                    Color.clear.frame(width: 34, height: 1)
+                    if !compact { Color.clear.frame(width: 34, height: 1) }
                     ForEach(Array(xLabels.enumerated()), id: \.offset) { i, t in
                         Text(verbatim: t).font(.system(size: 11, weight: .medium)).foregroundStyle(NunaPalette.textMuted).monospacedDigit()
                             .frame(maxWidth: .infinity, alignment: i == 0 ? .leading : (i == xLabels.count - 1 ? .trailing : .center))
