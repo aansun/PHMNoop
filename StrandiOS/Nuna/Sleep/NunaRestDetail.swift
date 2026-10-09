@@ -3,7 +3,7 @@ import SwiftUI
 import StrandDesign
 
 /// The screen behind the Rest ring, built like the Charge one: the ring, the four things Rest is made of, Anya's line, the trend of Rest and,
-/// under it, a card that opens last night's sleep.
+/// under it the whole night: stages, comparison, naps, vitals, need and body clock.
 struct NunaRestDetailView: View {
     @EnvironmentObject private var repo: Repository
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
@@ -29,7 +29,7 @@ struct NunaRestDetailView: View {
                 levelChip: { v in (text: nunaRestWord(v), color: nunaRestTextColor(v)) },
                 sentence: nil, range: $range, page: $page)
                 .columns(color: nunaRestColor, top: 100, legend: AnyView(restKey))
-            if let night = model.night { lastNight(night) }
+            if let night = model.night { NunaSleepNightSections(model: model, night: night) }
             NunaExpandRow(title: "How it's calculated", subtitle: "Four parts of the night",
                           text: "Rest adds up how long you slept against what you need (half of the score), how much of your time in bed you were asleep, the share of deep and REM sleep, and how regular your bedtime is. It is an estimate computed on this phone from your strap's data.")
         }
@@ -106,33 +106,6 @@ struct NunaRestDetailView: View {
         NavigationLink(value: NunaTodayRoute.sleepPerformance(model.index)) {
             NunaContributorRow(title: title, icon: icon, value: value, delta: delta, downIsGood: false)
         }.buttonStyle(.plain)
-    }
-
-    // MARK: Last night
-
-    private func lastNight(_ night: NunaNight) -> some View {
-        NavigationLink(value: NunaTodayRoute.sleep(0)) {
-            NunaCard {
-                VStack(alignment: .leading, spacing: 14) {
-                    HStack {
-                        Text("Last night's sleep").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                            .foregroundStyle(NunaPalette.textSecondary)
-                        Spacer()
-                        Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                    }
-                    HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Text(verbatim: NunaSleepFormat.duration(night.asleepMin))
-                            .font(.nuna(size: NunaTypeSize.numberL, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(NunaTypeSize.numberL))
-                            .foregroundStyle(NunaPalette.textPrimary)
-                        Text("asleep").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                    }
-                    Text(verbatim: "\(NunaSleepFormat.clock(night.onset)) – \(NunaSleepFormat.clock(night.wake))")
-                        .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    if night.intervals.isEmpty { NunaStageSplitBar(stages: night.stages) } else { NunaHypnogramStrip(intervals: night.intervals, height: 90) }
-                }
-            }
-        }
-        .buttonStyle(.plain)
     }
 }
 #endif

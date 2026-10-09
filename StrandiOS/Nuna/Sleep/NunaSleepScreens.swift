@@ -48,60 +48,17 @@ struct NunaSleepView: View {
     var startIndex = 0
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @State private var showCoach = false
-    @State private var edit: NunaSleepEditTarget?
-    @State private var undo: SleepDeletionSnapshot?
-    @EnvironmentObject private var repo: Repository
 
     var body: some View {
         NunaSleepHost(title: "Sleep", startIndex: startIndex) { model in
             if let night = model.night {
                 NunaNightPicker(model: model)
                 hero(model, night)
-                NunaSleepStageSection(model: model, night: night,
-                                      onEdit: night.editTarget.map { block in { edit = NunaSleepEditTarget(block, isNap: false) } })
-                NunaStageCompare(model: model, night: night)
-                if !night.naps.isEmpty { napCard(night) }
-                tiles(model, night)
-                NunaOvernightVitals(model: model, night: night)
-                needCard(model, night)
-                if let d = night.daily?.disturbances, d > 0 {
-                    NunaCard(small: true) {
-                        NunaListRow("Woke up \(d) times", description: "Brief awakenings during the night", systemImage: "moon.fill", tint: NunaPalette.restText)
-                    }
-                }
-                bodyClockCard
+                NunaSleepNightSections(model: model, night: night, showsTiles: true)
                 if coachEnabled { NunaAnyaCard(title: "How can I sleep better tonight?") { showCoach = true } }
             }
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "sleep") }
-        .sheet(item: $edit) { NunaSleepTimeSheet(target: $0) { snap in await repo.refresh(); if let snap { undo = snap } } }
-        .nunaSleepUndo($undo) { await repo.refresh() }
-    }
-
-    @EnvironmentObject private var appModel: AppModel
-
-    /// Body clock: the lowest point and whether last night sat in the ideal window.
-    @ViewBuilder private var bodyClockCard: some View {
-        NavigationLink(value: NunaTodayRoute.bodyClock) {
-            NunaCard(small: true) {
-                HStack(spacing: 12) {
-                    NunaIconTile("timer", tint: NunaPalette.restText)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Body clock").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                        if let est = appModel.circadianPhase, est.confidence != .unreadable {
-                            Text(verbatim: String(localized: "Lowest point \(NunaClockHour.text(est.tempMinHour))"))
-                                .font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        } else {
-                            Text("Still learning").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            Text("Needs about a week of heart-rate data").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        }
-                    }
-                    Spacer(minLength: 8)
-                    Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                }
-            }
-        }
-        .buttonStyle(.plain)
     }
 
     /// How the night's Rest reads: a word, its colour and a sentence that says what it means against the person's own recent nights.
@@ -142,6 +99,65 @@ struct NunaSleepView: View {
                 }.buttonStyle(.plain)
             }
         }
+    }
+
+}
+
+/// Everything the night had, from the stages to the body clock: the sleep stages card (with the pencil that edits the sleep times and an
+/// undo for a deleted night), the comparison with other nights, naps, the overnight vitals, the sleep need and debt, wake-ups and the body
+/// clock. Shared by the Rest screen and the Sleep screen, so the two always show the same night the same way.
+struct NunaSleepNightSections: View {
+    let model: NunaSleepModel
+    let night: NunaNight
+    /// The four percentage tiles (performance, efficiency, consistency, restorative); the Rest screen already lists them as rows.
+    var showsTiles = false
+    @EnvironmentObject private var repo: Repository
+    @EnvironmentObject private var appModel: AppModel
+    @State private var edit: NunaSleepEditTarget?
+    @State private var undo: SleepDeletionSnapshot?
+
+    var body: some View {
+        Group {
+            NunaSleepStageSection(model: model, night: night,
+                                  onEdit: night.editTarget.map { block in { edit = NunaSleepEditTarget(block, isNap: false) } })
+            NunaStageCompare(model: model, night: night)
+            if !night.naps.isEmpty { napCard(night) }
+            if showsTiles { tiles(model, night) }
+            NunaOvernightVitals(model: model, night: night)
+            needCard(model, night)
+            if let d = night.daily?.disturbances, d > 0 {
+                NunaCard(small: true) {
+                    NunaListRow("Woke up \(d) times", description: "Brief awakenings during the night", systemImage: "moon.fill", tint: NunaPalette.restText)
+                }
+            }
+            bodyClockCard
+        }
+        .sheet(item: $edit) { NunaSleepTimeSheet(target: $0) { snap in await repo.refresh(); if let snap { undo = snap } } }
+        .nunaSleepUndo($undo) { await repo.refresh() }
+    }
+
+    /// Body clock: the lowest point and whether last night sat in the ideal window.
+    @ViewBuilder private var bodyClockCard: some View {
+        NavigationLink(value: NunaTodayRoute.bodyClock) {
+            NunaCard(small: true) {
+                HStack(spacing: 12) {
+                    NunaIconTile("timer", tint: NunaPalette.restText)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Body clock").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        if let est = appModel.circadianPhase, est.confidence != .unreadable {
+                            Text(verbatim: String(localized: "Lowest point \(NunaClockHour.text(est.tempMinHour))"))
+                                .font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        } else {
+                            Text("Still learning").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            Text("Needs about a week of heart-rate data").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        }
+                    }
+                    Spacer(minLength: 8)
+                    Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                }
+            }
+        }
+        .buttonStyle(.plain)
     }
 
     private func napCard(_ night: NunaNight) -> some View {
