@@ -1,6 +1,7 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "First data": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Data pertama"}}}},
     "Achievements": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pencapaian"}}}},
     "Level %lld": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Level %lld"}}}},
     "Gold": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Emas"}}}},

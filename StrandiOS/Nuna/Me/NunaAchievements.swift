@@ -67,9 +67,10 @@ struct NunaAchievementsView: View {
         return n
     }
 
-    private var memberSince: String? {
+    /// The date of the earliest day stored: when data first came into the app (a live night or an import, whichever is older).
+    private var firstData: String? {
         guard let first = allDays.first, let d = date(first.day) else { return nil }
-        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("MMM yyyy")
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("d MMM yyyy")
         return f.string(from: d)
     }
 
@@ -131,7 +132,7 @@ struct NunaAchievementsView: View {
             Spacer(minLength: 8)
             VStack(alignment: .leading, spacing: 10) {
                 stat("Data streak", String(localized: "\(dataStreak) days"))
-                if let memberSince { stat("Member since", memberSince) }
+                if let firstData { stat("First data", firstData) }
             }
             .padding(.leading, 14)
             .overlay(alignment: .leading) { Rectangle().fill(NunaPalette.hairline).frame(width: 1) }
