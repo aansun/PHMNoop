@@ -65,27 +65,72 @@ private extension Double {
     func rounded(toPlaces p: Int) -> Double { let m = pow(10.0, Double(p)); return (self * m).rounded() / m }
 }
 
-/// The BMI band: where the number sits between under, normal, over and high (WHO adult bands). Shown on Health > Body, under body composition.
-struct NunaBMICard: View {
-    let bmi: Double
+/// Body health in one card: BMI and the waist to height ratio side by side, each with its word and its place on a scale. Opens the weight page.
+/// Both read from Apple Health and the profile; nothing is typed in here.
+struct NunaBodyHealthCard: View {
+    let weightKg: Double?
+    let bmi: Double?
+    let waistCm: Double
+    let heightCm: Double
+
+    private var ratio: Double? { (waistCm > 0 && heightCm > 0) ? waistCm / heightCm : nil }
+
+    /// Where a BMI sits on the scale in thirds: under 18.5, 18.5 to 25, 25 to 30, over 30 (WHO adult bands).
+    private func bmiPosition(_ b: Double) -> Double {
+        if b < 18.5 { return max(0, (b - 14) / 4.5) * (2.0 / 12) }
+        if b < 25 { return 2.0 / 12 + (b - 18.5) / 6.5 * (5.0 / 12) }
+        if b < 30 { return 7.0 / 12 + (b - 25) / 5 * (2.0 / 12) }
+        return 9.0 / 12 + min((b - 30) / 10, 1) * (3.0 / 12)
+    }
+
+    private func word(_ text: LocalizedStringKey, good: Bool) -> some View {
+        Text(text).font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+            .foregroundStyle(good ? NunaPalette.charge : NunaPalette.warning)
+    }
 
     var body: some View {
-        // Scale in thirds: under 18.5, 18.5 to 25, 25 to 30, over 30 (WHO adult bands).
-        func pos(_ b: Double) -> Double {
-            if b < 18.5 { return max(0, (b - 14) / 4.5) * (2.0 / 12) }
-            if b < 25 { return 2.0 / 12 + (b - 18.5) / 6.5 * (5.0 / 12) }
-            if b < 30 { return 7.0 / 12 + (b - 25) / 5 * (2.0 / 12) }
-            return 9.0 / 12 + min((b - 30) / 10, 1) * (3.0 / 12)
-        }
-        let label: LocalizedStringKey = bmi < 18.5 ? "Under" : (bmi < 25 ? "Normal" : (bmi < 30 ? "Over" : "High"))
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack { nunaCap("BMI"); Spacer(); NunaChip(label, color: bmi >= 18.5 && bmi < 25 ? NunaPalette.charge : NunaPalette.warning) }
-                NunaScaleBar(parts: [(2, NunaPalette.zoneBase), (5, NunaPalette.charge), (2, NunaPalette.warning), (3, NunaPalette.alert)], position: pos(bmi))
-                HStack { Text(verbatim: "18,5"); Spacer(); Text(verbatim: "25"); Spacer(); Text(verbatim: "30") }
-                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                HStack { Text("Under"); Spacer(); Text("Normal").foregroundStyle(NunaPalette.charge).fontWeight(.heavy); Spacer(); Text("Over") }
-                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+        NunaCard {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(spacing: 8) {
+                    nunaCap("Body health")
+                    Spacer()
+                    if let weightKg {
+                        Text(verbatim: nbFmt(weightKg, 1) + " kg").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    }
+                    Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                }
+                HStack(alignment: .top, spacing: 22) {
+                    // BMI
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("BMI").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: bmi.map { nbFmt($0, 1) } ?? "–").font(.nuna(size: 34, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        if let bmi { word(bmi < 18.5 ? "Under" : (bmi < 25 ? "Normal" : (bmi < 30 ? "Over" : "High")), good: bmi >= 18.5 && bmi < 25) }
+                        else { Text("Add height and weight").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil) }
+                        if let bmi {
+                            NunaScaleBar(parts: [(2, NunaPalette.zoneBase), (5, NunaPalette.charge), (2, NunaPalette.warning), (3, NunaPalette.alert)], position: bmiPosition(bmi))
+                                .padding(.top, 6)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    // Waist to height
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Waist ratio").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: ratio.map { nbFmt($0, 2) } ?? "–").font(.nuna(size: 34, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        if let ratio { word(ratio < 0.5 ? "Healthy" : (ratio < 0.6 ? "Above" : "High"), good: ratio < 0.5) }
+                        else { Text("Waiting for Apple Health").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil) }
+                        if let ratio {
+                            NunaScaleBar(parts: [(3, NunaPalette.rest), (3, NunaPalette.charge), (2, NunaPalette.warning), (3, NunaPalette.alert)],
+                                         position: min(max((ratio - 0.35) / 0.3, 0), 1))
+                                .padding(.top, 6)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                if ratio != nil, waistCm > 0 {
+                    Text(verbatim: String(localized: "Waist \(Int(waistCm.rounded())) cm · below 0.5 is generally considered healthy"))
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
         }
     }
@@ -230,50 +275,6 @@ struct NunaBodyCompositionCard: View {
 }
 
 // MARK: - Waist
-
-/// Waist and the waist to height ratio in one card on Health > Body. Both come from Apple Health (waist) and the profile (height); nothing is
-/// typed in here.
-struct NunaWaistRatioCard: View {
-    @EnvironmentObject private var profile: ProfileStore
-
-    var body: some View {
-        let waist = profile.waistCm
-        let ratio: Double? = (waist > 0 && profile.heightCm > 0) ? waist / profile.heightCm : nil
-        NunaCard {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    nunaCap("Waist to height ratio")
-                    Spacer()
-                    if let ratio {
-                        Text(ratio < 0.5 ? "Healthy" : (ratio < 0.6 ? "Above" : "High")).font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                            .foregroundStyle(ratio < 0.5 ? NunaPalette.charge : NunaPalette.warning)
-                    }
-                }
-                HStack(alignment: .firstTextBaseline) {
-                    Text(verbatim: ratio.map { nbFmt($0, 2) } ?? "–").font(.nuna(size: 40, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(40)).foregroundStyle(NunaPalette.textPrimary)
-                    Spacer()
-                    if waist > 0 {
-                        HStack(alignment: .firstTextBaseline, spacing: 3) {
-                            Text(verbatim: nbFmt(waist)).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            Text("cm").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                        }
-                    }
-                }
-                if let ratio {
-                    NunaScaleBar(parts: [(3, NunaPalette.rest), (3, NunaPalette.charge), (2, NunaPalette.warning), (3, NunaPalette.alert)],
-                                 position: min(max((ratio - 0.35) / 0.3, 0), 1))
-                    HStack { Text(verbatim: "0,4"); Spacer(); Text(verbatim: "0,6") }
-                        .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    Text(verbatim: String(localized: "Below 0.5 is generally considered healthy for a height of \(Int(profile.heightCm.rounded())) cm."))
-                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                } else {
-                    Text("Waiting for a waist measurement from Apple Health.")
-                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                }
-            }
-        }
-    }
-}
 
 // MARK: - Nutrition
 

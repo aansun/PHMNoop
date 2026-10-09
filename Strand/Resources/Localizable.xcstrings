@@ -1,6 +1,11 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Body health": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kesehatan tubuh"}}}},
+    "Waist ratio": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Rasio pinggang"}}}},
+    "Add height and weight": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Isi tinggi dan berat badan"}}}},
+    "Waiting for Apple Health": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Menunggu Apple Health"}}}},
+    "Waist %lld cm · below 0.5 is generally considered healthy": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pinggang %lld cm · di bawah 0,5 umumnya dianggap sehat"}}}},
     "Same as your age": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Sama dengan usiamu"}}}},
     "HR Dynamic Island": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "HR di Dynamic Island"}}}},
     "Broadcast HR": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Siarkan HR"}}}},
