@@ -13,7 +13,7 @@ private func nunaFmt(_ v: Double?, _ digits: Int = 0) -> String {
     v.map { String(format: "%.\(digits)f", locale: AppLanguage.activeLocale, $0) } ?? "–"
 }
 
-private func nunaSigned(_ v: Double, _ digits: Int = 1) -> String {
+func nunaSigned(_ v: Double, _ digits: Int = 1) -> String {
     (v >= 0 ? "+" : "−") + String(format: "%.\(digits)f", locale: AppLanguage.activeLocale, abs(v))
 }
 

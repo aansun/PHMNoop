@@ -2,6 +2,7 @@
 import SwiftUI
 import StrandDesign
 import StrandAnalytics
+import WhoopProtocol
 import WhoopStore
 
 private func rangeOptions() -> [(value: Int, title: LocalizedStringKey)] {
@@ -19,6 +20,9 @@ struct NunaChargeDetailView: View {
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @StateObject private var series = NunaSeriesModel()
     @StateObject private var day = NunaTodayModel()
+    /// Last night's Rest and skin-temperature deviation: two of the signals Charge is made of.
+    @StateObject private var restSeries = NunaSeriesModel()
+    @StateObject private var skinSeries = NunaSeriesModel()
     @State private var range = 7
     @State private var page = 0
     @State private var showCoach = false
@@ -47,9 +51,12 @@ struct NunaChargeDetailView: View {
                 NunaDivider()
                 contributor("Respiratory rate", "lungs", day.respiratory.map { String(format: "%.1f", locale: AppLanguage.activeLocale, $0) }, "", day.respiratoryDelta, nil, decimals: 1, key: "resp_rate")
                 NunaDivider()
-                NavigationLink(value: NunaTodayRoute.sleep(0)) {
-                    NunaContributorRow(title: "Sleep performance", icon: "moon", value: day.rest.map { String(format: "%.0f%%", $0) }, delta: nil)
+                NavigationLink(value: NunaTodayRoute.metric(restMetric)) {
+                    NunaContributorRow(title: "Sleep performance", icon: "moon",
+                                       value: (day.rest ?? restSeries.latest?.value).map { String(format: "%.0f", $0) }, unit: "%", delta: nil)
                 }.buttonStyle(.plain)
+                NunaDivider()
+                contributor("Skin temperature", "thermometer", skinSeries.latest.map { nunaSigned($0.value) }, "°C", nil, nil, decimals: 1, key: "skin_temp")
             }
             if coachEnabled, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
             NunaTrendDetailCard(
@@ -66,6 +73,8 @@ struct NunaChargeDetailView: View {
         }
         .task(id: repo.refreshSeq) {
             await series.load(repo: repo, key: "recovery", source: "my-whoop")
+            await restSeries.load(repo: repo, key: "sleep_performance", source: "my-whoop")
+            await skinSeries.load(repo: repo, key: "skin_temp", source: "my-whoop")
             await day.load(repo: repo, profile: profile)
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "Charge") }
@@ -100,6 +109,10 @@ struct NunaChargeDetailView: View {
             RoundedRectangle(cornerRadius: 3, style: .continuous).fill(color).frame(width: 10, height: 10)
             (Text(verbatim: range + " ") + Text(label)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
         }
+    }
+
+    private var restMetric: MetricDescriptor {
+        MetricCatalog.metric(key: "sleep_performance", source: "my-whoop") ?? MetricCatalog.metric(key: "recovery", source: "my-whoop")!
     }
 
     /// The word for today's Charge, which sits in the ring in place of the name.
@@ -139,6 +152,8 @@ struct NunaEffortDetailView: View {
     @State private var range = 7
     @State private var page = 0
     @State private var showCoach = false
+    /// Today's heart-rate readings, for the time in each zone.
+    @State private var hrToday: [HRSample] = []
 
     private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
 
@@ -153,6 +168,7 @@ struct NunaEffortDetailView: View {
                     .fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
             sourcesSection
+            zonesCard
             if coachEnabled, let e = day.effort {
                 NunaAnyaCard(verbatim: String(localized: "Your Effort is \(UnitFormatter.effortDisplay(e, scale: scale)) of \(UnitFormatter.effortScaleMax(scale)) so far today.")) { showCoach = true }
             }
@@ -173,8 +189,36 @@ struct NunaEffortDetailView: View {
         .task(id: repo.refreshSeq) {
             await series.load(repo: repo, key: "strain", source: "my-whoop")
             await day.load(repo: repo, profile: profile)
+            let start = Int(Calendar.current.startOfDay(for: Date()).timeIntervalSince1970)
+            hrToday = await repo.hrSamples(from: start, to: Int(Date().timeIntervalSince1970), limit: 200_000)
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "Effort") }
+    }
+
+    /// Time in each heart-rate zone today: what the load is made of. Zones follow the wearer's own heart-rate maximum.
+    @ViewBuilder private var zonesCard: some View {
+        let tiz = HRZones.timeInZone(hrToday, zoneSet: profile.hrZoneSet)
+        if tiz.total > 0 {
+            let colors: [Color] = [NunaPalette.zoneBase, NunaPalette.rest, NunaPalette.charge, NunaPalette.warning, NunaPalette.alert]
+            let names: [LocalizedStringKey] = ["Zone 1 · easy", "Zone 2 · light", "Zone 3 · aerobic", "Zone 4 · threshold", "Zone 5 · maximum"]
+            VStack(alignment: .leading, spacing: 12) {
+                NunaTitleRow(title: "Heart-rate zones today") { EmptyView() }
+                NunaProportionBar(parts: (0..<5).map { (tiz.seconds[$0], colors[$0]) }, height: 12)
+                NunaPlainList {
+                    ForEach(0..<5, id: \.self) { i in
+                        if i > 0 { NunaDivider() }
+                        HStack(spacing: 10) {
+                            Circle().fill(colors[i]).frame(width: 9, height: 9)
+                            Text(names[i]).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                            Spacer()
+                            Text(verbatim: NunaSleepFormat.duration(tiz.seconds[i] / 60)).font(.nuna(size: 17, weight: .bold, design: NunaType.design))
+                                .foregroundStyle(NunaPalette.textPrimary)
+                        }
+                        .padding(.vertical, 12)
+                    }
+                }
+            }
+        }
     }
 
     /// What the colours of the bars mean, on the scale the wearer chose.
