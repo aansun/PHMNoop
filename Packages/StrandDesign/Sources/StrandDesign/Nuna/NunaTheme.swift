@@ -301,22 +301,36 @@ public struct NunaRingGauge<Center: View>: View {
     private let fraction: Double
     private let color: Color
     private let gradient: [Color]?
+    private let target: ClosedRange<Double>?
     private let size: CGFloat
     private let lineWidth: CGFloat
     private let center: Center
     /// `gradient` paints the arc from its start to its end through these colours (Effort: dark blue to light blue); nil keeps `color`.
-    public init(fraction: Double, color: Color, gradient: [Color]? = nil, size: CGFloat = 98, lineWidth: CGFloat = 9,
+    /// `target` (0...1 of the ring) draws the day's aim as a grey stretch of the track with a white mark where it begins.
+    public init(fraction: Double, color: Color, gradient: [Color]? = nil, target: ClosedRange<Double>? = nil, size: CGFloat = 98, lineWidth: CGFloat = 9,
                 @ViewBuilder center: () -> Center) {
-        self.fraction = min(max(fraction, 0), 1); self.color = color; self.gradient = gradient
+        self.fraction = min(max(fraction, 0), 1); self.color = color; self.gradient = gradient; self.target = target
         self.size = size; self.lineWidth = lineWidth; self.center = center()
     }
     public var body: some View {
         ZStack {
             Circle().stroke(Color.white.opacity(0.09), lineWidth: lineWidth)
+            if let target {
+                Circle().trim(from: min(max(target.lowerBound, 0), 1), to: min(max(target.upperBound, 0), 1))
+                    .stroke(Color.gray.opacity(0.5), style: StrokeStyle(lineWidth: lineWidth, lineCap: .butt))
+                    .rotationEffect(.degrees(-90))
+            }
             Circle().trim(from: 0, to: fraction)
                 .stroke(gradient.map { AnyShapeStyle(AngularGradient(colors: $0, center: .center, startAngle: .degrees(0), endAngle: .degrees(max(360 * fraction, 1)))) }
                         ?? AnyShapeStyle(color), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
+            if let target {
+                // The least to aim for: a short white mark across the ring.
+                let at = min(max(target.lowerBound, 0), 1)
+                Circle().trim(from: max(at - 0.004, 0), to: min(at + 0.004, 1))
+                    .stroke(Color.white, style: StrokeStyle(lineWidth: lineWidth + 4, lineCap: .butt))
+                    .rotationEffect(.degrees(-90))
+            }
             center
         }
         .frame(width: size - lineWidth, height: size - lineWidth)
