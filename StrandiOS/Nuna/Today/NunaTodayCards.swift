@@ -108,7 +108,7 @@ struct NunaScoreRings: View {
     }
 
     private func ringView(_ v: RingValues, size: CGFloat) -> some View {
-        NunaRingGauge(fraction: v.fraction, color: v.color, size: size, lineWidth: max(3.5, size * 0.09)) {
+        NunaRingGauge(fraction: v.fraction, color: v.color, gradient: v.gradient, size: size, lineWidth: max(3.5, size * 0.09)) {
             if size >= 60 {
                 HStack(alignment: .firstTextBaseline, spacing: 1) {
                     Text(verbatim: v.number).font(.nuna(size: size * 0.27, weight: .bold, design: NunaType.design))
@@ -132,6 +132,7 @@ struct NunaScoreRings: View {
         let label: LocalizedStringKey
         let state: LocalizedStringKey
         let route: String
+        var gradient: [Color]? = nil
     }
 
     /// Each ring opens its own metric screen; Rest's has a way into last night's sleep.
@@ -148,14 +149,15 @@ struct NunaScoreRings: View {
         case .charge:
             let pct = charge.pct
             let state: LocalizedStringKey = pct.map { $0 >= 67 ? "Ready" : ($0 >= 34 ? "Moderate" : "Low") } ?? "No data"
-            return RingValues(fraction: (pct ?? 0) / 100, color: pct.map(nunaChargeColor) ?? NunaPalette.charge, textColor: pct.map(nunaChargeTextColor) ?? NunaPalette.charge,
+            return RingValues(fraction: (pct ?? 0) / 100, color: pct.map(nunaChargeColor) ?? NunaPalette.scoreHigh, textColor: pct.map(nunaChargeTextColor) ?? NunaPalette.scoreHigh,
                               number: pct.map { "\(Int($0.rounded()))" } ?? "–", unit: "%",
                               label: "Charge", state: state, route: HeroRingMetric.charge)
         case .effort:
             let text = effort.map { UnitFormatter.effortDisplay($0, scale: effortScale) } ?? "–"
             let state: LocalizedStringKey = effort.map { $0 < 33 ? "Light" : ($0 < 66 ? "Moderate" : "High") } ?? "No data"
-            return RingValues(fraction: (effort ?? 0) / 100, color: effort.map(nunaEffortColor) ?? NunaPalette.effort, textColor: effort.map(nunaEffortTextColor) ?? NunaPalette.effortText,
-                              number: text, unit: "", label: "Effort", state: state, route: HeroRingMetric.effort)
+            return RingValues(fraction: (effort ?? 0) / 100, color: effort.map(nunaEffortColor) ?? NunaPalette.effortModerate, textColor: effort.map(nunaEffortTextColor) ?? NunaPalette.effortModerate,
+                              number: text, unit: "", label: "Effort", state: state, route: HeroRingMetric.effort,
+                              gradient: effort.map(nunaEffortRingColors))
         case .rest:
             let state: LocalizedStringKey = rest.map(nunaRestWord) ?? "No data"
             return RingValues(fraction: (rest ?? 0) / 100, color: rest.map(nunaRestColor) ?? NunaPalette.rest, textColor: rest.map(nunaRestTextColor) ?? NunaPalette.restText,

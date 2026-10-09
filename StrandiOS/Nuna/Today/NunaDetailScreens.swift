@@ -98,9 +98,9 @@ struct NunaChargeDetailView: View {
     /// What the colours of the bars mean: the three Charge zones.
     private var zoneKey: some View {
         HStack(spacing: 16) {
-            key(NunaPalette.charge, "67–100", "Ready")
-            key(NunaPalette.warning, "34–66", "Moderate")
-            key(NunaPalette.alert, "0–33", "Low")
+            key(NunaPalette.scoreHigh, "67–100", "Ready")
+            key(NunaPalette.scoreMid, "34–66", "Moderate")
+            key(NunaPalette.scoreLow, "0–33", "Low")
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -174,7 +174,8 @@ struct NunaEffortDetailView: View {
                           fraction: (day.effort ?? 0) / 100,
                           number: day.effort.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–",
                           suffix: String(localized: "of \(UnitFormatter.effortScaleMax(scale))"),
-                          name: level?.0 ?? "Effort", nameColor: level?.1, color: day.effort.map(nunaEffortColor) ?? NunaPalette.effort) {
+                          name: level?.0 ?? "Effort", nameColor: level?.1, gradient: day.effort.map(nunaEffortRingColors),
+                          color: day.effort.map(nunaEffortColor) ?? NunaPalette.effortModerate) {
                 Text("Cardio load so far today").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     .fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
@@ -187,7 +188,7 @@ struct NunaEffortDetailView: View {
                 readings: { days, back in series.readings(days, endingDaysAgo: back).map { ($0.date, UnitFormatter.effortValue($0.value, scale: scale)) } },
                 hasOlder: { start in series.byDay.keys.min().map { Repository.localDayKey(start) > $0 } ?? false },
                 loaded: series.loaded,
-                lineColor: NunaPalette.effort, decimals: 1, directional: false,
+                lineColor: NunaPalette.effortModerate, decimals: 1, directional: false,
                 levelChip: { v in
                     let stored = scale == .whoop ? v / 21 * 100 : v
                     return (text: stored < 33 ? "Light" : (stored < 66 ? "Moderate" : "High"), color: nunaEffortTextColor(stored))
@@ -270,9 +271,9 @@ struct NunaEffortDetailView: View {
         func edge(_ stored: Double) -> Int { Int(UnitFormatter.effortValue(stored, scale: scale).rounded()) }
         let top = UnitFormatter.effortScaleMax(scale)
         return NunaZoneKey(zones: [
-            (NunaPalette.effort, "0–\(edge(33))", "Light"),
-            (NunaPalette.warning, "\(edge(33) + 1)–\(edge(66))", "Moderate"),
-            (NunaPalette.alert, "\(edge(66) + 1)–\(top)", "High"),
+            (NunaPalette.effortMinimal, "0–\(edge(33))", "Light"),
+            (NunaPalette.effortModerate, "\(edge(33) + 1)–\(edge(66))", "Moderate"),
+            (NunaPalette.effortAllOut, "\(edge(66) + 1)–\(top)", "High"),
         ])
     }
 
