@@ -71,7 +71,7 @@ struct NunaScoreRings: View {
     let effortScale: EffortScale
     var collapse: CGFloat = 0
 
-    static let fullHeight: CGFloat = 168
+    static let fullHeight: CGFloat = 138
     static let compactHeight: CGFloat = 36
 
     private func lerp(_ a: CGFloat, _ b: CGFloat) -> CGFloat { a + (b - a) * min(max(collapse, 0), 1) }
@@ -92,8 +92,8 @@ struct NunaScoreRings: View {
                 if collapse < 0.55 {
                     VStack(spacing: 8) {
                         ringView(v, size: size)
-                        Text(v.label).font(.nuna(size: NunaTypeSize.caption, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                            .foregroundStyle(NunaPalette.textSecondary)
+                        Text(v.label).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                            .foregroundStyle(NunaPalette.textPrimary)
                     }
                 } else {
                     HStack(spacing: 8) {
