@@ -71,7 +71,7 @@ struct NunaScoreRings: View {
     let effortScale: EffortScale
     var collapse: CGFloat = 0
 
-    static let fullHeight: CGFloat = 138
+    static let fullHeight: CGFloat = 116
     static let compactHeight: CGFloat = 36
 
     private func lerp(_ a: CGFloat, _ b: CGFloat) -> CGFloat { a + (b - a) * min(max(collapse, 0), 1) }
@@ -86,19 +86,19 @@ struct NunaScoreRings: View {
 
     @ViewBuilder private func item(_ kind: Kind) -> some View {
         let v = values(kind)
-        let size = lerp(112, 26)
+        let size = lerp(92, 26)
         ringLink(v.route) {
             Group {
                 if collapse < 0.55 {
                     VStack(spacing: 8) {
                         ringView(v, size: size)
-                        Text(v.label).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        Text(verbatim: englishName(kind)).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                             .foregroundStyle(NunaPalette.textPrimary)
                     }
                 } else {
                     HStack(spacing: 8) {
                         ringView(v, size: size)
-                        Text(v.label).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        Text(verbatim: englishName(kind)).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                             .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
                     }
                 }
@@ -107,14 +107,22 @@ struct NunaScoreRings: View {
         }
     }
 
+    /// The ring names stay in English in every app language, like the chips under the rings.
+    private func englishName(_ kind: Kind) -> String {
+        switch kind { case .charge: return "Charge"; case .effort: return "Effort"; case .rest: return "Rest" }
+    }
+
+    /// The figure keeps the size it had in the larger ring (30 pt) while the ring itself is smaller.
+    private func numberSize(_ ringSize: CGFloat) -> CGFloat { max(ringSize * 0.27, 30 * min(ringSize / 92, 1)) }
+
     private func ringView(_ v: RingValues, size: CGFloat) -> some View {
         NunaRingGauge(fraction: v.fraction, color: v.color, gradient: v.gradient, target: v.target, size: size, lineWidth: max(3.5, size * 0.09)) {
             if size >= 60 {
                 HStack(alignment: .firstTextBaseline, spacing: 1) {
-                    Text(verbatim: v.number).font(.nuna(size: size * 0.27, weight: .bold, design: NunaType.design))
-                        .tracking(nunaTrackingNumber(size * 0.27)).foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
+                    Text(verbatim: v.number).font(.nuna(size: numberSize(size), weight: .bold, design: NunaType.design))
+                        .tracking(nunaTrackingNumber(numberSize(size))).foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
                     if !v.unit.isEmpty && v.number != "–" {
-                        Text(verbatim: v.unit).font(.nuna(size: size * 0.13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: v.unit).font(.nuna(size: numberSize(size) * 0.48, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                 }
             }

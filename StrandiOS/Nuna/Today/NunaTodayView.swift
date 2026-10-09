@@ -771,7 +771,7 @@ struct NunaTodayView: View {
             todayChip(icon: .symbol("bolt.fill"), text: Text(verbatim: word), tint: tone)
         }
         if model.charge != .noData {
-            todayChip(icon: .dot(model.charge.pct.map(nunaChargeColor) ?? NunaPalette.charge), text: Text(verbatim: model.charge.stateLabel), tint: nil)
+            todayChip(icon: .dot(model.charge.pct.map(nunaChargeColor) ?? NunaPalette.scoreHigh), text: Text(verbatim: Self.chargeStateEnglish(model.charge)), tint: nil)
         }
     }
 
@@ -779,25 +779,35 @@ struct NunaTodayView: View {
 
     /// One chip shape for the whole row: the same height, radius, type and padding. A tint colours the readiness chip; the others are neutral.
     private func todayChip(icon: ChipIcon, text: Text, tint: Color?) -> some View {
-        HStack(spacing: 6) {
+        HStack(spacing: 5) {
             switch icon {
-            case .symbol(let name): Image(systemName: name).font(.nuna(size: 11.5, weight: .bold))
-            case .dot(let c): Circle().fill(c).frame(width: 7, height: 7)
+            case .symbol(let name): Image(systemName: name).font(.nuna(size: 10, weight: .bold))
+            case .dot(let c): Circle().fill(c).frame(width: 6, height: 6)
             }
-            text.font(.nuna(size: 12.5, weight: .bold)).lineLimit(1).minimumScaleFactor(0.8)
+            text.font(.nuna(size: 11, weight: .bold)).lineLimit(1).minimumScaleFactor(0.8)
         }
         .foregroundStyle(tint ?? NunaPalette.textPrimary)
-        .padding(.horizontal, 12).frame(height: 30)
+        .padding(.horizontal, 9).frame(height: 24)
         .background(tint.map { NunaPalette.tint($0) } ?? NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
         .overlay(RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous).strokeBorder(tint?.opacity(0.35) ?? NunaPalette.hairline, lineWidth: 1))
         .fixedSize()
     }
 
+    /// The Charge state word, always in English: the chips under the rings keep one language whatever the app language is.
+    private static func chargeStateEnglish(_ c: LiquidTodayView.ChargeDisplay) -> String {
+        switch c {
+        case .scored: return "Solid"
+        case .carried: return "Last night"
+        case .calibrating: return "Calibrating"
+        case .noData: return "No data"
+        }
+    }
+
     private static func readinessWord(_ level: ReadinessEngine.Level) -> String? {
         switch level {
-        case .primed: return String(localized: "Push")
-        case .balanced: return String(localized: "Maintain")
-        case .strained, .rundown: return String(localized: "Rest")
+        case .primed: return "Push"
+        case .balanced: return "Maintain"
+        case .strained, .rundown: return "Rest"
         case .insufficient: return nil
         }
     }
