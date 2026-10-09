@@ -2,10 +2,12 @@
 import SwiftUI
 import StrandDesign
 import StrandAnalytics
+import StrandImport
 import WhoopStore
 
-/// One saved session (WorkoutSummary): when it ran and the Effort it added, an Anya line, the map when a route was recorded,
-/// a summary that fits the sport, the heart-rate curve and zones, photos, how it felt, Strava and the housekeeping actions.
+/// One saved session, laid out as a log: the Effort and the time, an Anya line that reads the whole log, the heart-rate curve, the key
+/// statistics together (against the wearer's 30-day average of the sport), the zones, the map when a route was recorded, then photos and
+/// how it felt. Share (a file, or Strava), edit the time and delete sit behind the three dots in the header.
 /// Gym sessions open [NunaGymSessionView], which is built from the same pieces.
 struct NunaWorkoutSummaryView: View {
     let key: NunaWorkoutKey
@@ -14,15 +16,20 @@ struct NunaWorkoutSummaryView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var m = NunaWorkoutsModel()
     @StateObject private var data = NunaWorkoutDetailData()
+    @EnvironmentObject private var intelligence: IntelligenceEngine
     @State private var confirmDelete = false
     @State private var showCoach = false
+    @State private var showEdit = false
+    @State private var stravaState: NunaStravaState = .off
+    @State private var stravaMessage: String?
+    @StateObject private var strava = StravaSettingsModel()
 
     var body: some View {
         Group {
             if let ls = m.liftSessions.first(where: { $0.startTs == key.startTs }), m.row(key).map(NunaWorkoutKind.isStrength) ?? false {
                 NunaGymSessionView(sessionId: ls.id)
             } else if let r = m.row(key) {
-                NunaDetailScreen(LocalizedStringKey(WorkoutSource.displaySport(r.sport))) { content(r) }
+                NunaDetailScreen(LocalizedStringKey(WorkoutSource.displaySport(r.sport)), trailing: AnyView(actionsMenu(r))) { content(r) }
             } else {
                 NunaDetailScreen("Workout") {
                     NunaCard { Text(m.loaded ? "This session is no longer saved." : " ").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) }
@@ -31,7 +38,16 @@ struct NunaWorkoutSummaryView: View {
         }
         .task(id: repo.refreshSeq) {
             await m.load(repo: repo)
-            if let r = m.row(key) { await data.load(startTs: r.startTs, endTs: r.endTs, sport: r.sport, source: r.source, repo: repo, zoneSet: profile.hrZoneSet) }
+            if let r = m.row(key) {
+                await data.load(startTs: r.startTs, endTs: r.endTs, sport: r.sport, source: r.source, knownSteps: r.steps, repo: repo, zoneSet: profile.hrZoneSet)
+                stravaState = NunaStravaCheck.state(r)
+            }
+        }
+        .sheet(isPresented: $showEdit) {
+            if let r = m.row(key) { NunaWorkoutTimeSheet(row: r) { start, end in Task { await moveInTime(r, start: start, end: end) } }.nunaSheetChrome(detents: [.height(430)]) }
+        }
+        .alert(stravaMessage ?? "", isPresented: Binding(get: { stravaMessage != nil }, set: { if !$0 { stravaMessage = nil } })) {
+            Button("OK", role: .cancel) {}
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "workouts") }
         .environment(\.nunaAnyaCardContext, "workouts")
@@ -45,18 +61,121 @@ struct NunaWorkoutSummaryView: View {
 
     @ViewBuilder private func content(_ r: WorkoutRow) -> some View {
         let mins = NunaWorkoutZoneMath.minutes(r, measured: data.zoneMin)
-        NunaWorkoutHeaderCard(symbol: ActivitySport.symbol(for: r.sport), startTs: r.startTs, endTs: r.endTs, source: NunaWorkoutSourceLabel.label(r.source), strain: r.strain, dayEffort: data.dayEffort)
-        if let line = NunaWorkoutInsight.zoneLine(mins: mins, others: otherSessions(r)) { NunaAnyaCard(verbatim: line) { showCoach = true } }
+        let averages = NunaWorkoutAverages(for: r, in: m.rows)
+        NunaWorkoutLogHeader(row: r)
+        NunaWorkoutLogFigures(row: r, averages: averages)
+        if let line = anyaLine(r, mins: mins, averages: averages) { NunaAnyaCard(verbatim: line.headline, detail: line.detail) { showCoach = true } }
+        if data.hr.count >= 2 { NunaWorkoutHRArea(buckets: data.hr, start: r.startTs, end: r.endTs) }
+        NunaWorkoutLogStats(row: r, steps: data.steps, averages: averages)
+        if mins?.contains(where: { $0 > 0 }) ?? false { NunaWorkoutLogZones(minutes: mins) }
         if data.route.count >= 2 { NunaWorkoutRouteCard(points: data.route) }
-        NunaWorkoutSummaryCard(row: r, zoneMin: data.zoneMin)
-        NunaWorkoutHRCard(start: r.startTs, end: r.endTs, buckets: data.hr)
-        if mins?.contains(where: { $0 > 0 }) ?? false { NunaWorkoutZonesCard(minutes: mins, avgHr: r.avgHr, maxHr: r.maxHr) }
         NunaWorkoutReviewSection(row: r)
-        NunaWorkoutStravaCard(row: r, afterWorkout: false, checked: .constant(false))
-        Button(role: .destructive) { confirmDelete = true } label: {
-            Text("Delete").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText)
-                .frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-        }.buttonStyle(.plain)
+    }
+
+    // MARK: Anya
+
+    /// Everything the log says, for Anya to read: the zone line first, then distance and pace, steps, calories, heart rate and Effort, each
+    /// against the wearer's own 30-day average of the sport when there is one.
+    private func anyaLine(_ r: WorkoutRow, mins: [Double]?, averages: NunaWorkoutAverages?) -> (headline: String, detail: String?)? {
+        let scale = UnitPrefs.resolveEffortScale(UserDefaults.standard.string(forKey: UnitPrefs.effortScaleKey) ?? EffortScale.hundred.rawValue)
+        let system = UnitPrefs.resolveDistance(system: UnitSystem(rawValue: UserDefaults.standard.string(forKey: UnitPrefs.systemKey) ?? "") ?? .metric,
+                                               override: UserDefaults.standard.string(forKey: UnitPrefs.distanceSystemKey) ?? "")
+        let secs = r.durationS ?? Double(r.endTs - r.startTs)
+        var parts: [String] = [WorkoutSource.displaySport(r.sport) + " " + NunaWorkoutLogFigures.clock(secs)]
+        if let d = NunaWorkoutFormat.distance(r.distanceM, system) {
+            parts.append(d + (NunaWorkoutFormat.pace(distanceM: r.distanceM, seconds: secs, system).map { ", " + $0 } ?? ""))
+        }
+        if let s = data.steps { parts.append(String(localized: "\(NunaTrendsFormat.num(Double(s))) steps")) }
+        if let k = r.energyKcal { parts.append(String(localized: "\(NunaTrendsFormat.num(k)) calories")) }
+        if let a = r.avgHr, let x = r.maxHr { parts.append(String(localized: "heart rate \(a) average, \(x) max")) }
+        else if let a = r.avgHr { parts.append(String(localized: "heart rate \(a) average")) }
+        if let e = r.strain {
+            var text = String(localized: "Effort \(UnitFormatter.effortDisplay(e, scale: scale))")
+            if let avg = averages?.effort {
+                let d = e - avg
+                text += abs(d) < max(avg * 0.08, 1) ? " (" + String(localized: "about your 30-day average") + ")"
+                    : (d > 0 ? " (" + String(localized: "above your 30-day average of \(UnitFormatter.effortDisplay(avg, scale: scale))") + ")"
+                             : " (" + String(localized: "below your 30-day average of \(UnitFormatter.effortDisplay(avg, scale: scale))") + ")")
+            }
+            parts.append(text)
+        }
+        let zone = NunaWorkoutInsight.zoneLine(mins: mins, others: otherSessions(r))
+        let detail = parts.joined(separator: " · ")
+        if let zone { return (zone, detail) }
+        return parts.count > 1 ? (detail, nil) : nil
+    }
+
+    // MARK: Header actions
+
+    private func actionsMenu(_ r: WorkoutRow) -> some View {
+        Menu {
+            Section("Share") {
+                Button { Task { await exportFile(r, gpx: false) } } label: { Label("Export file", systemImage: "square.and.arrow.up") }
+                if data.route.count >= 2 { Button { Task { await exportFile(r, gpx: true) } } label: { Label("Export route (GPX)", systemImage: "map") } }
+                if stravaState == .ready {
+                    Button { Task { await sendToStrava(r) } } label: { Label("Upload to Strava", systemImage: "arrow.up.circle") }
+                } else if stravaState == .uploaded || stravaState == .processing {
+                    Button {} label: { Label("On Strava", systemImage: "checkmark.circle") }.disabled(true)
+                }
+            }
+            Section {
+                if Self.canEditTime(r) { Button { showEdit = true } label: { Label("Edit time", systemImage: "clock") } }
+                Button(role: .destructive) { confirmDelete = true } label: { Label("Delete", systemImage: "trash") }
+            }
+        } label: { NunaBareIcon("ellipsis") }
+        .accessibilityLabel(Text("More"))
+    }
+
+    /// Only a session this app owns can be moved in time: a strap or manual one, never an Apple Health, imported file or Hevy session.
+    private static func canEditTime(_ r: WorkoutRow) -> Bool {
+        switch WorkoutSource.classify(r.source) {
+        case .whoop, .manual, .detected: return true
+        case .apple, .lifting, .activityFile: return false
+        }
+    }
+
+    private func exportFile(_ r: WorkoutRow, gpx: Bool) async {
+        let points = data.route.map { RoutePoint(lat: $0.lat, lon: $0.lon) }
+        let steps = data.steps
+        let format: RouteExporter.Format = gpx ? .gpx : .fit
+        let name = "noop-workout-\(r.startTs).\(format.ext)"
+        let file = await Task.detached(priority: .userInitiated) {
+            RouteExporter.render(format, route: points, startTs: r.startTs, endTs: r.endTs, sport: r.sport, distanceM: r.distanceM,
+                                 energyKcal: r.energyKcal, avgHr: r.avgHr, maxHr: r.maxHr, movingTimeS: r.durationS, steps: steps)
+        }.value
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent(name)
+        guard (try? file.write(to: url)) != nil else { return }
+        FileExport.exportFile(at: url, suggestedName: name)
+    }
+
+    private func sendToStrava(_ r: WorkoutRow) async {
+        await strava.upload(r)
+        stravaState = NunaStravaCheck.state(r)
+        stravaMessage = strava.statusText
+    }
+
+    /// Moves the session to the new start and end. Its photos, how it felt and its Strava record follow it; the figures measured inside the
+    /// window are cleared for a strap session so they are read again for the new time.
+    private func moveInTime(_ r: WorkoutRow, start: Date, end: Date) async {
+        let s = Int(start.timeIntervalSince1970), e = Int(end.timeIntervalSince1970)
+        let fromStrap = WorkoutSource.classify(r.source) != .manual
+        let moved = WorkoutRow(startTs: s, endTs: e, sport: r.sport, source: r.source, durationS: Double(e - s),
+                               energyKcal: fromStrap ? nil : r.energyKcal, avgHr: fromStrap ? nil : r.avgHr, maxHr: fromStrap ? nil : r.maxHr,
+                               strain: fromStrap ? nil : r.strain, distanceM: r.distanceM, zonesJSON: fromStrap ? nil : r.zonesJSON,
+                               notes: r.notes, steps: fromStrap ? nil : r.steps)
+        let oldKey = StravaSettingsModel.workoutKey(for: r)
+        await repo.saveManualWorkout(moved, replacing: r)
+        NunaWorkoutReviewStore.move(fromStartTs: r.startTs, toStartTs: s, sport: r.sport)
+        if let rec = StravaActivityStore.record(for: oldKey) {
+            var copy = StravaUploadRecord(workoutKey: StravaSettingsModel.workoutKey(for: moved), startTs: s, sport: rec.sport, uploadId: rec.uploadId,
+                                          activityId: rec.activityId, status: rec.status, message: rec.message, updatedAt: rec.updatedAt)
+            copy.message = rec.message
+            StravaActivityStore.save(copy)
+            StravaActivityStore.remove(workoutKeys: [oldKey])
+        }
+        await intelligence.analyzeRecent()
+        await repo.refresh()
+        dismiss()
     }
 
     /// Zone minutes of the other saved sessions of the same sport.

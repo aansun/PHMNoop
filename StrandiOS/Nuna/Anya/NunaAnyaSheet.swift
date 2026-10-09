@@ -28,7 +28,7 @@ struct NunaAnyaCardLine: Equatable {
     static func signals(_ context: String) -> [String] {
         switch context {
         case "today": return ["Charge", "Effort", "Sleep"]
-        case "workouts": return ["Effort", "Heart rate zones"]
+        case "workouts": return ["Effort", "Distance", "Steps", "Heart rate zones"]
         case "trends": return ["Charge", "Effort"]
         default: return []
         }

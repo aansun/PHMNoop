@@ -91,6 +91,13 @@ enum NunaWorkoutReviewStore {
         try? FileManager.default.removeItem(at: folder(startTs, sport).appendingPathComponent(name))
     }
 
+    /// A session that moved in time keeps its feeling and photos: its folder is renamed to the new start.
+    static func move(fromStartTs: Int, toStartTs: Int, sport: String) {
+        let from = folder(fromStartTs, sport), to = folder(toStartTs, sport)
+        guard from != to, FileManager.default.fileExists(atPath: from.path), !FileManager.default.fileExists(atPath: to.path) else { return }
+        try? FileManager.default.moveItem(at: from, to: to)
+    }
+
     /// Everything kept for a session, when the session itself is deleted.
     static func remove(startTs: Int, sport: String) {
         try? FileManager.default.removeItem(at: folder(startTs, sport))
