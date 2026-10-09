@@ -60,13 +60,8 @@ struct NunaLiveHeartView: View {
     var body: some View {
         NunaDetailScreen("Live heart rate") {
             heroCard
-            NunaSegmented([(value: 0, title: "5 min"), (value: 1, title: "1 hour"), (value: 2, title: "Today")], selection: $range)
-            statTiles
-            zonesCard
-            togglesCard
-            NavigationLink(value: NunaTodayRoute.deepTimeline) {
-                NunaCard(small: true) { NunaListRow("Deep timeline", description: "Every second of your day, zoomable.", systemImage: "waveform.path.ecg", showsChevron: true) }
-            }.buttonStyle(.plain)
+            zonesList
+            settingsList
             Button { router.requestedDestination = .activeWorkout } label: {
                 HStack(spacing: 8) {
                     Image(systemName: "play.fill").font(.nuna(size: 14, weight: .bold))
@@ -86,40 +81,64 @@ struct NunaLiveHeartView: View {
         }
     }
 
+    /// One card: how the strap is doing, the reading and its line, then the range switch with the lowest, average and highest of that range.
     private var heroCard: some View {
-        NunaCard {
-            VStack(alignment: .leading, spacing: 12) {
+        let v = rangeSamples.map { Double($0.bpm) }
+        return NunaCard {
+            VStack(alignment: .leading, spacing: 16) {
                 HStack {
                     NunaChip(isLive ? "Live" : (live.connected ? "Waiting for the strap" : "Not connected"),
                              color: isLive ? NunaPalette.charge : (live.connected ? nil : NunaPalette.warning))
                     Spacer()
                     if let b = live.batteryPct {
-                        NunaChip(verbatim: String(localized: "Strap \(Int(b.rounded()))%"), systemImage: "applewatch")
+                        Text(verbatim: String(localized: "Strap \(Int(b.rounded()))%")).font(.nuna(size: 12.5, weight: .semibold))
+                            .foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                 }
-                HStack(alignment: .firstTextBaseline, spacing: 10) {
-                    Image(systemName: "heart.fill").font(.nuna(size: 26)).foregroundStyle(NunaPalette.alert)
-                    Text(verbatim: currentBpm.map(String.init) ?? "–").font(.nuna(size: 76, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(76)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("bpm").font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                }
-                HStack {
-                    if let stateLabel { NunaChip(stateLabel) }
-                    Spacer()
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(verbatim: currentBpm.map(String.init) ?? "–").font(.nuna(size: 64, weight: .bold, design: NunaType.design))
+                            .tracking(nunaTrackingNumber(64)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("bpm").font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    }
+                    if let stateLabel {
+                        Text(stateLabel).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.alertText)
+                    }
                     Text(isLive ? "Updated every second" : (banked.last.map { lastReading($0.ts) } ?? "–"))
                         .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 if isLive || banked.count >= 2 {
-                    NunaHRTrace(values: isLive ? rolling : banked.suffix(36).map(\.bpm), segments: nil).frame(height: 100)
-                    HStack {
-                        Text(isLive ? "−\(rolling.count) s" : "Earlier today"); Spacer(); Text(isLive ? "Now" : "Latest")
+                    VStack(spacing: 6) {
+                        NunaHRTrace(values: isLive ? rolling : banked.suffix(36).map(\.bpm), segments: nil).frame(height: 100)
+                        HStack {
+                            Text(isLive ? "−\(rolling.count) s" : "Earlier today"); Spacer(); Text(isLive ? "Now" : "Latest")
+                        }
+                        .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
-                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 } else {
                     Text(live.connected ? "Waiting for a live heartbeat…" : "Connect your strap to see live heart rate")
                         .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
+                NunaDivider()
+                NunaSegmented([(value: 0, title: "5 min"), (value: 1, title: "1 hour"), (value: 2, title: "Today")], selection: $range)
+                HStack(alignment: .top, spacing: 0) {
+                    stat("Lowest", nunaFmt(v.min()))
+                    stat("Average", nunaFmt(v.isEmpty ? nil : v.reduce(0, +) / Double(v.count)))
+                    stat("Highest", nunaFmt(v.max()))
+                }
             }
         }
+    }
+
+    private func stat(_ label: LocalizedStringKey, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text(verbatim: value).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                Text("bpm").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func lastReading(_ ts: Int) -> LocalizedStringKey {
@@ -127,68 +146,64 @@ struct NunaLiveHeartView: View {
         return LocalizedStringKey(String(localized: "Last reading \(f.string(from: Date(timeIntervalSince1970: TimeInterval(ts))))"))
     }
 
-    private var statTiles: some View {
-        let v = rangeSamples.map { Double($0.bpm) }
-        return HStack(spacing: 10) {
-            NunaStatTile(label: "Lowest", value: nunaFmt(v.min()))
-            NunaStatTile(label: "Average", value: nunaFmt(v.isEmpty ? nil : v.reduce(0, +) / Double(v.count)))
-            NunaStatTile(label: "Highest", value: nunaFmt(v.max()))
-        }
-    }
-
     // Zone colours: rest, light, aerobic, threshold, maximum.
     private let zoneColors: [Color] = [NunaPalette.zoneBase, NunaPalette.rest, NunaPalette.charge, NunaPalette.warning, NunaPalette.alert]
     private let zoneNames: [LocalizedStringKey] = ["Zone 1 · easy", "Zone 2 · light", "Zone 3 · aerobic", "Zone 4 · threshold", "Zone 5 · maximum"]
 
-    private var zonesCard: some View {
+    /// Time in each zone today as plain rows, the same shape as the signals under Charge.
+    @ViewBuilder private var zonesList: some View {
         let tiz = HRZones.timeInZone(daySamples, zoneSet: zoneSet)
-        let secs = [tiz.belowZone1] + tiz.seconds
-        let total = max(tiz.total, 1)
-        func dur(_ s: Double) -> String { NunaSleepFormat.duration(s / 60) }
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack {
-                    nunaCap("Zones today")
-                    Spacer()
-                    Text(verbatim: String(localized: "Total \(dur(tiz.total))")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                }
-                if tiz.total > 0 {
-                    NunaProportionBar(parts: (0..<6).map { i in (secs[i], i == 0 ? NunaPalette.zoneBase.opacity(0.6) : zoneColors[i - 1]) })
-                    VStack(spacing: 10) {
-                        zoneRow(Text("Resting · below zone 1"), secs[0], NunaPalette.zoneBase.opacity(0.6), dur)
-                        ForEach(0..<5, id: \.self) { i in zoneRow(Text(zoneNames[i]), secs[i + 1], zoneColors[i], dur) }
+        if tiz.total > 0 {
+            NunaPlainList {
+                ForEach(0..<5, id: \.self) { i in
+                    if i > 0 { NunaDivider() }
+                    HStack(spacing: 14) {
+                        Circle().fill(zoneColors[i]).frame(width: 10, height: 10).frame(width: 28)
+                        Text(zoneNames[i]).font(.nuna(size: 13.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                            .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
+                        Spacer(minLength: 8)
+                        Text(verbatim: NunaSleepFormat.duration(tiz.seconds[i] / 60)).font(.nuna(size: 19, weight: .bold, design: NunaType.design))
+                            .foregroundStyle(NunaPalette.textPrimary)
                     }
-                } else {
-                    Text("No heart-rate readings yet today").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    .padding(.vertical, 14)
                 }
             }
         }
     }
 
-    private func zoneRow(_ title: Text, _ seconds: Double, _ color: Color, _ dur: (Double) -> String) -> some View {
-        HStack(spacing: 10) {
-            Circle().fill(color).frame(width: 9, height: 9)
-            title.font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-            Spacer()
-            Text(verbatim: dur(seconds)).font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+    /// Two switches and a way into the deep timeline: a name and ON or OFF, nothing else.
+    private var settingsList: some View {
+        NunaPlainList {
+            switchRow("HR Dynamic Island", "platter.filled.top.iphone", $islandOn)
+            if model.whoop5Detected || broadcastOn {
+                NunaDivider()
+                switchRow("Broadcast HR", "dot.radiowaves.left.and.right", $broadcastOn)
+                    .onChange(of: broadcastOn) { _, on in model.ble.setBroadcastHr(on) }
+            }
+            NunaDivider()
+            NavigationLink(value: NunaTodayRoute.deepTimeline) {
+                HStack(spacing: 14) {
+                    Image(systemName: "waveform.path.ecg").font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
+                    Text("Deep timeline").font(.nuna(size: 13.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                    Spacer(minLength: 8)
+                    Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                }
+                .padding(.vertical, 16).contentShape(Rectangle())
+            }.buttonStyle(.plain)
         }
     }
 
-    private var togglesCard: some View {
-        NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-            VStack(spacing: 0) {
-                NunaListRow("Show on the Dynamic Island", description: "Live heart rate while the strap is connected") {
-                    Toggle("", isOn: $islandOn).labelsHidden().tint(NunaPalette.charge)
-                }
-                if model.whoop5Detected || broadcastOn {
-                    NunaDivider()
-                    NunaListRow("Broadcast to other apps", subtitle: "The strap shows up as a Bluetooth heart-rate sensor. Experimental, WHOOP 5/MG.") {
-                        Toggle("", isOn: $broadcastOn).labelsHidden().tint(NunaPalette.charge)
-                            .onChange(of: broadcastOn) { _, on in model.ble.setBroadcastHr(on) }
-                    }
-                }
-            }
+    private func switchRow(_ title: LocalizedStringKey, _ icon: String, _ isOn: Binding<Bool>) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon).font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
+            Text(title).font(.nuna(size: 13.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                .lineLimit(1).minimumScaleFactor(0.7)
+            Spacer(minLength: 8)
+            Text(isOn.wrappedValue ? "On" : "Off").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                .foregroundStyle(isOn.wrappedValue ? NunaPalette.charge : NunaPalette.textMuted)
+            Toggle("", isOn: isOn).labelsHidden().tint(NunaPalette.charge)
         }
+        .padding(.vertical, 10)
     }
 
     private func loadDay() async {
