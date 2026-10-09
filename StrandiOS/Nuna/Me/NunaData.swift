@@ -6,6 +6,8 @@ import StrandDesign
 
 struct NunaDataHubView: View {
     @EnvironmentObject private var health: HealthKitBridge
+    @EnvironmentObject private var repo: Repository
+    @State private var showReport = false
     @AppStorage(StravaExperiment.enabledKey) private var strava = false
     @AppStorage(HevyExperiment.enabledKey) private var hevy = false
 
@@ -40,6 +42,9 @@ struct NunaDataHubView: View {
                 NavigationLink(value: NunaMeRoute.imports) {
                     NunaTileRow(icon: "square.and.arrow.down", title: "Import data", subtitle: nil)
                 }.buttonStyle(.plain)
+                Button { showReport = true } label: {
+                    NunaTileRow(icon: "doc.text", title: "Export report", subtitle: nil)
+                }.buttonStyle(.plain)
                 NavigationLink(value: NunaMeRoute.backup) {
                     NunaTileRow(icon: "square.and.arrow.up", title: "Backup and export",
                                 subtitle: FolderBackup.lastBackupMs > 0 ? LocalizedStringKey(String(localized: "Last backup \(Self.when(FolderBackup.lastBackupMs))")) : "Not backed up yet")
@@ -47,6 +52,7 @@ struct NunaDataHubView: View {
             }
             nunaFootnote("Everything stays on this iPhone. Deleting an import never touches data recorded live from the strap.")
         }
+        .sheet(isPresented: $showReport) { NunaTrendsReportSheet(days: repo.days).environmentObject(repo) }
     }
 
     /// Apple Health, large at the top: the iPhone's own health data is the main source after the strap.
