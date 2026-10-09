@@ -168,10 +168,10 @@ struct NunaHealthView: View {
 
     private var vitalTab: some View {
         VStack(spacing: NunaSpacing.section) {
-            rangeCard
-            if coachEnabled { NunaAnyaCard(title: "Are my vitals normal today?") { showCoach = true } }
             liveCard
+            if coachEnabled { NunaAnyaCard(title: "Are my vitals normal today?") { showCoach = true } }
             vitalBento
+            rangeCard
             fitnessCard
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
