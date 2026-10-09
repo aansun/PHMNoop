@@ -203,14 +203,16 @@ struct NunaScoreHero<Note: View>: View {
     let note: Note
     /// Colour of the word in the ring (a verdict in place of the metric name); nil keeps the ink colour.
     var nameColor: Color?
+    /// Colours the ring runs through (Effort); nil keeps `color`.
+    var gradient: [Color]?
     /// Whether there is anything to explain; without it the info button is left out.
     var hasNote = true
     @State private var showInfo = false
 
     init(caption: LocalizedStringKey, chip: LocalizedStringKey? = nil, chipColor: Color? = nil, fraction: Double, number: String,
-         unit: String = "", suffix: String = "", name: LocalizedStringKey, nameColor: Color? = nil, color: Color, hasNote: Bool = true, @ViewBuilder note: () -> Note) {
+         unit: String = "", suffix: String = "", name: LocalizedStringKey, nameColor: Color? = nil, gradient: [Color]? = nil, color: Color, hasNote: Bool = true, @ViewBuilder note: () -> Note) {
         self.caption = caption; self.chip = chip; self.chipColor = chipColor; self.fraction = fraction; self.number = number
-        self.unit = unit; self.suffix = suffix; self.name = name; self.nameColor = nameColor; self.color = color; self.hasNote = hasNote; self.note = note()
+        self.unit = unit; self.suffix = suffix; self.name = name; self.nameColor = nameColor; self.gradient = gradient; self.color = color; self.hasNote = hasNote; self.note = note()
     }
 
     var body: some View {
@@ -221,7 +223,7 @@ struct NunaScoreHero<Note: View>: View {
                 if let chip { NunaChip(chip, color: chipColor) }
                 if hasNote { NunaInfoButton(isOn: $showInfo) }
             }
-            NunaRingGauge(fraction: fraction, color: color, size: 300, lineWidth: 24) {
+            NunaRingGauge(fraction: fraction, color: color, gradient: gradient, size: 300, lineWidth: 24) {
                 VStack(spacing: 6) {
                     HStack(alignment: .firstTextBaseline, spacing: 2) {
                         Text(verbatim: number).font(.nuna(size: 84, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(84))
@@ -332,21 +334,26 @@ struct NunaExpandRow: View {
 
 /// Charge zone colour: green 67+, yellow 34 to 66, red 0 to 33.
 func nunaChargeColor(_ v: Double) -> Color {
-    v >= 67 ? NunaPalette.charge : (v >= 34 ? NunaPalette.warning : NunaPalette.alert)
+    v >= 67 ? NunaPalette.scoreHigh : (v >= 34 ? NunaPalette.scoreMid : NunaPalette.scoreLow)
 }
 
-/// The same three zones for text, where the plain red is too hard to read.
-func nunaChargeTextColor(_ v: Double) -> Color {
-    v >= 67 ? NunaPalette.charge : (v >= 34 ? NunaPalette.warning : NunaPalette.alertText)
-}
+/// The same three zones for text.
+func nunaChargeTextColor(_ v: Double) -> Color { nunaChargeColor(v) }
 
-/// Effort on the stored 0-100 axis, by how much load it is: light is the Effort lime, moderate amber, high red.
+/// Effort on the stored 0-100 axis, by how hard the day was: minimal is dark blue, moderate blue, all out light blue.
 func nunaEffortColor(_ stored: Double) -> Color {
-    stored < 33 ? NunaPalette.effort : (stored < 66 ? NunaPalette.warning : NunaPalette.alert)
+    stored < 33 ? NunaPalette.effortMinimal : (stored < 66 ? NunaPalette.effortModerate : NunaPalette.effortAllOut)
 }
 
-func nunaEffortTextColor(_ stored: Double) -> Color {
-    stored < 33 ? NunaPalette.effortText : (stored < 66 ? NunaPalette.warning : NunaPalette.alertText)
+func nunaEffortTextColor(_ stored: Double) -> Color { nunaEffortColor(stored) }
+
+/// The colours an Effort ring runs through, from dark blue up to the level reached.
+func nunaEffortRingColors(_ stored: Double) -> [Color] {
+    var c = [NunaPalette.effortMinimal]
+    if stored >= 33 { c.append(NunaPalette.effortModerate) }
+    if stored >= 66 { c.append(NunaPalette.effortAllOut) }
+    if c.count == 1 { c.append(NunaPalette.effortMinimal) }
+    return c
 }
 
 /// Rest, by how well the night went: excellent green, good lime, fair amber, low red.

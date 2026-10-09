@@ -63,6 +63,15 @@ public enum NunaPalette {
     public static let warning       = Color(light: "#C98A00", dark: "#FFB020")
     public static let alert         = Color(light: "#E0003C", dark: "#FF3366")
     public static let alertText     = Color(light: "#D0103C", dark: "#FF6B8E")
+
+    // Charge zones (low, mid, high) and Effort levels (minimal, moderate, all out) from the score guide: red, yellow and green for how ready the
+    // body is; dark to light blue for how hard the day was.
+    public static let scoreLow      = Color(light: "#D0132D", dark: "#F0243A")
+    public static let scoreMid      = Color(light: "#C99A00", dark: "#F5C400")
+    public static let scoreHigh     = Color(light: "#2EA800", dark: "#46D200")
+    public static let effortMinimal = Color(light: "#1D4C9C", dark: "#2A66C8")
+    public static let effortModerate = Color(light: "#1480DA", dark: "#2BA0F5")
+    public static let effortAllOut  = Color(light: "#19A8E0", dark: "#66DCFF")
     public static var zoneBase: Color { skinned(light: "#C3C9D6", dark: "#3F3F46", whp: "#3A4650") }   // zone 1 / awake track
 
     // Primary action: white (the theme ink) on dark.
@@ -291,19 +300,22 @@ public struct NunaChip: View {
 public struct NunaRingGauge<Center: View>: View {
     private let fraction: Double
     private let color: Color
+    private let gradient: [Color]?
     private let size: CGFloat
     private let lineWidth: CGFloat
     private let center: Center
-    public init(fraction: Double, color: Color, size: CGFloat = 98, lineWidth: CGFloat = 9,
+    /// `gradient` paints the arc from its start to its end through these colours (Effort: dark blue to light blue); nil keeps `color`.
+    public init(fraction: Double, color: Color, gradient: [Color]? = nil, size: CGFloat = 98, lineWidth: CGFloat = 9,
                 @ViewBuilder center: () -> Center) {
-        self.fraction = min(max(fraction, 0), 1); self.color = color
+        self.fraction = min(max(fraction, 0), 1); self.color = color; self.gradient = gradient
         self.size = size; self.lineWidth = lineWidth; self.center = center()
     }
     public var body: some View {
         ZStack {
             Circle().stroke(Color.white.opacity(0.09), lineWidth: lineWidth)
             Circle().trim(from: 0, to: fraction)
-                .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .stroke(gradient.map { AnyShapeStyle(AngularGradient(colors: $0, center: .center, startAngle: .degrees(0), endAngle: .degrees(max(360 * fraction, 1)))) }
+                        ?? AnyShapeStyle(color), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
             center
         }
