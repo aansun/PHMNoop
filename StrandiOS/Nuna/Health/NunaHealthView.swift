@@ -30,11 +30,6 @@ struct NunaHealthView: View {
     @StateObject private var fatGS = NunaSeriesModel()
     @StateObject private var trainingM = NunaWorkoutsModel()
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
-    @AppStorage(HydrationStore.enabledKey) private var hydrationEnabled = false
-    @AppStorage(NunaQuickActions.waterAmountKey) private var quickWaterML = NunaQuickActions.waterAmountDefault
-    @State private var waterML = 0
-    @State private var weightRange = 30
-    @State private var weightPage = 0
     @State private var hrvRange = 30
     @State private var hrvPage = 0
     @State private var rhrRange = 30
@@ -44,6 +39,7 @@ struct NunaHealthView: View {
     @State private var didSetTab = false
     @State private var legacy: Legacy?
     @State private var showCoach = false
+    @State private var showBodyCoach = false
     @State private var showSleepCoach = false
     @State private var fitSeries: [(day: String, value: Double)] = []
     @State private var lastMaxHR: (bpm: Int, sport: String)?
@@ -94,7 +90,6 @@ struct NunaHealthView: View {
                 lastMaxHR = (m, w.sport.replacingOccurrences(of: "_", with: " ").capitalized)
             }
             await trainingM.load(repo: repo)
-            await reloadWater()
         }
         .sheet(item: $legacy) { which in
             NavigationStack {
@@ -115,6 +110,7 @@ struct NunaHealthView: View {
             .environmentObject(repo)
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "health") }
+        .sheet(isPresented: $showBodyCoach) { NunaAnyaSheet(context: "body") }
         .sheet(isPresented: $showSleepCoach) { NunaAnyaSheet(context: "sleep") }
     }
 
@@ -401,15 +397,13 @@ struct NunaHealthView: View {
 
     private var bodyTab: some View {
         VStack(spacing: NunaSpacing.section) {
-            weightHero
             NavigationLink(value: NunaTodayRoute.weight) {
-                NunaCard(small: true) { NunaListRow("Body composition", systemImage: "figure.arms.open", showsChevron: true) }
+                NunaBodyHealthCard(weightKg: weightS.latest?.value ?? (profile.weightKg > 0 ? profile.weightKg : nil),
+                                   bmi: bodyBMI, waistCm: profile.waistCm, heightCm: profile.heightCm)
             }.buttonStyle(.plain)
-            if let bmi = bodyBMI { NunaBMICard(bmi: bmi) }
-            NunaWaistRatioCard()
-            nutritionCard
-            if hydrationEnabled { waterCard }
+            if coachEnabled, let line = bodyAnyaLine { NunaAnyaCard(verbatim: line) { showBodyCoach = true } }
             NunaHealthTraining(m: trainingM, scale: UnitPrefs.resolveEffortScale(effortScaleRaw))
+            nutritionCard
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
                     link(.labBook, "Lab Book", "Your records", "cross.vial.fill")
@@ -424,16 +418,17 @@ struct NunaHealthView: View {
         }
     }
 
-    private var weightHero: some View {
-        let latest = weightS.latest?.value
-        let pts = weightS.readings(30)
-        let delta: Double? = (pts.count >= 2) ? (pts.last!.value - pts.first!.value) : nil
-        return VStack(alignment: .leading, spacing: 8) {
-            NunaTrendDetailCard(
-                caption: "Weight", valueText: fmt(latest, 1), unit: "kg",
-                chip: delta.map { (text: LocalizedStringKey((($0 <= 0 ? "−" : "+") + String(format: "%.1f", locale: AppLanguage.activeLocale, abs($0))) + " kg"), color: NunaPalette.textPrimary) },
-                series: weightS, showsBand: false, lineColor: NunaPalette.charge, decimals: 1, directional: false, range: $weightRange, page: $weightPage)
+    /// Anya's line for the whole Body tab: body health, the week of training and what was eaten, whichever there is.
+    private var bodyAnyaLine: String? {
+        var parts: [String] = []
+        if let b = bodyBMI { parts.append("BMI " + fmt(b, 1)) }
+        if profile.waistCm > 0, profile.heightCm > 0 { parts.append(String(localized: "Waist ratio") + " " + String(format: "%.2f", locale: AppLanguage.activeLocale, profile.waistCm / profile.heightCm)) }
+        let week = trainingM.recent(days: 7)
+        if !week.isEmpty {
+            parts.append(String(localized: "\(week.count) sessions") + " · Effort " + UnitFormatter.effortDisplay(trainingM.effort(week), scale: UnitPrefs.resolveEffortScale(effortScaleRaw)))
         }
+        if let kcal = kcalInS.latest?.value { parts.append(String(localized: "\(Int(kcal.rounded())) kcal in")) }
+        return parts.isEmpty ? nil : parts.joined(separator: " · ")
     }
 
     private var bodyBMI: Double? {
@@ -487,47 +482,6 @@ struct NunaHealthView: View {
                 }
             }
         }.buttonStyle(.plain)
-    }
-
-    private var waterCard: some View {
-        let goal = repo.hydrationGoalML(profileSex: profile.sex)
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 12) {
-                // The title row opens the water log and its history; the +250 and +500 below add a drink without leaving.
-                NavigationLink(value: NunaTodayRoute.hydration) {
-                    HStack {
-                        Text("Water").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                        Spacer()
-                        Text("Details").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                    }
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(verbatim: String(format: "%.1f", locale: AppLanguage.activeLocale, Double(waterML) / 1000))
-                        .font(.nuna(size: NunaTypeSize.numberL, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(NunaTypeSize.numberL)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(verbatim: "/ " + String(format: "%.1f", locale: AppLanguage.activeLocale, Double(goal) / 1000) + " L")
-                        .font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                }
-                NunaProgressBar(fraction: Double(waterML) / Double(max(goal, 1)), color: NunaPalette.effort)
-                HStack(spacing: 10) {
-                    Button(String("+\(quickWaterML)")) { Task { await addWater(quickWaterML) } }.buttonStyle(.nuna(.ghost, height: 44, fullWidth: true))
-                    Button(String("+\(quickWaterML * 2)")) { Task { await addWater(quickWaterML * 2) } }.buttonStyle(.nuna(.ghost, height: 44, fullWidth: true))
-                }
-            }
-        }
-    }
-
-    private func reloadWater() async {
-        guard hydrationEnabled else { return }
-        waterML = Int(await repo.hydrationTotal(day: Repository.localDayKey(Date())))
-    }
-
-    private func addWater(_ ml: Int) async {
-        _ = await repo.logHydration(amountMl: ml)
-        repo.noteHydrationChanged()
-        await reloadWater()
     }
 
     // MARK: Sleep

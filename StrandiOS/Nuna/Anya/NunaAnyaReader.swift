@@ -63,6 +63,7 @@ struct NunaAnyaMetric: Equatable {
 enum NunaAnyaReader {
     static func read(context: String, metric: NunaAnyaMetric? = nil, repo: Repository, profile: ProfileStore, scale: EffortScale) async -> NunaAnyaRead? {
         if let metric { return await metricRead(metric, repo: repo, profile: profile) }
+        if context.lowercased() == "body" { return await body(repo: repo, profile: profile, scale: scale) }
         let module = NunaAnyaModule(context: context)
         switch module {
         case .today, .nutrition, .device: return await today(module, repo: repo, profile: profile, scale: scale)
@@ -164,6 +165,81 @@ enum NunaAnyaReader {
         if let v = m.respiratory { vals["resp"] = v }
         return remembering(NunaAnyaRead(headline: String(head.prefix(1)).uppercased() + String(head.dropFirst()), detail: more.isEmpty ? nil : more.joined(separator: ", ") + ".",
                                         read: read, module: .health, questions: questions(.health)), values: vals)
+    }
+
+    // MARK: Body
+
+    /// The Health > Body tab as one read: body health (BMI, waist ratio, weight), the week of training and its load, and nutrition.
+    /// Each part is left out when there is nothing behind it.
+    private static func body(repo: Repository, profile: ProfileStore, scale: EffortScale) async -> NunaAnyaRead? {
+        func f(_ v: Double, _ d: Int = 1) -> String { String(format: "%.\(d)f", locale: AppLanguage.activeLocale, v) }
+        let weightS = NunaSeriesModel(), fatS = NunaSeriesModel(), leanS = NunaSeriesModel(), kcalS = NunaSeriesModel(), proteinS = NunaSeriesModel()
+        await weightS.load(repo: repo, key: "weight", source: "apple-health", days: 60, also: nunaManualSource)
+        await fatS.load(repo: repo, key: "body_fat", source: "apple-health", days: 60)
+        await leanS.load(repo: repo, key: "lean_mass", source: "apple-health", days: 60)
+        await kcalS.load(repo: repo, key: "calories_in", source: "nutrition-csv", days: 30)
+        await proteinS.load(repo: repo, key: "protein_g", source: "nutrition-csv", days: 30)
+        let training = NunaWorkoutsModel()
+        await training.load(repo: repo)
+
+        var head: [String] = [], detail: [String] = [], read: [String] = []
+        var vals: [String: Double] = [:]
+
+        let weight = weightS.latest?.value ?? (profile.weightKg > 0 ? profile.weightKg : nil)
+        if let w = weight, profile.heightCm > 0 {
+            let bmi = w / pow(profile.heightCm / 100, 2)
+            let word = bmi < 18.5 ? String(localized: "under range") : (bmi < 25 ? String(localized: "in the normal range") : String(localized: "above the normal range"))
+            head.append("BMI \(f(bmi)) (\(word))"); read.append("BMI"); vals["bmi"] = bmi
+        }
+        if profile.waistCm > 0, profile.heightCm > 0 {
+            let r = profile.waistCm / profile.heightCm
+            head.append(String(localized: "waist ratio \(f(r, 2))")); read.append("Waist ratio"); vals["waist"] = r
+        }
+        if let w = weight {
+            read.append("Weight"); vals["weight"] = w
+            let pts = weightS.readings(30)
+            if pts.count >= 2 {
+                let d = pts[pts.count - 1].value - pts[0].value
+                if abs(d) >= 0.05 { detail.append(String(localized: "Weight \(f(w)) kg, \(d < 0 ? "down" : "up") \(f(abs(d))) kg over 30 days.")) }
+                else { detail.append(String(localized: "Weight \(f(w)) kg, steady over 30 days.")) }
+            } else { detail.append(String(localized: "Weight \(f(w)) kg.")) }
+        }
+        if let fat = fatS.latest?.value { read.append("Body fat"); detail.append(String(localized: "Body fat \(f(fat))%.")); vals["fat"] = fat }
+        if let lean = leanS.latest?.value { read.append("Lean mass"); detail.append(String(localized: "Lean mass \(f(lean)) kg.")); vals["lean"] = lean }
+
+        let week = training.recent(days: 7)
+        if !week.isEmpty {
+            let e = training.effort(week)
+            head.append(String(localized: "\(week.count) sessions this week (Effort \(UnitFormatter.effortDisplay(e, scale: scale)))"))
+            read.append("Training"); vals["weekEffort"] = Double(UnitFormatter.effortDisplay(e, scale: scale)) ?? e
+        }
+        if let ratio = TrendInsights.loadRatio(blocks: training.weeklyEffort(weeks: 6)) {
+            let word: String
+            switch TrendInsights.loadBand(ratio) {
+            case .under: word = String(localized: "below your usual")
+            case .optimal: word = String(localized: "in your usual range")
+            case .high: word = String(localized: "above your usual")
+            case .excessive: word = String(localized: "well above your usual")
+            }
+            detail.append(String(localized: "Training load ratio \(f(ratio, 2)), \(word)."))
+            read.append("Training load"); vals["loadRatio"] = ratio
+        }
+        if let kcal = kcalS.latest?.value {
+            var line = String(localized: "Nutrition: \(Int(kcal.rounded())) kcal in")
+            if let p = proteinS.latest?.value { line += String(localized: ", \(Int(p.rounded())) g protein") }
+            detail.append(line + "."); read.append("Nutrition"); vals["kcalIn"] = kcal
+        }
+        guard !head.isEmpty else { return nil }
+        let h = head.joined(separator: ", ")
+        return remembering(NunaAnyaRead(headline: String(h.prefix(1)).uppercased() + String(h.dropFirst()),
+                                        detail: detail.isEmpty ? nil : detail.joined(separator: " "),
+                                        read: read, module: .health, questions: bodyQuestions), values: vals)
+    }
+
+    private static var bodyQuestions: [NunaAnyaQuestion] {
+        [NunaAnyaQuestion(title: String(localized: "Is my weight trend healthy?"), prompt: "Look at my weight, BMI and waist to height ratio and tell me neutrally what the trend says."),
+         NunaAnyaQuestion(title: String(localized: "Review my training load"), prompt: "Review my training this week and my training load ratio. Am I doing too much or too little?"),
+         NunaAnyaQuestion(title: String(localized: "What does my nutrition show?"), prompt: "Look at my nutrition and my training and tell me one thing to adjust.")]
     }
 
     // MARK: Trends
