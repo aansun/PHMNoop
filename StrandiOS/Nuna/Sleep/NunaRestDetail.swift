@@ -104,7 +104,7 @@ struct NunaRestDetailView: View {
 
     private func row(_ title: LocalizedStringKey, _ icon: String, _ value: String?, _ delta: Double?) -> some View {
         NavigationLink(value: NunaTodayRoute.sleepPerformance(model.index)) {
-            NunaContributorRow(title: title, icon: icon, value: value, unit: "%", delta: delta, downIsGood: false)
+            NunaContributorRow(title: title, icon: icon, value: value, delta: delta, downIsGood: false)
         }.buttonStyle(.plain)
     }
 
