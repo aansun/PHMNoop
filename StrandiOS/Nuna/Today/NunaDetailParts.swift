@@ -50,16 +50,21 @@ struct NunaDetailScreen<Content: View>: View {
         self.title = title; self.onAnya = onAnya; self.trailing = trailing; self.content = content()
     }
     var body: some View {
-        ScrollView {
-            VStack(spacing: NunaSpacing.section) {
-                NunaDetailHeader(title: title, onAnya: onAnya, trailing: trailing)
-                content
+        // The header stays at the top while the page scrolls, so the way back is always in reach however long the page is.
+        VStack(spacing: 0) {
+            NunaDetailHeader(title: title, onAnya: onAnya, trailing: trailing)
+                .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 4)
+                .background(NunaPalette.canvas)
+            ScrollView {
+                VStack(spacing: NunaSpacing.section) {
+                    content
+                }
+                .padding(.horizontal, NunaSpacing.screenH)
+                .padding(.top, 8)
+                .padding(.bottom, 120)
             }
-            .padding(.horizontal, NunaSpacing.screenH)
-            .padding(.top, 8)
-            .padding(.bottom, 120)
+            .scrollIndicators(.hidden).scrollDismissesKeyboard(.interactively)
         }
-        .scrollIndicators(.hidden).scrollDismissesKeyboard(.interactively)
         .background(NunaPalette.canvas.ignoresSafeArea())
         .toolbar(.hidden, for: .navigationBar)
     }
