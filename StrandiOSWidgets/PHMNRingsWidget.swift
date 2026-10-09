@@ -27,6 +27,12 @@ struct PHMNRingsProvider: TimelineProvider {
     }
 }
 
+/// What each figure on the Rings widgets opens: its own detail in the app (`noop://metric/<key>`), or the devices screen for the battery.
+private enum PHMNRingsLink {
+    static func metric(_ key: String) -> URL { URL(string: "noop://metric/\(key)")! }
+    static let devices = URL(string: "noop://devices")!
+}
+
 private enum PHMNRingsSecondaryMetric {
     case steps
     case calories
@@ -37,11 +43,20 @@ private struct PHMNRingsWidgetView: View {
     let secondaryMetric: PHMNRingsSecondaryMetric
 
     private var snapshot: WidgetSnapshot { entry.snapshot }
+    /// The same colours as the app: Charge red, yellow or green by zone; Effort dark to light blue by level.
     private var recoveryColor: Color {
-        snapshot.recovery.map { StrandPalette.recoveryColor(Double($0)) } ?? StrandPalette.textTertiary
+        snapshot.recovery.map { v in v >= 67 ? NunaPalette.scoreHigh : (v >= 34 ? NunaPalette.scoreMid : NunaPalette.scoreLow) } ?? StrandPalette.textTertiary
     }
     private var strainColor: Color {
-        snapshot.effort == nil ? StrandPalette.textTertiary : StrandPalette.effortColor
+        snapshot.effort.map { v in v < 33 ? NunaPalette.effortMinimal : (v < 66 ? NunaPalette.effortModerate : NunaPalette.effortAllOut) } ?? StrandPalette.textTertiary
+    }
+    private var strainGradient: [Color]? {
+        guard let v = snapshot.effort else { return nil }
+        var c = [NunaPalette.effortMinimal]
+        if v >= 33 { c.append(NunaPalette.effortModerate) }
+        if v >= 66 { c.append(NunaPalette.effortAllOut) }
+        if c.count == 1 { c.append(NunaPalette.effortMinimal) }
+        return c
     }
     private var effortText: String {
         snapshot.effortDisplay ?? snapshot.effort.map(String.init) ?? "—"
@@ -53,7 +68,7 @@ private struct PHMNRingsWidgetView: View {
         snapshot.caloriesKcal?.formatted() ?? "—"
     }
     private var secondaryLabel: String {
-        secondaryMetric == .calories ? String(localized: "Calories") : String(localized: "Steps")
+        secondaryMetric == .calories ? "Calories" : "Steps"
     }
     private var secondaryText: String {
         secondaryMetric == .calories ? caloriesText : stepsText
@@ -74,10 +89,10 @@ private struct PHMNRingsWidgetView: View {
 
             HStack(alignment: .center, spacing: 18) {
                 metricColumn(
-                    primaryLabel: String(localized: "Recovery"),
+                    primaryLabel: "Charge", primaryURL: PHMNRingsLink.metric("recovery"), secondaryURL: PHMNRingsLink.metric("hrv"),
                     primaryValue: snapshot.recovery.map(String.init) ?? "—",
                     primaryColor: recoveryColor,
-                    secondaryLabel: String(localized: "HRV"),
+                    secondaryLabel: "HRV",
                     secondaryValue: snapshot.hrv.map(String.init) ?? "—",
                     primarySuffix: snapshot.recovery == nil ? nil : "%",
                     primaryValueFirst: true,
@@ -90,7 +105,7 @@ private struct PHMNRingsWidgetView: View {
                     .frame(width: 96, height: 96)
 
                 metricColumn(
-                    primaryLabel: String(localized: "Strain"),
+                    primaryLabel: "Effort", primaryURL: PHMNRingsLink.metric("strain"), secondaryURL: PHMNRingsLink.metric(secondaryMetric == .calories ? "energy_kcal" : "steps"),
                     primaryValue: effortText,
                     primaryColor: strainColor,
                     secondaryLabel: secondaryLabel,
@@ -113,6 +128,10 @@ private struct PHMNRingsWidgetView: View {
     }
 
     private var heartRate: some View {
+        Link(destination: PHMNRingsLink.metric("heartrate")) { heartRateLabel }
+    }
+
+    private var heartRateLabel: some View {
         HStack(spacing: 3) {
             Image(systemName: "heart.fill")
                 .font(StrandFont.rounded(10, weight: .bold))
@@ -124,6 +143,10 @@ private struct PHMNRingsWidgetView: View {
     }
 
     private var battery: some View {
+        Link(destination: PHMNRingsLink.devices) { batteryLabel }
+    }
+
+    private var batteryLabel: some View {
         HStack(spacing: 4) {
             Text(batteryText)
                 .font(StrandFont.rounded(10, weight: .bold))
@@ -134,23 +157,28 @@ private struct PHMNRingsWidgetView: View {
         .accessibilityLabel("Battery \(batteryText)")
     }
 
-    private func metricColumn(primaryLabel: String, primaryValue: String, primaryColor: Color,
+    private func metricColumn(primaryLabel: String, primaryURL: URL, secondaryURL: URL,
+                              primaryValue: String, primaryColor: Color,
                               secondaryLabel: String, secondaryValue: String,
                               primarySuffix: String?,
                               primaryValueFirst: Bool,
                               alignment: HorizontalAlignment,
                               frameAlignment: Alignment) -> some View {
         VStack(alignment: alignment, spacing: 0) {
-            metric(label: primaryLabel, value: primaryValue, color: primaryColor,
-                   suffix: primarySuffix, valueFirst: primaryValueFirst,
-                   alignment: alignment, frameAlignment: frameAlignment)
+            Link(destination: primaryURL) {
+                metric(label: primaryLabel, value: primaryValue, color: primaryColor,
+                       suffix: primarySuffix, valueFirst: primaryValueFirst,
+                       alignment: alignment, frameAlignment: frameAlignment)
+            }
             Rectangle()
                 .fill(StrandPalette.hairline.opacity(0.8))
                 .frame(height: 1)
                 .padding(.vertical, 8)
-            metric(label: secondaryLabel, value: secondaryValue,
-                   color: StrandPalette.textSecondary, valueFirst: false, alignment: alignment,
-                   frameAlignment: frameAlignment)
+            Link(destination: secondaryURL) {
+                metric(label: secondaryLabel, value: secondaryValue,
+                       color: StrandPalette.textSecondary, valueFirst: false, alignment: alignment,
+                       frameAlignment: frameAlignment)
+            }
         }
     }
 
@@ -202,10 +230,10 @@ private struct PHMNRingsWidgetView: View {
 
     private var scoreRings: some View {
         ZStack {
-            // The outer blue ring is Strain; the inner ring is Recovery, matching the app's
+            // The outer blue ring is Effort; the inner ring is Charge, matching the app's
             // current metric tokens rather than a widget-only palette.
             PHMNRing(progress: snapshot.effort.map { Double($0) / 100 } ?? 0,
-                     color: strainColor, lineWidth: 9, diameter: 96)
+                     color: strainColor, gradient: strainGradient, lineWidth: 9, diameter: 96)
             PHMNRing(progress: snapshot.recovery.map { Double($0) / 100 } ?? 0,
                      color: recoveryColor, lineWidth: 8, diameter: 72)
         }
@@ -214,8 +242,8 @@ private struct PHMNRingsWidgetView: View {
 
     private var accessibilityText: String {
         let format = secondaryMetric == .calories
-            ? String(localized: "Recovery %@, HRV %@, Strain %@, Calories %@, Battery %@")
-            : String(localized: "Recovery %@, HRV %@, Strain %@, Steps %@, Battery %@")
+            ? "Charge %@, HRV %@, Effort %@, Calories %@, Battery %@"
+            : "Charge %@, HRV %@, Effort %@, Steps %@, Battery %@"
         return String(format: format,
                       snapshot.recovery.map { "\($0)%" } ?? "—",
                       snapshot.hrv.map(String.init) ?? "—",
@@ -226,16 +254,19 @@ private struct PHMNRingsWidgetView: View {
 private struct PHMNRing: View {
     let progress: Double
     let color: Color
+    var gradient: [Color]? = nil
     let lineWidth: CGFloat
     let diameter: CGFloat
 
     var body: some View {
+        let p = min(max(progress, 0), 1)
         ZStack {
             Circle()
                 .stroke(StrandPalette.textTertiary.opacity(0.17), lineWidth: lineWidth)
             Circle()
-                .trim(from: 0, to: min(max(progress, 0), 1))
-                .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .trim(from: 0, to: p)
+                .stroke(gradient.map { AnyShapeStyle(AngularGradient(colors: $0, center: .center, startAngle: .degrees(0), endAngle: .degrees(max(360 * p, 1)))) }
+                        ?? AnyShapeStyle(color), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
         }
         .frame(width: diameter, height: diameter)
         .rotationEffect(.degrees(-90))
@@ -251,7 +282,7 @@ struct PHMNRingsWidget: Widget {
                 .containerBackground(StrandPalette.surfaceBase, for: .widget)
         }
         .configurationDisplayName("PHMN Rings")
-        .description("Recovery, HRV, Strain, Steps and battery at a glance.")
+        .description("Charge, HRV, Effort, Steps and battery at a glance.")
         .supportedFamilies([.systemMedium])
     }
 }
@@ -267,7 +298,7 @@ struct NOOPRing2Widget: Widget {
                 .containerBackground(StrandPalette.surfaceBase, for: .widget)
         }
         .configurationDisplayName("PHMN Ring 2")
-        .description("Full Recovery and Strain rings with HRV, Calories and battery.")
+        .description("Full Charge and Effort rings with HRV, Calories and battery.")
         .supportedFamilies([.systemMedium])
     }
 }

@@ -362,6 +362,11 @@ struct StrandiOSApp: App {
                     } else if url.host == "anya" {
                         // The Anya widget.
                         router.openCoach()
+                    } else if url.host == "metric", let key = url.pathComponents.dropFirst().first {
+                        // The Rings widgets: the figure that was tapped opens its own detail.
+                        router.openMetric(key)
+                    } else if url.host == "devices" {
+                        router.openDevices()
                     }
                 }
                 .alert("Import Apple Health data?", isPresented: healthImportAlertPresented) {
