@@ -171,7 +171,6 @@ struct NunaEffortDetailView: View {
                     .fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
             sourcesSection
-            zonesCard
             if coachEnabled, let e = day.effort {
                 NunaAnyaCard(verbatim: String(localized: "Your Effort is \(UnitFormatter.effortDisplay(e, scale: scale)) of \(UnitFormatter.effortScaleMax(scale)) so far today.")) { showCoach = true }
             }
@@ -232,7 +231,6 @@ struct NunaEffortDetailView: View {
             let before = figures(hrYesterday)
             let hasBefore = before.total > 0
             VStack(alignment: .leading, spacing: 4) {
-                NunaTitleRow(title: "Heart-rate zones today") { EmptyView() }
                 NunaPlainList {
                     zoneRow("Heart rate zones 1–3", "heart.circle", Self.hm(now.easy), hasBefore ? now.easy - before.easy : nil, downIsGood: false)
                     NunaDivider()
@@ -325,6 +323,7 @@ struct NunaEffortDetailView: View {
                 Text("Each source gets its share of today's heart-rate load, so the parts add up to the day's Effort.")
                     .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
+            zonesCard
         }
     }
 
