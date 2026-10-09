@@ -1,6 +1,7 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Restorative sleep, last 14 nights": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur pemulihan, 14 malam terakhir"}}}},
     "Sleep time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Waktu tidur"}}}},
     "Last night's sleep": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur semalam"}}}},
     "Four parts of the night": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Empat bagian dari malam"}}}},
