@@ -53,10 +53,11 @@ struct NunaChargeDetailView: View {
                 NunaDivider()
                 NavigationLink(value: NunaTodayRoute.metric(restMetric)) {
                     NunaContributorRow(title: "Sleep performance", icon: "moon",
-                                       value: (day.rest ?? restSeries.latest?.value).map { String(format: "%.0f", $0) }, unit: "%", delta: nil)
+                                       value: (day.rest ?? restSeries.latest?.value).map { String(format: "%.0f", $0) },
+                                       delta: lastChange(restSeries), downIsGood: false)
                 }.buttonStyle(.plain)
                 NunaDivider()
-                contributor("Skin temperature", "thermometer", skinSeries.latest.map { nunaSigned($0.value) }, "°C", nil, nil, decimals: 1, key: "skin_temp")
+                contributor("Skin temperature", "thermometer", skinSeries.latest.map { nunaSigned($0.value) }, "", lastChange(skinSeries), nil, decimals: 1, key: "skin_temp")
             }
             if coachEnabled, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
             NunaTrendDetailCard(
@@ -109,6 +110,13 @@ struct NunaChargeDetailView: View {
             RoundedRectangle(cornerRadius: 3, style: .continuous).fill(color).frame(width: 10, height: 10)
             (Text(verbatim: range + " ") + Text(label)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
         }
+    }
+
+    /// How the latest reading moved from the one before it (the night before), nil when there is only one.
+    private func lastChange(_ m: NunaSeriesModel) -> Double? {
+        let r = m.readings(30)
+        guard r.count >= 2 else { return nil }
+        return r[r.count - 1].value - r[r.count - 2].value
     }
 
     private var restMetric: MetricDescriptor {
