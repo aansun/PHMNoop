@@ -123,6 +123,16 @@ struct NunaWeightView: View {
     @State private var page = 0
     @State private var showAdd = false
     @State private var showTarget = false
+    @State private var showCoach = false
+    @AppStorage("noop.coachEnabled") private var coachEnabled = true
+
+    /// Anya's line: the latest weight and how it moved over the range in view.
+    private func anyaLine(delta: Double?) -> String? {
+        guard let latest else { return nil }
+        var line = String(localized: "Weight") + " " + nbFmt(latest, 1) + " kg"
+        if let delta, abs(delta) >= 0.05 { line += " · " + (delta < 0 ? "−" : "+") + nbFmt(abs(delta), 1) + " kg" }
+        return line
+    }
 
     private var latest: Double? { weightS.latest?.value ?? (profile.weightKg > 0 ? profile.weightKg : nil) }
 
@@ -145,11 +155,8 @@ struct NunaWeightView: View {
                 note: targetNote,
                 series: weightS, showsBand: false, reference: target > 0 ? target : nil, lineColor: NunaPalette.charge, decimals: 1,
                 directional: false, range: $range, page: $page)
-            HStack(spacing: 10) {
-                NunaStatTile(label: "Body fat", value: nbFmt(fatS.latest?.value, 1), unit: fatS.latest == nil ? "" : "%")
-                NunaStatTile(label: "Lean mass", value: nbFmt(leanS.latest?.value, 1), unit: leanS.latest == nil ? "" : "kg")
-                NunaStatTile(label: "BMI", value: nbFmt(bmi, 1))
-            }
+            if coachEnabled, let line = anyaLine(delta: delta) { NunaAnyaCard(verbatim: line) { showCoach = true } }
+            NunaBodyCompositionCard(weightKg: latest, fatPct: fatS.latest?.value, leanKg: leanS.latest?.value, bmi: bmi)
             NunaExpandRow(title: "About body composition", subtitle: "From a smart scale via Apple Health", systemImage: "sparkles",
                           text: "Body fat and lean mass appear only when Apple Health has them, for example from a smart scale. NOOP never estimates them.")
         }
@@ -162,8 +169,10 @@ struct NunaWeightView: View {
             NunaNumberSheet(title: "Weight target", unit: "kg", initial: target > 0 ? target : (latest ?? 70), range: 25...250, step: 0.5, decimals: 1) { v in target = v }
         }
         .task(id: repo.refreshSeq) { await load() }
+        .sheet(isPresented: $showCoach) {
+            NunaAnyaSheet(context: "Weight", metric: NunaAnyaMetric(key: "weight", source: "apple-health", title: String(localized: "Weight"), unit: "kg", decimals: 1, higherIsBetter: nil))
+        }
     }
-
 
     private func saveWeight(_ v: Double) async {
         guard let store = await repo.storeHandle() else { return }
@@ -176,6 +185,47 @@ struct NunaWeightView: View {
         await weightS.load(repo: repo, key: "weight", source: "apple-health", days: 400, also: nunaManualSource)
         await fatS.load(repo: repo, key: "body_fat", source: "apple-health", days: 400)
         await leanS.load(repo: repo, key: "lean_mass", source: "apple-health", days: 400)
+    }
+}
+
+// MARK: - Body composition
+
+/// Fat, lean mass and BMI in one card: the split as a bar when both are known, then the three figures. Fat and lean mass appear only when
+/// Apple Health has them; nothing is estimated here.
+struct NunaBodyCompositionCard: View {
+    let weightKg: Double?
+    let fatPct: Double?
+    let leanKg: Double?
+    let bmi: Double?
+
+    private func fmt(_ v: Double?, _ d: Int = 1) -> String { v.map { String(format: "%.\(d)f", locale: AppLanguage.activeLocale, $0) } ?? "–" }
+
+    var body: some View {
+        NunaCard {
+            VStack(alignment: .leading, spacing: 14) {
+                nunaCap("Body composition")
+                if let fat = fatPct, let lean = leanKg, let w = weightKg, w > 0 {
+                    let fatShare = max(0, min(100, fat)), leanShare = max(0, min(100 - fatShare, lean / w * 100))
+                    NunaProportionBar(parts: [(fatShare, NunaPalette.warning), (leanShare, NunaPalette.charge), (max(0, 100 - fatShare - leanShare), NunaPalette.zoneBase)], height: 16)
+                }
+                HStack(alignment: .top, spacing: 0) {
+                    figure("Body fat", fmt(fatPct), fatPct == nil ? "" : "%")
+                    figure("Lean mass", fmt(leanKg), leanKg == nil ? "" : "kg")
+                    figure("BMI", fmt(bmi), "")
+                }
+            }
+        }
+    }
+
+    private func figure(_ label: LocalizedStringKey, _ value: String, _ unit: String) -> some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text(verbatim: value).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
+                if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
