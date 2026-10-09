@@ -118,6 +118,9 @@ final class RouteExporterTests: XCTestCase {
         XCTAssertEqual(RouteExporter.canonicalSport("Running"), "run")
         XCTAssertEqual(RouteExporter.canonicalSport("bike"), "cycle")
         XCTAssertEqual(RouteExporter.canonicalSport("Walking"), "walk")
+        // A treadmill session is a run or a walk to the FIT file, so its distance, speed and steps are read as one.
+        XCTAssertEqual(RouteExporter.canonicalSport("Treadmill run"), "run")
+        XCTAssertEqual(RouteExporter.canonicalSport("Treadmill walk"), "walk")
         XCTAssertEqual(RouteExporter.canonicalSport(nil), "other")
     }
 }
