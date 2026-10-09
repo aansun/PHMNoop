@@ -402,7 +402,9 @@ struct NunaHealthView: View {
     private var bodyTab: some View {
         VStack(spacing: NunaSpacing.section) {
             weightHero
-            compositionCard
+            NavigationLink(value: NunaTodayRoute.weight) {
+                NunaCard(small: true) { NunaListRow("Body composition", systemImage: "figure.arms.open", showsChevron: true) }
+            }.buttonStyle(.plain)
             if let bmi = bodyBMI { NunaBMICard(bmi: bmi) }
             NunaWaistRatioCard()
             nutritionCard
@@ -438,45 +440,6 @@ struct NunaHealthView: View {
         let w = weightS.latest?.value ?? (profile.weightKg > 0 ? profile.weightKg : nil)
         guard let w, profile.heightCm > 0 else { return nil }
         return w / pow(profile.heightCm / 100, 2)
-    }
-
-    private var compositionCard: some View {
-        let w = weightS.latest?.value ?? (profile.weightKg > 0 ? profile.weightKg : nil)
-        let h = profile.heightCm
-        let bmi: Double? = (w != nil && h > 0) ? w! / pow(h / 100, 2) : nil
-        let fat = fatS.latest?.value, lean = leanS.latest?.value
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 14) {
-                cardTitle("Body composition")
-                if let fat, let lean, let w, w > 0 {
-                    let fatShare = max(0, min(100, fat)), leanShare = max(0, min(100 - fatShare, lean / w * 100))
-                    NunaProportionBar(parts: [(fatShare, NunaPalette.warning), (leanShare, NunaPalette.charge), (max(0, 100 - fatShare - leanShare), NunaPalette.zoneBase)], height: 16)
-                    HStack {
-                        Text(verbatim: String(localized: "Fat \(Int(fat.rounded()))%")); Spacer()
-                        Text(verbatim: String(localized: "Lean mass \(Int(lean.rounded())) kg"))
-                    }
-                    .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                }
-                HStack(spacing: 10) {
-                    miniTile("Body fat", fat.map { fmt($0, 1) } ?? "–", fat == nil ? "" : "%")
-                    miniTile("Lean mass", lean.map { fmt($0, 1) } ?? "–", lean == nil ? "" : "kg")
-                    miniTile("BMI", fmt(bmi, 1), "")
-                }
-            }
-        }
-    }
-
-    private func miniTile(_ label: LocalizedStringKey, _ value: String, _ unit: String) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
-            HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text(verbatim: value).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
-                if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
-            }
-        }
-        .padding(12).frame(maxWidth: .infinity, alignment: .leading)
-        .background(NunaPalette.glass, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(NunaPalette.hairlineSoft, lineWidth: 1))
     }
 
     private var nutritionCard: some View {
