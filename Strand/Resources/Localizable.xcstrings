@@ -1,6 +1,7 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Today's target %lld–%lld, from your Charge": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Target hari ini %lld–%lld, dari Charge-mu"}}}},
     "Body health": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kesehatan tubuh"}}}},
     "Waist ratio": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Rasio pinggang"}}}},
     "Add height and weight": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Isi tinggi dan berat badan"}}}},

@@ -205,14 +205,16 @@ struct NunaScoreHero<Note: View>: View {
     var nameColor: Color?
     /// Colours the ring runs through (Effort); nil keeps `color`.
     var gradient: [Color]?
+    /// The day's aim as part of the ring (0...1); Effort draws it grey with a white mark at its minimum.
+    var target: ClosedRange<Double>?
     /// Whether there is anything to explain; without it the info button is left out.
     var hasNote = true
     @State private var showInfo = false
 
     init(caption: LocalizedStringKey, chip: LocalizedStringKey? = nil, chipColor: Color? = nil, fraction: Double, number: String,
-         unit: String = "", suffix: String = "", name: LocalizedStringKey, nameColor: Color? = nil, gradient: [Color]? = nil, color: Color, hasNote: Bool = true, @ViewBuilder note: () -> Note) {
+         unit: String = "", suffix: String = "", name: LocalizedStringKey, nameColor: Color? = nil, gradient: [Color]? = nil, target: ClosedRange<Double>? = nil, color: Color, hasNote: Bool = true, @ViewBuilder note: () -> Note) {
         self.caption = caption; self.chip = chip; self.chipColor = chipColor; self.fraction = fraction; self.number = number
-        self.unit = unit; self.suffix = suffix; self.name = name; self.nameColor = nameColor; self.gradient = gradient; self.color = color; self.hasNote = hasNote; self.note = note()
+        self.unit = unit; self.suffix = suffix; self.name = name; self.nameColor = nameColor; self.gradient = gradient; self.target = target; self.color = color; self.hasNote = hasNote; self.note = note()
     }
 
     var body: some View {
@@ -223,7 +225,7 @@ struct NunaScoreHero<Note: View>: View {
                 if let chip { NunaChip(chip, color: chipColor) }
                 if hasNote { NunaInfoButton(isOn: $showInfo) }
             }
-            NunaRingGauge(fraction: fraction, color: color, gradient: gradient, size: 300, lineWidth: 24) {
+            NunaRingGauge(fraction: fraction, color: color, gradient: gradient, target: target, size: 300, lineWidth: 24) {
                 VStack(spacing: 6) {
                     HStack(alignment: .firstTextBaseline, spacing: 2) {
                         Text(verbatim: number).font(.nuna(size: 84, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(84))
@@ -346,6 +348,12 @@ func nunaEffortColor(_ stored: Double) -> Color {
 }
 
 func nunaEffortTextColor(_ stored: Double) -> Color { nunaEffortColor(stored) }
+
+/// Today's Effort aim from Charge, as a stretch of the ring (0...1): the better the body is ready, the more it can take. nil while Charge is unknown.
+func nunaEffortTargetFractions(charge: Double?) -> ClosedRange<Double>? {
+    guard let band = CoupledView.optimalStrainRange(recovery: charge) else { return nil }
+    return (Double(band.lowerBound) / 21.0)...(Double(band.upperBound) / 21.0)
+}
 
 /// The colours an Effort ring runs through, from dark blue up to the level reached.
 func nunaEffortRingColors(_ stored: Double) -> [Color] {

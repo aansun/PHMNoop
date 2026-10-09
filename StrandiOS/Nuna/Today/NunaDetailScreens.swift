@@ -174,9 +174,9 @@ struct NunaEffortDetailView: View {
                           fraction: (day.effort ?? 0) / 100,
                           number: day.effort.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–",
                           suffix: String(localized: "of \(UnitFormatter.effortScaleMax(scale))"),
-                          name: level?.0 ?? "Effort", nameColor: level?.1, gradient: day.effort.map(nunaEffortRingColors),
+                          name: level?.0 ?? "Effort", nameColor: level?.1, gradient: day.effort.map(nunaEffortRingColors), target: nunaEffortTargetFractions(charge: day.charge.pct),
                           color: day.effort.map(nunaEffortColor) ?? NunaPalette.effortModerate) {
-                Text("Cardio load so far today").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                Text(verbatim: targetNote ?? String(localized: "Cardio load so far today")).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     .fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
             zonesCard
@@ -275,6 +275,13 @@ struct NunaEffortDetailView: View {
             (NunaPalette.effortModerate, "\(edge(33) + 1)–\(edge(66))", "Moderate"),
             (NunaPalette.effortAllOut, "\(edge(66) + 1)–\(top)", "High"),
         ])
+    }
+
+    /// "Today's target 67–86, from your Charge": the grey stretch of the ring, in the scale the wearer chose.
+    private var targetNote: String? {
+        guard let band = CoupledView.optimalStrainRange(recovery: day.charge.pct) else { return nil }
+        func shown(_ whoop: Int) -> Int { Int(UnitFormatter.effortValue(Double(whoop) / 21.0 * 100, scale: scale).rounded()) }
+        return String(localized: "Today's target \(shown(band.lowerBound))–\(shown(band.upperBound)), from your Charge")
     }
 
     private var level: (LocalizedStringKey, Color)? {
