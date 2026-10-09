@@ -171,10 +171,7 @@ struct NunaHealthView: View {
             rangeCard
             if coachEnabled { NunaAnyaCard(title: "Are my vitals normal today?") { showCoach = true } }
             liveCard
-            hrvHero
-            rhrHero
             vitalBento
-            stressCard
             fitnessCard
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
@@ -206,7 +203,7 @@ struct NunaHealthView: View {
         NavigationLink(value: metricRoute(key)) { tile }.buttonStyle(.plain)
     }
 
-    /// SpO2, respiratory, skin temperature and the highest recent heart rate, each with its status chip.
+    /// HRV, resting heart rate, SpO2, respiratory, skin temperature and the highest recent heart rate, each with its status chip. Each opens its own chart.
     private var vitalBento: some View {
         let spo2 = day.spo2
         let spo2Chip: (LocalizedStringKey, Color)? = spo2.map { $0 >= 95 ? ("Normal", NunaPalette.charge) : ("Low", NunaPalette.warning) }
@@ -218,7 +215,20 @@ struct NunaHealthView: View {
         let skin = day.extras["skin_temp"]
         let skinChip: (LocalizedStringKey, Color)? = skin.map { abs($0) < 0.5 ? ("Small deviation", NunaPalette.charge) : ("Larger deviation", NunaPalette.warning) }
         let skinText = skin.map { (($0 >= 0 ? "+" : "−") + String(format: "%.1f", locale: AppLanguage.activeLocale, abs($0))) } ?? "–"
+        let hrvB = hrvS.band
+        var hrvChip: (LocalizedStringKey, Color)?
+        if let v = day.hrv, let b = hrvB {
+            let inRange = abs(v - b.mean) <= max(b.sd, 1)
+            hrvChip = (inRange ? "In range" : (v > b.mean ? "Above range" : "Below range"), inRange ? NunaPalette.charge : NunaPalette.warning)
+        }
+        var rhrChip: (LocalizedStringKey, Color)?
+        if let v = day.restingHr, let b = rhrS.band {
+            let tol = max(b.sd, 1)
+            rhrChip = abs(v - b.mean) <= tol ? ("In range", NunaPalette.charge) : (v > b.mean ? ("Above range", NunaPalette.warning) : ("Below range", NunaPalette.charge))
+        }
         return LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+            linked("hrv", NunaVitalTile(icon: "waveform.path.ecg", label: "HRV", value: fmt(day.hrv), unit: "ms", chip: hrvChip?.0, chipColor: hrvChip?.1 ?? NunaPalette.charge))
+            linked("rhr", NunaVitalTile(icon: "heart", label: "Resting HR", value: fmt(day.restingHr), unit: "bpm", chip: rhrChip?.0, chipColor: rhrChip?.1 ?? NunaPalette.charge))
             linked("spo2", NunaVitalTile(icon: "drop", label: "SpO₂", value: fmt(spo2), unit: "%", chip: spo2Chip?.0, chipColor: spo2Chip?.1 ?? NunaPalette.charge))
             linked("resp_rate", NunaVitalTile(icon: "wind", label: "Respiratory", value: fmt(day.respiratory, 1), unit: "/min", chip: respChip?.0, chipColor: respChip?.1 ?? NunaPalette.charge))
             linked("skin_temp", NunaVitalTile(icon: "thermometer.medium", label: "Skin Temp", value: skinText, unit: "°C", chip: skinChip?.0, chipColor: skinChip?.1 ?? NunaPalette.charge))
@@ -300,34 +310,30 @@ struct NunaHealthView: View {
         }
     }
 
+    /// Fitness age as one quiet row: the age on the left, how it compares with the real age on the right.
     private var fitnessCard: some View {
         let fit = day.extras["fitness_age"]
         let age = profile.age
         let diff: Int? = (fit != nil && age > 0) ? Int((Double(age) - fit!).rounded()) : nil
         return NavigationLink(value: NunaTodayRoute.fitnessAge) {
-            NunaCard {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
+            NunaCard(small: true) {
+                HStack(alignment: .center, spacing: 12) {
+                    Image(systemName: "figure.run").font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
+                    VStack(alignment: .leading, spacing: 2) {
                         cardTitle("Fitness age")
-                        Spacer()
-                        NunaChip("Estimate ±5 years")
-                    }
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(verbatim: fmt(fit)).font(.nuna(size: 52, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(52)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("years").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                        Spacer()
-                        if let diff, diff != 0 {
-                            NunaChip(diff > 0 ? LocalizedStringKey("\(diff) years younger") : LocalizedStringKey("\(-diff) years older"),
-                                     color: diff > 0 ? NunaPalette.charge : NunaPalette.warning)
+                        HStack(alignment: .firstTextBaseline, spacing: 5) {
+                            Text(verbatim: fmt(fit)).font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            Text("years").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         }
                     }
-                    if age > 0 {
-                        Text(verbatim: String(localized: "Actual age \(age)")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    Spacer(minLength: 8)
+                    if let diff {
+                        Text(diff == 0 ? LocalizedStringKey("Same as your age")
+                             : (diff > 0 ? LocalizedStringKey("\(diff) years younger") : LocalizedStringKey("\(-diff) years older")))
+                            .font(.nuna(size: 13, weight: .heavy)).textCase(nil)
+                            .foregroundStyle(diff > 0 ? NunaPalette.charge : (diff == 0 ? NunaPalette.textSecondary : NunaPalette.warning))
                     }
-                    if let fit, age > 0 { NunaAgeSlider(fitness: fit, age: Double(age)) }
-                    if let note = fitnessFooter {
-                        Text(verbatim: note).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-                    }
+                    Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                 }
             }
         }.buttonStyle(.plain)
