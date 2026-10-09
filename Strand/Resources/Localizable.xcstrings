@@ -1,6 +1,9 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Heart rate zones 1–3": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Zona detak jantung 1–3"}}}},
+    "Heart rate zones 4–5": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Zona detak jantung 4–5"}}}},
+    "Strength training time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Waktu latihan kekuatan"}}}},
     "Heart-rate zones today": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Zona detak jantung hari ini"}}}},
     "Restorative sleep, last 14 nights": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur pemulihan, 14 malam terakhir"}}}},
     "Sleep time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Waktu tidur"}}}},

@@ -152,8 +152,11 @@ struct NunaEffortDetailView: View {
     @State private var range = 7
     @State private var page = 0
     @State private var showCoach = false
-    /// Today's heart-rate readings, for the time in each zone.
+    /// Today's heart-rate readings, and yesterday's up to the same time of day, for the time in each zone and its change.
     @State private var hrToday: [HRSample] = []
+    @State private var hrYesterday: [HRSample] = []
+    @State private var strengthToday: Double?
+    @State private var strengthYesterday: Double?
 
     private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
 
@@ -189,36 +192,71 @@ struct NunaEffortDetailView: View {
         .task(id: repo.refreshSeq) {
             await series.load(repo: repo, key: "strain", source: "my-whoop")
             await day.load(repo: repo, profile: profile)
-            let start = Int(Calendar.current.startOfDay(for: Date()).timeIntervalSince1970)
-            hrToday = await repo.hrSamples(from: start, to: Int(Date().timeIntervalSince1970), limit: 200_000)
+            await loadZones()
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "Effort") }
     }
 
-    /// Time in each heart-rate zone today: what the load is made of. Zones follow the wearer's own heart-rate maximum.
+    /// What today's heart-rate load is made of, as plain rows: time in the easy and the hard zones, strength training and the average heart
+    /// rate, each with the change against yesterday at the same time of day.
+    private func loadZones() async {
+        let cal = Calendar.current
+        let now = Date()
+        let start = Int(cal.startOfDay(for: now).timeIntervalSince1970)
+        let nowTs = Int(now.timeIntervalSince1970)
+        let yStart = Int((cal.date(byAdding: .day, value: -1, to: cal.startOfDay(for: now)) ?? now).timeIntervalSince1970)
+        hrToday = await repo.hrSamples(from: start, to: nowTs, limit: 200_000)
+        hrYesterday = await repo.hrSamples(from: yStart, to: yStart + (nowTs - start), limit: 200_000)
+        let rows = await repo.workoutRows()
+        func strength(_ from: Int, _ to: Int) -> Double? {
+            let hit = rows.filter { $0.startTs >= from && $0.startTs < to && NunaWorkoutKind.isStrength($0) }
+            return hit.isEmpty ? nil : hit.reduce(0) { $0 + ($1.durationS ?? Double($1.endTs - $1.startTs)) } / 60
+        }
+        strengthToday = strength(start, nowTs)
+        strengthYesterday = strength(yStart, start)
+    }
+
+    private struct ZoneFigures {
+        let easy: Double, hard: Double, avg: Double?, total: Double
+    }
+
+    private func figures(_ hr: [HRSample]) -> ZoneFigures {
+        let t = HRZones.timeInZone(hr, zoneSet: profile.hrZoneSet)
+        return ZoneFigures(easy: (t.seconds[0] + t.seconds[1] + t.seconds[2]) / 60, hard: (t.seconds[3] + t.seconds[4]) / 60,
+                           avg: hr.isEmpty ? nil : Double(hr.reduce(0) { $0 + $1.bpm }) / Double(hr.count), total: t.total)
+    }
+
     @ViewBuilder private var zonesCard: some View {
-        let tiz = HRZones.timeInZone(hrToday, zoneSet: profile.hrZoneSet)
-        if tiz.total > 0 {
-            let colors: [Color] = [NunaPalette.zoneBase, NunaPalette.rest, NunaPalette.charge, NunaPalette.warning, NunaPalette.alert]
-            let names: [LocalizedStringKey] = ["Zone 1 · easy", "Zone 2 · light", "Zone 3 · aerobic", "Zone 4 · threshold", "Zone 5 · maximum"]
-            VStack(alignment: .leading, spacing: 12) {
+        let now = figures(hrToday)
+        if now.total > 0 {
+            let before = figures(hrYesterday)
+            let hasBefore = before.total > 0
+            VStack(alignment: .leading, spacing: 4) {
                 NunaTitleRow(title: "Heart-rate zones today") { EmptyView() }
-                NunaProportionBar(parts: (0..<5).map { (tiz.seconds[$0], colors[$0]) }, height: 12)
                 NunaPlainList {
-                    ForEach(0..<5, id: \.self) { i in
-                        if i > 0 { NunaDivider() }
-                        HStack(spacing: 10) {
-                            Circle().fill(colors[i]).frame(width: 9, height: 9)
-                            Text(names[i]).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                            Spacer()
-                            Text(verbatim: NunaSleepFormat.duration(tiz.seconds[i] / 60)).font(.nuna(size: 17, weight: .bold, design: NunaType.design))
-                                .foregroundStyle(NunaPalette.textPrimary)
-                        }
-                        .padding(.vertical, 12)
+                    zoneRow("Heart rate zones 1–3", "heart.circle", Self.hm(now.easy), hasBefore ? now.easy - before.easy : nil, downIsGood: false)
+                    NunaDivider()
+                    zoneRow("Heart rate zones 4–5", "bolt.heart", Self.hm(now.hard), hasBefore ? now.hard - before.hard : nil, downIsGood: false)
+                    if let s = strengthToday {
+                        NunaDivider()
+                        zoneRow("Strength training time", "dumbbell", Self.hm(s), strengthYesterday.map { s - $0 } ?? (hasBefore ? s : nil), downIsGood: false)
                     }
+                    NunaDivider()
+                    zoneRow("Average heart rate", "heart", now.avg.map { String(format: "%.0f", $0) },
+                            (now.avg != nil && before.avg != nil) ? now.avg! - before.avg! : nil, downIsGood: nil)
                 }
             }
         }
+    }
+
+    private func zoneRow(_ title: LocalizedStringKey, _ icon: String, _ value: String?, _ delta: Double?, downIsGood: Bool?) -> some View {
+        NunaContributorRow(title: title, icon: icon, value: value, delta: delta, downIsGood: downIsGood)
+    }
+
+    /// Minutes as h:mm.
+    private static func hm(_ minutes: Double) -> String {
+        let m = Int(minutes.rounded())
+        return String(format: "%d:%02d", m / 60, m % 60)
     }
 
     /// What the colours of the bars mean, on the scale the wearer chose.
