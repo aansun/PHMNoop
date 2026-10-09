@@ -5,8 +5,17 @@ import Foundation
 /// Strava uses this field when importing a file, so downstream services see the same
 /// activity family even when the FIT payload is sparse or the label is localized.
 enum StravaActivityType {
+    /// A treadmill session, run or walk: it has no route by nature, so it goes up as an indoor activity.
     static func isTreadmill(_ sport: String) -> Bool {
-        value(for: sport) == "VirtualRun"
+        value(for: sport) == "VirtualRun" || normalized(sport).hasPrefix("treadmill")
+    }
+
+    private static func normalized(_ sport: String) -> String {
+        sport.lowercased()
+            .replacingOccurrences(of: "-", with: " ")
+            .replacingOccurrences(of: "_", with: " ")
+            .split(whereSeparator: { $0.isWhitespace })
+            .joined(separator: " ")
     }
 
     static func value(for sport: String) -> String {
@@ -20,6 +29,8 @@ enum StravaActivityType {
         case "run", "running": return "Run"
         case "trail run", "trailrun": return "TrailRun"
         case "treadmill", "treadmill run": return "VirtualRun"
+        // Strava has no virtual walk, so a treadmill walk is a Walk (the upload carries no route either way).
+        case "treadmill walk": return "Walk"
         case "walk", "walking": return "Walk"
         case "hike", "hiking", "rucking": return "Hike"
         case "cycle", "cycling", "bike", "biking", "ride": return "Ride"

@@ -258,9 +258,9 @@ public enum RouteExporter {
         let s = (sport ?? "").lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
         switch s {
         case "", "other": return "other"
-        case "run", "running", "jog", "jogging", "treadmill": return "run"
+        case "run", "running", "jog", "jogging", "treadmill", "treadmill run": return "run"
         case "cycle", "cycling", "bike", "biking", "ride", "spinning": return "cycle"
-        case "walk", "walking", "rucking": return "walk"
+        case "walk", "walking", "rucking", "treadmill walk": return "walk"
         case "hike", "hiking": return "hike"
         case "swim", "swimming": return "swim"
         default: return s
