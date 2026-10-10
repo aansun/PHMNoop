@@ -13,6 +13,8 @@ struct NunaTodayActivities: View {
     let dayStart: Date
     let sleepMinutes: Double?
     var isToday = true
+    /// Effort only concerns movement. Its embedded activity card deliberately leaves sleep and naps out.
+    var includesSleep = true
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var router: NavRouter
     @State private var night: (onset: Date, wake: Date)?
@@ -31,8 +33,10 @@ struct NunaTodayActivities: View {
             Item(id: "w-\(w.startTs)-\(w.sport)", kind: .workout(w),
                  start: Date(timeIntervalSince1970: TimeInterval(w.startTs)), end: Date(timeIntervalSince1970: TimeInterval(w.endTs)))
         }
-        if let night { out.append(Item(id: "sleep", kind: .sleep, start: night.onset, end: night.wake)) }
-        out += naps.map { Item(id: "nap-\(Int($0.nap.start.timeIntervalSince1970))", kind: .nap($0.dayKey, $0.nap), start: $0.nap.start, end: $0.nap.end) }
+        if includesSleep, let night { out.append(Item(id: "sleep", kind: .sleep, start: night.onset, end: night.wake)) }
+        if includesSleep {
+            out += naps.map { Item(id: "nap-\(Int($0.nap.start.timeIntervalSince1970))", kind: .nap($0.dayKey, $0.nap), start: $0.nap.start, end: $0.nap.end) }
+        }
         return out.sorted { $0.start < $1.start }
     }
 
@@ -50,13 +54,26 @@ struct NunaTodayActivities: View {
             }
             .padding(.horizontal, 6)
             VStack(spacing: 7) {
-                ForEach(rows) { item in row(item) }
+                if rows.isEmpty {
+                    HStack(spacing: 10) {
+                        Image(systemName: "figure.run").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                        Text("No activities logged today").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.horizontal, 12).frame(minHeight: 52)
+                    .background(NunaPalette.ink.opacity(0.07), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                } else {
+                    ForEach(rows) { item in row(item) }
+                }
             }
         }
         .padding(.horizontal, 12).padding(.top, 10).padding(.bottom, 12)
         // The same surface as every other card, so it follows the active look (Default or WHP) with them.
         .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
-        .task(id: "\(repo.refreshSeq)-\(dayStart.timeIntervalSince1970)") { await loadNight() }
+        .task(id: "\(repo.refreshSeq)-\(dayStart.timeIntervalSince1970)-\(includesSleep)") {
+            if includesSleep { await loadNight() }
+            else { night = nil; naps = [] }
+        }
     }
 
     @ViewBuilder private func row(_ item: Item) -> some View {
