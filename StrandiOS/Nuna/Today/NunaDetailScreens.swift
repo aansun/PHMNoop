@@ -4,6 +4,7 @@ import StrandDesign
 import StrandAnalytics
 import WhoopProtocol
 import WhoopStore
+import Charts
 
 private func rangeOptions() -> [(value: Int, title: LocalizedStringKey)] {
     [(value: 7, title: "W\u{2060}"), (value: 30, title: "M"), (value: 180, title: "6M")]
@@ -165,6 +166,7 @@ struct NunaEffortDetailView: View {
     @State private var hrYesterday: [HRSample] = []
     @State private var strengthToday: Double?
     @State private var strengthYesterday: Double?
+    @State private var todayWorkouts: [WorkoutRow] = []
 
     private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
 
@@ -194,6 +196,9 @@ struct NunaEffortDetailView: View {
                     return (text: stored < 33 ? "Light" : (stored < 66 ? "Moderate" : "High"), color: nunaEffortTextColor(stored))
                 }, sentence: nil, range: $range, page: $page)
                 .columns(color: { v in nunaEffortColor(scale == .whoop ? v / 21 * 100 : v) }, legend: AnyView(effortKey))
+            NunaTodayActivities(workouts: todayWorkouts, effortScale: scale,
+                                dayStart: Calendar.current.startOfDay(for: Date()), sleepMinutes: nil,
+                                includesSleep: false)
             NunaExpandRow(title: "How it's calculated", subtitle: "Cardio load across the day",
                           text: "Effort adds up how hard your heart worked during the day, weighted by heart rate zone. Workouts and everyday movement both count. It is shown on the scale you chose in Settings.")
         }
@@ -216,6 +221,7 @@ struct NunaEffortDetailView: View {
         hrToday = await repo.hrSamples(from: start, to: nowTs, limit: 200_000)
         hrYesterday = await repo.hrSamples(from: yStart, to: yStart + (nowTs - start), limit: 200_000)
         let rows = await repo.workoutRows()
+        todayWorkouts = rows.filter { $0.startTs >= start && $0.startTs <= nowTs }
         func strength(_ from: Int, _ to: Int) -> Double? {
             let hit = rows.filter { $0.startTs >= from && $0.startTs < to && NunaWorkoutKind.isStrength($0) }
             return hit.isEmpty ? nil : hit.reduce(0) { $0 + ($1.durationS ?? Double($1.endTs - $1.startTs)) } / 60
@@ -230,28 +236,30 @@ struct NunaEffortDetailView: View {
 
     private func figures(_ hr: [HRSample]) -> ZoneFigures {
         let t = HRZones.timeInZone(hr, zoneSet: profile.hrZoneSet)
-        return ZoneFigures(easy: (t.seconds[0] + t.seconds[1] + t.seconds[2]) / 60, hard: (t.seconds[3] + t.seconds[4]) / 60,
+        return ZoneFigures(easy: (t.seconds[0] + t.seconds[1]) / 60, hard: (t.seconds[3] + t.seconds[4]) / 60,
                            avg: hr.isEmpty ? nil : Double(hr.reduce(0) { $0 + $1.bpm }) / Double(hr.count), total: t.total)
     }
 
     @ViewBuilder private var zonesCard: some View {
         let now = figures(hrToday)
-        if now.total > 0 {
-            let before = figures(hrYesterday)
-            let hasBefore = before.total > 0
-            VStack(alignment: .leading, spacing: 4) {
-                NunaPlainList {
-                    zoneRow("Heart rate zones 1–3", "heart.circle", Self.hm(now.easy), hasBefore ? now.easy - before.easy : nil, downIsGood: false)
-                    NunaDivider()
-                    zoneRow("Heart rate zones 4–5", "bolt.heart", Self.hm(now.hard), hasBefore ? now.hard - before.hard : nil, downIsGood: false)
-                    if let s = strengthToday {
-                        NunaDivider()
-                        zoneRow("Strength training time", "dumbbell", Self.hm(s), strengthYesterday.map { s - $0 } ?? (hasBefore ? s : nil), downIsGood: false)
-                    }
-                    NunaDivider()
-                    zoneRow("Average heart rate", "heart", now.avg.map { String(format: "%.0f", $0) },
-                            (now.avg != nil && before.avg != nil) ? now.avg! - before.avg! : nil, downIsGood: nil)
-                }
+        let before = figures(hrYesterday)
+        let hasBefore = before.total > 0
+        VStack(alignment: .leading, spacing: 4) {
+            NunaPlainList {
+                NavigationLink { NunaEffortActivityDetailView(kind: .lowZones) } label: {
+                    zoneRow("Heart rate zones 1–2", "heart.circle", now.total > 0 ? Self.hm(now.easy) : nil, hasBefore ? now.easy - before.easy : nil, downIsGood: false)
+                }.buttonStyle(.plain)
+                NunaDivider()
+                NavigationLink { NunaEffortActivityDetailView(kind: .highZones) } label: {
+                    zoneRow("Heart rate zones 4–5", "bolt.heart", now.total > 0 ? Self.hm(now.hard) : nil, hasBefore ? now.hard - before.hard : nil, downIsGood: false)
+                }.buttonStyle(.plain)
+                NunaDivider()
+                NavigationLink { NunaEffortActivityDetailView(kind: .strength) } label: {
+                    zoneRow("Strength training time", "dumbbell", strengthToday.map(Self.hm), strengthYesterday.flatMap { current in strengthToday.map { $0 - current } }, downIsGood: false)
+                }.buttonStyle(.plain)
+                NunaDivider()
+                zoneRow("Average heart rate", "heart", now.avg.map { String(format: "%.0f", $0) },
+                        (now.avg != nil && before.avg != nil) ? now.avg! - before.avg! : nil, downIsGood: nil)
             }
         }
     }
@@ -291,6 +299,268 @@ struct NunaEffortDetailView: View {
     private func weekday(_ d: Date) -> String {
         let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE")
         return f.string(from: d)
+    }
+}
+
+// MARK: - Effort activity detail
+
+/// The three activity contributors behind Effort.  The same detail surface keeps the time in HR zones
+/// and time spent strength training legible without pretending that one is the other.
+struct NunaEffortActivityDetailView: View {
+    enum Kind: Hashable {
+        case lowZones, highZones, strength
+
+        var title: String {
+            switch self {
+            case .lowZones: return String(localized: "Heart rate zones 1–2")
+            case .highZones: return String(localized: "Heart rate zones 4–5")
+            case .strength: return String(localized: "Strength activity time")
+            }
+        }
+
+        var icon: String {
+            switch self {
+            case .lowZones: return "heart.circle"
+            case .highZones: return "bolt.heart"
+            case .strength: return "dumbbell"
+            }
+        }
+
+        var color: Color {
+            switch self {
+            case .lowZones: return NunaPalette.rest
+            case .highZones: return NunaPalette.alert
+            case .strength: return NunaPalette.effort
+            }
+        }
+    }
+
+    private struct Bucket: Identifiable {
+        let start: Date
+        let end: Date
+        let value: Double
+        let zones: [Double]
+        var id: Date { start }
+    }
+
+    let kind: Kind
+    @EnvironmentObject private var repo: Repository
+    @EnvironmentObject private var profile: ProfileStore
+    @State private var range = 7
+    @State private var buckets: [Bucket] = []
+    @State private var totalZones = [Double](repeating: 0, count: 5)
+    @State private var loaded = false
+
+    private var currentValue: Double { buckets.map(\.value).reduce(0, +) }
+    /// Month and six-month headers are comparable weekly averages; the one-week header remains the actual weekly total.
+    private var headlineValue: Double { range == 7 ? currentValue : currentValue / max(Double(range) / 7, 1) }
+    private var averageValue: Double { buckets.isEmpty ? 0 : currentValue / Double(buckets.count) }
+    private var rangeName: String { range == 7 ? String(localized: "Weekly total") : String(localized: "Average weekly total") }
+    private var bucketStride: Int { range == 7 ? 1 : (range == 30 ? 7 : 30) }
+    private var unitCopy: String { String(localized: "hr") }
+
+    var body: some View {
+        NunaDetailScreen("Effort") {
+            NunaCard {
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack(spacing: 10) {
+                        NunaIconTile(kind.icon, tint: kind.color)
+                        Text(verbatim: kind.title).font(.nuna(size: 17, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Spacer(minLength: 0)
+                    }
+                    HStack(alignment: .bottom, spacing: 14) {
+                        VStack(alignment: .leading, spacing: 5) {
+                            Text(rangeName).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                                Text(verbatim: Self.hm(headlineValue)).font(.nuna(size: 42, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
+                                Text(verbatim: unitCopy).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                            }
+                        }
+                        Spacer(minLength: 0)
+                        Picker("Range", selection: $range) {
+                            ForEach(rangeOptions(), id: \.value) { option in Text(option.title).tag(option.value) }
+                        }
+                        .pickerStyle(.segmented).frame(width: 154)
+                        .accessibilityLabel(Text("Time range"))
+                    }
+                    Text(verbatim: summary).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                }
+            }
+
+            NunaCard {
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack {
+                        Text("Time in period").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Spacer(minLength: 0)
+                        Text(verbatim: dateRange).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    }
+                    if buckets.isEmpty {
+                        Text(loaded ? "No activity data in this period" : " ").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 180, alignment: .leading).textCase(nil)
+                    } else {
+                        chart
+                    }
+                    HStack(spacing: 8) {
+                        Image(systemName: "info.circle").font(.nuna(size: 13, weight: .semibold))
+                        Text(kind == .strength ? "Strength activity time is derived from logged strength activities." : "Zone time is derived from heart-rate samples recorded on this device.")
+                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    }
+                }
+            }
+
+            breakdown
+        }
+        .task(id: "\(repo.refreshSeq)-\(range)") { await load() }
+    }
+
+    @ViewBuilder private var chart: some View {
+        let top = max((buckets.map(\.value).max() ?? 0) * 1.15, averageValue * 1.15, 15)
+        Chart {
+            ForEach(buckets) { bucket in
+                BarMark(x: .value("Period", bucket.start), y: .value("Minutes", bucket.value), width: .automatic)
+                    .foregroundStyle(kind.color).cornerRadius(4)
+            }
+            if averageValue > 0 {
+                RuleMark(y: .value("Average", averageValue))
+                    .lineStyle(StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [5, 4]))
+                    .foregroundStyle(NunaPalette.textPrimary.opacity(0.72))
+                    .annotation(position: .leading, overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
+                        Text("AVG.").font(.nuna(size: 10, weight: .heavy)).foregroundStyle(NunaPalette.canvas).padding(.horizontal, 6).padding(.vertical, 3)
+                            .background(NunaPalette.textPrimary, in: Capsule())
+                    }
+            }
+        }
+        .chartYScale(domain: 0...top)
+        .chartXAxis {
+            AxisMarks(values: buckets.map(\.start)) { value in
+                AxisGridLine().foregroundStyle(.clear)
+                AxisValueLabel {
+                    if let date = value.as(Date.self) { Text(verbatim: axisDate(date)).font(.nuna(size: 10.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) }
+                }
+            }
+        }
+        .chartYAxis {
+            AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) { value in
+                AxisGridLine().foregroundStyle(NunaPalette.hairline.opacity(0.62))
+                AxisValueLabel {
+                    if let minutes = value.as(Double.self) { Text(verbatim: Self.hm(minutes)).font(.nuna(size: 10.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) }
+                }
+            }
+        }
+        .frame(height: 236)
+        .accessibilityLabel(Text("Activity time chart"))
+    }
+
+    @ViewBuilder private var breakdown: some View {
+        NunaCard {
+            VStack(alignment: .leading, spacing: 14) {
+                Text(kind == .strength ? "Strength activity breakdown" : "Heart-rate zones breakdown")
+                    .font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                if kind == .strength {
+                    let sessions = strengthRows
+                    if sessions.isEmpty {
+                        Text("No strength activities in this period").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    } else {
+                        NunaProportionBar(parts: sessions.map { (duration($0), NunaPalette.effort) }, height: 12)
+                        ForEach(sessions.prefix(5), id: \.startTs) { row in
+                            HStack(spacing: 10) {
+                                RoundedRectangle(cornerRadius: 3).fill(NunaPalette.effort).frame(width: 10, height: 10)
+                                Text(verbatim: WorkoutSource.displaySport(row.sport)).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                                Spacer(minLength: 8)
+                                Text(verbatim: Self.hm(duration(row))).font(.nuna(size: 15, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
+                            }
+                        }
+                    }
+                } else {
+                    let indexes = kind == .lowZones ? [0, 1] : [3, 4]
+                    let colors = [NunaPalette.zoneBase, NunaPalette.rest, NunaPalette.effort, NunaPalette.warning, NunaPalette.alert]
+                    let selected = indexes.map { (totalZones[$0], colors[$0]) }
+                    if selected.map(\.0).reduce(0, +) > 0 {
+                        NunaProportionBar(parts: selected.map { (weight: $0.0, color: $0.1) }, height: 12)
+                        ForEach(indexes, id: \.self) { index in
+                            HStack(spacing: 10) {
+                                RoundedRectangle(cornerRadius: 3).fill(colors[index]).frame(width: 10, height: 10)
+                                Text(verbatim: String(localized: "Zone \(index + 1)")).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                                Spacer(minLength: 8)
+                                Text(verbatim: Self.hm(totalZones[index])).font(.nuna(size: 15, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
+                            }
+                        }
+                    } else {
+                        Text("No heart-rate samples in this period").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    }
+                }
+            }
+        }
+    }
+
+    @State private var rows: [WorkoutRow] = []
+    private var strengthRows: [WorkoutRow] { rows.filter(NunaWorkoutKind.isStrength) }
+
+    private func load() async {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        let start = cal.date(byAdding: .day, value: -(range - 1), to: today) ?? today
+        let end = min(Date(), cal.date(byAdding: .day, value: 1, to: today) ?? Date())
+        let from = Int(start.timeIntervalSince1970)
+        let to = Int(end.timeIntervalSince1970)
+        async let samplesTask = repo.hrSamples(from: from, to: to, limit: 400_000)
+        async let rowsTask = repo.workoutRows()
+        let samples = await samplesTask
+        let allRows = await rowsTask
+        rows = allRows.filter { $0.startTs >= from && $0.startTs < to }
+
+        let blockCount = Int(ceil(Double(range) / Double(bucketStride)))
+        let output: [Bucket] = (0..<blockCount).compactMap { index in
+            let bucketStart = cal.date(byAdding: .day, value: index * bucketStride, to: start) ?? start
+            let rawEnd = cal.date(byAdding: .day, value: bucketStride, to: bucketStart) ?? end
+            let bucketEnd = min(rawEnd, end)
+            guard bucketStart < bucketEnd else { return nil }
+            let localSamples = samples.filter { $0.ts >= Int(bucketStart.timeIntervalSince1970) && $0.ts < Int(bucketEnd.timeIntervalSince1970) }
+            let zoneSeconds = HRZones.timeInZone(localSamples, zoneSet: profile.hrZoneSet).seconds
+            let zones = zoneSeconds.map { $0 / 60 }
+            let localRows = allRows.filter { $0.startTs >= Int(bucketStart.timeIntervalSince1970) && $0.startTs < Int(bucketEnd.timeIntervalSince1970) && NunaWorkoutKind.isStrength($0) }
+            let strength = localRows.reduce(0) { $0 + duration($1) }
+            let value: Double
+            switch kind {
+            case .lowZones: value = zones[0] + zones[1]
+            case .highZones: value = zones[3] + zones[4]
+            case .strength: value = strength
+            }
+            return Bucket(start: bucketStart, end: bucketEnd, value: value, zones: zones)
+        }
+        buckets = output
+        totalZones = output.reduce(into: [Double](repeating: 0, count: 5)) { total, bucket in
+            for index in 0..<5 { total[index] += bucket.zones[index] }
+        }
+        loaded = true
+    }
+
+    private var summary: String {
+        let period = range == 7 ? String(localized: "the last 7 days") : String(localized: "this period")
+        let average = range == 7 ? Self.hm(averageValue) : Self.hm(headlineValue)
+        let averageLabel = range == 7 ? String(localized: "daily average") : String(localized: "weekly average")
+        if kind == .strength {
+            return String(localized: "You spent \(Self.hm(currentValue)) in strength activities during \(period). Your \(averageLabel) is \(average).")
+        }
+        return String(localized: "You spent \(Self.hm(currentValue)) in \(kind.title.lowercased()) during \(period). Your \(averageLabel) is \(average).")
+    }
+
+    private var dateRange: String {
+        guard let first = buckets.first?.start, let last = buckets.last?.end else { return "" }
+        let format = DateFormatter(); format.locale = AppLanguage.activeLocale; format.setLocalizedDateFormatFromTemplate("d MMM")
+        return format.string(from: first) + " – " + format.string(from: last)
+    }
+
+    private func axisDate(_ date: Date) -> String {
+        let format = DateFormatter(); format.locale = AppLanguage.activeLocale
+        format.setLocalizedDateFormatFromTemplate(range == 7 ? "EEE d" : "d MMM")
+        return format.string(from: date)
+    }
+
+    private func duration(_ row: WorkoutRow) -> Double { (row.durationS ?? Double(row.endTs - row.startTs)) / 60 }
+
+    private static func hm(_ minutes: Double) -> String {
+        let rounded = max(0, Int(minutes.rounded()))
+        return String(format: "%d:%02d", rounded / 60, rounded % 60)
     }
 }
 
