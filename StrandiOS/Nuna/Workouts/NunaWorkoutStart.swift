@@ -41,12 +41,15 @@ struct NunaWorkoutStartView: View {
     @State private var showPicker = false
     @State private var showStartSettings = false
     @State private var showTargetSetup = false
+    @State private var startAfterTargetSetup = false
     @State private var countdown: Int?
     @State private var live = false
     @State private var mapPosition: MapCameraPosition = .userLocation(followsHeading: false, fallback: .automatic)
     @StateObject private var locationPreview = NunaWorkoutLocationPreview()
 
     private var isDistance: Bool { WorkoutCatalog.sport(named: chosen)?.isDistanceSport ?? false }
+    private var isStrength: Bool { ["Strength", "Weightlifting", "Powerlifting", "Bodybuilding"].contains(chosen) }
+    private var hasSupportingDetails: Bool { repo.today?.recovery != nil || planned != nil || isStrength }
     private var zoneSet: HRZoneSet { profile.hrZoneSet }
     private var distanceSystem: UnitSystem {
         UnitPrefs.resolveDistance(system: UnitSystem(rawValue: unitSystemRaw) ?? .metric, override: distanceSystemRaw)
@@ -54,22 +57,20 @@ struct NunaWorkoutStartView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            ScrollView {
-                LazyVStack(spacing: NunaSpacing.section) {
-                    hero(height: heroHeight(geometry))
-
+            hero(height: geometry.size.height)
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            VStack(spacing: 0) {
+                if hasSupportingDetails {
                     VStack(spacing: NunaSpacing.section) {
                         readiness
                         anyaPlan
                         strengthShortcut
                     }
                     .padding(.horizontal, NunaSpacing.screenH)
+                    .padding(.vertical, NunaSpacing.cardInnerSmall)
+                    .background(NunaPalette.card)
                 }
-                .padding(.bottom, 148)
-            }
-            .scrollIndicators(.hidden)
-            .scrollDismissesKeyboard(.interactively)
-            .safeAreaInset(edge: .bottom, spacing: 0) {
                 actionDock
             }
         }
@@ -106,24 +107,30 @@ struct NunaWorkoutStartView: View {
             NunaWorkoutStartSettings(zoneBuzz: $zoneBuzz)
                 .nunaSheetChrome(detents: [.height(240)])
         }
-        .sheet(isPresented: $showTargetSetup) {
+        .sheet(isPresented: $showTargetSetup, onDismiss: {
+            guard startAfterTargetSetup else { return }
+            startAfterTargetSetup = false
+            begin()
+        }) {
             NunaWorkoutTargetSheet(
                 goal: $goal,
                 lastTargetMode: $lastTargetMode,
+                startRequested: $startAfterTargetSetup,
+                sport: chosen,
                 isDistanceActivity: isDistance,
                 distanceSystem: distanceSystem,
-                zones: zoneSet.zones)
-                .nunaSheetChrome(detents: [.fraction(0.78), .large])
+                zones: zoneSet.zones,
+                charge: repo.today?.recovery,
+                dayEffort: repo.today?.strain,
+                anyaPlanTitle: planned?.title,
+                hasActiveWorkout: model.activeWorkout != nil)
+                .nunaSheetChrome(detents: [.large])
         }
         .fullScreenCover(isPresented: $live) { NunaLiveWorkoutView(goal: goal, zoneBuzz: zoneBuzz, onClose: { live = false }) }
         .overlay { if let c = countdown { countdownView(c) } }
     }
 
     // MARK: Hero
-
-    private func heroHeight(_ geometry: GeometryProxy) -> CGFloat {
-        min(max(geometry.size.height * 0.60, 440), 620)
-    }
 
     private func hero(height: CGFloat) -> some View {
         ZStack {
@@ -288,7 +295,7 @@ struct NunaWorkoutStartView: View {
     }
 
     @ViewBuilder private var strengthShortcut: some View {
-        if chosen == "Strength" || chosen == "Weightlifting" || chosen == "Powerlifting" || chosen == "Bodybuilding" {
+        if isStrength {
             NavigationLink(value: NunaWorkoutRoute.gym) {
                 NunaCard(highlight: true) {
                     NunaListRow("Log sets and weights", description: "Open Gym to run a program or a freehand session", systemImage: "dumbbell", showsChevron: true)
@@ -306,21 +313,25 @@ struct NunaWorkoutStartView: View {
                     .foregroundStyle(goal.mode == .free ? NunaPalette.textSecondary : NunaPalette.effortModerate)
                     .frame(width: 36, height: 36)
                     .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Effort target")
-                        .font(.nuna(size: 15, weight: .heavy))
-                        .foregroundStyle(NunaPalette.textPrimary)
-                    if goal.mode == .free {
-                        Text("Free session")
-                            .font(.nuna(size: 12, weight: .semibold))
-                            .foregroundStyle(NunaPalette.textSecondary)
-                    } else {
-                        Text(verbatim: targetSummary)
-                            .font(.nuna(size: 12, weight: .semibold))
-                            .foregroundStyle(NunaPalette.textSecondary)
+                Button {
+                    if goal.mode == .free { goal.mode = lastTargetMode }
+                    showTargetSetup = true
+                } label: {
+                    VStack(alignment: .leading, spacing: NoopMetrics.spaceHalf) {
+                        Text("Effort target")
+                            .font(.nuna(size: NunaTypeSize.h3, weight: .heavy))
+                            .foregroundStyle(NunaPalette.textPrimary)
+                        HStack(spacing: NoopMetrics.space1) {
+                            Text(verbatim: goal.mode == .free ? String(localized: "Free session") : targetSummary)
+                            Image(systemName: "chevron.right")
+                        }
+                        .font(.nuna(size: NunaTypeSize.caption, weight: .semibold))
+                        .foregroundStyle(NunaPalette.textSecondary)
                     }
+                    .frame(maxWidth: .infinity, minHeight: NoopButtonMetrics.minHitTarget, alignment: .leading)
                 }
-                Spacer(minLength: 8)
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("Configure Effort target"))
                 Toggle("", isOn: targetEnabledBinding)
                     .labelsHidden()
                     .tint(NunaPalette.effortModerate)
@@ -527,145 +538,281 @@ private struct NunaWorkoutStartSettings: View {
 private struct NunaWorkoutTargetSheet: View {
     @Binding var goal: NunaWorkoutGoal
     @Binding var lastTargetMode: NunaWorkoutGoal.Mode
+    @Binding var startRequested: Bool
+    let sport: String
     let isDistanceActivity: Bool
     let distanceSystem: UnitSystem
     let zones: [HRZone]
+    let charge: Double?
+    let dayEffort: Double?
+    let anyaPlanTitle: String?
+    let hasActiveWorkout: Bool
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var configuredMode: NunaWorkoutGoal.Mode?
-
-    private static let zoneColors: [Color] = [NunaPalette.zoneBase, NunaPalette.charge, NunaPalette.effort, NunaPalette.warning, NunaPalette.alert]
+    @State private var showInfo = false
 
     private var modes: [NunaWorkoutGoal.Mode] {
         isDistanceActivity ? [.time, .zone, .distance] : [.time, .zone]
     }
 
-    private var estimatedStrain: Double {
+    private var estimatedEffort: Double {
+        let estimate: Double
         switch goal.mode {
-        case .time: return min(20, 2.8 + Double(goal.minutes) / 17)
-        case .distance: return min(20, 2.6 + goal.km * 1.34)
-        case .zone: return min(20, 3.6 + Double(goal.zone) * 2.55)
-        case .free: return 3.6
+        case .time: estimate = min(20, 2.8 + Double(goal.minutes) / 17)
+        case .distance: estimate = min(20, 2.6 + goal.km * 1.34)
+        case .zone: estimate = min(20, 3.6 + Double(goal.zone) * 2.55)
+        case .free: estimate = 3.6
         }
+        return estimate / UnitFormatter.effortScaleFactor
     }
 
-    private var strainText: String {
-        String(format: "%.1f", locale: AppLanguage.activeLocale, estimatedStrain)
+    private var effortText: String {
+        effortNumber(estimatedEffort)
     }
 
-    private var title: LocalizedStringKey {
-        switch goal.mode {
-        case .time: return "Time target"
-        case .distance: return "Distance target"
-        case .zone: return "Heart-rate target"
-        case .free: return "Effort target"
-        }
+    private func effortNumber(_ value: Double) -> String {
+        String(format: "%.1f", locale: AppLanguage.activeLocale, value)
     }
 
     var body: some View {
-        NavigationStack {
+        VStack(spacing: 0) {
+            activityHeader
+            NunaDivider()
             ScrollView {
-                VStack(spacing: 22) {
-                    Text("Effort target")
-                        .font(.nuna(size: 13, weight: .heavy))
-                        .tracking(nunaTrackingLabel)
-                        .textCase(.uppercase)
-                        .foregroundStyle(NunaPalette.textSecondary)
-
-                    NunaRingGauge(
-                        fraction: estimatedStrain / 21,
-                        color: NunaPalette.effortModerate,
-                        gradient: nunaEffortRingColors(estimatedStrain * 5),
-                        size: 234,
-                        lineWidth: 17
-                    ) {
-                        VStack(spacing: 3) {
-                            Text(strainText)
-                                .font(.nuna(size: 62, weight: .bold, design: NunaType.design))
-                                .tracking(nunaTrackingNumber(62))
-                                .foregroundStyle(NunaPalette.textPrimary)
-                                .monospacedDigit()
-                            Text("Estimated strain")
-                                .font(.nuna(size: 11, weight: .heavy))
-                                .tracking(nunaTrackingLabel)
-                                .textCase(.uppercase)
-                                .foregroundStyle(NunaPalette.textSecondary)
-                        }
+                VStack(spacing: NunaSpacing.cardInnerSmall) {
+                    targetHeader
+                    if showInfo {
+                        Text("This is a planning estimate on the 0–100 Effort scale. Actual Effort is calculated from the heart rate recorded during your activity.")
+                            .font(.nuna(size: NunaTypeSize.sub, weight: .regular))
+                            .foregroundStyle(NunaPalette.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .transition(.opacity)
                     }
-                    .animation(.spring(response: 0.32, dampingFraction: 0.78), value: estimatedStrain)
-
-                    Text("Choose what guides this session")
-                        .font(.nuna(size: 17, weight: .heavy))
-                        .foregroundStyle(NunaPalette.textPrimary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                    effortRing
+                    targetExplanation
+                    trainingSummary
+                    HStack(spacing: NoopMetrics.space2) {
                         ForEach(modes, id: \.rawValue) { mode in
                             targetModeButton(mode)
                         }
                     }
-
                     if let configuredMode {
                         configuration(for: configuredMode)
-                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                            .transition(reduceMotion ? .opacity : .move(edge: .bottom).combined(with: .opacity))
                     } else {
-                        Text("Tap a target to set its value. Your estimated strain updates as you adjust it.")
-                            .font(.nuna(size: 13.5, weight: .semibold))
+                        Text("Choose Time, HR or Distance to adjust your target.")
+                            .font(.nuna(size: NunaTypeSize.sub, weight: .regular))
                             .foregroundStyle(NunaPalette.textSecondary)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.top, 2)
+                            .multilineTextAlignment(.center)
                     }
                 }
                 .padding(.horizontal, NunaSpacing.screenH)
-                .padding(.top, 14)
-                .padding(.bottom, 34)
+                .padding(.vertical, NunaSpacing.section)
             }
             .scrollIndicators(.hidden)
-            .background(NunaPalette.canvas.ignoresSafeArea())
-            .navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") { dismiss() }
-                        .font(.nuna(size: 15, weight: .bold))
-                        .foregroundStyle(NunaPalette.accent)
-                }
+            startDock
+        }
+        .background(NunaPalette.canvas.ignoresSafeArea())
+    }
+
+    private var activityHeader: some View {
+        HStack(spacing: NoopMetrics.space2) {
+            Button { dismiss() } label: {
+                Image(systemName: "xmark")
+                    .font(.nuna(size: NunaTypeSize.h3, weight: .semibold))
+                    .frame(width: NoopButtonMetrics.minHitTarget, height: NoopButtonMetrics.minHitTarget)
             }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("Close target settings"))
+            Image(systemName: NunaSportPicker.symbol(for: sport))
+                .font(.nuna(size: NunaTypeSize.h2, weight: .semibold))
+            Text(LocalizedStringKey(sport))
+                .font(.nuna(size: NunaTypeSize.h3, weight: .bold))
+                .lineLimit(1)
+            Spacer(minLength: NoopMetrics.space2)
+            Button("Done") { dismiss() }
+                .font(.nuna(size: NunaTypeSize.sub, weight: .bold))
+                .frame(minHeight: NoopButtonMetrics.minHitTarget)
+                .buttonStyle(.plain)
+        }
+        .foregroundStyle(NunaPalette.textPrimary)
+        .padding(.horizontal, NunaSpacing.screenH)
+        .padding(.top, NoopMetrics.space2)
+    }
+
+    private var targetHeader: some View {
+        HStack(spacing: NoopMetrics.space2) {
+            NunaInfoButton(isOn: $showInfo)
+                .frame(width: NoopButtonMetrics.minHitTarget, height: NoopButtonMetrics.minHitTarget)
+            Text("Effort target")
+                .font(.nuna(size: NunaTypeSize.sub, weight: .heavy))
+                .tracking(nunaTrackingLabel)
+                .textCase(.uppercase)
+                .frame(maxWidth: .infinity)
+                .foregroundStyle(NunaPalette.textPrimary)
+            Toggle("Effort target", isOn: enabledBinding)
+                .labelsHidden()
+                .tint(NunaPalette.effortModerate)
+        }
+    }
+
+    private var effortRing: some View {
+        NunaRingGauge(
+            fraction: estimatedEffort / 100,
+            color: NunaPalette.effortModerate,
+            gradient: [NunaPalette.effortMinimal, NunaPalette.effortModerate],
+            target: nunaEffortTargetFractions(charge: charge),
+            size: NoopMetrics.chartHeight + NoopMetrics.space4,
+            lineWidth: NoopMetrics.space4
+        ) {
+            VStack(spacing: NoopMetrics.space2) {
+                Text("Activity effort")
+                    .font(.nuna(size: NunaTypeSize.caption, weight: .heavy))
+                    .tracking(nunaTrackingLabel)
+                    .textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: effortText)
+                    .font(.nuna(size: NunaTypeSize.numberXL, weight: .bold, design: NunaType.design))
+                    .tracking(nunaTrackingNumber(NunaTypeSize.numberXL))
+                    .foregroundStyle(NunaPalette.textPrimary)
+                    .monospacedDigit()
+                    .contentTransition(.numericText())
+                Text("Estimated")
+                    .font(.nuna(size: NunaTypeSize.caption, weight: .semibold))
+                    .foregroundStyle(NunaPalette.textSecondary)
+                Button { resetTarget() } label: {
+                    Image(systemName: "arrow.counterclockwise")
+                        .font(.nuna(size: NunaTypeSize.sub, weight: .semibold))
+                        .foregroundStyle(NunaPalette.textSecondary)
+                        .frame(width: NoopButtonMetrics.minHitTarget, height: NoopButtonMetrics.minHitTarget)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("Reset activity target"))
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, NoopMetrics.space1)
+        .animation(reduceMotion ? nil : StrandMotion.gentle, value: estimatedEffort)
+    }
+
+    private var targetExplanation: some View {
+        HStack(alignment: .top, spacing: NoopMetrics.space3) {
+            Image(systemName: "sparkles")
+                .font(.nuna(size: NunaTypeSize.h2, weight: .semibold))
+                .foregroundStyle(NunaPalette.effortModerate)
+                .frame(width: NoopMetrics.compactControlSize, height: NoopMetrics.compactControlSize)
+            VStack(alignment: .leading, spacing: NoopMetrics.space1) {
+                if let anyaPlanTitle {
+                    Text(verbatim: anyaPlanTitle)
+                        .font(.nuna(size: NunaTypeSize.sub, weight: .bold))
+                        .foregroundStyle(NunaPalette.textPrimary)
+                }
+                Text(explanation)
+                    .font(.nuna(size: NunaTypeSize.sub, weight: .regular))
+                    .foregroundStyle(NunaPalette.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var explanation: String {
+        let target = configurationValue(goal.mode)
+        if let band = CoupledView.optimalStrainRange(recovery: charge) {
+            let lower = effortNumber(Double(band.lowerBound) / UnitFormatter.effortScaleFactor)
+            let upper = effortNumber(Double(band.upperBound) / UnitFormatter.effortScaleFactor)
+            return String(localized: "Your \(target) target estimates \(effortText) activity Effort. Today's suggested day range is \(lower)–\(upper), based on Charge.")
+        }
+        return String(localized: "Your \(target) target estimates \(effortText) activity Effort. Adjust the slider to plan this session.")
+    }
+
+    private var trainingSummary: some View {
+        VStack(spacing: NoopMetrics.space3) {
+            NunaDivider()
+            HStack(alignment: .top, spacing: NoopMetrics.space2) {
+                summaryStat("Current day", value: dayEffort.map(effortNumber) ?? "–", color: NunaPalette.textPrimary)
+                summaryStat("Activity target", value: effortText, color: NunaPalette.effortModerate)
+                summaryStat("Charge", value: charge.map { "\(Int($0.rounded()))%" } ?? "–", color: NunaPalette.charge)
+            }
+        }
+    }
+
+    private func summaryStat(_ label: LocalizedStringKey, value: String, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: NoopMetrics.space1) {
+            Text(label)
+                .font(.nuna(size: NunaTypeSize.caption, weight: .semibold))
+                .foregroundStyle(NunaPalette.textSecondary)
+            Text(verbatim: value)
+                .font(.nuna(size: NunaTypeSize.numberS, weight: .bold, design: NunaType.design))
+                .foregroundStyle(color)
+                .monospacedDigit()
+                .contentTransition(.numericText())
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var startDock: some View {
+        VStack(spacing: 0) {
+            NunaDivider()
+            Button {
+                startRequested = true
+                dismiss()
+            } label: {
+                Text(hasActiveWorkout ? "View active workout" : "Start activity")
+                    .font(.nuna(size: NunaTypeSize.h3, weight: .bold))
+                    .foregroundStyle(NunaPalette.mapOverlayText)
+                    .frame(maxWidth: .infinity, minHeight: NoopMetrics.controlHeight)
+                    .background(NunaPalette.effortModerate, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .padding(.horizontal, NunaSpacing.screenH)
+            .padding(.vertical, NoopMetrics.space3)
+        }
+        .background(NunaPalette.card)
+    }
+
+    private var enabledBinding: Binding<Bool> {
+        Binding(get: { goal.mode != .free }, set: { enabled in
+            guard !enabled else { return }
+            if goal.mode != .free { lastTargetMode = goal.mode }
+            goal.mode = .free
+            dismiss()
+        })
+    }
+
+    private func resetTarget() {
+        withAnimation(reduceMotion ? nil : StrandMotion.gentle) {
+            let previousMode = goal.mode
+            goal = NunaWorkoutGoal()
+            goal.mode = previousMode
         }
     }
 
     private func targetModeButton(_ mode: NunaWorkoutGoal.Mode) -> some View {
         let isSelected = configuredMode == mode
         return Button {
-            withAnimation(.easeInOut(duration: 0.2)) {
+            withAnimation(reduceMotion ? nil : StrandMotion.gentle) {
                 goal.mode = mode
                 lastTargetMode = mode
                 configuredMode = mode
             }
             UISelectionFeedbackGenerator().selectionChanged()
         } label: {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(spacing: NoopMetrics.space2) {
                 Image(systemName: targetIcon(mode))
-                    .font(.nuna(size: 20, weight: .bold))
-                    .foregroundStyle(isSelected ? NunaPalette.onAccent : NunaPalette.effortModerate)
-                    .frame(width: 42, height: 42)
-                    .background(isSelected ? NunaPalette.effortModerate.opacity(0.24) : NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(targetName(mode))
-                        .font(.nuna(size: 16, weight: .heavy))
-                        .foregroundStyle(NunaPalette.textPrimary)
-                    Text(targetDescription(mode))
-                        .font(.nuna(size: 12, weight: .semibold))
-                        .foregroundStyle(NunaPalette.textSecondary)
-                        .lineLimit(1)
-                }
+                    .font(.nuna(size: NunaTypeSize.h3, weight: .semibold))
+                Text(targetName(mode))
+                    .font(.nuna(size: NunaTypeSize.sub, weight: .bold))
+                    .lineLimit(1)
             }
-            .frame(maxWidth: .infinity, minHeight: 122, alignment: .leading)
-            .padding(16)
-            .background(isSelected ? NunaPalette.tint(NunaPalette.effortModerate) : NunaPalette.card, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+            .foregroundStyle(isSelected ? NunaPalette.mapOverlayText : NunaPalette.textSecondary)
+            .frame(maxWidth: .infinity, minHeight: NoopMetrics.tabBarClearance)
+            .background(isSelected ? NunaPalette.effortModerate : NunaPalette.card, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous)
-                    .stroke(isSelected ? NunaPalette.effortModerate.opacity(0.8) : NunaPalette.hairline, lineWidth: isSelected ? 1.5 : 1)
+                RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous)
+                    .stroke(isSelected ? NunaPalette.effortModerate : NunaPalette.hairline, lineWidth: NoopMetrics.hairlineWidth)
             }
         }
         .buttonStyle(.plain)
@@ -673,59 +820,49 @@ private struct NunaWorkoutTargetSheet: View {
     }
 
     @ViewBuilder private func configuration(for mode: NunaWorkoutGoal.Mode) -> some View {
-        NunaCard(small: true) {
-            VStack(alignment: .leading, spacing: 16) {
-                HStack {
-                    Text(configurationTitle(mode))
-                        .font(.nuna(size: 16, weight: .heavy))
-                        .foregroundStyle(NunaPalette.textPrimary)
-                    Spacer()
-                    Text(configurationValue(mode))
-                        .font(.nuna(size: 17, weight: .bold, design: NunaType.design))
-                        .foregroundStyle(NunaPalette.effortModerate)
-                        .monospacedDigit()
-                }
-
-                switch mode {
-                case .time:
-                    Slider(value: timeBinding, in: 5...180, step: 5)
-                        .tint(NunaPalette.effortModerate)
-                    sliderBounds("5 min", "3 hr")
-                case .distance:
-                    Slider(value: distanceBinding, in: distanceRange, step: 0.5)
-                        .tint(NunaPalette.effortModerate)
-                    sliderBounds(distanceLowerText, distanceUpperText)
-                case .zone:
-                    zoneConfiguration
-                case .free:
-                    EmptyView()
-                }
+        VStack(alignment: .leading, spacing: NoopMetrics.space2) {
+            HStack(alignment: .firstTextBaseline, spacing: NoopMetrics.space2) {
+                Text(configurationTitle(mode))
+                    .font(.nuna(size: NunaTypeSize.sub, weight: .semibold))
+                    .foregroundStyle(NunaPalette.textSecondary)
+                Spacer()
+                Text(verbatim: configurationValue(mode))
+                    .font(.nuna(size: NunaTypeSize.numberS, weight: .bold, design: NunaType.design))
+                    .foregroundStyle(NunaPalette.textPrimary)
+                    .monospacedDigit()
+                    .contentTransition(.numericText())
+            }
+            switch mode {
+            case .time:
+                NunaSlider(value: timeBinding, in: 5...300, step: 5, accessibilityValue: configurationValue(mode))
+                    .accessibilityLabel(Text("Target duration"))
+                sliderBounds(String(localized: "5 min"), String(localized: "5 hr"))
+            case .distance:
+                NunaSlider(value: distanceBinding, in: distanceRange, step: 0.5, accessibilityValue: configurationValue(mode))
+                    .accessibilityLabel(Text("Target distance"))
+                sliderBounds(distanceLowerText, distanceUpperText)
+            case .zone:
+                zoneConfiguration
+            case .free:
+                EmptyView()
             }
         }
     }
 
     private var zoneConfiguration: some View {
         let zone = min(max(goal.zone, 1), 5)
-        let range = zones.first(where: { $0.number == zone })
-        return VStack(alignment: .leading, spacing: 12) {
-            HStack(spacing: 4) {
-                ForEach(1...5, id: \.self) { number in
-                    RoundedRectangle(cornerRadius: 4, style: .continuous)
-                        .fill(Self.zoneColors[number - 1].opacity(number == zone ? 1 : 0.42))
-                        .frame(height: 11)
-                }
-            }
-            Slider(value: zoneBinding, in: 1...5, step: 1)
-                .tint(Self.zoneColors[zone - 1])
+        return VStack(alignment: .leading, spacing: NoopMetrics.space2) {
+            NunaSlider(value: zoneBinding, in: 1...5, step: 1, accessibilityValue: configurationValue(.zone))
+                .accessibilityLabel(Text("Target heart-rate zone"))
             HStack {
                 Text("Zone 1")
                 Spacer()
-                Text(range.map { "\(Int($0.lower.rounded())) – \(Int($0.upper.rounded())) bpm" } ?? "Heart-rate range")
-                    .foregroundStyle(Self.zoneColors[zone - 1])
+                Text("Zone \(zone)")
+                    .foregroundStyle(NunaPalette.textPrimary)
                 Spacer()
                 Text("Zone 5")
             }
-            .font(.nuna(size: 12.5, weight: .bold, design: NunaType.design))
+            .font(.nuna(size: NunaTypeSize.caption, weight: .semibold, design: NunaType.design))
             .foregroundStyle(NunaPalette.textSecondary)
             .monospacedDigit()
         }
@@ -758,7 +895,7 @@ private struct NunaWorkoutTargetSheet: View {
             Spacer()
             Text(verbatim: trailing)
         }
-        .font(.nuna(size: 12, weight: .semibold, design: NunaType.design))
+        .font(.nuna(size: NunaTypeSize.caption, weight: .semibold, design: NunaType.design))
         .foregroundStyle(NunaPalette.textSecondary)
         .monospacedDigit()
     }
@@ -767,17 +904,8 @@ private struct NunaWorkoutTargetSheet: View {
         switch mode {
         case .time: return "Time"
         case .distance: return "Distance"
-        case .zone: return "Heart rate"
+        case .zone: return "HR"
         case .free: return "Free session"
-        }
-    }
-
-    private func targetDescription(_ mode: NunaWorkoutGoal.Mode) -> LocalizedStringKey {
-        switch mode {
-        case .time: return "Set a duration"
-        case .distance: return "Set a route length"
-        case .zone: return "Hold a HR range"
-        case .free: return "No target"
         }
     }
 
@@ -794,7 +922,7 @@ private struct NunaWorkoutTargetSheet: View {
         switch mode {
         case .time: return "Target duration"
         case .distance: return "Target distance"
-        case .zone: return "Heart-rate range"
+        case .zone: return "Target heart rate"
         case .free: return "Target"
         }
     }
