@@ -2,6 +2,8 @@
 import SwiftUI
 import UIKit
 import ActivityKit
+import MapKit
+import CoreLocation
 import StrandDesign
 import StrandAnalytics
 import WhoopStore
@@ -23,69 +25,249 @@ struct NunaWorkoutStartView: View {
     var resume = false
     @State private var didResume = false
     @EnvironmentObject private var model: AppModel
+    @EnvironmentObject private var liveState: LiveState
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
     @EnvironmentObject private var router: NavRouter
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var planned: NavRouter.PlannedSession?
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
+    @AppStorage(UnitPrefs.distanceSystemKey) private var distanceSystemRaw = ""
     @AppStorage("nuna.workout.zoneBuzz") private var zoneBuzz = true
     @State private var chosen: String = "Running"
     @State private var goal = NunaWorkoutGoal()
+    @State private var lastTargetMode = NunaWorkoutGoal.Mode.zone
     @State private var showPicker = false
+    @State private var showStartSettings = false
+    @State private var showTargetSetup = false
     @State private var countdown: Int?
     @State private var live = false
+    @State private var mapPosition: MapCameraPosition = .userLocation(followsHeading: false, fallback: .automatic)
+    @StateObject private var locationPreview = NunaWorkoutLocationPreview()
 
     private var isDistance: Bool { WorkoutCatalog.sport(named: chosen)?.isDistanceSport ?? false }
     private var zoneSet: HRZoneSet { profile.hrZoneSet }
+    private var distanceSystem: UnitSystem {
+        UnitPrefs.resolveDistance(system: UnitSystem(rawValue: unitSystemRaw) ?? .metric, override: distanceSystemRaw)
+    }
 
     var body: some View {
-        NunaDetailScreen(LocalizedStringKey(chosen)) {
-            if let planned {
-                NunaAnyaNote {
-                    HStack(spacing: 12) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("From Anya's plan").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                            Text(verbatim: planned.title).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                        }
-                        Spacer(minLength: 6)
-                        Button { withAnimation { self.planned = nil; goal = NunaWorkoutGoal() } } label: {
-                            Text("Clear").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(minHeight: 44)
-                        }.buttonStyle(.plain)
+        GeometryReader { geometry in
+            ScrollView {
+                LazyVStack(spacing: NunaSpacing.section) {
+                    hero(height: heroHeight(geometry))
+
+                    VStack(spacing: NunaSpacing.section) {
+                        readiness
+                        anyaPlan
+                        strengthShortcut
                     }
+                    .padding(.horizontal, NunaSpacing.screenH)
                 }
+                .padding(.bottom, 148)
             }
-            readiness
-            NunaSegmented([(value: NunaWorkoutGoal.Mode.free, title: "Free"), (value: .time, title: "Time"), (value: .distance, title: "Distance"), (value: .zone, title: "Zone")], selection: $goal.mode)
-            goalCard
-            optionsCard
-            Button { showPicker = true } label: {
-                NunaCard(small: true) { NunaListRow("Sport", subtitle: LocalizedStringKey(chosen), systemImage: NunaSportPicker.symbol(for: chosen), showsChevron: true) }
-            }.buttonStyle(.plain)
-            if chosen == "Strength" || chosen == "Weightlifting" || chosen == "Powerlifting" || chosen == "Bodybuilding" {
-                NavigationLink(value: NunaWorkoutRoute.gym) {
-                    NunaCard(highlight: true) { NunaListRow("Log sets and weights", description: "Open Gym to run a program or a freehand session", systemImage: "dumbbell", showsChevron: true) }
-                }.buttonStyle(.plain)
+            .scrollIndicators(.hidden)
+            .scrollDismissesKeyboard(.interactively)
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                actionDock
             }
-            Button { begin() } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "play.fill").font(.nuna(size: 14, weight: .bold))
-                    Text(model.activeWorkout == nil ? "Start in 3 seconds" : "View active workout").font(.nuna(size: 17, weight: .bold))
-                }
-                .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-            }.buttonStyle(.plain)
         }
+        .background(NunaPalette.canvas.ignoresSafeArea())
+        .toolbar(.hidden, for: .navigationBar)
         .onAppear {
             if resume, !didResume, model.activeWorkout != nil { didResume = true; live = true }
             // A session suggested by the day plan: hold its main zone, and keep its length for the Time goal.
             if let p = router.plannedSession {
                 router.plannedSession = nil
-                planned = p; goal.mode = .zone; goal.zone = min(max(p.zone, 1), 5); goal.minutes = max(5, min(p.minutes, 300))
+                planned = p; goal.mode = .zone; lastTargetMode = .zone
+                goal.zone = min(max(p.zone, 1), 5); goal.minutes = max(5, min(p.minutes, 300))
             }
             if let s = planned?.sport, let match = WorkoutCatalog.sport(named: s) { chosen = match.name }
-            if let sport { chosen = sport } else if let a = model.activeWorkout { chosen = a.sport } }
+            if let sport { chosen = sport } else if let a = model.activeWorkout { chosen = a.sport }
+            updateLocationPreview()
+        }
+        .onDisappear { locationPreview.stop() }
+        .onChange(of: chosen) { _, _ in
+            if !isDistance, goal.mode == .distance { goal.mode = .zone; lastTargetMode = .zone }
+            updateLocationPreview()
+        }
+        .onChange(of: locationPreview.status) { _, status in
+            guard status == .ready, let coordinate = locationPreview.coordinate else { return }
+            withAnimation(reduceMotion ? nil : .easeOut(duration: 0.35)) {
+                mapPosition = .region(MKCoordinateRegion(
+                    center: coordinate,
+                    latitudinalMeters: 1_200,
+                    longitudinalMeters: 1_200))
+            }
+        }
         .sheet(isPresented: $showPicker) { sportPicker.nunaSheetChrome(detents: [.large]) }
+        .sheet(isPresented: $showStartSettings) {
+            NunaWorkoutStartSettings(zoneBuzz: $zoneBuzz)
+                .nunaSheetChrome(detents: [.height(240)])
+        }
+        .sheet(isPresented: $showTargetSetup) {
+            NunaWorkoutTargetSheet(
+                goal: $goal,
+                lastTargetMode: $lastTargetMode,
+                isDistanceActivity: isDistance,
+                distanceSystem: distanceSystem,
+                zones: zoneSet.zones)
+                .nunaSheetChrome(detents: [.fraction(0.78), .large])
+        }
         .fullScreenCover(isPresented: $live) { NunaLiveWorkoutView(goal: goal, zoneBuzz: zoneBuzz, onClose: { live = false }) }
         .overlay { if let c = countdown { countdownView(c) } }
+    }
+
+    // MARK: Hero
+
+    private func heroHeight(_ geometry: GeometryProxy) -> CGFloat {
+        min(max(geometry.size.height * 0.60, 440), 620)
+    }
+
+    private func hero(height: CGFloat) -> some View {
+        ZStack {
+            if isDistance {
+                Map(position: $mapPosition, interactionModes: []) {
+                    UserAnnotation()
+                }
+                .mapStyle(.standard(elevation: .flat, emphasis: .muted))
+                .accessibilityLabel(Text("Current location map"))
+            } else {
+                NunaPalette.card
+                Image(systemName: NunaSportPicker.symbol(for: chosen))
+                    .font(.system(size: 136, weight: .thin))
+                    .foregroundStyle(NunaPalette.textMuted.opacity(0.22))
+            }
+
+            NunaPalette.shade.opacity(isDistance ? 0.38 : 0.12)
+
+            VStack(spacing: 0) {
+                heroHeader
+                Spacer(minLength: 16)
+                NunaWorkoutHeartPulse(
+                    bpm: model.bpm,
+                    battery: liveState.batteryPct,
+                    reduceMotion: reduceMotion)
+                Spacer(minLength: 16)
+                locationStatus
+            }
+            .padding(.horizontal, NunaSpacing.screenH)
+            .padding(.top, 8)
+            .padding(.bottom, 18)
+        }
+        .frame(height: height)
+        .clipped()
+    }
+
+    private var heroHeader: some View {
+        HStack(spacing: 10) {
+            Button { dismiss() } label: {
+                Image(systemName: "xmark")
+                    .font(.nuna(size: 18, weight: .bold))
+                    .foregroundStyle(NunaPalette.mapOverlayText)
+                    .frame(width: 44, height: 44)
+                    .background(NunaPalette.mapOverlay.opacity(0.65), in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("Close"))
+
+            Button { showPicker = true } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: NunaSportPicker.symbol(for: chosen))
+                        .font(.nuna(size: 18, weight: .bold))
+                    Text(LocalizedStringKey(chosen))
+                        .font(.nuna(size: 15, weight: .heavy))
+                        .lineLimit(1)
+                    Image(systemName: "chevron.down")
+                        .font(.nuna(size: 11, weight: .bold))
+                }
+                .foregroundStyle(NunaPalette.mapOverlayText)
+                .padding(.horizontal, 14)
+                .frame(height: 44)
+                .background(NunaPalette.mapOverlay.opacity(0.65), in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("Select activity"))
+
+            Spacer(minLength: 0)
+
+            Button { showStartSettings = true } label: {
+                Image(systemName: "gearshape.fill")
+                    .font(.nuna(size: 17, weight: .bold))
+                    .foregroundStyle(NunaPalette.mapOverlayText)
+                    .frame(width: 44, height: 44)
+                    .background(NunaPalette.mapOverlay.opacity(0.65), in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text("Activity settings"))
+        }
+    }
+
+    private var locationStatus: some View {
+        HStack(spacing: 8) {
+            Image(systemName: isDistance ? "location.fill" : "location.slash")
+                .font(.nuna(size: 12, weight: .bold))
+            Text(locationStatusText)
+                .font(.nuna(size: 12.5, weight: .bold))
+                .lineLimit(1)
+        }
+        .foregroundStyle(NunaPalette.mapOverlayText)
+        .padding(.horizontal, 12)
+        .frame(height: 34)
+        .background(NunaPalette.mapOverlay.opacity(0.72), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+        .accessibilityElement(children: .combine)
+    }
+
+    private var locationStatusText: LocalizedStringKey {
+        guard isDistance else { return "No GPS for this activity" }
+        switch locationPreview.status {
+        case .ready: return "GPS on · Current location"
+        case .requesting: return "Finding current location"
+        case .denied: return "Location is off"
+        }
+    }
+
+    // MARK: Plan + target
+
+    @ViewBuilder private var anyaPlan: some View {
+        if let planned {
+            NunaAnyaNote {
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("From Anya's plan")
+                            .font(.nuna(size: 11.5, weight: .heavy))
+                            .tracking(nunaTrackingLabel)
+                            .textCase(.uppercase)
+                            .foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: planned.title)
+                            .font(.nuna(size: 15.5, weight: .bold))
+                            .foregroundStyle(NunaPalette.textPrimary)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .textCase(nil)
+                    }
+                    Spacer(minLength: 6)
+                    Button { clearPlan() } label: {
+                        Text("Clear")
+                            .font(.nuna(size: 13, weight: .bold))
+                            .foregroundStyle(NunaPalette.textPrimary)
+                            .frame(minWidth: 44, minHeight: 44)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private var targetSummary: String {
+        switch goal.mode {
+        case .free: return String(localized: "Off")
+        case .time: return String(localized: "\(goal.minutes) min")
+        case .distance:
+            let value = distanceSystem == .imperial ? goal.km * UnitFormatter.milesPerKilometer : goal.km
+            return String(format: "%.1f %@", locale: AppLanguage.activeLocale, value, UnitFormatter.distanceUnit(distanceSystem))
+        case .zone: return String(localized: "Zone \(goal.zone)")
+        }
     }
 
     // MARK: Parts
@@ -105,108 +287,95 @@ struct NunaWorkoutStartView: View {
         }
     }
 
-    @ViewBuilder private var goalCard: some View {
-        switch goal.mode {
-        case .free:
-            NunaCard { Text("No target. The session records heart rate, Effort and, for outdoor sports, your route.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) }
-        case .time:
-            stepperCard("Target duration", "\(goal.minutes)", "min", minus: { goal.minutes = max(5, goal.minutes - 5) }, plus: { goal.minutes = min(300, goal.minutes + 5) })
-        case .distance:
-            stepperCard("Target distance", String(format: "%.1f", locale: AppLanguage.activeLocale, goal.km), unitSystemRaw == UnitSystem.imperial.rawValue ? "km" : "km",
-                        minus: { goal.km = max(0.5, goal.km - 0.5) }, plus: { goal.km = min(100, goal.km + 0.5) })
-        case .zone:
-            zoneCard
-        }
-    }
-
-    // MARK: Zone picker
-
-    /// The colour of each heart-rate zone, light to hard.
-    private static let zoneColors: [Color] = [NunaPalette.zoneBase, NunaPalette.charge, NunaPalette.effort, NunaPalette.warning, NunaPalette.alert]
-
-    /// One slim bar of five zones: tap a segment to choose it. A pointer sits under the chosen zone, the lowest and highest heart
-    /// rate of the wearer's own zones are at the ends and the chosen zone's range is written in its colour in the middle.
-    private var zoneCard: some View {
-        let z = min(max(goal.zone, 1), 5)
-        let color = Self.zoneColors[z - 1]
-        let zones = zoneSet.zones
-        let range = zones.first(where: { $0.number == z })
-        let lo = zones.first(where: { $0.number == 1 }).map { Int($0.lower.rounded()) }
-        let hi = zones.first(where: { $0.number == 5 }).map { Int($0.upper.rounded()) }
-        return NunaCard(small: true, padding: EdgeInsets(top: 16, leading: 16, bottom: 14, trailing: 16)) {
-            VStack(spacing: 8) {
-                GeometryReader { geo in
-                    let w = geo.size.width, gap: CGFloat = 3
-                    let seg = (w - gap * 4) / 5
-                    ZStack(alignment: .topLeading) {
-                        HStack(spacing: gap) {
-                            ForEach(1...5, id: \.self) { n in
-                                Button { withAnimation(.easeOut(duration: 0.18)) { goal.zone = n } } label: {
-                                    RoundedRectangle(cornerRadius: n == 1 || n == 5 ? 12 : 4, style: .continuous)
-                                        .fill(Self.zoneColors[n - 1].opacity(n == z ? 1 : 0.6)).frame(height: 26)
-                                        .padding(.vertical, 6).contentShape(Rectangle())
-                                }
-                                .buttonStyle(.plain).frame(width: seg)
-                                .accessibilityLabel(Text("Zone \(n)")).accessibilityAddTraits(n == z ? .isSelected : [])
-                            }
-                        }
-                        Triangle().fill(NunaPalette.textPrimary).frame(width: 14, height: 9)
-                            .offset(x: CGFloat(z - 1) * (seg + gap) + seg / 2 - 7, y: 42)
-                            .animation(.easeOut(duration: 0.18), value: z).allowsHitTesting(false)
-                    }
-                }
-                .frame(height: 52)
-                ZStack {
-                    HStack {
-                        Text(verbatim: lo.map(String.init) ?? "").font(.nuna(size: 13, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary).monospacedDigit()
-                        Spacer()
-                        Text(verbatim: hi.map(String.init) ?? "").font(.nuna(size: 13, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary).monospacedDigit()
-                    }
-                    Text(verbatim: String(localized: "Zone \(z)") + (range.map { " · \(Int($0.lower.rounded())) – \(Int($0.upper.rounded()))" } ?? ""))
-                        .font(.nuna(size: 16, weight: .heavy, design: NunaType.design)).foregroundStyle(z == 1 ? NunaPalette.textPrimary : color).monospacedDigit()
+    @ViewBuilder private var strengthShortcut: some View {
+        if chosen == "Strength" || chosen == "Weightlifting" || chosen == "Powerlifting" || chosen == "Bodybuilding" {
+            NavigationLink(value: NunaWorkoutRoute.gym) {
+                NunaCard(highlight: true) {
+                    NunaListRow("Log sets and weights", description: "Open Gym to run a program or a freehand session", systemImage: "dumbbell", showsChevron: true)
                 }
             }
+            .buttonStyle(.plain)
         }
     }
 
-    private func stepperCard(_ title: LocalizedStringKey, _ v: String, _ unit: String, minus: @escaping () -> Void, plus: @escaping () -> Void) -> some View {
-        NunaCard {
-            VStack(alignment: .leading, spacing: 12) {
-                nunaTrendsCap(title)
-                HStack {
-                    stepBtn("minus", minus)
-                    Spacer()
-                    HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Text(verbatim: v).font(.nuna(size: 46, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(46)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: unit).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+    private var actionDock: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 12) {
+                Image(systemName: "scope")
+                    .font(.nuna(size: 16, weight: .bold))
+                    .foregroundStyle(goal.mode == .free ? NunaPalette.textSecondary : NunaPalette.effortModerate)
+                    .frame(width: 36, height: 36)
+                    .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Effort target")
+                        .font(.nuna(size: 15, weight: .heavy))
+                        .foregroundStyle(NunaPalette.textPrimary)
+                    if goal.mode == .free {
+                        Text("Free session")
+                            .font(.nuna(size: 12, weight: .semibold))
+                            .foregroundStyle(NunaPalette.textSecondary)
+                    } else {
+                        Text(verbatim: targetSummary)
+                            .font(.nuna(size: 12, weight: .semibold))
+                            .foregroundStyle(NunaPalette.textSecondary)
                     }
-                    Spacer()
-                    stepBtn("plus", plus)
                 }
+                Spacer(minLength: 8)
+                Toggle("", isOn: targetEnabledBinding)
+                    .labelsHidden()
+                    .tint(NunaPalette.effortModerate)
             }
+
+            Button { begin() } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: model.activeWorkout == nil ? "play.fill" : "arrow.up.right")
+                        .font(.nuna(size: 14, weight: .bold))
+                    Text(model.activeWorkout == nil ? "Start activity" : "View active workout")
+                        .font(.nuna(size: 17, weight: .heavy))
+                }
+                .foregroundStyle(NunaPalette.onAccent)
+                .frame(maxWidth: .infinity)
+                .frame(height: 56)
+                .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+            }
+            .buttonStyle(.plain)
         }
+        .padding(.horizontal, NunaSpacing.screenH)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
+        .background(NunaPalette.card)
+        .overlay(alignment: .top) { NunaDivider() }
     }
 
-    private func stepBtn(_ s: String, _ a: @escaping () -> Void) -> some View {
-        Button(action: a) { Image(systemName: s).font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 52, height: 52) }.buttonStyle(.plain)
-    }
-
-    private var optionsCard: some View {
-        NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-            VStack(spacing: 0) {
-                NunaListRow("GPS and route", subtitle: isDistance ? "The route is recorded when location is allowed" : "Not used for this sport", systemImage: "location") {
-                    NunaChip(isDistance ? "On" : "Off", color: isDistance ? NunaPalette.charge : nil)
-                }
-                NunaDivider()
-                NunaListRow("Silent buzz on the strap", description: "When you leave the target zone or reach the target", systemImage: "applewatch.radiowaves.left.and.right") {
-                    Toggle("", isOn: $zoneBuzz).labelsHidden().tint(NunaPalette.charge)
+    private var targetEnabledBinding: Binding<Bool> {
+        Binding(get: { goal.mode != .free }, set: { enabled in
+            withAnimation(.easeInOut(duration: 0.28)) {
+                if enabled {
+                    goal.mode = lastTargetMode == .distance && !isDistance ? .zone : lastTargetMode
+                    showTargetSetup = true
+                } else {
+                    if goal.mode != .free { lastTargetMode = goal.mode }
+                    goal.mode = .free
                 }
             }
-        }
+            UISelectionFeedbackGenerator().selectionChanged()
+        })
     }
 
     private var sportPicker: some View {
         NunaSportPicker(selection: $chosen) { showPicker = false }
+    }
+
+    private func clearPlan() {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            planned = nil
+            goal = NunaWorkoutGoal()
+            lastTargetMode = .zone
+        }
+    }
+
+    private func updateLocationPreview() {
+        if isDistance { locationPreview.start() } else { locationPreview.stop() }
     }
 
     private func countdownView(_ c: Int) -> some View {
@@ -232,6 +401,7 @@ struct NunaWorkoutStartView: View {
             }
             guard countdown != nil else { return }
             countdown = nil
+            RecentSportsPrefs.recordSelection(chosen)
             model.startWorkout(sport: chosen)
             switch goal.mode {
             case .free: model.workoutTarget = nil
@@ -241,6 +411,451 @@ struct NunaWorkoutStartView: View {
             }
             live = true
         }
+    }
+}
+
+/// A lightweight location read used only to place the pre-workout map. Route recording remains owned by
+/// `GpsWorkoutRecorder` and starts only after the user starts a distance workout.
+@MainActor
+private final class NunaWorkoutLocationPreview: NSObject, ObservableObject {
+    enum Status: Equatable { case requesting, ready, denied }
+
+    @Published private(set) var coordinate: CLLocationCoordinate2D?
+    @Published private(set) var status: Status = .requesting
+
+    private let manager = CLLocationManager()
+
+    override init() {
+        super.init()
+        manager.delegate = self
+        manager.desiredAccuracy = kCLLocationAccuracyHundredMeters
+        manager.distanceFilter = 50
+    }
+
+    func start() {
+        guard CLLocationManager.locationServicesEnabled() else { status = .denied; return }
+        switch manager.authorizationStatus {
+        case .notDetermined:
+            status = .requesting
+            manager.requestWhenInUseAuthorization()
+        case .authorizedAlways, .authorizedWhenInUse:
+            status = .requesting
+            manager.startUpdatingLocation()
+        case .denied, .restricted:
+            status = .denied
+        @unknown default:
+            status = .denied
+        }
+    }
+
+    func stop() { manager.stopUpdatingLocation() }
+}
+
+extension NunaWorkoutLocationPreview: @preconcurrency CLLocationManagerDelegate {
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        switch manager.authorizationStatus {
+        case .authorizedAlways, .authorizedWhenInUse:
+            status = .requesting
+            manager.startUpdatingLocation()
+        case .denied, .restricted:
+            status = .denied
+            manager.stopUpdatingLocation()
+        case .notDetermined:
+            status = .requesting
+        @unknown default:
+            status = .denied
+        }
+    }
+
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let latest = locations.last, latest.horizontalAccuracy >= 0 else { return }
+        coordinate = latest.coordinate
+        status = .ready
+        manager.stopUpdatingLocation()
+    }
+
+    func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
+        if let locationError = error as? CLError, locationError.code == .denied { status = .denied }
+    }
+}
+
+// MARK: - Start settings + Effort target
+
+private struct NunaWorkoutStartSettings: View {
+    @Binding var zoneBuzz: Bool
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: NunaSpacing.section) {
+                NunaCard(small: true) {
+                    HStack(spacing: 14) {
+                        NunaIconTile("applewatch.radiowaves.left.and.right", tint: NunaPalette.charge)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text("Silent buzz")
+                                .font(.nuna(size: 16, weight: .heavy))
+                                .foregroundStyle(NunaPalette.textPrimary)
+                            Text("Buzz when you leave the selected heart-rate range or complete a target.")
+                                .font(.nuna(size: 13, weight: .semibold))
+                                .foregroundStyle(NunaPalette.textSecondary)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                        Spacer(minLength: 8)
+                        Toggle("", isOn: $zoneBuzz)
+                            .labelsHidden()
+                            .tint(NunaPalette.charge)
+                    }
+                }
+                Spacer()
+            }
+            .padding(.horizontal, NunaSpacing.screenH)
+            .padding(.top, NunaSpacing.section)
+            .background(NunaPalette.canvas.ignoresSafeArea())
+            .navigationTitle("Activity settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") { dismiss() }
+                        .font(.nuna(size: 15, weight: .bold))
+                        .foregroundStyle(NunaPalette.accent)
+                }
+            }
+        }
+    }
+}
+
+private struct NunaWorkoutTargetSheet: View {
+    @Binding var goal: NunaWorkoutGoal
+    @Binding var lastTargetMode: NunaWorkoutGoal.Mode
+    let isDistanceActivity: Bool
+    let distanceSystem: UnitSystem
+    let zones: [HRZone]
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var configuredMode: NunaWorkoutGoal.Mode?
+
+    private static let zoneColors: [Color] = [NunaPalette.zoneBase, NunaPalette.charge, NunaPalette.effort, NunaPalette.warning, NunaPalette.alert]
+
+    private var modes: [NunaWorkoutGoal.Mode] {
+        isDistanceActivity ? [.time, .zone, .distance] : [.time, .zone]
+    }
+
+    private var estimatedStrain: Double {
+        switch goal.mode {
+        case .time: return min(20, 2.8 + Double(goal.minutes) / 17)
+        case .distance: return min(20, 2.6 + goal.km * 1.34)
+        case .zone: return min(20, 3.6 + Double(goal.zone) * 2.55)
+        case .free: return 3.6
+        }
+    }
+
+    private var strainText: String {
+        String(format: "%.1f", locale: AppLanguage.activeLocale, estimatedStrain)
+    }
+
+    private var title: LocalizedStringKey {
+        switch goal.mode {
+        case .time: return "Time target"
+        case .distance: return "Distance target"
+        case .zone: return "Heart-rate target"
+        case .free: return "Effort target"
+        }
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 22) {
+                    Text("Effort target")
+                        .font(.nuna(size: 13, weight: .heavy))
+                        .tracking(nunaTrackingLabel)
+                        .textCase(.uppercase)
+                        .foregroundStyle(NunaPalette.textSecondary)
+
+                    NunaRingGauge(
+                        fraction: estimatedStrain / 21,
+                        color: NunaPalette.effortModerate,
+                        gradient: nunaEffortRingColors(estimatedStrain * 5),
+                        size: 234,
+                        lineWidth: 17
+                    ) {
+                        VStack(spacing: 3) {
+                            Text(strainText)
+                                .font(.nuna(size: 62, weight: .bold, design: NunaType.design))
+                                .tracking(nunaTrackingNumber(62))
+                                .foregroundStyle(NunaPalette.textPrimary)
+                                .monospacedDigit()
+                            Text("Estimated strain")
+                                .font(.nuna(size: 11, weight: .heavy))
+                                .tracking(nunaTrackingLabel)
+                                .textCase(.uppercase)
+                                .foregroundStyle(NunaPalette.textSecondary)
+                        }
+                    }
+                    .animation(.spring(response: 0.32, dampingFraction: 0.78), value: estimatedStrain)
+
+                    Text("Choose what guides this session")
+                        .font(.nuna(size: 17, weight: .heavy))
+                        .foregroundStyle(NunaPalette.textPrimary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+
+                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                        ForEach(modes, id: \.rawValue) { mode in
+                            targetModeButton(mode)
+                        }
+                    }
+
+                    if let configuredMode {
+                        configuration(for: configuredMode)
+                            .transition(.move(edge: .bottom).combined(with: .opacity))
+                    } else {
+                        Text("Tap a target to set its value. Your estimated strain updates as you adjust it.")
+                            .font(.nuna(size: 13.5, weight: .semibold))
+                            .foregroundStyle(NunaPalette.textSecondary)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(.top, 2)
+                    }
+                }
+                .padding(.horizontal, NunaSpacing.screenH)
+                .padding(.top, 14)
+                .padding(.bottom, 34)
+            }
+            .scrollIndicators(.hidden)
+            .background(NunaPalette.canvas.ignoresSafeArea())
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") { dismiss() }
+                        .font(.nuna(size: 15, weight: .bold))
+                        .foregroundStyle(NunaPalette.accent)
+                }
+            }
+        }
+    }
+
+    private func targetModeButton(_ mode: NunaWorkoutGoal.Mode) -> some View {
+        let isSelected = configuredMode == mode
+        return Button {
+            withAnimation(.easeInOut(duration: 0.2)) {
+                goal.mode = mode
+                lastTargetMode = mode
+                configuredMode = mode
+            }
+            UISelectionFeedbackGenerator().selectionChanged()
+        } label: {
+            VStack(alignment: .leading, spacing: 16) {
+                Image(systemName: targetIcon(mode))
+                    .font(.nuna(size: 20, weight: .bold))
+                    .foregroundStyle(isSelected ? NunaPalette.onAccent : NunaPalette.effortModerate)
+                    .frame(width: 42, height: 42)
+                    .background(isSelected ? NunaPalette.effortModerate.opacity(0.24) : NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(targetName(mode))
+                        .font(.nuna(size: 16, weight: .heavy))
+                        .foregroundStyle(NunaPalette.textPrimary)
+                    Text(targetDescription(mode))
+                        .font(.nuna(size: 12, weight: .semibold))
+                        .foregroundStyle(NunaPalette.textSecondary)
+                        .lineLimit(1)
+                }
+            }
+            .frame(maxWidth: .infinity, minHeight: 122, alignment: .leading)
+            .padding(16)
+            .background(isSelected ? NunaPalette.tint(NunaPalette.effortModerate) : NunaPalette.card, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous)
+                    .stroke(isSelected ? NunaPalette.effortModerate.opacity(0.8) : NunaPalette.hairline, lineWidth: isSelected ? 1.5 : 1)
+            }
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+
+    @ViewBuilder private func configuration(for mode: NunaWorkoutGoal.Mode) -> some View {
+        NunaCard(small: true) {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Text(configurationTitle(mode))
+                        .font(.nuna(size: 16, weight: .heavy))
+                        .foregroundStyle(NunaPalette.textPrimary)
+                    Spacer()
+                    Text(configurationValue(mode))
+                        .font(.nuna(size: 17, weight: .bold, design: NunaType.design))
+                        .foregroundStyle(NunaPalette.effortModerate)
+                        .monospacedDigit()
+                }
+
+                switch mode {
+                case .time:
+                    Slider(value: timeBinding, in: 5...180, step: 5)
+                        .tint(NunaPalette.effortModerate)
+                    sliderBounds("5 min", "3 hr")
+                case .distance:
+                    Slider(value: distanceBinding, in: distanceRange, step: 0.5)
+                        .tint(NunaPalette.effortModerate)
+                    sliderBounds(distanceLowerText, distanceUpperText)
+                case .zone:
+                    zoneConfiguration
+                case .free:
+                    EmptyView()
+                }
+            }
+        }
+    }
+
+    private var zoneConfiguration: some View {
+        let zone = min(max(goal.zone, 1), 5)
+        let range = zones.first(where: { $0.number == zone })
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 4) {
+                ForEach(1...5, id: \.self) { number in
+                    RoundedRectangle(cornerRadius: 4, style: .continuous)
+                        .fill(Self.zoneColors[number - 1].opacity(number == zone ? 1 : 0.42))
+                        .frame(height: 11)
+                }
+            }
+            Slider(value: zoneBinding, in: 1...5, step: 1)
+                .tint(Self.zoneColors[zone - 1])
+            HStack {
+                Text("Zone 1")
+                Spacer()
+                Text(range.map { "\(Int($0.lower.rounded())) – \(Int($0.upper.rounded())) bpm" } ?? "Heart-rate range")
+                    .foregroundStyle(Self.zoneColors[zone - 1])
+                Spacer()
+                Text("Zone 5")
+            }
+            .font(.nuna(size: 12.5, weight: .bold, design: NunaType.design))
+            .foregroundStyle(NunaPalette.textSecondary)
+            .monospacedDigit()
+        }
+    }
+
+    private var timeBinding: Binding<Double> {
+        Binding(get: { Double(goal.minutes) }, set: { goal.minutes = Int($0.rounded()) })
+    }
+
+    private var distanceBinding: Binding<Double> {
+        Binding(
+            get: { distanceSystem == .imperial ? goal.km * UnitFormatter.milesPerKilometer : goal.km },
+            set: { goal.km = distanceSystem == .imperial ? $0 / UnitFormatter.milesPerKilometer : $0 })
+    }
+
+    private var zoneBinding: Binding<Double> {
+        Binding(get: { Double(goal.zone) }, set: { goal.zone = min(max(Int($0.rounded()), 1), 5) })
+    }
+
+    private var distanceRange: ClosedRange<Double> {
+        distanceSystem == .imperial ? 0.5...62 : 0.5...100
+    }
+
+    private var distanceLowerText: String { String(format: "%.1f %@", locale: AppLanguage.activeLocale, distanceRange.lowerBound, UnitFormatter.distanceUnit(distanceSystem)) }
+    private var distanceUpperText: String { String(format: "%.0f %@", locale: AppLanguage.activeLocale, distanceRange.upperBound, UnitFormatter.distanceUnit(distanceSystem)) }
+
+    private func sliderBounds(_ leading: String, _ trailing: String) -> some View {
+        HStack {
+            Text(verbatim: leading)
+            Spacer()
+            Text(verbatim: trailing)
+        }
+        .font(.nuna(size: 12, weight: .semibold, design: NunaType.design))
+        .foregroundStyle(NunaPalette.textSecondary)
+        .monospacedDigit()
+    }
+
+    private func targetName(_ mode: NunaWorkoutGoal.Mode) -> LocalizedStringKey {
+        switch mode {
+        case .time: return "Time"
+        case .distance: return "Distance"
+        case .zone: return "Heart rate"
+        case .free: return "Free session"
+        }
+    }
+
+    private func targetDescription(_ mode: NunaWorkoutGoal.Mode) -> LocalizedStringKey {
+        switch mode {
+        case .time: return "Set a duration"
+        case .distance: return "Set a route length"
+        case .zone: return "Hold a HR range"
+        case .free: return "No target"
+        }
+    }
+
+    private func targetIcon(_ mode: NunaWorkoutGoal.Mode) -> String {
+        switch mode {
+        case .time: return "timer"
+        case .distance: return "point.topleft.down.curvedto.point.bottomright.up"
+        case .zone: return "heart.fill"
+        case .free: return "figure.walk"
+        }
+    }
+
+    private func configurationTitle(_ mode: NunaWorkoutGoal.Mode) -> LocalizedStringKey {
+        switch mode {
+        case .time: return "Target duration"
+        case .distance: return "Target distance"
+        case .zone: return "Heart-rate range"
+        case .free: return "Target"
+        }
+    }
+
+    private func configurationValue(_ mode: NunaWorkoutGoal.Mode) -> String {
+        switch mode {
+        case .time: return String(localized: "\(goal.minutes) min")
+        case .distance:
+            let value = distanceSystem == .imperial ? goal.km * UnitFormatter.milesPerKilometer : goal.km
+            return String(format: "%.1f %@", locale: AppLanguage.activeLocale, value, UnitFormatter.distanceUnit(distanceSystem))
+        case .zone:
+            let range = zones.first(where: { $0.number == goal.zone })
+            return range.map { "\(Int($0.lower.rounded())) – \(Int($0.upper.rounded())) bpm" } ?? String(localized: "Zone \(goal.zone)")
+        case .free: return "–"
+        }
+    }
+}
+
+/// The live status is isolated from the rest of the start screen so frequent HR ticks redraw only this circle.
+private struct NunaWorkoutHeartPulse: View {
+    let bpm: Int?
+    let battery: Double?
+    let reduceMotion: Bool
+    @State private var beating = false
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(NunaPalette.effortModerate.opacity(0.93))
+                .frame(width: 238, height: 238)
+                .scaleEffect(beating ? 1.035 : 0.985)
+                .animation(reduceMotion ? nil : .easeInOut(duration: 0.58).repeatForever(autoreverses: true), value: beating)
+
+            VStack(spacing: 4) {
+                Image(systemName: "heart.fill")
+                    .font(.nuna(size: 38, weight: .bold))
+                    .scaleEffect(beating ? 1.12 : 0.92)
+                    .animation(reduceMotion ? nil : .easeInOut(duration: 0.58).repeatForever(autoreverses: true), value: beating)
+                Text(verbatim: bpm.map(String.init) ?? "–")
+                    .font(.nuna(size: 80, weight: .bold, design: NunaType.design))
+                    .tracking(nunaTrackingNumber(80))
+                    .monospacedDigit()
+                Text("bpm")
+                    .font(.nuna(size: 12, weight: .heavy))
+                    .textCase(.uppercase)
+                    .tracking(nunaTrackingLabel)
+                if let battery {
+                    HStack(spacing: 5) {
+                        Image(systemName: "battery.75percent")
+                        Text(verbatim: "\(Int(battery.rounded()))%")
+                    }
+                    .font(.nuna(size: 13, weight: .bold))
+                    .padding(.top, 4)
+                }
+            }
+            .foregroundStyle(NunaPalette.mapOverlayText)
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(bpm.map { "Heart rate \($0) bpm" } ?? String(localized: "Heart rate unavailable")))
+        .onAppear { beating = !reduceMotion }
+        .onChange(of: reduceMotion) { _, reduced in beating = !reduced }
     }
 }
 
