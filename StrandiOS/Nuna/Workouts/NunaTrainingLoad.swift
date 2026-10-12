@@ -107,7 +107,7 @@ struct NunaTrainingLoadView: View {
             NunaCard(small: true) {
                 HStack(alignment: .top, spacing: 12) {
                     AnyaMark(size: 18).foregroundStyle(NunaPalette.textMuted)
-                    Text("Cardio is counted from daily Effort, not TRIMP. Strength is estimated from the volume you lift and is not added to cardio, because the heart strain of lifting is not invented.")
+                    Text("Cardio is counted from daily Effort, not TRIMP. Strength is estimated from the volume you lift and stays separate from cardiovascular Effort.")
                         .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
@@ -432,7 +432,7 @@ struct NunaTrainingLoadView: View {
             NunaCard(small: true) {
                 HStack(alignment: .top, spacing: 12) {
                     AnyaMark(size: 18).foregroundStyle(NunaPalette.textMuted)
-                    Text("Estimated from lifting volume (weight × reps). This is not heart strain, so it is not added to cardio Effort.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    Text("Estimated from lifting volume (weight × reps). This is not cardiovascular Effort, so it is not added to cardio Effort.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
         }

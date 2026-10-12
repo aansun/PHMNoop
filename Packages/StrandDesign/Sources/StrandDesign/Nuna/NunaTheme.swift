@@ -39,6 +39,10 @@ public enum NunaPalette {
     public static var hairline: Color { skinned(light: "#D5DAE0", dark: "#2A2A30", whp: "#2F3B44") }
     public static var hairlineSoft: Color { skinned(light: "#E1E5EA", dark: "#202024", whp: "#27333B") }
     public static var cardBorderHighlight: Color { skinned(light: "#C3CAD2", dark: "#34343B", whp: "#3B4A55") }
+    /// The contrast layer and label colour placed above a system map. These deliberately stay constant so controls
+    /// retain legibility regardless of the selected app theme or map tiles beneath them.
+    public static let mapOverlay = Color(light: "#0A0D10B3", dark: "#000000B3")
+    public static let mapOverlayText = Color(light: "#FFFFFF", dark: "#FFFFFF")
 
     /// The foreground ink of the theme (white on dark, near-black on light) and the matching shade for wells.
     /// Use `.opacity` on them wherever a translucent overlay of the text colour is wanted.

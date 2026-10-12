@@ -37,7 +37,7 @@ struct NunaImportView: View {
     var body: some View {
         NunaDetailScreen("Import data") {
             Text("Everything stays on this iPhone. Bring your history in once, then it is yours.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-            card("WHOOP export (.zip)", "doc.zipper", "Recovery, strain, sleep and workouts from the data export at app.whoop.com. Works for WHOOP 4.0, 5.0 and MG.",
+            card("WHOOP export (.zip)", "doc.zipper", "Charge, Effort, sleep and workouts from the data export at app.whoop.com. Works for WHOOP 4.0, 5.0 and MG.",
                  button: model.isImporting(.whoop) ? "Importing…" : "Choose the export", working: model.isImporting(.whoop), target: .whoop,
                  result: model.whoopImportSummary, failed: model.whoopImportFailed, footer: String(localized: "\(repo.days.count) days · \(repo.sleeps.count) sleeps stored"))
             card("Apple Health export (.zip)", "heart.text.square", "Years of heart rate, HRV, sleep, SpO₂ and steps. In Health, tap your profile > Export All Health Data.",

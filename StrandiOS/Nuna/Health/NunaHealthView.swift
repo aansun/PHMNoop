@@ -372,7 +372,7 @@ struct NunaHealthView: View {
                         NunaChip(raised ? "Signals are up" : "Safe", color: raised ? NunaPalette.warning : NunaPalette.charge)
                     }
                     Text(raised ? "Some signals are away from your range. Take it easy and watch how you feel."
-                                : "No signs of strain. It takes two signals away from your range to raise a warning.")
+                                : "No vital-sign warning. It takes two signals away from your range to raise a warning.")
                         .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
                         ForEach(0..<signals.count, id: \.self) { i in

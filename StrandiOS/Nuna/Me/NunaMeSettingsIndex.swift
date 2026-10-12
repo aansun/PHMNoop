@@ -120,7 +120,7 @@ enum NunaMeSettingsIndex {
         .init(route: .data, title: "Apple Health", note: "Permissions, what is read and written"),
         .init(route: .data, title: "Strava", note: "Upload GPS, treadmill and gym workouts · experimental"),
         .init(route: .data, title: "Hevy", note: "Bring your workouts and routines in with your own API key"),
-        .init(route: .data, title: "WHOOP export (.zip)", note: "Recovery, strain, sleep and workouts"),
+        .init(route: .data, title: "WHOOP export (.zip)", note: "Charge, Effort, sleep and workouts"),
         .init(route: .data, title: "Apple Health export (.zip)", note: "Years of heart rate, HRV and sleep"),
         .init(route: .data, title: "Nutrition (.csv)", note: "Cronometer or MacroFactor"),
         .init(route: .data, title: "Lifting log (Hevy or Liftosaur)", note: "Each workout becomes a strength session"),
