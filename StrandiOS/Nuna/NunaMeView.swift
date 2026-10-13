@@ -10,6 +10,7 @@ struct NunaMeView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var coach: AICoachEngine
     @EnvironmentObject private var behavior: BehaviorStore
+    @EnvironmentObject private var appModel: AppModel
     @AppStorage(ExperienceMode.storageKey) private var experienceRaw = ExperienceMode.nuna.rawValue
     @AppStorage(UnitPrefs.systemKey) private var unitSystem = UnitSystem.metric.rawValue
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScale = EffortScale.hundred.rawValue
@@ -41,6 +42,20 @@ struct NunaMeView: View {
                     NunaDivider()
                     row(.appearance, "Appearance", LocalizedStringKey(appearanceSubtitle), "slider.horizontal.3")
                 }
+                group("Applications", count: appModel.cyclePhase != nil ? 5 : 4) {
+                    app(NunaTodayRoute.hydration, "Water", LocalizedStringKey(waterSubtitle), "drop")
+                    NunaDivider()
+                    app(NunaTodayRoute.labBook, "Lab book", "Your records", "testtube.2")
+                    NunaDivider()
+                    app(NunaTodayRoute.nutrition, "Nutrition", "Calories and macros", "fork.knife")
+                    NunaDivider()
+                    app(NunaTodayRoute.sleepNaps(0), "Nap", "Daytime sleep", "moon.zzz")
+                    // Only when cycle awareness is on and has a reading, as it was in the Body tab of Health.
+                    if appModel.cyclePhase != nil {
+                        NunaDivider()
+                        app(NunaTodayRoute.cycle, "Menstrual cycle", "Cycle awareness", "drop.fill")
+                    }
+                }
                 group("Notifications and automation", count: 3) {
                     row(.notifications, "Notifications", LocalizedStringKey(notificationsSubtitle), "bell.fill")
                     NunaDivider()
@@ -66,6 +81,8 @@ struct NunaMeView: View {
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 14).padding(.bottom, 24)
         }
         .nunaScreenBackground()
+        // The apps are screens of the Today stack; this stack needs to know how to open them.
+        .nunaTodayDestinations()
     }
 
     // MARK: Subtitles
@@ -99,7 +116,14 @@ struct NunaMeView: View {
         return on.isEmpty ? String(localized: "Water, journal, auto workouts") : on.joined(separator: " · ")
     }
 
+    private var waterSubtitle: String { hydration ? String(localized: "Drink log with a daily target") : String(localized: "Turn on in Optional features") }
+
     // MARK: Pieces
+
+    /// A row that opens one of the apps (a screen of the Today stack).
+    private func app(_ route: NunaTodayRoute, _ title: LocalizedStringKey, _ subtitle: LocalizedStringKey?, _ icon: String) -> some View {
+        NavigationLink(value: route) { NunaListRow(title, subtitle: subtitle, systemImage: icon, showsChevron: true) }.buttonStyle(.plain)
+    }
 
     private var profileCard: some View {
         NavigationLink(value: NunaMeRoute.persona) {
