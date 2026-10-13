@@ -81,7 +81,7 @@ struct TodayCustomizationSheet: View {
         _dashboardCardsRaw = dashboardCardsRaw
         _hostedCardsRaw = hostedCardsRaw
 
-        let fullSectionOrder = TodayLayoutPrefs.decodeOrder(sectionOrderRaw.wrappedValue)
+        let fullSectionOrder = TodayLayoutPrefs.decodeOrder(sectionOrderRaw.wrappedValue).filter { $0 != .vitalMonitor }
         let hiddenSectionSet = Set(TodayLayoutPrefs.decodeHidden(hiddenSectionsRaw.wrappedValue))
         let sections = EditableLayoutDraft(
             visible: fullSectionOrder.filter { !hiddenSectionSet.contains($0) },
@@ -198,8 +198,8 @@ struct TodayCustomizationSheet: View {
         switch currentDestination {
         case .today:
             sectionDraft = EditableLayoutDraft(
-                visible: TodaySection.defaultOrder,
-                allItems: TodaySection.defaultOrder
+                visible: TodaySection.defaultOrder.filter { $0 != .vitalMonitor },
+                allItems: TodaySection.defaultOrder.filter { $0 != .vitalMonitor }
             )
         case .keyMetrics:
             keyMetricDraft = EditableLayoutDraft(
