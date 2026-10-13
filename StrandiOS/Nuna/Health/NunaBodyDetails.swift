@@ -72,6 +72,8 @@ struct NunaBodyHealthCard: View {
     let bmi: Double?
     let waistCm: Double
     let heightCm: Double
+    /// The arrow that says the card opens the weight page; left out on the weight page itself.
+    var showsChevron = true
 
     private var ratio: Double? { (waistCm > 0 && heightCm > 0) ? waistCm / heightCm : nil }
 
@@ -97,7 +99,9 @@ struct NunaBodyHealthCard: View {
                     if let weightKg {
                         Text(verbatim: nbFmt(weightKg, 1) + " kg").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
-                    Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                    if showsChevron {
+                        Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                    }
                 }
                 HStack(alignment: .top, spacing: 22) {
                     // BMI
@@ -201,6 +205,7 @@ struct NunaWeightView: View {
                 series: weightS, showsBand: false, reference: target > 0 ? target : nil, lineColor: NunaPalette.charge, decimals: 1,
                 directional: false, range: $range, page: $page)
             if coachEnabled, let line = anyaLine(delta: delta) { NunaAnyaCard(verbatim: line) { showCoach = true } }
+            NunaBodyHealthCard(weightKg: latest, bmi: bmi, waistCm: profile.waistCm, heightCm: profile.heightCm, showsChevron: false)
             NunaBodyCompositionCard(weightKg: latest, fatPct: fatS.latest?.value, leanKg: leanS.latest?.value, bmi: bmi)
             NunaExpandRow(title: "About body composition", subtitle: "From a smart scale via Apple Health", systemImage: "sparkles",
                           text: "Body fat and lean mass appear only when Apple Health has them, for example from a smart scale. NOOP never estimates them.")
