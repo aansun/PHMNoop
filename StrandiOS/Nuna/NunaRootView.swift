@@ -185,7 +185,7 @@ struct NunaRootView: View {
         defer { router.pendingMetricKey = nil }
         let route: NunaTodayRoute?
         switch key {
-        case "heartrate": route = .liveHeart
+        case "heartrate": route = .deepTimeline
         case "steps":
             route = MetricCatalog.todayStepsMetric(hasMeasuredSteps: true).map { .metric($0) }
         default:
