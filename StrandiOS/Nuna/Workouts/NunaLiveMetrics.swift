@@ -1,11 +1,39 @@
 #if os(iOS)
 import Foundation
+import CoreMotion
 import StrandAnalytics
 import WhoopStore
+
+/// Presentation-only field selection for the live Effort tab. A layout never exceeds three readouts.
+enum NunaLiveMetricLayout {
+    enum Field: Hashable { case distance, pace, steps, cadence, speed, elevation, calories }
+
+    static func fields(sport: String, usesGPS: Bool) -> [Field] {
+        let type = StravaActivityType.value(for: sport)
+        if NunaWorkoutSportKind.of(sport) == .cycling {
+            return type == "VirtualRide" ? [.distance, .speed, .calories] : [.distance, .speed, .elevation]
+        }
+        if usesGPS || StravaActivityType.isTreadmill(sport) {
+            let running = ["Run", "TrailRun", "VirtualRun"].contains(type)
+            return [.distance, .pace, running ? .cadence : .steps]
+        }
+        return [.calories]
+    }
+}
 
 /// The figures of a running session that more than one surface draws (the live screen and the Live Activity), computed once from
 /// the session's own heart-rate samples so the two cannot disagree.
 enum NunaLiveMetrics {
+    /// A session-window step count, preferring WHOOP's calibrated counter just like the daily readout.
+    @MainActor static func steps(sport: String, from: Int, to: Int, repo: Repository, ticksPerStep: Double, requestPhonePermission: Bool = false) async -> Int? {
+        guard from < to, NunaWorkoutSportKind.of(sport) == .onFoot || StravaActivityType.isTreadmill(sport) else { return nil }
+        if let ticks = await repo.strapStepTicks(from: from, to: to) {
+            return Int((Double(ticks) / max(ticksPerStep, 0.5)).rounded())
+        }
+        guard requestPhonePermission || CMPedometer.authorizationStatus() == .authorized else { return nil }
+        return await WorkoutPedometer.steps(fromSec: from, toSec: to)
+    }
+
     /// Calories so far, with the same estimate the saved workout uses. nil until two samples exist.
     @MainActor static func kcal(_ w: AppModel.ActiveWorkout, model: AppModel) -> Int? {
         guard w.samples.count >= 2 else { return nil }

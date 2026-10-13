@@ -11,6 +11,7 @@ import WhoopStore
 /// Gym sessions open [NunaGymSessionView], which is built from the same pieces.
 struct NunaWorkoutSummaryView: View {
     let key: NunaWorkoutKey
+    var initialRow: WorkoutRow? = nil
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
     @Environment(\.dismiss) private var dismiss
@@ -28,7 +29,7 @@ struct NunaWorkoutSummaryView: View {
         Group {
             if let ls = m.liftSessions.first(where: { $0.startTs == key.startTs }), m.row(key).map(NunaWorkoutKind.isStrength) ?? false {
                 NunaGymSessionView(sessionId: ls.id)
-            } else if let r = m.row(key) {
+            } else if let r = m.row(key) ?? (m.loaded ? nil : initialRow) {
                 NunaDetailScreen(LocalizedStringKey(WorkoutSource.displaySport(r.sport)), trailing: AnyView(actionsMenu(r))) { content(r) }
             } else {
                 NunaDetailScreen("Workout") {
@@ -39,7 +40,7 @@ struct NunaWorkoutSummaryView: View {
         .task(id: repo.refreshSeq) {
             await m.load(repo: repo)
             if let r = m.row(key) {
-                await data.load(startTs: r.startTs, endTs: r.endTs, sport: r.sport, source: r.source, knownSteps: r.steps, repo: repo, zoneSet: profile.hrZoneSet)
+                await data.load(startTs: r.startTs, endTs: r.endTs, sport: r.sport, source: r.source, knownSteps: r.steps, repo: repo, zoneSet: profile.hrZoneSet, ticksPerStep: profile.stepTicksPerStep)
                 stravaState = NunaStravaCheck.state(r)
             }
         }

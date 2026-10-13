@@ -15,13 +15,13 @@ final class NunaWorkoutDetailData: ObservableObject {
     @Published var zoneMin: [Double]?
     @Published var route: [RouteMath.LatLng] = []
     @Published var dayEffort: Double?
-    /// The steps of the session: the stored count, else the phone's pedometer for a sport on foot (treadmill included).
+    /// The stored count, otherwise the same calibrated WHOOP / phone resolver used by the live screen.
     @Published var steps: Int?
 
-    func load(startTs: Int, endTs: Int, sport: String, source: String, knownSteps: Int? = nil, repo: Repository, zoneSet: HRZoneSet) async {
+    func load(startTs: Int, endTs: Int, sport: String, source: String, knownSteps: Int? = nil, repo: Repository, zoneSet: HRZoneSet, ticksPerStep: Double = 1) async {
         if let knownSteps { steps = knownSteps }
         else if NunaWorkoutSportKind.of(sport) == .onFoot || StravaActivityType.isTreadmill(sport) {
-            steps = await WorkoutPedometer.steps(fromSec: startTs, toSec: endTs)
+            steps = await NunaLiveMetrics.steps(sport: sport, from: startTs, to: endTs, repo: repo, ticksPerStep: ticksPerStep, requestPhonePermission: true)
         } else { steps = nil }
         hr = await repo.workoutHrBuckets(from: startTs, to: endTs, source: source)
         zoneMin = await repo.workoutZoneMinutes(from: startTs, to: endTs, zoneSet: zoneSet, source: source)
