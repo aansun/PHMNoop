@@ -16,7 +16,6 @@ struct AudioCoachingSettingsView: View {
     @AppStorage(AudioCoachingPreferences.distanceIncludesDurationKey) private var distanceIncludesDuration = true
     @AppStorage(AudioCoachingPreferences.distanceIncludesHeartRateKey) private var distanceIncludesHeartRate = true
     @AppStorage(AudioCoachingPreferences.distanceMilestoneKilometersKey) private var distanceMilestoneKilometers = 1
-    @AppStorage(AudioCoachingPreferences.targetZoneKey) private var targetZone = 3
     @AppStorage(AudioCoachingPreferences.frequencyKey) private var frequencyRaw = AudioPromptFrequency.normal.rawValue
     @AppStorage(AudioCoachingPreferences.coachingFrequencyKey) private var coachingFrequencyRaw = AudioPromptFrequency.normal.rawValue
     @AppStorage(AudioCoachingPreferences.speechRateKey) private var speechRateRaw = AudioSpeechRate.normal.rawValue
@@ -93,13 +92,10 @@ struct AudioCoachingSettingsView: View {
                         VStack(alignment: .leading, spacing: 12) {
                             Text("Heart-rate alerts")
                                 .strandOverline()
-                            Picker("Target zone", selection: $targetZone) {
-                                Text("Off").tag(0)
-                                ForEach(1...5, id: \.self) { zone in
-                                    Text("Zone \(zone)").tag(zone)
-                                }
-                            }
-                            .pickerStyle(.menu)
+                            Text("The target comes from the activity you start: set a heart-rate target there and these alerts follow it.")
+                                .font(StrandFont.footnote)
+                                .foregroundStyle(StrandPalette.textTertiary)
+                                .fixedSize(horizontal: false, vertical: true)
                             Picker("Alert spacing", selection: $frequencyRaw) {
                                 ForEach(AudioPromptFrequency.allCases) { value in
                                     Text(value.title).tag(value.rawValue)

@@ -265,9 +265,9 @@ final class AudioCoachingCoordinator: ObservableObject {
     }
 
     private func targetHeartRate() -> ClosedRange<Int>? {
-        // A zone chosen when the session was started wins over the standing setting, so the spoken cues and the strap buzz agree.
-        let zone = model?.workoutTarget?.zone ?? AudioCoachingPreferences.targetZone
-        guard zone > 0, let band = model?.profile.hrZoneSet.zones.first(where: { $0.number == zone }) else {
+        // The target is the one chosen when the activity was started (its Effort target), so the spoken cues and the strap buzz agree.
+        // With no heart-rate target on the session there is nothing to alert against.
+        guard let zone = model?.workoutTarget?.zone, zone > 0, let band = model?.profile.hrZoneSet.zones.first(where: { $0.number == zone }) else {
             return nil
         }
         let lower = Int(ceil(band.lower))
