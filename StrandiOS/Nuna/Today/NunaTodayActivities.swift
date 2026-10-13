@@ -15,6 +15,9 @@ struct NunaTodayActivities: View {
     var isToday = true
     /// Effort only concerns movement. Its embedded activity card deliberately leaves sleep and naps out.
     var includesSleep = true
+    /// The two buttons under the rows. Left out (nil) where the card is embedded and the screen has its own way to start.
+    var onAdd: (() -> Void)?
+    var onStart: (() -> Void)?
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var router: NavRouter
     @State private var night: (onset: Date, wake: Date)?
@@ -66,6 +69,13 @@ struct NunaTodayActivities: View {
                     ForEach(rows) { item in row(item) }
                 }
             }
+            if onAdd != nil || onStart != nil {
+                HStack(spacing: 8) {
+                    if let onAdd { actionButton("Add activity", icon: "plus", action: onAdd) }
+                    if let onStart { actionButton("Start activity", icon: "stopwatch", action: onStart) }
+                }
+                .padding(.top, 3)
+            }
         }
         .padding(.horizontal, 12).padding(.top, 10).padding(.bottom, 12)
         // The same surface as every other card, so it follows the active look (Default or WHP) with them.
@@ -74,6 +84,20 @@ struct NunaTodayActivities: View {
             if includesSleep { await loadNight() }
             else { night = nil; naps = [] }
         }
+    }
+
+    private func actionButton(_ title: LocalizedStringKey, icon: String, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: icon)
+                Text(title).lineLimit(1).minimumScaleFactor(0.8)
+            }
+            .font(.nuna(size: NunaTypeSize.sub, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            .padding(.horizontal, 8)
+            .frame(maxWidth: .infinity, minHeight: 48)
+            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
+        }
+        .buttonStyle(.plain)
     }
 
     @ViewBuilder private func row(_ item: Item) -> some View {
