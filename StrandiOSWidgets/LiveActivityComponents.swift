@@ -33,7 +33,8 @@ struct NOOPZoneBar: View {
             ZStack(alignment: .topLeading) {
                 HStack(spacing: gap) {
                     ForEach(1...5, id: \.self) { n in
-                        Capsule().fill(NOOPLive.zoneColor(n).opacity(zone == nil || zone == n ? 1 : 0.45)).frame(height: height)
+                        // Only the zone the heart rate is in carries its colour; the others, and all of them before a reading, are grey.
+                        Capsule().fill(zone == n ? NOOPLive.zoneColor(n) : NunaPalette.ink.opacity(0.2)).frame(height: height)
                     }
                 }
                 if let position {
