@@ -11,6 +11,14 @@ struct AutoWorkoutSuggestion: Equatable, Sendable {
     let workout: DetectedWorkout
     let sport: String
     let confidence: Double
+    /// When the detector could not name the sport with confidence, the three it finds most likely (best first), so the person can
+    /// pick the closest one. Empty when the sport is named.
+    var alternatives: [String] = []
+
+    /// The same window saved under another sport (one of `alternatives`, chosen by the person).
+    func withSport(_ name: String) -> AutoWorkoutSuggestion {
+        AutoWorkoutSuggestion(workout: workout, sport: name, confidence: confidence)
+    }
 
     var startSec: Int { workout.startSec }
     var endSec: Int { workout.endSec }
@@ -38,6 +46,13 @@ enum IOSAutoWorkoutDetector {
     private static let walkMinSeconds = 10 * 60
     private static let runMinSeconds = 8 * 60
     private static let cycleMinSeconds = 12 * 60
+    /// What a suggestion is called when the evidence does not support a specific sport.
+    static let genericSport = "Workout"
+    /// A walking or running label from the shape classifier (not from a gait tick) needs at least this confidence.
+    private static let minLabelConfidence = 0.5
+    /// Cycling needs more: at least this confidence, and decoded ticks that are mostly "still".
+    private static let minCycleConfidence = 0.55
+    private static let minStillFractionForCycling = 0.6
     private static let maxClassGapSeconds = 90
     private static let mergeGapSeconds = 5 * 60
 
@@ -93,20 +108,33 @@ enum IOSAutoWorkoutDetector {
                 restingHR: Double(resting), maxHR: nil, caloriesKcal: nil) else { continue }
 
             let prediction = WorkoutTypeClassifier.classify(features)
-            let selected: CoarseWorkoutClass
+            // A specific label is given only on positive evidence; otherwise the suggestion stays generic ("Workout") and the
+            // person names it. Guessing is worse than not naming: a steady, low-motion, elevated heart rate is true of an
+            // elliptical, a row, a class or a stretch of housework, and it used to be read as cycling.
+            let selected: CoarseWorkoutClass?
             if let hint = window.hint, hint == .walk || hint == .run {
                 // A decoded @63 gait class is stronger evidence than the fallback shape score. The
                 // HR gate above still prevents a low-effort isolated step burst becoming a workout.
                 selected = hint
-            } else if prediction.predictedClass == .walk || prediction.predictedClass == .run
-                        || prediction.predictedClass == .cycle {
-                selected = prediction.predictedClass
             } else {
-                continue
+                switch prediction.predictedClass {
+                case .walk, .run:
+                    selected = prediction.confidence >= minLabelConfidence ? prediction.predictedClass : nil
+                case .cycle:
+                    // Not seeing steps is not seeing a bike: cycling needs decoded activity-class ticks that read "still" through
+                    // an elevated heart rate, and a classifier that is confident about it.
+                    let seesNoGait = features.tickCoverage >= WorkoutTypeClassifier.minTickCoverage
+                        && features.stillFraction >= minStillFractionForCycling
+                    selected = (seesNoGait && prediction.confidence >= minCycleConfidence) ? .cycle : nil
+                default:
+                    selected = nil
+                }
+                // No label, and not a sustained cardio window either: nothing to suggest.
+                if selected == nil, window.hint != .cycle { continue }
             }
 
             let minimum = selected == .run ? runMinSeconds :
-                (selected == .cycle ? cycleMinSeconds : walkMinSeconds)
+                (selected == nil || selected == .cycle ? cycleMinSeconds : walkMinSeconds)
             guard window.end - window.start >= minimum else { continue }
 
             let hrWindow = sortedHR.filter { $0.ts >= window.start && $0.ts <= window.end }
@@ -118,8 +146,9 @@ enum IOSAutoWorkoutDetector {
                 avgBpm: average, peakBpm: bpms.max() ?? average,
                 durationMin: max(1, (window.end - window.start) / 60))
             suggestions.append(AutoWorkoutSuggestion(
-                workout: detected, sport: sportName(selected),
-                confidence: max(0, min(1, prediction.confidence))))
+                workout: detected, sport: selected.map(sportName) ?? genericSport,
+                confidence: max(0, min(1, prediction.confidence)),
+                alternatives: selected == nil ? topAlternatives(prediction, hasGaitTicks: features.tickCoverage >= WorkoutTypeClassifier.minTickCoverage) : []))
         }
 
         // One suggestion per overlapping activity window. Preserve the strongest/latest candidate so a
@@ -131,6 +160,24 @@ enum IOSAutoWorkoutDetector {
             byKey[key] = suggestion
         }
         return byKey.values.sorted { $0.startSec > $1.startSec }
+    }
+
+    /// The three most likely sports when none could be named with confidence (the same rule WHOOP states for an activity it cannot
+    /// classify). The classifier is coarse, so each class stands for the catalogue sport people most often mean by it; a class
+    /// the classifier cannot tell apart from the rest is left out rather than padded in, and cycling is offered only when the
+    /// ticks could actually have seen a gait.
+    private static func topAlternatives(_ prediction: WorkoutClassPrediction, hasGaitTicks: Bool) -> [String] {
+        let names: [CoarseWorkoutClass: String] = [
+            .walk: "Walking", .run: "Running", .cycle: "Cycling", .strength: "Strength", .ski: "Skiing",
+        ]
+        let ranked = prediction.scores.sorted { $0.value > $1.value }.map(\.key)
+        var out: [String] = []
+        for cls in ranked {
+            if cls == .cycle, !hasGaitTicks { continue }
+            if let name = names[cls], !out.contains(name) { out.append(name) }
+            if out.count == 3 { break }
+        }
+        return out
     }
 
     private static func sportName(_ activity: CoarseWorkoutClass) -> String {

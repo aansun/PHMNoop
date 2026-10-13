@@ -3216,6 +3216,9 @@ final class Repository: ObservableObject {
     /// candidate to suggest , newest first , that is NOT already saved and NOT previously dismissed.
     /// Returns nil when the toggle is off, there's nothing to suggest, or detection finds nothing.
     /// PURE READ: never writes a workout. The window scans from `daysBack` days ago to now.
+    /// When the workout being logged right now started (unix seconds), kept by `AppModel`; nil with no session running.
+    var activeWorkoutStartTs: Int?
+
     func autoDetectSuggestion(daysBack: Int = 2) async -> AutoWorkoutSuggestion? {
         guard PuffinExperiment.autoDetectWorkoutsEnabled else { return nil }
         let now = Int(Date().timeIntervalSince1970)
@@ -3228,7 +3231,12 @@ final class Repository: ObservableObject {
 
         // Exclude every already-saved workout window (any source , strap, manual, imported, detected).
         let saved = await workoutRows()
-        let savedSpans = saved.map { SavedWorkoutSpan(startSec: $0.startTs, endSec: $0.endTs) }
+        var savedSpans = saved.map { SavedWorkoutSpan(startSec: $0.startTs, endSec: $0.endTs) }
+        // A session that is running now is not saved yet, but it is not something to suggest either: without this the
+        // activity being logged by hand reads as a "workout around 17:10" while it is still going on.
+        if let activeStart = activeWorkoutStartTs {
+            savedSpans.append(SavedWorkoutSpan(startSec: activeStart - 5 * 60, endSec: now + 60 * 60))
+        }
 
 #if os(iOS)
         // iOS has decoded WHOOP motion and @63 activity-class streams available locally. Read them

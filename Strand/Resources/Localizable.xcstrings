@@ -52,6 +52,7 @@
     "Broadcast HR": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Siarkan HR"}}}},
     "Heart rate zones 1–3": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Zona detak jantung 1–3"}}}},
     "Heart rate zones 4–5": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Zona detak jantung 4–5"}}}},
+    "Not sure what it was. Pick the closest:": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Belum yakin ini apa. Pilih yang paling mendekati:"}}}},
     "Your resting heart rate and HRV are close to your usual. The %@ level comes from your heart rate through the day.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Detak jantung istirahat dan HRV Anda mendekati biasanya. Level %@ berasal dari detak jantung Anda sepanjang hari."}}}},
     "Read from the activity you start. Set it there under Effort target.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Dibaca dari aktivitas yang Anda mulai. Atur di sana pada Target Effort."}}}},
     "The target comes from the activity you start: set a heart-rate target there and these alerts follow it.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Target berasal dari aktivitas yang Anda mulai: atur target detak jantung di sana dan peringatan ini mengikutinya."}}}},
