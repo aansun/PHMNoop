@@ -2,6 +2,7 @@
 import SwiftUI
 import StrandDesign
 import StrandAnalytics
+import WhoopProtocol
 import WhoopStore
 
 // MARK: - Live heart rate card (same data as "Beats per minute" on the Default Today screen)
@@ -44,7 +45,7 @@ struct NunaLiveHRCard: View {
 
     /// No card: the title, then the reading on the left and its line on the right, like a quiet strip of the page.
     var body: some View {
-        NavigationLink(value: NunaTodayRoute.liveHeart) {
+        NavigationLink(value: NunaTodayRoute.deepTimeline) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     HStack(spacing: 6) {
@@ -178,9 +179,18 @@ struct NunaHRTrace: View {
 
 // MARK: - Deep timeline (Nuna look for the existing per-second timeline)
 
+/// The heart rate page. The day's timeline is the page: the reading on top (live today), the chart with its day switcher and signal
+/// menu, the time in each zone for the day, and the two switches that send the heart rate elsewhere (the Dynamic Island and the strap's
+/// own broadcast).
 struct NunaDeepTimelineView: View {
     @EnvironmentObject private var repo: Repository
+    @EnvironmentObject private var live: LiveState
+    @EnvironmentObject private var profile: ProfileStore
+    @EnvironmentObject private var model: AppModel
     @Environment(\.dismiss) private var dismiss
+    @AppStorage(UnitPrefs.liveActivityKey) private var islandOn = true
+    @AppStorage(PuffinExperiment.broadcastHrKey) private var broadcastOn = false
+    @State private var daySamples: [HRSample] = []
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
     @AppStorage(UnitPrefs.temperatureKey) private var temperatureRaw = ""
 
@@ -209,18 +219,146 @@ struct NunaDeepTimelineView: View {
     private let metrics: [Repository.TimelineMetric] = [.hr, .hrv, .spo2, .skinTemp, .respiration, .motion, .bandSleepState]
 
     var body: some View {
-        NunaDetailScreen("Deep timeline") {
+        NunaDetailScreen("Heart rate") {
+            if isLatest && metric == .hr { liveCard }
             metricMenu
             chartCard
             hint
+            zonesCard
+            settingsCard
         }
         .task(id: taskKey) { await reload() }
+        .task(id: "\(Int(dayStart.timeIntervalSince1970))|\(repo.refreshSeq)") { await loadDaySamples() }
         .task(id: "\(Int(dayStart.timeIntervalSince1970))|\(repo.refreshSeq)") { await reloadAnnotations() }
         .task {
             guard !didLand else { return }
             didLand = true
             if let latest = await repo.latestDataDayStart(), latest < dayStart { dayStart = latest }
         }
+    }
+
+    // MARK: Live reading
+
+    private var zoneSet: HRZoneSet { profile.hrZoneSet }
+    private var liveBpm: Int? {
+        if live.connected, let hr = live.heartRate, hr > 0 { return hr }
+        return nil
+    }
+    /// The latest reading of the day when the strap is not streaming.
+    private var lastBanked: HRSample? { daySamples.last }
+
+    private static let zoneNames: [LocalizedStringKey] = ["Zone 1 · easy", "Zone 2 · light", "Zone 3 · aerobic", "Zone 4 · threshold", "Zone 5 · maximum"]
+
+    private var liveCard: some View {
+        let bpm = liveBpm ?? lastBanked?.bpm
+        let zone = bpm.map { zoneSet.zoneNumber(forBPM: Double($0)) } ?? 0
+        return NunaCard {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    NunaChip(liveBpm != nil ? "Live" : (live.connected ? "Waiting for the strap" : "Not connected"),
+                             color: liveBpm != nil ? NunaPalette.charge : (live.connected ? nil : NunaPalette.warning))
+                    Spacer()
+                    if let b = live.batteryPct {
+                        Text(verbatim: String(localized: "Strap \(Int(b.rounded()))%")).font(.nuna(size: 12.5, weight: .semibold))
+                            .foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    }
+                }
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(verbatim: bpm.map(String.init) ?? "–").font(.nuna(size: 64, weight: .bold, design: NunaType.design))
+                        .tracking(nunaTrackingNumber(64)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("bpm").font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                }
+                if zone >= 1 {
+                    HStack(spacing: 8) {
+                        RoundedRectangle(cornerRadius: 3, style: .continuous).fill(nunaHRZoneColors[min(zone, 5) - 1]).frame(width: 10, height: 10)
+                        Text(Self.zoneNames[min(zone, 5) - 1]).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                            .foregroundStyle(NunaPalette.textPrimary)
+                    }
+                }
+                Text(liveBpm != nil ? "Updated every second" : (lastBanked.map { lastReading($0.ts) } ?? "Connect your strap to see live heart rate"))
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            }
+        }
+    }
+
+    private func lastReading(_ ts: Int) -> LocalizedStringKey {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("jj:mm")
+        return LocalizedStringKey(String(localized: "Last reading \(f.string(from: Date(timeIntervalSince1970: TimeInterval(ts))))"))
+    }
+
+    // MARK: Zones for the day
+
+    /// Time in each of the five zones for the day on show, with the resting and the highest heart rate of that day.
+    @ViewBuilder private var zonesCard: some View {
+        let tiz = HRZones.timeInZone(daySamples, zoneSet: zoneSet)
+        if tiz.total > 0 {
+            let resting = repo.days.first { $0.day == Repository.localDayKey(dayStart) }?.restingHr
+            let peak = daySamples.map(\.bpm).max()
+            NunaCard {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("Time in zones").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        .foregroundStyle(NunaPalette.textSecondary)
+                    NunaProportionBar(parts: (0..<5).map { (tiz.seconds[$0], nunaHRZoneColors[$0]) }, height: 14)
+                    VStack(spacing: 10) {
+                        ForEach(0..<5, id: \.self) { i in
+                            HStack(spacing: 10) {
+                                RoundedRectangle(cornerRadius: 3, style: .continuous).fill(nunaHRZoneColors[i]).frame(width: 12, height: 12)
+                                Text(Self.zoneNames[i]).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                                    .lineLimit(1).minimumScaleFactor(0.8)
+                                Spacer(minLength: 8)
+                                Text(verbatim: NunaSleepFormat.duration(tiz.seconds[i] / 60)).font(.nuna(size: 15, weight: .bold, design: NunaType.design))
+                                    .monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
+                            }
+                        }
+                    }
+                    NunaDivider()
+                    HStack(alignment: .top, spacing: 0) {
+                        stat("Resting", resting.map(String.init) ?? "–")
+                        stat("Highest", peak.map(String.init) ?? "–")
+                        stat("Zones set by", zoneSource)
+                    }
+                }
+            }
+        }
+    }
+
+    /// Where the zone boundaries come from, in a word.
+    private var zoneSource: String {
+        profile.hrZoneSet.source == "custom" ? String(localized: "You") : String(localized: "Age")
+    }
+
+    // MARK: Where the heart rate goes
+
+    /// The Dynamic Island switch always; the strap broadcast only for a 5.0 / MG (or while it is on, so it can be turned off).
+    private var settingsCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            NunaCard(small: true, padding: EdgeInsets(top: 6, leading: 18, bottom: 6, trailing: 18)) {
+                VStack(spacing: 0) {
+                    NunaToggleRow("HR Dynamic Island", subtitle: "Heart rate on the Lock Screen and in the Dynamic Island",
+                                  systemImage: "platter.filled.top.iphone", isOn: $islandOn).padding(.vertical, 8)
+                    if model.whoop5Detected || broadcastOn {
+                        NunaDivider()
+                        NunaToggleRow("Broadcast HR", subtitle: "Your strap shares its heart rate with a Garmin, Zwift or gym equipment",
+                                      systemImage: "dot.radiowaves.left.and.right", isOn: $broadcastOn).padding(.vertical, 8)
+                            .onChange(of: broadcastOn) { _, on in model.ble.setBroadcastHr(on) }
+                    }
+                }
+            }
+            if broadcastOn {
+                Text("Broadcast is on: the strap advertises its heart rate all the time, which uses its battery faster. Turn it off when you are not using it with another device.")
+                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.warning).textCase(nil)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+    }
+
+    private func loadDaySamples() async {
+        let from = Int(dayStart.timeIntervalSince1970)
+        let to = min(from + 86_400, Int(Date().timeIntervalSince1970))
+        guard to > from else { daySamples = []; return }
+        let samples = await repo.hrSamples(from: from, to: to, limit: 200_000)
+        guard !Task.isCancelled else { return }
+        daySamples = samples
     }
 
     /// One colour per signal, so the chart and its chip read as the same thing.

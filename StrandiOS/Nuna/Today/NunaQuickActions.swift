@@ -45,7 +45,7 @@ enum NunaQuickActions {
         .init(id: "workouts", title: "Workouts", icon: "figure.run", group: "Train", kind: .route(.workouts)),
         .init(id: "history", title: "History", icon: "clock.arrow.circlepath", group: "Train", kind: .workout(.history)),
         .init(id: "load", title: "Training load", icon: "chart.bar", group: "Train", kind: .workout(.load)),
-        .init(id: "liveHeart", title: "Live heart rate", icon: "heart", group: "Train", kind: .today(.liveHeart)),
+        .init(id: "liveHeart", title: "Live heart rate", icon: "heart", group: "Train", kind: .today(.deepTimeline)),
         // Calm and sleep
         .init(id: "breathing", title: "Breathing", icon: "wind", group: "Rest", kind: .breathing),
         .init(id: "nap", title: "Nap", icon: "moon", group: "Rest", kind: .today(.sleepNaps(0))),

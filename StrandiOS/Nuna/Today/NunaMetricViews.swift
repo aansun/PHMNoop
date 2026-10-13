@@ -19,8 +19,8 @@ enum NunaTodayRoute: Hashable {
     case fitnessAge
     case bodyClock
     case bodyClockPlan
+    /// The heart rate page: the day's timeline, the live reading, time in zones and the broadcast and Dynamic Island switches.
     case deepTimeline
-    case liveHeart
     case mood
     case weight
     case nutrition
@@ -55,7 +55,6 @@ extension View {
             case .bodyClock: NunaBodyClockView()
             case .bodyClockPlan: NunaBodyClockPlanView()
             case .deepTimeline: NunaDeepTimelineView()
-            case .liveHeart: NunaLiveHeartView()
             case .mood: NunaMoodView()
             case .weight: NunaWeightView()
             case .nutrition: NunaNutritionView()
