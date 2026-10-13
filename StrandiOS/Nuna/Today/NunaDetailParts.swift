@@ -383,6 +383,9 @@ func nunaRestWord(_ v: Double) -> LocalizedStringKey {
     v >= 85 ? "Excellent" : (v >= 70 ? "Good" : (v >= 50 ? "Fair" : "Low"))
 }
 
+/// The five heart-rate zone colours, Zone 1 first: every zone list and chart draws them the same.
+let nunaHRZoneColors: [Color] = [NunaPalette.zoneBase, NunaPalette.rest, NunaPalette.charge, NunaPalette.warning, NunaPalette.alert]
+
 /// A row of colour keys: a swatch and "range word" for each zone. Three sit in one row; four go two by two.
 struct NunaZoneKey: View {
     let zones: [(color: Color, range: String, word: LocalizedStringKey)]

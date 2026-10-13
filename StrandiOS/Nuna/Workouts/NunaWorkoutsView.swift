@@ -50,11 +50,6 @@ struct NunaWorkoutsView: View {
     @State private var tab: Int
     @State private var showManual = false
     @State private var weekOffset = 0
-    @State private var query = ""
-    @State private var showAllSports = false
-    @State private var editingPins = false
-    @State private var limitHit = false
-    @AppStorage(NunaPinnedSports.key) private var pinnedRaw = NunaPinnedSports.unset
 
     init(autoOpenStart: Bool = false, initialTab: Int = 0) {
         self.autoOpenStart = autoOpenStart
@@ -63,12 +58,6 @@ struct NunaWorkoutsView: View {
 
     private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
     private var system: UnitSystem { UnitPrefs.resolveDistance(system: UnitSystem(rawValue: unitSystemRaw) ?? .metric, override: distanceRaw) }
-
-    private let starts: [(String, String, String)] = [
-        ("Running", "Run", "figure.run"), ("Walking", "Walk", "figure.walk"), ("Cycling", "Cycle", "bicycle"),
-        ("Pool swim", "Swim", "figure.pool.swim"),
-        ("HIIT", "HIIT", "bolt.heart"), ("Yoga", "Yoga", "figure.mind.and.body"),
-    ]
 
     var body: some View {
         let week = workoutWeek
@@ -345,18 +334,18 @@ struct NunaWorkoutsView: View {
         let range = date.string(from: week.start) + " – " + date.string(from: lastDay)
         return NunaCard {
             VStack(alignment: .leading, spacing: NunaSpacing.section) {
-                HStack(spacing: NoopMetrics.space2) {
+                HStack(spacing: 8) {
                     Text("Workout Data")
                         .font(.nuna(size: NunaTypeSize.h3, weight: .heavy, design: NunaType.design))
                         .foregroundStyle(NunaPalette.textPrimary)
-                    Spacer(minLength: NoopMetrics.space2)
+                    Spacer(minLength: 8)
                     Menu {
                         Button("Previous week", systemImage: "chevron.left") { weekOffset += 1 }
                         Button("Next week", systemImage: "chevron.right") { weekOffset = max(0, weekOffset - 1) }
                             .disabled(weekOffset == 0)
                         if weekOffset > 0 { Button("Current week") { weekOffset = 0 } }
                     } label: {
-                        HStack(spacing: NoopMetrics.space1) {
+                        HStack(spacing: 4) {
                             Text(verbatim: range)
                                 .lineLimit(1).minimumScaleFactor(0.85)
                             Image(systemName: "chevron.down")
@@ -368,18 +357,18 @@ struct NunaWorkoutsView: View {
                     .accessibilityLabel(Text("Workout date range"))
                     .accessibilityValue(Text(verbatim: range))
                 }
-                HStack(alignment: .top, spacing: NoopMetrics.space3) {
+                HStack(alignment: .top, spacing: 12) {
                     workoutDataStat("Total workout", "\(rows.count)")
                     workoutDataStat("Total time", seconds > 0 ? NunaWorkoutFormat.duration(seconds) : "0 min")
                     workoutDataStat("Total calories", totalCalories)
                 }
-                HStack(alignment: .top, spacing: NoopMetrics.space3) {
+                HStack(alignment: .top, spacing: 12) {
                     workoutDataStat("Most active", mostActive ?? "–", isActivity: true)
                     workoutDataStat("Active days", "\(active)")
                     workoutDataStat("Longest session", NunaWorkoutFormat.duration(longest))
                 }
                 NunaDivider()
-                HStack(spacing: NoopMetrics.space3) {
+                HStack(spacing: 12) {
                     Button { showManual = true } label: { workoutAction("Add activity", icon: "plus") }
                         .buttonStyle(.plain)
                     Button { openStart = true } label: { workoutAction("Start activity", icon: "stopwatch") }
@@ -401,7 +390,7 @@ struct NunaWorkoutsView: View {
     }
 
     private func workoutDataStat(_ label: LocalizedStringKey, _ value: String, isActivity: Bool = false) -> some View {
-        VStack(alignment: .leading, spacing: NoopMetrics.space1) {
+        VStack(alignment: .leading, spacing: 4) {
             Text(label)
                 .font(.nuna(size: NunaTypeSize.caption, weight: .semibold))
                 .textCase(.uppercase)
@@ -417,150 +406,15 @@ struct NunaWorkoutsView: View {
     }
 
     private func workoutAction(_ title: LocalizedStringKey, icon: String) -> some View {
-        HStack(spacing: NoopMetrics.space2) {
+        HStack(spacing: 8) {
             Image(systemName: icon)
             Text(title).lineLimit(1).minimumScaleFactor(0.8)
         }
         .font(.nuna(size: NunaTypeSize.sub, weight: .bold))
         .foregroundStyle(NunaPalette.textPrimary)
-        .padding(.horizontal, NoopMetrics.space2)
+        .padding(.horizontal, 8)
         .frame(maxWidth: .infinity, minHeight: NoopButtonMetrics.minHitTarget)
         .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
-    }
-
-    // MARK: Start
-
-    private var pinned: [String] { NunaPinnedSports.decode(pinnedRaw) }
-
-    /// The short, localised label of the quick set, or the catalogue name for anything else.
-    private func quickTitle(_ sport: String) -> (String, Bool) {
-        if let q = starts.first(where: { $0.0 == sport }) { return (q.1, true) }
-        return (sport, false)
-    }
-
-    private func togglePin(_ sport: String) {
-        if let next = NunaPinnedSports.toggled(sport, in: pinned) {
-            pinnedRaw = NunaPinnedSports.encode(next)
-            UISelectionFeedbackGenerator().selectionChanged()
-        } else {
-            UINotificationFeedbackGenerator().notificationOccurred(.warning)
-            limitHit = true
-            Task { try? await Task.sleep(nanoseconds: 2_000_000_000); limitHit = false }
-        }
-    }
-
-    /// Every sport of the catalogue that can be started from here.
-    private var catalogNames: [String] { WorkoutCatalog.all.map(\.name).filter { !NunaPinnedSports.hidden.contains($0) } }
-
-    private var startSection: some View {
-        let q = query.trimmingCharacters(in: .whitespaces)
-        let matches = WorkoutCatalog.matching(q).filter { !NunaPinnedSports.hidden.contains($0.name) }
-        let pins = pinned
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack {
-                    nunaTrendsCap("Start a workout")
-                    Spacer()
-                    Button { withAnimation(.easeInOut(duration: 0.2)) { editingPins.toggle(); limitHit = false } } label: {
-                        NunaBareIcon(editingPins ? "checkmark" : "pencil", tint: editingPins ? NunaPalette.charge : NunaPalette.textPrimary, target: 36)
-                    }.buttonStyle(.plain).accessibilityLabel(Text(editingPins ? "Done" : "Edit"))
-                }
-                HStack(spacing: 10) {
-                    Image(systemName: "magnifyingglass").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
-                    TextField("", text: $query, prompt: Text("Search all workouts").foregroundStyle(NunaPalette.textMuted))
-                        .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).autocorrectionDisabled().textCase(nil)
-                    if !query.isEmpty {
-                        Button { query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(NunaPalette.textMuted) }.buttonStyle(.plain)
-                    }
-                }
-                .padding(.horizontal, 14).frame(height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                if editingPins {
-                    HStack(spacing: 6) {
-                        Image(systemName: "pin.fill").font(.nuna(size: 11, weight: .bold))
-                        Text(verbatim: String(localized: "Pinned \(pins.count) of \(NunaPinnedSports.maxCount)")).font(.nuna(size: 12.5, weight: .bold))
-                        Spacer()
-                        Text(limitHit ? "You can pin up to 8 workouts." : "Tap a workout to pin or unpin it.").font(.nuna(size: 12, weight: .semibold)).textCase(nil).multilineTextAlignment(.trailing)
-                    }
-                    .foregroundStyle(limitHit ? NunaPalette.alertText : NunaPalette.textSecondary)
-                    let rest = (q.isEmpty ? catalogNames : matches.map(\.name)).filter { !pins.contains($0) }
-                    let shown = (q.isEmpty ? pins : pins.filter { p in matches.contains { $0.name == p } }) + rest
-                    if shown.isEmpty {
-                        Text("No workouts match").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    } else {
-                        sportGrid(shown)
-                    }
-                } else if !q.isEmpty {
-                    if matches.isEmpty {
-                        Text("No workouts match").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    } else {
-                        sportGrid(matches.map(\.name))
-                    }
-                } else if showAllSports {
-                    sportGrid(catalogNames)
-                    moreButton(expanded: true)
-                } else {
-                    if pins.isEmpty {
-                        Text("Pin the workouts you do most. Tap Edit to choose up to 8.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-                    } else {
-                        sportGrid(pins)
-                    }
-                    moreButton(expanded: false)
-                }
-            }
-        }
-    }
-
-    private func moreButton(expanded: Bool) -> some View {
-        Button { withAnimation(.easeInOut(duration: 0.2)) { showAllSports.toggle() } } label: {
-            HStack(spacing: 6) {
-                Text(expanded ? "Show fewer" : "More").font(.nuna(size: 14, weight: .bold))
-                Image(systemName: expanded ? "chevron.up" : "chevron.down").font(.nuna(size: 11, weight: .bold))
-            }
-            .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 44)
-            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-        }.buttonStyle(.plain)
-    }
-
-    private func cell(_ sport: String) -> some View {
-        let (title, localized) = quickTitle(sport)
-        let isPinned = pinned.contains(sport)
-        return VStack(spacing: 8) {
-            Image(systemName: NunaWorkoutKind.isStrengthName(sport) ? "dumbbell" : sportSymbol(sport)).font(.nuna(size: 20, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).frame(height: 26)
-            Group { if localized { Text(LocalizedStringKey(title)) } else { Text(verbatim: title) } }
-                .font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).minimumScaleFactor(0.75).multilineTextAlignment(.center).frame(height: 30, alignment: .top)
-        }
-        .frame(maxWidth: .infinity).frame(height: 84).padding(.horizontal, 2)
-        .background(editingPins && isPinned ? NunaPalette.glassStrong : NunaPalette.glass, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(editingPins && isPinned ? NunaPalette.textSecondary : NunaPalette.hairline, lineWidth: 1))
-        .overlay(alignment: .topTrailing) {
-            if editingPins {
-                Image(systemName: isPinned ? "pin.fill" : "pin").font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(isPinned ? NunaPalette.onAccent : NunaPalette.textMuted)
-                    .frame(width: 20, height: 20)
-                    .background(isPinned ? NunaPalette.accent : NunaPalette.field, in: Circle())
-                    .padding(5)
-            }
-        }
-        .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-    }
-
-    /// A grid of sports by catalogue name. While editing a tap pins or unpins; otherwise it starts the workout, and a long press
-    /// offers the pin.
-    private func sportGrid(_ sports: [String]) -> some View {
-        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 4), spacing: 10) {
-            ForEach(sports, id: \.self) { sport in
-                if editingPins {
-                    Button { togglePin(sport) } label: { cell(sport) }.buttonStyle(.plain)
-                } else {
-                    NavigationLink(value: NunaWorkoutRoute.start(sport)) { cell(sport) }.buttonStyle(.plain)
-                        .contextMenu {
-                            Button { togglePin(sport) } label: {
-                                Label(pinned.contains(sport) ? "Unpin" : "Pin", systemImage: pinned.contains(sport) ? "pin.slash" : "pin")
-                            }
-                        }
-                }
-            }
-        }
     }
 
     // MARK: History

@@ -4,7 +4,7 @@ import StrandDesign
 
 /// The sport list as a Nuna sheet: a search field and one card of rows, each with a symbol, the sport, a location mark for route
 /// sports and a check on the chosen one. With `allowsCustom` a typed name that is not in the catalogue can be used as typed,
-/// and the last picks sit above the full list while the search is empty.
+/// and the five most-recent picks sit above the full list while the search is empty.
 struct NunaSportPicker: View {
     @Binding var selection: String
     var allowsCustom = false
@@ -16,7 +16,9 @@ struct NunaSportPicker: View {
 
     private var sports: [WorkoutCatalog.Sport] { WorkoutCatalog.matching(query) }
     private var trimmed: String { query.trimmingCharacters(in: .whitespaces) }
-    private var recents: [String] { trimmed.isEmpty && allowsCustom ? RecentSportsPrefs.recent() : [] }
+    /// Both the live-start and manual-log paths surface the same most-recent-first list. Searching intentionally
+    /// hides it so the results stay focused; the preference contract caps this list at five entries.
+    private var recents: [String] { trimmed.isEmpty ? RecentSportsPrefs.recent() : [] }
     private var showCustom: Bool { allowsCustom && !trimmed.isEmpty && WorkoutCatalog.sport(named: trimmed) == nil }
 
     private func pick(_ name: String) { selection = name; onClose() }
@@ -39,7 +41,7 @@ struct NunaSportPicker: View {
         ScrollView {
             VStack(alignment: .leading, spacing: NunaSpacing.section) {
                 HStack {
-                    Text("Sport").font(.nuna(size: NunaTypeSize.h2, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("Select activity").font(.nuna(size: NunaTypeSize.h2, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Spacer()
                     Button(action: onClose) {
                         Text("Done").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
@@ -49,7 +51,7 @@ struct NunaSportPicker: View {
                 }
                 HStack(spacing: 10) {
                     Image(systemName: "magnifyingglass").foregroundStyle(NunaPalette.textMuted)
-                    TextField("", text: $query, prompt: Text("Search").foregroundStyle(NunaPalette.textMuted))
+                    TextField("", text: $query, prompt: Text("Search activities").foregroundStyle(NunaPalette.textMuted))
                         .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                         .textInputAutocapitalization(.never).autocorrectionDisabled().textCase(nil)
                     if !query.isEmpty {
@@ -65,7 +67,7 @@ struct NunaSportPicker: View {
                     }.buttonStyle(.plain)
                 }
                 if !recents.isEmpty {
-                    nunaTrendsCap("Recent")
+                    nunaTrendsCap("Most recent")
                     NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 14, bottom: 4, trailing: 14)) {
                         VStack(spacing: 0) {
                             ForEach(Array(recents.enumerated()), id: \.element) { i, name in
@@ -74,7 +76,7 @@ struct NunaSportPicker: View {
                             }
                         }
                     }
-                    nunaTrendsCap("All activities")
+                    nunaTrendsCap("All activities A–Z")
                 }
                 if sports.isEmpty && !showCustom {
                     Text("No sport matches").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)

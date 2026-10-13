@@ -72,8 +72,6 @@ struct NunaTrendDetailCard: View {
         return c
     }
 
-    private static let ranges: [(value: Int, title: String)] = [(7, "W\u{2060}"), (30, "M"), (180, "6M")]
-
     /// The card for a single stored series (`NunaSeriesModel`).
     init(caption: LocalizedStringKey, valueText: String?, unit: String = "", chip: (text: LocalizedStringKey, color: Color)? = nil, note: String? = nil,
          series: NunaSeriesModel, showsBand: Bool = true, reference: Double? = nil, referenceLabel: LocalizedStringKey = "Target",
@@ -274,33 +272,12 @@ struct NunaTrendDetailCard: View {
     }
 
     private var rangeSwitch: some View {
-        HStack(spacing: 2) {
-            ForEach(rangeChoices ?? Self.ranges, id: \.value) { r in
-                let on = range == r.value
-                Button { range = r.value; page = 0 } label: {
-                    Text(verbatim: r.title).font(.nuna(size: 13, weight: .bold)).lineLimit(1).fixedSize(horizontal: true, vertical: false)
-                        .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
-                        .padding(.horizontal, 10).frame(minWidth: 48, minHeight: 34)
-                        .background(on ? NunaPalette.ink.opacity(0.14) : Color.clear, in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
-                }.buttonStyle(.plain)
-            }
-        }
-        .padding(3)
-        .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+        NunaRangeSwitch(choices: rangeChoices ?? NunaRangeSwitch.standard, range: $range) { page = 0 }
     }
 
     private var dateStepper: some View {
-        HStack(spacing: 4) {
-            Button { page += 1 } label: {
-                Image(systemName: "chevron.left").font(.nuna(size: 14, weight: .bold)).frame(width: 26, height: 30)
-            }.disabled(!canGoBack).opacity(canGoBack ? 1 : 0.3)
-            Text(verbatim: dateLabel).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
-            Button { page = max(0, page - 1) } label: {
-                Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).frame(width: 26, height: 30)
-            }.disabled(page == 0).opacity(page == 0 ? 0.3 : 1)
-        }
-        .foregroundStyle(NunaPalette.textPrimary).buttonStyle(.plain)
+        NunaDateStepper(label: dateLabel, canGoBack: canGoBack, canGoForward: page > 0,
+                        back: { page += 1 }, forward: { page = max(0, page - 1) })
     }
 
     private func stat(_ label: LocalizedStringKey, _ value: String) -> some View {
@@ -442,3 +419,54 @@ struct NunaSegmentedChart: View {
     }
 }
 #endif
+
+
+/// The W / M / 6M switch of the one-card detail screens, shared so every trend card draws the same control.
+struct NunaRangeSwitch: View {
+    static let standard: [(value: Int, title: String)] = [(7, "W\u{2060}"), (30, "M"), (180, "6M")]
+
+    var choices: [(value: Int, title: String)] = NunaRangeSwitch.standard
+    @Binding var range: Int
+    var onSelect: () -> Void = {}
+
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(choices, id: \.value) { r in
+                let on = range == r.value
+                Button { range = r.value; onSelect() } label: {
+                    Text(verbatim: r.title).font(.nuna(size: 13, weight: .bold)).lineLimit(1).fixedSize(horizontal: true, vertical: false)
+                        .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+                        .padding(.horizontal, 10).frame(minWidth: 48, minHeight: 34)
+                        .background(on ? NunaPalette.ink.opacity(0.14) : Color.clear, in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
+                }.buttonStyle(.plain)
+            }
+        }
+        .padding(3)
+        .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+    }
+}
+
+/// "‹ 7 OCT – 13 OCT 26 ›": the date window with its back and forward arrows, shared by the trend cards.
+struct NunaDateStepper: View {
+    let label: String
+    var canGoBack = true
+    var canGoForward = true
+    let back: () -> Void
+    let forward: () -> Void
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Button(action: back) {
+                Image(systemName: "chevron.left").font(.nuna(size: 14, weight: .bold)).frame(width: 26, height: 30)
+            }.disabled(!canGoBack).opacity(canGoBack ? 1 : 0.3)
+                .accessibilityLabel(Text("Earlier period"))
+            Text(verbatim: label).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
+            Button(action: forward) {
+                Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).frame(width: 26, height: 30)
+            }.disabled(!canGoForward).opacity(canGoForward ? 1 : 0.3)
+                .accessibilityLabel(Text("Later period"))
+        }
+        .foregroundStyle(NunaPalette.textPrimary).buttonStyle(.plain)
+    }
+}

@@ -71,7 +71,7 @@ private final class NunaSliderTrack: UISlider {
 
     override func trackRect(forBounds bounds: CGRect) -> CGRect {
         var track = super.trackRect(forBounds: bounds)
-        track.size.height = NoopMetrics.space3
+        track.size.height = 12
         track.origin.y = bounds.midY - track.height / 2
         return track
     }
