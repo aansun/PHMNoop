@@ -3239,6 +3239,11 @@ final class Repository: ObservableObject {
         }
 
 #if os(iOS)
+        // The sports this person has saved in the last 90 days: the best label the strap will ever get. It decides whether cycling
+        // may be named at all and which of their own sports are offered first.
+        let since = now - 90 * 86_400
+        var userSports: [String: Int] = [:]
+        for row in saved where row.startTs >= since && !row.sport.isEmpty { userSports[row.sport, default: 0] += 1 }
         // iOS has decoded WHOOP motion and @63 activity-class streams available locally. Read them
         // alongside HR so brisk walking/running can use gait evidence while cycling can use a sustained
         // cardiovascular window without inventing foot strikes.
@@ -3247,7 +3252,7 @@ final class Repository: ObservableObject {
         let (gravity, steps) = await (gravityTask, stepsTask)
         let suggestions = IOSAutoWorkoutDetector.detect(
             hr: samples, gravity: gravity, steps: steps,
-            restingBpm: restingBpm, savedSpans: savedSpans)
+            restingBpm: restingBpm, maxBpm: strainProfile.map { Int($0.hrMax.rounded()) }, userSports: userSports, savedSpans: savedSpans)
         return Self.selectAutoDetectSuggestion(
             suggestions,
             autoDismissedTokens: autoDetectDismissedSpans,

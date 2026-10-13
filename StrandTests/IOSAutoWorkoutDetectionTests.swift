@@ -76,9 +76,23 @@ final class IOSAutoWorkoutDetectionTests: XCTestCase {
         XCTAssertFalse(alternatives.contains("Cycling"))
     }
 
-    /// Cycling is named only when the decoded activity-class ticks read "still" through the effort (no gait) and the
-    /// classifier is confident.
-    func testSustainedCardioWithStillTicksProducesCyclingSuggestion() {
+    /// Cycling is named only when the ticks read "still" through the effort, the classifier is confident AND this person has saved
+    /// cycling before.
+    func testSustainedCardioWithStillTicksProducesCyclingSuggestionForACyclist() {
+        let suggestions = IOSAutoWorkoutDetector.detect(
+            hr: hr(15 * 60, bpm: 135),
+            gravity: gravity(15 * 60, delta: 0.01),
+            steps: steps(15 * 60, activityClass: 0),
+            restingBpm: 60,
+            userSports: ["Cycling": 4],
+            savedSpans: [])
+
+        XCTAssertEqual(suggestions.count, 1)
+        XCTAssertEqual(suggestions.first?.sport, "Cycling")
+    }
+
+    /// The same stream for someone who has never saved a ride stays generic, and cycling is the first thing offered.
+    func testSameStreamWithoutCyclingHistoryStaysGenericAndOffersCyclingFirst() {
         let suggestions = IOSAutoWorkoutDetector.detect(
             hr: hr(15 * 60, bpm: 135),
             gravity: gravity(15 * 60, delta: 0.01),
@@ -86,8 +100,91 @@ final class IOSAutoWorkoutDetectionTests: XCTestCase {
             restingBpm: 60,
             savedSpans: [])
 
+        XCTAssertEqual(suggestions.first?.sport, IOSAutoWorkoutDetector.genericSport)
+        XCTAssertTrue(suggestions.first?.alternatives.contains("Cycling") ?? false)
+    }
+
+    /// Someone who logs the elliptical far more than rides is not told it was a ride, and their own sport comes first.
+    func testOwnSportComesFirstWhenItOutweighsCycling() {
+        let suggestions = IOSAutoWorkoutDetector.detect(
+            hr: hr(30 * 60, bpm: 140),
+            gravity: gravity(30 * 60, delta: 0.02),
+            steps: steps(30 * 60, activityClass: 0),
+            restingBpm: 60,
+            userSports: ["Elliptical": 6, "Cycling": 3],
+            savedSpans: [])
+
+        XCTAssertEqual(suggestions.first?.sport, IOSAutoWorkoutDetector.genericSport)
+        XCTAssertEqual(suggestions.first?.alternatives.first, "Elliptical")
+    }
+
+    /// A seated stretch with a heart rate lifted by stress (a drive, a presentation) is not a workout.
+    func testSeatedStressIsNotASuggestion() {
+        let stress = (0..<(30 * 60)).map { HRSample(ts: start + $0, bpm: 84 + ($0 / 60) % 6) }
+        let suggestions = IOSAutoWorkoutDetector.detect(
+            hr: stress,
+            gravity: gravity(30 * 60, delta: 0.01),
+            steps: steps(30 * 60, activityClass: 0),
+            restingBpm: 60,
+            savedSpans: [])
+
+        XCTAssertTrue(suggestions.isEmpty)
+    }
+
+    /// Two minutes running, two walking, five times over: one running session, not five pieces that are each too short.
+    func testRunWalkIntervalsAreOneRunningSession() {
+        var hrS: [HRSample] = [], gS: [GravitySample] = [], sS: [StepSample] = []
+        for block in 0..<10 {
+            let running = block.isMultiple(of: 2)
+            for i in 0..<120 {
+                let t = start + block * 120 + i
+                hrS.append(HRSample(ts: t, bpm: running ? 158 : 118))
+                gS.append(GravitySample(ts: t, x: i.isMultiple(of: 2) ? 0 : (running ? 0.4 : 0.1), y: 0, z: 1))
+                sS.append(StepSample(ts: t, counter: t - start, activityClass: running ? 2 : 1))
+            }
+        }
+        let suggestions = IOSAutoWorkoutDetector.detect(hr: hrS, gravity: gS, steps: sS, restingBpm: 60, savedSpans: [])
+
         XCTAssertEqual(suggestions.count, 1)
-        XCTAssertEqual(suggestions.first?.sport, "Cycling")
+        XCTAssertEqual(suggestions.first?.sport, "Running")
+    }
+
+    /// Sets then rest, no gait: lifting is named, with the person's own word for it when they have one.
+    func testSawToothHeartRateWithNoGaitIsStrength() {
+        let saw = (0..<(45 * 60)).map { i -> HRSample in
+            let phase = Double(i % 150) / 150
+            let level = phase < 0.4 ? phase / 0.4 : 1 - (phase - 0.4) / 0.6
+            return HRSample(ts: start + i, bpm: 88 + Int((54 * level).rounded()))
+        }
+        let g = gravity(45 * 60, delta: 0.015)
+        let s = steps(45 * 60, activityClass: 0)
+
+        let plain = IOSAutoWorkoutDetector.detect(hr: saw, gravity: g, steps: s, restingBpm: 60, savedSpans: [])
+        XCTAssertEqual(plain.first?.sport, "Strength")
+
+        let own = IOSAutoWorkoutDetector.detect(hr: saw, gravity: g, steps: s, restingBpm: 60,
+                                                userSports: ["Weightlifting": 8], savedSpans: [])
+        XCTAssertEqual(own.first?.sport, "Weightlifting")
+    }
+
+    /// Intervals reach a peak that lifting does not: not called strength.
+    func testHighPeakIntervalsAreNotNamedStrength() {
+        let hiit = (0..<(25 * 60)).map { i in HRSample(ts: start + i, bpm: (i / 30).isMultiple(of: 2) ? 172 : 118) }
+        let suggestions = IOSAutoWorkoutDetector.detect(
+            hr: hiit, gravity: gravity(25 * 60, delta: 0.2), steps: steps(25 * 60, activityClass: 0),
+            restingBpm: 60, savedSpans: [])
+
+        XCTAssertNotEqual(suggestions.first?.sport, "Strength")
+    }
+
+    /// The deepest REM stretch of a night lifts the heart rate a little: asleep and still is never a workout.
+    func testRemSleepHeartRateIsNotASuggestion() {
+        let rem = (0..<(15 * 60)).map { HRSample(ts: start + $0, bpm: 72 + ($0 / 45) % 10) }
+        let suggestions = IOSAutoWorkoutDetector.detect(
+            hr: rem, gravity: gravity(15 * 60, delta: 0.002), steps: steps(15 * 60, activityClass: 0),
+            restingBpm: 60, savedSpans: [])
+
+        XCTAssertTrue(suggestions.isEmpty)
     }
 
     /// A manual activity that is running right now is represented by a span that reaches into the future, so the detector
