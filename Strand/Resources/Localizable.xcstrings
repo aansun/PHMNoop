@@ -1,6 +1,11 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Coaching": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pelatihan"}}}},
+    "Personalized": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Dipersonalisasi"}}}},
+    "Education only": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Hanya edukasi"}}}},
+    "Anya explains what your numbers mean and gives general guidance. It does not plan sessions or bedtimes for you.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Anya menjelaskan arti angkamu dan memberi panduan umum. Anya tidak menyusun sesi latihan atau jam tidur untukmu."}}}},
+    "Anya uses your own numbers to suggest sessions, targets and bedtimes.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Anya memakai angkamu sendiri untuk menyarankan sesi, target, dan jam tidur."}}}},
     "Activity Effort": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Effort aktivitas"}}}},
     "Key statistics": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Statistik utama"}}}},
     "vs. 30 day average": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "vs. rata-rata 30 hari"}}}},

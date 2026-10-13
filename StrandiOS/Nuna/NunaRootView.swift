@@ -96,6 +96,12 @@ struct NunaRootView: View {
         .onChange(of: liftSession.isPresented) { _, on in
             if on { sessionPresenter.present(repo: model.repo, model: model, session: liftSession, router: router) } else { sessionPresenter.dismiss() }
         }
+        // Anya reads the clock, the Plan card's session, banked Effort and tonight's sleep need with every request.
+        .task {
+            let repo = model.repo, profile = model.profile
+            model.coach.dayContextProvider = { await NunaAnyaDayContext.build(repo: repo, profile: profile) }
+        }
+        .onDisappear { model.coach.dayContextProvider = nil }
         // A session left running by a previous launch comes back as the bar, not as a sheet thrown in the user's face.
         .task {
             guard !liftSession.isActive, let snapshot = LiftSessionPersistence.load() else { return }
