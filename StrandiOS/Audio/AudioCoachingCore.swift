@@ -679,7 +679,6 @@ enum AudioCoachingPreferences {
     static let distanceIncludesDurationKey = "noop.audioCoaching.distanceIncludesDuration"
     static let distanceIncludesHeartRateKey = "noop.audioCoaching.distanceIncludesHeartRate"
     static let distanceMilestoneKilometersKey = "noop.audioCoaching.distanceMilestoneKilometers"
-    static let targetZoneKey = "noop.audioCoaching.targetZone"
     static let frequencyKey = "noop.audioCoaching.frequency"
     static let coachingFrequencyKey = "noop.audioCoaching.coachingFrequency"
     static let speechRateKey = "noop.audioCoaching.speechRate"
@@ -703,11 +702,6 @@ enum AudioCoachingPreferences {
             distanceIncludesHeartRate: defaults.object(forKey: distanceIncludesHeartRateKey) as? Bool ?? true,
             distanceMilestoneKilometers: min(max(milestoneKilometers, 1), 10),
             checkInPrompts: defaults.object(forKey: checkInKey) as? Bool ?? false)
-    }
-
-    static var targetZone: Int {
-        let raw = UserDefaults.standard.object(forKey: targetZoneKey) as? Int ?? 3
-        return min(max(raw, 0), 5)
     }
 
     /// A short tone before a cue, so it is noticed over music or wind. On unless switched off.

@@ -52,6 +52,8 @@
     "Broadcast HR": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Siarkan HR"}}}},
     "Heart rate zones 1–3": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Zona detak jantung 1–3"}}}},
     "Heart rate zones 4–5": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Zona detak jantung 4–5"}}}},
+    "Read from the activity you start. Set it there under Effort target.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Dibaca dari aktivitas yang Anda mulai. Atur di sana pada Target Effort."}}}},
+    "The target comes from the activity you start: set a heart-rate target there and these alerts follow it.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Target berasal dari aktivitas yang Anda mulai: atur target detak jantung di sana dan peringatan ini mengikutinya."}}}},
     "Time in zones": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Waktu di tiap zona"}}}},
     "Zones set by": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Zona diatur oleh"}}}},
     "You": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Anda"}}}},

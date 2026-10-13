@@ -531,7 +531,6 @@ struct NunaAnyaVoiceCoachView: View {
     @AppStorage(AudioCoachingPreferences.checkInKey) private var checkIn = false
     @AppStorage(AudioCoachingPreferences.aiWordingKey) private var aiWording = false
     @AppStorage(AudioCoachingPreferences.distanceMilestoneKilometersKey) private var every = 1
-    @AppStorage(AudioCoachingPreferences.targetZoneKey) private var targetZone = 3
     @AppStorage(AudioCoachingPreferences.frequencyKey) private var frequency = AudioPromptFrequency.normal.rawValue
     @AppStorage(AudioCoachingPreferences.speechRateKey) private var speechRate = AudioSpeechRate.normal.rawValue
     @AppStorage(AudioCoachingPreferences.chimeKey) private var chime = true
@@ -605,12 +604,10 @@ struct NunaAnyaVoiceCoachView: View {
                     }
                 }
                 if heartRate {
+                    // The target is the one set when an activity starts (its Effort target), not a second setting kept here.
                     NunaCard(small: true) {
-                        HStack {
-                            Text("Target zone").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            Spacer()
-                            Picker("", selection: $targetZone) { Text("Off").tag(0); ForEach(1...5, id: \.self) { Text(verbatim: String(localized: "Zone \($0)")).tag($0) } }.pickerStyle(.menu).tint(NunaPalette.textPrimary)
-                        }
+                        NunaListRow("Heart-rate target", subtitle: "Read from the activity you start. Set it there under Effort target.",
+                                    systemImage: "heart.circle")
                     }
                 }
                 if distance {
