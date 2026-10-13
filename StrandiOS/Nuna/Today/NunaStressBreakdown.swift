@@ -488,7 +488,7 @@ struct NunaStressTrendView: View {
     // MARK: Chart
 
     @ViewBuilder private func chart(_ bars: [Bar]) -> some View {
-        if range == 7 { weekChart(bars) } else { dailyChart(bars) }
+        if range == 7 { weekChart(bars) } else if range == 180 { monthlyChart(bars) } else { dailyChart(bars) }
     }
 
     private func share(_ minutes: Double, of zones: NunaStressZones) -> Double { zones.total > 0 ? minutes / zones.total * 100 : 0 }
@@ -541,7 +541,84 @@ struct NunaStressTrendView: View {
         .font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
     }
 
-    /// A month or six months: one thin column per day on a time axis, like the other trend cards.
+    // MARK: Six months: each month's average split, drawn as a line per band over the faint days
+
+    private struct MonthShare: Identifiable {
+        let first: Date
+        let end: Date
+        let low: Double
+        let medium: Double
+        let high: Double
+        var id: Date { first }
+        var center: Date { Date(timeIntervalSince1970: (first.timeIntervalSince1970 + end.timeIntervalSince1970) / 2) }
+    }
+
+    /// The mean daily share of each band in every calendar month of the window.
+    private func monthShares(_ bars: [Bar]) -> [MonthShare] {
+        var groups: [(first: Date, last: Date, shares: [(Double, Double, Double)])] = []
+        var lastKey: DateComponents?
+        for bar in bars {
+            let key = cal.dateComponents([.year, .month], from: bar.date)
+            let total = max(bar.zones.total, 0.0001)
+            let share = (bar.zones.low / total * 100, bar.zones.medium / total * 100, bar.zones.high / total * 100)
+            if key == lastKey, !groups.isEmpty {
+                groups[groups.count - 1].last = bar.date
+                groups[groups.count - 1].shares.append(share)
+            } else {
+                groups.append((bar.date, bar.date, [share])); lastKey = key
+            }
+        }
+        return groups.map { group in
+            let n = Double(group.shares.count)
+            return MonthShare(first: group.first, end: cal.date(byAdding: .day, value: 1, to: group.last) ?? group.last,
+                              low: group.shares.map(\.0).reduce(0, +) / n, medium: group.shares.map(\.1).reduce(0, +) / n,
+                              high: group.shares.map(\.2).reduce(0, +) / n)
+        }
+    }
+
+    private func monthlyChart(_ bars: [Bar]) -> some View {
+        let months = monthShares(bars)
+        let end = cal.date(byAdding: .day, value: 1, to: lastDay) ?? lastDay
+        return Chart {
+            // The days, faint behind the lines.
+            ForEach(bars) { bar in
+                BarMark(x: .value("Day", bar.date, unit: .day), y: .value("Low", share(bar.zones.low, of: bar.zones)), width: .automatic)
+                    .foregroundStyle(NunaStressBand.low.opacity(0.22))
+                BarMark(x: .value("Day", bar.date, unit: .day), y: .value("Medium", share(bar.zones.medium, of: bar.zones)), width: .automatic)
+                    .foregroundStyle(NunaStressBand.medium.opacity(0.22))
+                BarMark(x: .value("Day", bar.date, unit: .day), y: .value("High", share(bar.zones.high, of: bar.zones)), width: .automatic)
+                    .foregroundStyle(NunaStressBand.high.opacity(0.22))
+            }
+            // Each band's monthly mean sits at the middle of its stretch of the stacked 100%.
+            ForEach(months) { month in
+                bandLine(month, share: month.low, at: month.low / 2, color: NunaStressBand.low)
+                bandLine(month, share: month.medium, at: month.low + month.medium / 2, color: NunaStressBand.medium)
+                bandLine(month, share: month.high, at: month.low + month.medium + month.high / 2, color: NunaStressBand.high)
+            }
+        }
+        .chartYScale(domain: 0...114)
+        .chartXScale(domain: firstDay...end)
+        .chartXAxis {
+            AxisMarks(values: months.map(\.center)) { _ in
+                AxisValueLabel(format: .dateTime.month(.abbreviated)).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+            }
+        }
+        .chartYAxis { percentAxis }
+        .frame(height: 280)
+        .accessibilityLabel(Text("Stress share chart"))
+    }
+
+    private func bandLine(_ month: MonthShare, share: Double, at height: Double, color: Color) -> some ChartContent {
+        RuleMark(xStart: .value("Month start", month.first), xEnd: .value("Month end", month.end), y: .value("Mean", height))
+            .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round))
+            .foregroundStyle(color)
+            .annotation(position: .top, alignment: .center, spacing: 2) {
+                Text(verbatim: "\(Int(share.rounded()))%").font(.nuna(size: 11.5, weight: .bold, design: NunaType.design))
+                    .foregroundStyle(NunaPalette.textPrimary).fixedSize()
+            }
+    }
+
+    /// A month: one thin column per day on a time axis, like the other trend cards.
     private func dailyChart(_ bars: [Bar]) -> some View {
         let end = cal.date(byAdding: .day, value: 1, to: lastDay) ?? lastDay
         return Chart {
