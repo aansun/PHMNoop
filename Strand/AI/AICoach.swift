@@ -404,7 +404,6 @@ final class AICoachEngine: ObservableObject {
     static let responseLanguageKey = "ai.responseLanguage"      // "app" | "id" | "en"
     static let responseStyleKey = "ai.responseStyle"            // "short" | "balanced" | "detailed"
     static let extraInstructionsKey = "ai.extraInstructions"    // free text, appended after the built-in prompt
-    static let coachingModeKey = "ai.coachingMode"              // "personal" | "education"
     static let maxExtraInstructionsLength = 600
 
     static func answerStyleBlock(_ defaults: UserDefaults = .standard) -> String {
@@ -418,10 +417,6 @@ final class AICoachEngine: ObservableObject {
         case "short": out += "\n\nLENGTH: Keep every answer very short: at most 60 words and no more than 3 bullets."
         case "detailed": out += "\n\nLENGTH: The user wants detail. Explain the reasoning and the evidence in full, up to about 250 words, still without padding."
         default: break
-        }
-        // Coaching mode. Personalized (the default) adds nothing. Education only keeps Anya explaining and stops it prescribing.
-        if defaults.string(forKey: coachingModeKey) == "education" {
-            out += "\n\nCOACHING MODE: Education only. Explain what the signals mean and give general, evidence-based guidance. Do not prescribe sessions, targets, bedtimes or plans for this person, and do not turn their numbers into instructions. If they ask for a plan, say this mode only explains and that Personalized mode can plan."
         }
         // Goals the wearer set in Me > Persona > Targets; a line is added only for a goal that is set.
         var goals: [String] = []
