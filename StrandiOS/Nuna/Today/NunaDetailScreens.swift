@@ -1030,8 +1030,7 @@ struct NunaStressDetailView: View {
     @AppStorage(NunaTodayDefaults.hiddenKey) private var hiddenRaw = ""
     @StateObject private var series = NunaSeriesModel()
     @StateObject private var day = NunaTodayModel()
-    @State private var range = 1
-    @State private var page = 0
+    @StateObject private var history = NunaStressHistory()
     @State private var showBreathing = false
     @State private var showCoach = false
     @State private var showInfo = false
@@ -1084,23 +1083,15 @@ struct NunaStressDetailView: View {
                         .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
-            recoveryTiles
+            NunaCard { dayChart }
+            if let score { levelExplanation(score) }
             if coachEnabled, let line = anyaLine(score) { NunaAnyaCard(verbatim: line) { showCoach = true } }
-            chartCard
-            if range == 1, let curve = day.stressCurve {
-                let zones = zoneMinutes(curve)
-                if zones.total > 0 {
-                    NunaTitleRow(title: "Stress zones") { EmptyView() }
-                    NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                        VStack(spacing: 0) {
-                            zoneRow("Low", NunaPalette.charge, zones.low, zones.total)
-                            NunaDivider()
-                            zoneRow("Medium", NunaPalette.warning, zones.mid, zones.total)
-                            NunaDivider()
-                            zoneRow("High", NunaPalette.alert, zones.high, zones.total)
-                        }
-                    }
-                }
+            ForEach(NunaStressCategory.allCases, id: \.self) { category in
+                NunaStressCategoryCard(category: category, today: reader.zones(category, todayKey),
+                                       typical: typical(category), weekdayName: weekdayName, dateName: dateName)
+            }
+            recoveryTiles
+            if day.isToday, let curve = day.stressCurve {
                 let peaks = topPeaks(curve)
                 if !peaks.isEmpty {
                     NunaTitleRow(title: "Today's peaks") { EmptyView() }
@@ -1143,6 +1134,7 @@ struct NunaStressDetailView: View {
         .task(id: repo.refreshSeq) {
             await series.load(repo: repo, key: "stress", source: "my-whoop")
             await day.load(repo: repo, profile: profile)
+            await history.ensure(days: typicalDays, repo: repo)
         }
         // Follows the day: the gauge and the line are re-read every minute while this screen is up.
         .task(id: day.dayOffset) {
@@ -1159,6 +1151,62 @@ struct NunaStressDetailView: View {
         }
     }
 
+    // MARK: Day breakdown
+
+    private var todayKey: String { Repository.localDayKey(Calendar.current.startOfDay(for: Date())) }
+
+    private var reader: NunaStressDayReader {
+        NunaStressDayReader(history: history.entries, nightly: series.byDay, rows: repo.days, todayKey: todayKey,
+                            today: day.stressCurve.map { NunaStressZones(hours: $0.hours) })
+    }
+
+    /// The same weekday over the four weeks before.
+    private var typicalDays: [Date] {
+        let cal = Calendar.current, start = cal.startOfDay(for: Date())
+        return (1...4).compactMap { cal.date(byAdding: .day, value: -7 * $0, to: start) }
+    }
+
+    private func typical(_ category: NunaStressCategory) -> NunaStressZones? {
+        let reader = self.reader
+        return NunaStressZones.mean(typicalDays.compactMap { reader.zones(category, Repository.localDayKey($0)) })
+    }
+
+    private var weekdayName: String {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEEE")
+        return f.string(from: Date())
+    }
+
+    private var dateName: String {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE, d MMM")
+        return f.string(from: Date())
+    }
+
+    /// "Medium stress" and why: the resting heart rate and HRV against the wearer's last month.
+    @ViewBuilder private func levelExplanation(_ score: Double) -> some View {
+        let word = score < 1 ? String(localized: "Low") : (score < 2 ? String(localized: "Medium") : String(localized: "High"))
+        let rows = repo.days.suffix(31).dropLast()
+        let rhrBase = rows.compactMap { $0.restingHr.map(Double.init) }
+        let hrvBase = rows.compactMap(\.avgHrv)
+        let rhrUp = (day.restingHr != nil && rhrBase.count >= 5) ? day.restingHr! > rhrBase.reduce(0, +) / Double(rhrBase.count) + 1 : false
+        let hrvDown = (day.hrv != nil && hrvBase.count >= 5) ? day.hrv! < hrvBase.reduce(0, +) / Double(hrvBase.count) - 3 : false
+        let cause: String = {
+            let level = word.lowercased()
+            if rhrUp && hrvDown { return String(localized: "Your resting heart rate is elevated and HRV is lower than usual, resulting in a \(level) level of stress.") }
+            if rhrUp { return String(localized: "Your resting heart rate is elevated, resulting in a \(level) level of stress.") }
+            if hrvDown { return String(localized: "Your HRV is lower than usual, resulting in a \(level) level of stress.") }
+            return String(localized: "Your resting heart rate and HRV are close to your usual, which keeps stress at a \(level) level.")
+        }()
+        let meaning = score < 1 ? String(localized: "This indicates your body is calm.")
+            : (score < 2 ? String(localized: "This indicates your body is moderately activated.") : String(localized: "This indicates your body is highly activated."))
+        VStack(alignment: .leading, spacing: 8) {
+            Text(score < 1 ? "Low stress" : (score < 2 ? "Medium stress" : "High stress"))
+                .font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+            Text(verbatim: cause + " " + meaning).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                .fixedSize(horizontal: false, vertical: true).textCase(nil)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     /// Anya's line on the stress: the level now, against the wearer's own baseline.
     private func anyaLine(_ score: Double?) -> String? {
         guard let score, let base = series.baseline else { return nil }
@@ -1167,28 +1215,6 @@ struct NunaStressDetailView: View {
         let vs = score < base - 0.05 ? String(localized: "Calmer than your baseline (\(b))")
             : (score > base + 0.05 ? String(localized: "Tenser than your baseline (\(b))") : String(localized: "About your usual baseline (\(b))"))
         return level + " · " + vs
-    }
-
-    /// The one trend card, as on Charge and the other metrics: Today is the line through the day, W and M the days before.
-    private var chartCard: some View {
-        NunaTrendDetailCard(
-            caption: "Average", unit: "",
-            readings: { days, back in series.readings(days, endingDaysAgo: back) },
-            hasOlder: { start in series.byDay.keys.min().map { Repository.localDayKey(start) > $0 } ?? false },
-            loaded: series.loaded, band: series.band.map { $0.lo...$0.hi },
-            lineColor: NunaPalette.charge, decimals: 1, directional: true,
-            levelChip: { v in (text: v < 1 ? "Low" : (v < 2 ? "Medium" : "High"), color: color(v)) },
-            sentence: nil, range: $range, page: $page)
-            .ranges([(1, "Today"), (7, "W\u{2060}"), (30, "M")], dayView: AnyView(dayChart))
-            .lowerIsBetter()
-            .footer(AnyView(stressKey))
-    }
-
-    private var stressKey: some View {
-        HStack(spacing: 14) {
-            legend(NunaPalette.charge, "Low"); legend(NunaPalette.warning, "Medium"); legend(NunaPalette.alert, "High")
-            Spacer()
-        }
     }
 
     /// Today's curve: the same line NOOP draws on Default Today and in the widget, hour by hour.
@@ -1244,21 +1270,6 @@ struct NunaStressDetailView: View {
         return coarse.contains(where: { $0.level != nil }) ? coarse : nil
     }
 
-    private func legend(_ c: Color, _ t: LocalizedStringKey) -> some View {
-        HStack(spacing: 6) {
-            RoundedRectangle(cornerRadius: 3, style: .continuous).fill(c).frame(width: 10, height: 10)
-            Text(t).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-        }
-    }
-
-    private func zoneMinutes(_ r: DaytimeStress.Result) -> (low: Double, mid: Double, high: Double, total: Double) {
-        let levels = r.hours.compactMap(\.level)
-        let low = Double(levels.filter { $0 < 1 }.count) * 60
-        let mid = Double(levels.filter { $0 >= 1 && $0 < 2 }.count) * 60
-        let high = Double(levels.filter { $0 >= 2 }.count) * 60
-        return (low, mid, high, low + mid + high)
-    }
-
     /// The two highest scored hours, at least two hours apart so one episode is not listed twice.
     private func topPeaks(_ r: DaytimeStress.Result) -> [DaytimeStress.HourPoint] {
         var out: [DaytimeStress.HourPoint] = []
@@ -1267,23 +1278,6 @@ struct NunaStressDetailView: View {
             if out.count == 2 { break }
         }
         return out.sorted { $0.startTs < $1.startTs }
-    }
-
-    private func zoneRow(_ title: LocalizedStringKey, _ color: Color, _ minutes: Double, _ total: Double) -> some View {
-        HStack(spacing: 12) {
-            RoundedRectangle(cornerRadius: 4, style: .continuous).fill(color).frame(width: 12, height: 12)
-            VStack(spacing: 8) {
-                HStack {
-                    Text(title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    Spacer()
-                    Text(verbatim: NunaSleepFormat.duration(minutes)).font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                }
-                NunaProgressBar(fraction: minutes / total, color: color)
-            }
-            Text(verbatim: "\(Int((minutes / total * 100).rounded()))%").font(.nuna(size: 12.5, weight: .semibold))
-                .foregroundStyle(NunaPalette.textSecondary).frame(width: 38, alignment: .trailing).textCase(nil)
-        }
-        .frame(minHeight: 60)
     }
 }
 
