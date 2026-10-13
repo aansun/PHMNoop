@@ -1079,13 +1079,6 @@ struct NunaStressDetailView: View {
                         .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
-            NunaCard { dayChart }
-            if let score { levelExplanation(score) }
-            if coachEnabled, let line = anyaLine(score) { NunaAnyaCard(verbatim: line) { showCoach = true } }
-            ForEach(NunaStressCategory.allCases, id: \.self) { category in
-                NunaStressCategoryCard(category: category, today: reader.zones(category, todayKey),
-                                       typical: typical(category), weekdayName: weekdayName, dateName: dateName)
-            }
             recoveryTiles
             if day.isToday, let curve = day.stressCurve {
                 let peaks = topPeaks(curve)
@@ -1109,6 +1102,13 @@ struct NunaStressDetailView: View {
                         }
                     }
                 }
+            }
+            NunaCard { dayChart }
+            if let score { levelExplanation(score) }
+            if coachEnabled, let line = anyaLine(score) { NunaAnyaCard(verbatim: line) { showCoach = true } }
+            ForEach(NunaStressCategory.allCases, id: \.self) { category in
+                NunaStressCategoryCard(category: category, today: reader.zones(category, todayKey),
+                                       typical: typical(category), weekdayName: weekdayName, dateName: dateName)
             }
             NunaCard(small: true, highlight: true, padding: EdgeInsets(top: 16, leading: 18, bottom: 16, trailing: 18)) {
                 HStack(spacing: 14) {
