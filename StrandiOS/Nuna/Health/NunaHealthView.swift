@@ -36,7 +36,6 @@ struct NunaHealthView: View {
     @State private var showCoach = false
     @State private var showSleepCoach = false
     @State private var fitSeries: [(day: String, value: Double)] = []
-    @State private var lastMaxHR: (bpm: Int, sport: String)?
 
     private enum Legacy: String, Identifiable { case appleHealth, live, mood, cycle, breathing; var id: String { rawValue } }
 
@@ -53,9 +52,6 @@ struct NunaHealthView: View {
                 await respS.load(repo: repo, key: "resp_rate", source: "my-whoop")
                 await skinS.load(repo: repo, key: "skin_temp", source: "my-whoop")
                 fitSeries = await repo.exploreSeries(key: "fitness_age", source: "my-whoop", days: 120)
-                if let w = await repo.workoutRows().filter({ ($0.maxHr ?? 0) > 0 }).max(by: { $0.startTs < $1.startTs }), let m = w.maxHr {
-                    lastMaxHR = (m, w.sport.replacingOccurrences(of: "_", with: " ").capitalized)
-                }
             } else {
                 await sleep.load(repo: repo)
             }
@@ -177,7 +173,7 @@ struct NunaHealthView: View {
         NavigationLink(value: metricRoute(key)) { tile }.buttonStyle(.plain)
     }
 
-    /// HRV, resting heart rate, SpO2, respiratory, skin temperature and the highest recent heart rate, each with its status chip. Each opens its own chart.
+    /// Respiratory, blood oxygen, resting heart rate, HRV and skin temperature, each with its status chip. Each opens its own chart.
     private var vitalBento: some View {
         let spo2 = day.spo2
         let spo2Chip: (LocalizedStringKey, Color)? = spo2.map { $0 >= 95 ? ("Normal", NunaPalette.charge) : ("Low", NunaPalette.warning) }
@@ -201,12 +197,11 @@ struct NunaHealthView: View {
             rhrChip = abs(v - b.mean) <= tol ? ("In range", NunaPalette.charge) : (v > b.mean ? ("Above range", NunaPalette.warning) : ("Below range", NunaPalette.charge))
         }
         return LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-            linked("hrv", NunaVitalTile(icon: "waveform.path.ecg", label: "HRV", value: fmt(day.hrv), unit: "ms", chip: hrvChip?.0, chipColor: hrvChip?.1 ?? NunaPalette.charge))
+            linked("resp_rate", NunaVitalTile(icon: "lungs", label: "Respiratory", value: fmt(day.respiratory, 1), unit: "/min", chip: respChip?.0, chipColor: respChip?.1 ?? NunaPalette.charge))
+            linked("spo2", NunaVitalTile(icon: "drop", label: "Blood Oxygen", value: fmt(spo2), unit: "%", chip: spo2Chip?.0, chipColor: spo2Chip?.1 ?? NunaPalette.charge))
             linked("rhr", NunaVitalTile(icon: "heart", label: "Resting HR", value: fmt(day.restingHr), unit: "bpm", chip: rhrChip?.0, chipColor: rhrChip?.1 ?? NunaPalette.charge))
-            linked("spo2", NunaVitalTile(icon: "drop", label: "SpO₂", value: fmt(spo2), unit: "%", chip: spo2Chip?.0, chipColor: spo2Chip?.1 ?? NunaPalette.charge))
-            linked("resp_rate", NunaVitalTile(icon: "wind", label: "Respiratory", value: fmt(day.respiratory, 1), unit: "/min", chip: respChip?.0, chipColor: respChip?.1 ?? NunaPalette.charge))
+            linked("hrv", NunaVitalTile(icon: "waveform.path.ecg", label: "HRV", value: fmt(day.hrv), unit: "ms", chip: hrvChip?.0, chipColor: hrvChip?.1 ?? NunaPalette.charge))
             linked("skin_temp", NunaVitalTile(icon: "thermometer.medium", label: "Skin Temp", value: skinText, unit: "°C", chip: skinChip?.0, chipColor: skinChip?.1 ?? NunaPalette.charge))
-            NunaVitalTile(icon: "bolt.heart", label: "Max HR", value: lastMaxHR.map { String($0.bpm) } ?? "–", unit: "bpm", note: lastMaxHR?.sport)
         }
     }
 

@@ -1027,6 +1027,9 @@ struct NunaStressDetailView: View {
     @StateObject private var series = NunaSeriesModel()
     @StateObject private var day = NunaTodayModel()
     @StateObject private var history = NunaStressHistory()
+    @State private var sleepSpan: OverviewHRChart.SleepSpan?
+    @State private var workoutSpans: [OverviewHRChart.WorkoutSpan] = []
+    @State private var zoomDomain: ClosedRange<Date>?
     @State private var showBreathing = false
     @State private var showCoach = false
     @State private var showInfo = false
@@ -1080,6 +1083,10 @@ struct NunaStressDetailView: View {
                 }
             }
             recoveryTiles
+            // The reading in words, then the day's curve, then Anya, then the peaks.
+            if let score { levelExplanation(score) }
+            stressChartCard
+            if coachEnabled, let line = anyaLine(score) { NunaAnyaCard(verbatim: line) { showCoach = true } }
             if day.isToday, let curve = day.stressCurve {
                 let peaks = topPeaks(curve)
                 if !peaks.isEmpty {
@@ -1103,9 +1110,6 @@ struct NunaStressDetailView: View {
                     }
                 }
             }
-            NunaCard { dayChart }
-            if let score { levelExplanation(score) }
-            if coachEnabled, let line = anyaLine(score) { NunaAnyaCard(verbatim: line) { showCoach = true } }
             ForEach(NunaStressCategory.allCases, id: \.self) { category in
                 NunaStressCategoryCard(category: category, today: reader.zones(category, todayKey),
                                        typical: typical(category), weekdayName: weekdayName, dateName: dateName)
@@ -1131,6 +1135,7 @@ struct NunaStressDetailView: View {
             await series.load(repo: repo, key: "stress", source: "my-whoop")
             await day.load(repo: repo, profile: profile)
             await history.ensure(days: typicalDays, repo: repo)
+            await loadAnnotations()
         }
         // Follows the day: the gauge and the line are re-read every minute while this screen is up.
         .task(id: day.dayOffset) {
@@ -1190,6 +1195,8 @@ struct NunaStressDetailView: View {
             if rhrUp && hrvDown { return String(localized: "Your resting heart rate is elevated and HRV is lower than usual, resulting in a \(level) level of stress.") }
             if rhrUp { return String(localized: "Your resting heart rate is elevated, resulting in a \(level) level of stress.") }
             if hrvDown { return String(localized: "Your HRV is lower than usual, resulting in a \(level) level of stress.") }
+            // Nothing off in the night's signals: a raised level comes from the heart rate through the day, so it is not blamed on them.
+            if score >= 1 { return String(localized: "Your resting heart rate and HRV are close to your usual. The \(level) level comes from your heart rate through the day.") }
             return String(localized: "Your resting heart rate and HRV are close to your usual, which keeps stress at a \(level) level.")
         }()
         let meaning = score < 1 ? String(localized: "This indicates your body is calm.")
@@ -1213,32 +1220,53 @@ struct NunaStressDetailView: View {
         return level + " · " + vs
     }
 
-    /// Today's curve: the same line NOOP draws on Default Today and in the widget, hour by hour.
-    @ViewBuilder private var dayChart: some View {
-        if let curve = day.stressCurve, let pts = chartPoints(curve) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .top, spacing: 8) {
-                    VStack(alignment: .trailing, spacing: 0) {
-                        ForEach([3, 2, 1, 0], id: \.self) { t in
-                            Text(verbatim: "\(t)").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-                            if t > 0 { Spacer(minLength: 0) }
-                        }
-                    }
-                    .frame(width: 14, height: 110)
-                    NunaStressReadout(points: pts, isToday: day.isToday).frame(height: 110)
-                }
-                HStack {
-                    if let f = pts.first(where: { $0.level != nil }) { Text(verbatim: NunaSleepFormat.clock(Date(timeIntervalSince1970: TimeInterval(f.startTs)))) }
-                    Spacer()
-                    Text("Now")
-                }
-                .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                .padding(.leading, 22)
-            }
-        } else {
-            Text("Calibrating").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                .frame(maxWidth: .infinity, minHeight: 110)
+    /// The day's stress as a line from 0 to 3, in the colours of the level (cyan calm, green, then yellow), with the night marked on top and
+    /// a glyph where a workout was. Pinch to zoom and hold to read, as on the heart rate page.
+    @ViewBuilder private var stressChartCard: some View {
+        let dayStart = Repository.logicalDayStart(Date())
+        let all: [TrendPoint] = (day.stressCurve.flatMap { chartPoints($0) } ?? []).compactMap { p in
+            p.level.map { TrendPoint(date: Date(timeIntervalSince1970: TimeInterval(p.startTs)), value: min(max($0, 0), 3)) }
         }
+        NunaCard(padding: EdgeInsets(top: 16, leading: 12, bottom: 14, trailing: 12)) {
+            VStack(alignment: .leading, spacing: 10) {
+                if all.count >= 2, let first = all.first?.date, let last = all.last?.date {
+                    OverviewHRChart(points: all, sleep: sleepSpan, workouts: workoutSpans,
+                                    gradient: Gradient(stops: [.init(color: NunaPalette.rest, location: 0), .init(color: NunaPalette.charge, location: 0.45),
+                                                               .init(color: NunaPalette.warning, location: 0.9)]),
+                                    valueRange: 0...3, xRange: first...max(last, first.addingTimeInterval(60)), height: 230, touchScrub: true,
+                                    zoomDomain: $zoomDomain, zoomBounds: dayStart...dayStart.addingTimeInterval(86_400),
+                                    valueFormat: { String(format: "%.1f", locale: AppLanguage.activeLocale, $0) },
+                                    dateFormat: { NunaSleepFormat.clock($0) })
+                    HStack(spacing: 8) {
+                        Image(systemName: zoomDomain == nil ? "arrow.up.left.and.arrow.down.right" : "arrow.down.right.and.arrow.up.left")
+                        Text(zoomDomain == nil ? "Pinch to zoom · hold to read" : "Zoomed in. Drag to pan · hold to read")
+                        Spacer()
+                        if zoomDomain != nil { Button("Reset") { zoomDomain = nil }.foregroundStyle(NunaPalette.textPrimary) }
+                    }
+                    .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                } else {
+                    Text("Calibrating").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        .frame(maxWidth: .infinity, minHeight: 160)
+                }
+            }
+        }
+    }
+
+    /// The night and the workouts of the day on show, for the marks above the line.
+    private func loadAnnotations() async {
+        let start = Repository.logicalDayStart(Date())
+        let bounds = start...start.addingTimeInterval(86_400)
+        let sleeps: [OverviewHRChart.SleepSpan] = await repo.allSleepSessions(days: 3).map { s in
+            let secs = max(0, s.endTs - s.effectiveStartTs)
+            return .init(start: Date(timeIntervalSince1970: TimeInterval(s.effectiveStartTs)), end: Date(timeIntervalSince1970: TimeInterval(s.endTs)),
+                         label: "\(secs / 3600):" + String(format: "%02d", (secs % 3600) / 60))
+        }
+        let works: [OverviewHRChart.WorkoutSpan] = await repo.workoutRows(days: 3).map { w in
+            .init(start: Date(timeIntervalSince1970: TimeInterval(w.startTs)), end: Date(timeIntervalSince1970: TimeInterval(w.endTs)), symbol: sportSymbol(w.sport))
+        }
+        guard !Task.isCancelled else { return }
+        sleepSpan = OverviewHRChart.mainSleep(sleeps, overlapping: bounds)
+        workoutSpans = OverviewHRChart.workouts(works, overlapping: bounds)
     }
 
     /// HRV and resting heart rate, the two signals the stress read leans on: the same plain rows as the signals under Charge, with the
@@ -1320,7 +1348,7 @@ struct NunaAllMetricsView: View {
             Row(id: "hrv", title: "HRV", icon: "waveform.path.ecg", tint: NunaPalette.charge, value: f(day.hrv, 0, " ms"), delta: h?.0, good: h?.1, route: r("hrv")),
             Row(id: "rhr", title: "Resting HR", icon: "heart", tint: NunaPalette.alertText, value: f(day.restingHr), delta: p?.0, good: p?.1, route: r("rhr")),
             Row(id: "spo2", title: "Blood Oxygen", icon: "drop", tint: NunaPalette.effortText, value: f(day.spo2, 0, "%"), route: r("spo2")),
-            Row(id: "resp", title: "Respiratory", icon: "wind", tint: NunaPalette.effortText, value: f(day.respiratory, 1), route: r("resp_rate")),
+            Row(id: "resp", title: "Respiratory", icon: "lungs", tint: NunaPalette.effortText, value: f(day.respiratory, 1), route: r("resp_rate")),
             Row(id: "steps", title: "Steps", icon: "figure.walk", tint: NunaPalette.charge, value: f(day.steps),
                 route: MetricCatalog.todayStepsMetric(hasMeasuredSteps: day.steps != nil).map { .metric($0) }),
             Row(id: "weight", title: "Weight", icon: "scalemass", tint: NunaPalette.effortText, value: f(day.extras["weight"], 1, " kg"), route: r("weight", "apple-health")),
@@ -1394,75 +1422,4 @@ private struct NunaAllMetricsScaffold<Content: View>: View {
     }
 }
 
-/// The all-day stress line with its numbers on it: the peak, the lowest and, today, the latest reading; and a finger held or dragged on the
-/// line reads any point (value and time). Points sit exactly where `DaytimeLoadLine` puts them (evenly across the readings, 0 to 3 up the side).
-private struct NunaStressReadout: View {
-    let points: [DaytimeStress.HourPoint]
-    let isToday: Bool
-    @State private var touchIndex: Int?
-
-    private func fmt(_ v: Double) -> String { String(format: "%.1f", locale: AppLanguage.activeLocale, min(max(v, 0), 3)) }
-
-    var body: some View {
-        GeometryReader { geo in
-            let w = geo.size.width, h = geo.size.height
-            let n = max(points.count, 1)
-            let x: (Int) -> CGFloat = { i in n <= 1 ? w / 2 : w * CGFloat(i) / CGFloat(n - 1) }
-            let y: (Double) -> CGFloat = { v in h - h * CGFloat(min(max(v / 3, 0), 1)) }
-            let scored = points.enumerated().filter { $0.element.level != nil }
-            let peak = scored.max { ($0.element.level ?? 0) < ($1.element.level ?? 0) }
-            let low = scored.min { ($0.element.level ?? 0) < ($1.element.level ?? 0) }
-            let last = scored.last
-            ZStack(alignment: .topLeading) {
-                DaytimeLoadLine(hours: points)
-                if let touchIndex, points.indices.contains(touchIndex), let v = points[touchIndex].level {
-                    let px = x(touchIndex), py = y(v)
-                    Path { p in p.move(to: CGPoint(x: px, y: 0)); p.addLine(to: CGPoint(x: px, y: h)) }
-                        .stroke(NunaPalette.textSecondary, style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
-                    Circle().fill(NunaPalette.textPrimary).frame(width: 10, height: 10).position(x: px, y: py)
-                    tag("\(fmt(v)) · \(NunaSleepFormat.clock(Date(timeIntervalSince1970: TimeInterval(points[touchIndex].startTs))))", bold: true)
-                        .position(x: min(max(px, 58), w - 58), y: max(py - 22, 12))
-                } else {
-                    if let peak, peak.offset != last?.offset {
-                        marker(fmt(peak.element.level ?? 0), at: CGPoint(x: x(peak.offset), y: y(peak.element.level ?? 0)), size: w, above: true)
-                    }
-                    if let low, low.offset != peak?.offset, low.offset != last?.offset, (peak?.element.level ?? 0) - (low.element.level ?? 0) >= 0.3 {
-                        marker(fmt(low.element.level ?? 0), at: CGPoint(x: x(low.offset), y: y(low.element.level ?? 0)), size: w, above: false)
-                    }
-                    if isToday, let last {
-                        let pt = CGPoint(x: x(last.offset), y: y(last.element.level ?? 0))
-                        Circle().fill(NunaPalette.textPrimary).frame(width: 10, height: 10).position(pt)
-                        tag(fmt(last.element.level ?? 0), bold: true)
-                            .position(x: min(max(pt.x - 24, 22), w - 22), y: min(max(pt.y - 20, 12), h - 12))
-                    }
-                }
-            }
-            .contentShape(Rectangle())
-            // Hold, then drag: a plain swipe over the chart still scrolls the screen.
-            .gesture(LongPressGesture(minimumDuration: 0.25)
-                .sequenced(before: DragGesture(minimumDistance: 0))
-                .onChanged { value in
-                    guard n > 1, case .second(true, let drag?) = value else { return }
-                    let i = Int((drag.location.x / max(w, 1) * CGFloat(n - 1)).rounded())
-                    let clamped = min(max(i, 0), n - 1)
-                    // The nearest hour that carries a reading.
-                    touchIndex = scored.min { abs($0.offset - clamped) < abs($1.offset - clamped) }?.offset
-                }
-                .onEnded { _ in touchIndex = nil })
-        }
-        .accessibilityHidden(true)
-    }
-
-    private func marker(_ text: String, at pt: CGPoint, size w: CGFloat, above: Bool) -> some View {
-        tag(text, bold: false).position(x: min(max(pt.x, 20), w - 20), y: pt.y + (above ? -14 : 14))
-    }
-
-    private func tag(_ text: String, bold: Bool) -> some View {
-        Text(verbatim: text).font(.nuna(size: bold ? 13 : 12, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-            .padding(.horizontal, 7).frame(height: 21)
-            .background(NunaPalette.card.opacity(0.92), in: Capsule())
-            .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
-            .fixedSize()
-    }
-}
 #endif
