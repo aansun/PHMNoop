@@ -1,6 +1,7 @@
 #if os(iOS)
 import SwiftUI
 import StrandDesign
+import StrandAnalytics
 
 /// The screen behind the Rest ring, built like the Charge one: the ring, the four things Rest is made of, Anya's line, the trend of Rest and,
 /// under it the whole night: stages, comparison, naps, vitals, need and body clock.
@@ -12,11 +13,12 @@ struct NunaRestDetailView: View {
     @State private var range = 7
     @State private var page = 0
     @State private var showCoach = false
+    @AppStorage(NunaNapPrefs.autoDetectKey) private var autoNaps = true
 
     private var rest: Double? { model.value("sleep_performance") ?? series.latest?.value }
 
     var body: some View {
-        NunaDetailScreen("Rest") {
+        NunaDetailScreen("Rest", trailing: AnyView(settingsButton)) {
             hero
             if let night = model.night { components(night) }
             if coachEnabled, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
@@ -29,15 +31,79 @@ struct NunaRestDetailView: View {
                 levelChip: { v in (text: nunaRestWord(v), color: nunaRestTextColor(v)) },
                 sentence: nil, range: $range, page: $page)
                 .columns(color: nunaRestColor, top: 100, legend: AnyView(restKey))
-            if let night = model.night { NunaSleepNightSections(model: model, night: night) }
+            if let night = model.night {
+                NunaSleepNightSections(model: model, night: night, showsNeed: false)
+                // After the Body clock card, which closes the night sections.
+                insights(night)
+            }
             NunaExpandRow(title: "How it's calculated", subtitle: "Four parts of the night",
                           text: "Rest adds up how long you slept against what you need (half of the score), how much of your time in bed you were asleep, the share of deep and REM sleep, and how regular your bedtime is. It is an estimate computed on this phone from your strap's data.")
         }
-        .task(id: repo.refreshSeq) {
+        .task(id: "\(repo.refreshSeq)-\(autoNaps)") {
             await series.load(repo: repo, key: "sleep_performance", source: "my-whoop")
             await model.load(repo: repo)
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "sleep") }
+    }
+
+    private var settingsButton: some View {
+        NavigationLink(value: NunaTodayRoute.sleepSettings) {
+            Image(systemName: "slider.horizontal.3").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                .frame(width: 44, height: 44)
+        }
+        .buttonStyle(.plain).accessibilityLabel(Text("Sleep settings"))
+    }
+
+    // MARK: Detail cards
+
+    /// Hours against need, consistency over the last five nights, and efficiency with the wake events.
+    @ViewBuilder private func insights(_ night: NunaNight) -> some View {
+        let asleep = night.daily?.totalSleepMin ?? night.asleepMin
+        let healthy = SleepModel.debtNeedMin(days: repo.days)
+        let total = max(model.need(night), healthy)
+        // The debt as of this night, from the same recurrence the ledger uses, kept inside what is left above the healthy minimum.
+        let debts = SleepDebt.debtSeries(series: model.nights.reversed().map { ($0.dayKey, $0.daily?.totalSleepMin ?? $0.asleepMin) },
+                                         needHours: healthy / 60)
+        let debt = min(max(debts.first(where: { $0.day == night.dayKey })?.value ?? 0, 0), total - healthy)
+        let strain = max(total - healthy - debt, 0)
+
+        NunaHoursVsNeededCard(asleepMin: asleep, healthyMin: healthy, strainMin: strain, debtMin: debt,
+                              percent: model.hoursVsNeeded(night), usual: model.usual { model.hoursVsNeeded($0) })
+        NunaConsistencyCard(nights: consistencyNights(night), percent: model.consistency(night), usual: model.usual { model.consistency($0) })
+        let total2 = max(night.wake.timeIntervalSince(night.onset), 1)
+        let events = night.intervals.filter { $0.stage == .awake && $0.end - $0.start >= 60 }.map { (start: $0.start, end: $0.end) }
+        NunaEfficiencyCard(asleepMin: night.asleepMin, awakeMin: night.stages.awake, events: events, totalSec: total2,
+                           percent: model.efficiency(night), usual: model.usual { model.efficiency($0) })
+    }
+
+    /// Hours from the evening the night began: a bedtime after midnight is 24 and more, so a night is one unbroken stretch.
+    private func hours(_ date: Date, evening: Bool) -> Double {
+        let c = Calendar.current.dateComponents([.hour, .minute], from: date)
+        let h = Double(c.hour ?? 0) + Double(c.minute ?? 0) / 60
+        return evening ? (h < 12 ? h + 24 : h) : h + 24
+    }
+
+    private func consistencyNights(_ night: NunaNight) -> [NunaConsistencyCard.Night] {
+        let recent = Array(model.nights.dropFirst(model.index).prefix(5).reversed())
+        func weekday(_ d: Date) -> String {
+            let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE")
+            return f.string(from: d)
+        }
+        // The bed and wake time each night is measured against: the mean of the nights up to it, up to 14.
+        func ideal(_ n: NunaNight) -> (bed: Double, wake: Double) {
+            guard let i = model.nights.firstIndex(where: { $0.id == n.id }) else { return (hours(n.onset, evening: true), hours(n.wake, evening: false)) }
+            let window = model.nights.dropFirst(i).prefix(14)
+            let beds = window.map { hours($0.onset, evening: true) }, wakes = window.map { hours($0.wake, evening: false) }
+            return (beds.reduce(0, +) / Double(max(beds.count, 1)), wakes.reduce(0, +) / Double(max(wakes.count, 1)))
+        }
+        return recent.map { n in
+            let bed = hours(n.onset, evening: true)
+            var wake = hours(n.wake, evening: false)
+            if wake <= bed { wake += 24 }
+            let ideal = ideal(n)
+            return NunaConsistencyCard.Night(id: n.id, label: weekday(n.wakeDate), bed: bed, wake: wake,
+                                             idealBed: ideal.bed, idealWake: max(ideal.wake, ideal.bed + 1), selected: n.id == night.id)
+        }
     }
 
     // MARK: Ring

@@ -9,10 +9,13 @@ import WhoopStore
 struct NunaSleepHost<Content: View>: View {
     let title: LocalizedStringKey
     let startIndex: Int
+    /// How many nights back the screen may go (nil: everything loaded).
+    var maxNights: Int?
     @ViewBuilder let content: (NunaSleepModel) -> Content
 
     @EnvironmentObject private var repo: Repository
     @StateObject private var model = NunaSleepModel()
+    @AppStorage(NunaNapPrefs.autoDetectKey) private var autoNaps = true
 
     var body: some View {
         NunaScreen(title) {
@@ -31,7 +34,8 @@ struct NunaSleepHost<Content: View>: View {
                 content(model)
             }
         }
-        .task(id: repo.refreshSeq) {
+        .task(id: "\(repo.refreshSeq)-\(autoNaps)") {
+            model.maxNights = maxNights
             await model.load(repo: repo)
             if model.loaded, startIndex < model.nights.count, startIndex > 0, model.index == 0 { model.index = startIndex }
         }
@@ -111,6 +115,8 @@ struct NunaSleepNightSections: View {
     let night: NunaNight
     /// The four percentage tiles (performance, efficiency, consistency, restorative); the Rest screen already lists them as rows.
     var showsTiles = false
+    /// The Need and debt card; the Rest screen draws a fuller one of its own.
+    var showsNeed = true
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var appModel: AppModel
     @State private var edit: NunaSleepEditTarget?
@@ -124,7 +130,7 @@ struct NunaSleepNightSections: View {
             if !night.naps.isEmpty { napCard(night) }
             if showsTiles { tiles(model, night) }
             NunaOvernightVitals(model: model, night: night)
-            needCard(model, night)
+            if showsNeed { needCard(model, night) }
             if let d = night.daily?.disturbances, d > 0 {
                 NunaCard(small: true) {
                     NunaListRow("Woke up \(d) times", description: "Brief awakenings during the night", systemImage: "moon.fill", tint: NunaPalette.restText)
@@ -351,7 +357,8 @@ struct NunaSleepVitalsView: View {
 struct NunaSleepPerformanceView: View {
     var startIndex = 0
     var body: some View {
-        NunaSleepHost(title: "Sleep performance", startIndex: startIndex) { model in
+        // Performance is about the last two weeks: the night picker stops there, and so do the charts.
+        NunaSleepHost(title: "Sleep performance", startIndex: startIndex, maxNights: 14) { model in
             if let night = model.night {
                 NunaNightPicker(model: model)
                 let hvn = model.hoursVsNeeded(night)

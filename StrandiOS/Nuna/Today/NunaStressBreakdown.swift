@@ -96,9 +96,9 @@ enum NunaStressCategory: CaseIterable, Hashable {
 
     var note: LocalizedStringKey {
         switch self {
-        case .total: return "Stress through the day, asleep and awake. Time in workouts is left out."
-        case .nonActivity: return "Stress outside of workouts and sleep."
-        case .sleep: return "Stress during sleep, from last night's resting heart rate and HRV against your baseline."
+        case .total: return "Stress experienced throughout the day including sleep and activities."
+        case .nonActivity: return "Stress experienced outside of activities and sleep."
+        case .sleep: return "Stress experienced during sleep."
         }
     }
 
@@ -316,16 +316,27 @@ struct NunaStressCategoryCard: View {
         }
     }
 
+    /// The change against a typical day, in a small grey box with a triangle, as the monitor cards of the reference draw it.
+    private func changeBox(_ band: Band) -> some View {
+        HStack(spacing: 4) {
+            if let typical = band.typical, typical > 0 {
+                let change = (band.minutes - typical) / typical * 100
+                Image(systemName: change >= 0 ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill").font(.nuna(size: 8, weight: .bold))
+                Text(verbatim: "\(Int(abs(change).rounded()))%").font(.nuna(size: 11.5, weight: .bold))
+            } else {
+                Text(verbatim: "–").font(.nuna(size: 11.5, weight: .bold))
+            }
+        }
+        .foregroundStyle(NunaPalette.textSecondary)
+        .padding(.horizontal, 8).frame(height: 24)
+        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
+    }
+
     private func column(_ band: Band) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(verbatim: NunaStressBand.hm(band.minutes)).font(.nuna(size: 22, weight: .bold, design: NunaType.design))
                 .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
-            if let typical = band.typical, typical > 0 {
-                let change = (band.minutes - typical) / typical * 100
-                NunaChip(verbatim: (change >= 0 ? "▲ " : "▼ ") + "\(Int(abs(change).rounded()))%")
-            } else {
-                NunaChip(verbatim: "–")
-            }
+            changeBox(band)
             HStack(spacing: 6) {
                 RoundedRectangle(cornerRadius: 3, style: .continuous).fill(band.color).frame(width: 10, height: 10)
                 Text(band.title).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
