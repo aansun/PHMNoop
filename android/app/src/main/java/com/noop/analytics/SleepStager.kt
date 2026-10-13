@@ -1538,6 +1538,63 @@ object SleepStager {
         return covered.toDouble() / dur.toDouble()
     }
 
+    /**
+     * The off-wrist time of a run as disjoint [start, end) intervals, clipped to it: the union of the HR-gap proxy spans and the
+     * WRIST_OFF→WRIST_ON intervals, merged and sorted. The same spans [offWristFraction] measures, kept as intervals so the run
+     * can be cut. Mirrors Swift `offWristUnion`.
+     */
+    internal fun offWristUnion(p: Period, hr: List<HrSample>, wristOff: List<Pair<Long, Long>>): List<Pair<Long, Long>> {
+        val spans = ArrayList(offWristHRGapSpans(p, hr))
+        for (w in wristOff) {
+            val s = maxOf(w.first, p.start); val e = minOf(w.second, p.end)
+            if (e > s) spans.add(s to e)
+        }
+        if (spans.isEmpty()) return emptyList()
+        spans.sortBy { it.first }
+        val out = ArrayList<Pair<Long, Long>>()
+        var curStart = spans[0].first; var curEnd = spans[0].second
+        for (i in 1 until spans.size) {
+            val sp = spans[i]
+            if (sp.first <= curEnd) curEnd = maxOf(curEnd, sp.second) else { out.add(curStart to curEnd); curStart = sp.first; curEnd = sp.second }
+        }
+        out.add(curStart to curEnd)
+        return out
+    }
+
+    /**
+     * Cut the time the strap was off the wrist out of a sleep run that the fractional rule keeps (some off-wrist time, but under
+     * [maxOffWristSleepFraction]). Without this the whole run is kept and its start or end sweeps the off-wrist stretch in: a still,
+     * worn evening followed by an hour with the strap on the desk read as one nap that ended an hour after the strap was taken off.
+     * The worn pieces stay separate candidates for every other gate ([minSleepMin] drops the short ones). Runs with no off-wrist
+     * time, and runs the fractional rule drops anyway, are returned untouched. [passesEarlierGates] is whatever the loop asks of a whole
+     * run before the off-wrist step; a run that fails it is left whole so it is dropped for the same reason as before. Mirrors Swift.
+     */
+    internal fun trimOffWrist(
+        runs: List<Period>, hr: List<HrSample>, wristOff: List<Pair<Long, Long>>,
+        passesEarlierGates: (Period) -> Boolean,
+    ): List<Period> {
+        val out = ArrayList<Period>()
+        for (p in runs) {
+            if (p.stage != "sleep" || !passesEarlierGates(p)) { out.add(p); continue }
+            val frac = offWristFraction(p, hr, wristOff)
+            if (!(frac > 0.0 && frac < maxOffWristSleepFraction)) { out.add(p); continue }
+            // Only the stretches that matter are cut: one that reaches the start or end of the run and one at least
+            // offWristHRGapMin long. A brief WRIST_OFF blip in the middle of a worn night is not a reason to split it.
+            val gapS = (offWristHRGapMin * 60).toLong()
+            val cuts = offWristUnion(p, hr, wristOff).filter {
+                it.first <= p.start || it.second >= p.end || (it.second - it.first) >= gapS
+            }
+            if (cuts.isEmpty()) { out.add(p); continue }
+            var cursor = p.start
+            for (span in cuts) {
+                if (span.first > cursor) out.add(Period(p.stage, cursor, span.first))
+                cursor = maxOf(cursor, span.second)
+            }
+            if (p.end > cursor) out.add(Period(p.stage, cursor, p.end))
+        }
+        return out
+    }
+
     // ── detectSleep (public) ──────────────────────────────────────────────────
 
     /**
@@ -1776,6 +1833,13 @@ object SleepStager {
                     "pair=$i gapMin=${a.gapMin} activeMin=${a.activeMin} activeCapMin=${a.activeCapMin} " +
                         "hrInSleepBand=${a.hrInSleepBand} reason=${a.reason}"))
             }
+        }
+
+        // Off-wrist time inside a run the fractional rule keeps is cut out of it (see trimOffWrist), so a session never claims the
+        // hours the strap was off the wrist. Mirrors Swift.
+        runs = trimOffWrist(runs, hrS, wristOff) { p ->
+            (p.end - p.start) > minSleepS && (p.end - p.start) <= maxMainSleepSpanS &&
+                confirmSleepWithHR(p, hrS, baseline, grav = grav, sleepHRBaseline = sleepHRBaseline)
         }
 
         val sessions = ArrayList<DetectedSleep>()
