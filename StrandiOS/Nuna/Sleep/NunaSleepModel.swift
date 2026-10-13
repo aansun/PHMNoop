@@ -127,8 +127,12 @@ final class NunaSleepModel: ObservableObject {
     private var importedNeed: [String: Double] = [:]
     private var fallbackNeed: Double = 450
 
+    /// Leave it nil for the whole stretch loaded; a screen that is about the last two weeks sets it to 14.
+    var maxNights: Int?
+    private var reach: Int { min(nights.count, maxNights ?? Int.max) }
+
     var night: NunaNight? { nights.indices.contains(index) ? nights[index] : nil }
-    var hasOlder: Bool { index + 1 < nights.count }
+    var hasOlder: Bool { index + 1 < reach }
     var hasNewer: Bool { index > 0 }
 
     private static let keys = ["sleep_performance", "sleep_need_min", "sleep_debt_min", "hours_vs_needed_pct",
@@ -182,6 +186,12 @@ final class NunaSleepModel: ObservableObject {
     /// Debt in minutes as of the latest night, when there is one.
     var debtMin: Double? { index == 0 ? ledger.flatMap { $0.isDebt ? $0.magnitudeMin : nil } : nil }
 
+    /// The mean of a figure over up to 14 nights before the selected one, once there are at least three of them.
+    func usual(_ f: (NunaNight) -> Double?) -> Double? {
+        let values = nights.dropFirst(index + 1).prefix(14).compactMap(f)
+        return values.count >= 3 ? values.reduce(0, +) / Double(values.count) : nil
+    }
+
     /// Real readings for the last `count` nights ending at the selected one, with their dates (oldest first).
     func recentPoints(count: Int = 14, _ f: (NunaNight) -> Double?) -> [(date: Date, value: Double)] {
         nights.dropFirst(index).prefix(count).reversed().compactMap { n in f(n).map { (n.wakeDate, $0) } }
@@ -221,7 +231,7 @@ final class NunaSleepModel: ObservableObject {
             guard let last = main.last else { continue }
             let key = Repository.localDayKey(Date(timeIntervalSince1970: TimeInterval(last.endTs)))
             let mainStarts = Set(main.map(\.startTs))
-            for b in group where !mainStarts.contains(b.startTs) {
+            for b in group where !mainStarts.contains(b.startTs) && (NunaNapPrefs.autoDetect || b.userEdited) {
                 let start = Date(timeIntervalSince1970: TimeInterval(b.effectiveStartTs))
                 guard start >= lo, start < hi else { continue }
                 let asleep = SleepView.decodeSegments(b.stagesJSON, sessionStart: b.effectiveStartTs)?.stages.asleep
@@ -295,7 +305,7 @@ final class NunaSleepModel: ObservableObject {
                 wakeAt = Date(timeIntervalSince1970: TimeInterval(onsetTs) + cut)
             }
 
-            let naps: [NunaNap] = group.filter { !mainStarts.contains($0.startTs) }.map { b in
+            let naps: [NunaNap] = group.filter { !mainStarts.contains($0.startTs) && (NunaNapPrefs.autoDetect || $0.userEdited) }.map { b in
                 let start = b.effectiveStartTs
                 let seg = SleepView.decodeSegments(b.stagesJSON, sessionStart: start)
                 let asleep = seg?.stages.asleep ?? SleepView.decodedAsleepMinutes(b.stagesJSON, effectiveStartTs: start)

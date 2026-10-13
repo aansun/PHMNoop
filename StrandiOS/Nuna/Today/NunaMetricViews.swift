@@ -32,6 +32,8 @@ enum NunaTodayRoute: Hashable {
     case hydration
     /// The vital signs page: the live heart rate, the five vitals against their range, fitness age and the early warning.
     case vitalSigns
+    /// What the Rest screen's top-right button opens: smart alarm, bedtime reminder, nap detection.
+    case sleepSettings
 }
 
 extension View {
@@ -62,6 +64,7 @@ extension View {
             case .windDown: NunaWindDownView()
             case .hydration: NunaHydrationView()
             case .vitalSigns: NunaHealthView(vitalsOnly: true)
+            case .sleepSettings: NunaSleepSettingsView()
             }
         }
     }
