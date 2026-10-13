@@ -66,6 +66,13 @@ private struct NunaScoreView: View {
     private var effortFraction: Double { Double(s.effort ?? 0) / 100 }
     private var charge: Int? { s.recovery }
 
+    // The ring colours are the app's (`NunaScoreStyle`): Effort runs dark to light blue with the day's aim marked, Rest is coloured by band.
+    private var effortColor: Color { s.effort.map { NunaScoreStyle.effortColor(Double($0)) } ?? NunaPalette.textMuted }
+    private var effortGradient: [Color]? { s.effort.map { NunaScoreStyle.effortGradient(Double($0)) } }
+    private var effortTarget: ClosedRange<Double>? { NunaScoreStyle.effortTarget(charge: charge.map(Double.init)) }
+    private var restColor: Color { s.rest.map { NunaScoreStyle.restColor(Double($0)) } ?? NunaPalette.textMuted }
+    private var restTextColor: Color { s.rest.map { NunaScoreStyle.restTextColor(Double($0)) } ?? NunaPalette.textMuted }
+
     var body: some View {
         switch family {
         case .systemSmall: small.padding(14)
@@ -80,8 +87,9 @@ private struct NunaScoreView: View {
 
     // MARK: Home Screen
 
-    private func scoreRing(_ fraction: Double, _ color: Color, _ text: String, unit: String? = nil, size: CGFloat, font: CGFloat, line: CGFloat) -> some View {
-        NunaWRing(fraction: fraction, color: color, lineWidth: line) {
+    private func scoreRing(_ fraction: Double, _ color: Color, _ text: String, unit: String? = nil, size: CGFloat, font: CGFloat, line: CGFloat,
+                           gradient: [Color]? = nil, target: ClosedRange<Double>? = nil) -> some View {
+        NunaWRing(fraction: fraction, color: color, gradient: gradient, target: target, lineWidth: line) {
             HStack(alignment: .firstTextBaseline, spacing: 1) {
                 Text(verbatim: text).font(.nuna(size: font, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 if let unit { Text(verbatim: unit).font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
@@ -101,8 +109,8 @@ private struct NunaScoreView: View {
             HStack(spacing: 10) {
                 scoreRing(Double(charge ?? 0) / 100, NunaW.chargeColor(charge), charge.map(String.init) ?? "–", unit: charge == nil ? nil : "%", size: 74, font: 19, line: 9)
                 VStack(alignment: .leading, spacing: 8) {
-                    miniScore("EFFORT", effortText, NunaPalette.effortText)
-                    miniScore("REST", s.rest.map { "\($0)%" } ?? "–", NunaPalette.restText)
+                    miniScore("EFFORT", effortText, effortColor)
+                    miniScore("REST", s.rest.map { "\($0)%" } ?? "–", restTextColor)
                 }
             }.padding(.top, 12)
             Spacer(minLength: 0)
@@ -122,17 +130,19 @@ private struct NunaScoreView: View {
             Spacer(minLength: 0)
             ringColumn("Charge", Double(charge ?? 0) / 100, NunaW.chargeColor(charge), charge.map(String.init) ?? "–", unit: charge == nil ? nil : "%")
             Spacer(minLength: 0)
-            ringColumn("Effort", effortFraction, NunaPalette.effortText, effortText, unit: nil)
+            ringColumn("Effort", effortFraction, effortColor, effortText, unit: nil, gradient: effortGradient, target: effortTarget)
             Spacer(minLength: 0)
-            ringColumn("Rest", Double(s.rest ?? 0) / 100, NunaPalette.restText, s.rest.map(String.init) ?? "–", unit: s.rest == nil ? nil : "%")
+            ringColumn("Rest", Double(s.rest ?? 0) / 100, restColor, s.rest.map(String.init) ?? "–", unit: s.rest == nil ? nil : "%")
             Spacer(minLength: 0)
         }
     }
 
-    private func ringColumn(_ title: LocalizedStringKey, _ f: Double, _ c: Color, _ v: String, unit: String?) -> some View {
+    private func ringColumn(_ title: LocalizedStringKey, _ f: Double, _ c: Color, _ v: String, unit: String?,
+                            gradient: [Color]? = nil, target: ClosedRange<Double>? = nil) -> some View {
         let size: CGFloat = family == .systemLarge ? 92 : 80
         return VStack(spacing: 5) {
-            scoreRing(f, c, v, unit: unit, size: size, font: family == .systemLarge ? 24 : 21, line: family == .systemLarge ? 10 : 9)
+            scoreRing(f, c, v, unit: unit, size: size, font: family == .systemLarge ? 24 : 21, line: family == .systemLarge ? 10 : 9,
+                      gradient: gradient, target: target)
             if family == .systemLarge { Text(title).font(.nuna(size: 10, weight: .heavy)).foregroundStyle(NunaPalette.textSecondary) }
         }
     }

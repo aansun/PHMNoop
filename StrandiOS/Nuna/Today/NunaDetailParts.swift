@@ -340,43 +340,26 @@ struct NunaExpandRow: View {
 // MARK: - Charts
 
 /// Charge zone colour: green 67+, yellow 34 to 66, red 0 to 33.
-func nunaChargeColor(_ v: Double) -> Color {
-    v >= 67 ? NunaPalette.scoreHigh : (v >= 34 ? NunaPalette.scoreMid : NunaPalette.scoreLow)
-}
+func nunaChargeColor(_ v: Double) -> Color { NunaScoreStyle.chargeColor(v) }
 
 /// The same three zones for text.
 func nunaChargeTextColor(_ v: Double) -> Color { nunaChargeColor(v) }
 
 /// Effort on the stored 0-100 axis, by how hard the day was: minimal is dark blue, moderate blue, all out light blue.
-func nunaEffortColor(_ stored: Double) -> Color {
-    stored < 33 ? NunaPalette.effortMinimal : (stored < 66 ? NunaPalette.effortModerate : NunaPalette.effortAllOut)
-}
+func nunaEffortColor(_ stored: Double) -> Color { NunaScoreStyle.effortColor(stored) }
 
 func nunaEffortTextColor(_ stored: Double) -> Color { nunaEffortColor(stored) }
 
 /// Today's Effort aim from Charge, as a stretch of the ring (0...1): the better the body is ready, the more it can take. nil while Charge is unknown.
-func nunaEffortTargetFractions(charge: Double?) -> ClosedRange<Double>? {
-    guard let band = CoupledView.optimalStrainRange(recovery: charge) else { return nil }
-    return (Double(band.lowerBound) / 21.0)...(Double(band.upperBound) / 21.0)
-}
+func nunaEffortTargetFractions(charge: Double?) -> ClosedRange<Double>? { NunaScoreStyle.effortTarget(charge: charge) }
 
 /// The colours an Effort ring runs through, from dark blue up to the level reached.
-func nunaEffortRingColors(_ stored: Double) -> [Color] {
-    var c = [NunaPalette.effortMinimal]
-    if stored >= 33 { c.append(NunaPalette.effortModerate) }
-    if stored >= 66 { c.append(NunaPalette.effortAllOut) }
-    if c.count == 1 { c.append(NunaPalette.effortMinimal) }
-    return c
-}
+func nunaEffortRingColors(_ stored: Double) -> [Color] { NunaScoreStyle.effortGradient(stored) }
 
 /// Rest, by how well the night went: excellent green, good lime, fair amber, low red.
-func nunaRestColor(_ v: Double) -> Color {
-    v >= 85 ? NunaPalette.charge : (v >= 70 ? NunaPalette.effort : (v >= 50 ? NunaPalette.warning : NunaPalette.alert))
-}
+func nunaRestColor(_ v: Double) -> Color { NunaScoreStyle.restColor(v) }
 
-func nunaRestTextColor(_ v: Double) -> Color {
-    v >= 85 ? NunaPalette.charge : (v >= 70 ? NunaPalette.effortText : (v >= 50 ? NunaPalette.warning : NunaPalette.alertText))
-}
+func nunaRestTextColor(_ v: Double) -> Color { NunaScoreStyle.restTextColor(v) }
 
 /// The word for a Rest score, the same on every screen.
 func nunaRestWord(_ v: Double) -> LocalizedStringKey {

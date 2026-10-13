@@ -7,10 +7,10 @@ import StrandDesign
 // the app wrote into the shared snapshot; nothing is computed here beyond picking a colour and formatting.
 
 enum NunaW {
-    /// Charge reads green from 67, amber from 34, red below (the same bands as Today).
+    /// Charge reads green from 67, yellow from 34, red below: the very colours the app's ring uses (`NunaScoreStyle`).
     static func chargeColor(_ v: Int?) -> Color {
         guard let v else { return NunaPalette.textMuted }
-        return v >= 67 ? NunaPalette.charge : (v >= 34 ? NunaPalette.warning : NunaPalette.alert)
+        return NunaScoreStyle.chargeColor(Double(v))
     }
 
     /// One word for the Charge band, for the large widget's title.
@@ -43,14 +43,30 @@ enum NunaW {
 struct NunaWRing<Centre: View>: View {
     let fraction: Double
     let color: Color
+    /// Paints the arc through these colours from its start to its end (Effort: dark blue to light blue), like the app's ring.
+    var gradient: [Color]? = nil
+    /// The day's Effort aim (0...1 of the ring): a grey stretch of the track with a white mark where it begins, like the app's ring.
+    var target: ClosedRange<Double>? = nil
     var lineWidth: CGFloat = 9
     @ViewBuilder var centre: () -> Centre
 
     var body: some View {
+        let shown = max(min(fraction, 1), fraction > 0 ? 0.015 : 0)
         ZStack {
             Circle().stroke(Color.primary.opacity(0.10), lineWidth: lineWidth)
-            Circle().trim(from: 0, to: max(min(fraction, 1), fraction > 0 ? 0.015 : 0))
-                .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round)).rotationEffect(.degrees(-90))
+            if let target {
+                Circle().trim(from: min(max(target.lowerBound, 0), 1), to: min(max(target.upperBound, 0), 1))
+                    .stroke(Color.gray.opacity(0.5), style: StrokeStyle(lineWidth: lineWidth, lineCap: .butt)).rotationEffect(.degrees(-90))
+            }
+            Circle().trim(from: 0, to: shown)
+                .stroke(gradient.map { AnyShapeStyle(AngularGradient(colors: $0, center: .center, startAngle: .degrees(0), endAngle: .degrees(max(360 * shown, 1)))) }
+                        ?? AnyShapeStyle(color), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                .rotationEffect(.degrees(-90))
+            if let target {
+                let at = min(max(target.lowerBound, 0), 1)
+                Circle().trim(from: max(at - 0.004, 0), to: min(at + 0.004, 1))
+                    .stroke(Color.white, style: StrokeStyle(lineWidth: lineWidth + 3, lineCap: .butt)).rotationEffect(.degrees(-90))
+            }
             centre()
         }
     }
