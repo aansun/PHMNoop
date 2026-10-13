@@ -283,6 +283,21 @@ struct NunaWorkoutsView: View {
                     Text(verbatim: "\(NunaWorkoutFormat.clock(s.startSec)) · \(s.sport) · \(w.durationMin) min")
                         .font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Text(verbatim: String(localized: "Average heart rate \(w.avgBpm) bpm. Save it as a workout?")).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    // Not sure what it was: the three most likely sports, one tap to save it as that.
+                    if !s.alternatives.isEmpty {
+                        Text("Not sure what it was. Pick the closest:").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        HStack(spacing: 8) {
+                            ForEach(s.alternatives, id: \.self) { name in
+                                Button {
+                                    Task { _ = await repo.saveDetectedWorkout(s.withSport(name)); suggestion = nil; await repo.refresh() }
+                                } label: {
+                                    Text(verbatim: name).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                        .lineLimit(1).minimumScaleFactor(0.8).padding(.horizontal, 12).frame(height: 38)
+                                        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                                }.buttonStyle(.plain)
+                            }
+                        }
+                    }
                     HStack(spacing: 10) {
                         Button {
                             Task { _ = await repo.saveDetectedWorkout(s); suggestion = nil; await repo.refresh() }
