@@ -334,6 +334,9 @@ struct NunaWorkoutsView: View {
         let rows = week.rows
         let active = Set(rows.map { m.dayKey($0.startTs) }).count
         let seconds = m.minutes(rows) * 60
+        let knownCalories = rows.compactMap(\.energyKcal)
+        let totalCalories = knownCalories.isEmpty && !rows.isEmpty ? "–" : knownCalories.reduce(0, +).formatted(.number.locale(AppLanguage.activeLocale).precision(.fractionLength(0)))
+        let mostActive = mostActiveActivity(rows)
         let longest = rows.map { max(0, $0.durationS ?? Double($0.endTs - $0.startTs)) }.max()
         let date = DateFormatter()
         date.locale = AppLanguage.activeLocale
@@ -342,30 +345,37 @@ struct NunaWorkoutsView: View {
         let range = date.string(from: week.start) + " – " + date.string(from: lastDay)
         return NunaCard {
             VStack(alignment: .leading, spacing: NunaSpacing.section) {
-                Text("Workout Data")
-                    .font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design))
-                    .foregroundStyle(NunaPalette.textPrimary)
                 HStack(spacing: NoopMetrics.space2) {
-                    Button { weekOffset += 1 } label: { weekArrow("chevron.left") }
-                        .buttonStyle(.plain).accessibilityLabel(Text("Previous week"))
-                    Text(verbatim: range)
-                        .font(.nuna(size: NunaTypeSize.sub, weight: .semibold))
+                    Text("Workout Data")
+                        .font(.nuna(size: NunaTypeSize.h3, weight: .heavy, design: NunaType.design))
+                        .foregroundStyle(NunaPalette.textPrimary)
+                    Spacer(minLength: NoopMetrics.space2)
+                    Menu {
+                        Button("Previous week", systemImage: "chevron.left") { weekOffset += 1 }
+                        Button("Next week", systemImage: "chevron.right") { weekOffset = max(0, weekOffset - 1) }
+                            .disabled(weekOffset == 0)
+                        if weekOffset > 0 { Button("Current week") { weekOffset = 0 } }
+                    } label: {
+                        HStack(spacing: NoopMetrics.space1) {
+                            Text(verbatim: range)
+                                .lineLimit(1).minimumScaleFactor(0.85)
+                            Image(systemName: "chevron.down")
+                        }
+                        .font(.nuna(size: NunaTypeSize.caption, weight: .semibold))
                         .foregroundStyle(NunaPalette.textSecondary)
-                        .frame(maxWidth: .infinity)
-                        .lineLimit(1).minimumScaleFactor(0.8)
-                    Button { weekOffset = max(0, weekOffset - 1) } label: { weekArrow("chevron.right") }
-                        .buttonStyle(.plain).accessibilityLabel(Text("Next week"))
-                        .disabled(weekOffset == 0)
-                        .opacity(weekOffset == 0 ? 0.35 : 1)
+                        .frame(minHeight: NoopButtonMetrics.minHitTarget, alignment: .trailing)
+                    }
+                    .accessibilityLabel(Text("Workout date range"))
+                    .accessibilityValue(Text(verbatim: range))
                 }
                 HStack(alignment: .top, spacing: NoopMetrics.space3) {
-                    workoutDataStat("Sessions", "\(rows.count)")
-                    workoutDataStat("Duration", seconds > 0 ? NunaWorkoutFormat.duration(seconds) : "0 min")
-                    workoutDataStat("Effort", UnitFormatter.effortDisplay(m.effort(rows), scale: scale))
+                    workoutDataStat("Total workout", "\(rows.count)")
+                    workoutDataStat("Total time", seconds > 0 ? NunaWorkoutFormat.duration(seconds) : "0 min")
+                    workoutDataStat("Total calories", totalCalories)
                 }
                 HStack(alignment: .top, spacing: NoopMetrics.space3) {
+                    workoutDataStat("Most active", mostActive ?? "–", isActivity: true)
                     workoutDataStat("Active days", "\(active)")
-                    workoutDataStat("Per week", String(format: "%.1f", locale: AppLanguage.activeLocale, Double(rows.count)))
                     workoutDataStat("Longest session", NunaWorkoutFormat.duration(longest))
                 }
                 NunaDivider()
@@ -379,14 +389,18 @@ struct NunaWorkoutsView: View {
         }
     }
 
-    private func weekArrow(_ icon: String) -> some View {
-        Image(systemName: icon)
-            .font(.nuna(size: NunaTypeSize.sub, weight: .bold))
-            .foregroundStyle(NunaPalette.textPrimary)
-            .frame(width: NoopButtonMetrics.minHitTarget, height: NoopButtonMetrics.minHitTarget)
+    private func mostActiveActivity(_ rows: [WorkoutRow]) -> String? {
+        let groups = Dictionary(grouping: rows, by: { WorkoutSource.displaySport($0.sport) })
+        let ranked = groups.sorted { lhs, rhs in
+            if lhs.value.count != rhs.value.count { return lhs.value.count > rhs.value.count }
+            let leftTime = m.minutes(lhs.value), rightTime = m.minutes(rhs.value)
+            if leftTime != rightTime { return leftTime > rightTime }
+            return lhs.key < rhs.key
+        }
+        return ranked.first.map { String(localized: String.LocalizationValue($0.key)) }
     }
 
-    private func workoutDataStat(_ label: LocalizedStringKey, _ value: String) -> some View {
+    private func workoutDataStat(_ label: LocalizedStringKey, _ value: String, isActivity: Bool = false) -> some View {
         VStack(alignment: .leading, spacing: NoopMetrics.space1) {
             Text(label)
                 .font(.nuna(size: NunaTypeSize.caption, weight: .semibold))
@@ -394,10 +408,10 @@ struct NunaWorkoutsView: View {
                 .foregroundStyle(NunaPalette.textSecondary)
                 .lineLimit(1).minimumScaleFactor(0.75)
             Text(verbatim: value)
-                .font(.nuna(size: NunaTypeSize.h2, weight: .bold, design: NunaType.design))
+                .font(.nuna(size: isActivity ? NunaTypeSize.h3 : NunaTypeSize.h2, weight: .bold, design: NunaType.design))
                 .foregroundStyle(NunaPalette.textPrimary)
                 .monospacedDigit()
-                .lineLimit(1).minimumScaleFactor(0.75)
+                .lineLimit(isActivity ? 2 : 1).minimumScaleFactor(0.75)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
