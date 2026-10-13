@@ -37,6 +37,7 @@ struct NunaWorkoutsView: View {
     @State private var openStart = false
     @State private var didAutoOpen = false
     @EnvironmentObject private var repo: Repository
+    @EnvironmentObject private var intelligence: IntelligenceEngine
     @EnvironmentObject private var router: NavRouter
     @Environment(\.dismiss) private var dismiss
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
@@ -47,6 +48,8 @@ struct NunaWorkoutsView: View {
     @State private var suggestion: AutoWorkoutSuggestion?
     @State private var showCoach = false
     @State private var tab: Int
+    @State private var showManual = false
+    @State private var weekOffset = 0
     @State private var query = ""
     @State private var showAllSports = false
     @State private var editingPins = false
@@ -68,7 +71,8 @@ struct NunaWorkoutsView: View {
     ]
 
     var body: some View {
-        ScrollView {
+        let week = workoutWeek
+        return ScrollView {
             VStack(spacing: NunaSpacing.section) {
                 header
                 NunaPageTabs([(value: 0, title: "Workout"), (value: 1, title: "Gym"), (value: 2, title: "Insight")], selection: $tab)
@@ -78,9 +82,9 @@ struct NunaWorkoutsView: View {
                 } else if !m.loaded {
                     ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 160)
                 } else if tab == 0 {
-                    startSection
+                    workoutDataCard(week)
                     suggestionCard
-                    historySection
+                    historySection(week.rows)
                 } else {
                     weekCard
                     anyaCard
@@ -102,6 +106,16 @@ struct NunaWorkoutsView: View {
             suggestion = autoDetect ? await repo.autoDetectSuggestion() : nil
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "workouts") }
+        .sheet(isPresented: $showManual) {
+            NunaManualWorkoutSheet(editing: nil) { row, replacing in
+                Task {
+                    await repo.saveManualWorkout(row, replacing: replacing)
+                    await intelligence.analyzeRecent()
+                    await m.load(repo: repo)
+                }
+            }
+            .nunaSheetChrome(detents: [.large])
+        }
         .environment(\.nunaAnyaCardContext, "workouts")
     }
 
@@ -295,6 +309,111 @@ struct NunaWorkoutsView: View {
         }
     }
 
+    // MARK: Weekly workout data and actions
+
+    private struct WorkoutWeek {
+        let start: Date
+        let end: Date
+        let rows: [WorkoutRow]
+    }
+
+    /// One calendar-aware window feeds both the totals and the session list.
+    private var workoutWeek: WorkoutWeek {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        let end = cal.date(byAdding: .day, value: 1 - weekOffset * 7, to: today) ?? today
+        let start = cal.date(byAdding: .day, value: -7, to: end) ?? end
+        let rows = m.rows.filter {
+            let date = Date(timeIntervalSince1970: TimeInterval($0.startTs))
+            return date >= start && date < end
+        }
+        return WorkoutWeek(start: start, end: end, rows: rows)
+    }
+
+    private func workoutDataCard(_ week: WorkoutWeek) -> some View {
+        let rows = week.rows
+        let active = Set(rows.map { m.dayKey($0.startTs) }).count
+        let seconds = m.minutes(rows) * 60
+        let longest = rows.map { max(0, $0.durationS ?? Double($0.endTs - $0.startTs)) }.max()
+        let date = DateFormatter()
+        date.locale = AppLanguage.activeLocale
+        date.setLocalizedDateFormatFromTemplate("d MMM")
+        let lastDay = Calendar.current.date(byAdding: .day, value: -1, to: week.end) ?? week.start
+        let range = date.string(from: week.start) + " – " + date.string(from: lastDay)
+        return NunaCard {
+            VStack(alignment: .leading, spacing: NunaSpacing.section) {
+                Text("Workout Data")
+                    .font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design))
+                    .foregroundStyle(NunaPalette.textPrimary)
+                HStack(spacing: NoopMetrics.space2) {
+                    Button { weekOffset += 1 } label: { weekArrow("chevron.left") }
+                        .buttonStyle(.plain).accessibilityLabel(Text("Previous week"))
+                    Text(verbatim: range)
+                        .font(.nuna(size: NunaTypeSize.sub, weight: .semibold))
+                        .foregroundStyle(NunaPalette.textSecondary)
+                        .frame(maxWidth: .infinity)
+                        .lineLimit(1).minimumScaleFactor(0.8)
+                    Button { weekOffset = max(0, weekOffset - 1) } label: { weekArrow("chevron.right") }
+                        .buttonStyle(.plain).accessibilityLabel(Text("Next week"))
+                        .disabled(weekOffset == 0)
+                        .opacity(weekOffset == 0 ? 0.35 : 1)
+                }
+                HStack(alignment: .top, spacing: NoopMetrics.space3) {
+                    workoutDataStat("Sessions", "\(rows.count)")
+                    workoutDataStat("Duration", seconds > 0 ? NunaWorkoutFormat.duration(seconds) : "0 min")
+                    workoutDataStat("Effort", UnitFormatter.effortDisplay(m.effort(rows), scale: scale))
+                }
+                HStack(alignment: .top, spacing: NoopMetrics.space3) {
+                    workoutDataStat("Active days", "\(active)")
+                    workoutDataStat("Per week", String(format: "%.1f", locale: AppLanguage.activeLocale, Double(rows.count)))
+                    workoutDataStat("Longest session", NunaWorkoutFormat.duration(longest))
+                }
+                NunaDivider()
+                HStack(spacing: NoopMetrics.space3) {
+                    Button { showManual = true } label: { workoutAction("Add activity", icon: "plus") }
+                        .buttonStyle(.plain)
+                    Button { openStart = true } label: { workoutAction("Start activity", icon: "stopwatch") }
+                        .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+
+    private func weekArrow(_ icon: String) -> some View {
+        Image(systemName: icon)
+            .font(.nuna(size: NunaTypeSize.sub, weight: .bold))
+            .foregroundStyle(NunaPalette.textPrimary)
+            .frame(width: NoopButtonMetrics.minHitTarget, height: NoopButtonMetrics.minHitTarget)
+    }
+
+    private func workoutDataStat(_ label: LocalizedStringKey, _ value: String) -> some View {
+        VStack(alignment: .leading, spacing: NoopMetrics.space1) {
+            Text(label)
+                .font(.nuna(size: NunaTypeSize.caption, weight: .semibold))
+                .textCase(.uppercase)
+                .foregroundStyle(NunaPalette.textSecondary)
+                .lineLimit(1).minimumScaleFactor(0.75)
+            Text(verbatim: value)
+                .font(.nuna(size: NunaTypeSize.h2, weight: .bold, design: NunaType.design))
+                .foregroundStyle(NunaPalette.textPrimary)
+                .monospacedDigit()
+                .lineLimit(1).minimumScaleFactor(0.75)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func workoutAction(_ title: LocalizedStringKey, icon: String) -> some View {
+        HStack(spacing: NoopMetrics.space2) {
+            Image(systemName: icon)
+            Text(title).lineLimit(1).minimumScaleFactor(0.8)
+        }
+        .font(.nuna(size: NunaTypeSize.sub, weight: .bold))
+        .foregroundStyle(NunaPalette.textPrimary)
+        .padding(.horizontal, NoopMetrics.space2)
+        .frame(maxWidth: .infinity, minHeight: NoopButtonMetrics.minHitTarget)
+        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
+    }
+
     // MARK: Start
 
     private var pinned: [String] { NunaPinnedSports.decode(pinnedRaw) }
@@ -432,7 +551,7 @@ struct NunaWorkoutsView: View {
 
     // MARK: History
 
-    private var historySection: some View {
+    private func historySection(_ rows: [WorkoutRow]) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("History").font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
@@ -444,10 +563,10 @@ struct NunaWorkoutsView: View {
             }
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
-                    if m.rows.isEmpty {
-                        NunaListRow("No workouts yet", subtitle: "Start one above or let auto-detect suggest one", systemImage: "figure.run")
+                    if rows.isEmpty {
+                        NunaListRow("No activities this week", subtitle: "Add an activity or choose another week", systemImage: "figure.run")
                     }
-                    ForEach(Array(m.rows.prefix(4).enumerated()), id: \.offset) { i, r in
+                    ForEach(Array(rows.enumerated()), id: \.offset) { i, r in
                         if i > 0 { NunaDivider() }
                         NavigationLink(value: NunaWorkoutRoute.summary(m.key(r))) { NunaWorkoutRow(row: r, system: system, effortScale: scale) }.buttonStyle(.plain)
                     }
