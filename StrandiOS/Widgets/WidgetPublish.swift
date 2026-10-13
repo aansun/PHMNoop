@@ -47,6 +47,10 @@ extension WidgetSnapshot {
         await refreshWidgetPresence()
         let days = model.repo.days
         let now = Date()
+        // Right after a launch the repository has not loaded its daily rows yet. Nothing scored can be resolved from an empty list:
+        // Charge would be published as "no data" and Effort as the live under-read alone, replacing the good numbers on the Home
+        // Screen with "–" until the next refresh. Keep what is there; the publish that follows the load writes the real ones.
+        if days.isEmpty, load() != nil { return }
         // The recovery-derived anchor: today's row when it's scored, else the freshest STRICTLY-PRIOR
         // scored day carried over. Resolved through the SHARED `Repository.widgetAnchor`, the ONE selector
         // the watch snapshot and the iOS Live Activity now also use, so all four surfaces describe the same
@@ -340,12 +344,10 @@ extension WidgetSnapshot {
         )
     }
 
+    /// The figure the app's own ring prints (`UnitFormatter.effortDisplay`: one decimal on either scale), so the widget and Today
+    /// never read "13" against "12.6".
     private static func effortDisplay(_ strain: Double, scale: EffortScale) -> String {
-        if scale == .whoop {
-            return String(format: "%.1f", locale: AppLanguage.activeLocale,
-                          UnitFormatter.effortValue(strain, scale: .whoop))
-        }
-        return "\(Int(strain.rounded()))"
+        UnitFormatter.effortDisplay(strain, scale: scale)
     }
 
     /// Persist and ask WidgetKit for a new timeline only when a rendered field changed. The snapshot's
