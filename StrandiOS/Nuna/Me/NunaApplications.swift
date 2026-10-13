@@ -20,6 +20,8 @@ struct NunaApplicationsView: View {
                     NunaDivider()
                     app(stressRoute, "Stress monitor", "Level now and through the day", "gauge.with.dots.needle.50percent")
                     NunaDivider()
+                    app(.sleepOverview, "Sleep", "Last seven nights, need and bedtime", "moon.zzz.fill")
+                    NunaDivider()
                     app(.hydration, "Water", hydration ? "Drink log with a daily target" : "Turn on in Optional features", "drop")
                     NunaDivider()
                     app(.labBook, "Lab book", "Your records", "testtube.2")

@@ -512,10 +512,12 @@ public struct NunaTabBar: View {
         .shadow(color: NunaPalette.shade.opacity(glass ? 0.22 : 0.35), radius: 14, y: 5)
     }
 
-    @ViewBuilder private func glyph(_ item: NunaTabItem, size: CGFloat) -> some View {
+    /// `anyaScale` is how much larger than the other glyphs her mark is drawn: her artwork has a thin ring that needs room, but inside the row of
+    /// tabs she stays within the height of the others.
+    @ViewBuilder private func glyph(_ item: NunaTabItem, size: CGFloat, anyaScale: CGFloat = 1.45) -> some View {
         if item.systemImage == NunaGlyph.anya {
-            // Anya keeps her own colours in the bar (the ring too is drawn in the wing teal); the page you are on is shown by how bright she is.
-            Image("AnyaLogoTeal").resizable().scaledToFit().frame(width: size * 1.45, height: size * 1.45)
+            // Anya is drawn as a template in the bar, so she takes the colour of the other tabs: bright on her own page, dimmed elsewhere.
+            Image("AnyaGlyph").renderingMode(.template).resizable().scaledToFit().frame(width: size * anyaScale, height: size * anyaScale)
         } else if item.usesAssetImage {
             Image(item.systemImage).resizable().scaledToFit().frame(width: size, height: size)
         } else {
@@ -529,7 +531,7 @@ public struct NunaTabBar: View {
             if on { onReselect(item.id) } else { selection = item.id }
         } label: {
             VStack(spacing: 4) {
-                glyph(item, size: 28).frame(width: 32, height: 28)
+                glyph(item, size: 28, anyaScale: 1.1).frame(width: 32, height: 28)
                 Text(verbatim: item.title).font(.nuna(size: NunaThemePrefs.skin == .whp ? 10.5 : 12, weight: .bold)).lineLimit(1)
                     .textCase(nil).minimumScaleFactor(0.7).allowsTightening(true)
             }

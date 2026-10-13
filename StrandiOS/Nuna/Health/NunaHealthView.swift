@@ -9,8 +9,8 @@ import WhoopStore
 /// flow (Lab Book, Rhythm with its consent gate, Apple Health permissions, cycle, mood) open as before.
 struct NunaHealthView: View {
     var initialTab = 0
-    /// The vital signs page (opened from the monitor card on Today and from Me): the vital content on its own, with a back arrow. Without
-    /// it this is the Health tab, which shows sleep.
+    /// The vital signs page (opened from the monitor card on Today and from Me): the vital content on its own. Without it this is the
+    /// sleep overview.
     var vitalsOnly = false
 
     @EnvironmentObject private var repo: Repository
@@ -86,20 +86,9 @@ struct NunaHealthView: View {
         if vitalsOnly {
             NunaDetailScreen("Vital signs") { vitalTab }
         } else {
-            ScrollView {
-                VStack(spacing: NunaSpacing.section) {
-                    Text("Health").font(.nuna(size: NunaTypeSize.h1, weight: .bold, design: NunaType.design))
-                        .foregroundStyle(NunaPalette.textPrimary)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    sleepTab
-                }
-                .padding(.horizontal, NunaSpacing.screenH)
-                .padding(.top, 8)
-                .padding(.bottom, 120)
-            }
-            .scrollIndicators(.hidden)
-            .background(NunaPalette.canvas.ignoresSafeArea())
-            .toolbar(.hidden, for: .navigationBar)
+            // The sleep overview: the last seven nights, need against actual, bedtime and stages. A page of its own now that Health
+            // is no longer a tab.
+            NunaDetailScreen("Sleep") { sleepTab }
         }
     }
 

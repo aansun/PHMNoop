@@ -52,6 +52,8 @@
     "Broadcast HR": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Siarkan HR"}}}},
     "Heart rate zones 1–3": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Zona detak jantung 1–3"}}}},
     "Heart rate zones 4–5": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Zona detak jantung 4–5"}}}},
+    "Last seven nights, need and bedtime": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tujuh malam terakhir, kebutuhan, dan waktu tidur"}}}},
+    "Vital signs, stress, sleep, water, lab book, nutrition, nap": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tanda vital, stres, tidur, air minum, buku lab, nutrisi, tidur siang"}}}},
     "Hours vs. needed": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Jam tidur vs. kebutuhan"}}}},
     "Sleep needed": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kebutuhan tidur"}}}},
     "Healthy minimum": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Minimum sehat"}}}},
