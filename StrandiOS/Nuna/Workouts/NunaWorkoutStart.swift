@@ -1287,15 +1287,33 @@ struct NunaLiveWorkoutView: View {
     }
 
     private func sessionProgress(_ w: AppModel.ActiveWorkout, elapsed: TimeInterval, distance: Double) -> some View {
-        let hasTarget = goal.mode == .time || goal.mode == .distance
+        let hasTarget = goal.mode != .free
+        let hasProgress = goal.mode == .time || goal.mode == .distance
         let fraction = min(max(goal.mode == .time ? elapsed / Double(max(goal.minutes, 1) * 60) : distance / (max(goal.km, 0.1) * 1000), 0), 1)
-        let targetText = goal.mode == .time
-            ? String(localized: "\(goal.minutes) min")
-            : UnitFormatter.distanceFromMeters(distance, system: distanceSystem) + " / " + UnitFormatter.distanceFromMeters(goal.km * 1000, system: distanceSystem)
+        let targetText: String
+        let targetLabel: LocalizedStringKey
+        switch goal.mode {
+        case .time:
+            targetLabel = "Time target"
+            targetText = String(localized: "\(goal.minutes) min")
+        case .distance:
+            targetLabel = "Distance target"
+            targetText = UnitFormatter.distanceFromMeters(distance, system: distanceSystem) + " / " + UnitFormatter.distanceFromMeters(goal.km * 1000, system: distanceSystem)
+        case .zone:
+            targetLabel = "Heart rate target"
+            if let range = zoneSet.zones.first(where: { $0.number == goal.zone }) {
+                targetText = "\(Int(range.lower.rounded()))–\(Int(range.upper.rounded())) bpm"
+            } else {
+                targetText = String(localized: "Zone \(goal.zone)")
+            }
+        case .free:
+            targetLabel = ""
+            targetText = ""
+        }
         return HStack(alignment: .center, spacing: NoopMetrics.space4) {
             if hasTarget {
                 VStack(alignment: .leading, spacing: NoopMetrics.space1) {
-                    Text(goal.mode == .time ? "Time target" : "Distance target")
+                    Text(targetLabel)
                         .font(.nuna(size: NunaTypeSize.caption, weight: .semibold))
                         .foregroundStyle(NunaPalette.textSecondary)
                     Text(verbatim: targetText)
@@ -1306,8 +1324,6 @@ struct NunaLiveWorkoutView: View {
                         .minimumScaleFactor(0.75)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
-            } else {
-                Spacer(minLength: 0)
             }
             HStack(spacing: NoopMetrics.space2) {
                 Image(systemName: w.isPaused ? "pause.fill" : "stopwatch")
@@ -1320,7 +1336,7 @@ struct NunaLiveWorkoutView: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
             }
-            .frame(maxWidth: .infinity, alignment: .trailing)
+            .frame(maxWidth: .infinity, alignment: hasTarget ? .trailing : .center)
         }
         .padding(.horizontal, NoopMetrics.space4)
         .padding(.vertical, NoopMetrics.space2)
@@ -1329,7 +1345,7 @@ struct NunaLiveWorkoutView: View {
             GeometryReader { geo in
                 ZStack(alignment: .leading) {
                     NunaPalette.card
-                    if hasTarget {
+                    if hasProgress {
                         LinearGradient(colors: [NunaPalette.effortModerate, NunaPalette.effortMinimal], startPoint: .leading, endPoint: .trailing)
                             .opacity(0.2 + fraction * 0.3)
                             .frame(width: geo.size.width * fraction)
@@ -1340,7 +1356,7 @@ struct NunaLiveWorkoutView: View {
         .clipShape(RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
         .accessibilityElement(children: .combine)
         .accessibilityLabel(Text("Session time \(clock(elapsed))"))
-        .accessibilityValue(Text(verbatim: hasTarget ? targetText + " · " + fraction.formatted(.percent.precision(.fractionLength(0))) : ""))
+        .accessibilityValue(Text(verbatim: hasProgress ? targetText + " · " + fraction.formatted(.percent.precision(.fractionLength(0))) : targetText))
     }
 
     // MARK: heart rate
@@ -1591,13 +1607,12 @@ struct NunaLiveWorkoutView: View {
     }
 
     private func guidance(bpm: Int?, state: ZoneState) -> String? {
-        guard let bpm, let z = zoneSet.zones.first(where: { $0.number == goal.zone }) else { return nil }
-        let lo = Int(z.lower.rounded()), hi = Int(z.upper.rounded())
+        guard let bpm, zoneSet.zones.contains(where: { $0.number == goal.zone }) else { return nil }
         switch state {
         case .none: return nil
-        case .inZone: return String(localized: "Hold steady. You are in Zone \(goal.zone), \(lo) – \(hi) bpm.")
-        case .below: return String(localized: "Pick up the pace a little. Target Zone \(goal.zone), \(lo) – \(hi) bpm.")
-        case .above: return String(localized: "Ease off a little. Target Zone \(goal.zone), \(lo) – \(hi) bpm.")
+        case .inZone: return String(localized: "Hold steady. You are in your target zone.")
+        case .below: return String(localized: "Pick up the pace a little.")
+        case .above: return String(localized: "Ease off a little.")
         case .farAbove: return String(localized: "Slow down now. \(bpm) bpm is too high.")
         }
     }
