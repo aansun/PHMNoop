@@ -728,11 +728,11 @@ struct NunaTodayView: View {
                 ))
             }
         case .workouts:
-            // Sleep and every workout of the day, in the order they happened.
-            if !model.workouts.isEmpty {
-                NunaTodayActivities(workouts: model.workouts.sorted { $0.startTs < $1.startTs }, effortScale: effortScale,
-                                    dayStart: Calendar.current.startOfDay(for: model.displayDate), sleepMinutes: model.sleepMinutes, isToday: model.isToday)
-            }
+            // Sleep and every workout of the day, in the order they happened. Always there, empty or not, with the two ways to log one.
+            NunaTodayActivities(workouts: model.workouts.sorted { $0.startTs < $1.startTs }, effortScale: effortScale,
+                                dayStart: Calendar.current.startOfDay(for: model.displayDate), sleepMinutes: model.sleepMinutes, isToday: model.isToday,
+                                onAdd: { showManual = true },
+                                onStart: { router.requestedDestination = .activeWorkout })
         case .heartRate:
             NunaLiveHR(isToday: model.isToday) { hr in
                 NavigationLink(value: NunaTodayRoute.deepTimeline) {
