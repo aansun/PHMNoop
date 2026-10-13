@@ -457,6 +457,18 @@ final class Repository: ObservableObject {
 
     /// metricSeries points across the imported union for a key + day range, DEDUPED per day with the active
     /// strap winning (same precedence as `unionDailyMetrics`).
+    /// Last published values of the computed Rest series, per day. Part of `refresh()`'s "did anything change" test.
+    private var lastComputedRest: [String: Double] = [:]
+
+    /// The computed `sleep_performance` points over a window, the active strap's sibling winning per day like `exploreSeries`.
+    private func computedRestSnapshot(store: WhoopStore, from: String, to: String) async -> [String: Double] {
+        var byDay: [String: Double] = [:]
+        for id in computedReadIds.reversed() {
+            for p in (try? await store.metricSeries(deviceId: id, key: "sleep_performance", from: from, to: to)) ?? [] { byDay[p.day] = p.value }
+        }
+        return byDay
+    }
+
     private func unionMetricSeries(store: WhoopStore, key: String, from: String, to: String) async -> [MetricPoint] {
         var byDay: [String: MetricPoint] = [:]
         for id in importedReadIds {
@@ -949,6 +961,10 @@ final class Repository: ObservableObject {
         let cons = await unionMetricSeries(store: store, key: "sleep_consistency", from: fromDay, to: toDay)
         let need = await unionMetricSeries(store: store, key: "sleep_need_min", from: fromDay, to: toDay)
         let debt = await unionMetricSeries(store: store, key: "sleep_debt_min", from: fromDay, to: toDay)
+        // The computed Rest composite lives in the on-device metric series, which none of the caches below hold. Until the
+        // heavy daily pass projects it, `exploreSeries` answers from the night's daily row with a neutral regularity term,
+        // so the score MOVES (a few points) when the series lands. Fingerprint it so that move is a real change.
+        let restSnapshot = await computedRestSnapshot(store: store, from: Self.dayString(now.addingTimeInterval(-30 * 86_400)), to: toDay)
 
         // Merge + sort OFF the main actor (FIX 3): the figures build, the two O(n log n) daily/sleep merges,
         // the source-row sort, and the freshness counts are all pure over the rows just read, so they run in
@@ -990,7 +1006,9 @@ final class Repository: ObservableObject {
             && merged.importedSleep == importedSleep
             && merged.vitalRows == vitalRows
             && merged.freshness == freshness
+            && restSnapshot == lastComputedRest
         guard !unchanged else { return }
+        lastComputedRest = restSnapshot
 
         // One consistent publish per refresh: assign every cache, flip `loaded`, then bump `refreshSeq` so
         // the intraday-updating views reload exactly once for this real change.
