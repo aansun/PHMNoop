@@ -69,6 +69,23 @@ enum NunaStressCategory: CaseIterable, Hashable {
         }
     }
 
+    /// The header dropdown's identifier and its text.
+    var key: String {
+        switch self {
+        case .total: return "total"
+        case .nonActivity: return "non-activity"
+        case .sleep: return "sleep"
+        }
+    }
+
+    var trendName: String {
+        switch self {
+        case .total: return String(localized: "Total day stress")
+        case .nonActivity: return String(localized: "Non activity stress")
+        case .sleep: return String(localized: "Sleep stress")
+        }
+    }
+
     var icon: String {
         switch self {
         case .total: return "gauge.with.dots.needle.33percent"
@@ -383,23 +400,6 @@ struct NunaStressTrendView: View {
         NunaDetailScreen("Trend view") {
             NunaCard {
                 VStack(alignment: .leading, spacing: 14) {
-                    Menu {
-                        ForEach(NunaStressCategory.allCases, id: \.self) { option in
-                            Button {
-                                category = option
-                            } label: {
-                                Label { Text(option.trendTitle) } icon: { Image(systemName: option.icon) }
-                            }
-                        }
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: category.icon).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                            Text(category.trendTitle).font(.nuna(size: 15, weight: .heavy)).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-                            Image(systemName: "chevron.down").font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                        }
-                        .contentShape(Rectangle())
-                    }
-                    .accessibilityLabel(Text("Stress type"))
                     HStack(alignment: .top, spacing: 12) {
                         VStack(alignment: .leading, spacing: 6) {
                             Text("Avg. high stress").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
@@ -451,6 +451,12 @@ struct NunaStressTrendView: View {
                 }
             }
         }
+        // The header's dropdown names the screen and moves between the three readings, like the other detail screens.
+        .environment(\.nunaDetailSwitch, NunaDetailSwitch(
+            current: category.key,
+            items: NunaStressCategory.allCases.map { .init(key: $0.key, title: $0.trendName, icon: $0.icon) }) { key in
+                if let next = NunaStressCategory.allCases.first(where: { $0.key == key }) { category = next }
+            })
         .task(id: "\(repo.refreshSeq)-\(range)-\(pageOffset)") {
             await nightly.load(repo: repo, key: "stress", source: "my-whoop")
             if let live = await StressDayCurve.today(repo: repo, now: Date())?.result {
