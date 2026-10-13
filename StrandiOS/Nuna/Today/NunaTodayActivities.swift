@@ -88,14 +88,15 @@ struct NunaTodayActivities: View {
 
     private func actionButton(_ title: LocalizedStringKey, icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            HStack(spacing: 8) {
-                Image(systemName: icon)
-                Text(title).lineLimit(1).minimumScaleFactor(0.8)
+            // About 4.4 : 1 as drawn in the design, with a label that is small against the card.
+            HStack(spacing: 7) {
+                Image(systemName: icon).font(.nuna(size: 12, weight: .bold))
+                Text(title).font(.nuna(size: 12, weight: .heavy)).tracking(0.6).lineLimit(1).minimumScaleFactor(0.8)
             }
-            .font(.nuna(size: NunaTypeSize.sub, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            .foregroundStyle(NunaPalette.textPrimary)
             .padding(.horizontal, 8)
-            .frame(maxWidth: .infinity, minHeight: 48)
-            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
+            .frame(maxWidth: .infinity, minHeight: 42, maxHeight: 42)
+            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.chip + 2, style: .continuous))
         }
         .buttonStyle(.plain)
     }
