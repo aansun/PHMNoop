@@ -61,7 +61,7 @@ struct NunaMonitorPackCard: View {
 
     private func shell<Body: View>(_ title: LocalizedStringKey, @ViewBuilder _ content: () -> Body) -> some View {
         NunaCard(small: true) {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .top, spacing: 8) {
                     Text(title).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textPrimary).lineLimit(2).multilineTextAlignment(.leading)
@@ -70,7 +70,7 @@ struct NunaMonitorPackCard: View {
                 }
                 content()
             }
-            .frame(maxWidth: .infinity, minHeight: 112, alignment: .topLeading)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
         }
     }
 
@@ -119,7 +119,7 @@ struct NunaMonitorPackCard: View {
     /// The small rounded square that carries the icon or the number, tinted by status.
     private func tile<Content: View>(tint: Color, @ViewBuilder _ content: () -> Content) -> some View {
         content()
-            .frame(width: 44, height: 44)
+            .frame(width: 40, height: 40)
             .background(tint.opacity(0.16), in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
     }
 }
