@@ -147,7 +147,7 @@ struct NunaLiveHeartView: View {
     }
 
     // Zone colours: rest, light, aerobic, threshold, maximum.
-    private let zoneColors: [Color] = [NunaPalette.zoneBase, NunaPalette.rest, NunaPalette.charge, NunaPalette.warning, NunaPalette.alert]
+    private let zoneColors = nunaHRZoneColors
     private let zoneNames: [LocalizedStringKey] = ["Zone 1 · easy", "Zone 2 · light", "Zone 3 · aerobic", "Zone 4 · threshold", "Zone 5 · maximum"]
 
     /// Time in each zone today as plain rows, the same shape as the signals under Charge.

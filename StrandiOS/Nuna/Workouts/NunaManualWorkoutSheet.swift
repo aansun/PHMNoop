@@ -57,27 +57,52 @@ struct NunaManualWorkoutSheet: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(editing == nil ? "Add Workout" : "Edit Workout")
-                            .font(.nuna(size: NunaTypeSize.h2, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(editing == nil ? "Log a session you tracked elsewhere." : "Adjust this session's details.")
-                            .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    }
-                    Spacer()
+                HStack {
                     Button { dismiss() } label: {
-                        Text("Cancel").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            .padding(.horizontal, 16).frame(height: 38)
-                            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                    }.buttonStyle(.plain)
+                        Image(systemName: "xmark")
+                            .font(.nuna(size: 16, weight: .bold))
+                            .foregroundStyle(NunaPalette.textPrimary)
+                            .frame(width: 44, height: 44)
+                            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(Text("Close"))
+                    Spacer()
+                    Text(editing == nil ? "Add activity" : "Edit activity")
+                        .font(.nuna(size: 16, weight: .heavy))
+                        .tracking(nunaTrackingLabel)
+                        .textCase(.uppercase)
+                        .foregroundStyle(NunaPalette.textPrimary)
+                    Spacer()
+                    Color.clear.frame(width: 44, height: 44)
                 }
+
+                if editing == nil {
+                    HStack(alignment: .top, spacing: 10) {
+                        Image(systemName: "sparkle")
+                            .font(.nuna(size: 15, weight: .bold))
+                            .foregroundStyle(NunaPalette.effortModerate)
+                            .frame(width: 30, height: 30)
+                            .background(NunaPalette.effortModerate.opacity(0.12), in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
+                        Text("Adding a past activity helps PHMN recognize and classify your future workouts more accurately.")
+                            .font(.nuna(size: 13.5, weight: .semibold))
+                            .foregroundStyle(NunaPalette.textPrimary)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .textCase(nil)
+                    }
+                    .padding(14)
+                    .background(NunaPalette.effortModerate.opacity(0.10), in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+                }
+
+                nunaTrendsCap("Activity")
                 Button { showSport = true } label: {
                     NunaCard(small: true) {
-                        NunaListRow("Sport", subtitle: sport.isEmpty ? "Choose a sport" : LocalizedStringKey(sport),
+                        NunaListRow("Select activity", subtitle: sport.isEmpty ? "Choose an activity" : LocalizedStringKey(sport),
                                     systemImage: NunaSportPicker.symbol(for: sport), showsChevron: true)
                     }
                 }.buttonStyle(.plain)
 
+                nunaTrendsCap("Time")
                 NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 14, bottom: 4, trailing: 14)) {
                     VStack(spacing: 0) {
                         dateRow("Start", selection: startBinding)
@@ -94,6 +119,7 @@ struct NunaManualWorkoutSheet: View {
                     }
                 }
 
+                nunaTrendsCap("Optional details")
                 NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 14, bottom: 4, trailing: 14)) {
                     VStack(spacing: 0) {
                         numberRow("Distance", text: $distanceText, unit: distanceUnit, field: .distance)
@@ -103,7 +129,7 @@ struct NunaManualWorkoutSheet: View {
                         numberRow("Calories", text: $kcalText, unit: "kcal", field: .calories)
                     }
                 }
-                Text("Distance, Avg HR and Calories are optional.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                Text("Distance, average heart rate, and calories are optional.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
 
                 if let note = validationNote {
                     Text(verbatim: note).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.warning).fixedSize(horizontal: false, vertical: true).textCase(nil)
@@ -115,7 +141,7 @@ struct NunaManualWorkoutSheet: View {
                 Button { save() } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "checkmark").font(.nuna(size: 15, weight: .bold))
-                        Text(editing == nil ? "Add" : "Save").font(.nuna(size: 17, weight: .bold))
+                        Text(editing == nil ? "Save activity" : "Save changes").font(.nuna(size: 17, weight: .bold))
                     }
                     .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54)
                     .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
