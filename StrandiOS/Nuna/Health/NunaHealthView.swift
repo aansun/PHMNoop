@@ -9,6 +9,9 @@ import WhoopStore
 /// flow (Lab Book, Rhythm with its consent gate, Apple Health permissions, cycle, mood) open as before.
 struct NunaHealthView: View {
     var initialTab = 0
+    /// The vital signs page (opened from the monitor card on Today and from Me): the vital content on its own, with a back arrow. Without
+    /// it this is the Health tab, which shows sleep.
+    var vitalsOnly = false
 
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var router: NavRouter
@@ -38,39 +41,23 @@ struct NunaHealthView: View {
     private enum Legacy: String, Identifiable { case appleHealth, live, mood, cycle, breathing; var id: String { rawValue } }
 
     var body: some View {
-        ScrollView {
-            VStack(spacing: NunaSpacing.section) {
-                Text("Health").font(.nuna(size: NunaTypeSize.h1, weight: .bold, design: NunaType.design))
-                    .foregroundStyle(NunaPalette.textPrimary)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                NunaPageTabs([(value: 0, title: "Vital"), (value: 2, title: "Sleep")],
-                              selection: $tab)
-                switch tab {
-                case 2: sleepTab
-                default: vitalTab
-                }
-            }
-            .padding(.horizontal, NunaSpacing.screenH)
-            .padding(.top, 8)
-            .padding(.bottom, 120)
-        }
-        .scrollIndicators(.hidden)
-        .background(NunaPalette.canvas.ignoresSafeArea())
-        .toolbar(.hidden, for: .navigationBar)
+        container
         .nunaTodayDestinations()
         .nunaWorkoutDestinations()
-        .onAppear { if !didSetTab { tab = initialTab == 2 ? 2 : 0; didSetTab = true } }
         .task(id: repo.refreshSeq) {
-            await day.load(repo: repo, profile: profile)
-            await sleep.load(repo: repo)
-            await hrvS.load(repo: repo, key: "hrv", source: "my-whoop", days: 400)
-            await rhrS.load(repo: repo, key: "rhr", source: "my-whoop", days: 400)
-            await spo2S.load(repo: repo, key: "spo2", source: "my-whoop")
-            await respS.load(repo: repo, key: "resp_rate", source: "my-whoop")
-            await skinS.load(repo: repo, key: "skin_temp", source: "my-whoop")
-            fitSeries = await repo.exploreSeries(key: "fitness_age", source: "my-whoop", days: 120)
-            if let w = await repo.workoutRows().filter({ ($0.maxHr ?? 0) > 0 }).max(by: { $0.startTs < $1.startTs }), let m = w.maxHr {
-                lastMaxHR = (m, w.sport.replacingOccurrences(of: "_", with: " ").capitalized)
+            if vitalsOnly {
+                await day.load(repo: repo, profile: profile)
+                await hrvS.load(repo: repo, key: "hrv", source: "my-whoop", days: 400)
+                await rhrS.load(repo: repo, key: "rhr", source: "my-whoop", days: 400)
+                await spo2S.load(repo: repo, key: "spo2", source: "my-whoop")
+                await respS.load(repo: repo, key: "resp_rate", source: "my-whoop")
+                await skinS.load(repo: repo, key: "skin_temp", source: "my-whoop")
+                fitSeries = await repo.exploreSeries(key: "fitness_age", source: "my-whoop", days: 120)
+                if let w = await repo.workoutRows().filter({ ($0.maxHr ?? 0) > 0 }).max(by: { $0.startTs < $1.startTs }), let m = w.maxHr {
+                    lastMaxHR = (m, w.sport.replacingOccurrences(of: "_", with: " ").capitalized)
+                }
+            } else {
+                await sleep.load(repo: repo)
             }
         }
         .sheet(item: $legacy) { which in
@@ -93,6 +80,27 @@ struct NunaHealthView: View {
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "health") }
         .sheet(isPresented: $showSleepCoach) { NunaAnyaSheet(context: "sleep") }
+    }
+
+    @ViewBuilder private var container: some View {
+        if vitalsOnly {
+            NunaDetailScreen("Vital signs") { vitalTab }
+        } else {
+            ScrollView {
+                VStack(spacing: NunaSpacing.section) {
+                    Text("Health").font(.nuna(size: NunaTypeSize.h1, weight: .bold, design: NunaType.design))
+                        .foregroundStyle(NunaPalette.textPrimary)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    sleepTab
+                }
+                .padding(.horizontal, NunaSpacing.screenH)
+                .padding(.top, 8)
+                .padding(.bottom, 120)
+            }
+            .scrollIndicators(.hidden)
+            .background(NunaPalette.canvas.ignoresSafeArea())
+            .toolbar(.hidden, for: .navigationBar)
+        }
     }
 
     // MARK: Tabs

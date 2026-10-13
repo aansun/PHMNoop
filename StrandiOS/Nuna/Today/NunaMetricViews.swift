@@ -30,6 +30,8 @@ enum NunaTodayRoute: Hashable {
     case smartAlarm
     case windDown
     case hydration
+    /// The vital signs page: the live heart rate, the five vitals against their range, fitness age and the early warning.
+    case vitalSigns
 }
 
 extension View {
@@ -59,6 +61,7 @@ extension View {
             case .smartAlarm: NunaSmartAlarmView()
             case .windDown: NunaWindDownView()
             case .hydration: NunaHydrationView()
+            case .vitalSigns: NunaHealthView(vitalsOnly: true)
             }
         }
     }

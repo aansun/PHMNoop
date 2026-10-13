@@ -19,10 +19,12 @@ enum NunaTodayDefaults {
     /// Rings and the synthesis chips, Anya, what was done today, key metrics, the stress card, the journal with mood, then the
     /// add-or-arrange card. Everything else (heart rate, start session, your cards, cycle, added cards) stays out until the person adds it.
     static let order: [TodaySection] = [
-        .hero, .synthesis, .workouts, .keyMetrics, .recoveryVitals, .journal,
+        .hero, .synthesis, .workouts, .keyMetrics, .recoveryVitals, .vitalMonitor, .journal,
         .heartRate, .liveSession, .yourCards, .menstrualCycle, .addedCards,
     ]
-    static let hidden: [TodaySection] = [.heartRate, .liveSession, .yourCards, .menstrualCycle, .addedCards]
+    static let hidden: [TodaySection] = [.heartRate, .liveSession, .yourCards, .menstrualCycle, .addedCards, .vitalMonitor]
+    /// Set once the monitor pair has been hidden on a layout saved before it existed (it would otherwise appear on its own).
+    static let monitorHiddenKey = "nuna.today.monitorHidden.v1"
     /// Set once the Activity card has been brought back on a layout saved while it was hidden by default.
     static let activityShownKey = "nuna.today.activityShown.v1"
 }
@@ -194,6 +196,18 @@ struct NunaTodayView: View {
         }
         // The Activity card used to be hidden by default; a layout saved back then keeps it hidden, so it is opened once.
         .task {
+            // A layout saved before the monitor pair existed lists what is hidden; a section absent from that list shows, so add it once.
+            if !UserDefaults.standard.bool(forKey: NunaTodayDefaults.monitorHiddenKey) {
+                UserDefaults.standard.set(true, forKey: NunaTodayDefaults.monitorHiddenKey)
+                let raw = hiddenSectionsRaw.trimmingCharacters(in: .whitespaces)
+                if !raw.isEmpty {
+                    var hidden = TodayLayoutPrefs.decodeHidden(raw)
+                    if !hidden.contains(.vitalMonitor) {
+                        hidden.append(.vitalMonitor)
+                        hiddenSectionsRaw = TodayLayoutPrefs.encodeHidden(hidden)
+                    }
+                }
+            }
             guard !UserDefaults.standard.bool(forKey: NunaTodayDefaults.activityShownKey) else { return }
             UserDefaults.standard.set(true, forKey: NunaTodayDefaults.activityShownKey)
             let raw = hiddenSectionsRaw.trimmingCharacters(in: .whitespaces)
@@ -374,6 +388,7 @@ struct NunaTodayView: View {
         case .hero: return "Daily scores"
         case .synthesis: return "Anya"
         case .recoveryVitals: return "Stress monitor"
+        case .vitalMonitor: return "Vital and stress monitors"
         case .keyMetrics: return "Key metrics"
         case .workouts: return "Activity"
         case .journal: return "Quick log"
@@ -483,6 +498,11 @@ struct NunaTodayView: View {
             previewRow("sparkles", nil, synthLine, "Anya suggestion").background(inner)
         case .recoveryVitals:
             previewRow("wind", NunaPalette.charge, model.stress.map { String(localized: "Stress \(String(format: "%.1f", locale: AppLanguage.activeLocale, $0)) / 3") } ?? String(localized: "Stress"), "Intraday curve").background(inner)
+        case .vitalMonitor:
+            HStack(spacing: 8) {
+                previewRow("heart.text.square", NunaPalette.charge, String(localized: "Vital signs"), "Within range").background(inner)
+                previewRow("gauge.with.dots.needle.50percent", NunaPalette.warning, String(localized: "Stress monitor"), "Latest reading").background(inner)
+            }
         case .keyMetrics:
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
                 ForEach(metricTiles.prefix(4)) { t in
@@ -674,6 +694,9 @@ struct NunaTodayView: View {
             if model.stress != nil || model.stressCurve != nil {
                 NunaStressCard(score: model.stress, curve: model.stressCurve, baseline: model.stressBaseline, isToday: model.isToday)
             }
+        case .vitalMonitor:
+            NunaMonitorPackCard(hrv: model.hrv, restingHr: model.restingHr, spo2: model.spo2, respiratory: model.respiratory,
+                                skinTemp: model.extras["skin_temp"], stress: model.stress, stressCurve: model.stressCurve)
         case .keyMetrics:
             let tiles = metricTiles
             if !tiles.isEmpty {

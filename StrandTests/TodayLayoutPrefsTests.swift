@@ -93,7 +93,7 @@ final class TodayLayoutPrefsTests: XCTestCase {
         // Pin the exact wire strings — they must match the Android TodaySection byte-for-byte.
         XCTAssertEqual(
             raws,
-            ["hero", "liveSession", "synthesis", "keyMetrics", "workouts", "heartRate", "recoveryVitals", "yourCards", "menstrualCycle", "journal", "addedCards"]
+            ["hero", "liveSession", "synthesis", "keyMetrics", "workouts", "heartRate", "recoveryVitals", "vitalMonitor", "yourCards", "menstrualCycle", "journal", "addedCards"]
         )
     }
 
