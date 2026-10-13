@@ -43,20 +43,15 @@ private struct PHMNRingsWidgetView: View {
     let secondaryMetric: PHMNRingsSecondaryMetric
 
     private var snapshot: WidgetSnapshot { entry.snapshot }
-    /// The same colours as the app: Charge red, yellow or green by zone; Effort dark to light blue by level.
+    /// The same colours as the app (`NunaScoreStyle`): Charge red, yellow or green by zone; Effort dark to light blue by level.
     private var recoveryColor: Color {
-        snapshot.recovery.map { v in v >= 67 ? NunaPalette.scoreHigh : (v >= 34 ? NunaPalette.scoreMid : NunaPalette.scoreLow) } ?? StrandPalette.textTertiary
+        snapshot.recovery.map { NunaScoreStyle.chargeColor(Double($0)) } ?? StrandPalette.textTertiary
     }
     private var strainColor: Color {
-        snapshot.effort.map { v in v < 33 ? NunaPalette.effortMinimal : (v < 66 ? NunaPalette.effortModerate : NunaPalette.effortAllOut) } ?? StrandPalette.textTertiary
+        snapshot.effort.map { NunaScoreStyle.effortColor(Double($0)) } ?? StrandPalette.textTertiary
     }
     private var strainGradient: [Color]? {
-        guard let v = snapshot.effort else { return nil }
-        var c = [NunaPalette.effortMinimal]
-        if v >= 33 { c.append(NunaPalette.effortModerate) }
-        if v >= 66 { c.append(NunaPalette.effortAllOut) }
-        if c.count == 1 { c.append(NunaPalette.effortMinimal) }
-        return c
+        snapshot.effort.map { NunaScoreStyle.effortGradient(Double($0)) }
     }
     private var effortText: String {
         snapshot.effortDisplay ?? snapshot.effort.map(String.init) ?? "—"

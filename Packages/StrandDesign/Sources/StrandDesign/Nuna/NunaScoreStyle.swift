@@ -1,0 +1,41 @@
+import SwiftUI
+
+/// How the three score rings are coloured, in one place: the app draws its rings with these and so do the widgets, so a ring
+/// cannot read differently on the Home Screen than it does in Today.
+public enum NunaScoreStyle {
+    /// Charge: green from 67, yellow from 34, red below.
+    public static func chargeColor(_ v: Double) -> Color {
+        v >= 67 ? NunaPalette.scoreHigh : (v >= 34 ? NunaPalette.scoreMid : NunaPalette.scoreLow)
+    }
+
+    /// Effort on the stored 0-100 axis: dark blue below 33, blue below 66, light blue above.
+    public static func effortColor(_ stored: Double) -> Color {
+        stored < 33 ? NunaPalette.effortMinimal : (stored < 66 ? NunaPalette.effortModerate : NunaPalette.effortAllOut)
+    }
+
+    /// The colours the Effort arc runs through, from dark blue up to the level reached.
+    public static func effortGradient(_ stored: Double) -> [Color] {
+        var c = [NunaPalette.effortMinimal]
+        if stored >= 33 { c.append(NunaPalette.effortModerate) }
+        if stored >= 66 { c.append(NunaPalette.effortAllOut) }
+        if c.count == 1 { c.append(NunaPalette.effortMinimal) }
+        return c
+    }
+
+    /// Today's Effort aim from Charge, as a stretch of the ring (0...1): 14 to 18 of 21 from Charge 67, 10 to 14 from 34, 4 to 10
+    /// below. nil while Charge is unknown.
+    public static func effortTarget(charge: Double?) -> ClosedRange<Double>? {
+        guard let charge else { return nil }
+        let band: ClosedRange<Double> = charge >= 67 ? 14...18 : (charge >= 34 ? 10...14 : 4...10)
+        return (band.lowerBound / 21.0)...(band.upperBound / 21.0)
+    }
+
+    /// Rest: excellent green from 85, good lime from 70, fair amber from 50, low red below.
+    public static func restColor(_ v: Double) -> Color {
+        v >= 85 ? NunaPalette.charge : (v >= 70 ? NunaPalette.effort : (v >= 50 ? NunaPalette.warning : NunaPalette.alert))
+    }
+
+    public static func restTextColor(_ v: Double) -> Color {
+        v >= 85 ? NunaPalette.charge : (v >= 70 ? NunaPalette.effortText : (v >= 50 ? NunaPalette.warning : NunaPalette.alertText))
+    }
+}
