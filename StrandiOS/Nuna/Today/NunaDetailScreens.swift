@@ -327,6 +327,14 @@ struct NunaEffortActivityDetailView: View {
             }
         }
 
+        var switchKey: String {
+            switch self {
+            case .lowZones: return "low"
+            case .highZones: return "high"
+            case .strength: return "strength"
+            }
+        }
+
         var icon: String {
             switch self {
             case .lowZones: return "heart.circle"
@@ -389,24 +397,6 @@ struct NunaEffortActivityDetailView: View {
         NunaDetailScreen("Effort") {
             NunaCard {
                 VStack(alignment: .leading, spacing: 14) {
-                    Menu {
-                        ForEach(Kind.allCases, id: \.self) { option in
-                            Button {
-                                kind = option
-                                pageOffset = 0
-                            } label: {
-                                Label(option.title, systemImage: option.icon)
-                            }
-                        }
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: kind.icon).font(.nuna(size: 15, weight: .bold)).foregroundStyle(kind.color)
-                            Text(verbatim: kind.title).font(.nuna(size: 15, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
-                            Image(systemName: "chevron.down").font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                        }
-                        .contentShape(Rectangle())
-                    }
-                    .accessibilityLabel(Text("Activity type"))
                     HStack(alignment: .top, spacing: 12) {
                         VStack(alignment: .leading, spacing: 6) {
                             Text(rangeName).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
@@ -445,6 +435,12 @@ struct NunaEffortActivityDetailView: View {
 
             breakdown
         }
+        // The header's dropdown names the screen and moves between the three readings, like the other detail screens.
+        .environment(\.nunaDetailSwitch, NunaDetailSwitch(
+            current: kind.switchKey,
+            items: Kind.allCases.map { .init(key: $0.switchKey, title: $0.title, icon: $0.icon) }) { key in
+                if let next = Kind.allCases.first(where: { $0.switchKey == key }) { kind = next; pageOffset = 0 }
+            })
         .task(id: "\(repo.refreshSeq)-\(range)-\(pageOffset)-\(kind.icon)") { await load() }
         .onChange(of: range) { pageOffset = 0 }
     }
