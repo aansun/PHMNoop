@@ -48,6 +48,8 @@ public struct NOOPActivityAttributes: ActivityAttributes {
         public var pausedAt: Date?
         /// The session's Effort as the app shows it (the user's scale, one decimal), e.g. "4.1". Nil outside a workout.
         public var effortLabel: String?
+        /// Steps so far for a walk, run or hike, from the strap's counter or the phone's pedometer. Nil when neither has a count.
+        public var steps: Int?
 
         public init(bpm: Int?, recovery: Int?, bonded: Bool, batteryPct: Int? = nil,
                     effort: Int? = nil,
@@ -56,8 +58,9 @@ public struct NOOPActivityAttributes: ActivityAttributes {
                     averageBPM: Int? = nil, peakBPM: Int? = nil,
                     distance: String? = nil, pace: String? = nil, speed: String? = nil,
                     calories: Int? = nil, subtitle: String? = nil, progress: Double? = nil, targetZone: Int? = nil,
-                    zonePosition: Double? = nil, zoneSeconds: Int? = nil, pausedAt: Date? = nil, effortLabel: String? = nil) {
+                    zonePosition: Double? = nil, zoneSeconds: Int? = nil, pausedAt: Date? = nil, effortLabel: String? = nil, steps: Int? = nil) {
             self.effortLabel = effortLabel
+            self.steps = steps
             self.bpm = bpm
             self.recovery = recovery
             self.bonded = bonded

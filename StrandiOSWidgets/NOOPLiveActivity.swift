@@ -21,36 +21,17 @@ struct NOOPLiveActivity: Widget {
             let tint = s.accent
             return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    HStack(spacing: 8) {
-                        NOOPLiveRing(symbol: s.symbol, tint: tint, progress: s.progress)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(verbatim: s.activityName ?? context.attributes.title).font(.nuna(size: 14.5, weight: .heavy)).lineLimit(1).minimumScaleFactor(0.7)
-                            // Zone and Effort on one line under the name, as the mockup has them, rather than in a region of their own.
-                            HStack(spacing: 6) {
-                                if s.isPaused {
-                                    Text("Paused").foregroundStyle(tint)
-                                } else if let z = s.heartRateZone {
-                                    Text("Zone \(z)").foregroundStyle(tint)
-                                }
-                                if let e = s.effort { s.effortText(e).foregroundStyle(NunaPalette.effortText) }
-                            }
-                            .font(.nuna(size: 11, weight: .heavy)).lineLimit(1).minimumScaleFactor(0.7)
-                        }
-                    }
+                    HeartRate(state: s, tint: tint, size: 28)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    HStack(alignment: .firstTextBaseline, spacing: 5) {
-                        Image(systemName: "heart.fill").font(.system(size: 13, weight: .bold)).foregroundStyle(NunaPalette.alertText)
-                        Text(verbatim: s.bpm.map(String.init) ?? "–").font(.nuna(size: 22, weight: .bold, design: NunaType.design)).monospacedDigit()
-                            .foregroundStyle(s.outOfZone ? tint : NunaPalette.textPrimary).fixedSize()
-                    }
+                    ElapsedPill(state: s, tint: tint, size: 17)
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    VStack(spacing: 12) {
-                        Metrics(state: s, size: 22)
-                        NOOPZoneBar(zone: s.heartRateZone, position: s.zonePosition)
+                    VStack(spacing: 10) {
+                        ZoneStrip(state: s, tint: tint)
+                        WorkoutFigures(state: s, size: 20)
                     }
-                    .padding(.top, 6)
+                    .padding(.top, 4)
                 }
             } compactLeading: {
                 HStack(spacing: 6) {
@@ -151,60 +132,122 @@ private struct LockScreen: View {
         .padding(EdgeInsets(top: 14, leading: 20, bottom: 14, trailing: 20))
     }
 
+    /// Heart rate and the clock always; the zone bar under them; then the figures the session has: distance and pace (speed on a bike)
+    /// with a route, steps (walk, run) or calories in the middle.
     private var workout: some View {
         let tint = state.accent
-        return VStack(spacing: 0) {
-            HStack {
-                HStack(spacing: 10) {
-                    Circle().fill(NunaPalette.alert).frame(width: 10, height: 10)
-                    Text(verbatim: state.activityName ?? title).font(.nuna(size: 15.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
-                }
+        return VStack(spacing: 14) {
+            HStack(alignment: .center, spacing: 10) {
+                HeartRate(state: state, tint: tint, size: 36)
                 Spacer(minLength: 8)
-                if let paused = state.pausedAt {
-                    HStack(spacing: 6) {
-                        Text("Paused")
-                        Text(timerInterval: paused...paused.addingTimeInterval(86_400), countsDown: false).monospacedDigit().frame(minWidth: 34, alignment: .leading)
-                    }
-                    .fixedSize()
-                    .font(.nuna(size: 12, weight: .heavy)).foregroundStyle(NunaPalette.warning)
-                    .padding(.horizontal, 10).frame(height: 26)
-                    .background(NunaPalette.warning.opacity(0.14), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                } else if let e = state.effort {
-                    NOOPLiveChip(text: state.effortText(e), color: NunaPalette.effortText, systemImage: "bolt.fill")
-                }
+                ElapsedPill(state: state, tint: tint, size: 20)
             }
-            // The heart rate never gives way: the number and its unit keep their size, the zone chip and the range after it take what is left.
-            HStack(spacing: 10) {
-                Image(systemName: "heart.fill").font(.system(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText)
-                HStack(alignment: .firstTextBaseline, spacing: 3) {
-                    Text(verbatim: state.bpm.map(String.init) ?? "–").font(.nuna(size: 24, weight: .bold, design: NunaType.design)).monospacedDigit()
-                        .foregroundStyle(state.outOfZone ? tint : NunaPalette.textPrimary)
-                    Text("bpm").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                }
-                .fixedSize().layoutPriority(3)
-                if let z = state.heartRateZone { NOOPLiveChip(text: Text("Zone \(z)"), color: NOOPLive.tint(zone: z)).scaleEffect(0.85, anchor: .leading).fixedSize().layoutPriority(2) }
-                Spacer(minLength: 6)
-                // The current zone's own range, in place of the target and calories line.
-                if let range = state.subtitle {
-                    Text(verbatim: range).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.7)
-                }
-            }
-            .padding(.top, 8)
-            NOOPZoneBar(zone: state.heartRateZone, position: state.zonePosition).padding(.top, 6)
-            Rectangle().fill(NunaPalette.hairline).frame(height: 1).padding(.top, 2).padding(.bottom, 8)
-            Metrics(state: state, size: 26)
+            ZoneStrip(state: state, tint: tint)
+            WorkoutFigures(state: state, size: 24)
         }
-        .padding(EdgeInsets(top: 12, leading: 18, bottom: 12, trailing: 18))
+        .padding(EdgeInsets(top: 16, leading: 20, bottom: 16, trailing: 20))
     }
 }
 
-// MARK: - the three figures
+// MARK: - the pieces
 
-/// Three figures, left, centre and right. A route sport: distance, time and pace (speed on a bike). A sport without a route: time,
-/// calories and the time in the current zone. Live heart rate alone: Effort and the strap battery.
-private struct Metrics: View {
+/// The heart and the number, kept whole: the unit and the figure never give way.
+private struct HeartRate: View {
+    let state: NOOPActivityAttributes.ContentState
+    let tint: Color
+    let size: CGFloat
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "heart.fill").font(.system(size: size * 0.62, weight: .bold)).foregroundStyle(tint)
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(verbatim: state.bpm.map(String.init) ?? "–").font(.nuna(size: size, weight: .bold, design: NunaType.design)).monospacedDigit()
+                    .foregroundStyle(state.outOfZone ? tint : NunaPalette.textPrimary)
+                Text("bpm").font(.nuna(size: max(size * 0.4, 11), weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            }
+            .fixedSize()
+        }
+        .fixedSize()
+    }
+}
+
+/// The elapsed time of the session in a rounded tile; it stands still, with a pause mark, while the session is paused.
+private struct ElapsedPill: View {
+    let state: NOOPActivityAttributes.ContentState
+    let tint: Color
+    let size: CGFloat
+
+    var body: some View {
+        let tone = state.isPaused ? NunaPalette.warning : NunaPalette.effortModerate
+        // A timer text takes all the width it is offered, so it is given its own: five characters (m:ss) until the first hour, seven
+        // after it. Left open it makes the whole row infinitely wide.
+        let hours = (state.activityStartedAt.map { Date().timeIntervalSince($0) } ?? 0) >= 3600
+        HStack(spacing: 8) {
+            Image(systemName: state.isPaused ? "pause.fill" : "stopwatch").font(.system(size: size * 0.8, weight: .bold))
+            clock(state).font(.nuna(size: size, weight: .bold, design: NunaType.design)).monospacedDigit()
+                .foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+                .frame(width: size * (hours ? 3.9 : 2.9), alignment: .leading)
+        }
+        .foregroundStyle(tone)
+        .padding(.horizontal, 14).frame(height: size * 2.1)
+        .background(tone.opacity(0.16), in: RoundedRectangle(cornerRadius: size * 1.05, style: .continuous))
+        .fixedSize()
+    }
+}
+
+/// The five-zone bar with the zone's name centred under it.
+private struct ZoneStrip: View {
+    let state: NOOPActivityAttributes.ContentState
+    let tint: Color
+
+    var body: some View {
+        VStack(spacing: 6) {
+            NOOPZoneBar(zone: state.heartRateZone, position: state.zonePosition)
+            if state.isPaused {
+                Text("Paused").font(.nuna(size: 11.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(NunaPalette.warning)
+            } else if let z = state.heartRateZone {
+                Text("Zone \(z)").font(.nuna(size: 11.5, weight: .heavy)).tracking(0.8).textCase(.uppercase).foregroundStyle(tint)
+            }
+        }
+    }
+}
+
+// MARK: - the figures
+
+/// What the session can tell: distance and pace (speed on a bike) when it records a route, with steps (walk, run, hike) or calories in
+/// the middle. Without a route: steps and calories on foot, calories otherwise. Live heart rate alone: Effort and the strap battery.
+private struct WorkoutFigures: View {
     let state: NOOPActivityAttributes.ContentState
     let size: CGFloat
+
+    private struct Figure: Identifiable {
+        let id: String
+        let label: LocalizedStringKey
+        let value: String
+        var unit = ""
+    }
+
+    private var onFoot: Bool { state.activityName.map(ActivitySport.countsSteps) ?? false }
+
+    private var calories: Figure {
+        Figure(id: "calories", label: "CALORIES", value: state.calories.map(String.init) ?? "–",
+               unit: state.calories == nil ? "" : String(localized: "kcal"))
+    }
+
+    private var steps: Figure? {
+        state.steps.map { Figure(id: "steps", label: "STEPS", value: String($0)) }
+    }
+
+    private var figures: [Figure] {
+        if state.isRoute {
+            let d = NOOPLive.split(state.distance)
+            let p = NOOPLive.split(state.isCycling ? state.speed : state.pace)
+            return [Figure(id: "distance", label: "DISTANCE", value: d.0, unit: d.1),
+                    (onFoot ? steps : nil) ?? calories,
+                    Figure(id: "pace", label: state.isCycling ? "SPEED" : "PACE", value: p.0, unit: p.1)]
+        }
+        return onFoot ? [steps, calories].compactMap { $0 } : [calories]
+    }
 
     var body: some View {
         if state.activityName == nil {
@@ -215,29 +258,14 @@ private struct Metrics: View {
                     NOOPBatteryRing(percent: state.batteryPct, size: size)
                 }.frame(maxWidth: .infinity, alignment: .trailing)
             }
-        } else if state.isRoute {
-            let d = NOOPLive.split(state.distance)
-            let p = NOOPLive.split(state.isCycling ? state.speed : state.pace)
-            HStack(spacing: 0) {
-                NOOPLiveMetric(label: "DISTANCE", text: Text(verbatim: d.0), unit: d.1, size: size, alignment: .leading)
-                NOOPLiveMetric(label: "TIME", text: clock(state), size: size, alignment: .center)
-                NOOPLiveMetric(label: state.isCycling ? "SPEED" : "PACE", text: Text(verbatim: p.0), unit: p.1, size: size, alignment: .trailing)
-            }
         } else {
+            let items = figures
             HStack(spacing: 0) {
-                NOOPLiveMetric(label: "TIME", text: clock(state), size: size, alignment: .leading)
-                NOOPLiveMetric(label: "CALORIES", text: Text(verbatim: state.calories.map(String.init) ?? "–"), unit: state.calories == nil ? "" : String(localized: "kcal"), size: size, alignment: .center)
-                if let z = state.heartRateZone {
-                    NOOPLiveMetric(label: "ZONE \(z)", text: Text(verbatim: mmss(state.zoneSeconds)), size: size, alignment: .trailing)
-                } else {
-                    NOOPLiveMetric(label: "ZONE", text: Text(verbatim: "–"), size: size, alignment: .trailing)
+                ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
+                    if index > 0 { Rectangle().fill(NunaPalette.hairline).frame(width: 1, height: size * 1.9) }
+                    NOOPLiveMetric(label: item.label, text: Text(verbatim: item.value), unit: item.unit, size: size, alignment: .center)
                 }
             }
         }
-    }
-
-    private func mmss(_ s: Int?) -> String {
-        guard let s else { return "–" }
-        return String(format: "%d:%02d", s / 60, s % 60)
     }
 }

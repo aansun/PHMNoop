@@ -23,5 +23,11 @@ enum ActivitySport {
     static func isRoute(_ name: String) -> Bool {
         ["running", "walking", "hiking", "cycling", "open-water swim", "rowing", "skiing", "snowboarding"].contains(name.lowercased())
     }
+
+    /// Sports measured in steps (on foot, with or without a route).
+    static func countsSteps(_ name: String) -> Bool {
+        let n = name.lowercased()
+        return ["run", "walk", "hik", "treadmill"].contains { n.contains($0) }
+    }
 }
 #endif
