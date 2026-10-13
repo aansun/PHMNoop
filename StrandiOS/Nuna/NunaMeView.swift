@@ -24,7 +24,7 @@ struct NunaMeView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: NunaSpacing.section) {
-                NunaHeader("Me") {
+                NunaHeader("Settings") {
                     NavigationLink(value: NunaMeRoute.search) {
                         NunaGlyph("magnifyingglass", pointSize: 16).foregroundStyle(NunaPalette.textPrimary)
                             .frame(width: 44, height: 44)

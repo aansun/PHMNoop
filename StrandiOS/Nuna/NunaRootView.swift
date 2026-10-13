@@ -36,14 +36,14 @@ struct NunaRootView: View {
     @AppStorage(NunaTabBarPrefs.autoHideKey) private var autoHide = false
     @State private var barHidden = false
 
-    /// One bar: Today, Trends, Anya (while it is on) and Me.
+    /// One bar: Today, Trends, Anya (while it is on) and More.
     private var items: [NunaTabItem] {
         var out = [
             NunaTabItem(id: Tab.today.rawValue, title: "Today", systemImage: "square.grid.2x2.fill"),
             NunaTabItem(id: Tab.trends.rawValue, title: "Trends", systemImage: "chart.line.uptrend.xyaxis"),
         ]
         if coachEnabled { out.append(NunaTabItem(id: Tab.anya.rawValue, title: "Anya", systemImage: NunaGlyph.anya)) }
-        out.append(NunaTabItem(id: Tab.me.rawValue, title: "Me", systemImage: "person.fill"))
+        out.append(NunaTabItem(id: Tab.me.rawValue, title: "More", systemImage: "ellipsis.circle.fill"))
         return out
     }
 
