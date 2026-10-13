@@ -220,7 +220,6 @@ struct NunaDeepTimelineView: View {
 
     var body: some View {
         NunaDetailScreen("Heart rate") {
-            if isLatest && metric == .hr { liveCard }
             metricMenu
             chartCard
             hint
@@ -237,54 +236,11 @@ struct NunaDeepTimelineView: View {
         }
     }
 
-    // MARK: Live reading
+    // MARK: Zones
 
     private var zoneSet: HRZoneSet { profile.hrZoneSet }
-    private var liveBpm: Int? {
-        if live.connected, let hr = live.heartRate, hr > 0 { return hr }
-        return nil
-    }
-    /// The latest reading of the day when the strap is not streaming.
-    private var lastBanked: HRSample? { daySamples.last }
 
     private static let zoneNames: [LocalizedStringKey] = ["Zone 1 · easy", "Zone 2 · light", "Zone 3 · aerobic", "Zone 4 · threshold", "Zone 5 · maximum"]
-
-    private var liveCard: some View {
-        let bpm = liveBpm ?? lastBanked?.bpm
-        let zone = bpm.map { zoneSet.zoneNumber(forBPM: Double($0)) } ?? 0
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    NunaChip(liveBpm != nil ? "Live" : (live.connected ? "Waiting for the strap" : "Not connected"),
-                             color: liveBpm != nil ? NunaPalette.charge : (live.connected ? nil : NunaPalette.warning))
-                    Spacer()
-                    if let b = live.batteryPct {
-                        Text(verbatim: String(localized: "Strap \(Int(b.rounded()))%")).font(.nuna(size: 12.5, weight: .semibold))
-                            .foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    }
-                }
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Text(verbatim: bpm.map(String.init) ?? "–").font(.nuna(size: 64, weight: .bold, design: NunaType.design))
-                        .tracking(nunaTrackingNumber(64)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("bpm").font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                }
-                if zone >= 1 {
-                    HStack(spacing: 8) {
-                        RoundedRectangle(cornerRadius: 3, style: .continuous).fill(nunaHRZoneColors[min(zone, 5) - 1]).frame(width: 10, height: 10)
-                        Text(Self.zoneNames[min(zone, 5) - 1]).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                            .foregroundStyle(NunaPalette.textPrimary)
-                    }
-                }
-                Text(liveBpm != nil ? "Updated every second" : (lastBanked.map { lastReading($0.ts) } ?? "Connect your strap to see live heart rate"))
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            }
-        }
-    }
-
-    private func lastReading(_ ts: Int) -> LocalizedStringKey {
-        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("jj:mm")
-        return LocalizedStringKey(String(localized: "Last reading \(f.string(from: Date(timeIntervalSince1970: TimeInterval(ts))))"))
-    }
 
     // MARK: Zones for the day
 
