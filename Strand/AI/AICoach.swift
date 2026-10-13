@@ -371,12 +371,30 @@ final class AICoachEngine: ObservableObject {
         // saved goals/events/preferences steer replies. Empty when none exist (prompt unchanged).
         // The Nuna experience draws charts, gym programs and workouts from fenced blocks; the Default one does not, so it never asks.
         #if os(iOS)
-        let actions = UserDefaults.standard.string(forKey: "experience.mode") == "nuna" ? "\n\n" + AnyaActions.instruction : ""
+        let nuna = UserDefaults.standard.string(forKey: "experience.mode") == "nuna"
+        let actions = nuna ? "\n\n" + AnyaActions.instruction + "\n\n" + Self.dayRhythmInstruction : ""
         #else
         let actions = ""
         #endif
         return base + languagePrompt + Self.answerStyleBlock() + CoachMemoryStore.activePromptBlock() + actions
     }
+
+    // MARK: Day rhythm (Nuna)
+
+    /// How Anya uses the "right now" block and the per-session lines: a planning answer in the morning, a review in the evening,
+    /// and a workout explained from the session itself. Appended in the Nuna experience only, beside `AnyaActions.instruction`.
+    static let dayRhythmInstruction = """
+    DAY RHYTHM: The context carries RIGHT NOW (the time and part of the day), the session the Plan card suggests, the Effort banked, \
+    tonight's sleep need and a NEXT STEP worked out from them. Use them. Talk like a coach who has just looked at the person's day: \
+    say what you see in one or two sentences, then close with the NEXT STEP in your own words, adjusted only if their message \
+    points elsewhere. In the morning, plan the day around the suggested session and say what would change it. \
+    In the evening, review the day: what its Effort cost, how the night ahead looks, and a bedtime that follows from the sleep need. \
+    Never recommend a session that contradicts the suggested one unless the person gives a reason, and then say what changed. \
+    When asked about a workout, explain it from the session's own line: duration, Effort, average and max heart rate and the time in \
+    zones. Name what drove the Effort, say what it means for the next day or two, and offer one follow-up the person can ask. \
+    If a figure the answer needs is not in the context, say so instead of estimating it. This is guidance from the person's own \
+    numbers, not medical advice.
+    """
 
     // MARK: Answer style (Nuna Anya settings)
 
@@ -386,6 +404,7 @@ final class AICoachEngine: ObservableObject {
     static let responseLanguageKey = "ai.responseLanguage"      // "app" | "id" | "en"
     static let responseStyleKey = "ai.responseStyle"            // "short" | "balanced" | "detailed"
     static let extraInstructionsKey = "ai.extraInstructions"    // free text, appended after the built-in prompt
+    static let coachingModeKey = "ai.coachingMode"              // "personal" | "education"
     static let maxExtraInstructionsLength = 600
 
     static func answerStyleBlock(_ defaults: UserDefaults = .standard) -> String {
@@ -399,6 +418,10 @@ final class AICoachEngine: ObservableObject {
         case "short": out += "\n\nLENGTH: Keep every answer very short: at most 60 words and no more than 3 bullets."
         case "detailed": out += "\n\nLENGTH: The user wants detail. Explain the reasoning and the evidence in full, up to about 250 words, still without padding."
         default: break
+        }
+        // Coaching mode. Personalized (the default) adds nothing. Education only keeps Anya explaining and stops it prescribing.
+        if defaults.string(forKey: coachingModeKey) == "education" {
+            out += "\n\nCOACHING MODE: Education only. Explain what the signals mean and give general, evidence-based guidance. Do not prescribe sessions, targets, bedtimes or plans for this person, and do not turn their numbers into instructions. If they ask for a plan, say this mode only explains and that Personalized mode can plan."
         }
         // Goals the wearer set in Me > Persona > Targets; a line is added only for a goal that is set.
         var goals: [String] = []
@@ -698,6 +721,9 @@ final class AICoachEngine: ObservableObject {
     #if DEBUG
     var fetchModelsOverride: ((_ provider: AIProvider, _ key: String) async throws -> [String])?
     #endif
+
+    /// Builds the "right now" block (`AnyaDayContext`) appended to every full context. Nil outside the Nuna shell.
+    var dayContextProvider: (() async -> String)?
 
     /// Best-effort: GET the chosen provider's models endpoint with the saved key and merge the
     /// returned ids into `availableModels`. Never crashes; failures land in `errorText` and leave
@@ -1343,6 +1369,12 @@ final class AICoachEngine: ObservableObject {
         // with consent on), so it rides the SAME consent + text-only channel as the HRV/RHR summary, a
         // derived number, never raw R-R egress. Omitted when there aren't enough clean beats yet.
         if let line = await stressIndexLine() { ctx += "\n\n" + line }
+        // The clock, the Plan card's session, banked Effort and tonight's sleep need. Set by the Nuna shell only, so the
+        // Default experience and the macOS app send exactly the context they always did.
+        if let provider = dayContextProvider {
+            let block = await provider()
+            if !block.isEmpty { ctx += "\n\n" + block }
+        }
         if includeOnDeviceSignals {
             let block = await onDeviceSignalsBlock()
             if !block.isEmpty { ctx += "\n\n" + block }
@@ -1734,16 +1766,31 @@ final class AICoachEngine: ObservableObject {
             if let dur = w.durationS { parts.append("\(Int((dur / 60).rounded())) min") }
             if let s = w.strain { parts.append("effort \(String(format: "%.1f", s))") }
             if let hr = w.avgHr { parts.append("avg HR \(hr)") }
+            if let mx = w.maxHr { parts.append("max HR \(mx)") }
             if let kcal = w.energyKcal { parts.append("\(Int(kcal.rounded())) kcal") }
             if let dist = w.distanceM {
                 parts.append(UnitFormatter.distanceFromMeters(dist, system: distanceSystem))
             }
+            // Share of the session spent in each heart-rate zone, so "why was that Effort so high?" can be answered from
+            // the session itself. A zone under half a percent is left out; a row with no zone data adds nothing.
+            if let zones = Self.zoneShareText(w.zonesJSON) { parts.append(zones) }
             lines.append(parts.joined(separator: ", "))
         }
         return lines.joined(separator: "\n")
     }
 
     // MARK: Formatting helpers
+
+    /// "time in zones Z2 28% Z3 34%" for one session, or nil when the row carries no zone data. A zone that rounds to 0% is
+    /// left out. Pure so a test can pin the text the Kotlin twin must emit too.
+    nonisolated static func zoneShareText(_ zonesJSON: String?) -> String? {
+        guard let p = WorkoutZones.percents(zonesJSON) else { return nil }
+        let shares = p.enumerated().compactMap { i, v -> String? in
+            let r = Int(v.rounded())
+            return r > 0 ? "Z\(i + 1) \(r)%" : nil
+        }
+        return shares.isEmpty ? nil : "time in zones " + shares.joined(separator: " ")
+    }
 
     /// `internal`, not private, so `AICoachSleepContextTests` can assert the emitted line directly.
     /// Swift's `buildContext()` takes no arguments (it reads the repo), unlike the Kotlin twin which is

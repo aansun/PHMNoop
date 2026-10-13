@@ -16,6 +16,7 @@ struct NunaAnyaSettingsView: View {
     @AppStorage(NunaAnyaPrefs.cardsKey) private var cards = true
     @AppStorage(AICoachEngine.responseLanguageKey) private var language = "app"
     @AppStorage(AICoachEngine.responseStyleKey) private var style = "balanced"
+    @AppStorage(AICoachEngine.coachingModeKey) private var coachingMode = "personal"
     @AppStorage("coachBrief.enabled") private var briefOn = false
     @AppStorage(AudioCoachingPreferences.enabledKey) private var voiceOn = false
     @StateObject private var memory = CoachMemoryStore()
@@ -62,6 +63,9 @@ struct NunaAnyaSettingsView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         labelled("Language") { NunaSegmented([(value: "id", title: "Indonesian"), (value: "en", title: "English"), (value: "app", title: "Follow app")], selection: $language) }
                         labelled("Style") { NunaSegmented([(value: "short", title: "Short"), (value: "balanced", title: "Balanced"), (value: "detailed", title: "Detailed")], selection: $style) }
+                        labelled("Coaching") { NunaSegmented([(value: "personal", title: "Personalized"), (value: "education", title: "Education only")], selection: $coachingMode) }
+                        Text(coachingMode == "education" ? "Anya explains what your numbers mean and gives general guidance. It does not plan sessions or bedtimes for you." : "Anya uses your own numbers to suggest sessions, targets and bedtimes.")
+                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }
                 }
                 NunaCard(small: true) {
