@@ -472,10 +472,14 @@ public struct NunaTabBar: View {
 
     private var full: some View {
         HStack(spacing: 10) {
+            // The bar is as wide as its tabs (each a fixed, comfortable width) and sits in the middle, so four tabs stay close together
+            // instead of being pulled to the edges of the screen.
+            Spacer(minLength: 0)
             HStack(spacing: 0) { ForEach(items) { tab($0) } }
-                .padding(.horizontal, 6)
+                .padding(.horizontal, 8)
                 .frame(height: 64)
                 .background { surface(cornerRadius: radius) }
+            if trailing == nil { Spacer(minLength: 0) }
             if let trailing {
                 Button {
                     if selection == trailing.id { onReselect(trailing.id) } else { selection = trailing.id }
@@ -537,8 +541,7 @@ public struct NunaTabBar: View {
             }
             // The active tab is lit; the others are dimmed. No card behind either.
             .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textPrimary.opacity(0.52))
-            .frame(minWidth: 52, minHeight: 52)
-            .frame(maxWidth: .infinity)
+            .frame(width: 78, height: 52)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
