@@ -4,7 +4,7 @@ import StrandDesign
 import StrandAnalytics
 import WhoopStore
 
-/// Nuna "Kesehatan": a hub with All / Vital / Body / Sleep tabs. Phase 2 of docs/nuna/IMPLEMENTATION_PLAN.md.
+/// Nuna "Kesehatan": a hub with Vital and Sleep tabs. Phase 2 of docs/nuna/IMPLEMENTATION_PLAN.md.
 /// Display only. Values come from the same loader as Nuna Today; screens that already have a good
 /// flow (Lab Book, Rhythm with its consent gate, Apple Health permissions, cycle, mood) open as before.
 struct NunaHealthView: View {
@@ -21,14 +21,6 @@ struct NunaHealthView: View {
     @StateObject private var spo2S = NunaSeriesModel()
     @StateObject private var respS = NunaSeriesModel()
     @StateObject private var skinS = NunaSeriesModel()
-    @StateObject private var weightS = NunaSeriesModel()
-    @StateObject private var fatS = NunaSeriesModel()
-    @StateObject private var leanS = NunaSeriesModel()
-    @StateObject private var kcalInS = NunaSeriesModel()
-    @StateObject private var proteinS = NunaSeriesModel()
-    @StateObject private var carbsS = NunaSeriesModel()
-    @StateObject private var fatGS = NunaSeriesModel()
-    @StateObject private var trainingM = NunaWorkoutsModel()
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
     @State private var hrvRange = 30
     @State private var hrvPage = 0
@@ -39,7 +31,6 @@ struct NunaHealthView: View {
     @State private var didSetTab = false
     @State private var legacy: Legacy?
     @State private var showCoach = false
-    @State private var showBodyCoach = false
     @State private var showSleepCoach = false
     @State private var fitSeries: [(day: String, value: Double)] = []
     @State private var lastMaxHR: (bpm: Int, sport: String)?
@@ -52,10 +43,9 @@ struct NunaHealthView: View {
                 Text("Health").font(.nuna(size: NunaTypeSize.h1, weight: .bold, design: NunaType.design))
                     .foregroundStyle(NunaPalette.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                NunaPageTabs([(value: 0, title: "Vital"), (value: 1, title: "Body"), (value: 2, title: "Sleep")],
+                NunaPageTabs([(value: 0, title: "Vital"), (value: 2, title: "Sleep")],
                               selection: $tab)
                 switch tab {
-                case 1: bodyTab
                 case 2: sleepTab
                 default: vitalTab
                 }
@@ -69,7 +59,7 @@ struct NunaHealthView: View {
         .toolbar(.hidden, for: .navigationBar)
         .nunaTodayDestinations()
         .nunaWorkoutDestinations()
-        .onAppear { if !didSetTab { tab = initialTab; didSetTab = true } }
+        .onAppear { if !didSetTab { tab = initialTab == 2 ? 2 : 0; didSetTab = true } }
         .task(id: repo.refreshSeq) {
             await day.load(repo: repo, profile: profile)
             await sleep.load(repo: repo)
@@ -78,18 +68,10 @@ struct NunaHealthView: View {
             await spo2S.load(repo: repo, key: "spo2", source: "my-whoop")
             await respS.load(repo: repo, key: "resp_rate", source: "my-whoop")
             await skinS.load(repo: repo, key: "skin_temp", source: "my-whoop")
-            await weightS.load(repo: repo, key: "weight", source: "apple-health", days: 400, also: nunaManualSource)
-            await fatS.load(repo: repo, key: "body_fat", source: "apple-health", days: 400)
-            await leanS.load(repo: repo, key: "lean_mass", source: "apple-health", days: 400)
-            await kcalInS.load(repo: repo, key: "calories_in", source: "nutrition-csv", days: 30)
-            await proteinS.load(repo: repo, key: "protein_g", source: "nutrition-csv", days: 30)
-            await carbsS.load(repo: repo, key: "carbs_g", source: "nutrition-csv", days: 30)
-            await fatGS.load(repo: repo, key: "fat_g", source: "nutrition-csv", days: 30)
             fitSeries = await repo.exploreSeries(key: "fitness_age", source: "my-whoop", days: 120)
             if let w = await repo.workoutRows().filter({ ($0.maxHr ?? 0) > 0 }).max(by: { $0.startTs < $1.startTs }), let m = w.maxHr {
                 lastMaxHR = (m, w.sport.replacingOccurrences(of: "_", with: " ").capitalized)
             }
-            await trainingM.load(repo: repo)
         }
         .sheet(item: $legacy) { which in
             NavigationStack {
@@ -110,7 +92,6 @@ struct NunaHealthView: View {
             .environmentObject(repo)
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "health") }
-        .sheet(isPresented: $showBodyCoach) { NunaAnyaSheet(context: "body") }
         .sheet(isPresented: $showSleepCoach) { NunaAnyaSheet(context: "sleep") }
     }
 
@@ -392,97 +373,6 @@ struct NunaHealthView: View {
     }
 
     private var liveCard: some View { NunaLiveHRCard() }
-
-    // MARK: Body
-
-    private var bodyTab: some View {
-        VStack(spacing: NunaSpacing.section) {
-            NavigationLink(value: NunaTodayRoute.weight) {
-                NunaBodyHealthCard(weightKg: weightS.latest?.value ?? (profile.weightKg > 0 ? profile.weightKg : nil),
-                                   bmi: bodyBMI, waistCm: profile.waistCm, heightCm: profile.heightCm)
-            }.buttonStyle(.plain)
-            if coachEnabled, let line = bodyAnyaLine { NunaAnyaCard(verbatim: line) { showBodyCoach = true } }
-            NunaHealthTraining(m: trainingM, scale: UnitPrefs.resolveEffortScale(effortScaleRaw))
-            nutritionCard
-            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                VStack(spacing: 0) {
-                    link(.labBook, "Lab Book", "Your records", "cross.vial.fill")
-                    NunaWithApp { appModel in
-                        if appModel.cyclePhase != nil {
-                            NunaDivider()
-                            link(.cycle, "Menstrual cycle", "Cycle awareness", "drop.fill")
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    /// Anya's line for the whole Body tab: body health, the week of training and what was eaten, whichever there is.
-    private var bodyAnyaLine: String? {
-        var parts: [String] = []
-        if let b = bodyBMI { parts.append("BMI " + fmt(b, 1)) }
-        if profile.waistCm > 0, profile.heightCm > 0 { parts.append(String(localized: "Waist ratio") + " " + String(format: "%.2f", locale: AppLanguage.activeLocale, profile.waistCm / profile.heightCm)) }
-        let week = trainingM.recent(days: 7)
-        if !week.isEmpty {
-            parts.append(String(localized: "\(week.count) sessions") + " · Effort " + UnitFormatter.effortDisplay(trainingM.effort(week), scale: UnitPrefs.resolveEffortScale(effortScaleRaw)))
-        }
-        if let kcal = kcalInS.latest?.value { parts.append(String(localized: "\(Int(kcal.rounded())) kcal in")) }
-        return parts.isEmpty ? nil : parts.joined(separator: " · ")
-    }
-
-    private var bodyBMI: Double? {
-        let w = weightS.latest?.value ?? (profile.weightKg > 0 ? profile.weightKg : nil)
-        guard let w, profile.heightCm > 0 else { return nil }
-        return w / pow(profile.heightCm / 100, 2)
-    }
-
-    private var nutritionCard: some View {
-        let kcalIn = kcalInS.latest
-        let macros: [(LocalizedStringKey, Double?, Double, Color)] = [
-            ("Protein", proteinS.latest?.value, 4, NunaPalette.charge),
-            ("Carbs", carbsS.latest?.value, 4, NunaPalette.effort),
-            ("Fat", fatGS.latest?.value, 9, NunaPalette.warning),
-        ]
-        return NavigationLink(value: NunaTodayRoute.nutrition) {
-            NunaCard {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        cardTitle("Nutrition")
-                        Spacer()
-                        NunaChip("Import CSV")
-                    }
-                    if let kcalIn {
-                        HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            Text(verbatim: fmt(kcalIn.value)).font(.nuna(size: 40, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(40)).foregroundStyle(NunaPalette.textPrimary)
-                            Text("kcal in").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                            Spacer()
-                            if let out = day.calories { Text(verbatim: String(localized: "Out \(fmt(out))")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
-                        }
-                        if let out = day.calories, out > 0 { NunaProgressBar(fraction: min(kcalIn.value / out, 1), color: NunaPalette.warning) }
-                        VStack(spacing: 12) {
-                            ForEach(0..<macros.count, id: \.self) { i in
-                                if let g = macros[i].1 {
-                                    VStack(spacing: 6) {
-                                        HStack {
-                                            Text(macros[i].0).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                            Spacer()
-                                            Text(verbatim: "\(fmt(g)) g").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                                        }
-                                        NunaProgressBar(fraction: kcalIn.value > 0 ? g * macros[i].2 / kcalIn.value : 0, color: macros[i].3)
-                                    }
-                                }
-                            }
-                        }
-                        Text(verbatim: kcalIn.day + " · " + String(localized: "Bars show each macro's share of calories")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    } else {
-                        Text("No nutrition imported yet. Import a CSV from Cronometer or MacroFactor, processed on this phone.")
-                            .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                    }
-                }
-            }
-        }.buttonStyle(.plain)
-    }
 
     // MARK: Sleep
 
