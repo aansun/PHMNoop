@@ -317,6 +317,18 @@ struct NunaDeepTimelineView: View {
         daySamples = samples
     }
 
+    private func icon(_ m: Repository.TimelineMetric) -> String {
+        switch m {
+        case .hr: return "heart"
+        case .hrv: return "waveform.path.ecg"
+        case .spo2: return "drop"
+        case .skinTemp: return "thermometer.medium"
+        case .respiration: return "lungs"
+        case .motion, .ouraMovement: return "figure.walk.motion"
+        case .bandSleepState: return "moon.zzz"
+        }
+    }
+
     /// One colour per signal, so the chart and its chip read as the same thing.
     private func tint(_ m: Repository.TimelineMetric) -> Color {
         switch m {
@@ -341,15 +353,15 @@ struct NunaDeepTimelineView: View {
                 }
             }
         } label: {
-            HStack(spacing: 10) {
-                Circle().fill(tint(metric)).frame(width: 9, height: 9)
+            // The signal's icon in the neutral icon colour; the colour of the signal lives in the chart only.
+            HStack(spacing: 12) {
+                Image(systemName: icon(metric)).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 26)
                 Text(verbatim: metric.title).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
                 Spacer(minLength: 8)
                 Image(systemName: "chevron.up.chevron.down").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
             }
             .padding(.horizontal, 16).frame(maxWidth: .infinity, minHeight: 48)
             .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(tint(metric).opacity(0.7), lineWidth: 1.5))
         }
         .buttonStyle(.plain)
     }
