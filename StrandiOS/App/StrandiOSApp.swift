@@ -26,6 +26,10 @@ struct StrandiOSApp: App {
     /// observes it and presents the Devices manager.
     @StateObject private var router: NavRouter
     @State private var liveActivity = LiveActivityController()
+    /// Steps of the running walk, run or hike for the banner, refreshed at most every 15 seconds.
+    @State private var liveActivitySteps: Int?
+    @State private var liveActivityStepsAt = Date.distantPast
+    @State private var liveActivityStepsBusy = false
     /// iOS-only offline audio coach. It observes the existing workout/HR/GPS publishers and owns the
     /// prompt/audio lifecycle at app-root scope so dismissing the workout screen cannot silence it.
     @StateObject private var audioCoaching = AudioCoachingCoordinator()
@@ -522,6 +526,7 @@ struct StrandiOSApp: App {
                 speed = UnitFormatter.speedFromKilometersPerHour(3600 / pace, system: distanceSystem) ?? speed
             }
         }
+        if let w = workout { refreshLiveActivitySteps(for: w) } else { liveActivitySteps = nil }
         // While paused the clock must stand still, so the running clock starts later by the time already spent paused.
         let clockStart = workout.map { $0.start.addingTimeInterval($0.pausedDuration) }
         liveActivity.update(
@@ -547,7 +552,26 @@ struct StrandiOSApp: App {
             zoneSeconds: zoneSeconds,
             pausedAt: workout?.pausedAt,
             effortLabel: workout.map { UnitFormatter.effortDisplay($0.liveStrain, scale: UnitPrefs.resolveEffortScale(UserDefaults.standard.string(forKey: UnitPrefs.effortScaleKey) ?? "")) },
+            steps: workout == nil ? nil : liveActivitySteps,
             workoutActive: workoutActive)
+    }
+
+    /// The step count of a running session, read off the main flow so a tick never waits on it. It is the same count the live
+    /// screen shows, from the strap's counter or the phone's pedometer; nil for a sport that is not on foot.
+    @MainActor
+    private func refreshLiveActivitySteps(for w: AppModel.ActiveWorkout) {
+        guard !liveActivityStepsBusy, Date().timeIntervalSince(liveActivityStepsAt) > 15 else { return }
+        liveActivityStepsBusy = true
+        liveActivityStepsAt = Date()
+        let start = Int(w.start.timeIntervalSince1970)
+        let end = w.pausedAt.map { Int($0.timeIntervalSince1970) } ?? Int(Date().timeIntervalSince1970)
+        let sport = w.sport
+        Task { @MainActor in
+            let steps = await NunaLiveMetrics.steps(sport: sport, from: start, to: end, repo: model.repo,
+                                                    ticksPerStep: model.profile.stepTicksPerStep)
+            if model.activeWorkout?.start == w.start { liveActivitySteps = steps }
+            liveActivityStepsBusy = false
+        }
     }
 
     private static func clock(_ s: TimeInterval) -> String {

@@ -53,7 +53,7 @@ final class LiveActivityController {
                 averageBPM: Int? = nil, peakBPM: Int? = nil,
                 distance: String? = nil, pace: String? = nil, speed: String? = nil,
                 calories: Int? = nil, subtitle: String? = nil, progress: Double? = nil, targetZone: Int? = nil,
-                zonePosition: Double? = nil, zoneSeconds: Int? = nil, pausedAt: Date? = nil, effortLabel: String? = nil,
+                zonePosition: Double? = nil, zoneSeconds: Int? = nil, pausedAt: Date? = nil, effortLabel: String? = nil, steps: Int? = nil,
                 workoutActive: Bool = false) {
         guard activitiesEnabled else { return }
 
@@ -116,7 +116,8 @@ final class LiveActivityController {
             zonePosition: zonePosition,
             zoneSeconds: zoneSeconds,
             pausedAt: pausedAt,
-            effortLabel: effortLabel)
+            effortLabel: effortLabel,
+            steps: steps)
         // A workout owns this activity until End/Discard. Do not let a temporary strap disconnect or
         // quiet GPS stream make the Lock Screen activity stale while the workout clock is still live.
         // Ordinary live-HR activity keeps the shorter freshness date as a safety net.
