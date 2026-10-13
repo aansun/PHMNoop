@@ -14,7 +14,8 @@ struct NOOPLiveActivity: Widget {
         ActivityConfiguration(for: NOOPActivityAttributes.self) { context in
             LockScreen(state: context.state, title: context.attributes.title)
                 .widgetURL(URL(string: "noop://workout"))
-                .activityBackgroundTint(NunaPalette.card)
+                // Glass: a translucent tint over the system material, so the wallpaper shows through softly.
+                .activityBackgroundTint(NunaPalette.card.opacity(0.55))
                 .activitySystemActionForegroundColor(NunaPalette.textPrimary)
         } dynamicIsland: { context in
             let s = context.state
@@ -190,7 +191,7 @@ private struct ElapsedPill: View {
         }
         .foregroundStyle(tone)
         .padding(.horizontal, 14).frame(height: size * 2.1)
-        .background(tone.opacity(0.16), in: RoundedRectangle(cornerRadius: size * 1.05, style: .continuous))
+        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: size * 1.05, style: .continuous))
         .fixedSize()
     }
 }
@@ -213,6 +214,28 @@ private struct ZoneStrip: View {
 }
 
 // MARK: - the figures
+
+/// One figure: the number with its unit beside it, and its name under it, centred in its column.
+private struct FigureColumn: View {
+    let label: LocalizedStringKey
+    let value: String
+    let unit: String
+    let size: CGFloat
+
+    var body: some View {
+        VStack(spacing: 4) {
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text(verbatim: value).font(.nuna(size: size, weight: .bold, design: NunaType.design)).monospacedDigit()
+                    .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+                if !unit.isEmpty {
+                    Text(verbatim: unit).font(.nuna(size: size * 0.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1)
+                }
+            }
+            Text(label).font(.nuna(size: 10, weight: .heavy)).tracking(0.8).foregroundStyle(NunaPalette.textSecondary)
+        }
+        .frame(maxWidth: .infinity)
+    }
+}
 
 /// What the session can tell: distance and pace (speed on a bike) when it records a route, with steps (walk, run, hike) or calories in
 /// the middle. Without a route: steps and calories on foot, calories otherwise. Live heart rate alone: Effort and the strap battery.
@@ -263,7 +286,7 @@ private struct WorkoutFigures: View {
             HStack(spacing: 0) {
                 ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                     if index > 0 { Rectangle().fill(NunaPalette.hairline).frame(width: 1, height: size * 1.9) }
-                    NOOPLiveMetric(label: item.label, text: Text(verbatim: item.value), unit: item.unit, size: size, alignment: .center)
+                    FigureColumn(label: item.label, value: item.value, unit: item.unit, size: size)
                 }
             }
         }
