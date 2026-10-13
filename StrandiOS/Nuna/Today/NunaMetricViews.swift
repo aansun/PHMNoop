@@ -34,6 +34,8 @@ enum NunaTodayRoute: Hashable {
     case vitalSigns
     /// What the Rest screen's top-right button opens: smart alarm, bedtime reminder, nap detection.
     case sleepSettings
+    /// The seven-night sleep overview (what the Health tab used to show for sleep).
+    case sleepOverview
 }
 
 extension View {
@@ -65,6 +67,7 @@ extension View {
             case .hydration: NunaHydrationView()
             case .vitalSigns: NunaHealthView(vitalsOnly: true)
             case .sleepSettings: NunaSleepSettingsView()
+            case .sleepOverview: NunaHealthView()
             }
         }
     }

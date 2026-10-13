@@ -3,7 +3,7 @@ import SwiftUI
 import UIKit
 import StrandDesign
 
-/// The Nuna navigation shell: five tabs with a floating tab bar.
+/// The Nuna navigation shell: four tabs (Today, Trends, Anya, Me) in one floating tab bar.
 ///
 /// Phase 0 of docs/nuna/IMPLEMENTATION_PLAN.md. The tab roots still host the existing screens; later
 /// phases replace them one by one. The shell is only used when `ExperienceMode` is `.nuna`; the default
@@ -24,7 +24,7 @@ struct NunaRootView: View {
     @AppStorage(NunaThemePrefs.densityKey) private var densityRaw = NunaThemePrefs.Density.standard.rawValue
     @AppStorage(NunaThemePrefs.skinKey) private var skinRaw = NunaThemePrefs.Skin.standard.rawValue
 
-    private enum Tab: Int, CaseIterable { case today = 0, health, trends, anya, me }
+    private enum Tab: Int, CaseIterable { case today = 0, trends, anya, me }
 
     @State private var selection = Tab.today.rawValue
     @State private var paths: [NavigationPath] = Array(repeating: NavigationPath(), count: Tab.allCases.count)
@@ -36,25 +36,20 @@ struct NunaRootView: View {
     @AppStorage(NunaTabBarPrefs.autoHideKey) private var autoHide = false
     @State private var barHidden = false
 
+    /// One bar: Today, Trends, Anya (while it is on) and Me.
     private var items: [NunaTabItem] {
         var out = [
             NunaTabItem(id: Tab.today.rawValue, title: "Today", systemImage: "square.grid.2x2.fill"),
-            NunaTabItem(id: Tab.health.rawValue, title: "Health", systemImage: "heart.text.square.fill"),
             NunaTabItem(id: Tab.trends.rawValue, title: "Trends", systemImage: "chart.line.uptrend.xyaxis"),
         ]
+        if coachEnabled { out.append(NunaTabItem(id: Tab.anya.rawValue, title: "Anya", systemImage: NunaGlyph.anya)) }
         out.append(NunaTabItem(id: Tab.me.rawValue, title: "Me", systemImage: "person.fill"))
         return out
-    }
-
-    /// Anya sits apart from the bar, on its right.
-    private var anyaItem: NunaTabItem? {
-        coachEnabled ? NunaTabItem(id: Tab.anya.rawValue, title: "Anya", systemImage: NunaGlyph.anya) : nil
     }
 
     var body: some View {
         TabView(selection: $selection) {
             stack(.today) { NunaTodayView() }
-            stack(.health) { NunaHealthView() }
             stack(.trends) { NunaTrendsView() }
             if coachEnabled { stack(.anya) { NunaAnyaView() } }
             stack(.me) { NunaMeView() }
@@ -63,7 +58,7 @@ struct NunaRootView: View {
             if !keyboardUp {
                 VStack(spacing: 0) {
                     NunaLiftBar()
-                    NunaTabBar(items: items, trailing: anyaItem, selection: $selection, minimized: autoHide && barHidden,
+                    NunaTabBar(items: items, selection: $selection, minimized: autoHide && barHidden,
                                onExpand: { barHidden = false }) { id in
                         // Re-tapping the active tab pops it to its root.
                         if id < paths.count { paths[id] = NavigationPath() }
@@ -177,7 +172,7 @@ struct NunaRootView: View {
         case .liveSession: LiquidTodayView()
         case .journal: NunaJournalView()
         case .coach: NunaAnyaView()
-        case .health: NunaHealthView()
+        case .health: NunaHealthView(vitalsOnly: true)
         }
     }
 
@@ -214,8 +209,9 @@ struct NunaRootView: View {
         case .trends:
             selection = Tab.trends.rawValue
         case .health:
-            selection = Tab.health.rawValue
-            paths[Tab.health.rawValue] = NavigationPath()
+            // There is no Health tab: what opened it (the vital sign widget) lands on the vital signs page of Today.
+            selection = Tab.today.rawValue
+            paths[Tab.today.rawValue] = NavigationPath([NunaTodayRoute.vitalSigns])
         case .liveSession:
             selection = Tab.today.rawValue
         default:

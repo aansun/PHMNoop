@@ -49,7 +49,7 @@ struct NunaMeView: View {
                     row(.features, "Optional features", LocalizedStringKey(featuresSubtitle), "checkmark.circle.fill")
                 }
                 group("Data", count: 4) {
-                    row(.applications, "Application", "Vital signs, stress, water, lab book, nutrition, nap", "square.grid.2x2")
+                    row(.applications, "Application", "Vital signs, stress, sleep, water, lab book, nutrition, nap", "square.grid.2x2")
                     NunaDivider()
                     row(.data, "Data and integrations", nil, "square.and.arrow.up")
                     NunaDivider()
