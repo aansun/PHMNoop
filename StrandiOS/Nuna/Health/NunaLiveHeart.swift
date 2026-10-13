@@ -240,8 +240,6 @@ struct NunaDeepTimelineView: View {
 
     private var zoneSet: HRZoneSet { profile.hrZoneSet }
 
-    private static let zoneNames: [LocalizedStringKey] = ["Zone 1 · easy", "Zone 2 · light", "Zone 3 · aerobic", "Zone 4 · threshold", "Zone 5 · maximum"]
-
     // MARK: Zones for the day
 
     /// Time in each of the five zones for the day on show, with the resting and the highest heart rate of that day.
@@ -252,19 +250,17 @@ struct NunaDeepTimelineView: View {
             let peak = daySamples.map(\.bpm).max()
             NunaCard {
                 VStack(alignment: .leading, spacing: 14) {
-                    Text("Time in zones").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                        .foregroundStyle(NunaPalette.textSecondary)
-                    NunaProportionBar(parts: (0..<5).map { (tiz.seconds[$0], nunaHRZoneColors[$0]) }, height: 14)
-                    VStack(spacing: 10) {
-                        ForEach(0..<5, id: \.self) { i in
-                            HStack(spacing: 10) {
-                                RoundedRectangle(cornerRadius: 3, style: .continuous).fill(nunaHRZoneColors[i]).frame(width: 12, height: 12)
-                                Text(Self.zoneNames[i]).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                                    .lineLimit(1).minimumScaleFactor(0.8)
-                                Spacer(minLength: 8)
-                                Text(verbatim: NunaSleepFormat.duration(tiz.seconds[i] / 60)).font(.nuna(size: 15, weight: .bold, design: NunaType.design))
-                                    .monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
-                            }
+                    // The same card as the zone breakdown of the Effort pages: title, one bar, a row per zone (swatch, "Zone n", time as h:mm).
+                    Text("Heart-rate zones breakdown")
+                        .font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    NunaProportionBar(parts: (0..<5).map { (tiz.seconds[$0], nunaHRZoneColors[$0]) }, height: 12)
+                    ForEach(0..<5, id: \.self) { i in
+                        HStack(spacing: 10) {
+                            RoundedRectangle(cornerRadius: 3).fill(nunaHRZoneColors[i]).frame(width: 10, height: 10)
+                            Text(verbatim: String(localized: "Zone \(i + 1)")).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                            Spacer(minLength: 8)
+                            Text(verbatim: Self.hm(tiz.seconds[i] / 60)).font(.nuna(size: 15, weight: .bold, design: NunaType.design))
+                                .monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
                         }
                     }
                     NunaDivider()
@@ -276,6 +272,11 @@ struct NunaDeepTimelineView: View {
                 }
             }
         }
+    }
+
+    private static func hm(_ minutes: Double) -> String {
+        let m = max(0, Int(minutes.rounded()))
+        return String(format: "%d:%02d", m / 60, m % 60)
     }
 
     /// Where the zone boundaries come from, in a word.
