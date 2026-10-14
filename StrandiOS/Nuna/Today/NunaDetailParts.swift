@@ -697,6 +697,10 @@ final class NunaSeriesModel: ObservableObject {
         if let also {
             for r in await repo.exploreSeries(key: key, source: also, days: days) { map[r.day] = r.value }
         }
+        // Blood Oxygen: add the strap's nightly estimate for the nights that have no calibrated reading (experiment on).
+        if key == "spo2", source == "my-whoop", PuffinExperiment.spo2CandidateDisplayEnabled {
+            for p in await repo.exploreSeries(key: "spo2_candidate", source: source, days: days) where map[p.day] == nil { map[p.day] = p.value }
+        }
         byDay = map
         loaded = true
     }

@@ -899,7 +899,9 @@ struct NunaMetricDetailView: View {
         NunaExpandRow(title: "What affects it", subtitle: "Common factors", systemImage: "chart.line.uptrend.xyaxis",
                       text: "Sleep, alcohol, hydration, stress, illness and training load all move your daily numbers. Look at the trend over weeks rather than a single day.")
         NunaExpandRow(title: "How it's calculated", subtitle: "Source and method",
-                      text: LocalizedStringKey("Source: \(metric.sourceLabel). Values are read from the data stored on this phone."))
+                      text: metric.key == "spo2" && metric.source == "my-whoop" && PuffinExperiment.spo2CandidateDisplayEnabled
+                        ? "Nights without a calibrated reading show the strap's own estimate (WHOOP 5/MG, Oura). It is not verified, so read it as a trend and not as a measurement. It never feeds Charge or the early warning."
+                        : LocalizedStringKey("Source: \(metric.sourceLabel). Values are read from the data stored on this phone."))
     }
 
     var body: some View {
@@ -1157,7 +1159,8 @@ struct NunaStressDetailView: View {
     private var todayKey: String { Repository.localDayKey(Calendar.current.startOfDay(for: Date())) }
 
     private var reader: NunaStressDayReader {
-        NunaStressDayReader(history: history.entries, nightly: series.byDay, rows: repo.days, todayKey: todayKey,
+        NunaStressDayReader(history: history.entries, nightly: NunaNightlyStress.merged(stored: series.byDay, days: repo.days),
+                            rows: repo.days, todayKey: todayKey,
                             today: day.stressCurve.map { NunaStressZones(hours: $0.hours) })
     }
 

@@ -181,6 +181,27 @@ final class NunaStressHistory: ObservableObject {
     }
 }
 
+/// The night's stress per day (0 to 3). The stored series only exists for an imported export, so on a strap-only install it is
+/// empty and the sleep category had nothing to show; every day with a resting heart rate or HRV is scored the way the Day Stress
+/// score is (against the 30 nights before it) and a stored value still wins for its day.
+enum NunaNightlyStress {
+    private static let keyFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.locale = Locale(identifier: "en_US_POSIX"); f.timeZone = TimeZone(identifier: "UTC"); f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+
+    static func merged(stored: [String: Double], days: [DailyMetric]) -> [String: Double] {
+        var out = stored
+        guard let model = StressModel(days: days, stored: stored.map { (day: $0.key, value: $0.value) }) else { return out }
+        for point in model.fullTrend {
+            let key = keyFormatter.string(from: point.date)
+            if out[key] == nil { out[key] = point.value }
+        }
+        return out
+    }
+}
+
 /// Reads one day's zones for a category: the stored daytime read, the night, or both.
 struct NunaStressDayReader {
     let history: [String: NunaStressHistory.Entry]
@@ -379,7 +400,7 @@ struct NunaStressTrendView: View {
     }
 
     private var reader: NunaStressDayReader {
-        NunaStressDayReader(history: history.entries, nightly: nightly.byDay, rows: repo.days,
+        NunaStressDayReader(history: history.entries, nightly: NunaNightlyStress.merged(stored: nightly.byDay, days: repo.days), rows: repo.days,
                             todayKey: Repository.localDayKey(todayStart), today: todayZones)
     }
 

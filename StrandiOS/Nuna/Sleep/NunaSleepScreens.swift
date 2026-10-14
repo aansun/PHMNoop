@@ -246,6 +246,7 @@ struct NunaSleepStagesView: View {
 
 struct NunaSleepVitalsView: View {
     var startIndex = 0
+    @EnvironmentObject private var repo: Repository
     var body: some View {
         NunaSleepHost(title: "Overnight vitals", startIndex: startIndex) { model in
             if let night = model.night {
@@ -254,7 +255,7 @@ struct NunaSleepVitalsView: View {
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
                     vital("HRV", "hrv", night.daily?.avgHrv, others.compactMap(\.avgHrv), "ms", 0)
                     vital("Resting HR", "rhr", night.daily?.restingHr.map(Double.init), others.compactMap { $0.restingHr.map(Double.init) }, "bpm", 0)
-                    vital("Blood Oxygen", "spo2", night.daily?.spo2Pct, others.compactMap(\.spo2Pct), "%", 0)
+                    vital("Blood Oxygen", "spo2", repo.spo2(for: night.daily), others.compactMap { repo.spo2(for: $0) }, "%", 0)
                     vital("Respiratory", "resp_rate", night.daily?.respRateBpm, others.compactMap(\.respRateBpm), "/min", 1)
                     vital("Skin Temp", "skin_temp", night.daily?.skinTempDevC, others.compactMap(\.skinTempDevC), "°C", 1)
                 }
