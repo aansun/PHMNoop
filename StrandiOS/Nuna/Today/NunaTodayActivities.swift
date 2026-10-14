@@ -109,7 +109,7 @@ struct NunaTodayActivities: View {
             }.buttonStyle(.plain)
         case .nap(let dayKey, let nap):
             NavigationLink(value: NunaTodayRoute.nap(dayKey, Int(nap.start.timeIntervalSince1970))) {
-                rowBody(tint: NunaPalette.rest, icon: "moon.zzz.fill", figure: String(localized: "\(Int(nap.asleepMin.rounded())) min"), name: Text("Nap"), start: item.start, end: item.end)
+                rowBody(tint: NunaPalette.rest, icon: "moon.zzz.fill", figure: Self.hoursAndMinutes(nap.asleepMin), name: Text("Nap"), start: item.start, end: item.end)
             }.buttonStyle(.plain)
         case .workout(let w):
             let strength = NunaWorkoutKind.isStrength(w)
@@ -165,7 +165,11 @@ struct NunaTodayActivities: View {
 
     /// Sleep as hours and minutes ("6:50"); the span of the night when the daily figure is not there.
     private func sleepFigure(_ item: Item) -> String {
-        let minutes = sleepMinutes ?? item.end.timeIntervalSince(item.start) / 60
+        Self.hoursAndMinutes(sleepMinutes ?? item.end.timeIntervalSince(item.start) / 60)
+    }
+
+    /// "6:50", with no unit: sleep and naps read the same way in the tile, so the column of figures stays even.
+    private static func hoursAndMinutes(_ minutes: Double) -> String {
         let m = Int(minutes.rounded())
         return String(format: "%d:%02d", m / 60, m % 60)
     }
