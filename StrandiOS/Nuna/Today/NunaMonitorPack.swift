@@ -20,6 +20,10 @@ struct NunaMonitorPackCard: View {
     @StateObject private var rhrS = NunaSeriesModel()
     @StateObject private var respS = NunaSeriesModel()
 
+    /// The vital signs the tile watches: HRV, resting heart rate, blood oxygen, respiratory rate and skin temperature. The count is
+    /// always out of these, so a vital with no reading shows up as a missing one ("4/5") and not as a smaller total ("4/4").
+    private static let monitored = 5
+
     /// How many of the vital signs with a reading are in range, and how many have one.
     private var vitals: (within: Int, known: Int) {
         var within = 0, known = 0
@@ -88,7 +92,7 @@ struct NunaMonitorPackCard: View {
                         .font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(tint)
                         .lineLimit(2).fixedSize(horizontal: false, vertical: true)
                     if v.known > 0 {
-                        Text(verbatim: String(localized: "\(v.within)/\(v.known) Metrics")).font(.nuna(size: 12.5, weight: .semibold))
+                        Text(verbatim: String(localized: "\(v.within)/\(Self.monitored) Metrics")).font(.nuna(size: 12.5, weight: .semibold))
                             .foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                 }
