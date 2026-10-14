@@ -1,6 +1,7 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Time asleep held this night back, just under what you need.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Durasi tidur menahan malam ini, sedikit di bawah kebutuhan Anda."}}}},
     "Blood oxygen is under 95%. One night is noise; several in a row are worth mentioning to a doctor if you feel it.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Oksigen darah di bawah 95%. Satu malam hanya gangguan; beberapa malam berturut-turut layak disampaikan ke dokter bila Anda merasakannya."}}}},
     "Blood oxygen is in the normal range. It matters only if it falls under 95% on several nights.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Oksigen darah dalam rentang normal. Baru penting bila turun di bawah 95% pada beberapa malam."}}}},
     "Time asleep held this night back: you got %@ less than you need.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Durasi tidur yang menahan malam ini: Anda tidur %@ kurang dari kebutuhan."}}}},
