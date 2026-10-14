@@ -15,12 +15,12 @@ enum NunaInsightText {
     }
 
     /// Why the night scored as it did, and what to do about it tonight.
-    static func sleep(_ r: SleepRead) -> String {
-        let p = sleepParts(r)
+    static func sleep(_ r: SleepRead, factors: NunaSleepFactorContext? = nil, wakeDay: String? = nil) -> String {
+        let p = sleepParts(r, factors: factors, wakeDay: wakeDay)
         return p.why + " " + p.action
     }
 
-    static func sleepParts(_ r: SleepRead) -> (why: String, action: String) {
+    static func sleepParts(_ r: SleepRead, factors: NunaSleepFactorContext? = nil, wakeDay: String? = nil) -> (why: String, action: String) {
         var why: String
         switch r.verdict {
         case .heldBack(.duration):
@@ -67,7 +67,12 @@ enum NunaInsightText {
         case .lagging: why += " " + String(localized: "HRV and resting heart rate have not followed the sleep yet, so recovery may lag it.")
         case .neutral: break
         }
-        return (why, sleepAction(r))
+        var action = sleepAction(r)
+        if let wakeDay, let note = factorNote(factors, wakeDay: wakeDay) {
+            why += " " + note.why
+            if let a = note.action { action = a }
+        }
+        return (why, action)
     }
 
     private static func sleepAction(_ r: SleepRead) -> String {
@@ -234,6 +239,49 @@ enum NunaInsightText {
         if effort < lo { return String(localized: "You are under the Effort your Charge supports today, so there is room for a session if you feel like it.") }
         if effort <= hi { return String(localized: "You are inside the Effort your Charge supports today: more adds load without much return.") }
         return String(localized: "You are past the Effort your Charge supports today: food, water and an early night are the work now.")
+    }
+}
+
+// MARK: - Evening habits from the journal
+
+/// The journal's evening habits (alcohol, late caffeine, a meal close to bedtime) and what they have cost this wearer's Rest, for the
+/// sleep line. Built once per screen from the journal and the Rest series.
+struct NunaSleepFactorContext {
+    let journal: [SleepFactors.Entry]
+    let evidence: [SleepFactors.Evidence]
+
+    static func load(repo: Repository, restByWakeDay: [String: Double]) async -> NunaSleepFactorContext {
+        let entries = await repo.journalEntries(days: 400).map { SleepFactors.Entry(day: $0.day, question: $0.question, yes: $0.answeredYes) }
+        return NunaSleepFactorContext(journal: entries, evidence: SleepFactors.evidence(journal: entries, restByWakeDay: restByWakeDay))
+    }
+
+    func logged(wakeDay: String) -> Set<SleepFactorKind> { SleepFactors.loggedYes(journal: journal, wakeDay: wakeDay) }
+}
+
+extension NunaInsightText {
+    private static func habitName(_ k: SleepFactorKind) -> String {
+        switch k {
+        case .alcohol: return String(localized: "alcohol")
+        case .lateCaffeine: return String(localized: "caffeine late in the day")
+        case .lateMeal: return String(localized: "a meal close to bedtime")
+        }
+    }
+
+    /// What the journal adds to a night's line: a habit named as a cause only where this wearer's own nights show it costing Rest,
+    /// and an honest "not enough nights yet" where it was logged but there is nothing to compare.
+    static func factorNote(_ context: NunaSleepFactorContext?, wakeDay: String) -> (why: String, action: String?)? {
+        guard let context else { return nil }
+        let logged = context.logged(wakeDay: wakeDay)
+        guard !logged.isEmpty else { return nil }
+        let evidence = context.evidence.filter { logged.contains($0.kind) }
+        if let worst = evidence.filter(\.costsRest).min(by: { ($0.restDelta ?? 0) < ($1.restDelta ?? 0) }), let d = worst.restDelta {
+            let why = String(localized: "Your journal explains part of it: you logged \(habitName(worst.kind)) yesterday, and after the \(worst.nYes) nights you did, your Rest ran \(Int(abs(d).rounded())) points lower.")
+            return (why, String(localized: "Skip it tonight and see whether the night recovers."))
+        }
+        if let first = evidence.first {
+            return (String(localized: "You logged \(habitName(first.kind)) yesterday; with only \(first.nYes) such night(s) so far there is not enough to say whether it moves your sleep."), nil)
+        }
+        return nil
     }
 }
 
