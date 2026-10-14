@@ -181,7 +181,8 @@ struct NunaWorkoutsView: View {
     }
 
     private var anyaCard: some View {
-        let week = m.recent(days: 7)
+        // "This week" is the Monday-to-Sunday week the Workout Data card opens on.
+        let week = rows(inWeek: 0)
         return Group {
             if !week.isEmpty {
                 NunaAnyaCard(verbatim: String(localized: "This week: \(week.count) sessions, Effort \(UnitFormatter.effortDisplay(m.effort(week), scale: scale)).")) { showCoach = true }
@@ -321,17 +322,29 @@ struct NunaWorkoutsView: View {
         let rows: [WorkoutRow]
     }
 
-    /// One calendar-aware window feeds both the totals and the session list.
-    private var workoutWeek: WorkoutWeek {
-        let cal = Calendar.current
-        let today = cal.startOfDay(for: Date())
-        let end = cal.date(byAdding: .day, value: 1 - weekOffset * 7, to: today) ?? today
-        let start = cal.date(byAdding: .day, value: -7, to: end) ?? end
-        let rows = m.rows.filter {
+    /// Weeks start on Monday, whatever the region setting says. `offset` 0 is the week that contains today.
+    private static func weekBounds(offset: Int) -> (start: Date, end: Date) {
+        var cal = Calendar.current
+        cal.firstWeekday = 2
+        cal.minimumDaysInFirstWeek = 4
+        let thisMonday = cal.dateInterval(of: .weekOfYear, for: Date())?.start ?? cal.startOfDay(for: Date())
+        let start = cal.date(byAdding: .day, value: -7 * offset, to: thisMonday) ?? thisMonday
+        let end = cal.date(byAdding: .day, value: 7, to: start) ?? start
+        return (start, end)
+    }
+
+    private func rows(inWeek offset: Int) -> [WorkoutRow] {
+        let b = Self.weekBounds(offset: offset)
+        return m.rows.filter {
             let date = Date(timeIntervalSince1970: TimeInterval($0.startTs))
-            return date >= start && date < end
+            return date >= b.start && date < b.end
         }
-        return WorkoutWeek(start: start, end: end, rows: rows)
+    }
+
+    /// One Monday-to-Sunday window feeds both the totals and the session list.
+    private var workoutWeek: WorkoutWeek {
+        let b = Self.weekBounds(offset: weekOffset)
+        return WorkoutWeek(start: b.start, end: b.end, rows: rows(inWeek: weekOffset))
     }
 
     private func workoutDataCard(_ week: WorkoutWeek) -> some View {
@@ -374,13 +387,13 @@ struct NunaWorkoutsView: View {
                 }
                 HStack(alignment: .top, spacing: 12) {
                     workoutDataStat("Total workout", "\(rows.count)")
-                    workoutDataStat("Total time", seconds > 0 ? NunaWorkoutFormat.duration(seconds) : "0 min")
+                    workoutDataStat("Total time", NunaWorkoutFormat.minutes(seconds))
                     workoutDataStat("Total calories", totalCalories)
                 }
                 HStack(alignment: .top, spacing: 12) {
                     workoutDataStat("Most active", mostActive ?? "–", isActivity: true)
                     workoutDataStat("Active days", "\(active)")
-                    workoutDataStat("Longest session", NunaWorkoutFormat.duration(longest))
+                    workoutDataStat("Longest session", longest.map { $0 > 0 ? NunaWorkoutFormat.minutes($0) : "–" } ?? "–")
                 }
                 NunaDivider()
                 HStack(spacing: 12) {

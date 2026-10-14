@@ -3,7 +3,7 @@ import SwiftUI
 import StrandDesign
 
 /// "Application": the screens that are apps in their own right, in one place: the vital signs and stress monitors, the water log, the lab
-/// book, nutrition and naps (and the menstrual cycle while cycle awareness has a reading).
+/// book, nutrition and naps (and the menstrual cycle while cycle awareness has a reading). Sleep has no entry of its own: its detail is the Rest screen.
 struct NunaApplicationsView: View {
     @EnvironmentObject private var appModel: AppModel
     @AppStorage(HydrationStore.enabledKey) private var hydration = false
@@ -19,8 +19,6 @@ struct NunaApplicationsView: View {
                     app(.vitalSigns, "Vital signs", "HRV, resting heart rate, blood oxygen and more", "heart.text.square")
                     NunaDivider()
                     app(stressRoute, "Stress monitor", "Level now and through the day", "gauge.with.dots.needle.50percent")
-                    NunaDivider()
-                    app(.sleepOverview, "Sleep", "Last seven nights, need and bedtime", "moon.zzz.fill")
                     NunaDivider()
                     app(.hydration, "Water", hydration ? "Drink log with a daily target" : "Turn on in Optional features", "drop")
                     NunaDivider()

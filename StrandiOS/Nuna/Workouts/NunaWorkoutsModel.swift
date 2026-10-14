@@ -112,6 +112,12 @@ enum NunaWorkoutFormat {
         return m >= 60 ? "\(m / 60)h \(m % 60)m" : "\(m) min"
     }
 
+    /// Whole minutes with the unit, for any length ("125 min", never "2h 5m").
+    static func minutes(_ seconds: Double?) -> String {
+        let m = Int(((seconds ?? 0) / 60).rounded())
+        return "\(m) min"
+    }
+
     static func distance(_ meters: Double?, _ system: UnitSystem) -> String? {
         guard let m = meters, m > 50 else { return nil }
         return system == .imperial ? String(format: "%.1f mi", locale: AppLanguage.activeLocale, m / 1609.344)
