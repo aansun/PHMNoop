@@ -308,6 +308,21 @@ public enum StrainScorer {
         return (value * 100).rounded() / 100
     }
 
+    // MARK: - Planning: a day with an activity added
+
+    /// Effort of a day once an activity worth `activity` (its own Effort, on the same 0-100 axis) is added to a day already at `day`.
+    ///
+    /// The Effort axis is a LOG map of TRIMP, and TRIMP is what adds up, so two Efforts cannot simply be summed: 40 plus 40 is far
+    /// less than 80. This undoes the map for each (`D^(e/100) − 1`), adds the two TRIMPs and maps the total again, which is the
+    /// number the day would read if the activity were recorded. An estimate for planning, with the same denominator the day is
+    /// scored with (pass `logMapDenominator(method:sex:)` for Banister). Inputs ≤ 0 contribute nothing.
+    public static func effortAfter(day: Double, adding activity: Double,
+                                   denominator: Double = strainDenominator) -> Double {
+        guard denominator > 1 else { return max(day, 0) }
+        func trimp(_ effort: Double) -> Double { effort > 0 ? pow(denominator, min(effort, maxStrain) / maxStrain) - 1 : 0 }
+        return min(trimpToStrain(trimp(day) + trimp(activity), denominator: denominator), maxStrain)
+    }
+
     // MARK: - Denominator calibration
 
     /// Calibrate D from (TRIMP, reference_strain) pairs via the through-origin

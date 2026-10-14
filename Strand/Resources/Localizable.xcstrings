@@ -1,6 +1,10 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "* Estimated from the activity target": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "* Estimasi dari target aktivitas"}}}},
+    "Current effort": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Effort saat ini"}}}},
+    "After activity": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Setelah aktivitas"}}}},
+    "Training state": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kondisi latihan"}}}},
     "Muscular": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Otot"}}}},
     "Against your last %lld sessions. An estimate; it does not change Effort.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Dibandingkan dengan %lld sesi terakhir Anda. Hanya estimasi; tidak mengubah Effort."}}}},
     "Appears once you have three earlier sessions with logged sets and an Effort.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Muncul setelah ada tiga sesi sebelumnya dengan set tercatat dan Effort."}}}},
