@@ -1,6 +1,9 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Muscular": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Otot"}}}},
+    "Against your last %lld sessions. An estimate; it does not change Effort.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Dibandingkan dengan %lld sesi terakhir Anda. Hanya estimasi; tidak mengubah Effort."}}}},
+    "Appears once you have three earlier sessions with logged sets and an Effort.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Muncul setelah ada tiga sesi sebelumnya dengan set tercatat dan Effort."}}}},
     "Nights without a calibrated reading show the strap's own estimate (WHOOP 5/MG, Oura). It is not verified, so read it as a trend and not as a measurement. It never feeds Charge or the early warning.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Malam tanpa pembacaan terkalibrasi menampilkan estimasi dari strap (WHOOP 5/MG, Oura). Belum terverifikasi, jadi baca sebagai tren, bukan hasil pengukuran. Tidak dipakai untuk Charge maupun peringatan dini."}}}},
     "Activity Effort": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Effort aktivitas"}}}},
     "Key statistics": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Statistik utama"}}}},
