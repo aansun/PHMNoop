@@ -130,6 +130,16 @@ enum NunaAnyaReader {
         let m = NunaTodayModel()
         await m.load(repo: repo, profile: profile)
         guard let rest = m.rest else { return nil }
+        // What carried or held the night back and what to do tonight, in place of the figures the screen already shows.
+        let sleepModel = NunaSleepModel()
+        await sleepModel.load(repo: repo)
+        if let night = sleepModel.night, let read = SleepRead.analyze(sleepModel.sleepFacts(night, debtMin: sleepModel.debtMin)) {
+            let parts = NunaInsightText.sleepParts(read)
+            var vals: [String: Double] = ["rest": rest]
+            if let v = m.sleepMinutes { vals["sleepMin"] = v }
+            return remembering(NunaAnyaRead(headline: parts.why, detail: parts.action, read: ["Rest", "Sleep duration", "Sleep stages"],
+                                            module: .sleep, questions: questions(.sleep)), values: vals)
+        }
         let hours = m.sleepMinutes.map { NunaAnyaReader.hm($0) }
         var bits: [String] = []
         if let e = m.day?.efficiency { bits.append(String(localized: "Sleep efficiency \(Int(e.rounded()))%")) }
@@ -150,6 +160,21 @@ enum NunaAnyaReader {
     private static func health(repo: Repository, profile: ProfileStore) async -> NunaAnyaRead? {
         let m = NunaTodayModel()
         await m.load(repo: repo, profile: profile)
+        // Against the person's own 30 days: what the two overnight signals say together, not the two figures.
+        func history(_ pick: (DailyMetric) -> Double?) -> [Double] { repo.days.dropLast().suffix(30).compactMap(pick) }
+        if let h = m.hrv, let r = m.restingHr,
+           let hrv = VitalRead.analyze(latest: h, history: history { $0.avgHrv }),
+           let rhr = VitalRead.analyze(latest: r, history: history { $0.restingHr.map(Double.init) }) {
+            var vals: [String: Double] = ["hrv": h, "rhr": r]
+            if let v = m.spo2 { vals["spo2"] = v }
+            if let v = m.respiratory { vals["resp"] = v }
+            var read = ["HRV", "Resting HR"]
+            if m.spo2 != nil { read.append("Blood Oxygen") }
+            if m.respiratory != nil { read.append("Respiratory") }
+            let text = NunaInsightText.health(hrv: hrv, rhr: rhr)
+            return remembering(NunaAnyaRead(headline: text.headline, detail: text.detail, read: read, module: .health,
+                                            questions: questions(.health)), values: vals)
+        }
         var parts: [String] = [], read: [String] = []
         if let v = m.hrv { parts.append("HRV \(Int(v.rounded())) ms"); read.append("HRV") }
         if let v = m.restingHr { parts.append(String(localized: "resting heart rate \(Int(v.rounded())) bpm")); read.append("Resting HR") }

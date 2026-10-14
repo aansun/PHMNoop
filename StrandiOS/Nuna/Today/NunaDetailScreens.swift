@@ -87,13 +87,19 @@ struct NunaChargeDetailView: View {
         return f.string(from: d)
     }
 
-    /// Anya's one line about today's Charge: the figure against the 30-day average.
+    /// Anya's line about today's Charge: what lifts it, what holds it back and what that means for the day, not the figure the ring shows.
     private var anyaLine: String? {
-        guard let v = day.charge.pct ?? series.latest?.value, let base = series.baseline else { return nil }
-        let d = Int((v - base).rounded())
-        let note = d == 0 ? String(localized: "In line with your 30-day average")
-            : (d > 0 ? String(localized: "\(d) points above your 30-day average") : String(localized: "\(-d) points below your 30-day average"))
-        return String(localized: "Your Charge is \(Int(v.rounded()))%, \(note).")
+        guard let v = day.charge.pct ?? series.latest?.value else { return nil }
+        let rows = repo.days.suffix(31).dropLast()
+        let efforts = rows.compactMap(\.strain).filter { $0 > 0 }.sorted()
+        let usual = efforts.isEmpty ? nil : efforts[efforts.count / 2]
+        let hrvBase = day.hrv.flatMap { h in day.hrvDelta.map { h - $0 } }
+        let hrvPct = day.hrvDelta.flatMap { d in hrvBase.map { $0 > 0 ? d / $0 * 100 : 0 } }
+        let prior = repo.days.dropLast().last?.strain
+        let read = ChargeRead.analyze(hrvDeltaPct: hrvPct, rhrDeltaBpm: day.restingHrDelta, sleepPct: day.rest ?? restSeries.latest?.value,
+                                      priorEffort: prior, usualEffort: usual, respDeltaBpm: day.respiratoryDelta,
+                                      skinTempDevC: skinSeries.latest?.value)
+        return NunaInsightText.charge(read, chargePct: v)
     }
 
     /// What the colours of the bars mean: the three Charge zones.
@@ -183,7 +189,8 @@ struct NunaEffortDetailView: View {
             }
             zonesCard
             if coachEnabled, let e = day.effort {
-                NunaAnyaCard(verbatim: String(localized: "Your Effort is \(UnitFormatter.effortDisplay(e, scale: scale)) of \(UnitFormatter.effortScaleMax(scale)) so far today.")) { showCoach = true }
+                NunaAnyaCard(verbatim: NunaInsightText.effort(effort: e, chargePct: day.charge.pct)
+                             ?? String(localized: "Your Effort is \(UnitFormatter.effortDisplay(e, scale: scale)) of \(UnitFormatter.effortScaleMax(scale)) so far today.")) { showCoach = true }
             }
             NunaTrendDetailCard(
                 caption: "Average", unit: "",
@@ -973,6 +980,13 @@ struct NunaMetricDetailView: View {
     /// Anya's line on this metric: the latest figure and where it sits against the usual range (or against yesterday).
     private var anyaLine: String? {
         guard let latest = series.latest else { return nil }
+        // What the reading means against the person's own usual and recent days; the older "figure · status" line is the fallback.
+        let history = series.byDay.keys.sorted().dropLast().suffix(30).compactMap { series.byDay[$0] }
+        if !isColumns, let text = NunaInsightText.vital(key: metric.key, title: String(localized: String.LocalizationValue(metric.title)),
+                                                         latest: latest.value, read: VitalRead.analyze(latest: latest.value, history: Array(history)),
+                                                         higherIsBetter: metric.higherIsBetter) {
+            return text
+        }
         var line = String(localized: String.LocalizationValue(metric.title)) + " " + fmt(latest.value) + (metric.unit.isEmpty ? "" : " " + metric.unit)
         if let st = statusText { line += " · " + st }
         else if let prev = previous {
@@ -1215,6 +1229,13 @@ struct NunaStressDetailView: View {
 
     /// Anya's line on the stress: the level now, against the wearer's own baseline.
     private func anyaLine(_ score: Double?) -> String? {
+        if day.isToday, let curve = day.stressCurve {
+            let cal = Calendar.current
+            let levels: [(hour: Int, level: Double)] = curve.hours.compactMap { h in
+                h.level.map { (cal.component(.hour, from: Date(timeIntervalSince1970: TimeInterval(h.startTs))), $0) }
+            }
+            if let read = StressRead.analyze(levels: levels) { return NunaInsightText.stress(read) }
+        }
         guard let score, let base = series.baseline else { return nil }
         let b = String(format: "%.1f", locale: AppLanguage.activeLocale, base)
         let level = score < 1 ? String(localized: "Low") : (score < 2 ? String(localized: "Medium") : String(localized: "High"))

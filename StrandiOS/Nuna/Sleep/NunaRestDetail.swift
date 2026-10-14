@@ -73,13 +73,17 @@ struct NunaRestDetailView: View {
         let debt = min(max(debts.first(where: { $0.day == night.dayKey })?.value ?? 0, 0), total - healthy)
         let strain = max(total - healthy - debt, 0)
 
+        let facts = model.sleepFacts(night, debtMin: debt)
         NunaHoursVsNeededCard(asleepMin: asleep, healthyMin: healthy, strainMin: strain, debtMin: debt,
-                              percent: model.hoursVsNeeded(night), usual: model.usual { model.hoursVsNeeded($0) })
-        NunaConsistencyCard(nights: consistencyNights(night), percent: model.consistency(night), usual: model.usual { model.consistency($0) })
+                              percent: model.hoursVsNeeded(night), usual: model.usual { model.hoursVsNeeded($0) },
+                              note: NunaInsightText.hoursNote(asleepMin: asleep, needMin: total, debtMin: debt))
+        NunaConsistencyCard(nights: consistencyNights(night), percent: model.consistency(night), usual: model.usual { model.consistency($0) },
+                            note: NunaInsightText.consistencyNote(shiftMin: facts.bedShiftMin))
         let total2 = max(night.wake.timeIntervalSince(night.onset), 1)
         let events = night.intervals.filter { $0.stage == .awake && $0.end - $0.start >= 60 }.map { (start: $0.start, end: $0.end) }
         NunaEfficiencyCard(asleepMin: night.asleepMin, awakeMin: night.stages.awake, events: events, totalSec: total2,
-                           percent: model.efficiency(night), usual: model.usual { model.efficiency($0) })
+                           percent: model.efficiency(night), usual: model.usual { model.efficiency($0) },
+                           note: NunaInsightText.efficiencyNote(events: events, totalSec: total2))
     }
 
     /// Hours from the evening the night began: a bedtime after midnight is 24 and more, so a night is one unbroken stretch.
@@ -139,8 +143,11 @@ struct NunaRestDetailView: View {
         }
     }
 
-    /// Anya's one line: the Rest figure against the recent nights.
+    /// Anya's line: what carried or held the night back and what to do about it tonight, not the figure the ring already shows.
     private var anyaLine: String? {
+        if let night = model.night, let read = SleepRead.analyze(model.sleepFacts(night, debtMin: model.debtMin)) {
+            return NunaInsightText.sleep(read)
+        }
         guard let rest, let d = againstRecent else { return nil }
         let note = d == 0 ? String(localized: "in line with your last 14 nights")
             : (d > 0 ? String(localized: "\(d) points above your last 14 nights") : String(localized: "\(-d) points below your last 14 nights"))

@@ -50,6 +50,15 @@ private struct NunaRestFigure: View {
     }
 }
 
+/// The sentence under a card's figures: what they mean, not a repeat of them.
+private struct NunaRestNote: View {
+    let text: String
+    var body: some View {
+        Text(verbatim: text).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            .fixedSize(horizontal: false, vertical: true).textCase(nil)
+    }
+}
+
 // MARK: - Hours vs needed
 
 struct NunaHoursVsNeededCard: View {
@@ -60,6 +69,7 @@ struct NunaHoursVsNeededCard: View {
     let debtMin: Double
     let percent: Double?
     let usual: Double?
+    var note: String? = nil
 
     private var neededMin: Double { healthyMin + strainMin + debtMin }
 
@@ -96,6 +106,7 @@ struct NunaHoursVsNeededCard: View {
                     legend("Recent strain", NunaPalette.effortModerate, "+" + hm(strainMin))
                     legend("Sleep debt", NunaPalette.textPrimary, "+" + hm(debtMin))
                 }
+                if let note { NunaRestNote(text: note) }
             }
         }
     }
@@ -147,6 +158,7 @@ struct NunaConsistencyCard: View {
     let nights: [Night]
     let percent: Double?
     let usual: Double?
+    var note: String? = nil
 
     /// 21:00 down to 13:00 the next day, widened when a night falls outside it, in whole four-hour steps.
     private var span: (lo: Double, hi: Double) {
@@ -178,6 +190,7 @@ struct NunaConsistencyCard: View {
                 } else {
                     chart(s)
                 }
+                if let note { NunaRestNote(text: note) }
             }
         }
     }
@@ -241,6 +254,7 @@ struct NunaEfficiencyCard: View {
     let totalSec: TimeInterval
     let percent: Double?
     let usual: Double?
+    var note: String? = nil
 
     var body: some View {
         NunaCard {
@@ -261,6 +275,7 @@ struct NunaEfficiencyCard: View {
                     Spacer()
                     Text(verbatim: "\(events.count)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 }
+                if let note { NunaRestNote(text: note) }
             }
         }
     }
