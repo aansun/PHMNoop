@@ -658,7 +658,7 @@ struct NunaOvernightVitals: View {
         var out: [Row] = []
         if let v = d?.avgHrv { out.append(Row(id: "hrv", title: "HRV", icon: "waveform.path.ecg", unit: "ms", decimals: 0, value: v, prior: before.compactMap(\.avgHrv), upIsGood: true, key: "hrv")) }
         if let v = d?.restingHr { out.append(Row(id: "rhr", title: "RHR", icon: "heart", unit: "bpm", decimals: 0, value: Double(v), prior: before.compactMap { $0.restingHr.map(Double.init) }, upIsGood: false, key: "rhr")) }
-        if let v = d?.spo2Pct { out.append(Row(id: "spo2", title: "SpO₂", icon: "drop", unit: "%", decimals: 0, value: v, prior: before.compactMap(\.spo2Pct), upIsGood: true, key: "spo2")) }
+        if let v = repo.spo2(for: d) { out.append(Row(id: "spo2", title: "SpO₂", icon: "drop", unit: "%", decimals: 0, value: v, prior: before.compactMap { repo.spo2(for: $0) }, upIsGood: true, key: "spo2")) }
         if let v = d?.respRateBpm { out.append(Row(id: "resp", title: "Breathing", icon: "lungs", unit: "/min", decimals: 1, value: v, prior: before.compactMap(\.respRateBpm), upIsGood: nil, key: "resp_rate")) }
         if let v = d?.skinTempDevC {
             let f = temperatureUnit == .fahrenheit

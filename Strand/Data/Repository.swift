@@ -462,11 +462,35 @@ final class Repository: ObservableObject {
 
     /// The computed `sleep_performance` points over a window, the active strap's sibling winning per day like `exploreSeries`.
     private func computedRestSnapshot(store: WhoopStore, from: String, to: String) async -> [String: Double] {
+        await computedSeriesSnapshot(store: store, key: "sleep_performance", from: from, to: to)
+    }
+
+    private func computedSeriesSnapshot(store: WhoopStore, key: String, from: String, to: String) async -> [String: Double] {
         var byDay: [String: Double] = [:]
         for id in computedReadIds.reversed() {
-            for p in (try? await store.metricSeries(deviceId: id, key: "sleep_performance", from: from, to: to)) ?? [] { byDay[p.day] = p.value }
+            for p in (try? await store.metricSeries(deviceId: id, key: key, from: from, to: to)) ?? [] { byDay[p.day] = p.value }
         }
         return byDay
+    }
+
+    /// The strap's nightly SpO₂ estimate per day (`spo2_candidate`, the WHOOP 5/MG @82 byte or the Oura ceiling mean), published
+    /// only while the "Estimated SpO₂ from the strap" experiment is on, and empty otherwise. A computed row never carries a
+    /// calibrated `spo2Pct` unless a WHOOP export was imported, so on an install without one this is the only Blood Oxygen there is.
+    /// Display only: it never feeds a score.
+    @Published private(set) var spo2Estimates: [String: Double] = [:]
+
+    /// Blood Oxygen for a day: the calibrated reading when the row has one, else the strap's estimate while the experiment is on.
+    func spo2(for row: DailyMetric?) -> Double? {
+        guard let row else { return nil }
+        return row.spo2Pct ?? spo2Estimates[row.day]
+    }
+
+    /// The estimate for `dayKey`, or with `carry` the freshest earlier one still inside the vital carry window (a missed night does not blank the tile).
+    func spo2Estimate(dayKey: String, carry: Bool) -> Double? {
+        if let v = spo2Estimates[dayKey] { return v }
+        guard carry else { return nil }
+        let earlier = spo2Estimates.filter { $0.key < dayKey }.sorted { $0.key < $1.key }.map { (day: $0.key, value: $0.value) }
+        return Baselines.freshestCarried(earlier, todayKey: dayKey)?.value
     }
 
     private func unionMetricSeries(store: WhoopStore, key: String, from: String, to: String) async -> [MetricPoint] {
@@ -965,6 +989,12 @@ final class Repository: ObservableObject {
         // heavy daily pass projects it, `exploreSeries` answers from the night's daily row with a neutral regularity term,
         // so the score MOVES (a few points) when the series lands. Fingerprint it so that move is a real change.
         let restSnapshot = await computedRestSnapshot(store: store, from: Self.dayString(now.addingTimeInterval(-30 * 86_400)), to: toDay)
+        // The strap's SpO₂ estimate, read only while its experiment is on (an off toggle publishes an empty map, so the figure
+        // goes away with the switch).
+        let spo2Snapshot: [String: Double] = PuffinExperiment.spo2CandidateDisplayEnabled
+            ? await computedSeriesSnapshot(store: store, key: "spo2_candidate",
+                                           from: Self.dayString(now.addingTimeInterval(-400 * 86_400)), to: toDay)
+            : [:]
 
         // Merge + sort OFF the main actor (FIX 3): the figures build, the two O(n log n) daily/sleep merges,
         // the source-row sort, and the freshness counts are all pure over the rows just read, so they run in
@@ -1007,8 +1037,10 @@ final class Repository: ObservableObject {
             && merged.vitalRows == vitalRows
             && merged.freshness == freshness
             && restSnapshot == lastComputedRest
+            && spo2Snapshot == spo2Estimates
         guard !unchanged else { return }
         lastComputedRest = restSnapshot
+        self.spo2Estimates = spo2Snapshot
 
         // One consistent publish per refresh: assign every cache, flip `loaded`, then bump `refreshSeq` so
         // the intraday-updating views reload exactly once for this real change.

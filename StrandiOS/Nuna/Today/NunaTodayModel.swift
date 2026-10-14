@@ -89,7 +89,9 @@ final class NunaTodayModel: ObservableObject {
         hrv = row?.avgHrv ?? (today ? Repository.lastHrvDay(days: repo.days, todayKey: key)?.avgHrv : nil)
         restingHr = (row?.restingHr ?? (today ? Repository.lastRestingHrDay(days: repo.days, todayKey: key)?.restingHr : nil)).map(Double.init)
         respiratory = row?.respRateBpm ?? (today ? Repository.lastRespDay(days: repo.days, todayKey: key)?.respRateBpm : nil)
-        spo2 = row?.spo2Pct ?? (today ? Repository.lastVitalsDay(days: repo.days, todayKey: key)?.spo2Pct : nil)
+        // Calibrated reading first; then the strap's estimate (experiment on), carried a few days like the other vitals.
+        spo2 = row?.spo2Pct ?? (today ? Repository.lastSpo2Day(days: repo.days, todayKey: key)?.spo2Pct : nil)
+            ?? repo.spo2Estimate(dayKey: key, carry: today)
         sleepMinutes = row?.totalSleepMin
         readiness = ReadinessEngine.evaluate(days: repo.days, today: key)
         // Change against the night BEFORE the one the value came from. A value carried from the last

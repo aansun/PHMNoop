@@ -25,7 +25,7 @@ final class NunaKeySparkModel: ObservableObject {
             switch m {
             case .hrv: out[m.rawValue] = fromDays { $0.avgHrv }
             case .restingHr: out[m.rawValue] = fromDays { $0.restingHr.map(Double.init) }
-            case .bloodOxygen: out[m.rawValue] = fromDays { $0.spo2Pct }
+            case .bloodOxygen: out[m.rawValue] = fromDays { repo.spo2(for: $0) }
             case .respiratory: out[m.rawValue] = fromDays { $0.respRateBpm }
             case .steps: out[m.rawValue] = fromDays { $0.steps.map(Double.init) }
             case .calories: out[m.rawValue] = fromDays { $0.activeKcalEst }
