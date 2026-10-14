@@ -737,27 +737,65 @@ private struct NunaWorkoutTargetSheet: View {
         return String(localized: "Your \(target) target estimates \(effortText) activity Effort. Adjust the slider to plan this session.")
     }
 
+    /// What the day reads now, what the activity adds, and what the day would read after it, with the day's training state against
+    /// the range Charge sets (the same band the Today card judges by). The after figure is worked out through TRIMP, not by adding
+    /// two Efforts (`StrainScorer.effortAfter`), and is an estimate.
     private var trainingSummary: some View {
-        VStack(spacing: 12) {
+        let day = dayEffort ?? 0
+        let sex = UserDefaults.standard.string(forKey: "profile.sex") ?? ""
+        let denominator = StrainScorer.logMapDenominator(method: PuffinExperiment.effortMethod, sex: sex)
+        let after = StrainScorer.effortAfter(day: day, adding: estimatedEffort, denominator: denominator)
+        let band = CoupledView.optimalStrainRange(recovery: charge).map {
+            (Double($0.lowerBound) / UnitFormatter.effortScaleFactor)...(Double($0.upperBound) / UnitFormatter.effortScaleFactor)
+        }
+        let state: (word: LocalizedStringKey, color: Color)? = band.map { b in
+            after < b.lowerBound ? ("Light", NunaPalette.textSecondary)
+                : (after <= b.upperBound ? ("Optimal", NunaPalette.charge) : ("High", NunaPalette.warning))
+        }
+        return VStack(spacing: 14) {
             NunaDivider()
-            HStack(alignment: .top, spacing: 8) {
-                summaryStat("Current day", value: dayEffort.map(effortNumber) ?? "–", color: NunaPalette.textPrimary)
-                summaryStat("Activity target", value: effortText, color: NunaPalette.effortModerate)
-                summaryStat("Charge", value: charge.map { "\(Int($0.rounded()))%" } ?? "–", color: NunaPalette.charge)
+            if let state {
+                HStack(spacing: 6) {
+                    Text("Training state").foregroundStyle(NunaPalette.textSecondary)
+                    Text(state.word).foregroundStyle(state.color)
+                }
+                .font(.nuna(size: NunaTypeSize.caption, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                .frame(maxWidth: .infinity)
             }
+            HStack(alignment: .top, spacing: 4) {
+                summaryStat("Current effort", swatch: .solid, value: dayEffort.map(effortNumber) ?? "–", color: NunaPalette.textPrimary)
+                chevron
+                summaryStat("Activity target", swatch: .hatched, value: effortText, color: NunaPalette.effortModerate)
+                chevron
+                summaryStat("After activity", swatch: .half, value: effortNumber(after), color: NunaPalette.textPrimary, estimate: true)
+            }
+            Text("* Estimated from the activity target")
+                .font(.nuna(size: NunaTypeSize.caption, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
-    private func summaryStat(_ label: LocalizedStringKey, value: String, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+    private var chevron: some View {
+        Image(systemName: "chevron.right")
+            .font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+            .frame(height: 22).padding(.top, 20)
+    }
+
+    private func summaryStat(_ label: LocalizedStringKey, swatch: NunaEffortSwatch.Kind, value: String, color: Color, estimate: Bool = false) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            NunaEffortSwatch(kind: swatch).frame(width: 22, height: 22)
             Text(label)
                 .font(.nuna(size: NunaTypeSize.caption, weight: .semibold))
                 .foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: value)
-                .font(.nuna(size: NunaTypeSize.numberS, weight: .bold, design: NunaType.design))
-                .foregroundStyle(color)
-                .monospacedDigit()
-                .contentTransition(.numericText())
+                .lineLimit(2).minimumScaleFactor(0.8).fixedSize(horizontal: false, vertical: true)
+            HStack(alignment: .firstTextBaseline, spacing: 2) {
+                Text(verbatim: value)
+                    .font(.nuna(size: NunaTypeSize.numberS, weight: .bold, design: NunaType.design))
+                    .foregroundStyle(color)
+                    .monospacedDigit()
+                    .contentTransition(.numericText())
+                if estimate { Text(verbatim: "*").font(.nuna(size: NunaTypeSize.sub, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -1641,6 +1679,46 @@ struct NunaLiveWorkoutView: View {
 private struct Triangle: Shape {
     func path(in r: CGRect) -> Path {
         var p = Path(); p.move(to: CGPoint(x: r.midX, y: r.minY)); p.addLine(to: CGPoint(x: r.maxX, y: r.maxY)); p.addLine(to: CGPoint(x: r.minX, y: r.maxY)); p.closeSubpath(); return p
+    }
+}
+
+/// The three small squares of the planning strip: the day as it is (solid), the activity on top of it (hatched) and the day after it
+/// (half and half).
+private struct NunaEffortSwatch: View {
+    enum Kind { case solid, hatched, half }
+    let kind: Kind
+
+    var body: some View {
+        Canvas { ctx, size in
+            let rect = CGRect(origin: .zero, size: size)
+            let shape = Path(roundedRect: rect, cornerRadius: 4)
+            let blue = NunaPalette.effortModerate
+            func stripes() -> Path {
+                var p = Path()
+                var x: CGFloat = -size.height
+                while x < size.width {
+                    p.move(to: CGPoint(x: x, y: size.height)); p.addLine(to: CGPoint(x: x + size.height, y: 0))
+                    x += 5
+                }
+                return p
+            }
+            switch kind {
+            case .solid:
+                ctx.fill(shape, with: .color(blue))
+            case .hatched:
+                ctx.fill(shape, with: .color(blue.opacity(0.18)))
+                ctx.clipToLayer { c in c.fill(shape, with: .color(.black)) }
+                ctx.stroke(stripes(), with: .color(blue), lineWidth: 1.6)
+            case .half:
+                ctx.fill(shape, with: .color(blue.opacity(0.18)))
+                ctx.clipToLayer { c in c.fill(shape, with: .color(.black)) }
+                var tri = Path()
+                tri.move(to: .zero); tri.addLine(to: CGPoint(x: size.width, y: 0)); tri.addLine(to: CGPoint(x: 0, y: size.height)); tri.closeSubpath()
+                ctx.fill(tri, with: .color(blue))
+                ctx.stroke(stripes(), with: .color(blue), lineWidth: 1.6)
+            }
+        }
+        .accessibilityHidden(true)
     }
 }
 #endif
