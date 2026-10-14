@@ -1,6 +1,12 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "alcohol": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "alkohol"}}}},
+    "caffeine late in the day": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "kafein larut hari"}}}},
+    "a meal close to bedtime": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "makan mendekati jam tidur"}}}},
+    "Your journal explains part of it: you logged %@ yesterday, and after the %lld nights you did, your Rest ran %lld points lower.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Jurnal Anda menjelaskan sebagian: kemarin Anda mencatat %@, dan pada %lld malam setelah Anda melakukannya, Rest Anda rata-rata %lld poin lebih rendah."}}}},
+    "Skip it tonight and see whether the night recovers.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lewati malam ini dan lihat apakah malamnya membaik."}}}},
+    "You logged %@ yesterday; with only %lld such night(s) so far there is not enough to say whether it moves your sleep.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kemarin Anda mencatat %@; dengan baru %lld malam seperti itu belum cukup untuk mengatakan apakah itu memengaruhi tidur Anda."}}}},
     "Time asleep held this night back, just under what you need.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Durasi tidur menahan malam ini, sedikit di bawah kebutuhan Anda."}}}},
     "Blood oxygen is under 95%. One night is noise; several in a row are worth mentioning to a doctor if you feel it.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Oksigen darah di bawah 95%. Satu malam hanya gangguan; beberapa malam berturut-turut layak disampaikan ke dokter bila Anda merasakannya."}}}},
     "Blood oxygen is in the normal range. It matters only if it falls under 95% on several nights.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Oksigen darah dalam rentang normal. Baru penting bila turun di bawah 95% pada beberapa malam."}}}},

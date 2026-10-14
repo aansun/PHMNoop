@@ -18,6 +18,8 @@ struct NunaRestDetailView: View {
     @State private var page = 0
     @State private var showCoach = false
     @AppStorage(NunaNapPrefs.autoDetectKey) private var autoNaps = true
+    /// The journal's evening habits against this wearer's own Rest, for the night's line.
+    @State private var factors: NunaSleepFactorContext?
 
     private var rest: Double? { model.value("sleep_performance") ?? series.latest?.value }
 
@@ -47,6 +49,7 @@ struct NunaRestDetailView: View {
         .task(id: "\(repo.refreshSeq)-\(autoNaps)") {
             await series.load(repo: repo, key: "sleep_performance", source: "my-whoop")
             await model.load(repo: repo)
+            factors = await NunaSleepFactorContext.load(repo: repo, restByWakeDay: series.byDay)
             if model.loaded, startIndex > 0, startIndex < model.nights.count, model.index == 0 { model.index = startIndex }
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "sleep") }
@@ -146,7 +149,7 @@ struct NunaRestDetailView: View {
     /// Anya's line: what carried or held the night back and what to do about it tonight, not the figure the ring already shows.
     private var anyaLine: String? {
         if let night = model.night, let read = SleepRead.analyze(model.sleepFacts(night, debtMin: model.debtMin)) {
-            return NunaInsightText.sleep(read)
+            return NunaInsightText.sleep(read, factors: factors, wakeDay: night.dayKey)
         }
         guard let rest, let d = againstRecent else { return nil }
         let note = d == 0 ? String(localized: "in line with your last 14 nights")
