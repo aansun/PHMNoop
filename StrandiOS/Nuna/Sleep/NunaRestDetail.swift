@@ -6,6 +6,10 @@ import StrandAnalytics
 /// The screen behind the Rest ring, built like the Charge one: the ring, the four things Rest is made of, Anya's line, the trend of Rest and,
 /// under it the whole night: stages, comparison, naps, vitals, need and body clock.
 struct NunaRestDetailView: View {
+    /// The night to open on (0 is the latest). The Sleep entries open this same screen on the night they were showing.
+    var startIndex = 0
+    /// "Rest" behind the ring, "Sleep" behind the Sleep tile and rows: one screen, one night, whichever way it was opened.
+    var title: LocalizedStringKey = "Rest"
     @EnvironmentObject private var repo: Repository
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @StateObject private var series = NunaSeriesModel()
@@ -18,7 +22,8 @@ struct NunaRestDetailView: View {
     private var rest: Double? { model.value("sleep_performance") ?? series.latest?.value }
 
     var body: some View {
-        NunaDetailScreen("Rest", trailing: AnyView(settingsButton)) {
+        NunaDetailScreen(title, trailing: AnyView(settingsButton)) {
+            if model.loaded, model.nights.count > 1 { NunaNightPicker(model: model) }
             hero
             if let night = model.night { components(night) }
             if coachEnabled, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
@@ -42,6 +47,7 @@ struct NunaRestDetailView: View {
         .task(id: "\(repo.refreshSeq)-\(autoNaps)") {
             await series.load(repo: repo, key: "sleep_performance", source: "my-whoop")
             await model.load(repo: repo)
+            if model.loaded, startIndex > 0, startIndex < model.nights.count, model.index == 0 { model.index = startIndex }
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "sleep") }
     }
@@ -122,7 +128,7 @@ struct NunaRestDetailView: View {
     }
 
     private var hero: some View {
-        NunaScoreHero(caption: "Last night",
+        NunaScoreHero(caption: model.index == 0 ? "Last night" : "Earlier night",
                       fraction: (rest ?? 0) / 100, number: rest.map { "\(Int($0.rounded()))" } ?? "–", unit: "%",
                       name: rest.map(nunaRestWord) ?? "Rest", nameColor: rest.map(nunaRestTextColor),
                       color: rest.map(nunaRestColor) ?? NunaPalette.rest, hasNote: againstRecent != nil) {

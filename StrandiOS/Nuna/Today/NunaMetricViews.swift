@@ -45,7 +45,7 @@ extension View {
             case .metric(let m): NunaMetricHost(initial: m)
             case .allMetrics: NunaAllMetricsView()
             case .earlyWarning: NunaEarlyWarningView()
-            case .sleep(let i): NunaSleepView(startIndex: i)
+            case .sleep(let i): NunaRestDetailView(startIndex: i, title: "Sleep")
             case .sleepStages(let i): NunaSleepStagesView(startIndex: i)
             case .sleepVitals(let i): NunaSleepVitalsView(startIndex: i)
             case .sleepPerformance(let i): NunaSleepPerformanceView(startIndex: i)
