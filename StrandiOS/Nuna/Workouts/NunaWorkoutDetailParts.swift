@@ -107,6 +107,55 @@ struct NunaWorkoutHeaderCard: View {
     }
 }
 
+// MARK: - Cardio and muscular
+
+/// The bar under a gym session's header: the share of the session that was cardio and the share that was muscular, against the
+/// wearer's own earlier sessions (`SessionLoadSplit`). An estimate and never part of Effort, and it says so. Until there are enough
+/// earlier sessions it says what it is waiting for instead of showing a number.
+struct NunaCardioMuscularCard: View {
+    let split: SessionLoadSplit.Result?
+
+    var body: some View {
+        NunaCard(small: true) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    caption("Cardio")
+                    Spacer()
+                    caption("Muscular")
+                }
+                if let split {
+                    GeometryReader { geo in
+                        let x = geo.size.width * CGFloat(split.cardioPct) / 100
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(NunaPalette.effortAllOut.opacity(0.55))
+                            Capsule().fill(NunaPalette.effortModerate).frame(width: max(x, 0))
+                            // The mark where the cardio share ends.
+                            Rectangle().fill(Color.white).frame(width: 2.5, height: 18).offset(x: min(max(x - 1.25, 0), geo.size.width - 2.5))
+                        }
+                    }
+                    .frame(height: 14)
+                    HStack {
+                        Text(verbatim: "\(split.cardioPct)%").font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Spacer()
+                        Text(verbatim: "\(split.muscularPct)%").font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    }
+                    Text("Against your last \(split.sessions) sessions. An estimate; it does not change Effort.")
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text("Appears once you have three earlier sessions with logged sets and an Effort.")
+                        .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+    }
+
+    private func caption(_ key: LocalizedStringKey) -> some View {
+        Text(key).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+    }
+}
+
 // MARK: - Map
 
 struct NunaWorkoutRouteCard: View {

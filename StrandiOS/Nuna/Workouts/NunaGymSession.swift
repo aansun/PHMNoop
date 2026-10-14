@@ -14,6 +14,8 @@ struct NunaGymSessionView: View {
     @Environment(\.dismiss) private var dismiss
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
     @StateObject private var data = NunaWorkoutDetailData()
+    /// The earlier sessions the cardio and muscular split is ranked against.
+    @StateObject private var history = NunaWorkoutsModel()
     @State private var session: LiftSessionRow?
     @State private var sets: [LiftSetRow] = []
     @State private var workout: WorkoutRow?
@@ -31,7 +33,7 @@ struct NunaGymSessionView: View {
             if let session { content(session) }
             else if loaded { NunaCard { Text("This session is no longer saved.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) } }
         }
-        .task(id: repo.refreshSeq) { await load() }
+        .task(id: repo.refreshSeq) { await load(); await history.load(repo: repo) }
         .sheet(isPresented: $saveProgram) { if let session { NunaSaveProgramView(session: session, sets: sets) } }
         .sheet(isPresented: $editing) {
             if let session { LiftSessionEditSheet(session: session, sets: sets) { await load() } }
@@ -59,6 +61,7 @@ struct NunaGymSessionView: View {
     @ViewBuilder private func content(_ s: LiftSessionRow) -> some View {
         let secs = max(0, (s.endTs ?? s.startTs) - s.startTs)
         NunaWorkoutHeaderCard(symbol: ActivitySport.symbol(for: s.sport), startTs: s.startTs, endTs: s.endTs ?? s.startTs, source: "Done", strain: workout?.strain, dayEffort: data.dayEffort)
+        NunaCardioMuscularCard(split: loadSplit(s))
         if !records.isEmpty {
             NunaAnyaCard(verbatim: String(localized: "Personal record on \(records.joined(separator: ", ")). Give the trained muscles two days to recover before the next session.")) { showCoach = true }
         } else if let line = volumeLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
@@ -84,6 +87,27 @@ struct NunaGymSessionView: View {
         Button(role: .destructive) { confirmDelete = true } label: {
             Text("Delete").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
         }.buttonStyle(.plain)
+    }
+
+    /// Effort per minute and kilograms per minute for one session, each nil when it cannot be worked out. Sessions under five
+    /// minutes are left out: a rate over a few seconds is noise.
+    private func rates(_ s: LiftSessionRow, sets: [LiftSetRow], strain: Double?) -> (cardio: Double?, muscular: Double?) {
+        let minutes = Double((s.endTs ?? s.startTs) - s.startTs) / 60
+        guard minutes >= 5 else { return (nil, nil) }
+        return (strain.flatMap { $0 > 0 ? $0 / minutes : nil }, LiftMetrics.volumeLoadKg(sets).map { $0 / minutes })
+    }
+
+    /// This session against the earlier ones with sets (the last 120 days the model holds).
+    private func loadSplit(_ s: LiftSessionRow) -> SessionLoadSplit.Result? {
+        let now = rates(s, sets: sets, strain: workout?.strain)
+        var cardio: [Double] = [], muscular: [Double] = []
+        for other in history.liftSessions where other.id != s.id && other.startTs < s.startTs {
+            let strain = history.rows.first { $0.startTs == other.startTs }?.strain
+            let r = rates(other, sets: history.liftSets[other.id] ?? [], strain: strain)
+            if let c = r.cardio { cardio.append(c) }
+            if let m = r.muscular { muscular.append(m) }
+        }
+        return SessionLoadSplit.split(cardio: now.cardio, muscular: now.muscular, cardioHistory: cardio, muscularHistory: muscular)
     }
 
     /// Which muscle group took most of the volume, when no record was set.
