@@ -46,70 +46,9 @@ private func whole(_ v: Double?) -> String {
     v.map { String(format: "%.0f", locale: AppLanguage.activeLocale, $0) } ?? "–"
 }
 
-// MARK: - Summary
-
-struct NunaSleepView: View {
-    var startIndex = 0
-    @AppStorage("noop.coachEnabled") private var coachEnabled = true
-    @State private var showCoach = false
-
-    var body: some View {
-        NunaSleepHost(title: "Sleep", startIndex: startIndex) { model in
-            if let night = model.night {
-                NunaNightPicker(model: model)
-                hero(model, night)
-                NunaSleepNightSections(model: model, night: night, showsTiles: true)
-                if coachEnabled { NunaAnyaCard(title: "How can I sleep better tonight?") { showCoach = true } }
-            }
-        }
-        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "sleep") }
-    }
-
-    /// How the night's Rest reads: a word, its colour and a sentence that says what it means against the person's own recent nights.
-    private func verdict(_ rest: Double?, _ model: NunaSleepModel) -> (word: LocalizedStringKey, color: Color, line: String)? {
-        guard let rest else { return nil }
-        let before = model.nights.dropFirst(model.index + 1).prefix(14).compactMap { model.value("sleep_performance", $0) }
-        let avg = before.count >= 3 ? before.reduce(0, +) / Double(before.count) : nil
-        let word: LocalizedStringKey, color: Color, base: String
-        switch rest {
-        case 85...: word = "Excellent"; color = NunaPalette.charge; base = String(localized: "Your body got the sleep it needed.")
-        case 70..<85: word = "Good"; color = NunaPalette.charge; base = String(localized: "A solid night. You are well rested.")
-        case 50..<70: word = "Fair"; color = NunaPalette.warning; base = String(localized: "You slept less than you needed. Go easier on yourself today.")
-        default: word = "Low"; color = NunaPalette.alert; base = String(localized: "A short or broken night. Recovery will come first today.")
-        }
-        guard let avg else { return (word, color, base) }
-        let d = Int((rest - avg).rounded())
-        let cmp = d == 0 ? String(localized: "In line with your last 14 nights.")
-            : (d > 0 ? String(localized: "\(d) points above your last 14 nights.") : String(localized: "\(-d) points below your last 14 nights."))
-        return (word, color, base + " " + cmp)
-    }
-
-    private func hero(_ model: NunaSleepModel, _ night: NunaNight) -> some View {
-        let rest = model.value("sleep_performance")
-        let v = verdict(rest, model)
-        return VStack(spacing: 14) {
-            // The word for the night sits in the ring, where the metric's name would be; the hours are on the stages card.
-            NunaScoreHero(caption: "Last night", fraction: (rest ?? 0) / 100,
-                          number: rest.map { "\(Int($0.rounded()))" } ?? "–", unit: "%", name: v?.word ?? "Rest", nameColor: rest.map(nunaRestTextColor),
-                          color: rest.map(nunaRestColor) ?? NunaPalette.rest, hasNote: v != nil) {
-                if let v {
-                    Text(verbatim: v.line).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        .fixedSize(horizontal: false, vertical: true).textCase(nil)
-                }
-            }
-            if let nap = night.naps.first {
-                NavigationLink(value: NunaTodayRoute.sleepNaps(model.index)) {
-                    NunaChip(verbatim: String(localized: "Nap \(Int(nap.asleepMin.rounded()))m"), systemImage: "plus")
-                }.buttonStyle(.plain)
-            }
-        }
-    }
-
-}
-
 /// Everything the night had, from the stages to the body clock: the sleep stages card (with the pencil that edits the sleep times and an
 /// undo for a deleted night), the comparison with other nights, naps, the overnight vitals, the sleep need and debt, wake-ups and the body
-/// clock. Shared by the Rest screen and the Sleep screen, so the two always show the same night the same way.
+/// clock. Shared by the Rest screen (which is also the Sleep screen) and the pushed sleep sub-screens, so they show the same night the same way.
 struct NunaSleepNightSections: View {
     let model: NunaSleepModel
     let night: NunaNight
