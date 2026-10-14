@@ -25,7 +25,8 @@ enum NunaInsightText {
         switch r.verdict {
         case .heldBack(.duration):
             let short = max(-r.durationGapMin, 0)
-            why = String(localized: "Time asleep held this night back: you got \(duration(short)) less than you need.")
+            why = short < 10 ? String(localized: "Time asleep held this night back, just under what you need.")
+                             : String(localized: "Time asleep held this night back: you got \(duration(short)) less than you need.")
             if let d = r.debtMin, d >= 30 { why += " " + String(localized: "That adds to \(duration(d)) of sleep debt.") }
         case .heldBack(.efficiency):
             if let n = r.wakeEvents, let a = r.awakeMin, n > 0 {
