@@ -52,18 +52,18 @@ struct NunaHeartBeat: View {
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 60, paused: reduceMotion)) { timeline in
             let _ = clock.advance(to: timeline.date, target: bpm.map(Double.init))
-            let swell = NunaBeat.swell(clock.phase) * (0.4 + 0.6 * clock.presence)
+            let swell = NunaBeat.swell(clock.phase) * (0.7 + 0.3 * clock.presence)
             VStack(spacing: 14) {
                 ZStack {
                     // A ripple that leaves the disc with each beat.
                     Circle()
-                        .stroke(color.opacity(0.28 * swell), lineWidth: 3)
+                        .stroke(color.opacity(0.45 * swell), lineWidth: 4)
                         .frame(width: size, height: size)
-                        .scaleEffect(1 + 0.10 * swell)
+                        .scaleEffect(1 + 0.16 * swell)
                     Circle()
                         .fill(color.opacity(0.93))
                         .frame(width: size, height: size)
-                        .scaleEffect(0.985 + 0.045 * swell)
+                        .scaleEffect(0.95 + 0.09 * swell)
                     VStack(spacing: 4) {
                         Image(systemName: "heart.fill")
                             .font(.nuna(size: size * 0.16, weight: .bold))
