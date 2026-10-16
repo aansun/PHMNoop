@@ -1253,7 +1253,7 @@ struct NunaLiveWorkoutView: View {
         let range = zoneSet.zones.first(where: { $0.number == zone })
         let caption = range.map { String(localized: "Zone \(zone) · \(Int($0.lower.rounded()))–\(Int($0.upper.rounded())) bpm") }
         return NunaHeartBeat(bpm: bpm, color: bpm == nil ? NunaPalette.effortModerate : color, zone: zone,
-                             numberText: hideBpm ? "•••" : nil, size: min(260, max(188, height - NunaSpacing.section * 2 - 40)),
+                             numberText: hideBpm ? "•••" : nil, size: min(250, max(170, (height - NunaSpacing.section * 2 - 40) / 1.2)),
                              caption: hideBpm ? nil : caption)
             .frame(maxWidth: .infinity, minHeight: max(height - NunaSpacing.section * 2, 0), alignment: .center)
             .overlay(alignment: .topTrailing) {
