@@ -77,14 +77,17 @@ final class StravaAPIClient {
         request.httpMethod = "POST"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
+        var fields = [
+            "name": WorkoutSource.displaySport(row.sport),
+            "sport_type": StravaActivityType.value(for: row.sport),
+            "data_type": "fit",
+            "external_id": "noop-\(row.startTs)-\(row.sport)",
+        ]
+        // Indoor: Strava hides the map and keeps the session off the segment leaderboards.
+        if StravaActivityType.isTreadmill(row.sport) { fields["trainer"] = "1" }
         request.httpBody = Self.multipartBody(
             boundary: boundary,
-            fields: [
-                "name": WorkoutSource.displaySport(row.sport),
-                "sport_type": StravaActivityType.value(for: row.sport),
-                "data_type": "fit",
-                "external_id": "noop-\(row.startTs)-\(row.sport)",
-            ],
+            fields: fields,
             file: file,
             filename: "noop-\(row.startTs).fit")
 

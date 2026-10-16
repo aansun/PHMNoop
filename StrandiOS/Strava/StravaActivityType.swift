@@ -7,7 +7,7 @@ import Foundation
 enum StravaActivityType {
     /// A treadmill session, run or walk: it has no route by nature, so it goes up as an indoor activity.
     static func isTreadmill(_ sport: String) -> Bool {
-        value(for: sport) == "VirtualRun" || normalized(sport).hasPrefix("treadmill")
+        normalized(sport).hasPrefix("treadmill")
     }
 
     private static func normalized(_ sport: String) -> String {
@@ -28,8 +28,9 @@ enum StravaActivityType {
         switch key {
         case "run", "running": return "Run"
         case "trail run", "trailrun": return "TrailRun"
-        case "treadmill", "treadmill run": return "VirtualRun"
-        // Strava has no virtual walk, so a treadmill walk is a Walk (the upload carries no route either way).
+        // A treadmill is a Run or a Walk marked as indoor (`trainer`), as a Garmin treadmill file lands on Strava. "Virtual Run" is only
+        // for a session recorded by a smart treadmill or a virtual platform, and Strava does not let it be chosen by hand.
+        case "treadmill", "treadmill run": return "Run"
         case "treadmill walk": return "Walk"
         case "walk", "walking": return "Walk"
         case "hike", "hiking", "rucking": return "Hike"

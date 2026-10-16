@@ -123,4 +123,19 @@ final class RouteExporterTests: XCTestCase {
         XCTAssertEqual(RouteExporter.canonicalSport("Treadmill walk"), "walk")
         XCTAssertEqual(RouteExporter.canonicalSport(nil), "other")
     }
+
+    func testTreadmillSessionsCarryTheTreadmillSubSport() {
+        XCTAssertEqual(RouteExporter.fitSubSport("Treadmill run"), 1)
+        XCTAssertEqual(RouteExporter.fitSubSport("treadmill"), 1)
+        XCTAssertEqual(RouteExporter.fitSubSport("Treadmill walk"), 27)
+        XCTAssertNil(RouteExporter.fitSubSport("Running"))
+        XCTAssertNil(RouteExporter.fitSubSport(nil))
+        // The file is still a well-formed activity that reads back as a run, with the distance given.
+        let fit = RouteExporter.render(.fit, route: [], startTs: 1_723_000_000, endTs: 1_723_001_800, sport: "Treadmill run",
+                                       distanceM: 5000, avgHr: 150, maxHr: 170, movingTimeS: 1800)
+        let a = ActivityFileImporter.parse(data: fit, filename: "t.fit").activity
+        XCTAssertEqual(a?.sport?.lowercased().contains("run"), true)
+        XCTAssertEqual(a?.distanceM ?? 0, 5000, accuracy: 0.5)
+        XCTAssertEqual(a?.avgHr, 150)
+    }
 }
