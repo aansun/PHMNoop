@@ -60,6 +60,12 @@ struct NunaWorkoutStartView: View {
 
     private var isDistance: Bool { WorkoutCatalog.sport(named: chosen)?.isDistanceSport ?? false }
     private var isStrength: Bool { ["Strength", "Weightlifting", "Powerlifting", "Bodybuilding"].contains(chosen) }
+    /// The Sleep tab's own need and debt, so the target sheet judges the session against the same sleep the rest of the app shows.
+    private var sleepDebtMin: Double? {
+        let need = SleepModel.debtNeedMin(days: repo.days)
+        let ledger = SleepDebt.ledger(series: repo.days.map { (day: $0.day, totalSleepMin: $0.totalSleepMin) }, needHours: need / 60)
+        return ledger.nightCount > 0 ? ledger.magnitudeMin : nil
+    }
     private var hasSupportingDetails: Bool { repo.today?.recovery != nil || planned != nil || isStrength }
     private var zoneSet: HRZoneSet { profile.hrZoneSet }
     private var distanceSystem: UnitSystem {
@@ -133,7 +139,7 @@ struct NunaWorkoutStartView: View {
                 zones: zoneSet.zones,
                 charge: repo.today?.recovery,
                 dayEffort: repo.today?.strain,
-                anyaPlanTitle: planned?.title,
+                sleepDebtMin: sleepDebtMin,
                 hasActiveWorkout: model.activeWorkout != nil)
                 .nunaSheetChrome(detents: [.large])
         }
@@ -563,7 +569,8 @@ private struct NunaWorkoutTargetSheet: View {
     let zones: [HRZone]
     let charge: Double?
     let dayEffort: Double?
-    let anyaPlanTitle: String?
+    /// Recency-weighted sleep debt in minutes (nil without enough nights): the sleep half of how much the day can take.
+    let sleepDebtMin: Double?
     let hasActiveWorkout: Bool
 
     @Environment(\.dismiss) private var dismiss
@@ -623,7 +630,7 @@ private struct NunaWorkoutTargetSheet: View {
                     .transition(.opacity)
             }
             effortRing(size: ringSize)
-            targetExplanation
+            fitVerdict
             trainingSummary
             HStack(spacing: 8) {
                 ForEach(modes, id: \.rawValue) { mode in
@@ -729,37 +736,52 @@ private struct NunaWorkoutTargetSheet: View {
         .animation(reduceMotion ? nil : StrandMotion.gentle, value: estimatedEffort)
     }
 
-    private var targetExplanation: some View {
-        HStack(alignment: .top, spacing: 12) {
+    /// Whether the day ends where Charge and sleep say it should: the one thing the three figures below cannot say by themselves.
+    private var fitVerdict: some View {
+        let sex = UserDefaults.standard.string(forKey: "profile.sex") ?? ""
+        let denominator = StrainScorer.logMapDenominator(method: PuffinExperiment.effortMethod, sex: sex)
+        let after = StrainScorer.effortAfter(day: dayEffort ?? 0, adding: estimatedEffort, denominator: denominator)
+        let band = CoupledView.optimalStrainRange(recovery: charge).map {
+            (Double($0.lowerBound) / UnitFormatter.effortScaleFactor)...(Double($0.upperBound) / UnitFormatter.effortScaleFactor)
+        }
+        let debt = (sleepDebtMin ?? 0) >= 60 ? sleepDebtMin : nil
+        return HStack(alignment: .top, spacing: 12) {
             Image(systemName: "sparkles")
                 .font(.nuna(size: NunaTypeSize.h3, weight: .semibold))
                 .foregroundStyle(NunaPalette.effortModerate)
                 .frame(width: 28, height: 28)
             VStack(alignment: .leading, spacing: 3) {
-                if let anyaPlanTitle {
-                    Text(verbatim: anyaPlanTitle)
-                        .font(.nuna(size: NunaTypeSize.sub, weight: .bold))
-                        .foregroundStyle(NunaPalette.textPrimary)
-                        .lineLimit(1)
+                if let band, let charge {
+                    let lo = effortNumber(band.lowerBound), hi = effortNumber(band.upperBound), end = effortNumber(after)
+                    let c = Int(charge.rounded())
+                    if after < band.lowerBound {
+                        Text("Room for more").font(.nuna(size: NunaTypeSize.sub, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("The day would end at \(end), below the \(lo)–\(hi) your Charge of \(c) supports.")
+                    } else if after <= band.upperBound {
+                        Text("Right for today").font(.nuna(size: NunaTypeSize.sub, weight: .bold)).foregroundStyle(NunaPalette.charge)
+                        Text("The day would end at \(end), inside the \(lo)–\(hi) your Charge of \(c) supports.")
+                    } else {
+                        Text("More than today needs").font(.nuna(size: NunaTypeSize.sub, weight: .bold)).foregroundStyle(NunaPalette.warning)
+                        Text("The day would end at \(end), above the \(lo)–\(hi) your Charge of \(c) supports. Recovery will pay for it.")
+                    }
+                    if let debt, after >= band.lowerBound {
+                        Text("Carrying \(Self.hoursText(debt)) of sleep debt, so stay at the lower end.").foregroundStyle(NunaPalette.warning)
+                    }
+                } else {
+                    Text("Not scored against your energy yet").font(.nuna(size: NunaTypeSize.sub, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("There is no Charge for today yet, so this target cannot be checked against your sleep and energy.")
                 }
-                Text(explanation)
-                    .font(.nuna(size: NunaTypeSize.caption + 1, weight: .regular))
-                    .foregroundStyle(NunaPalette.textSecondary)
-                    .lineLimit(3)
-                    .fixedSize(horizontal: false, vertical: true)
             }
+            .font(.nuna(size: NunaTypeSize.caption + 1, weight: .regular))
+            .foregroundStyle(NunaPalette.textSecondary)
+            .fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var explanation: String {
-        let target = configurationValue(goal.mode)
-        if let band = CoupledView.optimalStrainRange(recovery: charge) {
-            let lower = effortNumber(Double(band.lowerBound) / UnitFormatter.effortScaleFactor)
-            let upper = effortNumber(Double(band.upperBound) / UnitFormatter.effortScaleFactor)
-            return String(localized: "Your \(target) target estimates \(effortText) activity Effort. Today's suggested day range is \(lower)–\(upper), based on Charge.")
-        }
-        return String(localized: "Your \(target) target estimates \(effortText) activity Effort. Adjust the slider to plan this session.")
+    private static func hoursText(_ minutes: Double) -> String {
+        let m = Int(minutes.rounded())
+        return m % 60 == 0 ? "\(m / 60)h" : "\(m / 60)h \(m % 60)m"
     }
 
     /// What the day reads now, what the activity adds, and what the day would read after it, with the day's training state against
@@ -770,23 +792,8 @@ private struct NunaWorkoutTargetSheet: View {
         let sex = UserDefaults.standard.string(forKey: "profile.sex") ?? ""
         let denominator = StrainScorer.logMapDenominator(method: PuffinExperiment.effortMethod, sex: sex)
         let after = StrainScorer.effortAfter(day: day, adding: estimatedEffort, denominator: denominator)
-        let band = CoupledView.optimalStrainRange(recovery: charge).map {
-            (Double($0.lowerBound) / UnitFormatter.effortScaleFactor)...(Double($0.upperBound) / UnitFormatter.effortScaleFactor)
-        }
-        let state: (word: LocalizedStringKey, color: Color)? = band.map { b in
-            after < b.lowerBound ? ("Light", NunaPalette.textSecondary)
-                : (after <= b.upperBound ? ("Optimal", NunaPalette.charge) : ("High", NunaPalette.warning))
-        }
         return VStack(spacing: 10) {
             NunaDivider()
-            if let state {
-                HStack(spacing: 6) {
-                    Text("Training state").foregroundStyle(NunaPalette.textSecondary)
-                    Text(state.word).foregroundStyle(state.color)
-                }
-                .font(.nuna(size: NunaTypeSize.caption, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                .frame(maxWidth: .infinity)
-            }
             HStack(alignment: .top, spacing: 4) {
                 summaryStat("Current effort", swatch: .solid, value: dayEffort.map(effortNumber) ?? "–", color: NunaPalette.textPrimary)
                 chevron
