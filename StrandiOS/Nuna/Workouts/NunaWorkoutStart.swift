@@ -175,24 +175,14 @@ struct NunaWorkoutStartView: View {
         .clipped()
     }
 
-    /// Before the session starts: the heart rate as a moving trace in the colour of the current zone, with the strap's battery under it.
+    /// Before the session starts: the heart rate as a beating disc in the colour of the current zone, with the strap's battery in it.
     private var heroHeartRate: some View {
         let bpm = model.bpm
         let zone = bpm.map { zoneSet.zoneNumber(forBPM: Double($0)) } ?? 0
         let range = zoneSet.zones.first(where: { $0.number == zone })
         let caption = range.map { String(localized: "Zone \(zone) · \(Int($0.lower.rounded()))–\(Int($0.upper.rounded())) bpm") }
-        return VStack(spacing: 10) {
-            NunaHeartRateDisplay(bpm: bpm, color: NunaHeartRateDisplay.zoneColor(zone), zone: zone, caption: caption,
-                                 traceHeight: 110, numberSize: 72, onMap: true)
-            if let battery = liveState.batteryPct {
-                HStack(spacing: 5) {
-                    Image(systemName: "battery.75percent")
-                    Text(verbatim: "\(Int(battery.rounded()))%")
-                }
-                .font(.nuna(size: 13, weight: .bold))
-                .foregroundStyle(NunaPalette.mapOverlayText)
-            }
-        }
+        return NunaHeartBeat(bpm: bpm, color: NunaHeartBeat.zoneColor(zone), zone: zone, battery: liveState.batteryPct,
+                             caption: caption, captionColor: NunaPalette.mapOverlayText)
     }
 
     private var heroHeader: some View {
@@ -1168,7 +1158,7 @@ struct NunaLiveWorkoutView: View {
         }
     }
 
-    private static let zoneColors = NunaHeartRateDisplay.zoneColors
+    private static let zoneColors = NunaHeartBeat.zoneColors
     private var distanceSystem: UnitSystem { UnitPrefs.resolveDistance(system: UnitSystem(rawValue: unitSystemRaw) ?? .metric, override: distanceSystemRaw) }
 
     private enum ZoneState { case none, inZone, below, above, farAbove }
@@ -1194,7 +1184,7 @@ struct NunaLiveWorkoutView: View {
                 ScrollView {
                     VStack(spacing: NunaSpacing.section) {
                         if selectedTab == .heartRate {
-                            heartRateTrace(bpm: bpm, zone: zone, color: tone, height: viewport.size.height)
+                            heartRateBeat(bpm: bpm, zone: zone, color: tone, height: viewport.size.height)
                         } else {
                             activityRing(w, bpm: bpm, zone: zone, color: tone,
                                          size: min(260,
@@ -1258,12 +1248,13 @@ struct NunaLiveWorkoutView: View {
         }
     }
 
-    /// The Heart rate tab: the number and a moving trace in the colour of the current zone (see `NunaHeartRateDisplay`).
-    private func heartRateTrace(bpm: Int?, zone: Int, color: Color, height: CGFloat) -> some View {
+    /// The Heart rate tab: the beating disc in the colour of the current zone (see `NunaHeartBeat`).
+    private func heartRateBeat(bpm: Int?, zone: Int, color: Color, height: CGFloat) -> some View {
         let range = zoneSet.zones.first(where: { $0.number == zone })
         let caption = range.map { String(localized: "Zone \(zone) · \(Int($0.lower.rounded()))–\(Int($0.upper.rounded())) bpm") }
-        return NunaHeartRateDisplay(bpm: bpm, color: color, zone: zone, numberText: hideBpm ? "•••" : nil, caption: hideBpm ? nil : caption,
-                                    traceHeight: min(170, max(110, height * 0.36)), numberSize: min(88, max(64, height * 0.2)))
+        return NunaHeartBeat(bpm: bpm, color: bpm == nil ? NunaPalette.effortModerate : color, zone: zone,
+                             numberText: hideBpm ? "•••" : nil, size: min(260, max(188, height - NunaSpacing.section * 2 - 40)),
+                             caption: hideBpm ? nil : caption)
             .frame(maxWidth: .infinity, minHeight: max(height - NunaSpacing.section * 2, 0), alignment: .center)
             .overlay(alignment: .topTrailing) {
                 Button { hideBpm.toggle() } label: {
