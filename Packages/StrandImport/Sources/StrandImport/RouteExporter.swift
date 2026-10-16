@@ -155,6 +155,7 @@ public enum RouteExporter {
         sf.append((7, 4, 0x86)); u32(&sd, elapsedMs)
         sf.append((8, 4, 0x86)); u32(&sd, movingMs)
         sf.append((5, 1, 0x00)); u8(&sd, fitSport(canon))
+        if let sub = fitSubSport(sport) { sf.append((6, 1, 0x00)); u8(&sd, sub) }
         if let distCenti { sf.append((9, 4, 0x86)); u32(&sd, distCenti) }
         if let energyKcal { sf.append((11, 2, 0x84)); u16(&sd, UInt16(min(max(0, energyKcal.rounded()), 65534))) }
         if let totalCycles { sf.append((10, 4, 0x86)); u32(&sd, totalCycles) }
@@ -280,6 +281,17 @@ public enum RouteExporter {
         case "walk": return 11
         case "hike": return 15
         default: return 0
+        }
+    }
+
+    /// FIT `sub_sport` (session field 6). A treadmill session says so, the way a Garmin treadmill file does (running / treadmill,
+    /// walking / indoor_walking), so a reader that honours the sub-sport files it as indoor, with no map.
+    static func fitSubSport(_ sport: String?) -> Int? {
+        let s = (sport ?? "").lowercased().trimmingCharacters(in: .whitespacesAndNewlines)
+        switch s {
+        case "treadmill", "treadmill run": return 1
+        case "treadmill walk": return 27
+        default: return nil
         }
     }
 
