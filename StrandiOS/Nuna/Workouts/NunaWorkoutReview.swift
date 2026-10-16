@@ -98,6 +98,13 @@ enum NunaWorkoutReviewStore {
         try? FileManager.default.moveItem(at: from, to: to)
     }
 
+    /// The same, when the sport changed as well as the start.
+    static func move(fromStartTs: Int, fromSport: String, toStartTs: Int, toSport: String) {
+        let from = folder(fromStartTs, fromSport), to = folder(toStartTs, toSport)
+        guard from != to, FileManager.default.fileExists(atPath: from.path), !FileManager.default.fileExists(atPath: to.path) else { return }
+        try? FileManager.default.moveItem(at: from, to: to)
+    }
+
     /// Everything kept for a session, when the session itself is deleted.
     static func remove(startTs: Int, sport: String) {
         try? FileManager.default.removeItem(at: folder(startTs, sport))

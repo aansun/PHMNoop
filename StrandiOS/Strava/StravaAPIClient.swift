@@ -67,7 +67,7 @@ final class StravaAPIClient {
         let token = try await validAccessToken()
         let steps = await Self.stepsForUpload(row: row)
         let points = route.map { RoutePoint(lat: $0.lat, lon: $0.lon) }
-        let distanceM = row.distanceM ?? (route.count >= 2 ? RouteMath.totalMeters(route) : nil)
+        let distanceM = row.distanceM ?? (route.count >= 2 ? RouteMath.totalMeters(route) : nil) ?? NunaTreadmillEstimate.meters(row: row, steps: steps)
         let file = RouteExporter.render(
             .fit, route: points, startTs: row.startTs, endTs: row.endTs, sport: row.sport,
             distanceM: distanceM, energyKcal: row.energyKcal, avgHr: row.avgHr, maxHr: row.maxHr,

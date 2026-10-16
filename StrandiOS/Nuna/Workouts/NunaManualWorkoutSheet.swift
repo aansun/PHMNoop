@@ -8,6 +8,8 @@ import WhoopStore
 /// calories. On save the caller persists it; when editing, the original row is passed as `replacing`.
 struct NunaManualWorkoutSheet: View {
     let editing: WorkoutRow?
+    /// A distance worked out from steps and height, offered while the session has none (a treadmill).
+    var suggestedDistanceM: Double? = nil
     let onSave: (_ row: WorkoutRow, _ replacing: WorkoutRow?) -> Void
 
     @Environment(\.dismiss) private var dismiss
@@ -17,6 +19,8 @@ struct NunaManualWorkoutSheet: View {
     @State private var avgHrText: String
     @State private var kcalText: String
     @State private var distanceText: String
+    /// The text the estimate filled in; the note below stays while it is still there.
+    @State private var suggestedText: String?
     @State private var showSport = false
 
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
@@ -29,8 +33,8 @@ struct NunaManualWorkoutSheet: View {
     }
     private var distanceUnit: String { UnitFormatter.distanceUnit(distanceUnitSystem) }
 
-    init(editing: WorkoutRow? = nil, onSave: @escaping (_ row: WorkoutRow, _ replacing: WorkoutRow?) -> Void) {
-        self.editing = editing; self.onSave = onSave
+    init(editing: WorkoutRow? = nil, suggestedDistanceM: Double? = nil, onSave: @escaping (_ row: WorkoutRow, _ replacing: WorkoutRow?) -> Void) {
+        self.editing = editing; self.onSave = onSave; self.suggestedDistanceM = suggestedDistanceM
         let e = editing
         _sport = State(initialValue: e.map { WorkoutSource.editableSport($0.sport) } ?? "")
         let defaultEnd = Date()
@@ -40,7 +44,10 @@ struct NunaManualWorkoutSheet: View {
         _kcalText = State(initialValue: e?.energyKcal.map { String(Int($0.rounded())) } ?? "")
         let body = UnitSystem(rawValue: UserDefaults.standard.string(forKey: UnitPrefs.systemKey) ?? "") ?? .metric
         let sys = UnitPrefs.resolveDistance(system: body, override: UserDefaults.standard.string(forKey: UnitPrefs.distanceSystemKey) ?? "")
-        _distanceText = State(initialValue: e?.distanceM.map { Self.distanceString($0, system: sys) } ?? "")
+        let given = e?.distanceM.flatMap { $0 > 0 ? $0 : nil }
+        let initial = given ?? (e == nil ? nil : suggestedDistanceM)
+        _distanceText = State(initialValue: initial.map { Self.distanceString($0, system: sys) } ?? "")
+        _suggestedText = State(initialValue: given == nil ? initial.map { Self.distanceString($0, system: sys) } : nil)
     }
 
     private static func distanceString(_ meters: Double, system: UnitSystem) -> String {
@@ -128,6 +135,10 @@ struct NunaManualWorkoutSheet: View {
                         NunaDivider()
                         numberRow("Calories", text: $kcalText, unit: "kcal", field: .calories)
                     }
+                }
+                if let suggestedText, distanceText == suggestedText {
+                    Text("Distance estimated from your steps and height. Replace it with the treadmill's reading if you have it.")
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.effortText).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
                 Text("Distance, average heart rate, and calories are optional.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
 

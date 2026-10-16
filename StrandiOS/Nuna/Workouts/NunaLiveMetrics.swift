@@ -21,6 +21,25 @@ enum NunaLiveMetricLayout {
     }
 }
 
+/// How far a treadmill session went when nothing measured it: steps x a step length taken from the wearer's height. nil for any other
+/// sport, for a session that already has a distance, and when there are too few steps to say.
+enum NunaTreadmillEstimate {
+    static func meters(row: WorkoutRow, steps: Int?) -> Double? {
+        guard StravaActivityType.isTreadmill(row.sport), (row.distanceM ?? 0) <= 0, let steps else { return nil }
+        let height = UserDefaults.standard.object(forKey: "profile.heightCm") as? Double ?? 178
+        let secs = row.durationS ?? Double(row.endTs - row.startTs)
+        return TreadmillDistance.estimateMeters(steps: steps, heightCm: height, durationS: secs, gait: TreadmillDistance.gait(forSport: row.sport))
+    }
+
+    /// The row as it should be read and shared: the estimate stands in for a missing distance.
+    static func filled(_ row: WorkoutRow, steps: Int?) -> (row: WorkoutRow, estimated: Bool) {
+        guard let m = meters(row: row, steps: steps) else { return (row, false) }
+        return (WorkoutRow(startTs: row.startTs, endTs: row.endTs, sport: row.sport, source: row.source, durationS: row.durationS,
+                           energyKcal: row.energyKcal, avgHr: row.avgHr, maxHr: row.maxHr, strain: row.strain, distanceM: m,
+                           zonesJSON: row.zonesJSON, notes: row.notes, steps: row.steps), true)
+    }
+}
+
 /// The figures of a running session that more than one surface draws (the live screen and the Live Activity), computed once from
 /// the session's own heart-rate samples so the two cannot disagree.
 enum NunaLiveMetrics {

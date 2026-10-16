@@ -237,6 +237,8 @@ struct NunaWorkoutLogStats: View {
     let row: WorkoutRow
     let steps: Int?
     let averages: NunaWorkoutAverages?
+    /// The distance (and so the pace) was worked out from steps and height, not measured.
+    var distanceEstimated = false
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
     @AppStorage(UnitPrefs.distanceSystemKey) private var distanceRaw = ""
 
@@ -270,7 +272,7 @@ struct NunaWorkoutLogStats: View {
 
         if ground {
             let d = distanceParts(row.distanceM)
-            var t = Tile(id: "dist", icon: "point.topleft.down.to.point.bottomright.curvepath", label: "Distance", value: d?.0 ?? "–", unit: d?.1 ?? "")
+            var t = Tile(id: "dist", icon: "point.topleft.down.to.point.bottomright.curvepath", label: distanceEstimated ? "Estimated distance" : "Distance", value: d?.0 ?? "–", unit: d?.1 ?? "")
             if let m = row.distanceM, let avg = averages?.distanceM, let a = distanceParts(avg) { t.pill = (m, avg, a.0 + " " + a.1) }
             out.append(t)
         }
@@ -287,7 +289,7 @@ struct NunaWorkoutLogStats: View {
                 }
             } else if let pace = NunaWorkoutFormat.pace(distanceM: row.distanceM, seconds: secs, system) {
                 let parts = pace.split(separator: " ", maxSplits: 1).map(String.init)
-                out.append(Tile(id: "pace", icon: "speedometer", label: "Pace", value: parts.first ?? pace, unit: parts.count > 1 ? parts[1] : ""))
+                out.append(Tile(id: "pace", icon: "speedometer", label: distanceEstimated ? "Estimated pace" : "Pace", value: parts.first ?? pace, unit: parts.count > 1 ? parts[1] : ""))
             }
         }
         if let kcal = row.energyKcal {
