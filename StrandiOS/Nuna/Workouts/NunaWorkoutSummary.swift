@@ -21,6 +21,7 @@ struct NunaWorkoutSummaryView: View {
     @State private var confirmDelete = false
     @State private var showCoach = false
     @State private var showEdit = false
+    @State private var showEditActivity = false
     @State private var stravaState: NunaStravaState = .off
     @State private var stravaMessage: String?
     @StateObject private var strava = StravaSettingsModel()
@@ -47,6 +48,14 @@ struct NunaWorkoutSummaryView: View {
         .sheet(isPresented: $showEdit) {
             if let r = m.row(key) { NunaWorkoutTimeSheet(row: r) { start, end in Task { await moveInTime(r, start: start, end: end) } }.nunaSheetChrome(detents: [.height(430)]) }
         }
+        .sheet(isPresented: $showEditActivity) {
+            if let r = m.row(key) {
+                NunaManualWorkoutSheet(editing: r, suggestedDistanceM: NunaTreadmillEstimate.meters(row: r, steps: data.steps)) { new, old in
+                    Task { await applyEdit(old ?? r, to: new) }
+                }
+                .nunaSheetChrome(detents: [.large])
+            }
+        }
         .alert(stravaMessage ?? "", isPresented: Binding(get: { stravaMessage != nil }, set: { if !$0 { stravaMessage = nil } })) {
             Button("OK", role: .cancel) {}
         }
@@ -63,11 +72,12 @@ struct NunaWorkoutSummaryView: View {
     @ViewBuilder private func content(_ r: WorkoutRow) -> some View {
         let mins = NunaWorkoutZoneMath.minutes(r, measured: data.zoneMin)
         let averages = NunaWorkoutAverages(for: r, in: m.rows)
+        let shown = NunaTreadmillEstimate.filled(r, steps: data.steps)
         NunaWorkoutLogHeader(row: r)
         NunaWorkoutLogFigures(row: r, averages: averages)
-        if let line = anyaLine(r, mins: mins, averages: averages) { NunaAnyaCard(verbatim: line.headline, detail: line.detail) { showCoach = true } }
+        if let line = anyaLine(shown.row, mins: mins, averages: averages) { NunaAnyaCard(verbatim: line.headline, detail: line.detail) { showCoach = true } }
         if data.hr.count >= 2 { NunaWorkoutHRArea(buckets: data.hr, start: r.startTs, end: r.endTs) }
-        NunaWorkoutLogStats(row: r, steps: data.steps, averages: averages)
+        NunaWorkoutLogStats(row: shown.row, steps: data.steps, averages: averages, distanceEstimated: shown.estimated)
         if mins?.contains(where: { $0 > 0 }) ?? false { NunaWorkoutLogZones(minutes: mins) }
         if data.route.count >= 2 { NunaWorkoutRouteCard(points: data.route) }
         NunaWorkoutReviewSection(row: r)
@@ -120,7 +130,9 @@ struct NunaWorkoutSummaryView: View {
                 }
             }
             Section {
-                if Self.canEditTime(r) { Button { showEdit = true } label: { Label("Edit time", systemImage: "clock") } }
+                if WorkoutSource.classify(r.source) == .manual {
+                    Button { showEditActivity = true } label: { Label("Edit activity", systemImage: "pencil") }
+                } else if Self.canEditTime(r) { Button { showEdit = true } label: { Label("Edit time", systemImage: "clock") } }
                 Button(role: .destructive) { confirmDelete = true } label: { Label("Delete", systemImage: "trash") }
             }
         } label: { NunaBareIcon("ellipsis") }
@@ -138,6 +150,7 @@ struct NunaWorkoutSummaryView: View {
     private func exportFile(_ r: WorkoutRow, gpx: Bool) async {
         let points = data.route.map { RoutePoint(lat: $0.lat, lon: $0.lon) }
         let steps = data.steps
+        let r = NunaTreadmillEstimate.filled(r, steps: steps).row
         let format: RouteExporter.Format = gpx ? .gpx : .fit
         let name = "noop-workout-\(r.startTs).\(format.ext)"
         let file = await Task.detached(priority: .userInitiated) {
@@ -164,19 +177,32 @@ struct NunaWorkoutSummaryView: View {
                                energyKcal: fromStrap ? nil : r.energyKcal, avgHr: fromStrap ? nil : r.avgHr, maxHr: fromStrap ? nil : r.maxHr,
                                strain: fromStrap ? nil : r.strain, distanceM: r.distanceM, zonesJSON: fromStrap ? nil : r.zonesJSON,
                                notes: r.notes, steps: fromStrap ? nil : r.steps)
-        let oldKey = StravaSettingsModel.workoutKey(for: r)
         await repo.saveManualWorkout(moved, replacing: r)
-        NunaWorkoutReviewStore.move(fromStartTs: r.startTs, toStartTs: s, sport: r.sport)
-        if let rec = StravaActivityStore.record(for: oldKey) {
-            var copy = StravaUploadRecord(workoutKey: StravaSettingsModel.workoutKey(for: moved), startTs: s, sport: rec.sport, uploadId: rec.uploadId,
-                                          activityId: rec.activityId, status: rec.status, message: rec.message, updatedAt: rec.updatedAt)
-            copy.message = rec.message
-            StravaActivityStore.save(copy)
-            StravaActivityStore.remove(workoutKeys: [oldKey])
-        }
+        carryRecords(from: r, to: moved)
         await intelligence.analyzeRecent()
         await repo.refresh()
         dismiss()
+    }
+
+    /// Its photos, how it felt and its Strava record follow a session whose start or sport changed.
+    private func carryRecords(from r: WorkoutRow, to moved: WorkoutRow) {
+        NunaWorkoutReviewStore.move(fromStartTs: r.startTs, fromSport: r.sport, toStartTs: moved.startTs, toSport: moved.sport)
+        let oldKey = StravaSettingsModel.workoutKey(for: r), newKey = StravaSettingsModel.workoutKey(for: moved)
+        guard oldKey != newKey, let rec = StravaActivityStore.record(for: oldKey) else { return }
+        let copy = StravaUploadRecord(workoutKey: newKey, startTs: moved.startTs, sport: rec.sport, uploadId: rec.uploadId,
+                                      activityId: rec.activityId, status: rec.status, message: rec.message, updatedAt: rec.updatedAt)
+        StravaActivityStore.save(copy)
+        StravaActivityStore.remove(workoutKeys: [oldKey])
+    }
+
+    /// Saves what the edit sheet changed (sport, time, distance, average heart rate, calories). The session keeps what was measured: its
+    /// heart-rate curve, zones, Effort and steps.
+    private func applyEdit(_ r: WorkoutRow, to new: WorkoutRow) async {
+        await repo.saveManualWorkout(new, replacing: r)
+        carryRecords(from: r, to: new)
+        await intelligence.analyzeRecent()
+        await repo.refresh()
+        if new.startTs != r.startTs || new.sport != r.sport { dismiss() }
     }
 
     /// Zone minutes of the other saved sessions of the same sport.
