@@ -41,6 +41,10 @@ enum AnyaDayContext {
         var habitualMidsleepSec: Int?
         /// How the last few sessions felt, in the person's own rating, newest first ("Running, Challenging").
         var sessionFeelings: [String] = []
+        /// The weather and air where the wearer is, as plain sentences, and what they mean for training: "good", "adjust" or "indoors".
+        /// nil when the wearer has not turned weather and air on, or the reading is old.
+        var outdoorLine: String?
+        var outdoorLevel: String?
     }
 
     // MARK: Parts of the day
@@ -141,6 +145,10 @@ enum AnyaDayContext {
             s += ". Debt is repaid over several nights: never ask for more than about 45 minutes of extra sleep in one night."
             lines.append(s)
         }
+        // The weather and air, read a moment ago: a reason to shorten, move or shift a session, never a forecast for later in the week.
+        if let o = i.outdoorLine {
+            lines.append("OUTDOORS (read recently, treat as now): \(o) When the person asks what to do today, or how a session went, let these conditions shape the answer: heat and bad air raise heart rate for the same pace, so judge by effort, and move the session indoors or to a kinder hour when the level says so.")
+        }
         if let step = nextStep(i) {
             lines.append("NEXT STEP (worked out from the numbers above, for this moment; close the answer with it unless the question points elsewhere): \(step)")
         }
@@ -220,6 +228,14 @@ enum AnyaDayContext {
             s = "A quality session fits today: \(title). Warm up properly and stop if it feels wrong."
             if let m = minutesToBed, m < 4 * 60 {
                 s = "A hard session is too close to bedtime: make it easy (\(title) in zone 2) or move it to tomorrow morning."
+            }
+        }
+        // Conditions outside come before the plan: the same session, indoors or easier, is still the right session.
+        if kind != "recovery" {
+            if i.outdoorLevel == "indoors" {
+                s = "It is poor outside today (see OUTDOORS): do \(title) indoors, on a treadmill or a trainer, or move it to a better day."
+            } else if i.outdoorLevel == "adjust" {
+                s += " Outside is not ideal (see OUTDOORS): keep it shorter and easier, or pick a kinder hour."
             }
         }
         if debt >= 60, let bed { s += " With about \(hours(debt)) of sleep debt, be asleep by \(bed) tonight." }

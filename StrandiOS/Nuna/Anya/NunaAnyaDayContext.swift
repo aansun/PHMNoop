@@ -29,6 +29,16 @@ enum NunaAnyaDayContext {
             return "\(r.sport), \(f.plain)"
         }
 
+        // The weather and air, when they are on and were read in the last three hours; a fresh read is started for next time.
+        let env = EnvironmentStore.shared
+        var outdoor: (line: String, level: String)?
+        if env.isActive {
+            Task { await env.refreshIfNeeded() }
+            if let snap = env.snapshot, now.timeIntervalSince1970 - Double(snap.ts) < 3 * 3600, let advice = EnvironmentAdvice.analyze(snap) {
+                outdoor = (Self.outdoorLine(snap, advice), advice.level == .good ? "good" : (advice.level == .adjust ? "adjust" : "indoors"))
+            }
+        }
+
         // The band the Today card judges the day by: Charge sets how much Effort is worth aiming for.
         let band = CoupledView.optimalStrainRange(recovery: plan.map { Double($0.charge) })
         let input = AnyaDayContext.Input(
@@ -48,8 +58,46 @@ enum NunaAnyaDayContext {
             sleepNeedMin: ledger.nightCount > 0 ? need : nil,
             sleepDebtMin: ledger.nightCount > 0 ? ledger.magnitudeMin : nil,
             habitualMidsleepSec: midsleep,
-            sessionFeelings: feelings)
+            sessionFeelings: feelings,
+            outdoorLine: outdoor?.line,
+            outdoorLevel: outdoor?.level)
         return AnyaDayContext.block(input)
+    }
+
+    /// The reading and what it means for training, in plain English for Anya.
+    static func outdoorLine(_ s: EnvironmentSnapshot, _ a: EnvironmentAdvice) -> String {
+        func c(_ v: Double) -> String { "\(Int(v.rounded())) degrees C" }
+        var parts: [String] = []
+        if let p = s.place { parts.append(p + ":") }
+        var weather: [String] = []
+        if let t = s.tempC { weather.append(c(t)) }
+        if let f = s.feelsLikeC { weather.append("feels like \(c(f))") }
+        if let h = s.humidityPct { weather.append("humidity \(Int(h.rounded()))%") }
+        if let w = s.windMps { weather.append("wind \(Int(w.rounded())) m/s") }
+        if let t = s.conditionText { weather.append(t) }
+        if !weather.isEmpty { parts.append(weather.joined(separator: ", ") + ".") }
+        if let aqi = s.usAqi { parts.append("Air quality US AQI \(aqi) (\(AirQuality.band(usAqi: aqi)))" + (s.pm25.map { ", PM2.5 \(Int($0.rounded())) ug/m3" } ?? "") + ".") }
+        let level = a.level == .good ? "good" : (a.level == .adjust ? "adjust: go shorter and easier" : "indoors: better to train inside today")
+        parts.append("Training conditions: \(level).")
+        var why: [String] = []
+        for r in a.reasons {
+            switch r {
+            case .veryHot(let t): why.append("very hot, feels like \(c(t))")
+            case .hot(let t): why.append("hot, feels like \(c(t))")
+            case .cold(let t): why.append("cold, feels like \(c(t))")
+            case .freezing(let t): why.append("freezing, feels like \(c(t))")
+            case .air(let aqi, _): why.append("air quality \(aqi)")
+            case .storm: why.append("thunderstorm")
+            case .rain: why.append("rain")
+            case .wind(let m): why.append("strong wind \(Int(m.rounded())) m/s")
+            }
+        }
+        if !why.isEmpty { parts.append("Because: " + why.joined(separator: "; ") + ".") }
+        if let k = a.cooler {
+            let f = DateFormatter(); f.dateFormat = "HH:mm"
+            parts.append("It should feel like \(c(k.feelsLikeC)) around \(f.string(from: Date(timeIntervalSince1970: TimeInterval(k.ts)))), a kinder time to go.")
+        }
+        return parts.joined(separator: " ")
     }
 }
 #endif

@@ -27,6 +27,8 @@ struct NunaWorkoutSummaryView: View {
     @State private var stravaState: NunaStravaState = .off
     @State private var stravaMessage: String?
     @StateObject private var strava = StravaSettingsModel()
+    /// Observed so the read changes once the weather and air arrive.
+    @ObservedObject private var environment = EnvironmentStore.shared
 
     var body: some View {
         Group {
@@ -45,6 +47,10 @@ struct NunaWorkoutSummaryView: View {
             if let r = m.row(key) {
                 await data.load(startTs: r.startTs, endTs: r.endTs, sport: r.sport, source: r.source, knownSteps: r.steps, repo: repo, zoneSet: profile.hrZoneSet, ticksPerStep: profile.stepTicksPerStep)
                 stravaState = NunaStravaCheck.state(r)
+                // A session that has just finished is read against the conditions now, when none was taken near it.
+                if Int(Date().timeIntervalSince1970) - r.endTs < 90 * 60, environment.snapshot(near: (r.startTs + r.endTs) / 2) == nil {
+                    await environment.refreshIfNeeded(maxAge: 15 * 60)
+                }
             }
         }
         .sheet(isPresented: $showEdit) {
@@ -109,7 +115,9 @@ struct NunaWorkoutSummaryView: View {
             day = WorkoutDayContext(dayEffort: effort, rangeLow: Double(band.lowerBound) / UnitFormatter.effortScaleFactor,
                                     rangeHigh: Double(band.upperBound) / UnitFormatter.effortScaleFactor, charge: charge)
         }
-        guard let read = WorkoutRead.analyze(facts, baseline: baseline, day: day) else { return nil }
+        // The weather and air at the time, when the app read them near the session.
+        let conditions = EnvironmentStore.shared.snapshot(near: (r.startTs + r.endTs) / 2)
+        guard let read = WorkoutRead.analyze(facts, baseline: baseline, day: day, conditions: conditions) else { return nil }
         return NunaInsightText.workout(read, system: system, scale: scale)
     }
 

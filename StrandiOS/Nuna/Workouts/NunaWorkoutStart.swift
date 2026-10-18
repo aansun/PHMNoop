@@ -480,6 +480,8 @@ struct NunaWorkoutStartView: View {
             guard countdown != nil else { return }
             countdown = nil
             RecentSportsPrefs.recordSelection(chosen)
+            // The weather and air at the start, so the session can be read against them afterwards.
+            Task { await EnvironmentStore.shared.refreshIfNeeded(maxAge: 20 * 60) }
             model.startWorkout(sport: chosen)
             model.workoutTarget = goal.isFree ? nil : .init(
                 seconds: goal.timeOn ? goal.minutes * 60 : nil,
@@ -625,6 +627,7 @@ private struct NunaWorkoutTargetSheet: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// The card whose controls are open; the others show their value on one line.
     @State private var open: Kind?
+    @ObservedObject private var environment = EnvironmentStore.shared
     /// The explanation of the figures above; off until the ? is pressed.
     @State private var showHelp = false
     private enum Kind: Hashable { case time, distance, zone }
@@ -1045,10 +1048,19 @@ private struct NunaWorkoutTargetSheet: View {
             VStack(spacing: 12) {
                 HStack(spacing: 12) {
                     AnyaMark(size: 26)
-                    Text(verbatim: sentence(suggestion))
-                        .font(.nuna(size: NunaTypeSize.sub, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        .fixedSize(horizontal: false, vertical: true).textCase(nil)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(verbatim: sentence(suggestion))
+                            .font(.nuna(size: NunaTypeSize.sub, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                            .fixedSize(horizontal: false, vertical: true).textCase(nil)
+                        // Outdoor sports only: when the weather or the air is against it, one more line says so.
+                        if isDistanceActivity, environment.isActive, let snap = environment.snapshot,
+                           Date().timeIntervalSince1970 - Double(snap.ts) < 3 * 3600,
+                           let a = environment.advice, let line = NunaInsightText.environmentShort(a, snap) {
+                            Text(verbatim: line).font(.nuna(size: NunaTypeSize.caption + 1, weight: .bold)).foregroundStyle(NunaEnvironmentFormat.levelColor(a.level))
+                                .fixedSize(horizontal: false, vertical: true).textCase(nil)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                     if applied {
                         Image(systemName: "checkmark.circle.fill").font(.nuna(size: 22, weight: .semibold)).foregroundStyle(NunaPalette.charge)
                             .accessibilityLabel(Text("Applied"))

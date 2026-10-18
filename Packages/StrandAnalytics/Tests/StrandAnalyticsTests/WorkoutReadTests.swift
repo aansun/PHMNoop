@@ -52,4 +52,21 @@ final class WorkoutReadTests: XCTestCase {
         let d = WorkoutDayContext(dayEffort: 70, rangeLow: 48, rangeHigh: 67, charge: 51)
         guard case .day = WorkoutRead.analyze(s, baseline: base, day: d)!.headline else { return XCTFail() }
     }
+
+    func testHotAirRanksBehindPaceAndHeartRateAndStandsAloneOtherwise() {
+        let hot = EnvironmentSnapshot(ts: 1, tempC: 33, feelsLikeC: 39, humidityPct: 70, conditionId: 800, usAqi: 60)
+        // A slower session at a higher heart rate: that stays the headline, the heat follows.
+        let s = WorkoutFacts(durationS: 2700, distanceM: 5000, avgHr: 148, effort: 41)
+        let r = WorkoutRead.analyze(s, baseline: base, day: nil, conditions: hot)!
+        guard case .efficiency = r.headline else { return XCTFail("\(r.headline)") }
+        XCTAssertTrue(r.more.contains { if case .conditions(.indoors, _) = $0 { return true } else { return false } })
+        // A session on the usual: the conditions are the only thing worth saying.
+        let usual = WorkoutFacts(durationS: 2400, distanceM: 5000, avgHr: 140, effort: 40, zoneMin: [2, 22, 14, 2, 0])
+        guard case .conditions = WorkoutRead.analyze(usual, baseline: base, day: nil, conditions: hot)!.headline else { return XCTFail() }
+        // Mild, clean air: nothing added.
+        let mild = EnvironmentSnapshot(ts: 1, tempC: 27, feelsLikeC: 28, humidityPct: 60, conditionId: 800, usAqi: 40)
+        XCTAssertEqual(WorkoutRead.analyze(usual, baseline: base, day: nil, conditions: mild)?.headline, .typical)
+        // Conditions alone are enough for a read, even without a baseline.
+        guard case .conditions = WorkoutRead.analyze(usual, baseline: nil, day: nil, conditions: hot)!.headline else { return XCTFail() }
+    }
 }

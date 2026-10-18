@@ -26,9 +26,11 @@ struct NunaAnyaCardLine: Equatable {
 
     /// The signals a card on this screen was drawn from.
     static func signals(_ context: String) -> [String] {
+        // The weather and air are one more thing Anya sees once they are on.
+        let outdoors = EnvironmentExperiment.isEnabled && EnvironmentKeyStore.hasAny ? ["Weather and air"] : []
         switch context {
-        case "today": return ["Charge", "Effort", "Sleep"]
-        case "workouts": return ["Effort", "Distance", "Steps", "Heart rate zones"]
+        case "today": return ["Charge", "Effort", "Sleep"] + outdoors
+        case "workouts": return ["Effort", "Distance", "Steps", "Heart rate zones"] + outdoors
         case "trends": return ["Charge", "Effort"]
         default: return []
         }
