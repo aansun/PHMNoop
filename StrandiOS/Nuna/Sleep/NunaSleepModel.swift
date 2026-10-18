@@ -146,6 +146,10 @@ final class NunaSleepModel: ObservableObject {
     // Derived per-night figures. They use the same rules as `SleepModel` (imported figure wins, else a
     // personal estimate), so the Nuna and Default screens agree.
 
+    /// True when the night's need came from an import or the engine's own series, so it already holds strain and debt; false when it is
+    /// only the personal baseline.
+    func hasStoredNeed(_ n: NunaNight) -> Bool { importedNeed[n.dayKey] != nil || series["sleep_need_min"]?[n.dayKey] != nil }
+
     func need(_ n: NunaNight) -> Double { importedNeed[n.dayKey] ?? series["sleep_need_min"]?[n.dayKey] ?? fallbackNeed }
 
     func hoursVsNeeded(_ n: NunaNight) -> Double? {

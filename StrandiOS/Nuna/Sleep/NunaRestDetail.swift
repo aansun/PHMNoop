@@ -69,17 +69,21 @@ struct NunaRestDetailView: View {
     @ViewBuilder private func insights(_ night: NunaNight) -> some View {
         let asleep = night.daily?.totalSleepMin ?? night.asleepMin
         let healthy = SleepModel.debtNeedMin(days: repo.days)
-        let total = max(model.need(night), healthy)
-        // The debt as of this night, from the same recurrence the ledger uses, kept inside what is left above the healthy minimum.
+        // The debt as of this night, from the same recurrence the ledger uses.
         let debts = SleepDebt.debtSeries(series: model.nights.reversed().map { ($0.dayKey, $0.daily?.totalSleepMin ?? $0.asleepMin) },
                                          needHours: healthy / 60)
-        let debt = min(max(debts.first(where: { $0.day == night.dayKey })?.value ?? 0, 0), total - healthy)
+        let ledgerDebt = max(debts.first(where: { $0.day == night.dayKey })?.value ?? 0, 0)
+        // A stored need already holds strain and debt, so the debt is what is left above the healthy minimum. Without one the need is only
+        // the baseline, and the debt is added on top of it: capping it there would show no debt after a run of short nights.
+        let stored = model.hasStoredNeed(night)
+        let total = stored ? max(model.need(night), healthy) : healthy + ledgerDebt
+        let debt = stored ? min(ledgerDebt, total - healthy) : ledgerDebt
         let strain = max(total - healthy - debt, 0)
 
         let facts = model.sleepFacts(night, debtMin: debt)
         NunaHoursVsNeededCard(asleepMin: asleep, healthyMin: healthy, strainMin: strain, debtMin: debt,
                               percent: model.hoursVsNeeded(night), usual: model.usual { model.hoursVsNeeded($0) },
-                              note: NunaInsightText.hoursNote(asleepMin: asleep, needMin: total, debtMin: debt))
+                              note: NunaInsightText.hoursNote(asleepMin: asleep, needMin: total - debt, debtMin: debt))
         NunaConsistencyCard(nights: consistencyNights(night), percent: model.consistency(night), usual: model.usual { model.consistency($0) },
                             note: NunaInsightText.consistencyNote(shiftMin: facts.bedShiftMin))
         let total2 = max(night.wake.timeIntervalSince(night.onset), 1)
