@@ -22,6 +22,8 @@ struct NunaWorkoutSummaryView: View {
     @State private var showCoach = false
     @State private var showEdit = false
     @State private var showEditActivity = false
+    /// The zone picked in the zone list, lit on the heart-rate curve.
+    @State private var zonePick: Int?
     @State private var stravaState: NunaStravaState = .off
     @State private var stravaMessage: String?
     @StateObject private var strava = StravaSettingsModel()
@@ -31,7 +33,7 @@ struct NunaWorkoutSummaryView: View {
             if let ls = m.liftSessions.first(where: { $0.startTs == key.startTs }), m.row(key).map(NunaWorkoutKind.isStrength) ?? false {
                 NunaGymSessionView(sessionId: ls.id)
             } else if let r = m.row(key) ?? (m.loaded ? nil : initialRow) {
-                NunaDetailScreen(LocalizedStringKey(WorkoutSource.displaySport(r.sport)), trailing: AnyView(actionsMenu(r))) { content(r) }
+                NunaDetailScreen(LocalizedStringKey(WorkoutSource.displaySport(r.sport)), titleSymbol: ActivitySport.symbol(for: r.sport), trailing: AnyView(actionsMenu(r))) { content(r) }
             } else {
                 NunaDetailScreen("Workout") {
                     NunaCard { Text(m.loaded ? "This session is no longer saved." : " ").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) }
@@ -75,11 +77,11 @@ struct NunaWorkoutSummaryView: View {
         let shown = NunaTreadmillEstimate.filled(r, steps: data.steps)
         NunaWorkoutLogHeader(row: r)
         NunaWorkoutLogFigures(row: r, averages: averages)
-        if let line = anyaLine(shown.row, mins: mins, averages: averages) { NunaAnyaCard(verbatim: line.headline, detail: line.detail) { showCoach = true } }
-        if data.hr.count >= 2 { NunaWorkoutHRArea(buckets: data.hr, start: r.startTs, end: r.endTs) }
-        NunaWorkoutLogStats(row: shown.row, steps: data.steps, averages: averages, distanceEstimated: shown.estimated)
-        if mins?.contains(where: { $0 > 0 }) ?? false { NunaWorkoutLogZones(minutes: mins) }
         if data.route.count >= 2 { NunaWorkoutRouteCard(points: data.route) }
+        NunaWorkoutLogStats(row: shown.row, steps: data.steps, averages: averages, distanceEstimated: shown.estimated)
+        if data.hr.count >= 2 { NunaWorkoutHRArea(buckets: data.hr, start: r.startTs, end: r.endTs, highlightZone: zonePick, zoneSet: profile.hrZoneSet) }
+        if mins?.contains(where: { $0 > 0 }) ?? false { NunaWorkoutLogZones(minutes: mins, selection: $zonePick) }
+        if let line = anyaLine(shown.row, mins: mins, averages: averages) { NunaAnyaCard(verbatim: line.headline, detail: line.detail) { showCoach = true } }
         NunaWorkoutReviewSection(row: r)
     }
 

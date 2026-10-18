@@ -8,6 +8,8 @@ import WhoopStore
 
 struct NunaDetailHeader: View {
     let title: LocalizedStringKey
+    /// An SF Symbol drawn at the left of the title (the sport of a workout).
+    var titleSymbol: String?
     var onAnya: (() -> Void)?
     /// Extra control at the trailing edge (for example a "Today" chip), shown when there is no Anya button.
     var trailing: AnyView?
@@ -24,6 +26,9 @@ struct NunaDetailHeader: View {
             }
             .accessibilityLabel(Text("Back"))
             if switcher == nil {
+                if let titleSymbol {
+                    Image(systemName: titleSymbol).font(.nuna(size: 22, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
+                }
                 Text(title).font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 Spacer(minLength: 8)
             } else {
@@ -43,16 +48,17 @@ struct NunaDetailHeader: View {
 /// Header + scroll + background for the Today detail screens.
 struct NunaDetailScreen<Content: View>: View {
     let title: LocalizedStringKey
+    var titleSymbol: String?
     var onAnya: (() -> Void)?
     var trailing: AnyView?
     let content: Content
-    init(_ title: LocalizedStringKey, onAnya: (() -> Void)? = nil, trailing: AnyView? = nil, @ViewBuilder content: () -> Content) {
-        self.title = title; self.onAnya = onAnya; self.trailing = trailing; self.content = content()
+    init(_ title: LocalizedStringKey, titleSymbol: String? = nil, onAnya: (() -> Void)? = nil, trailing: AnyView? = nil, @ViewBuilder content: () -> Content) {
+        self.title = title; self.titleSymbol = titleSymbol; self.onAnya = onAnya; self.trailing = trailing; self.content = content()
     }
     var body: some View {
         // The header stays at the top while the page scrolls, so the way back is always in reach however long the page is.
         VStack(spacing: 0) {
-            NunaDetailHeader(title: title, onAnya: onAnya, trailing: trailing)
+            NunaDetailHeader(title: title, titleSymbol: titleSymbol, onAnya: onAnya, trailing: trailing)
                 .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 4)
                 .background(NunaPalette.canvas)
             ScrollView {

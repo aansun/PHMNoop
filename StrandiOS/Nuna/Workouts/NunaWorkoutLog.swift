@@ -48,12 +48,11 @@ private struct NunaAveragePill: View {
 
 // MARK: - Header
 
-/// The sport, when it ran and where it came from, under the screen title.
+/// When it ran and where it came from, under the screen title (the sport's symbol sits beside the title).
 struct NunaWorkoutLogHeader: View {
     let row: WorkoutRow
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: ActivitySport.symbol(for: row.sport)).font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
             Text(verbatim: NunaWorkoutFormat.day(row.startTs) + " · " + NunaWorkoutFormat.clock(row.startTs) + " – " + NunaWorkoutFormat.clock(row.endTs))
                 .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
             Spacer(minLength: 8)
@@ -109,6 +108,9 @@ struct NunaWorkoutHRArea: View {
     let buckets: [HRBucket]
     let start: Int
     let end: Int
+    /// A zone (1...5) picked in the zone list: the stretches of the session spent in it are lit on the curve, at their time and length.
+    var highlightZone: Int? = nil
+    var zoneSet: HRZoneSet? = nil
 
     var body: some View {
         let pts = buckets.sorted { $0.ts < $1.ts }
@@ -144,7 +146,18 @@ struct NunaWorkoutHRArea: View {
                     area.closeSubpath()
                     ctx.fill(area, with: .linearGradient(Gradient(colors: [NunaPalette.effortModerate.opacity(0.5), NunaPalette.effortMinimal.opacity(0.04)]),
                                                          startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
-                    ctx.stroke(line, with: .color(NunaPalette.effortModerate), style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round))
+                    let lit = highlightZone != nil && zoneSet != nil
+                    ctx.stroke(line, with: .color(NunaPalette.effortModerate.opacity(lit ? 0.3 : 1)), style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round))
+                    if let zone = highlightZone, let zoneSet {
+                        let color = NunaWorkoutLogZones.colors[min(max(zone, 1), 5) - 1]
+                        for i in 0..<(pts.count - 1) where pts[i + 1].ts - pts[i].ts <= 300 && zoneSet.zoneNumber(forBPM: pts[i].bpm) == zone {
+                            let a = pt(pts[i]), b = pt(pts[i + 1])
+                            var band = Path(); band.addRect(CGRect(x: a.x, y: 0, width: max(b.x - a.x, 1.5), height: size.height))
+                            ctx.fill(band, with: .color(color.opacity(0.22)))
+                            var seg = Path(); seg.move(to: a); seg.addLine(to: b)
+                            ctx.stroke(seg, with: .color(color), style: StrokeStyle(lineWidth: 3.4, lineCap: .round))
+                        }
+                    }
                     // The start and the end of the session as dashed marks.
                     for x in [CGFloat(0), size.width] {
                         var m = Path(); m.move(to: CGPoint(x: x, y: 0)); m.addLine(to: CGPoint(x: x, y: size.height))
@@ -159,6 +172,7 @@ struct NunaWorkoutHRArea: View {
             .font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.leading, 38)
         }
         .accessibilityHidden(true)
+        .animation(.easeInOut(duration: 0.2), value: highlightZone)
     }
 }
 
@@ -181,10 +195,14 @@ private struct NunaHatchedTrack: View {
 /// One row per zone, the hardest first: its name and bpm range, its share of the session and the time spent there.
 struct NunaWorkoutLogZones: View {
     let minutes: [Double]?
+    /// The zone (1...5) whose stretches are lit on the heart-rate curve above; tapping a row picks it, tapping it again clears it.
+    @Binding var selection: Int?
     @EnvironmentObject private var profile: ProfileStore
 
+    static let colors: [Color] = [NunaPalette.textSecondary, NunaPalette.rest, NunaPalette.charge, NunaPalette.warning, NunaPalette.alert]
+
     var body: some View {
-        let colors: [Color] = [NunaPalette.textSecondary, NunaPalette.rest, NunaPalette.charge, NunaPalette.warning, NunaPalette.alert]
+        let colors = Self.colors
         let bands = profile.hrZoneSet.zones
         VStack(alignment: .leading, spacing: 10) {
             if let mins = minutes, mins.count >= 5, mins.contains(where: { $0 > 0 }) {
@@ -213,6 +231,10 @@ struct NunaWorkoutLogZones: View {
                     }
                     .padding(.horizontal, 14).padding(.vertical, 12)
                     .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(selection == i + 1 ? colors[i] : .clear, lineWidth: 1.5))
+                    .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .onTapGesture { if on { selection = selection == i + 1 ? nil : i + 1 } }
+                    .accessibilityAddTraits(on ? .isButton : [])
                 }
             } else {
                 Text("No heart-rate readings were recorded for this session.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
