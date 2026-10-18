@@ -653,7 +653,7 @@ private struct NunaWorkoutTargetSheet: View {
                 ScrollView {
                     VStack(spacing: 0) {
                         effortCard
-                            .padding(.horizontal, NunaSpacing.screenH).padding(.top, 10).padding(.bottom, 12)
+                            .padding(.top, 10).padding(.bottom, 22)
                         panel
                     }
                     .frame(minHeight: geo.size.height, alignment: .top)
@@ -674,18 +674,24 @@ private struct NunaWorkoutTargetSheet: View {
 
     /// The lower panel, in the manner of a choice sheet: a title, then one square card per target.
     private var panel: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 9) {
             Text("Choose your target")
                 .font(.nuna(size: NunaTypeSize.h3, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                .frame(maxWidth: .infinity).padding(.bottom, 2)
-            targetCard(.time)
-            if isDistanceActivity { targetCard(.distance) }
-            targetCard(.zone)
-            anyaCard.padding(.top, 4)
+                .frame(maxWidth: .infinity).padding(.bottom, 4)
+            ForEach(order, id: \.self) { targetCard($0) }
+            anyaCard.padding(.top, 4).padding(.horizontal, -22)
         }
-        .padding(.horizontal, NunaSpacing.screenH).padding(.top, 16).padding(.bottom, 12)
+        // The cards sit in from the edges, as in the choice sheet they follow.
+        .padding(.horizontal, 40).padding(.top, 16).padding(.bottom, 10)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
         .background(NunaPalette.card, in: UnevenRoundedRectangle(topLeadingRadius: 24, topTrailingRadius: 24, style: .continuous))
+        .animation(reduceMotion ? nil : StrandMotion.gentle, value: order)
+    }
+
+    /// The targets that are on come first, in a fixed order; the ones that are off follow, so a target that is switched off drops to the bottom.
+    private var order: [Kind] {
+        let all: [Kind] = isDistanceActivity ? [.time, .distance, .zone] : [.time, .zone]
+        return all.filter { isOn($0) } + all.filter { !isOn($0) }
     }
 
     private func isOn(_ k: Kind) -> Bool {
@@ -734,26 +740,27 @@ private struct NunaWorkoutTargetSheet: View {
     private func targetCard(_ k: Kind) -> some View {
         let on = isOn(k)
         let expanded = on && open == k
-        return VStack(spacing: 10) {
+        let shape = RoundedRectangle(cornerRadius: 6, style: .continuous)
+        return VStack(spacing: 8) {
             ZStack(alignment: .topTrailing) {
-                VStack(spacing: 4) {
+                VStack(spacing: 5) {
                     Text(title(k)).font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                        .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+                        .foregroundStyle(NunaPalette.textPrimary)
                     Text(verbatim: subtitle(k)).font(.nuna(size: 13, weight: .semibold)).textCase(nil)
-                        .foregroundStyle(on ? NunaPalette.effortText : NunaPalette.textMuted).multilineTextAlignment(.center)
+                        .foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center)
                 }
-                .frame(maxWidth: .infinity).padding(.horizontal, 48)
+                .frame(maxWidth: .infinity).padding(.horizontal, 44)
                 Toggle("", isOn: Binding(get: { isOn(k) }, set: { setOn(k, $0) }))
-                    .labelsHidden().tint(NunaPalette.effortModerate).scaleEffect(0.8, anchor: .topTrailing)
+                    .labelsHidden().tint(NunaPalette.effortModerate).scaleEffect(0.75, anchor: .topTrailing)
             }
+            .frame(minHeight: 44)
             if expanded { controls(k) }
         }
-        .padding(.horizontal, 14).padding(.vertical, 11)
-        .frame(maxWidth: .infinity)
-        .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous)
-            .stroke(on ? NunaPalette.effortModerate : NunaPalette.hairline, lineWidth: on ? 1.5 : 1))
-        .contentShape(RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+        .padding(.horizontal, 12).padding(.vertical, 11)
+        .frame(maxWidth: .infinity, minHeight: 76)
+        .background(NunaPalette.tile, in: shape)
+        .overlay(shape.stroke(NunaPalette.hairline, lineWidth: 1))
+        .contentShape(shape)
         .onTapGesture { tap(k) }
         .accessibilityElement(children: .contain)
         .accessibilityAddTraits(on ? .isSelected : [])
@@ -815,49 +822,57 @@ private struct NunaWorkoutTargetSheet: View {
             guard !free, let b = band else { return NunaPalette.textPrimary }
             return after < b.lowerBound ? NunaPalette.textPrimary : (after <= b.upperBound ? NunaPalette.charge : NunaPalette.warning)
         }()
-        return VStack(spacing: 14) {
+        return VStack(spacing: 16) {
             HStack(alignment: .top, spacing: 8) {
                 stat("Effort", dayEffort.map(effortNumber) ?? "–")
                 stat("Target", free ? "–" : effortNumber(estimatedEffort), color: NunaPalette.effortModerate)
                 stat("After (est.)", free ? "–" : effortNumber(after), color: afterColor)
             }
+            .padding(.horizontal, NunaSpacing.screenH)
             effortBar(current: day, after: after, band: band, free: free)
         }
         .animation(reduceMotion ? nil : StrandMotion.gentle, value: estimatedEffort)
     }
 
-    /// 0–100: what the day already holds and what the session adds on top of it, with a dashed bracket and the range beneath.
+    /// A thick band from edge to edge: the range that suits today is hatched in green on it, what the day holds and what the session adds
+    /// run along its middle, and a dashed bracket with the range sits under it.
     private func effortBar(current: Double, after: Double, band: ClosedRange<Double>?, free: Bool) -> some View {
         GeometryReader { geo in
             let w = geo.size.width
             let unit = w / 100
             let lo = (band?.lowerBound ?? 0).clamped(0, 100) * unit
             let hi = (band?.upperBound ?? 0).clamped(0, 100) * unit
+            let barH: CGFloat = 22
             ZStack(alignment: .topLeading) {
-                ZStack(alignment: .leading) {
-                    Rectangle().fill(NunaPalette.field)
-                    Rectangle().fill(NunaPalette.effortModerate).frame(width: free ? 0 : max(after.clamped(0, 100) * unit, 6))
-                    Rectangle().fill(NunaPalette.effortMinimal).frame(width: current > 0 ? max(current.clamped(0, 100) * unit, 6) : 0)
+                Rectangle().fill(NunaPalette.field).frame(width: w, height: barH)
+                if band != nil {
+                    NunaHatch(color: NunaPalette.charge).frame(width: max(hi - lo, 1), height: barH).offset(x: lo)
+                    Rectangle().fill(NunaPalette.charge).frame(width: 2, height: barH).offset(x: lo)
                 }
-                .frame(height: 8).clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
+                Rectangle().fill(NunaPalette.effortModerate).frame(width: free ? 0 : max(after.clamped(0, 100) * unit, 4), height: 8).offset(y: (barH - 8) / 2)
+                Rectangle().fill(NunaPalette.effortMinimal).frame(width: current > 0 ? max(current.clamped(0, 100) * unit, 4) : 0, height: 8).offset(y: (barH - 8) / 2)
                 if let band {
-                    // Bracket: a tick up at each end of the range and a dashed line between them, the range said on the line.
-                    Canvas { ctx, size in
+                    // Bracket: down from each end of the range, a dashed line between with rounded corners, and the range on the line.
+                    Canvas { ctx, _ in
                         var p = Path()
-                        p.move(to: CGPoint(x: lo, y: 14)); p.addLine(to: CGPoint(x: lo, y: 30))
-                        p.addLine(to: CGPoint(x: hi, y: 30)); p.addLine(to: CGPoint(x: hi, y: 14))
-                        ctx.stroke(p, with: .color(NunaPalette.charge), style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round, dash: [4, 3]))
+                        let top = barH + 6, bottom = barH + 26, r: CGFloat = 8
+                        p.move(to: CGPoint(x: lo, y: top))
+                        p.addLine(to: CGPoint(x: lo, y: bottom - r))
+                        p.addQuadCurve(to: CGPoint(x: lo + r, y: bottom), control: CGPoint(x: lo, y: bottom))
+                        p.addLine(to: CGPoint(x: hi - r, y: bottom))
+                        p.addQuadCurve(to: CGPoint(x: hi, y: bottom - r), control: CGPoint(x: hi, y: bottom))
+                        p.addLine(to: CGPoint(x: hi, y: top))
+                        ctx.stroke(p, with: .color(NunaPalette.textSecondary.opacity(0.7)), style: StrokeStyle(lineWidth: 1, lineCap: .round, dash: [3, 3]))
                     }
-                    .frame(height: 34)
                     Text(verbatim: "\(effortNumber(band.lowerBound))–\(effortNumber(band.upperBound))")
                         .font(.nuna(size: NunaTypeSize.caption, weight: .bold, design: NunaType.design)).monospacedDigit()
-                        .foregroundStyle(NunaPalette.charge)
-                        .padding(.horizontal, 6).background(NunaPalette.canvas)
-                        .position(x: (lo + hi) / 2, y: 30)
+                        .foregroundStyle(NunaPalette.textSecondary)
+                        .padding(.horizontal, 8).background(NunaPalette.canvas)
+                        .position(x: (lo + hi) / 2, y: barH + 26)
                 }
             }
         }
-        .frame(height: band == nil ? 8 : 38)
+        .frame(height: band == nil ? 22 : 58)
     }
 
     private func stat(_ label: LocalizedStringKey, _ value: String, color: Color = NunaPalette.textPrimary) -> some View {
@@ -945,7 +960,7 @@ private struct NunaWorkoutTargetSheet: View {
         } label: {
             Text(verbatim: item.0).font(.nuna(size: NunaTypeSize.h3, weight: .bold, design: NunaType.design)).monospacedDigit()
                 .foregroundStyle(item.1 ? NunaPalette.effortModerate : NunaPalette.textSecondary)
-                .frame(maxWidth: .infinity, minHeight: 51, maxHeight: 51)
+                .frame(maxWidth: .infinity, minHeight: 44, maxHeight: 44)
                 .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous).stroke(item.1 ? NunaPalette.effortModerate : NunaPalette.hairline, lineWidth: item.1 ? 1.5 : 1))
         }
@@ -1759,6 +1774,21 @@ private struct NunaEffortSwatch: View {
             }
         }
         .accessibilityHidden(true)
+    }
+}
+
+/// Diagonal lines in one colour on a dark ground: the hatching of a range on a bar.
+private struct NunaHatch: View {
+    let color: Color
+    var body: some View {
+        Canvas { ctx, size in
+            ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(color.opacity(0.18)))
+            var p = Path(); var x: CGFloat = -size.height
+            while x < size.width {
+                p.move(to: CGPoint(x: x, y: size.height)); p.addLine(to: CGPoint(x: x + size.height, y: 0)); x += 5
+            }
+            ctx.stroke(p, with: .color(color), lineWidth: 1.2)
+        }
     }
 }
 #endif
