@@ -559,54 +559,48 @@ extension NunaWorkoutLocationPreview: @preconcurrency CLLocationManagerDelegate 
 
 private struct NunaWorkoutStartSettings: View {
     @Binding var zoneBuzz: Bool
-    @Environment(\.dismiss) private var dismiss
     @AppStorage(AudioCoachingPreferences.enabledKey) private var audioCoachOn = false
+    /// The audio coach has a lot to set and a test button, so it opens in a sheet of its own, as tall as the screen.
+    @State private var showAudioCoach = false
 
     var body: some View {
-        NavigationStack {
-            VStack(spacing: NunaSpacing.section) {
+        VStack(spacing: NunaSpacing.section) {
+            Text("Activity settings")
+                .font(.nuna(size: NunaTypeSize.h3, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                .frame(maxWidth: .infinity).padding(.top, 4)
+            NunaCard(small: true) {
+                HStack(spacing: 14) {
+                    NunaIconTile("applewatch.radiowaves.left.and.right", tint: NunaPalette.charge)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text("Silent buzz")
+                            .font(.nuna(size: 16, weight: .heavy))
+                            .foregroundStyle(NunaPalette.textPrimary)
+                        Text("Buzz when you leave the selected heart-rate range or complete a target.")
+                            .font(.nuna(size: 13, weight: .semibold))
+                            .foregroundStyle(NunaPalette.textSecondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    Spacer(minLength: 8)
+                    Toggle("", isOn: $zoneBuzz)
+                        .labelsHidden()
+                        .tint(NunaPalette.charge)
+                }
+            }
+            Button { showAudioCoach = true } label: {
                 NunaCard(small: true) {
-                    HStack(spacing: 14) {
-                        NunaIconTile("applewatch.radiowaves.left.and.right", tint: NunaPalette.charge)
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text("Silent buzz")
-                                .font(.nuna(size: 16, weight: .heavy))
-                                .foregroundStyle(NunaPalette.textPrimary)
-                            Text("Buzz when you leave the selected heart-rate range or complete a target.")
-                                .font(.nuna(size: 13, weight: .semibold))
-                                .foregroundStyle(NunaPalette.textSecondary)
-                                .fixedSize(horizontal: false, vertical: true)
-                        }
-                        Spacer(minLength: 8)
-                        Toggle("", isOn: $zoneBuzz)
-                            .labelsHidden()
-                            .tint(NunaPalette.charge)
-                    }
-                }
-                // The spoken cues have their own screen; this is the way to it from here.
-                NavigationLink {
-                    NunaAnyaVoiceCoachView()
-                } label: {
-                    NunaCard(small: true) {
-                        NunaListRow("Audio coach", subtitle: LocalizedStringKey(audioCoachOn ? String(localized: "On") : String(localized: "Off")),
-                                    systemImage: "speaker.wave.2", showsChevron: true)
-                    }
-                }
-                .buttonStyle(.plain)
-                Spacer()
-            }
-            .padding(.horizontal, NunaSpacing.screenH)
-            .padding(.top, NunaSpacing.section)
-            .background(NunaPalette.canvas.ignoresSafeArea())
-            .navigationTitle("Activity settings")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") { dismiss() }
-                        .font(.nuna(size: 15, weight: .bold))
-                        .foregroundStyle(NunaPalette.accent)
+                    NunaListRow("Audio coach", subtitle: LocalizedStringKey(audioCoachOn ? String(localized: "On") : String(localized: "Off")),
+                                systemImage: "speaker.wave.2", showsChevron: true)
                 }
             }
+            .buttonStyle(.plain)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, NunaSpacing.screenH)
+        .padding(.top, NunaSpacing.section)
+        .background(NunaPalette.canvas.ignoresSafeArea())
+        .sheet(isPresented: $showAudioCoach) {
+            NunaAnyaVoiceCoachView()
+                .nunaSheetChrome(detents: [.large])
         }
     }
 }
