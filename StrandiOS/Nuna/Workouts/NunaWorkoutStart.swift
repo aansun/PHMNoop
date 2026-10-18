@@ -828,8 +828,8 @@ private struct NunaWorkoutTargetSheet: View {
         }()
         return VStack(spacing: 8) {
             HStack(alignment: .top, spacing: 8) {
-                stat("Effort", dayEffort.map(effortNumber) ?? "–")
-                stat("After (est.)", free ? "–" : effortNumber(after), color: afterColor)
+                stat("Current\neffort", dayEffort.map(effortNumber) ?? "–")
+                stat("After activity\n(est.)", free ? "–" : effortNumber(after), color: afterColor)
             }
             .padding(.horizontal, NunaSpacing.screenH + 18)
             effortBar(current: day, after: after, band: band, free: free,
@@ -854,8 +854,11 @@ private struct NunaWorkoutTargetSheet: View {
             let pillX = min(max((cur + end) / 2, pillW / 2 + 12), w - pillW / 2 - 12)
             ZStack(alignment: .topLeading) {
                 Rectangle().fill(NunaPalette.field).frame(width: w, height: barH).offset(y: top)
-                NunaHatch(color: NunaPalette.charge).frame(width: max(end, 0), height: barH).offset(y: top)
-                Rectangle().fill(NunaPalette.charge).frame(width: 2, height: barH).offset(x: 0, y: top)
+                NunaHatch(colors: nunaEffortRingColors(free ? current : after)).frame(width: max(end, 0), height: barH).offset(y: top)
+                if band != nil {
+                    // A white mark where the range that suits today begins, like the one on the Effort ring.
+                    Rectangle().fill(NunaPalette.mapOverlayText).frame(width: 3, height: barH + 8).offset(x: max(lo - 1.5, 0), y: top - 4)
+                }
                 if let target {
                     Text("Target").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.charge).position(x: pillX, y: 6)
@@ -896,7 +899,7 @@ private struct NunaWorkoutTargetSheet: View {
             Text(verbatim: value).font(.nuna(size: 34, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(34))
                 .foregroundStyle(color).monospacedDigit().contentTransition(.numericText())
             Text(label).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                .foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.7)
+                .foregroundStyle(NunaPalette.textSecondary).lineLimit(2).multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
     }
@@ -1796,17 +1799,19 @@ private struct NunaEffortSwatch: View {
     }
 }
 
-/// Diagonal lines in one colour on a dark ground: the hatching of a range on a bar.
+/// Diagonal lines on a dark ground, in a run of colours from left to right: the hatching of a bar.
 private struct NunaHatch: View {
-    let color: Color
+    let colors: [Color]
     var body: some View {
         Canvas { ctx, size in
-            ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(color.opacity(0.18)))
+            let gradient = Gradient(colors: colors.count > 1 ? colors : colors + colors)
+            let shading = GraphicsContext.Shading.linearGradient(gradient, startPoint: .zero, endPoint: CGPoint(x: size.width, y: 0))
+            ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .linearGradient(Gradient(colors: gradient.stops.map { $0.color.opacity(0.18) }), startPoint: .zero, endPoint: CGPoint(x: size.width, y: 0)))
             var p = Path(); var x: CGFloat = -size.height
             while x < size.width {
                 p.move(to: CGPoint(x: x, y: size.height)); p.addLine(to: CGPoint(x: x + size.height, y: 0)); x += 5
             }
-            ctx.stroke(p, with: .color(color), lineWidth: 1.2)
+            ctx.stroke(p, with: shading, lineWidth: 1.2)
         }
     }
 }
