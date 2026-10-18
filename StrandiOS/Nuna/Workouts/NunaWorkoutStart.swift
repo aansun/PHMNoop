@@ -799,7 +799,13 @@ private struct NunaWorkoutTargetSheet: View {
 
     private var goalSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            sectionLabel("Goal")
+            HStack(alignment: .firstTextBaseline) {
+                sectionLabel("Goal")
+                Spacer()
+                if let race = raceName {
+                    Text(race).font(.nuna(size: NunaTypeSize.sub, weight: .bold)).foregroundStyle(NunaPalette.effortModerate).transition(.opacity)
+                }
+            }
             HStack(spacing: 8) {
                 goalChoice(.none, "No goal", "infinity")
                 goalChoice(.time, "Time", "timer")
@@ -823,14 +829,10 @@ private struct NunaWorkoutTargetSheet: View {
     private var distanceControls: some View {
         let shown = goal.km * perKm
         let step = shown < 10 ? 0.5 : 1.0
-        let named: LocalizedStringKey? = abs(goal.km - 42.195) < 0.05 ? "Marathon" : (abs(goal.km - 21.0975) < 0.05 ? "Half marathon" : nil)
         return VStack(alignment: .leading, spacing: 12) {
             stepper(value: String(format: "%.1f", locale: AppLanguage.activeLocale, shown), unit: unit,
                     minus: { setShown(shown - step) }, plus: { setShown(shown + step) },
                     canMinus: shown > Self.minimumDistanceKm * perKm + 0.001, canPlus: shown < Self.maximumDistanceKm * perKm - 0.001)
-            if let named {
-                Text(named).font(.nuna(size: NunaTypeSize.sub, weight: .bold)).foregroundStyle(NunaPalette.effortModerate).frame(maxWidth: .infinity)
-            }
             presets(Self.distancePresets.map { km in
                 (Self.presetLabel(km * perKm), abs(goal.km - km) < 0.01, { goal.km = km })
             })
@@ -839,6 +841,12 @@ private struct NunaWorkoutTargetSheet: View {
 
     private static func presetLabel(_ value: Double) -> String {
         value.rounded() == value ? String(Int(value)) : String(format: "%.1f", value)
+    }
+
+    /// The race the distance stands for, said beside the Goal heading so nothing below it moves.
+    private var raceName: LocalizedStringKey? {
+        guard goal.primary == .distance else { return nil }
+        return abs(goal.km - 42.195) < 0.05 ? "Marathon" : (abs(goal.km - 21.0975) < 0.05 ? "Half marathon" : nil)
     }
 
     private func setShown(_ value: Double) {
@@ -963,36 +971,31 @@ private struct NunaWorkoutTargetSheet: View {
 
     // MARK: Anya's suggestion
 
-    /// Anya's session for today, from Charge: what to do, why, and what it adds. The target starts as this; one tap brings it back.
+    /// Anya's session for today in one sentence, with the tap that applies it. The target starts as this already.
     @ViewBuilder private var anyaCard: some View {
         if let suggestion {
-            let plan = suggestion.plan
-            let suggested = NunaWorkoutGoal.suggested(by: plan)
+            let suggested = NunaWorkoutGoal.suggested(by: suggestion.plan)
             let applied = goal.primary == suggested.primary && goal.minutes == suggested.minutes && goal.zoneOn && goal.zone == suggested.zone
-            NunaCard {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 10) {
-                        AnyaMark(size: 26)
-                        Text("Anya suggests").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                            .foregroundStyle(NunaPalette.textSecondary)
-                        Spacer(minLength: 6)
-                        if applied {
-                            Image(systemName: "checkmark.circle.fill").font(.nuna(size: 20, weight: .semibold)).foregroundStyle(NunaPalette.charge)
-                                .accessibilityLabel(Text("Applied"))
-                        } else {
-                            Button {
-                                withAnimation(reduceMotion ? nil : StrandMotion.gentle) { goal = suggested }
-                                UISelectionFeedbackGenerator().selectionChanged()
-                            } label: {
-                                Text("Use").font(.nuna(size: NunaTypeSize.sub, weight: .bold)).foregroundStyle(NunaPalette.mapOverlayText)
-                                    .padding(.horizontal, 16).frame(height: 32).background(NunaPalette.effortModerate, in: Capsule())
-                            }
-                            .buttonStyle(.plain)
+            NunaCard(small: true) {
+                HStack(spacing: 12) {
+                    AnyaMark(size: 26)
+                    Text(verbatim: sentence(suggestion))
+                        .font(.nuna(size: NunaTypeSize.sub, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true).textCase(nil)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    if applied {
+                        Image(systemName: "checkmark.circle.fill").font(.nuna(size: 22, weight: .semibold)).foregroundStyle(NunaPalette.charge)
+                            .accessibilityLabel(Text("Applied"))
+                    } else {
+                        Button {
+                            withAnimation(reduceMotion ? nil : StrandMotion.gentle) { goal = suggested }
+                            UISelectionFeedbackGenerator().selectionChanged()
+                        } label: {
+                            Text("Use").font(.nuna(size: NunaTypeSize.sub, weight: .bold)).foregroundStyle(NunaPalette.mapOverlayText)
+                                .padding(.horizontal, 16).frame(height: 32).background(NunaPalette.effortModerate, in: Capsule())
                         }
+                        .buttonStyle(.plain)
                     }
-                    Text(verbatim: suggestion.title).font(.nuna(size: NunaTypeSize.h3, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                    Text(verbatim: reason(suggestion)).font(.nuna(size: NunaTypeSize.caption + 1, weight: .semibold))
-                        .foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
         } else if charge == nil {
@@ -1002,17 +1005,13 @@ private struct NunaWorkoutTargetSheet: View {
         }
     }
 
-    /// One line: how Charge reads today, then what the session adds.
-    private func reason(_ s: NunaDayPlanResult) -> String {
-        let why: String
-        switch s.plan.kind {
-        case .recovery: why = String(localized: "Charge \(s.charge): keep it easy and let the body recover.")
-        case .easy: why = String(localized: "Charge \(s.charge): easy aerobic work suits today.")
-        case .steady: why = String(localized: "Charge \(s.charge): steady aerobic work suits today.")
-        case .quality: why = String(localized: "Charge \(s.charge): a tempo session fits today.")
+    /// "Anya suggests steady zone 2, 42 min for Charge 51 (+31–46 Effort)."
+    private func sentence(_ s: NunaDayPlanResult) -> String {
+        let title = s.title.prefix(1).lowercased() + s.title.dropFirst()
+        guard let lo = s.plan.effortLow, let hi = s.plan.effortHigh else {
+            return String(localized: "Anya suggests \(title) for Charge \(s.charge).")
         }
-        guard let lo = s.plan.effortLow, let hi = s.plan.effortHigh else { return why }
-        return why + " " + String(localized: "Adds about \(Int(lo.rounded()))–\(Int(hi.rounded())) Effort.")
+        return String(localized: "Anya suggests \(title) for Charge \(s.charge) (+\(Int(lo.rounded()))–\(Int(hi.rounded())) Effort).")
     }
 
     // MARK: Actions
