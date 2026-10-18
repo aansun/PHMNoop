@@ -15,6 +15,9 @@ struct NunaAnyaRead: Equatable {
     var read: [String]
     var module: NunaAnyaModule
     var questions: [NunaAnyaQuestion]
+    /// What the weather and air mean for training, when they are on. Kept apart from the detail so a screen that already shows them
+    /// does not say them twice.
+    var outdoor: String? = nil
 }
 
 struct NunaAnyaQuestion: Equatable, Identifiable {
@@ -125,8 +128,7 @@ enum NunaAnyaReader {
         // The weather and air, when they are on: what they mean for training today, in plain words (the memory above keeps only the figures).
         let environment = EnvironmentStore.shared
         if environment.isActive, let s = environment.snapshot, Date().timeIntervalSince1970 - Double(s.ts) < 3 * 3600, let a = environment.advice {
-            let line = NunaMark.plain(NunaInsightText.environment(a, s, maxReasons: 1))
-            out.detail = [out.detail, line].compactMap { $0 }.joined(separator: " ")
+            out.outdoor = NunaMark.plain(NunaInsightText.environment(a, s, maxReasons: 1))
             out.read.append("Weather and air")
         }
         return out
