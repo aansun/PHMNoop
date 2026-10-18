@@ -53,7 +53,13 @@ struct NunaAnyaSheet: View {
     @State private var loaded = false
     @State private var explanation: String?
     @State private var explaining = false
+    @State private var turns: [ChatMessage] = []
+    @State private var draft = ""
+    @State private var sending = false
+    @FocusState private var focused: Bool
     @State private var path = NavigationPath()
+    /// What the sheet shows: Anya's read of the line that was tapped, or a conversation about it. Each sheet has its own conversation.
+    @State private var tab = "read"
 
     /// Provider replies use light markdown (bold, lists); show it formatted and keep line breaks.
     static func markdown(_ s: String) -> AttributedString {
@@ -73,17 +79,18 @@ struct NunaAnyaSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     top
-                    if let read { card(read) } else if loaded { empty }
-                    connectState
-                    // Follow-up questions live in the Anya tab, not here.
-                    Button { openFull() } label: {
-                        Text("Open full conversation").font(.nuna(size: 15, weight: .heavy)).foregroundStyle(NunaAnyaWing.ink)
-                            .frame(maxWidth: .infinity).frame(height: 50).background(NunaAnyaWing.gradient, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    }.buttonStyle(.plain)
+                    NunaSegmented([(value: "read", title: "Read"), (value: "ask", title: "Ask")], selection: $tab)
+                    if tab == "read" {
+                        if let read { card(read) } else if loaded { empty }
+                        connectState
+                    } else {
+                        asking
+                    }
                 }
                 .padding(.horizontal, NunaSpacing.screenH).padding(.top, 20).padding(.bottom, 24)
             }
-            .scrollIndicators(.hidden)
+            .scrollIndicators(.hidden).scrollDismissesKeyboard(.immediately)
+            .simultaneousGesture(TapGesture().onEnded { focused = false })
             .textCase(nil)
             .background(NunaPalette.canvas.ignoresSafeArea())
             .toolbar(.hidden, for: .navigationBar)
@@ -174,7 +181,79 @@ struct NunaAnyaSheet: View {
         }
     }
 
+    /// The conversation of this sheet: what was asked and answered about this line, the box to ask more, and the way into the Anya tab.
+    private var asking: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            connectState
+            if turns.isEmpty {
+                Text("Ask about this line, or anything else on this page. The answer stays in this sheet.")
+                    .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+            } else {
+                conversation
+            }
+            composer
+            if !turns.isEmpty {
+                Button { openFull() } label: {
+                    HStack(spacing: 8) {
+                        Text("Continue in the Anya tab").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        Image(systemName: "arrow.right").font(.nuna(size: 13, weight: .bold))
+                    }
+                    .foregroundStyle(LinearGradient(colors: NunaAnyaWing.colors, startPoint: .leading, endPoint: .trailing))
+                    .frame(minHeight: 44).contentShape(Rectangle())
+                }.buttonStyle(.plain)
+            }
+        }
+    }
+
+    private var conversation: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            ForEach(turns) { t in
+                if t.role == .user {
+                    HStack { Spacer(minLength: 40)
+                        Text(verbatim: t.text).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 14).padding(.vertical, 9).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: 12, style: .continuous)) }
+                } else {
+                    Text(Self.markdown(AnyaActions.proseOnly(t.text))).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            if sending { HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) } }
+        }
+    }
+
+    private var composer: some View {
+        HStack(spacing: 8) {
+            TextField("", text: $draft, prompt: Text(coach.isConfigured ? "Ask a follow-up" : "Connect Anya to ask").foregroundStyle(NunaPalette.textMuted), axis: .vertical)
+                .font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1...3).focused($focused)
+                .padding(.leading, 16).padding(.vertical, 12).disabled(!coach.isConfigured).onSubmit { submit() }
+            Button { submit() } label: {
+                Image(systemName: "arrow.up").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(width: 38, height: 38).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.iconButton, style: .continuous))
+            }.buttonStyle(.plain).disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty || sending || !coach.isConfigured)
+                .opacity(draft.trimmingCharacters(in: .whitespaces).isEmpty ? 0.4 : 1).padding(.trailing, 5)
+        }
+        .frame(minHeight: 48).background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous)).overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+    }
+
     // MARK: Actions
+
+    // MARK: Actions
+
+    private func submit() {
+        let q = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !q.isEmpty else { return }
+        draft = ""; focused = false
+        Task { await ask(q, shown: q) }
+    }
+
+    /// Answers inside the sheet. Needs a provider and data access; otherwise it hands the question to the full conversation
+    /// where the same gates are explained, so nothing is sent from here without them.
+    private func ask(_ prompt: String, shown: String) async {
+        guard coach.isConfigured else { return }
+        guard coach.dataConsent else { coach.pendingPrompt = prompt; openFull(); return }
+        turns.append(ChatMessage(id: UUID(), role: .user, text: shown))
+        sending = true; defer { sending = false }
+        let reply = await coach.answerContextualMessage(pageContext: context, notice: notice, history: Array(turns.dropLast()), question: prompt)
+        turns.append(ChatMessage(id: UUID(), role: .assistant, text: reply ?? String(localized: "I couldn't answer right now. Check the provider in Anya settings.")))
+        if let reply { NunaAnyaMemory.remember(module, "Asked: \(shown) Answer: \(reply.prefix(220))") }
+    }
 
     private func explain() async {
         explaining = true; defer { explaining = false }
@@ -182,6 +261,7 @@ struct NunaAnyaSheet: View {
     }
 
     private func openFull() {
+        if let last = turns.last(where: { $0.role == .user })?.text, coach.pendingPrompt == nil, turns.count == 1 { coach.pendingPrompt = last }
         dismiss()
         router.requestedDestination = .coach
     }
