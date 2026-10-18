@@ -115,6 +115,8 @@
     "Key statistics": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Statistik utama"}}}},
     "vs. 30 day average": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "vs. rata-rata 30 hari"}}}},
     "Edit time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ubah waktu"}}}},
+    "Current\neffort": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Effort\nsaat ini"}}}},
+    "After activity\n(est.)": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Setelah aktivitas\n(est.)"}}}},
     "Choose your target": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pilih target Anda"}}}},
     "Reach a set duration.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Capai durasi tertentu."}}}},
     "Reach a set distance.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Capai jarak tertentu."}}}},
