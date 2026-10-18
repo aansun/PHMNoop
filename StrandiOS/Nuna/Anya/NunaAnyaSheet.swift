@@ -79,7 +79,6 @@ struct NunaAnyaSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     top
-                    NunaSegmented([(value: "read", title: "Read"), (value: "ask", title: "Ask")], selection: $tab)
                     if tab == "read" {
                         if let read { card(read) } else if loaded { empty }
                         connectState
@@ -117,7 +116,26 @@ struct NunaAnyaSheet: View {
             Text(metric.map { LocalizedStringKey($0.title) } ?? module.title)
                 .font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             Spacer(minLength: 0)
+            tabSwitch
         }
+    }
+
+    /// Read and Ask, small and at the right of the header.
+    private var tabSwitch: some View {
+        HStack(spacing: 2) {
+            ForEach([("read", LocalizedStringKey("Read")), ("ask", LocalizedStringKey("Ask"))], id: \.0) { id, title in
+                let on = tab == id
+                Button { withAnimation(.easeInOut(duration: 0.15)) { tab = id } } label: {
+                    Text(title).font(.nuna(size: 12.5, weight: .bold)).textCase(nil)
+                        .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+                        .padding(.horizontal, 14).frame(height: 30)
+                        .background(on ? NunaPalette.glassStrong : .clear, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                }
+                .buttonStyle(.plain).accessibilityAddTraits(on ? .isSelected : [])
+            }
+        }
+        .padding(3)
+        .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
     }
 
     private func card(_ r: NunaAnyaRead) -> some View {
