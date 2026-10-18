@@ -115,6 +115,7 @@
     "Key statistics": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Statistik utama"}}}},
     "vs. 30 day average": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "vs. rata-rata 30 hari"}}}},
     "Edit time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ubah waktu"}}}},
+    "Brief awakenings": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Terbangun sebentar"}}}},
     "Edit activity": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ubah aktivitas"}}}},
     "Start time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Waktu mulai"}}}},
     "End time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Waktu selesai"}}}},

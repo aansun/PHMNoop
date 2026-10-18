@@ -47,7 +47,7 @@ private func whole(_ v: Double?) -> String {
 }
 
 /// Everything the night had, from the stages to the body clock: the sleep stages card (with the pencil that edits the sleep times and an
-/// undo for a deleted night), the comparison with other nights, naps, the overnight vitals, the sleep need and debt, wake-ups and the body
+/// undo for a deleted night), the comparison with other nights, naps, the overnight vitals, the sleep need and debt and the body
 /// clock. Shared by the Rest screen (which is also the Sleep screen) and the pushed sleep sub-screens, so they show the same night the same way.
 struct NunaSleepNightSections: View {
     let model: NunaSleepModel
@@ -70,11 +70,6 @@ struct NunaSleepNightSections: View {
             if showsTiles { tiles(model, night) }
             NunaOvernightVitals(model: model, night: night)
             if showsNeed { needCard(model, night) }
-            if let d = night.daily?.disturbances, d > 0 {
-                NunaCard(small: true) {
-                    NunaListRow("Woke up \(d) times", description: "Brief awakenings during the night", systemImage: "moon.fill", tint: NunaPalette.restText)
-                }
-            }
             bodyClockCard
         }
         .sheet(item: $edit) { NunaSleepTimeSheet(target: $0) { snap in await repo.refresh(); if let snap { undo = snap } } }

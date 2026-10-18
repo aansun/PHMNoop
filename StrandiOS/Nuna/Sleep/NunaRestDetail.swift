@@ -90,6 +90,7 @@ struct NunaRestDetailView: View {
         let events = night.intervals.filter { $0.stage == .awake && $0.end - $0.start >= 60 }.map { (start: $0.start, end: $0.end) }
         NunaEfficiencyCard(asleepMin: night.asleepMin, awakeMin: night.stages.awake, events: events, totalSec: total2,
                            percent: model.efficiency(night), usual: model.usual { model.efficiency($0) },
+                           briefAwakenings: night.daily?.disturbances,
                            note: NunaInsightText.efficiencyNote(events: events, totalSec: total2))
     }
 

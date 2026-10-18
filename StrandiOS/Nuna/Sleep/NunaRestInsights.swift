@@ -254,6 +254,8 @@ struct NunaEfficiencyCard: View {
     let totalSec: TimeInterval
     let percent: Double?
     let usual: Double?
+    /// Brief awakenings the night logged, shorter than the wake events above and not drawn on the bar.
+    var briefAwakenings: Int? = nil
     var note: String? = nil
 
     var body: some View {
@@ -274,6 +276,14 @@ struct NunaEfficiencyCard: View {
                     Text("Wake events").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                     Spacer()
                     Text(verbatim: "\(events.count)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                }
+                if let briefAwakenings, briefAwakenings > 0 {
+                    HStack(spacing: 10) {
+                        RoundedRectangle(cornerRadius: 3, style: .continuous).fill(NunaPalette.textMuted).frame(width: 12, height: 12)
+                        Text("Brief awakenings").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                        Spacer()
+                        Text(verbatim: "\(briefAwakenings)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    }
                 }
                 if let note { NunaRestNote(text: note) }
             }
