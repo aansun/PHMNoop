@@ -102,7 +102,7 @@ struct NunaEnvironmentView: View {
                 if let s = store.snapshot {
                     Text(verbatim: NunaEnvironmentFormat.line(s)).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                     if let a = store.advice {
-                        Text(verbatim: NunaInsightText.environment(a, s)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: NunaMark.plain(NunaInsightText.environment(a, s))).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                             .fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }
                 } else if !store.hasKeys {
@@ -160,7 +160,7 @@ enum NunaEnvironmentFormat {
         if let p = s.place { parts.append(p) }
         if let t = s.tempC ?? s.feelsLikeC {
             var temp = NunaInsightText.degrees(t)
-            if let f = s.feelsLikeC, abs(f - t) >= 2 { temp += " " + String(localized: "feels like \(NunaInsightText.degrees(f))") }
+            if let f = s.feelsLikeC, abs(f - t) >= 2 { temp += " (" + String(localized: "feels like \(NunaInsightText.degrees(f))") + ")" }
             parts.append(temp)
         }
         if let aqi = s.usAqi { parts.append(String(localized: "AQI \(aqi)")) }
