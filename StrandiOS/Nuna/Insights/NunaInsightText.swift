@@ -44,14 +44,14 @@ enum NunaInsightText {
     private static func reasonSentence(_ r: EnvironmentAdvice.Reason) -> String {
         switch r {
         case .storm: return String(localized: "A thunderstorm is around: train indoors.")
-        case .veryHot(let t): return String(localized: "It feels like \(degrees(t)): too hot for hard work outside. Train indoors, or after sunset.")
-        case .hot(let t): return String(localized: "It feels like \(degrees(t)): keep it shorter and easier, drink early and stay in the shade.")
+        case .veryHot(let t): return String(localized: "It feels like \(NunaMark.neg(degrees(t))): too hot for hard work outside. Train indoors, or after sunset.")
+        case .hot(let t): return String(localized: "It feels like \(NunaMark.neg(degrees(t))): keep it shorter and easier, drink early and stay in the shade.")
         case .cold(let t): return String(localized: "It feels like \(degrees(t)): warm up longer and cover your hands and ears.")
         case .freezing(let t): return String(localized: "It feels like \(degrees(t)): dangerously cold outside, train indoors.")
         case .air(let aqi, let band):
             return band >= .unhealthy
-                ? String(localized: "Air quality is \(aqi), \(airWord(band)): skip training outside and do an indoor session.")
-                : String(localized: "Air quality is \(aqi), \(airWord(band)): keep it short and easy, and go indoors if your chest feels tight.")
+                ? String(localized: "Air quality is \(NunaMark.neg(String(aqi))), \(airWord(band)): skip training outside and do an indoor session.")
+                : String(localized: "Air quality is \(NunaMark.neg(String(aqi))), \(airWord(band)): keep it short and easy, and go indoors if your chest feels tight.")
         case .rain: return String(localized: "It is wet: grip is poor and you cool fast, so a shorter route or an indoor session is smarter.")
         case .wind: return String(localized: "Strong wind: expect a slower pace into it.")
         }
@@ -61,7 +61,7 @@ enum NunaInsightText {
     static func environment(_ a: EnvironmentAdvice, _ s: EnvironmentSnapshot, maxReasons: Int = 2) -> String {
         var parts: [String] = []
         if a.reasons.isEmpty {
-            parts.append(String(localized: "Good conditions to train outside."))
+            parts.append(NunaMark.pos(String(localized: "Good conditions to train outside.")))
             if let aqi = s.usAqi, AirQuality.band(usAqi: aqi) == .moderate {
                 parts.append(String(localized: "The air is moderate: fine for most, easy does it if you are sensitive."))
             }
@@ -110,8 +110,8 @@ enum NunaInsightText {
         var heatOrAir = false
         for r in reasons.sorted(by: { severity($0) < severity($1) }).prefix(3) {
             switch r {
-            case .veryHot(let t), .hot(let t): facts.append(String(localized: "it felt like \(degrees(t))")); heatOrAir = true
-            case .air(let aqi, _): facts.append(String(localized: "the air quality was \(aqi)")); heatOrAir = true
+            case .veryHot(let t), .hot(let t): facts.append(String(localized: "it felt like \(NunaMark.neg(degrees(t)))")); heatOrAir = true
+            case .air(let aqi, _): facts.append(String(localized: "the air quality was \(NunaMark.neg(String(aqi)))")); heatOrAir = true
             case .cold(let t), .freezing(let t): facts.append(String(localized: "it felt like \(degrees(t))"))
             case .storm: facts.append(String(localized: "there was a storm around"))
             case .rain: facts.append(String(localized: "it was wet"))
@@ -127,16 +127,17 @@ enum NunaInsightText {
     private static func workoutFinding(_ f: WorkoutRead.Finding, system: UnitSystem, scale: EffortScale) -> String {
         switch f {
         case let .efficiency(kind, pace, usual, hr):
-            let now = paceText(pace, system), was = paceText(usual, system), gap = Int(abs(hr).rounded())
+            let now = paceText(pace, system), was = paceText(usual, system), gapN = "\(Int(abs(hr).rounded())) bpm"
+            // Marked only where it is good or bad news: faster and lower heart rate are good, slower at a higher heart rate is not.
             switch kind {
-            case .fasterLowerHr: return String(localized: "Faster than your 30-day usual, \(now) against \(was), and at a heart rate \(gap) bpm lower: your fitness is showing.")
-            case .fasterSameHr: return String(localized: "Faster than your 30-day usual, \(now) against \(was), at about the same heart rate.")
-            case .fasterHigherHr: return String(localized: "Faster than your 30-day usual, \(now) against \(was), but at a heart rate \(gap) bpm higher: you pushed harder for it.")
-            case .slowerLowerHr: return String(localized: "Slower than your 30-day usual, \(now) against \(was), at a heart rate \(gap) bpm lower: an easier day.")
+            case .fasterLowerHr: return String(localized: "Faster than your 30-day usual, \(NunaMark.pos(now)) against \(was), and at a heart rate \(NunaMark.pos(gapN)) lower: your fitness is showing.")
+            case .fasterSameHr: return String(localized: "Faster than your 30-day usual, \(NunaMark.pos(now)) against \(was), at about the same heart rate.")
+            case .fasterHigherHr: return String(localized: "Faster than your 30-day usual, \(NunaMark.pos(now)) against \(was), but at a heart rate \(NunaMark.neg(gapN)) higher: you pushed harder for it.")
+            case .slowerLowerHr: return String(localized: "Slower than your 30-day usual, \(now) against \(was), at a heart rate \(gapN) lower: an easier day.")
             case .slowerSameHr: return String(localized: "Slower than your 30-day usual, \(now) against \(was), at about the same heart rate.")
-            case .slowerHigherHr: return String(localized: "Slower than your 30-day usual, \(now) against \(was), and at a heart rate \(gap) bpm higher: tiredness, heat or little recovery can do that.")
-            case .samePaceLowerHr: return String(localized: "Your usual pace took a heart rate \(gap) bpm lower than usual: your body is handling it better.")
-            case .samePaceHigherHr: return String(localized: "Your usual pace cost \(gap) bpm more than usual: a sign you are not fully recovered.")
+            case .slowerHigherHr: return String(localized: "Slower than your 30-day usual, \(NunaMark.neg(now)) against \(was), and at a heart rate \(NunaMark.neg(gapN)) higher: tiredness, heat or little recovery can do that.")
+            case .samePaceLowerHr: return String(localized: "Your usual pace took a heart rate \(NunaMark.pos(gapN)) lower than usual: your body is handling it better.")
+            case .samePaceHigherHr: return String(localized: "Your usual pace cost \(NunaMark.neg(gapN)) more than usual: a sign you are not fully recovered.")
             }
         case let .duration(minutes, usual):
             let m = Int(minutes.rounded()), u = Int(usual.rounded())
@@ -155,8 +156,8 @@ enum NunaInsightText {
             let c = Int(charge.rounded())
             switch state {
             case .below: return String(localized: "The day is at Effort \(e), under the \(range) your Charge of \(c) supports: there is room for more.")
-            case .inside: return String(localized: "The day is at Effort \(e), inside the \(range) your Charge of \(c) supports.")
-            case .above: return String(localized: "The day is at Effort \(e), above the \(range) your Charge of \(c) supports: let recovery lead tomorrow.")
+            case .inside: return String(localized: "The day is at Effort \(NunaMark.pos(e)), inside the \(range) your Charge of \(c) supports.")
+            case .above: return String(localized: "The day is at Effort \(NunaMark.neg(e)), above the \(range) your Charge of \(c) supports: let recovery lead tomorrow.")
             }
         case let .conditions(_, reasons):
             return workoutConditions(reasons)

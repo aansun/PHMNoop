@@ -260,7 +260,7 @@ struct NunaAnyaCard: View {
     init(verbatim: String, detail: String? = nil, progress: Double? = nil, progressColor: Color = NunaPalette.effort, buttonTitle: LocalizedStringKey? = nil, onButton: (() -> Void)? = nil,
          moreActions: [NunaAnyaCardAction] = [], action: @escaping () -> Void) {
         self.moreActions = moreActions
-        self.title = Text(verbatim: verbatim); self.line = verbatim; self.detail = detail; self.progress = progress; self.progressColor = progressColor
+        self.title = Text(verbatim: NunaMark.plain(verbatim)); self.line = verbatim; self.detail = detail; self.progress = progress; self.progressColor = progressColor
         self.buttonTitle = buttonTitle; self.onButton = onButton; self.action = action
     }
 
@@ -347,7 +347,7 @@ struct NunaAnyaCard: View {
                 .multilineTextAlignment(.leading)
                 .fixedSize(horizontal: false, vertical: true).textCase(nil)
             if let detail, !compact {
-                Text(verbatim: detail).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: NunaMark.plain(detail)).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.top, 2)
             }
             if let progress, !compact {

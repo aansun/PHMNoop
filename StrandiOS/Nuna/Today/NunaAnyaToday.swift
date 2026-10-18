@@ -178,15 +178,25 @@ struct NunaAnyaTodayCard: View {
     /// session itself is on its own screen; this keeps Anya on Today without repeating it.
     private func finishedCard(_ row: WorkoutRow, now: Date) -> some View {
         let minutesAgo = max(0, Int(now.timeIntervalSince1970 - Double(row.endTs)) / 60)
-        var parts = [NunaWorkoutFormat.duration(row.durationS ?? Double(row.endTs - row.startTs))]
-        if let s = row.strain { parts.append(String(format: String(localized: "Effort +%@"), shown(s))) }
-        parts.append(String(localized: "Your session ended \(minutesAgo) min ago"))
+        let length = NunaWorkoutFormat.duration(row.durationS ?? Double(row.endTs - row.startTs))
+        var lines: [String] = []
+        if let s = row.strain { lines.append(String(localized: "It ran \(length) and added Effort \(shown(s)).")) }
+        else { lines.append(String(localized: "It ran \(length).")) }
         if let effort {
-            if let t = target { parts.append(String(format: String(localized: "Effort %@ of %@ today"), shown(effort), targetText(t))) }
-            else { parts.append(String(format: String(localized: "Effort %@ today"), shown(effort))) }
+            // Where the day stands: inside the range Charge supports is good news, above it is not.
+            let e = shown(effort)
+            if let t = target {
+                let word = effort > t.high ? NunaMark.neg(e) : (effort >= t.low ? NunaMark.pos(e) : e)
+                lines.append(String(localized: "It ended \(minutesAgo) min ago, and the day is at Effort \(word) of \(targetText(t)).") )
+            } else {
+                lines.append(String(localized: "It ended \(minutesAgo) min ago, and the day is at Effort \(e)."))
+            }
+        } else {
+            lines.append(String(localized: "It ended \(minutesAgo) min ago."))
         }
+        let parts = lines
         let title = String(format: String(localized: "%@ done"), WorkoutSource.displaySport(row.sport))
-        return NunaAnyaCard(verbatim: title, detail: joined(parts.joined(separator: " · "), conditionsNote(for: row)), progress: progress, action: onCoach)
+        return NunaAnyaCard(verbatim: title, detail: joined(parts.joined(separator: "\n"), conditionsNote(for: row)), progress: progress, action: onCoach)
     }
 
     private func eveningCard(now: Date, bpm: Int?, hour: Int) -> some View {
