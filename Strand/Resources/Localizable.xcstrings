@@ -115,6 +115,8 @@
     "Key statistics": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Statistik utama"}}}},
     "vs. 30 day average": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "vs. rata-rata 30 hari"}}}},
     "Edit time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ubah waktu"}}}},
+    "About these figures": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tentang angka-angka ini"}}}},
+    "Effort adds up on a log scale, so two Efforts are not simply summed. Activity effort is what this session alone would score. After activity is where your day would end: the higher your Effort already is, the less the same session adds. All figures are estimates.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Effort dihitung dengan skala logaritma, jadi dua Effort tidak sekadar dijumlahkan. Effort aktivitas adalah nilai sesi ini saja. Setelah aktivitas adalah posisi hari Anda nanti: makin tinggi Effort Anda, makin sedikit tambahan dari sesi yang sama. Semua angka hanyalah perkiraan."}}}},
     "Current\neffort": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Effort\nsaat ini"}}}},
     "After activity\n(est.)": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Setelah aktivitas\n(est.)"}}}},
     "Choose your target": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pilih target Anda"}}}},

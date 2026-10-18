@@ -631,6 +631,8 @@ private struct NunaWorkoutTargetSheet: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// The card whose controls are open; the others show their value on one line.
     @State private var open: Kind?
+    /// The explanation of the figures above; off until the ? is pressed.
+    @State private var showHelp = false
     private enum Kind: Hashable { case time, distance, zone }
 
     private static let maximumDistanceKm = 60.0
@@ -653,7 +655,9 @@ private struct NunaWorkoutTargetSheet: View {
                 ScrollView {
                     VStack(spacing: 0) {
                         effortCard
-                            .padding(.top, 20).padding(.bottom, 8)
+                            .overlay(alignment: .topTrailing) { helpButton }
+                            .padding(.top, 20).padding(.bottom, showHelp ? 4 : 8)
+                        if showHelp { helpText.padding(.horizontal, NunaSpacing.screenH).padding(.bottom, 10).transition(.opacity) }
                         anyaCard
                             .padding(.horizontal, NunaSpacing.screenH).padding(.bottom, 10)
                         panel
@@ -670,6 +674,27 @@ private struct NunaWorkoutTargetSheet: View {
             if !isDistanceActivity, goal.distanceOn { goal.distanceOn = false }
             open = goal.timeOn ? .time : (goal.distanceOn ? .distance : (goal.zoneOn ? .zone : nil))
         }
+    }
+
+    // MARK: Help
+
+    private var helpButton: some View {
+        Button { withAnimation(reduceMotion ? nil : StrandMotion.gentle) { showHelp.toggle() } } label: {
+            Image(systemName: "info")
+                .font(.nuna(size: 16, weight: .bold))
+                .foregroundStyle(showHelp ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+                .frame(width: NoopButtonMetrics.minHitTarget, height: NoopButtonMetrics.minHitTarget)
+        }
+        .buttonStyle(.plain)
+        .padding(.trailing, 6)
+        .accessibilityLabel(Text("About these figures"))
+        .accessibilityAddTraits(showHelp ? .isSelected : [])
+    }
+
+    private var helpText: some View {
+        Text("Effort adds up on a log scale, so two Efforts are not simply summed. Activity effort is what this session alone would score. After activity is where your day would end: the higher your Effort already is, the less the same session adds. All figures are estimates.")
+            .font(.nuna(size: NunaTypeSize.caption + 1, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            .fixedSize(horizontal: false, vertical: true).textCase(nil)
     }
 
     // MARK: Panel (three targets, each on or off by itself)
@@ -851,7 +876,7 @@ private struct NunaWorkoutTargetSheet: View {
             let barH: CGFloat = 22, top: CGFloat = 20
             let pillW: CGFloat = 74
             // The box sits half-way along what the session adds, kept inside the screen.
-            let pillX = min(max((cur + end) / 2, pillW / 2 + 12), w - pillW / 2 - 12)
+            let pillX = min(max((cur + end) / 2, 62), w - 62)
             ZStack(alignment: .topLeading) {
                 Rectangle().fill(NunaPalette.field).frame(width: w, height: barH).offset(y: top)
                 NunaHatch(colors: nunaEffortRingColors(free ? current : after)).frame(width: max(end, 0), height: barH).offset(y: top)
@@ -860,8 +885,8 @@ private struct NunaWorkoutTargetSheet: View {
                     Rectangle().fill(NunaPalette.mapOverlayText).frame(width: 3, height: barH + 8).offset(x: max(lo - 1.5, 0), y: top - 4)
                 }
                 if let target {
-                    Text("Target").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                        .foregroundStyle(NunaPalette.charge).position(x: pillX, y: 6)
+                    Text("Activity effort").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        .foregroundStyle(NunaPalette.charge).fixedSize().position(x: pillX, y: 6)
                     Text(verbatim: target)
                         .font(.nuna(size: 18, weight: .bold, design: NunaType.design)).monospacedDigit()
                         .foregroundStyle(NunaPalette.charge)
@@ -1084,11 +1109,14 @@ private struct NunaWorkoutTargetSheet: View {
                 startRequested = true
                 dismiss()
             } label: {
-                Text(hasActiveWorkout ? "View active workout" : "Start activity")
-                    .font(.nuna(size: NunaTypeSize.h3, weight: .bold))
-                    .foregroundStyle(NunaPalette.mapOverlayText)
-                    .frame(maxWidth: .infinity, minHeight: 48)
-                    .background(NunaPalette.effortModerate, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+                HStack(spacing: 8) {
+                    Image(systemName: hasActiveWorkout ? "arrow.up.right" : "play.fill").font(.nuna(size: 14, weight: .bold))
+                    Text(hasActiveWorkout ? "View active workout" : "Start activity").font(.nuna(size: 17, weight: .heavy))
+                }
+                .foregroundStyle(NunaPalette.onAccent)
+                .frame(maxWidth: .infinity)
+                .frame(height: 56)
+                .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
             }
             .buttonStyle(.plain)
             .padding(.horizontal, NunaSpacing.screenH)
