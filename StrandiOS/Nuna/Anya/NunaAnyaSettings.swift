@@ -83,6 +83,12 @@ struct NunaAnyaSettingsView: View {
                 NunaToggleRow("Suggestion cards on each screen", subtitle: "One short card per module, always with figures", systemImage: "rectangle.on.rectangle", isOn: $cards).padding(.vertical, 8)
             }
 
+            section("What Anya reads") {
+                NavigationLink(value: NunaAnyaRoute.environment) {
+                    NunaListRow("Weather and air", subtitle: LocalizedStringKey(EnvironmentExperiment.isEnabled && EnvironmentKeyStore.hasAny ? String(localized: "On") : String(localized: "Off")), systemImage: "cloud.sun", showsChevron: true)
+                }.buttonStyle(.plain)
+            }
+
             section("Memory and history") {
                 NavigationLink(value: NunaAnyaRoute.memory) {
                     NunaListRow("Memory", subtitle: LocalizedStringKey(String(localized: "\(memory.memories.filter(\.isActive).count) active")), systemImage: "brain", showsChevron: true)

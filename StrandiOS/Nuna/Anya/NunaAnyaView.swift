@@ -13,7 +13,7 @@ enum NunaAnyaRoute: Hashable {
     case apiKey(String)          // AIProvider.rawValue
     case custom
     case chatGPT
-    case settings, memory, history, instructions, brief, voiceCoach, plan
+    case settings, memory, history, instructions, brief, voiceCoach, plan, environment
 }
 
 extension View {
@@ -31,6 +31,7 @@ extension View {
             case .brief: NunaAnyaBriefView()
             case .voiceCoach: NunaAnyaVoiceCoachView()
             case .plan: NunaAnyaPlanView()
+            case .environment: NunaEnvironmentView()
             }
         }
     }
@@ -67,6 +68,8 @@ struct NunaAnyaView: View {
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
     @StateObject private var memory = CoachMemoryStore()
     @StateObject private var voice = CoachVoiceInput()
+    /// The weather and air, when they are on: Anya's tab shows what she reads from them.
+    @ObservedObject private var environment = EnvironmentStore.shared
     @State private var keyboardUp = false
     @State private var draft = UserDefaults.standard.string(forKey: "coach.composerDraft") ?? ""
     @FocusState private var focused: Bool
@@ -266,6 +269,7 @@ struct NunaAnyaView: View {
                         }
                     }
                 }
+                outside
                 NunaTitleRow(title: "Try asking") { EmptyView() }
                 NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
                     VStack(spacing: 0) {
@@ -294,8 +298,33 @@ struct NunaAnyaView: View {
         .simultaneousGesture(TapGesture().onEnded { focused = false })
     }
 
+    /// The weather and air Anya reads for training: how it is outside and what to do about it, or the way to switch it on.
+    @ViewBuilder private var outside: some View {
+        if environment.isActive, let s = environment.snapshot, let a = environment.advice {
+            NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
+                VStack(alignment: .leading, spacing: 10) {
+                    nunaTrendsCap("Outside now")
+                    Text(verbatim: NunaEnvironmentFormat.line(s)).font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        .fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    Text(NunaMark.attributed(NunaInsightText.environment(a, s), size: 14.5)).font(.nuna(size: 14.5, weight: .semibold))
+                        .foregroundStyle(NunaPalette.textSecondary).lineSpacing(3).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    NavigationLink(value: NunaAnyaRoute.environment) {
+                        Text("Weather and air settings").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                            .foregroundStyle(NunaPalette.textSecondary).frame(minHeight: 36)
+                    }.buttonStyle(.plain)
+                }
+            }
+        } else if !environment.isEnabled {
+            NavigationLink(value: NunaAnyaRoute.environment) {
+                NunaListRow("Weather and air", description: "Let Anya read the weather and air before she suggests a session", systemImage: "cloud.sun", showsChevron: true)
+            }.buttonStyle(.plain)
+        }
+    }
+
     private struct Starter { let title: String; let subtitle: String; let prompt: String }
     private var starters: [Starter] {
+        (environment.isActive ? [Starter(title: String(localized: "Is it a good time to train outside?"), subtitle: String(localized: "From the weather and air where you are"),
+                 prompt: "Given the weather and air quality around me right now, is it a good time to train outside? Tell me what to change: the hour, the length, the intensity, or whether to move indoors.")] : []) +
         [Starter(title: String(localized: "Recommend a workout"), subtitle: String(localized: "From Charge, Effort, Rest and your goal"),
                  prompt: "Recommend the best workout for today using my Charge, Effort, Rest, recent workouts, and goal. Give the workout type, duration, target Heart Rate Zone or strength intensity, and one thing to avoid."),
          Starter(title: String(localized: "Why is my sleep short?"), subtitle: String(localized: "Compare the last 7 nights"),

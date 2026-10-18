@@ -7,6 +7,12 @@ import WhoopStore
 /// Plan card read the same plan from one function and cannot disagree about it.
 enum NunaAnyaDayContext {
 
+    /// Gives Anya the day's context with every request and the daily brief, and a fresh weather and air reading before the brief.
+    @MainActor static func install(on coach: AICoachEngine, repo: Repository, profile: ProfileStore) {
+        coach.dayContextProvider = { await build(repo: repo, profile: profile) }
+        coach.beforeBrief = { await EnvironmentStore.shared.refreshIfNeeded() }
+    }
+
     @MainActor static func build(repo: Repository, profile: ProfileStore, now: Date = Date()) async -> String {
         let days = repo.days
         let plan = await NunaDayPlanResult.load(repo: repo, profile: profile)

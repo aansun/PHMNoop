@@ -17,6 +17,7 @@ struct NunaRootView: View {
     /// The live gym session, owned at the app root. Both shells present it; this one with its own face.
     @EnvironmentObject private var liftSession: LiftSessionController
     @EnvironmentObject private var model: AppModel
+    @Environment(\.scenePhase) private var scenePhase
     @State private var sessionPresenter = NunaLiftSessionPresenter()
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     /// The theme choices. The palette reads them from UserDefaults, so a change rebuilds the tabs (the navigation paths are kept).
@@ -98,10 +99,14 @@ struct NunaRootView: View {
         }
         // Anya reads the clock, the Plan card's session, banked Effort and tonight's sleep need with every request.
         .task {
-            let repo = model.repo, profile = model.profile
-            model.coach.dayContextProvider = { await NunaAnyaDayContext.build(repo: repo, profile: profile) }
+            NunaAnyaDayContext.install(on: model.coach, repo: model.repo, profile: model.profile)
+            // The daily brief is armed (and made, if its time has passed) as soon as the app is up, not only when the Anya tab is opened.
+            CoachBriefScheduler.activateIfEnabled { await model.coach.generateBrief() }
         }
-        .onDisappear { model.coach.dayContextProvider = nil }
+        .onChange(of: scenePhase) { _, phase in
+            if phase == .active { CoachBriefScheduler.activateIfEnabled { await model.coach.generateBrief() } }
+        }
+        .onDisappear { model.coach.dayContextProvider = nil; model.coach.beforeBrief = nil }
         // A session left running by a previous launch comes back as the bar, not as a sheet thrown in the user's face.
         .task {
             guard !liftSession.isActive, let snapshot = LiftSessionPersistence.load() else { return }

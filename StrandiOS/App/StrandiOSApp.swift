@@ -126,6 +126,15 @@ struct StrandiOSApp: App {
         }, onExpire: { [weak model] in
             model?.live.append(log: "re-score: background processing time expired before the pass finished (#1538)")
         })
+        // The daily Anya brief. Without this registration the background request was never delivered, and the brief only ever came when
+        // the Anya tab was opened. A background wake has no screen up, so the brief is given the day's context for the call itself.
+        CoachBriefScheduler.register { [weak model] in
+            guard let model else { return nil }
+            let hadContext = model.coach.dayContextProvider != nil
+            if !hadContext { NunaAnyaDayContext.install(on: model.coach, repo: model.repo, profile: model.profile) }
+            defer { if !hadContext { model.coach.dayContextProvider = nil; model.coach.beforeBrief = nil } }
+            return await model.coach.generateBrief()
+        }
         let bridge = HealthKitBridge(
             repo: model.repo,
             appleDeviceId: model.appleDeviceId,

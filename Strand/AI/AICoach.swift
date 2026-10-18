@@ -720,6 +720,9 @@ final class AICoachEngine: ObservableObject {
     /// Builds the "right now" block (`AnyaDayContext`) appended to every full context. Nil outside the Nuna shell.
     var dayContextProvider: (() async -> String)?
 
+    /// Runs before the scheduled brief reads its context, so what that context draws on (the weather and air) is fresh. Set by the Nuna shell.
+    var beforeBrief: (() async -> Void)?
+
     /// Best-effort: GET the chosen provider's models endpoint with the saved key and merge the
     /// returned ids into `availableModels`. Never crashes; failures land in `errorText` and leave
     /// the existing list intact. Requires a saved key.
@@ -1332,7 +1335,8 @@ final class AICoachEngine: ObservableObject {
     a measured training direction and one thing to avoid; one recovery action; and one quiet cue to notice \
     later. Never use a numbered list. Use only the most relevant evidence, never list the whole context, and \
     keep the entire brief under 120 words. Make it feel personal and useful, not motivational or clinical. \
-    Do not add a week plan.
+    If the data has an OUTDOORS line, let it shape the training direction in a few words (go indoors, shorten, or \
+    pick a kinder hour). Do not add a week plan.
     """
 
     /// K5: Generate today's coaching brief WITHOUT touching the visible chat transcript. Used by the
@@ -1346,6 +1350,7 @@ final class AICoachEngine: ObservableObject {
         // the AI switched off.
         guard CoachBriefScheduler.coachMasterEnabled else { return nil }
         guard isConfigured, dataConsent, let key = resolvedKey else { return nil }
+        await beforeBrief?()
         let context = await buildFullContext()
         let wire: [(role: ChatMessage.Role, content: String)] =
             [(.user, context + "\n\n---\n\n" + Self.briefInstruction)]

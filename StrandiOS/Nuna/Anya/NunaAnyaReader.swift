@@ -119,9 +119,17 @@ enum NunaAnyaReader {
         if let v = m.rest { vals["rest"] = v }
         if let v = m.hrv { vals["hrv"] = v }
         if let v = m.restingHr { vals["rhr"] = v }
-        return remembering(NunaAnyaRead(headline: String(localized: "Charge \(c)%, \(tail)"),
-                                        detail: bits.isEmpty ? nil : bits.joined(separator: ". ") + ".",
-                                        read: read, module: module, questions: questions(.today)), values: vals)
+        var out = remembering(NunaAnyaRead(headline: String(localized: "Charge \(c)%, \(tail)"),
+                                           detail: bits.isEmpty ? nil : bits.joined(separator: ". ") + ".",
+                                           read: read, module: module, questions: questions(.today)), values: vals)
+        // The weather and air, when they are on: what they mean for training today, in plain words (the memory above keeps only the figures).
+        let environment = EnvironmentStore.shared
+        if environment.isActive, let s = environment.snapshot, Date().timeIntervalSince1970 - Double(s.ts) < 3 * 3600, let a = environment.advice {
+            let line = NunaMark.plain(NunaInsightText.environment(a, s, maxReasons: 1))
+            out.detail = [out.detail, line].compactMap { $0 }.joined(separator: " ")
+            out.read.append("Weather and air")
+        }
+        return out
     }
 
     // MARK: Sleep
