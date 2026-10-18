@@ -638,9 +638,9 @@ private struct NunaWorkoutTargetSheet: View {
 
     private static let maximumDistanceKm = 60.0
     private static let minimumMinutes = 30
-    private static let timePresets = [30, 45, 60, 90, 120]
-    /// In kilometres: 3, 5, 10, the half marathon and the marathon.
-    private static let distancePresets = [3.0, 5.0, 10.0, 21.0975, 42.195]
+    private static let timePresets = [30, 45, 60, 90, 120, 180]
+    /// In kilometres: 3, 5, 10, 15, the half marathon and the marathon.
+    private static let distancePresets = [3.0, 5.0, 10.0, 15.0, 21.0975, 42.195]
     private static let minimumDistanceKm = 1.0
 
     private var estimatedEffort: Double { goal.estimatedEffort }
@@ -820,29 +820,80 @@ private struct NunaWorkoutTargetSheet: View {
     }
 
     private var timeControls: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            stepper(value: "\(goal.minutes)", unit: String(localized: "min"),
-                    minus: { goal.minutes = max(Self.minimumMinutes, goal.minutes - 5) }, plus: { goal.minutes = min(300, max(Self.minimumMinutes, goal.minutes + 5)) },
-                    canMinus: goal.minutes > Self.minimumMinutes, canPlus: goal.minutes < 300)
-            presets(Self.timePresets.map { m in (m.formatted(), goal.minutes == m, { goal.minutes = m }) })
-        }
+        valuePanel(value: "\(goal.minutes)", unit: String(localized: "min"),
+                   up: { goal.minutes = min(300, max(Self.minimumMinutes, goal.minutes + 5)) },
+                   down: { goal.minutes = max(Self.minimumMinutes, goal.minutes - 5) },
+                   canUp: goal.minutes < 300, canDown: goal.minutes > Self.minimumMinutes,
+                   templates: Self.timePresets.map { m in (m.formatted(), goal.minutes == m, { goal.minutes = m }) })
     }
 
     private var distanceControls: some View {
         let shown = goal.km * perKm
         let step = shown < 10 ? 0.5 : 1.0
-        return VStack(alignment: .leading, spacing: 12) {
-            stepper(value: String(format: "%.1f", locale: AppLanguage.activeLocale, shown), unit: unit,
-                    minus: { setShown(shown - step) }, plus: { setShown(shown + step) },
-                    canMinus: shown > Self.minimumDistanceKm * perKm + 0.001, canPlus: shown < Self.maximumDistanceKm * perKm - 0.001)
-            presets(Self.distancePresets.map { km in
-                (Self.presetLabel(km * perKm), abs(goal.km - km) < 0.01, { goal.km = km })
-            })
-        }
+        return valuePanel(value: String(format: "%.1f", locale: AppLanguage.activeLocale, shown), unit: unit,
+                          up: { setShown(shown + step) }, down: { setShown(shown - step) },
+                          canUp: shown < Self.maximumDistanceKm * perKm - 0.001,
+                          canDown: shown > Self.minimumDistanceKm * perKm + 0.001,
+                          templates: Self.distancePresets.map { km in
+                              (Self.presetLabel(km * perKm), abs(goal.km - km) < 0.01, { goal.km = km })
+                          })
     }
 
     private static func presetLabel(_ value: Double) -> String {
         value.rounded() == value ? String(Int(value)) : String(format: "%.1f", value)
+    }
+
+    /// The value on the left with a triangle above to raise it and one below to lower it; on the right, six templates in two rows of three.
+    private func valuePanel(value: String, unit: String, up: @escaping () -> Void, down: @escaping () -> Void,
+                            canUp: Bool, canDown: Bool, templates: [(String, Bool, () -> Void)]) -> some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(spacing: 4) {
+                triangle("arrowtriangle.up.fill", enabled: canUp, action: up).accessibilityLabel(Text("Increase"))
+                HStack(alignment: .firstTextBaseline, spacing: 5) {
+                    Text(verbatim: value)
+                        .font(.nuna(size: 38, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(38))
+                        .foregroundStyle(NunaPalette.textPrimary).monospacedDigit().contentTransition(.numericText())
+                        .lineLimit(1).minimumScaleFactor(0.7)
+                    Text(verbatim: unit).font(.nuna(size: NunaTypeSize.sub, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                }
+                .frame(height: 44)
+                triangle("arrowtriangle.down.fill", enabled: canDown, action: down).accessibilityLabel(Text("Decrease"))
+            }
+            .frame(width: 128)
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 8) {
+                ForEach(templates.indices, id: \.self) { i in template(templates[i]) }
+            }
+            .frame(maxWidth: .infinity)
+        }
+    }
+
+    private func triangle(_ symbol: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+        Button {
+            withAnimation(reduceMotion ? nil : StrandMotion.gentle) { action() }
+            UISelectionFeedbackGenerator().selectionChanged()
+        } label: {
+            Image(systemName: symbol).font(.nuna(size: 15, weight: .bold))
+                .foregroundStyle(enabled ? NunaPalette.textPrimary : NunaPalette.textMuted)
+                .frame(maxWidth: .infinity, minHeight: 38, maxHeight: 38)
+                .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous).stroke(NunaPalette.hairline, lineWidth: 1))
+        }
+        .buttonStyle(.plain).disabled(!enabled)
+    }
+
+    private func template(_ item: (String, Bool, () -> Void)) -> some View {
+        Button {
+            withAnimation(reduceMotion ? nil : StrandMotion.gentle) { item.2() }
+            UISelectionFeedbackGenerator().selectionChanged()
+        } label: {
+            Text(verbatim: item.0).font(.nuna(size: NunaTypeSize.h3, weight: .bold, design: NunaType.design)).monospacedDigit()
+                .foregroundStyle(item.1 ? NunaPalette.effortModerate : NunaPalette.textSecondary)
+                .frame(maxWidth: .infinity, minHeight: 60, maxHeight: 60)
+                .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous).stroke(item.1 ? NunaPalette.effortModerate : NunaPalette.hairline, lineWidth: item.1 ? 1.5 : 1))
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(item.1 ? .isSelected : [])
     }
 
     /// The race the distance stands for, said beside the Goal heading so nothing below it moves.
@@ -876,52 +927,6 @@ private struct NunaWorkoutTargetSheet: View {
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(on ? .isSelected : [])
-    }
-
-    private func stepper(value: String, unit: String, minus: @escaping () -> Void, plus: @escaping () -> Void, canMinus: Bool, canPlus: Bool) -> some View {
-        HStack(spacing: 0) {
-            stepButton("minus", enabled: canMinus, action: minus).accessibilityLabel(Text("Decrease"))
-            Spacer(minLength: 8)
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(verbatim: value)
-                    .font(.nuna(size: 34, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(34))
-                    .foregroundStyle(NunaPalette.textPrimary).monospacedDigit().contentTransition(.numericText())
-                Text(verbatim: unit).font(.nuna(size: NunaTypeSize.h3, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-            }
-            Spacer(minLength: 8)
-            stepButton("plus", enabled: canPlus, action: plus).accessibilityLabel(Text("Increase"))
-        }
-        .padding(.top, 0)
-    }
-
-    private func stepButton(_ symbol: String, enabled: Bool, action: @escaping () -> Void) -> some View {
-        Button {
-            withAnimation(reduceMotion ? nil : StrandMotion.gentle) { action() }
-            UISelectionFeedbackGenerator().selectionChanged()
-        } label: {
-            Image(systemName: symbol).font(.nuna(size: 18, weight: .bold))
-                .foregroundStyle(enabled ? NunaPalette.textPrimary : NunaPalette.textMuted)
-                .frame(width: 46, height: 46).background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous).stroke(NunaPalette.hairline, lineWidth: 1))
-        }
-        .buttonStyle(.plain).disabled(!enabled)
-    }
-
-    private func presets(_ items: [(String, Bool, () -> Void)]) -> some View {
-        HStack(spacing: 8) {
-            ForEach(items.indices, id: \.self) { i in
-                Button {
-                    withAnimation(reduceMotion ? nil : StrandMotion.gentle) { items[i].2() }
-                    UISelectionFeedbackGenerator().selectionChanged()
-                } label: {
-                    Text(verbatim: items[i].0).font(.nuna(size: NunaTypeSize.sub, weight: .bold, design: NunaType.design)).monospacedDigit()
-                        .foregroundStyle(items[i].1 ? NunaPalette.effortModerate : NunaPalette.textSecondary)
-                        .frame(maxWidth: .infinity, minHeight: 34)
-                        .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).stroke(items[i].1 ? NunaPalette.effortModerate : NunaPalette.hairline, lineWidth: 1))
-                }
-                .buttonStyle(.plain)
-            }
-        }
     }
 
     // MARK: Heart-rate zone (optional, with either goal or alone)
