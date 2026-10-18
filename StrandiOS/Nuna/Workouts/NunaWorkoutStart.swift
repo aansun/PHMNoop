@@ -872,11 +872,10 @@ private struct NunaWorkoutTargetSheet: View {
             withAnimation(reduceMotion ? nil : StrandMotion.gentle) { action() }
             UISelectionFeedbackGenerator().selectionChanged()
         } label: {
-            Image(systemName: symbol).font(.nuna(size: 15, weight: .bold))
-                .foregroundStyle(enabled ? NunaPalette.textPrimary : NunaPalette.textMuted)
+            Image(systemName: symbol).font(.nuna(size: 20, weight: .bold))
+                .foregroundStyle(enabled ? NunaPalette.textPrimary : NunaPalette.textMuted.opacity(0.5))
                 .frame(maxWidth: .infinity, minHeight: 38, maxHeight: 38)
-                .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous).stroke(NunaPalette.hairline, lineWidth: 1))
+                .contentShape(Rectangle())
         }
         .buttonStyle(.plain).disabled(!enabled)
     }
