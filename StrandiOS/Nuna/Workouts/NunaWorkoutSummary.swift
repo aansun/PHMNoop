@@ -94,28 +94,23 @@ struct NunaWorkoutSummaryView: View {
         let system = UnitPrefs.resolveDistance(system: UnitSystem(rawValue: UserDefaults.standard.string(forKey: UnitPrefs.systemKey) ?? "") ?? .metric,
                                                override: UserDefaults.standard.string(forKey: UnitPrefs.distanceSystemKey) ?? "")
         let secs = r.durationS ?? Double(r.endTs - r.startTs)
-        var parts: [String] = [WorkoutSource.displaySport(r.sport) + " " + NunaWorkoutLogFigures.clock(secs)]
-        if let d = NunaWorkoutFormat.distance(r.distanceM, system) {
-            parts.append(d + (NunaWorkoutFormat.pace(distanceM: r.distanceM, seconds: secs, system).map { ", " + $0 } ?? ""))
+        let facts = WorkoutFacts(durationS: secs, distanceM: r.distanceM, avgHr: r.avgHr.map(Double.init), effort: r.strain, zoneMin: mins)
+        // The wearer's own other sessions of the sport over the last 30 days; the zone minutes are the mean of the ones that have them.
+        var baseline: WorkoutBaseline?
+        if let a = averages {
+            let others = otherSessions(r)
+            let zoneMean: [Double]? = others.count >= 2 && others.allSatisfy({ $0.count >= 5 })
+                ? (0..<5).map { z in others.map { $0[z] }.reduce(0, +) / Double(others.count) } : nil
+            baseline = WorkoutBaseline(count: a.count, durationS: a.durationS ?? secs, distanceM: a.distanceM, avgHr: a.avgHr, effort: a.effort, zoneMin: zoneMean)
         }
-        if let s = data.steps { parts.append(String(localized: "\(NunaTrendsFormat.num(Double(s))) steps")) }
-        if let k = r.energyKcal { parts.append(String(localized: "\(NunaTrendsFormat.num(k)) calories")) }
-        if let a = r.avgHr, let x = r.maxHr { parts.append(String(localized: "heart rate \(a) average, \(x) max")) }
-        else if let a = r.avgHr { parts.append(String(localized: "heart rate \(a) average")) }
-        if let e = r.strain {
-            var text = String(localized: "Effort \(UnitFormatter.effortDisplay(e, scale: scale))")
-            if let avg = averages?.effort {
-                let d = e - avg
-                text += abs(d) < max(avg * 0.08, 1) ? " (" + String(localized: "about your 30-day average") + ")"
-                    : (d > 0 ? " (" + String(localized: "above your 30-day average of \(UnitFormatter.effortDisplay(avg, scale: scale))") + ")"
-                             : " (" + String(localized: "below your 30-day average of \(UnitFormatter.effortDisplay(avg, scale: scale))") + ")")
-            }
-            parts.append(text)
+        // The day the session belongs to, against the Effort range its Charge supports.
+        var day: WorkoutDayContext?
+        if let effort = data.dayEffort, let charge = data.dayCharge, let band = CoupledView.optimalStrainRange(recovery: charge) {
+            day = WorkoutDayContext(dayEffort: effort, rangeLow: Double(band.lowerBound) / UnitFormatter.effortScaleFactor,
+                                    rangeHigh: Double(band.upperBound) / UnitFormatter.effortScaleFactor, charge: charge)
         }
-        let zone = NunaWorkoutInsight.zoneLine(mins: mins, others: otherSessions(r))
-        let detail = parts.joined(separator: " · ")
-        if let zone { return (zone, detail) }
-        return parts.count > 1 ? (detail, nil) : nil
+        guard let read = WorkoutRead.analyze(facts, baseline: baseline, day: day) else { return nil }
+        return NunaInsightText.workout(read, system: system, scale: scale)
     }
 
     // MARK: Header actions
