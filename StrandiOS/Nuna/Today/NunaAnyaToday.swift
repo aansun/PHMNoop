@@ -13,6 +13,8 @@ struct NunaAnyaTodayCard: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var router: NavRouter
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    /// The weather and air, when they are on: Anya reads them with the plan and after a session.
+    @ObservedObject private var environment = EnvironmentStore.shared
 
     let plan: NunaDayPlanResult?
     let fallbackLine: String
@@ -73,6 +75,40 @@ struct NunaAnyaTodayCard: View {
             let key = Repository.localDayKey(Date())
             journalLine = await journalSummary(day: key)
         }
+        .task { await environment.refreshIfNeeded() }
+    }
+
+    /// The weather and air now, as Anya says them for today's training: where, how it feels, the air, and what to do about it. nil while
+    /// the feature is off or the reading is more than three hours old.
+    private func outdoorNote(now: Date) -> String? {
+        guard environment.isActive, let s = environment.snapshot, now.timeIntervalSince1970 - Double(s.ts) < 3 * 3600,
+              let a = environment.advice else { return nil }
+        return NunaEnvironmentFormat.line(s) + "\n" + NunaInsightText.environment(a, s, maxReasons: 1)
+    }
+
+    /// A few words for the headline when the weather or the air is against the session, so the card says it without being opened.
+    private func outdoorTag(now: Date) -> String {
+        guard environment.isActive, let s = environment.snapshot, now.timeIntervalSince1970 - Double(s.ts) < 3 * 3600,
+              let a = environment.advice else { return "" }
+        switch a.level {
+        case .good: return ""
+        case .adjust: return " · " + String(localized: "easy outside today")
+        case .indoors: return " · " + String(localized: "better indoors today")
+        }
+    }
+
+    /// What the weather and air were while a session ran, when they were hard on the body.
+    private func conditionsNote(for row: WorkoutRow) -> String? {
+        environment.snapshot(near: (row.startTs + row.endTs) / 2).flatMap { NunaInsightText.conditionsDuring($0) }
+    }
+
+    private func joined(_ base: String?, _ extra: String?) -> String? {
+        switch (base, extra) {
+        case let (b?, e?): return b + "\n" + e
+        case let (b?, nil): return b
+        case let (nil, e?): return e
+        default: return nil
+        }
     }
 
     /// The day's journal in a sentence: what was answered yes (numbers with their value) and the mood. Nil when nothing is logged.
@@ -126,10 +162,10 @@ struct NunaAnyaTodayCard: View {
             verdictCard(v, progress: progress)
         } else if !workouts.isEmpty, let next = nextSession(after: workouts.last, hour: hourNow) {
             // 4. Earlier today, and the target is still open: the rest of it, as one more session.
-            suggestionCard(next)
+            suggestionCard(next, now: now)
         } else {
             // 5. Nothing done yet: the plan.
-            NunaAnyaCard(verbatim: plan?.title ?? fallbackLine, detail: planDetail, progress: nil,
+            NunaAnyaCard(verbatim: (plan?.title ?? fallbackLine) + outdoorTag(now: now), detail: joined(planDetail, outdoorNote(now: now)), progress: nil,
                          buttonTitle: "Start",
                          onButton: {
                              if let r = plan { router.plannedSession = .init(title: r.title, minutes: r.plan.totalMinutes, zone: r.plan.mainZone) }
@@ -150,7 +186,7 @@ struct NunaAnyaTodayCard: View {
             else { parts.append(String(format: String(localized: "Effort %@ today"), shown(effort))) }
         }
         let title = String(format: String(localized: "%@ done"), WorkoutSource.displaySport(row.sport))
-        return NunaAnyaCard(verbatim: title, detail: parts.joined(separator: " · "), progress: progress, action: onCoach)
+        return NunaAnyaCard(verbatim: title, detail: joined(parts.joined(separator: " · "), conditionsNote(for: row)), progress: progress, action: onCoach)
     }
 
     private func eveningCard(now: Date, bpm: Int?, hour: Int) -> some View {
@@ -239,7 +275,7 @@ struct NunaAnyaTodayCard: View {
         return NextSession(zone: zone, minutes: mins, effortLow: lo, effortHigh: hi, left: left, feeling: feeling)
     }
 
-    private func suggestionCard(_ n: NextSession) -> some View {
+    private func suggestionCard(_ n: NextSession, now: Date) -> some View {
         var detail = [String(format: String(localized: "%@ Effort left for today's target"), shown(n.left))]
         if let lo = n.effortLow, let hi = n.effortHigh {
             detail.append(String(format: String(localized: "about +%@–%@"), shown(lo), shown(hi)))
@@ -247,7 +283,7 @@ struct NunaAnyaTodayCard: View {
         }
         if let f = n.feeling, f == .hard { detail.append(String(localized: "You called the last one challenging, so this stays easy")) }
         let title = String(format: String(localized: "Another %d min in zone %d"), n.minutes, n.zone)
-        return NunaAnyaCard(verbatim: title, detail: detail.joined(separator: " · "), progress: nil,
+        return NunaAnyaCard(verbatim: title + outdoorTag(now: now), detail: joined(detail.joined(separator: " · "), outdoorNote(now: now)), progress: nil,
                             buttonTitle: "Start",
                             onButton: {
                                 router.plannedSession = .init(title: title, minutes: n.minutes, zone: n.zone)

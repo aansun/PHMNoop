@@ -63,6 +63,8 @@ public struct WorkoutRead: Equatable, Sendable {
         case effort(stored: Double, usualStored: Double)
         case zone(number: Int, minutes: Int, usualMinutes: Int)
         case day(DayState, dayEffort: Double, low: Double, high: Double, charge: Double)
+        /// The weather and air the session was done in, when they were hard on the body.
+        case conditions(EnvironmentAdvice.Level, reasons: [EnvironmentAdvice.Reason])
         /// Nothing stood out: the session sat on the person's own norms.
         case typical
     }
@@ -75,7 +77,8 @@ public struct WorkoutRead: Equatable, Sendable {
     static let hrMargin = 3.0
     static let sizeMargin = 0.15
 
-    public static func analyze(_ s: WorkoutFacts, baseline b: WorkoutBaseline?, day: WorkoutDayContext?) -> WorkoutRead? {
+    public static func analyze(_ s: WorkoutFacts, baseline b: WorkoutBaseline?, day: WorkoutDayContext?,
+                               conditions: EnvironmentSnapshot? = nil) -> WorkoutRead? {
         var ranked: [(score: Double, finding: Finding)] = []
 
         if let b, b.count >= 2 {
@@ -115,6 +118,11 @@ public struct WorkoutRead: Equatable, Sendable {
             let state: DayState = day.dayEffort < day.rangeLow ? .below : (day.dayEffort <= day.rangeHigh ? .inside : .above)
             // The day is worth a line when it ended outside the range, and is a closing line when it is the only thing to say.
             ranked.append((state == .inside ? 20 : 45, .day(state, dayEffort: day.dayEffort, low: day.rangeLow, high: day.rangeHigh, charge: day.charge)))
+        }
+
+        // Heat, bad air or a storm explain a heart rate that ran high, so they rank right behind the pace-against-heart-rate finding.
+        if let conditions, let advice = EnvironmentAdvice.analyze(conditions), advice.level != .good, !advice.reasons.isEmpty {
+            ranked.append((advice.level == .indoors ? 80 : 70, .conditions(advice.level, reasons: advice.reasons)))
         }
 
         ranked.sort { $0.score > $1.score }

@@ -7,6 +7,82 @@ import WhoopStore
 /// what to do about it; none of them restates what the screen already shows. Everything is localised through the string catalog.
 enum NunaInsightText {
 
+    // MARK: Weather and air
+
+    static func degrees(_ c: Double) -> String { "\(Int(c.rounded()))°" }
+
+    static func clockHour(_ ts: Int) -> String {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("HH:mm")
+        return f.string(from: Date(timeIntervalSince1970: TimeInterval(ts)))
+    }
+
+    static func airWord(_ band: AirQuality.Band) -> String {
+        switch band {
+        case .good: return String(localized: "good")
+        case .moderate: return String(localized: "moderate")
+        case .unhealthyForSensitive: return String(localized: "unhealthy for sensitive groups")
+        case .unhealthy: return String(localized: "unhealthy")
+        case .veryUnhealthy: return String(localized: "very unhealthy")
+        case .hazardous: return String(localized: "hazardous")
+        }
+    }
+
+    /// The reasons that matter most come first: a storm or a dangerous heat before a gust of wind.
+    private static func severity(_ r: EnvironmentAdvice.Reason) -> Int {
+        switch r {
+        case .storm: return 0
+        case .veryHot: return 1
+        case .air(_, let b): return b >= .unhealthy ? 2 : 6
+        case .freezing: return 3
+        case .hot: return 4
+        case .rain: return 5
+        case .cold: return 7
+        case .wind: return 8
+        }
+    }
+
+    private static func reasonSentence(_ r: EnvironmentAdvice.Reason) -> String {
+        switch r {
+        case .storm: return String(localized: "A thunderstorm is around: train indoors.")
+        case .veryHot(let t): return String(localized: "It feels like \(degrees(t)): too hot for hard work outside. Train indoors, or after sunset.")
+        case .hot(let t): return String(localized: "It feels like \(degrees(t)): keep it shorter and easier, drink early and stay in the shade.")
+        case .cold(let t): return String(localized: "It feels like \(degrees(t)): warm up longer and cover your hands and ears.")
+        case .freezing(let t): return String(localized: "It feels like \(degrees(t)): dangerously cold outside, train indoors.")
+        case .air(let aqi, let band):
+            return band >= .unhealthy
+                ? String(localized: "Air quality is \(aqi), \(airWord(band)): skip training outside and do an indoor session.")
+                : String(localized: "Air quality is \(aqi), \(airWord(band)): keep it short and easy, and go indoors if your chest feels tight.")
+        case .rain: return String(localized: "It is wet: grip is poor and you cool fast, so a shorter route or an indoor session is smarter.")
+        case .wind: return String(localized: "Strong wind: expect a slower pace into it.")
+        }
+    }
+
+    /// What the weather and air mean for training now: the two reasons that matter most and, when it is hot, a kinder hour.
+    static func environment(_ a: EnvironmentAdvice, _ s: EnvironmentSnapshot, maxReasons: Int = 2) -> String {
+        var parts: [String] = []
+        if a.reasons.isEmpty {
+            parts.append(String(localized: "Good conditions to train outside."))
+            if let aqi = s.usAqi, AirQuality.band(usAqi: aqi) == .moderate {
+                parts.append(String(localized: "The air is moderate: fine for most, easy does it if you are sensitive."))
+            }
+        } else {
+            parts += a.reasons.sorted { severity($0) < severity($1) }.prefix(maxReasons).map(reasonSentence)
+        }
+        if let c = a.cooler {
+            parts.append(String(localized: "Around \(clockHour(c.ts)) it should feel like \(degrees(c.feelsLikeC)): a better time to go."))
+        }
+        return parts.joined(separator: " ")
+    }
+
+    /// One short line for the places that have no room for more, only when the conditions are not good.
+    static func environmentShort(_ a: EnvironmentAdvice, _ s: EnvironmentSnapshot) -> String? {
+        switch a.level {
+        case .good: return nil
+        case .adjust: return String(localized: "Outside is not ideal: go shorter and easier.")
+        case .indoors: return String(localized: "Outside is poor today: train indoors.")
+        }
+    }
+
     // MARK: Workout
 
     private static func paceText(_ secPerKm: Double, _ system: UnitSystem) -> String {
@@ -20,6 +96,32 @@ enum NunaInsightText {
     static func workout(_ r: WorkoutRead, system: UnitSystem, scale: EffortScale) -> (headline: String, detail: String?) {
         let detail = r.more.map { workoutFinding($0, system: system, scale: scale) }.joined(separator: " ")
         return (workoutFinding(r.headline, system: system, scale: scale), detail.isEmpty ? nil : detail)
+    }
+
+    /// The weather and air a session was done in, as Anya says it on Today after the session; nil when they were fine or unknown.
+    static func conditionsDuring(_ s: EnvironmentSnapshot) -> String? {
+        guard let a = EnvironmentAdvice.analyze(s), a.level != .good, !a.reasons.isEmpty else { return nil }
+        return workoutConditions(a.reasons)
+    }
+
+    /// The conditions a session was done in, when they were hard on the body, and what that does to a heart rate.
+    private static func workoutConditions(_ reasons: [EnvironmentAdvice.Reason]) -> String {
+        var facts: [String] = []
+        var heatOrAir = false
+        for r in reasons.sorted(by: { severity($0) < severity($1) }).prefix(3) {
+            switch r {
+            case .veryHot(let t), .hot(let t): facts.append(String(localized: "it felt like \(degrees(t))")); heatOrAir = true
+            case .air(let aqi, _): facts.append(String(localized: "the air quality was \(aqi)")); heatOrAir = true
+            case .cold(let t), .freezing(let t): facts.append(String(localized: "it felt like \(degrees(t))"))
+            case .storm: facts.append(String(localized: "there was a storm around"))
+            case .rain: facts.append(String(localized: "it was wet"))
+            case .wind: facts.append(String(localized: "the wind was strong"))
+            }
+        }
+        let list = facts.joined(separator: ", ")
+        return heatOrAir
+            ? String(localized: "Conditions were hard on you: \(list). Your heart rate runs higher in them for the same pace, so judge this session by effort, not by pace.")
+            : String(localized: "Conditions were against you: \(list). Read the pace with that in mind.")
     }
 
     private static func workoutFinding(_ f: WorkoutRead.Finding, system: UnitSystem, scale: EffortScale) -> String {
@@ -56,6 +158,8 @@ enum NunaInsightText {
             case .inside: return String(localized: "The day is at Effort \(e), inside the \(range) your Charge of \(c) supports.")
             case .above: return String(localized: "The day is at Effort \(e), above the \(range) your Charge of \(c) supports: let recovery lead tomorrow.")
             }
+        case let .conditions(_, reasons):
+            return workoutConditions(reasons)
         case .typical:
             return String(localized: "This session sat right on your 30-day norms: about the same length, Effort and zones as usual.")
         }
