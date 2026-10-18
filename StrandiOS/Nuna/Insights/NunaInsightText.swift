@@ -7,6 +7,60 @@ import WhoopStore
 /// what to do about it; none of them restates what the screen already shows. Everything is localised through the string catalog.
 enum NunaInsightText {
 
+    // MARK: Workout
+
+    private static func paceText(_ secPerKm: Double, _ system: UnitSystem) -> String {
+        let per = system == .imperial ? secPerKm * 1.609344 : secPerKm
+        let s = Int(per.rounded())
+        return String(format: "%d:%02d /%@", s / 60, s % 60, system == .imperial ? "mi" : "km")
+    }
+
+    /// What a session means against the wearer's own last 30 days of the sport and the day it sits in: a headline and, when there is more
+    /// to say, the next findings after it.
+    static func workout(_ r: WorkoutRead, system: UnitSystem, scale: EffortScale) -> (headline: String, detail: String?) {
+        let detail = r.more.map { workoutFinding($0, system: system, scale: scale) }.joined(separator: " ")
+        return (workoutFinding(r.headline, system: system, scale: scale), detail.isEmpty ? nil : detail)
+    }
+
+    private static func workoutFinding(_ f: WorkoutRead.Finding, system: UnitSystem, scale: EffortScale) -> String {
+        switch f {
+        case let .efficiency(kind, pace, usual, hr):
+            let now = paceText(pace, system), was = paceText(usual, system), gap = Int(abs(hr).rounded())
+            switch kind {
+            case .fasterLowerHr: return String(localized: "Faster than your 30-day usual, \(now) against \(was), and at a heart rate \(gap) bpm lower: your fitness is showing.")
+            case .fasterSameHr: return String(localized: "Faster than your 30-day usual, \(now) against \(was), at about the same heart rate.")
+            case .fasterHigherHr: return String(localized: "Faster than your 30-day usual, \(now) against \(was), but at a heart rate \(gap) bpm higher: you pushed harder for it.")
+            case .slowerLowerHr: return String(localized: "Slower than your 30-day usual, \(now) against \(was), at a heart rate \(gap) bpm lower: an easier day.")
+            case .slowerSameHr: return String(localized: "Slower than your 30-day usual, \(now) against \(was), at about the same heart rate.")
+            case .slowerHigherHr: return String(localized: "Slower than your 30-day usual, \(now) against \(was), and at a heart rate \(gap) bpm higher: tiredness, heat or little recovery can do that.")
+            case .samePaceLowerHr: return String(localized: "Your usual pace took a heart rate \(gap) bpm lower than usual: your body is handling it better.")
+            case .samePaceHigherHr: return String(localized: "Your usual pace cost \(gap) bpm more than usual: a sign you are not fully recovered.")
+            }
+        case let .duration(minutes, usual):
+            let m = Int(minutes.rounded()), u = Int(usual.rounded())
+            return minutes > usual ? String(localized: "Longer than your usual \(u) min: this one ran \(m) min.")
+                                   : String(localized: "Shorter than your usual \(u) min: this one ran \(m) min.")
+        case let .effort(stored, usual):
+            let e = UnitFormatter.effortDisplay(stored, scale: scale), u = UnitFormatter.effortDisplay(usual, scale: scale)
+            return stored > usual ? String(localized: "A heavier session than most: Effort \(e) against your 30-day average of \(u).")
+                                  : String(localized: "A lighter session than most: Effort \(e) against your 30-day average of \(u).")
+        case let .zone(number, minutes, usual):
+            return minutes > usual ? String(localized: "You spent \(minutes) min in zone \(number); your usual is \(usual) min, so this one ran harder.")
+                                   : String(localized: "You spent \(minutes) min in zone \(number); your usual is \(usual) min, so this one was lighter.")
+        case let .day(state, effort, low, high, charge):
+            let e = UnitFormatter.effortDisplay(effort, scale: scale)
+            let range = UnitFormatter.effortDisplay(low, scale: scale) + "–" + UnitFormatter.effortDisplay(high, scale: scale)
+            let c = Int(charge.rounded())
+            switch state {
+            case .below: return String(localized: "The day is at Effort \(e), under the \(range) your Charge of \(c) supports: there is room for more.")
+            case .inside: return String(localized: "The day is at Effort \(e), inside the \(range) your Charge of \(c) supports.")
+            case .above: return String(localized: "The day is at Effort \(e), above the \(range) your Charge of \(c) supports: let recovery lead tomorrow.")
+            }
+        case .typical:
+            return String(localized: "This session sat right on your 30-day norms: about the same length, Effort and zones as usual.")
+        }
+    }
+
     // MARK: Sleep
 
     static func duration(_ minutes: Int) -> String {

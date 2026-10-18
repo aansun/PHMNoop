@@ -15,6 +15,8 @@ final class NunaWorkoutDetailData: ObservableObject {
     @Published var zoneMin: [Double]?
     @Published var route: [RouteMath.LatLng] = []
     @Published var dayEffort: Double?
+    /// The Charge of the day the session belongs to.
+    @Published var dayCharge: Double?
     /// The stored count, otherwise the same calibrated WHOOP / phone resolver used by the live screen.
     @Published var steps: Int?
 
@@ -30,6 +32,7 @@ final class NunaWorkoutDetailData: ObservableObject {
         }
         let k = Repository.localDayKey(Date(timeIntervalSince1970: TimeInterval(startTs)))
         dayEffort = repo.days.first { $0.day == k }?.strain
+        dayCharge = repo.days.first { $0.day == k }?.recovery
     }
 }
 

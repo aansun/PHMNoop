@@ -14,11 +14,14 @@ import WhoopStore
 /// of one is the session itself.
 struct NunaWorkoutAverages {
     let effort: Double?, durationS: Double?, kcal: Double?, avgHr: Double?, maxHr: Double?, distanceM: Double?, steps: Double?
+    /// How many other sessions of the sport the averages are taken from.
+    let count: Int
 
     init?(for row: WorkoutRow, in rows: [WorkoutRow]) {
         let from = row.startTs - 30 * 86_400
         let others = rows.filter { $0.sport == row.sport && $0.startTs != row.startTs && $0.startTs >= from && $0.startTs < row.startTs }
         guard others.count >= 2 else { return nil }
+        count = others.count
         func mean(_ v: [Double]) -> Double? { v.isEmpty ? nil : v.reduce(0, +) / Double(v.count) }
         effort = mean(others.compactMap(\.strain))
         durationS = mean(others.map { $0.durationS ?? Double($0.endTs - $0.startTs) })
@@ -48,7 +51,7 @@ private struct NunaAveragePill: View {
 
 // MARK: - Header
 
-/// When it ran and where it came from, under the screen title (the sport's symbol sits beside the title).
+/// When it ran, under the screen title (the sport's symbol sits beside the title).
 struct NunaWorkoutLogHeader: View {
     let row: WorkoutRow
     var body: some View {
@@ -56,7 +59,6 @@ struct NunaWorkoutLogHeader: View {
             Text(verbatim: NunaWorkoutFormat.day(row.startTs) + " · " + NunaWorkoutFormat.clock(row.startTs) + " – " + NunaWorkoutFormat.clock(row.endTs))
                 .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
             Spacer(minLength: 8)
-            NunaChip(NunaWorkoutSourceLabel.label(row.source))
         }
     }
 }
@@ -150,12 +152,31 @@ struct NunaWorkoutHRArea: View {
                     ctx.stroke(line, with: .color(NunaPalette.effortModerate.opacity(lit ? 0.3 : 1)), style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round))
                     if let zone = highlightZone, let zoneSet {
                         let color = NunaWorkoutLogZones.colors[min(max(zone, 1), 5) - 1]
-                        for i in 0..<(pts.count - 1) where pts[i + 1].ts - pts[i].ts <= 300 && zoneSet.zoneNumber(forBPM: pts[i].bpm) == zone {
-                            let a = pt(pts[i]), b = pt(pts[i + 1])
-                            var band = Path(); band.addRect(CGRect(x: a.x, y: 0, width: max(b.x - a.x, 1.5), height: size.height))
-                            ctx.fill(band, with: .color(color.opacity(0.22)))
-                            var seg = Path(); seg.move(to: a); seg.addLine(to: b)
-                            ctx.stroke(seg, with: .color(color), style: StrokeStyle(lineWidth: 3.4, lineCap: .round))
+                        // The stretches spent in the zone, broken wherever the heart rate left it (or a gap in the readings): each one
+                        // is the area under the curve itself, so the colour follows the line instead of standing in columns over it.
+                        var runs: [[CGPoint]] = []
+                        var current: [CGPoint] = []
+                        for i in pts.indices {
+                            let inZone = zoneSet.zoneNumber(forBPM: pts[i].bpm) == zone
+                            let gap = i > 0 && pts[i].ts - pts[i - 1].ts > 300
+                            if inZone, !gap { current.append(pt(pts[i])) }
+                            else {
+                                if current.count >= 2 { runs.append(current) }
+                                current = inZone ? [pt(pts[i])] : []
+                            }
+                        }
+                        if current.count >= 2 { runs.append(current) }
+                        for run in runs {
+                            var fill = Path()
+                            fill.move(to: CGPoint(x: run[0].x, y: size.height))
+                            for q in run { fill.addLine(to: q) }
+                            fill.addLine(to: CGPoint(x: run[run.count - 1].x, y: size.height))
+                            fill.closeSubpath()
+                            ctx.fill(fill, with: .linearGradient(Gradient(colors: [color.opacity(0.55), color.opacity(0.12)]),
+                                                                 startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
+                            var seg = Path(); seg.move(to: run[0])
+                            for q in run.dropFirst() { seg.addLine(to: q) }
+                            ctx.stroke(seg, with: .color(color), style: StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round))
                         }
                     }
                     // The start and the end of the session as dashed marks.
