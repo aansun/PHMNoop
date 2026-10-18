@@ -800,7 +800,8 @@ private struct NunaWorkoutTargetSheet: View {
 
     // MARK: Effort
 
-    /// Effort now, what the target adds and where the day would end, against the range that suits today.
+    /// Effort now, the target and the day after it, on the sheet with no card behind them; the range that suits today is a dashed
+    /// bracket under the bar. The After figure takes the colour of where the day would end against that range.
     private var effortCard: some View {
         let day = dayEffort ?? 0
         let sex = UserDefaults.standard.string(forKey: "profile.sex") ?? ""
@@ -810,77 +811,63 @@ private struct NunaWorkoutTargetSheet: View {
         let band = CoupledView.optimalStrainRange(recovery: charge).map {
             (Double($0.lowerBound) / UnitFormatter.effortScaleFactor)...(Double($0.upperBound) / UnitFormatter.effortScaleFactor)
         }
-        let verdict: (text: String, color: Color)? = free ? nil : band.map { b in
-            after < b.lowerBound ? (String(localized: "Room for more"), NunaPalette.textSecondary)
-                : (after <= b.upperBound ? (String(localized: "Right for today"), NunaPalette.charge)
-                   : (String(localized: "More than today needs"), NunaPalette.warning))
-        }
-        let debt = (sleepDebtMin ?? 0) >= 60 ? sleepDebtMin : nil
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 9) {
-                HStack(alignment: .top, spacing: 8) {
-                    stat("Effort", dayEffort.map(effortNumber) ?? "–")
-                    stat("Target", free ? "–" : effortNumber(estimatedEffort), color: NunaPalette.effortModerate)
-                    stat("After (est.)", free ? "–" : effortNumber(after))
-                }
-                effortBar(current: day, after: after, band: band, free: free)
-                HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    RoundedRectangle(cornerRadius: 3, style: .continuous).stroke(NunaPalette.charge.opacity(band == nil ? 0.3 : 1), lineWidth: 2).frame(width: 16, height: 10)
-                    Text("Optimal today").font(.nuna(size: NunaTypeSize.sub, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                    Spacer(minLength: 6)
-                    Text(verbatim: band.map { "\(effortNumber($0.lowerBound))–\(effortNumber($0.upperBound))" } ?? "–")
-                        .font(.nuna(size: NunaTypeSize.h3, weight: .bold, design: NunaType.design)).monospacedDigit()
-                        .foregroundStyle(NunaPalette.textPrimary)
-                }
-                if let verdict {
-                    HStack(spacing: 8) {
-                        Text(verbatim: verdict.text).font(.nuna(size: NunaTypeSize.sub, weight: .bold)).foregroundStyle(verdict.color)
-                        if let debt, let band, after >= band.lowerBound {
-                            Text(verbatim: String(localized: "Sleep debt \(Self.hoursText(debt))"))
-                                .font(.nuna(size: NunaTypeSize.caption, weight: .semibold)).foregroundStyle(NunaPalette.warning)
-                        }
-                    }
-                } else if band == nil {
-                    Text(free ? "Pick a target below" : "No Charge for today yet")
-                        .font(.nuna(size: NunaTypeSize.caption, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
-                }
+        let afterColor: Color = {
+            guard !free, let b = band else { return NunaPalette.textPrimary }
+            return after < b.lowerBound ? NunaPalette.textPrimary : (after <= b.upperBound ? NunaPalette.charge : NunaPalette.warning)
+        }()
+        return VStack(spacing: 14) {
+            HStack(alignment: .top, spacing: 8) {
+                stat("Effort", dayEffort.map(effortNumber) ?? "–")
+                stat("Target", free ? "–" : effortNumber(estimatedEffort), color: NunaPalette.effortModerate)
+                stat("After (est.)", free ? "–" : effortNumber(after), color: afterColor)
             }
+            effortBar(current: day, after: after, band: band, free: free)
         }
         .animation(reduceMotion ? nil : StrandMotion.gentle, value: estimatedEffort)
     }
 
-    /// 0–100: what the day already holds, what the session adds on top of it, and the range Charge supports behind both.
+    /// 0–100: what the day already holds and what the session adds on top of it, with a dashed bracket and the range beneath.
     private func effortBar(current: Double, after: Double, band: ClosedRange<Double>?, free: Bool) -> some View {
         GeometryReader { geo in
             let w = geo.size.width
             let unit = w / 100
-            let bandStart = (band?.lowerBound ?? 0).clamped(0, 100) * unit
-            let bandWidth = band.map { max(($0.upperBound.clamped(0, 100) - $0.lowerBound.clamped(0, 100)) * unit, 6) } ?? 0
-            ZStack(alignment: .leading) {
+            let lo = (band?.lowerBound ?? 0).clamped(0, 100) * unit
+            let hi = (band?.upperBound ?? 0).clamped(0, 100) * unit
+            ZStack(alignment: .topLeading) {
                 ZStack(alignment: .leading) {
                     Rectangle().fill(NunaPalette.field)
                     Rectangle().fill(NunaPalette.effortModerate).frame(width: free ? 0 : max(after.clamped(0, 100) * unit, 6))
                     Rectangle().fill(NunaPalette.effortMinimal).frame(width: current > 0 ? max(current.clamped(0, 100) * unit, 6) : 0)
                 }
-                .frame(height: 10).clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
-                // The range that suits today is a green bracket around the bar, so it shows over the fill.
-                if band != nil {
-                    RoundedRectangle(cornerRadius: 5, style: .continuous).stroke(NunaPalette.charge, lineWidth: 2).frame(width: bandWidth, height: 18).offset(x: bandStart)
+                .frame(height: 8).clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
+                if let band {
+                    // Bracket: a tick up at each end of the range and a dashed line between them, the range said on the line.
+                    Canvas { ctx, size in
+                        var p = Path()
+                        p.move(to: CGPoint(x: lo, y: 14)); p.addLine(to: CGPoint(x: lo, y: 30))
+                        p.addLine(to: CGPoint(x: hi, y: 30)); p.addLine(to: CGPoint(x: hi, y: 14))
+                        ctx.stroke(p, with: .color(NunaPalette.charge), style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round, dash: [4, 3]))
+                    }
+                    .frame(height: 34)
+                    Text(verbatim: "\(effortNumber(band.lowerBound))–\(effortNumber(band.upperBound))")
+                        .font(.nuna(size: NunaTypeSize.caption, weight: .bold, design: NunaType.design)).monospacedDigit()
+                        .foregroundStyle(NunaPalette.charge)
+                        .padding(.horizontal, 6).background(NunaPalette.canvas)
+                        .position(x: (lo + hi) / 2, y: 30)
                 }
             }
-            .frame(height: 18)
         }
-        .frame(height: 18)
+        .frame(height: band == nil ? 8 : 38)
     }
 
     private func stat(_ label: LocalizedStringKey, _ value: String, color: Color = NunaPalette.textPrimary) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text(label).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                .foregroundStyle(NunaPalette.textMuted).lineLimit(1).minimumScaleFactor(0.7)
-            Text(verbatim: value).font(.nuna(size: 28, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(28))
+        VStack(spacing: 4) {
+            Text(verbatim: value).font(.nuna(size: 34, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(34))
                 .foregroundStyle(color).monospacedDigit().contentTransition(.numericText())
+            Text(label).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                .foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.7)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
+        .frame(maxWidth: .infinity)
     }
 
     private static func hoursText(_ minutes: Double) -> String {
