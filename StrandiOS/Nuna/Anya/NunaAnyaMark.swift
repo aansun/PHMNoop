@@ -27,7 +27,7 @@ enum NunaMark {
     }
 
     /// The text with the marked parts in a colour and a little heavier.
-    static func attributed(_ s: String) -> AttributedString {
+    static func attributed(_ s: String, size: CGFloat = 17) -> AttributedString {
         var out = AttributedString()
         var rest = Substring(s)
         while let open = rest.range(of: "⟦") {
@@ -36,7 +36,7 @@ enum NunaMark {
             guard let sign = after.first, let close = after.range(of: "⟧") else { out += AttributedString(String(rest[open.lowerBound...])); return out }
             var piece = AttributedString(String(after[after.index(after.startIndex, offsetBy: 1)..<close.lowerBound]))
             piece.foregroundColor = sign == "+" ? NunaPalette.charge : NunaPalette.warning
-            piece.font = .nuna(size: 17, weight: .heavy)
+            piece.font = .nuna(size: size, weight: .heavy)
             out += piece
             rest = after[close.upperBound...]
         }
