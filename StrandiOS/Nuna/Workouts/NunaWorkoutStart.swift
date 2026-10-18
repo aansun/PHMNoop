@@ -654,10 +654,12 @@ private struct NunaWorkoutTargetSheet: View {
             NunaDivider()
             GeometryReader { geo in
                 ScrollView {
-                    VStack(spacing: 16) {
+                    VStack(spacing: 0) {
                         effortCard
-                        goalSection
+                        goalSection.padding(.top, 22)
+                        NunaDivider().padding(.vertical, 20)
                         zoneSection
+                        NunaDivider().padding(.vertical, 20)
                         anyaCard
                     }
                     .padding(.horizontal, NunaSpacing.screenH)
@@ -731,7 +733,7 @@ private struct NunaWorkoutTargetSheet: View {
                 }
                 effortBar(current: day, after: after, band: band, free: free)
                 HStack(alignment: .firstTextBaseline, spacing: 8) {
-                    Capsule().stroke(NunaPalette.charge.opacity(band == nil ? 0.3 : 1), lineWidth: 2).frame(width: 16, height: 10)
+                    RoundedRectangle(cornerRadius: 3, style: .continuous).stroke(NunaPalette.charge.opacity(band == nil ? 0.3 : 1), lineWidth: 2).frame(width: 16, height: 10)
                         .alignmentGuide(.firstTextBaseline) { $0[.bottom] }
                     Text("Optimal today").font(.nuna(size: NunaTypeSize.sub, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     Spacer(minLength: 6)
@@ -765,14 +767,14 @@ private struct NunaWorkoutTargetSheet: View {
             let bandWidth = band.map { max(($0.upperBound.clamped(0, 100) - $0.lowerBound.clamped(0, 100)) * unit, 6) } ?? 0
             ZStack(alignment: .leading) {
                 ZStack(alignment: .leading) {
-                    Capsule().fill(NunaPalette.field)
-                    Capsule().fill(NunaPalette.effortModerate).frame(width: free ? 0 : max(after.clamped(0, 100) * unit, 6))
-                    Capsule().fill(NunaPalette.effortMinimal).frame(width: current > 0 ? max(current.clamped(0, 100) * unit, 6) : 0)
+                    Rectangle().fill(NunaPalette.field)
+                    Rectangle().fill(NunaPalette.effortModerate).frame(width: free ? 0 : max(after.clamped(0, 100) * unit, 6))
+                    Rectangle().fill(NunaPalette.effortMinimal).frame(width: current > 0 ? max(current.clamped(0, 100) * unit, 6) : 0)
                 }
-                .frame(height: 10).clipShape(Capsule())
+                .frame(height: 10).clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                 // The range that suits today is a green bracket around the bar, so it shows over the fill.
                 if band != nil {
-                    Capsule().stroke(NunaPalette.charge, lineWidth: 2).frame(width: bandWidth, height: 18).offset(x: bandStart)
+                    RoundedRectangle(cornerRadius: 5, style: .continuous).stroke(NunaPalette.charge, lineWidth: 2).frame(width: bandWidth, height: 18).offset(x: bandStart)
                 }
             }
             .frame(height: 18)
@@ -869,7 +871,8 @@ private struct NunaWorkoutTargetSheet: View {
             }
             .foregroundStyle(on ? NunaPalette.mapOverlayText : NunaPalette.textSecondary)
             .frame(maxWidth: .infinity, minHeight: 40)
-            .background(on ? NunaPalette.effortModerate : NunaPalette.field, in: Capsule())
+            .background(on ? NunaPalette.effortModerate : NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous).stroke(on ? .clear : NunaPalette.hairline, lineWidth: 1))
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(on ? .isSelected : [])
@@ -898,7 +901,8 @@ private struct NunaWorkoutTargetSheet: View {
         } label: {
             Image(systemName: symbol).font(.nuna(size: 18, weight: .bold))
                 .foregroundStyle(enabled ? NunaPalette.textPrimary : NunaPalette.textMuted)
-                .frame(width: 46, height: 46).background(NunaPalette.field, in: Circle())
+                .frame(width: 46, height: 46).background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous).stroke(NunaPalette.hairline, lineWidth: 1))
         }
         .buttonStyle(.plain).disabled(!enabled)
     }
@@ -913,7 +917,7 @@ private struct NunaWorkoutTargetSheet: View {
                     Text(verbatim: items[i].0).font(.nuna(size: NunaTypeSize.sub, weight: .bold, design: NunaType.design)).monospacedDigit()
                         .foregroundStyle(items[i].1 ? NunaPalette.effortModerate : NunaPalette.textSecondary)
                         .frame(maxWidth: .infinity, minHeight: 34)
-                        .overlay(Capsule().stroke(items[i].1 ? NunaPalette.effortModerate : NunaPalette.hairline, lineWidth: 1))
+                        .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).stroke(items[i].1 ? NunaPalette.effortModerate : NunaPalette.hairline, lineWidth: 1))
                 }
                 .buttonStyle(.plain)
             }
@@ -957,8 +961,8 @@ private struct NunaWorkoutTargetSheet: View {
             }
             .foregroundStyle(on ? NunaHeartBeat.inkColor(zone: z, hasReading: true) : color)
             .frame(maxWidth: .infinity, minHeight: 56)
-            .background(on ? color : NunaPalette.field, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(on ? .clear : color.opacity(0.35), lineWidth: 1))
+            .background(on ? color : NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous).stroke(on ? .clear : color.opacity(0.35), lineWidth: 1))
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text("Zone \(z)"))
@@ -992,7 +996,7 @@ private struct NunaWorkoutTargetSheet: View {
                             UISelectionFeedbackGenerator().selectionChanged()
                         } label: {
                             Text("Use").font(.nuna(size: NunaTypeSize.sub, weight: .bold)).foregroundStyle(NunaPalette.mapOverlayText)
-                                .padding(.horizontal, 16).frame(height: 32).background(NunaPalette.effortModerate, in: Capsule())
+                                .padding(.horizontal, 16).frame(height: 34).background(NunaPalette.effortModerate, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                         }
                         .buttonStyle(.plain)
                     }
