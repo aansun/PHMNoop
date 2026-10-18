@@ -519,6 +519,7 @@ extension NunaWorkoutLocationPreview: @preconcurrency CLLocationManagerDelegate 
 private struct NunaWorkoutStartSettings: View {
     @Binding var zoneBuzz: Bool
     @Environment(\.dismiss) private var dismiss
+    @AppStorage(AudioCoachingPreferences.enabledKey) private var audioCoachOn = false
 
     var body: some View {
         NavigationStack {
@@ -541,6 +542,16 @@ private struct NunaWorkoutStartSettings: View {
                             .tint(NunaPalette.charge)
                     }
                 }
+                // The spoken cues have their own screen; this is the way to it from here.
+                NavigationLink {
+                    NunaAnyaVoiceCoachView()
+                } label: {
+                    NunaCard(small: true) {
+                        NunaListRow("Audio coach", subtitle: LocalizedStringKey(audioCoachOn ? String(localized: "On") : String(localized: "Off")),
+                                    systemImage: "speaker.wave.2", showsChevron: true)
+                    }
+                }
+                .buttonStyle(.plain)
                 Spacer()
             }
             .padding(.horizontal, NunaSpacing.screenH)
