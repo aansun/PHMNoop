@@ -131,7 +131,7 @@ struct NunaWorkoutStartView: View {
                 router.plannedSession = nil
                 planned = p
                 goal.zoneOn = true; goal.zone = min(max(p.zone, 1), 5)
-                goal.primary = .time; goal.minutes = max(5, min(p.minutes, 300))
+                goal.primary = .time; goal.minutes = max(30, min(Int((Double(p.minutes) / 5).rounded()) * 5, 300))
                 lastGoal = goal
             }
             if let s = planned?.sport, let match = WorkoutCatalog.sport(named: s) { chosen = match.name }
@@ -820,7 +820,7 @@ private struct NunaWorkoutTargetSheet: View {
     private var timeControls: some View {
         VStack(alignment: .leading, spacing: 12) {
             stepper(value: "\(goal.minutes)", unit: String(localized: "min"),
-                    minus: { goal.minutes = max(Self.minimumMinutes, goal.minutes - 5) }, plus: { goal.minutes = min(300, goal.minutes + 5) },
+                    minus: { goal.minutes = max(Self.minimumMinutes, goal.minutes - 5) }, plus: { goal.minutes = min(300, max(Self.minimumMinutes, goal.minutes + 5)) },
                     canMinus: goal.minutes > Self.minimumMinutes, canPlus: goal.minutes < 300)
             presets(Self.timePresets.map { m in (m.formatted(), goal.minutes == m, { goal.minutes = m }) })
         }
