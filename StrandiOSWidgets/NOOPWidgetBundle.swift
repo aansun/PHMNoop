@@ -11,6 +11,7 @@ struct NOOPWidgetBundle: WidgetBundle {
         NunaVitalWidget()
         NunaAnyaWidget()
         NunaStepsWidget()
+        NunaStepsWeekWidget()
         PHMNRingsWidget()
         NOOPRing2Widget()
         NOOPLiveActivity()

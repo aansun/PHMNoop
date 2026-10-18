@@ -163,7 +163,6 @@ struct NunaAnyaView: View {
                 }
                 NavigationLink(value: NunaAnyaRoute.settings) { NunaBareIcon("slider.horizontal.3", target: 42) }.buttonStyle(.plain).accessibilityLabel(Text("Anya settings"))
             }
-            if coach.isConfigured { readsRow }
         }
         .padding(.horizontal, NunaSpacing.screenH).padding(.top, 10).padding(.bottom, 6)
     }
@@ -176,37 +175,6 @@ struct NunaAnyaView: View {
         Image(systemName: symbol).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
             .frame(width: 42, height: 42)
     }
-
-    /// "Anya reads: Charge · Sleep · Workouts 7 days", and the memory chip. Honest: only what the settings allow.
-    private var readsRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                if coach.dataConsent {
-                    Text("Anya reads").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    ForEach(readNames, id: \.self) { n in chip(n) }
-                    if coach.includeOnDeviceSignals { chip(String(localized: "Patterns and Lab Book")) }
-                    NavigationLink(value: NunaAnyaRoute.settings) {
-                        Text("Adjust").font(.nuna(size: 12.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 6)
-                    }.buttonStyle(.plain)
-                } else {
-                    NavigationLink(value: NunaAnyaRoute.settings) {
-                        HStack(spacing: 6) { Image(systemName: "lock").font(.nuna(size: 11, weight: .bold)); Text("Anya only sees your question. Allow data access") }
-                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                            .padding(.trailing, 6).frame(height: 32)
-                    }.buttonStyle(.plain)
-                }
-                let active = memory.memories.filter(\.isActive).count
-                if active > 0 {
-                    NavigationLink(value: NunaAnyaRoute.memory) {
-                        HStack(spacing: 5) { Image(systemName: "brain").font(.nuna(size: 11, weight: .bold)); Text(verbatim: String(localized: "Memory active · \(active)")) }
-                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                            .padding(.trailing, 6).frame(height: 32)
-                    }.buttonStyle(.plain)
-                }
-            }
-        }
-    }
-
     private var readNames: [String] {
         [String(localized: "Charge"), String(localized: "Sleep"), String(localized: "Workouts 7 days")]
     }
@@ -236,7 +204,7 @@ struct NunaAnyaView: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("Your day, without a provider").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                         Text(verbatim: reading.headline).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        if let d = reading.detail { Text(verbatim: d).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
+                        if let d = [reading.detail, reading.outdoor].compactMap({ $0 }).joined(separator: " ").nilIfEmpty { Text(verbatim: d).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
@@ -251,11 +219,6 @@ struct NunaAnyaView: View {
     private var start: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: NunaSpacing.section) {
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("I'm here with you").font(.nuna(size: 26, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("Anya reads your baseline, load and sleep together, then picks the next small step.")
-                        .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                }
                 if let reading {
                     NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
                         VStack(alignment: .leading, spacing: 12) {
@@ -578,4 +541,5 @@ struct NunaAnyaVoiceSheet: View {
         .onDisappear { if voice.isRecording { voice.stopTranscribing { _ in } } }
     }
 }
+private extension String { var nilIfEmpty: String? { isEmpty ? nil : self } }
 #endif

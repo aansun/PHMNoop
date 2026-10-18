@@ -165,9 +165,28 @@ extension WidgetSnapshot {
             // The night the vitals describe: today's row once it carries a night, otherwise the carried-over scored day (today's row can
             // exist for steps alone while last night's HRV and resting heart rate still sit on the anchor).
             vitals: Self.vitalReadings(days: days, row: [todayRow, day].compactMap { $0 }.first(where: { $0.avgHrv != nil || $0.restingHr != nil }) ?? day),
-            stepGoal: Self.configuredStepGoal
+            stepGoal: Self.configuredStepGoal,
+            weekSteps: Self.weekSteps(days: days, apple: await model.repo.appleDailyRows(days: 9), today: steps, now: now)
         )
         saveAndReloadIfChanged(snap)
+    }
+
+    /// Steps for each day of the current week, Monday first. A day takes the strap's count when it has one, otherwise Apple Health's; today
+    /// takes the figure the widget already shows, so the bar and the number cannot disagree. Days still to come stay nil.
+    static func weekSteps(days: [DailyMetric], apple: [AppleDaily], today: Int?, now: Date) -> [Int?] {
+        var cal = Calendar.current
+        cal.firstWeekday = 2
+        guard let start = cal.dateInterval(of: .weekOfYear, for: now)?.start else { return [] }
+        let strap = Dictionary(days.compactMap { d in d.steps.map { (d.day, $0) } }, uniquingKeysWith: { _, last in last })
+        let health = Dictionary(apple.compactMap { r in r.steps.map { (r.day, $0) } }, uniquingKeysWith: { _, last in last })
+        let todayKey = Repository.localDayKey(now)
+        return (0..<7).map { i in
+            guard let date = cal.date(byAdding: .day, value: i, to: start), date <= now || cal.isDateInToday(date) else { return nil }
+            let key = Repository.localDayKey(date)
+            if key == todayKey, let today { return today }
+            if let v = strap[key], v > 0 { return v }
+            return health[key]
+        }
     }
 
     /// Last night's vital signs for the Vital widget, as finished numbers. In or out of range is the same rule the Health screen
@@ -273,6 +292,7 @@ extension WidgetSnapshot {
             snap.steps = steps
         }
         snap.stepGoal = Self.configuredStepGoal
+        snap.weekSteps = Self.weekSteps(days: model.repo.days, apple: await model.repo.appleDailyRows(days: 9), today: snap.steps, now: now)
         snap.bpm = model.bpm ?? model.live.heartRate
         snap.batteryPct = Self.activeBatteryPct(from: model)
         snap.bonded = model.live.bonded

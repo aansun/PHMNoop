@@ -101,6 +101,8 @@ struct NunaAnyaSheet: View {
         .task(id: "\(context)|\(metric?.key ?? "")") {
             read = await NunaAnyaReader.read(context: context, metric: metric, repo: repo, profile: profile, scale: UnitPrefs.resolveEffortScale(effortScaleRaw))
             // The questions stay the screen's; the line and the signals are the card's.
+            // Without a card line of its own, the page's read carries the weather and air in its detail.
+            if cardLine == nil, let o = read?.outdoor { read?.detail = [read?.detail, o].compactMap { $0 }.joined(separator: " ") }
             if let c = cardLine { read = NunaAnyaRead(headline: c.headline, detail: c.detail, read: c.read, module: read?.module ?? module, questions: read?.questions ?? []) }
             loaded = true
         }
