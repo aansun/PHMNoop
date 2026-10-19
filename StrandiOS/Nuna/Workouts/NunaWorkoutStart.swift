@@ -1259,9 +1259,13 @@ struct NunaLiveWorkoutView: View {
         .scrollDismissesKeyboard(.interactively)
     }
 
+    /// The summary opens at once from the row just built; the screen fills in the heart-rate curve and the rest as the save lands. Waiting for
+    /// the store first left the wearer on a "Saving activity" page for seconds.
     private func finishAndOpenActivity() {
         model.endWorkout()
-        if let row = model.lastWorkout { openSavedActivity(row) }
+        guard let row = model.lastWorkout else { return }
+        savedActivityRow = row
+        savedActivity = NunaWorkoutKey(startTs: row.startTs, sport: row.sport, source: row.source)
     }
 
     private func openSavedActivity(_ row: WorkoutRow) {

@@ -30,11 +30,18 @@ struct NunaWorkoutSummaryView: View {
     /// Observed so the read changes once the weather and air arrive.
     @ObservedObject private var environment = EnvironmentStore.shared
 
+    /// Opened from the end of a session: the row may not be in the store yet, so it is shown from memory for a short while instead of "no
+    /// longer saved". The screen reloads when the save lands.
+    private var justSaved: Bool {
+        guard let r = initialRow else { return false }
+        return Date().timeIntervalSince1970 - Double(r.endTs) < 30
+    }
+
     var body: some View {
         Group {
             if let ls = m.liftSessions.first(where: { $0.startTs == key.startTs }), m.row(key).map(NunaWorkoutKind.isStrength) ?? false {
                 NunaGymSessionView(sessionId: ls.id)
-            } else if let r = m.row(key) ?? (m.loaded ? nil : initialRow) {
+            } else if let r = m.row(key) ?? (m.loaded && !justSaved ? nil : initialRow) {
                 NunaDetailScreen(LocalizedStringKey(WorkoutSource.displaySport(r.sport)), titleSymbol: ActivitySport.symbol(for: r.sport), trailing: AnyView(actionsMenu(r))) { content(r) }
             } else {
                 NunaDetailScreen("Workout") {
