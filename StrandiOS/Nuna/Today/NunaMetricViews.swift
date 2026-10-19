@@ -9,6 +9,9 @@ enum NunaTodayRoute: Hashable {
     case metric(MetricDescriptor)
     case allMetrics
     case earlyWarning
+    /// What the Charge-state chip or the readiness chip under the rings means right now.
+    case chargeState
+    case readiness
     case sleep(Int)
     case sleepStages(Int)
     case sleepVitals(Int)
@@ -45,6 +48,8 @@ extension View {
             case .metric(let m): NunaMetricHost(initial: m)
             case .allMetrics: NunaAllMetricsView()
             case .earlyWarning: NunaEarlyWarningView()
+            case .chargeState: NunaDayStateView(kind: .charge)
+            case .readiness: NunaDayStateView(kind: .readiness)
             case .sleep(let i): NunaRestDetailView(startIndex: i, title: "Sleep")
             case .sleepStages(let i): NunaSleepStagesView(startIndex: i)
             case .sleepVitals(let i): NunaSleepVitalsView(startIndex: i)
