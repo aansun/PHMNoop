@@ -1,4 +1,4 @@
-## PHMN <version>
+## PHMN 1.0.0
 
 Gym summary redesigned, tappable explanations on Today, a Trends header that pages through your history, and fixes for workouts that lost their targets when the app was away.
 
