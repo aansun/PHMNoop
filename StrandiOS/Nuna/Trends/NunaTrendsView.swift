@@ -46,7 +46,6 @@ struct NunaTrendsView: View {
         ScrollView {
             VStack(spacing: NunaSpacing.section) {
                 header
-                NunaSegmented(NunaTrendsRange.options, selection: $range)
                 if !m.loaded {
                     ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 200)
                 } else if !m.hasAnything {
@@ -88,13 +87,15 @@ struct NunaTrendsView: View {
         return NunaTrendsFormat.short(da) + " – " + NunaTrendsFormat.short(db)
     }
 
+    /// The title with the range switch small at its right, on one line; the dates it covers sit under the title.
     private var header: some View {
-        HStack(alignment: .top) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(verbatim: rangeCaption).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+        VStack(alignment: .leading, spacing: 4) {
+            HStack(alignment: .center) {
                 Text("Trends").font(.nuna(size: NunaTypeSize.h1, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                Spacer(minLength: 8)
+                NunaSegmented(NunaTrendsRange.options, selection: $range, compact: true)
             }
-            Spacer()
+            Text(verbatim: rangeCaption).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
         }
     }
 
