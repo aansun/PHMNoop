@@ -25,11 +25,16 @@ struct NunaGymSessionView: View {
     @State private var editing = false
     @State private var confirmDelete = false
     @State private var showCoach = false
+    @State private var tab = Tab.exercises
+    @State private var open: Set<String> = []
+    @State private var zonePick: Int?
+
+    private enum Tab: Hashable { case exercises, heartRate }
 
     private var system: UnitSystem { UnitSystem(rawValue: unitSystemRaw) ?? .metric }
 
     var body: some View {
-        NunaDetailScreen(LocalizedStringKey(session?.programName ?? String(localized: "Gym session"))) {
+        NunaDetailScreen("Gym session", titleSymbol: session.map { ActivitySport.symbol(for: $0.sport) } ?? "dumbbell", trailing: session == nil ? nil : AnyView(actionsMenu)) {
             if let session { content(session) }
             else if loaded { NunaCard { Text("This session is no longer saved.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) } }
         }
@@ -58,35 +63,73 @@ struct NunaGymSessionView: View {
         }
     }
 
+    /// The three dots: what used to be buttons at the foot of the page.
+    private var actionsMenu: some View {
+        Menu {
+            Button { saveProgram = true } label: { Label("Save as program", systemImage: "square.and.arrow.down") }
+            Button { editing = true } label: { Label("Edit sets", systemImage: "pencil") }
+            Section {
+                Button(role: .destructive) { confirmDelete = true } label: { Label("Delete", systemImage: "trash") }
+            }
+        } label: { NunaBareIcon("ellipsis") }
+        .accessibilityLabel(Text("More"))
+    }
+
+    /// Top to bottom: when it ran and the program, the Effort it added beside the cardio and muscular split, Anya's line, the key
+    /// statistics, then two tabs: the exercises (each opens to its sets) and the heart rate with its zones.
     @ViewBuilder private func content(_ s: LiftSessionRow) -> some View {
         let secs = max(0, (s.endTs ?? s.startTs) - s.startTs)
-        NunaWorkoutHeaderCard(symbol: ActivitySport.symbol(for: s.sport), startTs: s.startTs, endTs: s.endTs ?? s.startTs, source: "Done", strain: workout?.strain, dayEffort: data.dayEffort)
-        NunaCardioMuscularCard(split: loadSplit(s))
+        let averages = workout.flatMap { NunaWorkoutAverages(for: $0, in: history.rows) }
+        HStack(spacing: 10) {
+            Text(verbatim: NunaWorkoutFormat.day(s.startTs) + " · " + NunaWorkoutFormat.clock(s.startTs) + " – " + NunaWorkoutFormat.clock(s.endTs ?? s.startTs))
+                .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
+            Spacer(minLength: 8)
+        }
+        if let program = s.programName, !program.isEmpty {
+            Text(verbatim: program).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 10).frame(height: 28)
+                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        effortAndSplit(s, averages: averages)
         if !records.isEmpty {
             NunaAnyaCard(verbatim: String(localized: "Personal record on \(records.joined(separator: ", ")). Give the trained muscles two days to recover before the next session.")) { showCoach = true }
         } else if let line = volumeLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
-        statsCard(secs)
-        NunaTitleRow(title: "Exercises") { EmptyView() }
-        ForEach(summaries, id: \.exercise) { exerciseCard($0) }
-        muscleVolume
-        if let w = workout {
-            NunaWorkoutHRCard(start: w.startTs, end: w.endTs, buckets: data.hr)
-            if let mins = NunaWorkoutZoneMath.minutes(w, measured: data.zoneMin), mins.contains(where: { $0 > 0 }) { NunaWorkoutZonesCard(minutes: mins, avgHr: w.avgHr, maxHr: w.maxHr) }
+        keyStatistics(secs, averages: averages)
+        NunaPageTabs([(value: Tab.exercises, title: "Exercises"), (value: Tab.heartRate, title: "Heart rate zones")], selection: $tab)
+        switch tab {
+        case .exercises: exercisesTab
+        case .heartRate: heartRateTab
         }
         NunaWorkoutReviewSection(startTs: s.startTs, sport: s.sport)
         if let w = workout { NunaWorkoutStravaCard(row: w, afterWorkout: false, checked: .constant(false)) }
-        Button { saveProgram = true } label: {
-            NunaCard(small: true) { NunaListRow("Save as program", description: "Repeat this session later with the same weights", systemImage: "square.and.arrow.down", showsChevron: true) }
-        }.buttonStyle(.plain)
         NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
             NunaListRow("Apple Health", description: "Strength workout, duration and energy are written by the sync. Manage it in Me", systemImage: "heart.text.square")
         }
-        Button { editing = true } label: {
-            Text("Edit sets").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-        }.buttonStyle(.plain)
-        Button(role: .destructive) { confirmDelete = true } label: {
-            Text("Delete").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-        }.buttonStyle(.plain)
+    }
+
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
+    private var effortScale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
+
+    /// The Effort the session added with its 30-day average beside it, and the cardio and muscular share at the right.
+    private func effortAndSplit(_ s: LiftSessionRow, averages: NunaWorkoutAverages?) -> some View {
+        let strain = workout?.strain
+        return HStack(alignment: .top, spacing: 16) {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .center, spacing: 8) {
+                    Text(verbatim: strain.map { UnitFormatter.effortDisplay($0, scale: effortScale) } ?? "–")
+                        .font(.nuna(size: 40, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(40))
+                        .foregroundStyle(strain.map(nunaEffortColor) ?? NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+                    if let st = strain, let avg = averages?.effort {
+                        NunaAveragePill(value: st, average: avg, text: UnitFormatter.effortDisplay(avg, scale: effortScale))
+                    }
+                }
+                Text("Activity Effort").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            NunaCardioMuscularCard(split: loadSplit(s), compact: true)
+                .frame(maxWidth: .infinity)
+        }
     }
 
     /// Effort per minute and kilograms per minute for one session, each nil when it cannot be worked out. Sessions under five
@@ -120,71 +163,142 @@ struct NunaGymSessionView: View {
         return String(localized: "Most of the volume, \(pct)%, went to \(top.key.name).")
     }
 
-    private func statsCard(_ secs: Int) -> some View {
+    private struct StatTile: Identifiable {
+        let id: String; let icon: String; let label: LocalizedStringKey; let value: String; var unit = ""
+        var pill: (value: Double, average: Double, text: String)?
+    }
+
+    /// Key statistics for lifting: the weight moved, the work (sets and reps), how long, and the heart rate, each against the wearer's
+    /// 30-day average where there is one.
+    private func keyStatistics(_ secs: Int, averages: NunaWorkoutAverages?) -> some View {
         let volume = LiftMetrics.volumeLoadKg(sets)
         let reps = working.compactMap(\.reps).reduce(0, +)
-        return NunaCard {
-            VStack(spacing: 18) {
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Volume").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                        HStack(alignment: .firstTextBaseline, spacing: 4) {
-                            Text(verbatim: volume.map { NunaTrendsFormat.num($0) } ?? "–").font(.nuna(size: 44, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(44)).foregroundStyle(NunaPalette.textPrimary)
-                            Text(verbatim: UnitFormatter.massUnit(system)).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                        }
-                    }
-                    Spacer()
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Duration").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                        HStack(alignment: .firstTextBaseline, spacing: 4) {
-                            Text(verbatim: secs > 0 ? "\(max(1, secs / 60))" : "–").font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            Text("min").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                        }
-                    }
-                }
-                NunaDivider()
-                HStack {
-                    miniStat("Sets", "\(working.count)")
-                    miniStat("Reps", "\(reps)")
-                    miniStat("Avg heart rate", workout?.avgHr.map(String.init) ?? "–")
-                }
+        var tiles: [StatTile] = [
+            .init(id: "vol", icon: "scalemass", label: "Volume", value: volume.map { NunaTrendsFormat.num($0) } ?? "–", unit: UnitFormatter.massUnit(system)),
+            .init(id: "sets", icon: "list.number", label: "Sets", value: "\(working.count)"),
+            .init(id: "reps", icon: "repeat", label: "Reps", value: "\(reps)"),
+        ]
+        var dur = StatTile(id: "dur", icon: "timer", label: "Duration", value: secs > 0 ? "\(max(1, secs / 60))" : "–", unit: "min")
+        if secs > 0, let avg = averages?.durationS { dur.pill = (Double(secs), avg, "\(max(1, Int((avg / 60).rounded()))) min") }
+        tiles.append(dur)
+        if let hr = workout?.avgHr {
+            var t = StatTile(id: "avg", icon: "heart", label: "Avg HR", value: "\(hr)", unit: "bpm")
+            if let avg = averages?.avgHr { t.pill = (Double(hr), avg, "\(Int(avg.rounded())) bpm") }
+            tiles.append(t)
+        }
+        if let hr = workout?.maxHr {
+            var t = StatTile(id: "max", icon: "bolt.heart", label: "Max HR", value: "\(hr)", unit: "bpm")
+            if let avg = averages?.maxHr { t.pill = (Double(hr), avg, "\(Int(avg.rounded())) bpm") }
+            tiles.append(t)
+        }
+        if let kcal = workout?.energyKcal {
+            var t = StatTile(id: "kcal", icon: "flame", label: "Calories", value: NunaTrendsFormat.num(kcal), unit: "kcal")
+            if let avg = averages?.kcal { t.pill = (kcal, avg, NunaTrendsFormat.num(avg)) }
+            tiles.append(t)
+        }
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                nunaTrendsCap("Key statistics")
+                Spacer()
+                if averages != nil { Text("vs. 30 day average").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textMuted) }
+            }
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
+                ForEach(tiles) { statTile($0, reservePill: tiles.contains { $0.pill != nil }) }
             }
         }
     }
 
-    private func miniStat(_ l: LocalizedStringKey, _ v: String) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(l).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
-            Text(verbatim: v).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-        }.frame(maxWidth: .infinity, alignment: .leading)
+    private func statTile(_ t: StatTile, reservePill: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Image(systemName: t.icon).font(.nuna(size: 12, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
+                Text(t.label).font(.nuna(size: 10, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    .lineLimit(1).minimumScaleFactor(0.7)
+            }
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text(verbatim: t.value).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+                if !t.unit.isEmpty && t.value != "–" { Text(verbatim: t.unit).font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1) }
+            }
+            if let p = t.pill { NunaAveragePill(value: p.value, average: p.average, text: p.text) }
+            else if reservePill { Color.clear.frame(height: 22) }
+        }
+        .padding(12).frame(maxWidth: .infinity, alignment: .leading)
+        .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 
-    private func exerciseCard(_ s: LiftMetrics.ExerciseSummary) -> some View {
+    // MARK: Tabs
+
+    @ViewBuilder private var exercisesTab: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(verbatim: String(localized: "\(summaries.count) exercises") + " · " + String(localized: "\(working.count) sets"))
+                .font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Spacer()
+            if summaries.count > 1 {
+                Button { withAnimation(.easeInOut(duration: 0.2)) { open = open.count == summaries.count ? [] : Set(summaries.map(\.exercise)) } } label: {
+                    Text(open.count == summaries.count ? "Collapse all" : "Open all").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                        .frame(minHeight: 32)
+                }.buttonStyle(.plain)
+            }
+        }
+        VStack(spacing: 10) {
+            ForEach(summaries, id: \.exercise) { exerciseRow($0) }
+        }
+        muscleVolume
+    }
+
+    @ViewBuilder private var heartRateTab: some View {
+        if let w = workout, data.hr.count >= 2 {
+            NunaCard(small: true) { NunaWorkoutHRArea(buckets: data.hr, start: w.startTs, end: w.endTs, highlightZone: zonePick, zoneSet: profile.hrZoneSet) }
+            if let mins = NunaWorkoutZoneMath.minutes(w, measured: data.zoneMin), mins.contains(where: { $0 > 0 }) {
+                NunaWorkoutLogZones(minutes: mins, selection: $zonePick)
+            }
+        } else {
+            NunaCard(small: true) {
+                Text("No heart rate was recorded for this session.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+    }
+
+    /// One exercise: its name, the muscles and a line of what was done; tapping it opens every set, the record and the demo.
+    private func exerciseRow(_ s: LiftMetrics.ExerciseSummary) -> some View {
         let rows = sets.filter { $0.exercise == s.exercise }.sorted { $0.ord < $1.ord }
         let first = rows.first
+        let isOpen = open.contains(s.exercise)
+        let best = rows.filter { !$0.isWarmup }.max { ($0.weightKg ?? 0) < ($1.weightKg ?? 0) }
         return NunaCard(small: true) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 12) {
-                    NunaExerciseThumb(name: s.exercise, width: 50, height: 38)
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(verbatim: s.exercise).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: LiftMuscleSummary.line(primary: first?.primaryMuscle, secondaries: first?.secondaryMuscles ?? [])).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            VStack(alignment: .leading, spacing: 12) {
+                Button { withAnimation(.easeInOut(duration: 0.2)) { if isOpen { open.remove(s.exercise) } else { open.insert(s.exercise) } } } label: {
+                    HStack(spacing: 12) {
+                        NunaExerciseThumb(name: s.exercise, width: 50, height: 38)
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(verbatim: s.exercise).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).multilineTextAlignment(.leading)
+                            Text(verbatim: String(localized: "\(s.workingSets) sets") + (best.map { " · " + setText($0) } ?? ""))
+                                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        }
+                        Spacer(minLength: 8)
+                        if records.contains(s.exercise) { NunaChip("PR") }
+                        Image(systemName: "chevron.down").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted).rotationEffect(.degrees(isOpen ? 180 : 0))
                     }
-                    Spacer()
-                    if records.contains(s.exercise) { NunaChip("PR") }
+                    .contentShape(Rectangle())
+                }.buttonStyle(.plain)
+                if isOpen {
+                    NunaDivider()
+                    Text(verbatim: LiftMuscleSummary.line(primary: first?.primaryMuscle, secondaries: first?.secondaryMuscles ?? []))
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    ForEach(Array(rows.enumerated()), id: \.element.id) { i, r in
+                        HStack {
+                            Text(verbatim: r.isWarmup ? String(localized: "Warm-up") : String(localized: "Set \(rows.prefix(i + 1).filter { !$0.isWarmup }.count)"))
+                                .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                            Spacer()
+                            Text(verbatim: setText(r)).font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        }
+                    }
                     if let lib = NunaExerciseLibrary.match(s.exercise) {
                         NavigationLink(value: NunaWorkoutRoute.exercise(lib.id)) {
-                            Image(systemName: "play.rectangle.fill").font(.nuna(size: 18)).foregroundStyle(NunaPalette.textSecondary)
-                                .frame(width: 36, height: 36)
-                        }.buttonStyle(.plain).accessibilityLabel(Text("Show the demo"))
-                    }
-                }
-                ForEach(Array(rows.enumerated()), id: \.element.id) { i, r in
-                    HStack {
-                        Text(verbatim: r.isWarmup ? String(localized: "Warm-up") : String(localized: "Set \(rows.prefix(i + 1).filter { !$0.isWarmup }.count)"))
-                            .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        Spacer()
-                        Text(verbatim: setText(r)).font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            Label("Show the demo", systemImage: "play.rectangle.fill").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                .frame(minHeight: 36)
+                        }.buttonStyle(.plain)
                     }
                 }
             }

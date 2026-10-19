@@ -117,9 +117,14 @@ struct NunaWorkoutHeaderCard: View {
 /// earlier sessions it says what it is waiting for instead of showing a number.
 struct NunaCardioMuscularCard: View {
     let split: SessionLoadSplit.Result?
+    /// Beside the Effort at the top of a gym session: no card behind it, and one short line under the bar.
+    var compact = false
 
-    var body: some View {
-        NunaCard(small: true) {
+    @ViewBuilder var body: some View {
+        if compact { inner } else { NunaCard(small: true) { inner } }
+    }
+
+    private var inner: some View {
             VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     caption("Cardio")
@@ -142,16 +147,15 @@ struct NunaCardioMuscularCard: View {
                         Spacer()
                         Text(verbatim: "\(split.muscularPct)%").font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     }
-                    Text("Against your last \(split.sessions) sessions. An estimate; it does not change Effort.")
+                    Text(compact ? "Against your last \(split.sessions) sessions" : "Against your last \(split.sessions) sessions. An estimate; it does not change Effort.")
                         .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                         .fixedSize(horizontal: false, vertical: true)
                 } else {
-                    Text("Appears once you have three earlier sessions with logged sets and an Effort.")
+                    Text(compact ? "Appears after three earlier sessions with sets." : "Appears once you have three earlier sessions with logged sets and an Effort.")
                         .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-        }
     }
 
     private func caption(_ key: LocalizedStringKey) -> some View {

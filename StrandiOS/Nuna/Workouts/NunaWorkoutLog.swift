@@ -34,7 +34,7 @@ struct NunaWorkoutAverages {
 }
 
 /// "▼ 147 bpm": which side of the average this session sits on, and the average itself.
-private struct NunaAveragePill: View {
+struct NunaAveragePill: View {
     let value: Double
     let average: Double
     let text: String
