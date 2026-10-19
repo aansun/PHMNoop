@@ -7,6 +7,7 @@ import StrandDesign
 struct NunaWhatsNewView: View {
     @State private var showNoop = false
     @State private var shown = 6
+    @ObservedObject private var feed = PHMNChangelogFeed.shared
 
     var body: some View {
         NunaDetailScreen("What's new") {
@@ -24,7 +25,7 @@ struct NunaWhatsNewView: View {
                     }
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
-            ForEach(Array(PHMNChangelog.releases.enumerated()), id: \.element.id) { i, r in
+            ForEach(Array(PHMNChangelog.merged(with: feed.releases).enumerated()), id: \.element.id) { i, r in
                 releaseCard(version: r.version, title: r.title, date: r.date, items: r.items, highlight: i == 0)
             }
             Button { withAnimation(.easeInOut(duration: 0.2)) { showNoop.toggle() } } label: {
@@ -48,6 +49,7 @@ struct NunaWhatsNewView: View {
                 }
             }
         }
+        .task { await feed.refresh() }
     }
 
     private func releaseCard(version: String, title: String, date: String, items: [String], highlight: Bool, prefix: String = "") -> some View {
