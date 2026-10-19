@@ -60,10 +60,24 @@ private struct NunaLiveStrapChip: View {
     var body: some View { NunaStrapChip(connected: live.connected, battery: live.batteryPct) }
 }
 
-private struct NunaIllnessGate: View {
+/// The early warning no longer takes a card on Today: it goes into the bell once a day per level (and Anya's card carries a short
+/// line). It draws nothing itself.
+private struct NunaIllnessNotifier: View {
     @EnvironmentObject private var appModel: AppModel
+    @EnvironmentObject private var updateStore: UpdateStore
+    private static let stampKey = "nuna.illness.posted"
+
     var body: some View {
-        if let warn = appModel.illnessSignal, warn.level != .quiet { NunaEarlyWarningCard(result: warn) }
+        Color.clear
+            .onChange(of: appModel.illnessSignal?.level, initial: true) { _, _ in post() }
+    }
+
+    private func post() {
+        guard let r = appModel.illnessSignal, r.level != .quiet else { return }
+        let stamp = "\(Int(Calendar.current.startOfDay(for: Date()).timeIntervalSince1970))|\(r.level)"
+        guard UserDefaults.standard.string(forKey: Self.stampKey) != stamp else { return }
+        UserDefaults.standard.set(stamp, forKey: Self.stampKey)
+        updateStore.post(UpdateItem(kind: .reading, title: String(localized: "Early warning"), message: localizedIllnessCopy(r), deepLink: "coach"))
     }
 }
 
@@ -678,8 +692,8 @@ struct NunaTodayView: View {
                     // Readiness, Charge state and heart rate: three chips of one shape on one line.
                     HStack(spacing: 8) { Spacer(minLength: 0); synthesisChips; heartRatePill }
                 }
-                if model.isToday { NunaIllnessGate() }
             }
+            .background { if model.isToday { NunaIllnessNotifier() } }
         case .synthesis:
             if coachEnabled && model.isToday {
                 NunaAnyaTodayCard(plan: dayPlan, fallbackLine: synthLine, workouts: model.workouts, effort: model.effort,

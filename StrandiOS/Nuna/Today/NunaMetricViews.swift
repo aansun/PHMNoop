@@ -74,28 +74,6 @@ extension View {
 
 // MARK: - Early warning
 
-struct NunaEarlyWarningCard: View {
-    let result: IllnessSignalEngine.Result
-    var body: some View {
-        NavigationLink(value: NunaTodayRoute.earlyWarning) {
-            NunaCard(small: true) {
-                HStack(spacing: 12) {
-                    NunaIconTile("exclamationmark.triangle.fill", tint: warnColor(result.level))
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Early warning").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: localizedIllnessCopy(result))
-                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                            .lineLimit(2).multilineTextAlignment(.leading).textCase(nil)
-                    }
-                    Spacer(minLength: 8)
-                    Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                }
-            }
-        }
-        .buttonStyle(.plain)
-    }
-}
-
 private func warnColor(_ level: IllnessSignalEngine.Level) -> Color {
     switch level {
     case .raised: return NunaPalette.alertText
