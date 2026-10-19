@@ -19,7 +19,7 @@ final class PHMNChangelogFeed: ObservableObject {
     private static let minInterval: TimeInterval = 3600
 
     private struct Stored: Codable {
-        let version: String, title: String, date: String, items: [String]
+        let version: String, title: String, date: String, items: [String], fixes: [String]?
     }
 
     private init() {
@@ -42,14 +42,14 @@ final class PHMNChangelogFeed: ObservableObject {
         let parsed = list.compactMap(Self.release(from:))
         guard !parsed.isEmpty else { return }
         releases = parsed
-        let stored = parsed.map { Stored(version: $0.version, title: $0.title, date: $0.date, items: $0.items) }
+        let stored = parsed.map { Stored(version: $0.version, title: $0.title, date: $0.date, items: $0.items, fixes: $0.fixes) }
         if let data = try? JSONEncoder().encode(stored) { d.set(data, forKey: Self.cacheKey) }
     }
 
     private static func loadCache() -> [PHMNChangelog.Release] {
         guard let data = UserDefaults.standard.data(forKey: cacheKey),
               let stored = try? JSONDecoder().decode([Stored].self, from: data) else { return [] }
-        return stored.map { .init(version: $0.version, title: $0.title, date: $0.date, items: $0.items) }
+        return stored.map { .init(version: $0.version, title: $0.title, date: $0.date, items: $0.items, fixes: $0.fixes ?? []) }
     }
 
     /// One GitHub release as a changelog entry, nil for a draft, a pre-release or a body without bullets.
@@ -59,31 +59,39 @@ final class PHMNChangelogFeed: ObservableObject {
               let body = json["body"] as? String else { return nil }
         let version = tag.hasPrefix("v") ? String(tag.dropFirst()) : tag
         guard let parsed = parse(body: body) else { return nil }
-        return .init(version: version, title: parsed.title, date: monthYear(json["published_at"] as? String), items: parsed.items)
+        return .init(version: version, title: parsed.title, date: monthYear(json["published_at"] as? String), items: parsed.items, fixes: parsed.fixes)
     }
 
-    /// The release body is "## PHMN x", a one-line summary, "### What's new" and its bullets, then other sections (Install, notes).
-    /// The summary is the title and the bullets under What's new are the items.
-    static func parse(body: String) -> (title: String, items: [String])? {
+    /// The release body is "## PHMN x", a one-line summary, then sections: "### New / Enhancement" (also the older "### What's new") and
+    /// "### Bug Fixing", each a list of bullets. The summary is the title; other sections (Install, notes) are ignored.
+    static func parse(body: String) -> (title: String, items: [String], fixes: [String])? {
+        enum Section { case none, new, fix }
         var title: String?
-        var items: [String] = []
-        var inNew = false
+        var items: [String] = [], fixes: [String] = []
+        var section = Section.none
         for raw in body.components(separatedBy: .newlines) {
             let line = raw.trimmingCharacters(in: .whitespaces)
             if line.hasPrefix("###") {
-                inNew = line.lowercased().contains("what's new") || line.lowercased().contains("whats new")
+                let h = line.lowercased()
+                if h.contains("bug") || h.contains("fix") { section = .fix }
+                else if h.contains("new") || h.contains("enhanc") { section = .new }
+                else { section = .none }
                 continue
             }
             if line.hasPrefix("#") || line.isEmpty { continue }
-            if inNew {
-                if line.hasPrefix("- ") || line.hasPrefix("* ") { items.append(String(line.dropFirst(2))) }
-                else if !items.isEmpty { items[items.count - 1] += " " + line }
-            } else if title == nil {
-                title = line
+            switch section {
+            case .none:
+                if title == nil { title = line }
+            case .new, .fix:
+                if line.hasPrefix("- ") || line.hasPrefix("* ") {
+                    let text = String(line.dropFirst(2))
+                    if section == .new { items.append(text) } else { fixes.append(text) }
+                } else if section == .new, !items.isEmpty { items[items.count - 1] += " " + line }
+                else if section == .fix, !fixes.isEmpty { fixes[fixes.count - 1] += " " + line }
             }
         }
-        guard !items.isEmpty else { return nil }
-        return (title ?? "", items)
+        guard !items.isEmpty || !fixes.isEmpty else { return nil }
+        return (title ?? "", items, fixes)
     }
 
     private static func monthYear(_ iso: String?) -> String {

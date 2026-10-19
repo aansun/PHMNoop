@@ -115,6 +115,8 @@
     "Key statistics": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Statistik utama"}}}},
     "vs. 30 day average": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "vs. rata-rata 30 hari"}}}},
     "Edit time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ubah waktu"}}}},
+    "New / Enhancement": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Baru / Peningkatan"}}}},
+    "Bug Fixing": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Perbaikan bug"}}}},
     "Collapse all": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tutup semua"}}}},
     "Open all": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Buka semua"}}}},
     "Appears after three earlier sessions with sets.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Muncul setelah tiga sesi sebelumnya yang punya set."}}}},

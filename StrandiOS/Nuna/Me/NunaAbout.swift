@@ -26,7 +26,7 @@ struct NunaWhatsNewView: View {
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
             ForEach(Array(PHMNChangelog.merged(with: feed.releases).enumerated()), id: \.element.id) { i, r in
-                releaseCard(version: r.version, title: r.title, date: r.date, items: r.items, highlight: i == 0)
+                releaseCard(version: r.version, title: r.title, date: r.date, items: r.items, fixes: r.fixes, highlight: i == 0)
             }
             Button { withAnimation(.easeInOut(duration: 0.2)) { showNoop.toggle() } } label: {
                 HStack {
@@ -52,7 +52,7 @@ struct NunaWhatsNewView: View {
         .task { await feed.refresh() }
     }
 
-    private func releaseCard(version: String, title: String, date: String, items: [String], highlight: Bool, prefix: String = "") -> some View {
+    private func releaseCard(version: String, title: String, date: String, items: [String], fixes: [String] = [], highlight: Bool, prefix: String = "") -> some View {
         NunaCard(highlight: highlight) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
@@ -61,13 +61,20 @@ struct NunaWhatsNewView: View {
                     Text(verbatim: date).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                 }
                 Text(verbatim: title).font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                ForEach(Array(items.enumerated()), id: \.offset) { _, item in
-                    HStack(alignment: .top, spacing: 10) {
-                        Circle().fill(NunaPalette.accent).frame(width: 5, height: 5).padding(.top, 8)
-                        Text(Self.styled(item)).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                    }
+                if !fixes.isEmpty { nunaTrendsCap("New / Enhancement") }
+                ForEach(Array(items.enumerated()), id: \.offset) { _, item in bullet(item) }
+                if !fixes.isEmpty {
+                    nunaTrendsCap("Bug Fixing").padding(.top, 6)
+                    ForEach(Array(fixes.enumerated()), id: \.offset) { _, item in bullet(item) }
                 }
             }.frame(maxWidth: .infinity, alignment: .leading)
+        }
+    }
+
+    private func bullet(_ item: String) -> some View {
+        HStack(alignment: .top, spacing: 10) {
+            Circle().fill(NunaPalette.accent).frame(width: 5, height: 5).padding(.top, 8)
+            Text(Self.styled(item)).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
         }
     }
 
