@@ -805,10 +805,14 @@ struct NunaTodayView: View {
     @ViewBuilder private var synthesisChips: some View {
         if model.isToday, let level = model.readiness?.level, let word = Self.readinessWord(level) {
             let tone = level == .primed ? NunaPalette.charge : (level == .balanced ? NunaPalette.effortText : NunaPalette.warning)
-            todayChip(icon: .symbol("bolt.fill"), text: Text(verbatim: word), tint: tone)
+            NavigationLink(value: NunaTodayRoute.readiness) {
+                todayChip(icon: .symbol("bolt.fill"), text: Text(verbatim: word), tint: tone)
+            }.buttonStyle(.plain)
         }
         if model.charge != .noData {
-            todayChip(icon: .dot(model.charge.pct.map(nunaChargeColor) ?? NunaPalette.scoreHigh), text: Text(verbatim: Self.chargeStateEnglish(model.charge)), tint: nil)
+            NavigationLink(value: NunaTodayRoute.chargeState) {
+                todayChip(icon: .dot(model.charge.pct.map(nunaChargeColor) ?? NunaPalette.textMuted), text: Text(verbatim: Self.chargeStateEnglish(model.charge)), tint: nil)
+            }.buttonStyle(.plain)
         }
     }
 
