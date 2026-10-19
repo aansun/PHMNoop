@@ -687,43 +687,46 @@ struct NunaMetricsGrid: View {
         }
     }
 
+    /// The same tile as the vital signs: the icon and the label, the value, then the change as a chip under it. With trend lines on, every tile
+    /// keeps the room of the chip and of the line, so a tile with no history yet is as tall as the rest.
     private func tileBody(_ tile: NunaMetricTile) -> some View {
-        Group {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(alignment: .center) {
-                    Text(tile.label)
-                        .font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                        .foregroundStyle(NunaPalette.textSecondary)
-                        .lineLimit(2).fixedSize(horizontal: false, vertical: true)
-                    Spacer(minLength: 4)
-                    if let delta = tile.delta {
-                        let tint: Color = tile.deltaGood == nil ? NunaPalette.textSecondary
-                            : (tile.deltaGood! ? NunaPalette.charge : NunaPalette.warning)
-                        Text(verbatim: delta)
-                            .font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(tint)
-                            .padding(.horizontal, 8).frame(height: 24)
-                            .background(NunaPalette.tint(tint), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(tint.opacity(0.35), lineWidth: 1))
-                    }
-                }
-                .frame(minHeight: 24, alignment: .top)
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(verbatim: tile.value)
-                        .font(.nuna(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design))
-                        .foregroundStyle(NunaPalette.textPrimary)
-                        .minimumScaleFactor(0.6).lineLimit(1)
-                    if !tile.unit.isEmpty && tile.value != "–" {
-                        Text(verbatim: tile.unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                    }
-                }
-                // With trend lines on, every tile keeps the line's room, so a tile with no history yet is as tall as the rest.
-                if let spark = tile.spark, spark.count >= 2 {
-                    NunaSpark(values: spark, color: tile.tint ?? NunaPalette.charge).frame(height: 38)
-                } else if tiles.contains(where: { ($0.spark?.count ?? 0) >= 2 }) {
-                    Color.clear.frame(height: 38)
+        let anyDelta = tiles.contains { $0.delta != nil }
+        let anySpark = tiles.contains { ($0.spark?.count ?? 0) >= 2 }
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                Image(systemName: tile.icon).font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 24, height: 24)
+                Text(tile.label)
+                    .font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.textSecondary)
+                    .lineLimit(1).minimumScaleFactor(0.8)
+            }
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text(verbatim: tile.value)
+                    .font(.nuna(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design))
+                    .foregroundStyle(NunaPalette.textPrimary)
+                    .minimumScaleFactor(0.6).lineLimit(1)
+                if !tile.unit.isEmpty && tile.value != "–" {
+                    Text(verbatim: tile.unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
             }
+            if let delta = tile.delta {
+                let tint: Color = tile.deltaGood == nil ? NunaPalette.textSecondary
+                    : (tile.deltaGood! ? NunaPalette.charge : NunaPalette.warning)
+                Text(verbatim: delta)
+                    .font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(tint)
+                    .padding(.horizontal, 9).frame(height: 24)
+                    .background(NunaPalette.tint(tint), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(tint.opacity(0.35), lineWidth: 1))
+            } else if anyDelta {
+                Color.clear.frame(height: 24)
+            }
+            if let spark = tile.spark, spark.count >= 2 {
+                NunaSpark(values: spark, color: tile.tint ?? NunaPalette.charge).frame(height: 38)
+            } else if anySpark {
+                Color.clear.frame(height: 38)
+            }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
