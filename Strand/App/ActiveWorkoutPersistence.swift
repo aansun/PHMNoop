@@ -28,6 +28,11 @@ enum ActiveWorkoutPersistence {
         var liveStrain: Double
         var pausedAtSec: Int? = nil
         var pausedDurationSec: Int? = nil
+        /// What the wearer asked the session to reach (time, distance, zone). Kept so a session restored after the app was
+        /// killed still has its targets and strap buzz. nil on a free session and on snapshots written before this field.
+        var targetSeconds: Int? = nil
+        var targetMeters: Double? = nil
+        var targetZone: Int? = nil
     }
 
     /// The single `UserDefaults` key (JSON-encoded `Snapshot`). Namespaced like `moments`/`sleepMarks`.
@@ -58,6 +63,9 @@ enum ActiveWorkoutPersistence {
             liveStrain: raw.liveStrain.isFinite ? max(0, raw.liveStrain) : 0,
             pausedAtSec: raw.pausedAtSec.flatMap { $0 > 0 ? $0 : nil },
             pausedDurationSec: raw.pausedDurationSec.map { max(0, $0) },
+            targetSeconds: raw.targetSeconds.flatMap { $0 > 0 ? $0 : nil },
+            targetMeters: raw.targetMeters.flatMap { $0.isFinite && $0 > 0 ? $0 : nil },
+            targetZone: raw.targetZone.flatMap { (1...5).contains($0) ? $0 : nil }
         )
     }
 

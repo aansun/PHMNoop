@@ -190,7 +190,14 @@ final class AudioCoachingCoordinator: ObservableObject {
                 self?.ingestCurrentMetrics()
             }
         }
-        emit([.activityStarted], for: workout)
+        // A session picked up again (the app was killed and reopened) is not a new start: no second "start workout" announcement,
+        // and a time target already passed is not announced a second time.
+        let resumed = Date().timeIntervalSince(workout.start) > 20
+        if resumed {
+            if let seconds = model?.workoutTarget?.seconds, workout.elapsed(at: Date()) >= Double(seconds) { timeTargetAnnounced = true }
+        } else {
+            emit([.activityStarted], for: workout)
+        }
         logger.debug("Audio coaching activity started")
     }
 

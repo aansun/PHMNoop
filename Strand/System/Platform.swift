@@ -87,6 +87,9 @@ enum ScreenIdle {
         case session
         /// A strap history sync, while Settings → "Keep screen on while syncing" is on (iOS).
         case strapSync
+        /// A Strava or Oura import/upload running in the foreground (iOS), so finishing it does not release a workout's hold.
+        case stravaBusy
+        case ouraBusy
     }
 
     /// UserDefaults key for the "Keep screen on while syncing" toggle (default OFF). iOS-only behaviour;

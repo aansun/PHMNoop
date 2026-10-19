@@ -95,7 +95,7 @@ final class OuraConnectModel: ObservableObject {
     private func setBusy(_ b: Bool) {
         busy = b
         #if os(iOS)
-        UIApplication.shared.isIdleTimerDisabled = b
+        ScreenIdle.hold(.ouraBusy, b)
         #endif
     }
     private static let dayFormatter: DateFormatter = {

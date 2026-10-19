@@ -41,6 +41,22 @@ final class ActiveWorkoutPersistenceTests: XCTestCase {
         XCTAssertEqual(decoded, original)
     }
 
+    func testTargetsSurviveTheRoundTrip() {
+        var original = snapshot()
+        original.targetSeconds = 2700
+        original.targetMeters = 5000
+        original.targetZone = 3
+        XCTAssertEqual(ActiveWorkoutPersistence.decode(ActiveWorkoutPersistence.encode(original)), original)
+    }
+
+    func testSnapshotWrittenBeforeTargetsStillDecodes() {
+        let legacy = Data(#"{"startSec":1700000000,"sport":"Tennis","samples":[],"avgHr":0,"peakHr":0,"liveStrain":0}"#.utf8)
+        let decoded = ActiveWorkoutPersistence.decode(legacy)
+        XCTAssertNotNil(decoded)
+        XCTAssertNil(decoded?.targetSeconds)
+        XCTAssertNil(decoded?.targetZone)
+    }
+
     func testRoundTripWithNoSamples() {
         // A session that started but hasn't captured a sample yet (strap not streaming) must still
         // persist + rehydrate — otherwise a kill right after Start loses the start time.

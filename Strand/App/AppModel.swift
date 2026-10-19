@@ -93,7 +93,9 @@ final class AppModel: ObservableObject {
     }
     /// What the wearer asked the running session to reach (a time, a distance or a heart-rate zone). Set by the Nuna start screen,
     /// read by the Live Activity, cleared when the session ends. nil = a free session.
-    @Published var workoutTarget: WorkoutTarget?
+    @Published var workoutTarget: WorkoutTarget? {
+        didSet { if workoutTarget != oldValue { persistActiveWorkout() } }
+    }
     struct WorkoutTarget: Equatable {
         var seconds: Int?
         var meters: Double?
@@ -879,7 +881,10 @@ final class AppModel: ObservableObject {
                 peakHr: w.peakHr,
                 liveStrain: w.liveStrain,
                 pausedAtSec: w.pausedAt.map { Int($0.timeIntervalSince1970) },
-                pausedDurationSec: Int(w.pausedDuration)))
+                pausedDurationSec: Int(w.pausedDuration),
+                targetSeconds: workoutTarget?.seconds,
+                targetMeters: workoutTarget?.meters,
+                targetZone: workoutTarget?.zone))
     }
 
     /// If a manual workout was in flight when iOS killed the app, rebuild `activeWorkout` from the durable
@@ -897,6 +902,10 @@ final class AppModel: ObservableObject {
         w.pausedAt = snap.pausedAtSec.map { Date(timeIntervalSince1970: TimeInterval($0)) }
         w.pausedDuration = TimeInterval(snap.pausedDurationSec ?? 0)
         activeWorkout = w
+        // The targets chosen at the start come back with the session, so the strap buzz and the spoken cues survive an OS kill.
+        if snap.targetSeconds != nil || snap.targetMeters != nil || snap.targetZone != nil {
+            workoutTarget = WorkoutTarget(seconds: snap.targetSeconds, meters: snap.targetMeters, zone: snap.targetZone)
+        }
 
         // Rebuild the transient GPS lifecycle flag as well as the durable workout value. Without this,
         // a distance workout restored after an OS kill resumes as a non-GPS workout: Resume never
