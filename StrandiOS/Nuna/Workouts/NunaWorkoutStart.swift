@@ -666,7 +666,7 @@ private struct NunaWorkoutTargetSheet: View {
                             .padding(.top, 20).padding(.bottom, showHelp ? 4 : 8)
                         if showHelp { helpText.padding(.horizontal, NunaSpacing.screenH).padding(.bottom, 10).transition(.opacity) }
                         anyaCard
-                            .padding(.horizontal, NunaSpacing.screenH).padding(.bottom, 10)
+                            .padding(.horizontal, NunaSpacing.screenH).padding(.bottom, 20)
                         panel
                     }
                     .frame(minHeight: geo.size.height, alignment: .top)
@@ -858,7 +858,7 @@ private struct NunaWorkoutTargetSheet: View {
             guard !free, let b = band else { return NunaPalette.textPrimary }
             return after < b.lowerBound ? NunaPalette.textPrimary : (after <= b.upperBound ? NunaPalette.charge : NunaPalette.warning)
         }()
-        return VStack(spacing: 8) {
+        return VStack(spacing: 20) {
             HStack(alignment: .top, spacing: 8) {
                 stat("Current\neffort", dayEffort.map(effortNumber) ?? "–")
                 stat("After activity\n(est.)", free ? "–" : effortNumber(after), color: afterColor)
@@ -924,6 +924,7 @@ private struct NunaWorkoutTargetSheet: View {
             }
         }
         .frame(height: band == nil ? 42 : 74)
+        .padding(.bottom, 16)
     }
 
     private func stat(_ label: LocalizedStringKey, _ value: String, color: Color = NunaPalette.textPrimary) -> some View {
