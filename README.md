@@ -53,9 +53,9 @@ The animations are short screen recordings of the app on sample data.
 
 ### Today
 
-<p>
-  <img src="docs/media/today.gif" alt="Today" width="230" align="right">
-</p>
+<table>
+<tr>
+<td valign="top">
 
 The home screen is built to be read in a few seconds, then explored.
 
@@ -71,11 +71,20 @@ The home screen is built to be read in a few seconds, then explored.
 - **Past days** are one swipe away and read-only. **The bell** holds what is new in the app and your data, including the early warning when your body looks strained.
 - **Customize** the order and visibility of every card.
 
+</td>
+<td width="250" valign="top">
+
+<img src="docs/media/today.gif" alt="Today" width="230">
+
+</td>
+</tr>
+</table>
+
 ### Metrics: Charge, Effort, Rest and the rest
 
-<p>
-  <img src="docs/media/metric.gif" alt="A metric detail" width="230" align="right">
-</p>
+<table>
+<tr>
+<td valign="top">
 
 Every metric opens **one card** with a **W / M / 6M** switch and a date stepper, the same on all of them: Charge, Effort, Rest, HRV, resting heart rate, blood oxygen, respiratory rate, skin temperature,
 steps, calories, weight, stress and more.
@@ -85,11 +94,20 @@ steps, calories, weight, stress and more.
 - **How it's calculated** and **What affects it** sit at the foot as quiet notes, so a number is never a black box.
 - Charge is coloured green from 67, yellow from 34, red below; Effort dark blue to light blue by how hard the day was. The same colours are used on the widgets.
 
+</td>
+<td width="250" valign="top">
+
+<img src="docs/media/metric.gif" alt="A metric detail" width="230">
+
+</td>
+</tr>
+</table>
+
 ### Sleep
 
-<p>
-  <img src="docs/media/sleep.gif" alt="Sleep" width="230" align="right">
-</p>
+<table>
+<tr>
+<td valign="top">
 
 The Rest screen carries the whole night.
 
@@ -100,11 +118,20 @@ The Rest screen carries the whole night.
 - **Edit the sleep or a nap** and undo a delete for ten seconds. **Body clock**, **smart alarm** and **wind down** have their own screens.
 - Anya names an evening habit (alcohol, late caffeine, a late meal) as the cause of a poor night **only if your own nights show it**.
 
+</td>
+<td width="250" valign="top">
+
+<img src="docs/media/sleep.gif" alt="Sleep" width="230">
+
+</td>
+</tr>
+</table>
+
 ### Workouts
 
-<p>
-  <img src="docs/media/activity.gif" alt="Starting an activity" width="230" align="right">
-</p>
+<table>
+<tr>
+<td valign="top">
 
 **Start an activity** with a target built for how you train:
 
@@ -116,11 +143,20 @@ The Rest screen carries the whole night.
 - It survives the app being away: the workout and its targets are saved as it runs.
 - **Live Activity** on the Lock Screen and in the Dynamic Island.
 
+</td>
+<td width="250" valign="top">
+
+<img src="docs/media/activity.gif" alt="Starting an activity" width="230">
+
+</td>
+</tr>
+</table>
+
 **Afterwards**
 
-<p>
-  <img src="docs/media/workout-summary.gif" alt="Workout summary" width="230" align="right">
-</p>
+<table>
+<tr>
+<td valign="top">
 
 - **One layout for every sport**: when it ran and the Effort it added with your 30-day average, the map if a route was recorded, key statistics that fit the sport (pace for a run, speed for a ride,
   time and heart rate for a class), the heart-rate curve and the zones. **Tap a zone** and its stretches light up on the curve.
@@ -130,11 +166,20 @@ The Rest screen carries the whole night.
 - **Auto-detect** offers a workout it found (and names a sport only on evidence), **Add activity** logs one by hand, **History** lists them by week, and **Training load** shows the balance of your last weeks.
 - Export a session as a FIT file or its route as GPX, or send it to Strava.
 
+</td>
+<td width="250" valign="top">
+
+<img src="docs/media/workout-summary.gif" alt="Workout summary" width="230">
+
+</td>
+</tr>
+</table>
+
 ### Gym
 
-<p>
-  <img src="docs/media/gym.gif" alt="Gym summary" width="230" align="right">
-</p>
+<table>
+<tr>
+<td valign="top">
 
 A module of its own, in the style of Hevy.
 
@@ -146,16 +191,34 @@ A module of its own, in the style of Hevy.
   exercise opens to its sets, its record and its demo, and a **Heart rate zones** tab. Personal records are flagged.
 - **Hevy** workouts and routines can be imported, read-only.
 
+</td>
+<td width="250" valign="top">
+
+<img src="docs/media/gym.gif" alt="Gym summary" width="230">
+
+</td>
+</tr>
+</table>
+
 ### Trends
 
-<p>
-  <img src="docs/media/trends.gif" alt="Trends" width="230" align="right">
-</p>
+<table>
+<tr>
+<td valign="top">
 
 - **W, M, 6M and 1Y** beside the title, with a date stepper that pages back through your history.
 - A **summary** with three rings and what changed against the period before, Anya's read, and **comparisons** of Charge with Effort and Charge with Rest.
 - **Daily signals**, a **Charge heat map**, what moves your Charge, the change since the previous period, and ways into Explore, Compare and Insights.
 - **Export a PDF report**: a readable multi-page summary with charts and a daily data table.
+
+</td>
+<td width="250" valign="top">
+
+<img src="docs/media/trends.gif" alt="Trends" width="230">
+
+</td>
+</tr>
+</table>
 
 ### Anya, the coach
 
@@ -201,9 +264,9 @@ All off by default, all with your own keys, none sends anything until you ask.
 
 ### Settings
 
-<p>
-  <img src="docs/media/settings.gif" alt="Settings" width="230" align="right">
-</p>
+<table>
+<tr>
+<td valign="top">
 
 The **More** tab is the settings hub: grouped, with a profile on top, and every row says its current value instead of a generic description. **Search** reaches the individual setting: type
 "live activity" and it opens the right switch, and the ones you opened last are listed.
@@ -218,6 +281,15 @@ The **More** tab is the settings hub: grouped, with a profile on top, and every 
   - *Optional features*: water tracker, **auto-detect workouts** (it only suggests, never saves on its own), journal reminder, **screen on during workouts**, Live Activity, screen on while syncing, and cycle awareness (only on this iPhone).
 - **Data**: **Application** (which of vital signs, stress, sleep, water, lab book, nutrition and nap are shown), **Data and integrations**, **Backup** and **Privacy**.
 - **More**: **Advanced and experiments**, a **Test Centre** for diagnostics, **Open-source notices**, **What's new** and help.
+
+</td>
+<td width="250" valign="top">
+
+<img src="docs/media/settings.gif" alt="Settings" width="230">
+
+</td>
+</tr>
+</table>
 
 ### Data and privacy
 
