@@ -277,29 +277,32 @@ public struct NunaToggleRow: View {
 public struct NunaSegmented<Value: Hashable>: View {
     private let options: [(value: Value, title: LocalizedStringKey)]
     @Binding private var selection: Value
+    private let compact: Bool
 
-    public init(_ options: [(value: Value, title: LocalizedStringKey)], selection: Binding<Value>) {
-        self.options = options; self._selection = selection
+    /// `compact`: a small control for a page header, each segment as wide as its label needs instead of sharing the full width.
+    public init(_ options: [(value: Value, title: LocalizedStringKey)], selection: Binding<Value>, compact: Bool = false) {
+        self.options = options; self._selection = selection; self.compact = compact
     }
 
     public var body: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: compact ? 2 : 0) {
             ForEach(options.indices, id: \.self) { i in
                 let option = options[i]
                 let selected = option.value == selection
                 Button { selection = option.value } label: {
                     Text(option.title)
-                        .font(.nuna(size: 13, weight: .bold))
+                        .font(.nuna(size: compact ? 12 : 13, weight: .bold))
                         .foregroundStyle(selected ? NunaPalette.textPrimary : NunaPalette.textSecondary)
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 36)
+                        .padding(.horizontal, compact ? 11 : 0)
+                        .frame(maxWidth: compact ? nil : .infinity)
+                        .frame(height: compact ? 28 : 36)
                         .background(selected ? NunaPalette.ink.opacity(0.14) : .clear, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(selected ? .isSelected : [])
             }
         }
-        .padding(4)
+        .padding(compact ? 3 : 4)
         .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
     }
 }
