@@ -277,7 +277,8 @@ struct NunaContributorRow: View {
                 Text(verbatim: value ?? "–").font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 if value != nil, !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
             }
-            marker.frame(width: 14)
+            // A fixed slot, empty or not: a row with no change marker keeps its figure in line with the rows that have one.
+            Color.clear.frame(width: 14, height: 10).overlay { marker }
         }
         .padding(.vertical, 16)
         .contentShape(Rectangle())

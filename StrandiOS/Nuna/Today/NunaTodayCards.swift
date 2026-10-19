@@ -649,7 +649,7 @@ struct NunaMetricsGrid: View {
     }
 
     private var grid: some View {
-        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
+        LazyVGrid(columns: [GridItem(.flexible(), spacing: 12, alignment: .top), GridItem(.flexible(), spacing: 12, alignment: .top)], alignment: .center, spacing: 12) {
             ForEach(tiles) { tile in
                 if let route = tile.route {
                     NavigationLink(value: route) { content(tile) }.buttonStyle(.plain)
@@ -665,7 +665,7 @@ struct NunaMetricsGrid: View {
         NunaCard(small: true, padding: EdgeInsets(top: 10, leading: 12, bottom: 12, trailing: 12)) {
             VStack(spacing: 8) {
                 if let header { header.padding(.horizontal, 6) }
-                LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 8, alignment: .top), GridItem(.flexible(), spacing: 8, alignment: .top)], spacing: 8) {
                     ForEach(tiles) { tile in
                         if let route = tile.route {
                             NavigationLink(value: route) { content(tile, inCard: true) }.buttonStyle(.plain)
@@ -716,8 +716,11 @@ struct NunaMetricsGrid: View {
                         Text(verbatim: tile.unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                 }
+                // With trend lines on, every tile keeps the line's room, so a tile with no history yet is as tall as the rest.
                 if let spark = tile.spark, spark.count >= 2 {
                     NunaSpark(values: spark, color: tile.tint ?? NunaPalette.charge).frame(height: 38)
+                } else if tiles.contains(where: { ($0.spark?.count ?? 0) >= 2 }) {
+                    Color.clear.frame(height: 38)
                 }
             }
         }

@@ -12,6 +12,7 @@ import WhoopStore
 struct NunaAnyaTodayCard: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var router: NavRouter
+    @EnvironmentObject private var appModel: AppModel
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
     /// The weather and air, when they are on: Anya reads them with the plan and after a session.
     @ObservedObject private var environment = EnvironmentStore.shared
@@ -102,6 +103,16 @@ struct NunaAnyaTodayCard: View {
         environment.snapshot(near: (row.startTs + row.endTs) / 2).flatMap { NunaInsightText.conditionsDuring($0) }
     }
 
+    /// One short line when the body's signals are off or the wearer logged feeling unwell; the full text is in the bell.
+    private var healthNote: String? {
+        switch appModel.illnessSignal?.level {
+        case .raised?: return String(localized: "Your body looks strained. Take it easy today.")
+        case .alreadyUnwell?: return String(localized: "You logged feeling unwell. Take it easy today.")
+        case .mild?: return String(localized: "Some of your signals are up. Keep an eye on today.")
+        default: return nil
+        }
+    }
+
     private func joined(_ base: String?, _ extra: String?) -> String? {
         switch (base, extra) {
         case let (b?, e?): return b + "\n" + e
@@ -165,7 +176,7 @@ struct NunaAnyaTodayCard: View {
             suggestionCard(next, now: now)
         } else {
             // 5. Nothing done yet: the plan.
-            NunaAnyaCard(verbatim: (plan?.title ?? fallbackLine) + outdoorTag(now: now), detail: joined(planDetail, outdoorNote(now: now)), progress: nil,
+            NunaAnyaCard(verbatim: (plan?.title ?? fallbackLine) + outdoorTag(now: now), detail: joined(joined(planDetail, healthNote), outdoorNote(now: now)), progress: nil,
                          buttonTitle: "Start",
                          onButton: {
                              if let r = plan { router.plannedSession = .init(title: r.title, minutes: r.plan.totalMinutes, zone: r.plan.mainZone) }
@@ -293,7 +304,7 @@ struct NunaAnyaTodayCard: View {
         }
         if let f = n.feeling, f == .hard { detail.append(String(localized: "You called the last one challenging, so this stays easy")) }
         let title = String(format: String(localized: "Another %d min in zone %d"), n.minutes, n.zone)
-        return NunaAnyaCard(verbatim: title + outdoorTag(now: now), detail: joined(detail.joined(separator: " · "), outdoorNote(now: now)), progress: nil,
+        return NunaAnyaCard(verbatim: title + outdoorTag(now: now), detail: joined(joined(detail.joined(separator: " · "), healthNote), outdoorNote(now: now)), progress: nil,
                             buttonTitle: "Start",
                             onButton: {
                                 router.plannedSession = .init(title: title, minutes: n.minutes, zone: n.zone)
