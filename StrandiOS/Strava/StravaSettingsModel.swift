@@ -268,7 +268,7 @@ final class StravaSettingsModel: ObservableObject {
     private func setBusy(_ value: Bool) {
         busy = value
         #if os(iOS)
-        UIApplication.shared.isIdleTimerDisabled = value
+        ScreenIdle.hold(.stravaBusy, value)
         #endif
     }
 }

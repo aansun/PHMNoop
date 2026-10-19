@@ -21,6 +21,16 @@ struct NunaWorkoutGoal: Equatable {
 
     var isFree: Bool { !timeOn && !distanceOn && !zoneOn }
 
+    init() {}
+
+    /// The goal of a session that is already running, read back from the target it carries (also after a restore).
+    init(target: AppModel.WorkoutTarget?) {
+        guard let target else { return }
+        if let s = target.seconds { timeOn = true; minutes = max(1, s / 60) }
+        if let m = target.meters { distanceOn = true; km = m / 1000 }
+        if let z = target.zone { zoneOn = true; zone = z }
+    }
+
     /// Anya's session as a target: its length and the zone most of it is spent in. A session under 30 minutes is shown as 30, the shortest
     /// the setup offers.
     static func suggested(by plan: DayPlan.Plan) -> NunaWorkoutGoal {
@@ -177,7 +187,7 @@ struct NunaWorkoutStartView: View {
                 hasActiveWorkout: model.activeWorkout != nil)
                 .nunaSheetChrome(detents: [.large])
         }
-        .fullScreenCover(isPresented: $live) { NunaLiveWorkoutView(goal: goal, zoneBuzz: zoneBuzz, onClose: { live = false }) }
+        .fullScreenCover(isPresented: $live) { NunaLiveWorkoutView(goal: NunaWorkoutGoal(target: model.workoutTarget), zoneBuzz: zoneBuzz, onClose: { live = false }) }
         .overlay { if let c = countdown { countdownView(c) } }
     }
 
@@ -1141,6 +1151,7 @@ struct NunaLiveWorkoutView: View {
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var repo: Repository
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
     @AppStorage("workoutKeepScreenOn") private var keepScreenOn = false
     @AppStorage("nuna.live.hideBpm") private var hideBpm = false
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
@@ -1187,10 +1198,21 @@ struct NunaLiveWorkoutView: View {
                 NunaWorkoutSummaryView(key: key, initialRow: savedActivityRow)
             }
         }
-        .onAppear { if keepScreenOn { UIApplication.shared.isIdleTimerDisabled = true } }
-        .onDisappear { UIApplication.shared.isIdleTimerDisabled = false }
+        .onAppear {
+            holdScreenAwake()
+            // A session picked up after the app was killed: targets already passed are not announced or buzzed a second time.
+            if let w = model.activeWorkout {
+                if goal.timeOn, w.elapsed(at: Date()) >= Double(goal.minutes * 60) { goalHit = true }
+                if goal.distanceOn, model.gpsRecorder.distanceM >= goal.km * 1000 { distanceHit = true }
+            }
+        }
+        .onDisappear { ScreenIdle.keepAwake(false) }
+        // iOS can drop the "keep awake" flag while the app is away (lock screen, another app, a sync that finished), so it is asked for
+        // again every time the app comes back to the front.
+        .onChange(of: scenePhase) { _, phase in if phase == .active { holdScreenAwake() } }
+        .onChange(of: keepScreenOn) { _, _ in holdScreenAwake() }
         .onChange(of: model.activeWorkout == nil) { _, ended in
-            if ended { UIApplication.shared.isIdleTimerDisabled = false }
+            if ended { ScreenIdle.keepAwake(false) }
         }
         .confirmationDialog("End this workout?", isPresented: $confirmEnd, titleVisibility: .visible) {
             Button("End and save") { finishAndOpenActivity() }
@@ -1774,6 +1796,10 @@ struct NunaLiveWorkoutView: View {
         if goal.timeOn, !goalHit, elapsed >= Double(goal.minutes * 60) { goalHit = true; cue(loops: 3) }
         if goal.distanceOn, !distanceHit, distance >= goal.km * 1000 { distanceHit = true; cue(loops: 3) }
         if goal.zoneOn, zone > 0, zone != goal.zone, Date().timeIntervalSince(lastBuzz) > 45 { lastBuzz = Date(); cue(loops: 1) }
+    }
+
+    private func holdScreenAwake() {
+        ScreenIdle.keepAwake(keepScreenOn && model.activeWorkout != nil)
     }
 
     private func cue(loops: UInt8) {
