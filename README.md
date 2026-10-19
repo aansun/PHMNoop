@@ -49,7 +49,7 @@ The animations are short screen recordings of the app on sample data.
 
 - [Today](#today) · [Metrics](#metrics-charge-effort-rest-and-the-rest) · [Sleep](#sleep) · [Workouts](#workouts) · [Gym](#gym) · [Trends](#trends) · [Anya](#anya-the-coach)
 - [Breathing](#breathing-and-recovery) · [Health and body](#health-and-body) · [Strap](#the-strap) · [Widgets and Live Activities](#widgets-live-activities-and-shortcuts)
-- [Connections](#connections) · [Data, privacy and settings](#data-privacy-and-settings)
+- [Connections](#connections) · [Settings](#settings) · [Data and privacy](#data-and-privacy)
 
 ### Today
 
@@ -199,12 +199,31 @@ All off by default, all with your own keys, none sends anything until you ask.
 | **Weather and air** | OpenWeather and IQAir, your own keys. Only your place, rounded to about a kilometre, is sent |
 | **An AI provider** | For Anya, only if you choose one |
 
-### Data, privacy and settings
+### Settings
 
-- **Settings** are grouped, and the search reaches the individual setting: type "live activity" and it opens the right switch.
-- **Import** WHOOP CSV and Apple Health exports, **back up** and restore, **export** a PDF report, and a Privacy page listing exactly what can leave the phone and its live state.
-- **Units** (metric or imperial, Effort on 0 to 100 or WHOOP's 0 to 21), two looks (Default and WHP) with their own typography, and **English and Indonesian** as first-class languages.
-- A **Test Centre** for diagnostics.
+<p>
+  <img src="docs/media/settings.gif" alt="Settings" width="230" align="right">
+</p>
+
+The **More** tab is the settings hub: grouped, with a profile on top, and every row says its current value instead of a generic description. **Search** reaches the individual setting: type
+"live activity" and it opens the right switch, and the ones you opened last are listed.
+
+- **Personalize**: **Devices** (the strap, its battery and last sync), **Achievements**, **Anya** (provider, key, memory and the morning brief) and **Appearance**.
+  - *Appearance*: two looks (Default and WHP) with their own typography, **units** (metric or imperial, and Effort on 0 to 100 or WHOOP's 0 to 21), and the **language**, English or Indonesian, with Anya's reply language set on its own.
+  - Your **persona** (age, height, weight, maximum heart rate), your **heart-rate zones** and your **targets**.
+- **Notifications and automation**
+  - *Notifications*: Anya's morning brief, the early-illness warning, a summary after a workout, a journal reminder, "Effort target reached", strap battery, and alarms and bedtime.
+  - *Strap automations*: **wrist alerts** as one master switch for every vibration, **double tap** and what it does, a Shortcut when the strap goes on or off, **session cues** (breathing, intervals, live session, workout start and end),
+    heart-rate zone coaching, a stress check with a minute of guided breathing, a **sitting reminder** inside the hours you choose, and the **Siri and Shortcuts** actions.
+  - *Optional features*: water tracker, **auto-detect workouts** (it only suggests, never saves on its own), journal reminder, **screen on during workouts**, Live Activity, screen on while syncing, and cycle awareness (only on this iPhone).
+- **Data**: **Application** (which of vital signs, stress, sleep, water, lab book, nutrition and nap are shown), **Data and integrations**, **Backup** and **Privacy**.
+- **More**: **Advanced and experiments**, a **Test Centre** for diagnostics, **Open-source notices**, **What's new** and help.
+
+### Data and privacy
+
+- **Import** WHOOP CSV and Apple Health exports, **back up** and restore to a folder, **export** a PDF report of your trends, and export a session as FIT or GPX.
+- **Privacy** lists exactly what can leave the phone and its live state: a text summary to an AI provider, Strava, Apple Health, weather and air, and your own exports and backups, and nothing else. It also opens iOS Settings for every permission,
+  and can delete the Apple Health data PHMN imported without touching the strap's.
 
 ---
 
@@ -248,8 +267,8 @@ Design notes for Nuna, the design language, are in [docs/nuna](docs/nuna).
 
 ## Status
 
-Built and tested on my own iPhone with my own strap. NOOP's Mac and Android apps are still in the repository but are not reworked beyond the name. The clips and screenshots are from the iOS simulator
-with sample data.
+PHMN is an **iOS app**, built and tested on my own iPhone with my own strap, and iOS is the only thing I work on and support. NOOP's Mac and Android apps are still in the repository because the fork
+carries NOOP's history, but they are not part of PHMN: they are not built, tested or maintained here, and nothing on this page applies to them. The animations are from the iOS simulator with sample data.
 
 ## Credit and license
 
