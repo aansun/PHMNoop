@@ -132,10 +132,13 @@ struct NunaDayStateView: View {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(spacing: 8) {
-                        if let word { NunaChip(verbatim: word, color: Self.tone(r.level)) }
+                        if let word { NunaChip(verbatim: word, systemImage: "bolt.fill", color: Self.tone(r.level)) }
                         Spacer()
                         NunaChip(verbatim: Self.confidence(r.confidence))
                     }
+                    Text("The bolt chip on Today is your readiness for training: how ready your body looks today, worked out from your own signals. The word is what to do with it, and its colour shows how favourable it is.")
+                        .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                        .fixedSize(horizontal: false, vertical: true).textCase(nil)
                     Text(verbatim: r.headline).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         .fixedSize(horizontal: false, vertical: true).textCase(nil)
                     Text(verbatim: r.summary).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
@@ -152,6 +155,7 @@ struct NunaDayStateView: View {
                         }
                     }
                 }
+                nunaFootnote("Dots: green helps, grey is neutral, amber is worth watching, red works against you.")
             }
             nunaTrendsCap("What the word means")
             NunaCard(small: true) {

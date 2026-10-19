@@ -115,6 +115,8 @@
     "Key statistics": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Statistik utama"}}}},
     "vs. 30 day average": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "vs. rata-rata 30 hari"}}}},
     "Edit time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ubah waktu"}}}},
+    "Dots: green helps, grey is neutral, amber is worth watching, red works against you.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Titik: hijau membantu, abu-abu netral, kuning tua perlu diperhatikan, merah merugikan."}}}},
+    "The bolt chip on Today is your readiness for training: how ready your body looks today, worked out from your own signals. The word is what to do with it, and its colour shows how favourable it is.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Chip petir di Today adalah kesiapan Anda untuk berlatih: seberapa siap tubuh Anda hari ini, dihitung dari sinyal Anda sendiri. Katanya adalah apa yang sebaiknya dilakukan, dan warnanya menunjukkan seberapa baik kondisinya."}}}},
     "The colour of the dot": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Arti warna titik"}}}},
     "Grey": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Abu-abu"}}}},
     "67% and above. You are well recovered: a hard session should land well.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "67% ke atas. Anda pulih dengan baik: sesi berat seharusnya berjalan baik."}}}},
