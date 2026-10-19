@@ -36,6 +36,11 @@ struct NunaTrendsView: View {
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
     @StateObject private var m = NunaTrendsModel()
     @State private var range = 30
+    /// How many whole windows back the screen is looking: 0 is the window ending today.
+    @State private var page = 0
+    private var back: Int { page * range }
+    /// Far enough back to cover the stored history (400 days).
+    private var canGoBack: Bool { (page + 1) * range < 400 }
     @State private var showReport = false
     @State private var showCoach = false
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
@@ -79,7 +84,8 @@ struct NunaTrendsView: View {
     // MARK: Header
 
     private var rangeCaption: String {
-        guard let a = TrendInsights.shift(m.todayKey, by: -(range - 1)), let da = m.date(a), let db = m.date(m.todayKey) else { return "" }
+        guard let a = TrendInsights.shift(m.todayKey, by: -(back + range - 1)), let da = m.date(a),
+              let end = TrendInsights.shift(m.todayKey, by: -back), let db = m.date(end) else { return "" }
         if range > 90 {
             let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("d MMM yy")
             return f.string(from: da) + " – " + f.string(from: db)
@@ -87,15 +93,17 @@ struct NunaTrendsView: View {
         return NunaTrendsFormat.short(da) + " – " + NunaTrendsFormat.short(db)
     }
 
-    /// The title with the range switch small at its right, on one line; the dates it covers sit under the title.
+    /// The title on the left; on the right the same W / M / 6M switch and date stepper every trend card uses.
     private var header: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(alignment: .center) {
-                Text("Trends").font(.nuna(size: NunaTypeSize.h1, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                Spacer(minLength: 8)
-                NunaSegmented(NunaTrendsRange.options, selection: $range, compact: true)
+        HStack(alignment: .top) {
+            Text("Trends").font(.nuna(size: NunaTypeSize.h1, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                .padding(.top, 4)
+            Spacer(minLength: 8)
+            VStack(alignment: .trailing, spacing: 12) {
+                NunaRangeSwitch(choices: NunaTrendsRange.choices, range: $range) { page = 0 }
+                NunaDateStepper(label: rangeCaption, canGoBack: canGoBack, canGoForward: page > 0,
+                                back: { page += 1 }, forward: { page = max(0, page - 1) })
             }
-            Text(verbatim: rangeCaption).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
         }
     }
 
@@ -104,8 +112,8 @@ struct NunaTrendsView: View {
     private func delta(_ now: Double?, _ before: Double?) -> Double? { (now != nil && before != nil) ? now! - before! : nil }
 
     private var summaryCard: some View {
-        let c = m.means(m.charge, days: range), e = m.means(m.effort, days: range), r = m.means(m.rest, days: range)
-        let win = m.window(m.charge, days: range)
+        let c = m.means(m.charge, days: range, back: back), e = m.means(m.effort, days: range, back: back), r = m.means(m.rest, days: range, back: back)
+        let win = m.window(m.charge, days: range, back: back)
         let green = win.filter { $0.value >= 67 }.count
         let best = win.max { $0.value < $1.value }, worst = win.min { $0.value < $1.value }
         return NunaCard {
@@ -208,10 +216,10 @@ struct NunaTrendsView: View {
         }
     }
 
-    private var windowStart: String { TrendInsights.shift(m.todayKey, by: -(range - 1)) ?? m.todayKey }
+    private var windowStart: String { TrendInsights.shift(m.todayKey, by: -(back + range - 1)) ?? m.todayKey }
 
     private var chargeEffortCard: some View {
-        let ch = m.window(m.charge, days: range), ef = m.window(m.effort, days: range)
+        let ch = m.window(m.charge, days: range, back: back), ef = m.window(m.effort, days: range, back: back)
         let pairs = TrendInsights.pairs(driver: ef, outcome: m.charge, lag: 1)
         let corr = CorrelationEngine.pearson(pairs.map { ($0.x, $0.y) })
         let efDisp: NunaDaySeries = ef.map { ($0.day, UnitFormatter.effortValue($0.value, scale: scale)) }
@@ -236,7 +244,7 @@ struct NunaTrendsView: View {
     }
 
     private var chargeRestCard: some View {
-        let ch = m.window(m.charge, days: range), rs = m.window(m.rest, days: range)
+        let ch = m.window(m.charge, days: range, back: back), rs = m.window(m.rest, days: range, back: back)
         let pairs = TrendInsights.pairs(driver: rs, outcome: m.charge, lag: 0)
         let corr = CorrelationEngine.pearson(pairs.map { ($0.x, $0.y) })
         let b = TrendInsights.buckets(driver: rs, outcome: m.charge, edges: [78, 86], lag: 0)
@@ -285,8 +293,8 @@ struct NunaTrendsView: View {
     enum SignalRoute { case metricKey(String) }
 
     @ViewBuilder private func signal(_ title: LocalizedStringKey, _ s: NunaDaySeries, _ unit: String, _ digits: Int, upGood: Bool, route: SignalRoute) -> some View {
-        let win = m.window(s, days: range)
-        let (now, before) = m.means(s, days: range)
+        let win = m.window(s, days: range, back: back)
+        let (now, before) = m.means(s, days: range, back: back)
         let d = delta(now, before)
         let tile = NunaCard(small: true) {
             VStack(alignment: .leading, spacing: 8) {
@@ -341,7 +349,7 @@ struct NunaTrendsView: View {
     }
 
     private var sinceCard: some View {
-        let c = m.means(m.charge, days: range), e = m.means(m.effort, days: range), r = m.means(m.rest, days: range)
+        let c = m.means(m.charge, days: range, back: back), e = m.means(m.effort, days: range, back: back), r = m.means(m.rest, days: range, back: back)
         return NunaCard {
             VStack(alignment: .leading, spacing: 16) {
                 nunaTrendsCap("Against the previous period")
@@ -371,7 +379,7 @@ struct NunaTrendsView: View {
     }
 
     private var anyaCard: some View {
-        let b = TrendInsights.buckets(driver: m.window(m.effort, days: range).map { ($0.day, UnitFormatter.effortValue($0.value, scale: scale)) },
+        let b = TrendInsights.buckets(driver: m.window(m.effort, days: range, back: back).map { ($0.day, UnitFormatter.effortValue($0.value, scale: scale)) },
                                       outcome: m.charge, edges: [effortEdges[0], effortEdges[1]], lag: 1)
         let best = b.filter { $0.meanOutcome != nil && $0.n >= 3 }.max { $0.meanOutcome! < $1.meanOutcome! }
         return Group {
