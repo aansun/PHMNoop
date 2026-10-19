@@ -228,6 +228,34 @@ enum AppleDemoSeeder {
         _ = try await store.upsertAppleDaily(appleRows, deviceId: apple)
         if !workouts.isEmpty { _ = try await store.upsertWorkouts(workouts, deviceId: whoop) }
         if !journal.isEmpty { _ = try await store.upsertJournal(journal, deviceId: whoop) }
+        // One finished gym session from yesterday, with sets, so the gym summary can be looked at under `--demo-seed`.
+        let gymStart = Int(cal.startOfDay(for: Date()).timeIntervalSince1970) - 86_400 + 18 * 3600
+        let gymEnd = gymStart + 62 * 60
+        let gymSession = "demo-gym-1"
+        _ = try await store.upsertWorkouts([WorkoutRow(
+            startTs: gymStart, endTs: gymEnd, sport: "Strength Training", source: "manual", durationS: 62 * 60,
+            energyKcal: 410, avgHr: 118, maxHr: 156, strain: 38, distanceM: nil, zonesJSON: nil, notes: "Upper push/pull", steps: nil)], deviceId: whoop)
+        _ = try await store.upsertLiftSessions([LiftSessionRow(
+            id: gymSession, deviceId: whoop, startTs: gymStart, endTs: gymEnd, sport: "Strength Training",
+            programId: nil, programName: "Upper push/pull", sessionRpe: nil, note: nil)])
+        let plan: [(String, LiftMuscle, [LiftMuscle], [(Double, Int)])] = [
+            ("Bench Press", .chest, [.triceps, .frontDelts], [(40, 10), (60, 8), (60, 8), (62.5, 6)]),
+            ("Barbell Row", .lats, [.upperBack], [(50, 10), (60, 8), (60, 8)]),
+            ("Overhead Press", .frontDelts, [.triceps], [(30, 10), (35, 8), (35, 7)]),
+            ("Lat Pulldown", .lats, [.biceps], [(45, 12), (50, 10), (50, 10)]),
+        ]
+        var ord = 0
+        var liftSets: [LiftSetRow] = []
+        for (name, primary, secondary, work) in plan {
+            for (i, w) in work.enumerated() {
+                liftSets.append(LiftSetRow(
+                    id: "\(gymSession)-\(ord)", deviceId: whoop, sessionId: gymSession, ord: ord, exercise: name, primaryMuscle: primary,
+                    secondaryMuscles: secondary, setIndex: i + 1, weightKg: w.0, reps: w.1, rpe: nil, isWarmup: false,
+                    startTs: gymStart + ord * 240, endTs: gymStart + ord * 240 + 60, restSec: 90, note: nil))
+                ord += 1
+            }
+        }
+        _ = try await store.upsertLiftSets(liftSets)
         NSLog("AppleDemoSeeder: seeded \(daily.count) days, \(workouts.count) workouts.")
     }
 
