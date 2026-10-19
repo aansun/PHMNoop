@@ -64,8 +64,8 @@ final class NunaTrendsModel: ObservableObject {
     func mean(_ s: Series) -> Double? { s.isEmpty ? nil : s.map(\.value).reduce(0, +) / Double(s.count) }
 
     /// Mean of the current window and of the window right before it.
-    func means(_ s: Series, days: Int) -> (now: Double?, before: Double?) {
-        (mean(window(s, days: days)), mean(window(s, days: days, back: days)))
+    func means(_ s: Series, days: Int, back: Int = 0) -> (now: Double?, before: Double?) {
+        (mean(window(s, days: days, back: back)), mean(window(s, days: days, back: back + days)))
     }
 
     func date(_ day: String) -> Date? { Self.parser.date(from: day) }
@@ -118,6 +118,8 @@ enum NunaTrendsFormat {
 enum NunaTrendsRange: Int, CaseIterable, Identifiable {
     case week = 7, month = 30, halfYear = 180, year = 365
     var id: Int { rawValue }
+    /// The same choices for the shared range switch of the trend cards.
+    static let choices: [(value: Int, title: String)] = [(7, "W\u{2060}"), (30, "M"), (180, "6M"), (365, "1Y")]
     static var options: [(value: Int, title: LocalizedStringKey)] {
         [(7, "W\u{2060}"), (30, "M"), (180, "6M"), (365, "1Y")]
     }
