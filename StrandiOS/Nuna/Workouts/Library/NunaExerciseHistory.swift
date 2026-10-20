@@ -25,7 +25,7 @@ enum NunaExerciseHistory {
 
     /// The records of an exercise over every session logged: the best of each, and the session it was set in.
     struct Records {
-        var heaviest: Double?, oneRepMax: Double?, bestSetVolume: Double?, bestSessionVolume: Double?, mostReps: Int?
+        var heaviest: Double?, oneRepMax: Double?, bestSetVolume: Double?, bestSessionVolume: Double?, mostReps: Int?, mostRepsInSession: Int?
     }
 
     /// For each number of reps you have done, the heaviest weight you did it with, fewest reps first.
@@ -39,12 +39,18 @@ enum NunaExerciseHistory {
     /// sessions oldest first, so a later session never takes a record from an earlier one. Keyed by set id, with the words to show.
     static func records(inSets sessions: [NunaExerciseSession]) -> [String: [String]] {
         var out: [String: [String]] = [:]
-        var bestWeight = 0.0, bestMax = 0.0
+        var bestWeight = 0.0, bestMax = 0.0, bestReps = 0
         for s in sessions.sorted(by: { $0.startTs < $1.startTs }) {
             for set in s.sets where !set.isWarmup {
                 var labels: [String] = []
-                if let w = set.weightKg, w > bestWeight { if bestWeight > 0 { labels.append(String(localized: "Weight")) }; bestWeight = w }
-                if let m = oneRepMax(set), m > bestMax { if bestMax > 0 { labels.append("1RM") }; bestMax = m }
+                if NunaExerciseKind.of(set.exercise).usesWeight {
+                    if let w = set.weightKg, w > bestWeight { if bestWeight > 0 { labels.append(String(localized: "Weight")) }; bestWeight = w }
+                    if let m = oneRepMax(set), m > bestMax { if bestMax > 0 { labels.append("1RM") }; bestMax = m }
+                } else if let r = set.reps, r > bestReps {
+                    // A bodyweight set is a record by its reps, a hold by its time.
+                    if bestReps > 0 { labels.append(NunaExerciseKind.of(set.exercise) == .timed ? String(localized: "Time") : String(localized: "Reps")) }
+                    bestReps = r
+                }
                 if !labels.isEmpty { out[set.id] = labels }
             }
         }
@@ -59,6 +65,8 @@ enum NunaExerciseHistory {
             if let b = s.bestSetVolume { r.bestSetVolume = max(r.bestSetVolume ?? 0, b) }
             if s.volume > 0 { r.bestSessionVolume = max(r.bestSessionVolume ?? 0, s.volume) }
             if let m = s.working.compactMap(\.reps).max() { r.mostReps = max(r.mostReps ?? 0, m) }
+            let total = s.working.compactMap(\.reps).reduce(0, +)
+            if total > 0 { r.mostRepsInSession = max(r.mostRepsInSession ?? 0, total) }
         }
         return r
     }
