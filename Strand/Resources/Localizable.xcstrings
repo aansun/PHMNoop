@@ -115,6 +115,7 @@
     "Key statistics": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Statistik utama"}}}},
     "vs. 30 day average": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "vs. rata-rata 30 hari"}}}},
     "Edit time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ubah waktu"}}}},
+    "Explore Program": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Jelajahi Program"}}}},
     "Bring a routine in from a spreadsheet": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Bawa rutinitas dari spreadsheet"}}}},
     "Only when you tap Watch a video: YouTube gets the exercise name": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Hanya saat Anda menekan Tonton video: YouTube menerima nama latihan"}}}},
     "Exercise videos": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Video latihan"}}}},

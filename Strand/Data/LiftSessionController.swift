@@ -160,21 +160,26 @@ final class LiftSessionController: ObservableObject {
         LiftSessionPersistence.clear()
     }
 
-    /// Called once the session has been written to the store.
-    func finishedSaving() {
-        teardown()
+    /// The session that was just saved, for the shell to show its summary in the screen the session was on.
+    @Published var summaryRequest: String?
+
+    /// Called once the session has been written to the store. With `summaryId` the screen stays up for the summary of that session
+    /// instead of closing; the shell then swaps the session for the summary.
+    func finishedSaving(summaryId: String? = nil) {
+        teardown(keepScreen: summaryId != nil)
         LiftSessionPersistence.clear()
         savedSessions += 1
+        if let summaryId { summaryRequest = summaryId }
     }
 
-    private func teardown() {
+    private func teardown(keepScreen: Bool = false) {
         engine = nil
         programId = nil
         programName = nil
         warnedFor = nil
         pendingWarmups = []
         pendingValues = [:]
-        isPresented = false
+        if !keepScreen { isPresented = false }
         ticker?.cancel()
         ticker = nil
         setStrapHandler(nil)

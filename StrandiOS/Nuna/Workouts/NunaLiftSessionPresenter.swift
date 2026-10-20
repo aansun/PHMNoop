@@ -29,6 +29,19 @@ final class NunaLiftSessionPresenter {
         attempt(generation: generation, tries: 0, repo: repo, model: model, session: session, router: router)
     }
 
+    /// Replaces the session on the screen with the summary of the session just saved. Back from it closes the screen.
+    func showSummary(sessionId: String, repo: Repository, model: AppModel, session: LiftSessionController, router: NavRouter) {
+        guard let host else { return }
+        let root = NavigationStack { NunaGymSessionView(sessionId: sessionId).nunaWorkoutDestinations() }
+            .environmentObject(repo).environmentObject(session).environmentObject(model)
+            .environmentObject(model.ble).environmentObject(model.live).environmentObject(model.profile)
+            .environmentObject(model.behavior).environmentObject(model.intelligence).environmentObject(model.coach)
+            .environmentObject(router)
+            .environment(\.locale, AppLanguage.activeLocale)
+            .preferredColorScheme(NunaTheme.colorScheme)
+        host.rootView = AnyView(root)
+    }
+
     func dismiss() {
         generation += 1
         // Asked of the controller below, so the session goes with anything open above it (the finish sheet); asked of the session itself it

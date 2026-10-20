@@ -198,9 +198,6 @@ struct NunaGymView: View {
         NunaMuscleReadinessCard(readings: readiness)
         weekSection
         sessionsSection
-        NavigationLink(value: NunaWorkoutRoute.explore) {
-            NunaCard(small: true) { NunaListRow("Explore programs", description: "Ready-made routines by level, goal and equipment", systemImage: "safari", showsChevron: true) }
-        }.buttonStyle(.plain)
         NavigationLink(value: NunaWorkoutRoute.loadMuscle) {
             NunaCard(small: true) { NunaListRow("Muscle load", description: "Volume, recovery and personal records", systemImage: "chart.bar", showsChevron: true) }
         }.buttonStyle(.plain)
@@ -296,7 +293,7 @@ struct NunaGymView: View {
                 ForEach(loose, id: \.id) { p in programRow(p) }
             }
             if programView == "types" {
-                NavigationLink(value: NunaWorkoutRoute.explore) { programButton("Explore", "safari") }.buttonStyle(.plain)
+                NavigationLink(value: NunaWorkoutRoute.explore) { programButton("Explore Program", "safari") }.buttonStyle(.plain)
             } else {
                 HStack(spacing: 10) {
                     NavigationLink(value: NunaWorkoutRoute.program("new")) { programButton("New program", "plus") }.buttonStyle(.plain)

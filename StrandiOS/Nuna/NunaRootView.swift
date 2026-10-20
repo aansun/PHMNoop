@@ -94,6 +94,11 @@ struct NunaRootView: View {
         // The gym session is full screen, like the live workout of every other sport, and never a sheet that a swipe could close by accident:
         // it is put away with the chevron in its header. It is presented by UIKit over whatever is on top, so starting it from a sheet
         // (Gym in Quick actions) does not close the sheet first.
+        .onChange(of: liftSession.summaryRequest) { _, id in
+            guard let id else { return }
+            sessionPresenter.showSummary(sessionId: id, repo: model.repo, model: model, session: liftSession, router: router)
+            liftSession.summaryRequest = nil
+        }
         .onChange(of: liftSession.isPresented) { _, on in
             if on { sessionPresenter.present(repo: model.repo, model: model, session: liftSession, router: router) } else { sessionPresenter.dismiss() }
         }
