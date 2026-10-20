@@ -71,7 +71,7 @@ extension KeyMetric {
 extension DashboardCard {
     var customizationTint: Color {
         switch self {
-        case .stress, .respiratory: return StrandPalette.accent
+        case .stress, .respiratory, .weight: return StrandPalette.accent
         case .fitnessAge: return StrandPalette.chargeColor
         case .vo2max: return StrandPalette.chargeColor
         case .vitality, .hrv: return StrandPalette.metricPurple

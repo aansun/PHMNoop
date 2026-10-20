@@ -112,7 +112,7 @@ struct NunaTodayView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var router: NavRouter
     @EnvironmentObject private var liftSession: LiftSessionController
-    @EnvironmentObject private var profile: ProfileStore
+    @EnvironmentObject var profile: ProfileStore
     @EnvironmentObject private var updateStore: UpdateStore
     @EnvironmentObject private var intelligence: IntelligenceEngine
 
