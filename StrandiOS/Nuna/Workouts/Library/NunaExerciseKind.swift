@@ -114,6 +114,14 @@ enum NunaProgramType: Int, CaseIterable, Identifiable {
         case .bodyweight: return "Bodyweight"; case .travel: return "Travel"; case .cardio: return "Cardio"
         }
     }
+    /// The type's name as plain text, for the group a program is put in.
+    var name: String {
+        switch self {
+        case .anya: return String(localized: "Anya special"); case .gym: return String(localized: "Gym"); case .home: return String(localized: "At home")
+        case .dumbbells: return String(localized: "Dumbbells only"); case .bodyweight: return String(localized: "Bodyweight")
+        case .travel: return String(localized: "Travel"); case .cardio: return String(localized: "Cardio")
+        }
+    }
     var icon: String {
         switch self {
         case .anya: return "sparkles"; case .gym: return "building.2"; case .home: return "house"; case .dumbbells: return "dumbbell.fill"
@@ -137,6 +145,12 @@ enum NunaProgramType: Int, CaseIterable, Identifiable {
         case "other"?: return NunaExerciseKind.natural(name) == .weighted ? .gym : .bar   // a pull-up bar, rings
         default: return .gym
         }
+    }
+
+    /// The one type a program is filed under when it fits several: the most specific first, so a dumbbell routine is "Dumbbells only"
+    /// rather than "At home", and a bodyweight one "Bodyweight" rather than "At home". Anya's own are filed apart.
+    static func primary(of types: Set<NunaProgramType>) -> NunaProgramType? {
+        [.anya, .cardio, .dumbbells, .bodyweight, .home, .gym].first { types.contains($0) }
     }
 
     static func classify(exercises: [String], isAnya: Bool) -> Set<NunaProgramType> {

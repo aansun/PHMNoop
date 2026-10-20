@@ -450,6 +450,7 @@ struct NunaSaveProgramView: View {
                                       targetWeightKg: useWeights ? best?.weightKg : nil, restSec: rows.compactMap(\.restSec).max(), note: nil)
         }
         _ = try? await store.replaceLiftProgramItems(programId: pid, items: items)
+        NunaProgramGroupsModel.shared.placeNew(pid)
         await repo.refresh()
         dismiss()
     }

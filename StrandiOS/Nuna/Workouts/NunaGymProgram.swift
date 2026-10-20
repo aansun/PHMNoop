@@ -361,6 +361,7 @@ struct NunaProgramEditor: View {
                                targetWeightKg: it.targetWeightKg, restSec: it.restSec, note: it.note)
         }
         _ = try? await store.replaceLiftProgramItems(programId: id, items: ordered)
+        if isNew { NunaProgramGroupsModel.shared.placeNew(id) }
         await repo.refresh()
         dismiss()
     }
@@ -1012,6 +1013,7 @@ struct NunaProgramImportView: View {
                                    targetRepsLow: l.targetReps, targetRepsHigh: nil, targetRpe: nil, targetWeightKg: l.targetWeightKg, restSec: l.restSec, note: l.note)
             }
             _ = try? await store.replaceLiftProgramItems(programId: pid, items: items)
+            NunaProgramGroupsModel.shared.placeNew(pid)
             let exercises = program.lines.map { l in
                 LiftExerciseRow(id: UUID().uuidString, deviceId: repo.deviceId, name: l.exercise, primaryMuscle: l.primaryMuscle, secondaryMuscles: l.secondaryMuscles, createdAt: now, lastUsedTs: nil)
             }

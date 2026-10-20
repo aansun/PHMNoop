@@ -331,6 +331,7 @@ struct NunaGymAnyaSheet: View {
         }
         _ = try? await store.replaceLiftProgramItems(programId: id, items: items)
         NunaAnyaPrograms.add(id)
+        NunaProgramGroupsModel.shared.place(id, inGroupNamed: NunaProgramType.anya.name)
         await repo.refresh()
         saved = true
     }

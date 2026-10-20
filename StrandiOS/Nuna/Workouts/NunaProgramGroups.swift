@@ -21,6 +21,10 @@ final class NunaProgramGroupsModel: ObservableObject {
 
     private struct Stored: Codable { var groups: [NunaProgramGroup]; var membership: [String: String] }
 
+    /// The group the Gym tab shows, as it was left: the id of a group, or empty for Ungrouped, the group every program is in until it is moved.
+    @Published var openGroupId: String = UserDefaults.standard.string(forKey: "nuna.gym.openGroup") ?? "" {
+        didSet { UserDefaults.standard.set(openGroupId, forKey: "nuna.gym.openGroup") }
+    }
     @Published private(set) var groups: [NunaProgramGroup] = []
     /// Program id to group id.
     @Published private(set) var membership: [String: String] = [:]
@@ -64,6 +68,7 @@ final class NunaProgramGroupsModel: ObservableObject {
 
     /// The group goes; its programs stay and become ungrouped.
     func delete(_ group: NunaProgramGroup) {
+        if openGroupId == group.id { openGroupId = "" }
         groups.removeAll { $0.id == group.id }
         membership = membership.filter { $0.value != group.id }
         save()
@@ -72,6 +77,27 @@ final class NunaProgramGroupsModel: ObservableObject {
     func move(_ programId: String, to group: NunaProgramGroup?) {
         if let group { membership[programId] = group.id } else { membership.removeValue(forKey: programId) }
         save()
+    }
+
+    /// The group on show, or nil for Ungrouped (also when the remembered group is gone).
+    var openGroup: NunaProgramGroup? { groups.first { $0.id == openGroupId } }
+
+    /// The very first time, when no group was ever opened, show the group that holds the most programs rather than an empty Ungrouped.
+    func adoptDefaultGroup(for all: [LiftProgramRow]) {
+        guard UserDefaults.standard.object(forKey: "nuna.gym.openGroup") == nil else { return }
+        if ungrouped(all).count > 0 { openGroupId = ""; return }
+        if let best = groups.max(by: { programs(in: $0, from: all).count < programs(in: $1, from: all).count }), !programs(in: best, from: all).isEmpty { openGroupId = best.id }
+    }
+
+
+    /// A program just made by hand goes into the group on show, so it lands where the person is looking. Ungrouped stays ungrouped.
+    func placeNew(_ programId: String) {
+        if let g = openGroup { move(programId, to: g) }
+    }
+
+    /// A program made from a template or by Anya goes into the group of its type, made if it is not there yet.
+    func place(_ programId: String, inGroupNamed name: String) {
+        if let g = add(name: name) { move(programId, to: g) }
     }
 
     func toggleCollapsed(_ group: NunaProgramGroup) {

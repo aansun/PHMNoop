@@ -166,9 +166,6 @@ struct NunaGymView: View {
     @EnvironmentObject private var profile: ProfileStore
     @StateObject private var anyaModel = NunaGymAnyaModel()
     @StateObject private var anyaDay = NunaTodayModel()
-    @AppStorage("nuna.gym.programView") private var programView = "folders"
-    @AppStorage("nuna.gym.collapsedTypes") private var collapsedTypesRaw = ""
-    @State private var kinds: [String: Set<NunaProgramType>] = [:]
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
     @State private var deletingProgram: LiftProgramRow?
     @State private var lastUsed: [String: Int] = [:]
@@ -194,7 +191,7 @@ struct NunaGymView: View {
 
     @ViewBuilder private var content: some View {
         NunaGymAnyaCard(model: anyaModel)
-        emptyCard
+        topActions
         programsSection
         NunaMuscleReadinessCard(readings: readiness)
         weekSection
@@ -226,21 +223,27 @@ struct NunaGymView: View {
         } }
     }
 
-    // MARK: Empty session
+    // MARK: Start and explore
 
-    private var emptyCard: some View {
-        NunaCard(highlight: true) {
-            HStack(spacing: 14) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(session.isActive ? "Session in progress" : "Start an empty session").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(session.isActive ? "Open it to keep logging sets" : "Pick the exercises you want to do").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+    /// Two buttons side by side under Anya: an empty session, and the ready-made programs.
+    private var topActions: some View {
+        HStack(spacing: 10) {
+            Button { if session.isActive { session.present() } else { picking = true } } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: session.isActive ? "arrow.up.forward" : "plus").font(.nuna(size: 14, weight: .bold))
+                    Text(session.isActive ? "Open session" : "Empty session").font(.nuna(size: 15, weight: .bold)).lineLimit(1).minimumScaleFactor(0.8)
                 }
-                Spacer(minLength: 8)
-                Button { if session.isActive { session.present() } else { picking = true } } label: {
-                    Text(session.isActive ? "Open" : "Start").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                        .padding(.horizontal, 22).frame(height: 44).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                }.buttonStyle(.plain)
-            }
+                .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 52)
+                .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+            }.buttonStyle(.plain)
+            NavigationLink(value: NunaWorkoutRoute.explore) {
+                HStack(spacing: 8) {
+                    Image(systemName: "safari").font(.nuna(size: 14, weight: .bold))
+                    Text("Explore Program").font(.nuna(size: 15, weight: .bold)).lineLimit(1).minimumScaleFactor(0.8)
+                }
+                .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52)
+                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+            }.buttonStyle(.plain)
         }
     }
 
@@ -255,7 +258,11 @@ struct NunaGymView: View {
         guard let dialog = groupDialog else { return }
         switch dialog {
         case .new(let programId):
-            if let g = groupsModel.add(name: groupName), let programId { groupsModel.move(programId, to: g) }
+            // The new group opens, so a program just moved into it, or the empty group just made, is the one in view.
+            if let g = groupsModel.add(name: groupName) {
+                if let programId { groupsModel.move(programId, to: g) }
+                groupsModel.openGroupId = g.id
+            }
         case .rename(let g):
             groupsModel.rename(g, to: groupName)
         }
@@ -267,35 +274,64 @@ struct NunaGymView: View {
         groupDialog = dialog
     }
 
+    /// Every program is in a group: one the person made, or Ungrouped. One group shows at a time, picked from a drop-down, and the Gym tab
+    /// comes back to the one that was open last.
     private var programsSection: some View {
-        let loose = groupsModel.ungrouped(programs)
-        let suggestion = groupsModel.suggestions(for: programs).first
+        let open = groupsModel.openGroup
+        let inGroup = open.map { groupsModel.programs(in: $0, from: programs) } ?? groupsModel.ungrouped(programs)
+        let suggestion = open == nil ? groupsModel.suggestions(for: programs).first : nil
         return VStack(alignment: .leading, spacing: 12) {
             NunaTitleRow(title: "Programs") { EmptyView() }
-            if loaded, programs.isEmpty {
-                NunaCard(small: true) {
-                    Text("No programs yet. A program is a named list of exercises with your targets for each.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+            NunaCard {
+                VStack(alignment: .leading, spacing: 14) {
+                    groupPicker(open, count: inGroup.count)
+                    if let suggestion { suggestionCard(suggestion) }
+                    if inGroup.isEmpty {
+                        Text(loaded && programs.isEmpty ? "No programs yet. A program is a named list of exercises with your targets for each."
+                             : open == nil ? "Every program is in a group. The ones you have not moved are here." : "Empty. Use the menu of a program to move it here.")
+                            .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    }
+                    ForEach(inGroup, id: \.id) { p in programRow(p) }
+                    HStack(spacing: 10) {
+                        NavigationLink(value: NunaWorkoutRoute.program("new")) { programButton("New program", "plus") }.buttonStyle(.plain)
+                        Button { askForGroup(.new(programId: nil)) } label: { programButton("New group", "folder.badge.plus") }.buttonStyle(.plain)
+                    }
                 }
             }
-            if !programs.isEmpty {
-                NunaSegmented([(value: "folders", title: "My folders"), (value: "types", title: "By type")], selection: $programView)
-            }
-            if programView == "types" {
-                typeSections
-            } else {
-                if let suggestion { suggestionCard(suggestion) }
-                ForEach(groupsModel.groups) { g in groupSection(g) }
-                if !groupsModel.groups.isEmpty, !loose.isEmpty {
-                    Text("Ungrouped").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).padding(.top, 4)
+        }
+    }
+
+    /// The drop-down that names the group on show, with the options of that group beside it.
+    private func groupPicker(_ open: NunaProgramGroup?, count: Int) -> some View {
+        HStack(spacing: 8) {
+            Menu {
+                Button { withAnimation(.easeInOut(duration: 0.2)) { groupsModel.openGroupId = "" } } label: {
+                    if open == nil { Label(String(localized: "Ungrouped") + " (\(groupsModel.ungrouped(programs).count))", systemImage: "checkmark") }
+                    else { Text(verbatim: String(localized: "Ungrouped") + " (\(groupsModel.ungrouped(programs).count))") }
                 }
-                ForEach(loose, id: \.id) { p in programRow(p) }
-            }
-            if programView == "types" {
-                NavigationLink(value: NunaWorkoutRoute.explore) { programButton("Explore Program", "safari") }.buttonStyle(.plain)
-            } else {
+                ForEach(groupsModel.groups) { g in
+                    Button { withAnimation(.easeInOut(duration: 0.2)) { groupsModel.openGroupId = g.id } } label: {
+                        let n = groupsModel.programs(in: g, from: programs).count
+                        if open?.id == g.id { Label(g.name + " (\(n))", systemImage: "checkmark") } else { Text(verbatim: g.name + " (\(n))") }
+                    }
+                }
+            } label: {
                 HStack(spacing: 10) {
-                    NavigationLink(value: NunaWorkoutRoute.program("new")) { programButton("New program", "plus") }.buttonStyle(.plain)
-                    Button { askForGroup(.new(programId: nil)) } label: { programButton("New group", "folder.badge.plus") }.buttonStyle(.plain)
+                    Image(systemName: open == nil ? "tray" : "folder").font(.nuna(size: 16, weight: .semibold))
+                    Text(verbatim: open?.name ?? String(localized: "Ungrouped")).font(.nuna(size: 17, weight: .heavy)).lineLimit(1)
+                    Text(verbatim: "\(count)").font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
+                    Image(systemName: "chevron.up.chevron.down").font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                    Spacer(minLength: 0)
+                }
+                .foregroundStyle(NunaPalette.textPrimary).frame(minHeight: 40).contentShape(Rectangle())
+            }
+            .accessibilityLabel(Text("Group"))
+            if let open {
+                Menu {
+                    Button { askForGroup(.rename(open)) } label: { Label("Rename group", systemImage: "pencil") }
+                    Button(role: .destructive) { deletingGroup = open } label: { Label("Delete group", systemImage: "trash") }
+                } label: {
+                    Image(systemName: "ellipsis").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 34, height: 36).contentShape(Rectangle())
                 }
             }
         }
@@ -321,72 +357,6 @@ struct NunaGymView: View {
     }
 
     /// One folder: its name and count (tap to fold it), a menu to rename or delete it, and its programs.
-    @ViewBuilder private func groupSection(_ g: NunaProgramGroup) -> some View {
-        let inside = groupsModel.programs(in: g, from: programs)
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 10) {
-                Button { withAnimation(.easeInOut(duration: 0.2)) { groupsModel.toggleCollapsed(g) } } label: {
-                    HStack(spacing: 10) {
-                        Image(systemName: g.collapsed ? "folder.fill" : "folder").font(.nuna(size: 17, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: g.name).font(.nuna(size: 17, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
-                        Text(verbatim: "\(inside.count)").font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
-                        Spacer(minLength: 6)
-                        Image(systemName: "chevron.down").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted).rotationEffect(.degrees(g.collapsed ? -90 : 0))
-                    }.contentShape(Rectangle())
-                }.buttonStyle(.plain)
-                Menu {
-                    Button { askForGroup(.rename(g)) } label: { Label("Rename group", systemImage: "pencil") }
-                    Button(role: .destructive) { deletingGroup = g } label: { Label("Delete group", systemImage: "trash") }
-                } label: {
-                    Image(systemName: "ellipsis").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 34, height: 36).contentShape(Rectangle())
-                }
-            }
-            .padding(.horizontal, 4)
-            if !g.collapsed {
-                if inside.isEmpty {
-                    NunaCard(small: true) {
-                        Text("Empty. Use the menu of a program to move it here.").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                }
-                ForEach(inside, id: \.id) { p in programRow(p) }
-            }
-        }
-        .padding(.top, 4)
-    }
-
-    /// The programs grouped by what they need: a program shows under every type it fits (a dumbbell program is also an at-home one).
-    /// The types folded away in the By type view, kept between visits.
-    private var collapsedTypes: Set<String> { Set(collapsedTypesRaw.split(separator: ",").map(String.init)) }
-
-    private func toggleType(_ t: NunaProgramType) {
-        var set = collapsedTypes
-        let key = String(t.rawValue)
-        if set.contains(key) { set.remove(key) } else { set.insert(key) }
-        collapsedTypesRaw = set.sorted().joined(separator: ",")
-    }
-
-    @ViewBuilder private var typeSections: some View {
-        ForEach(NunaProgramType.allCases) { t in
-            let inType = programs.filter { kinds[$0.id]?.contains(t) == true }
-            if !inType.isEmpty {
-                let folded = collapsedTypes.contains(String(t.rawValue))
-                VStack(alignment: .leading, spacing: 10) {
-                    Button { withAnimation(.easeInOut(duration: 0.2)) { toggleType(t) } } label: {
-                        HStack(spacing: 10) {
-                            Image(systemName: t.icon).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                            Text(t.title).font(.nuna(size: 17, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
-                            Text(verbatim: "\(inType.count)").font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
-                            Spacer(minLength: 6)
-                            Image(systemName: "chevron.down").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted).rotationEffect(.degrees(folded ? -90 : 0))
-                        }.contentShape(Rectangle())
-                    }.buttonStyle(.plain).padding(.horizontal, 4)
-                    .accessibilityLabel(Text(verbatim: "\(t.title), \(inType.count)")).accessibilityValue(folded ? Text("Collapsed") : Text("Expanded"))
-                    if !folded { ForEach(inType, id: \.id) { p in programRow(p) } }
-                }.padding(.top, 4)
-            }
-        }
-    }
-
     private func programButton(_ title: LocalizedStringKey, _ icon: String) -> some View {
         HStack(spacing: 8) {
             Image(systemName: icon).font(.nuna(size: 14, weight: .bold))
@@ -404,7 +374,7 @@ struct NunaGymView: View {
                         if groupsModel.group(of: p.id)?.id == g.id { Label(g.name, systemImage: "checkmark") } else { Text(verbatim: g.name) }
                     }
                 }
-                if groupsModel.group(of: p.id) != nil { Button { groupsModel.move(p.id, to: nil) } label: { Label("No group", systemImage: "xmark") } }
+                if groupsModel.group(of: p.id) != nil { Button { groupsModel.move(p.id, to: nil) } label: { Label("Ungrouped", systemImage: "tray") } }
                 Button { askForGroup(.new(programId: p.id)) } label: { Label("New group", systemImage: "folder.badge.plus") }
             } label: { Label("Move to group", systemImage: "folder") }
             Divider()
@@ -430,12 +400,12 @@ struct NunaGymView: View {
         await repo.refresh()
     }
 
-    /// One program as a card like the others in the app: the name with its menu at the top right, what it holds, the exercises as a
+    /// One program as a tile inside the Programs card: the name with its menu at the top right, what it holds, the exercises as a
     /// muted line, and Start along the bottom. Tapping the card opens the program.
     private func programRow(_ p: LiftProgramRow) -> some View {
         let c = itemCounts[p.id]
         let empty = (c?.exercises ?? 0) == 0
-        return NunaCard(small: true) {
+        return VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .top, spacing: 8) {
                     NavigationLink(value: NunaWorkoutRoute.program(p.id)) {
@@ -463,6 +433,8 @@ struct NunaGymView: View {
                 }.buttonStyle(.plain).disabled(empty).opacity(empty ? 0.4 : 1)
             }
         }
+        .padding(14).frame(maxWidth: .infinity, alignment: .leading)
+        .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
     }
 
     // MARK: Sets per muscle group
@@ -544,13 +516,10 @@ struct NunaGymView: View {
         let ps = (try? await store.liftPrograms(deviceId: repo.deviceId)) ?? []
         var counts: [String: (exercises: Int, sets: Int)] = [:]
         var names: [String: [String]] = [:]
-        var types: [String: Set<NunaProgramType>] = [:]
-        let anya = NunaAnyaPrograms.ids
         for p in ps {
             let items = (try? await store.liftProgramItems(programId: p.id)) ?? []
             counts[p.id] = (items.count, items.reduce(0) { $0 + ($1.targetSets ?? 1) })
             names[p.id] = items.prefix(5).map(\.exercise)
-            types[p.id] = NunaProgramType.classify(exercises: items.map(\.exercise), isAnya: anya.contains(p.id))
         }
         let now = Int(Date().timeIntervalSince1970)
         let all = ((try? await store.liftSessions(deviceId: repo.deviceId, fromTs: now - 180 * 86_400, toTs: now + 86_400)) ?? [])
@@ -567,7 +536,8 @@ struct NunaGymView: View {
         }
         readiness = NunaMuscleReadiness.readings(sets: dated, now: now)
         groupsModel.prune(existing: Set(ps.map(\.id)))
-        programs = ps; itemCounts = counts; previews = names; kinds = types; lastUsed = last; history = all; volumes = vols; loaded = true
+        groupsModel.adoptDefaultGroup(for: ps)
+        programs = ps; itemCounts = counts; previews = names; lastUsed = last; history = all; volumes = vols; loaded = true
     }
 }
 #endif
