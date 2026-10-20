@@ -150,6 +150,9 @@ struct NunaGymExploreView: View {
             }
             NunaTitleRow(title: "Routines") { EmptyView() }
             categories
+            NavigationLink { NunaProgramImportView() } label: {
+                NunaCard(small: true) { NunaListRow("Import a program", description: "Bring a routine in from a spreadsheet", systemImage: "tablecells", showsChevron: true) }
+            }.buttonStyle(.plain)
             nunaFootnote("General templates written for PHMN, with exercises from the library. They are a place to start: add one, then change anything in it. Not personal advice.")
         }
         .sheet(isPresented: $filtering) { filterSheet.nunaSheetChrome(detents: [.large]) }
