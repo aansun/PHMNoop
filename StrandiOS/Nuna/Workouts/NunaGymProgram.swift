@@ -38,6 +38,11 @@ struct NunaProgramEditor: View {
     @State private var saving = false
     @State private var editing: NunaItemTarget?
     @State private var replacing: LiftProgramItemRow?
+    @State private var picking = false
+    @State private var demo: NunaLibraryExercise?
+    @State private var video: String?
+    @State private var noteFor: String?
+    @State private var noteDraft = ""
     @State private var confirmDelete = false
 
     private var isNew: Bool { programId == "new" }
@@ -75,6 +80,18 @@ struct NunaProgramEditor: View {
         .sheet(item: $editing) { t in
             NunaProgramItemView(item: t.item) { saved in apply(saved, replacing: t.item) }
         }
+        .sheet(isPresented: $picking) {
+            NunaExercisePicker(confirm: { $0 == 1 ? String(localized: "Add 1 exercise") : String(localized: "Add \($0) exercises") }, title: "Add exercise") { picked in addPicked(picked) }
+        }
+        .sheet(item: $demo) { e in
+            NavigationStack { NunaExerciseDetailView(exerciseId: e.id) }.preferredColorScheme(NunaTheme.colorScheme).presentationDragIndicator(.visible)
+        }
+        .sheet(item: Binding(get: { video.map { NunaVideoTarget(name: $0) } }, set: { video = $0?.name })) { t in NunaExerciseVideoSheet(name: t.name) }
+        .alert("Note for this exercise", isPresented: Binding(get: { noteFor != nil }, set: { if !$0 { noteFor = nil } })) {
+            TextField("Technique, grip, cues", text: $noteDraft)
+            Button("Save") { if let id = noteFor { let t = String(noteDraft.trimmingCharacters(in: .whitespacesAndNewlines).prefix(WhoopStore.maxExerciseNoteLength)); update(id) { $0.note = t.isEmpty ? nil : t } }; noteFor = nil }
+            Button("Cancel", role: .cancel) { noteFor = nil }
+        }
         .sheet(item: $replacing) { old in
             NunaExercisePicker(title: "Replace exercise", single: true, suggestingFor: old.exercise) { picked in
                 guard let p = picked.first, let i = items.firstIndex(where: { $0.id == old.id }) else { return }
@@ -96,46 +113,184 @@ struct NunaProgramEditor: View {
         }.buttonStyle(.plain).disabled(!canSave).opacity(canSave ? 1 : 0.4)
     }
 
+    /// The exercises as cards, the way an exercise reads in a finished session: its picture and name with the menu at the top right, the rest
+    /// and a note as chips, and the target. Adding opens the library to choose from, and a new exercise lands here with a starting target.
     @ViewBuilder private var exercises: some View {
-        NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-            VStack(spacing: 0) {
-                if items.isEmpty {
-                    Text("No exercises yet. Add the first one below.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        .frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 16)
+        if items.isEmpty {
+            NunaCard(small: true) {
+                Text("No exercises yet. Add the first one below.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        ForEach(items) { item in exerciseCard(item) }
+        Button { picking = true } label: {
+            HStack(spacing: 8) { Image(systemName: "plus").font(.nuna(size: 14, weight: .bold)); Text("Add exercise").font(.nuna(size: 15, weight: .bold)) }
+                .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 52)
+                .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+        }.buttonStyle(.plain)
+    }
+
+    private func index(of id: String) -> Int? { items.firstIndex { $0.id == id } }
+
+    private func exerciseCard(_ item: LiftProgramItemRow) -> some View {
+        let kind = NunaExerciseKind.of(item.exercise)
+        let lib = NunaExerciseLibrary.match(item.exercise)
+        let i = index(of: item.id) ?? 0
+        let known = lib?.liftPrimary.map { LiftMuscleSummary.line(primary: $0, secondaries: lib?.liftSecondary ?? []) }
+        return NunaCard(small: true) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top, spacing: 12) {
+                    Button { if let lib { demo = lib } else { video = item.exercise } } label: { NunaExerciseThumb(lib, width: 58, height: 44) }.buttonStyle(.plain)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(verbatim: item.exercise).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).multilineTextAlignment(.leading)
+                        if let known { Text(verbatim: known).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1) }
+                        else { Text("Choose its muscles in the menu").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.warning).textCase(nil) }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    exerciseMenu(item, index: i, lib: lib)
                 }
-                ForEach(Array(items.enumerated()), id: \.element.id) { i, item in
-                    if i > 0 { NunaDivider() }
-                    HStack(spacing: 10) {
-                        Button { editing = NunaItemTarget(id: item.id, item: item) } label: {
-                            HStack(spacing: 12) {
-                                NunaExerciseThumb(name: item.exercise, width: 50, height: 38)
-                                VStack(alignment: .leading, spacing: 3) {
-                                    Text(verbatim: item.exercise).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2)
-                                    if !detail(item).isEmpty { Text(verbatim: detail(item)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
-                                }
-                                Spacer(minLength: 6)
-                                if let s = item.targetSets {
-                                    Text(verbatim: NunaExerciseKind.of(item.exercise).targetText(sets: s, reps: item.targetRepsLow) ?? "\(s)").font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                                }
-                            }.contentShape(Rectangle())
-                        }.buttonStyle(.plain)
-                        Menu {
-                            Button { move(i, -1) } label: { Label("Move up", systemImage: "arrow.up") }.disabled(i == 0)
-                            Button { move(i, 1) } label: { Label("Move down", systemImage: "arrow.down") }.disabled(i == items.count - 1)
-                            Button { replacing = item } label: { Label("Replace exercise", systemImage: "arrow.triangle.2.circlepath") }
-                            Button(role: .destructive) { items.removeAll { $0.id == item.id } } label: { Label("Remove exercise", systemImage: "trash") }
-                        } label: {
-                            Image(systemName: "ellipsis").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 32, height: 40)
+                HStack(spacing: 8) {
+                    Menu {
+                        ForEach([30, 45, 60, 90, 120, 150, 180, 240], id: \.self) { secs in
+                            Button { setRest(item.id, secs) } label: { Text(verbatim: LiftFormat.duration(secs)) }
                         }
-                    }.padding(.vertical, 12)
+                    } label: { chip("timer", String(localized: "Rest: \(LiftFormat.duration(item.restSec ?? LiftPlanItem.defaultRestSec))")) }
+                    Button { noteDraft = item.note ?? ""; noteFor = item.id } label: { chip("note.text", item.note.flatMap { $0.isEmpty ? nil : String(localized: "Note") } ?? String(localized: "Add note")) }
+                        .buttonStyle(.plain)
+                    Spacer(minLength: 0)
+                }
+                let pinned = NunaExerciseNotes.note(forName: item.exercise)
+                if let note = item.note, !note.isEmpty {
+                    Text(verbatim: note).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(3)
+                }
+                if !pinned.isEmpty {
+                    Label { Text(verbatim: pinned).textCase(nil) } icon: { Image(systemName: "pin.fill") }
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).lineLimit(2)
+                }
+                NunaDivider()
+                targetRow(item.id, kind: kind)
+            }
+        }
+    }
+
+    private func chip(_ icon: String, _ text: String) -> some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon).font(.nuna(size: 13, weight: .semibold))
+            Text(verbatim: text).font(.nuna(size: 13.5, weight: .bold)).textCase(nil)
+        }
+        .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 12).frame(height: 34)
+        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+    }
+
+    private func exerciseMenu(_ item: LiftProgramItemRow, index i: Int, lib: NunaLibraryExercise?) -> some View {
+        Menu {
+            if let lib { Button { demo = lib } label: { Label("Show the demo", systemImage: "play.rectangle") } }
+            else { Button { video = item.exercise } label: { Label("Watch a video", systemImage: "play.rectangle") } }
+            Button { replacing = item } label: { Label("Replace exercise", systemImage: "arrow.triangle.2.circlepath") }
+            if NunaExerciseKind.natural(item.exercise) == .bodyweight {
+                let tracks = NunaExerciseKind.weightOverrides.contains(item.exercise)
+                Button { NunaExerciseKind.setTracksWeight(!tracks, for: item.exercise); items = items } label: {
+                    Label(tracks ? "Bodyweight only" : "Add weight", systemImage: tracks ? "figure.stand" : "scalemass")
+                }
+            }
+            Button { editing = NunaItemTarget(id: item.id, item: item) } label: { Label("Muscles and technique", systemImage: "figure.strengthtraining.traditional") }
+            Divider()
+            Button { move(i, -1) } label: { Label("Move up", systemImage: "arrow.up") }.disabled(i == 0)
+            Button { move(i, 1) } label: { Label("Move down", systemImage: "arrow.down") }.disabled(i == items.count - 1)
+            Button(role: .destructive) { items.removeAll { $0.id == item.id } } label: { Label("Remove exercise", systemImage: "trash") }
+        } label: {
+            Image(systemName: "ellipsis").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 36, height: 34).contentShape(Rectangle())
+        }
+        .accessibilityLabel(Text("More"))
+    }
+
+    /// The target of the exercise: how many sets, and weight and a rep range, reps alone, or a time, by how the exercise is logged. It is one
+    /// target for every set of the exercise.
+    private func targetRow(_ id: String, kind: NunaExerciseKind) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .top, spacing: 10) {
+                VStack(alignment: .leading, spacing: 6) {
+                    heading("Sets")
+                    HStack(spacing: 0) {
+                        stepper("minus") { changeSets(id, -1) }
+                        Text(verbatim: "\(items.first { $0.id == id }?.targetSets ?? 0)").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            .frame(maxWidth: .infinity)
+                        stepper("plus") { changeSets(id, 1) }
+                    }
+                    .frame(height: 44).background(NunaPalette.field, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                }.frame(maxWidth: .infinity)
+                if kind.usesWeight {
+                    VStack(alignment: .leading, spacing: 6) {
+                        heading(system == .imperial ? "Weight (lb)" : "Weight (kg)")
+                        NunaTargetField(prompt: "70", keyboard: .decimalPad,
+                                        get: { items.first { $0.id == id }?.targetWeightKg.map { LiftFormat.trim(LiftFormat.display(fromKilograms: $0, system: system)) } ?? "" },
+                                        set: { t in update(id) { $0.targetWeightKg = LiftFormat.number(t).map { LiftFormat.kilograms(fromDisplay: $0, system: system) } } })
+                    }.frame(maxWidth: .infinity)
+                }
+            }
+            if kind == .timed {
+                VStack(alignment: .leading, spacing: 6) {
+                    heading("Time (mm:ss)")
+                    NunaTargetField(prompt: "00:30", keyboard: .numbersAndPunctuation,
+                                    get: { items.first { $0.id == id }?.targetRepsLow.map(NunaExerciseKind.clock) ?? "" },
+                                    set: { t in update(id) { $0.targetRepsLow = NunaExerciseKind.seconds(from: t); $0.targetRepsHigh = nil } })
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 6) {
+                    heading("Rep range")
+                    HStack(spacing: 8) {
+                        NunaTargetField(prompt: "8", keyboard: .numberPad,
+                                        get: { items.first { $0.id == id }?.targetRepsLow.map(String.init) ?? "" },
+                                        set: { t in update(id) { $0.targetRepsLow = Int(t.trimmingCharacters(in: .whitespaces)) } })
+                        Text("to").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        NunaTargetField(prompt: "12", keyboard: .numberPad,
+                                        get: { items.first { $0.id == id }?.targetRepsHigh.map(String.init) ?? "" },
+                                        set: { t in update(id) { $0.targetRepsHigh = Int(t.trimmingCharacters(in: .whitespaces)) } })
+                    }
                 }
             }
         }
-        Button { editing = NunaItemTarget(id: "new", item: nil) } label: {
-            HStack(spacing: 8) { Image(systemName: "plus").font(.nuna(size: 14, weight: .bold)); Text("Add exercise").font(.nuna(size: 15, weight: .bold)) }
-                .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52)
-                .background(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(NunaPalette.hairline, style: StrokeStyle(lineWidth: 1, dash: [5, 5])))
+    }
+
+    private func heading(_ t: LocalizedStringKey) -> some View {
+        Text(t).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+    }
+
+    private func stepper(_ icon: String, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: icon).font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44).contentShape(Rectangle())
         }.buttonStyle(.plain)
+    }
+
+    private func update(_ id: String, _ change: (inout LiftProgramItemRow) -> Void) {
+        guard let i = index(of: id) else { return }
+        var row = items[i]; change(&row); items[i] = row
+    }
+
+    private func changeSets(_ id: String, _ by: Int) {
+        update(id) { $0.targetSets = min(LiftSessionEngine.maxSetsPerExercise, max(1, ($0.targetSets ?? 1) + by)) }
+    }
+
+    private func setRest(_ id: String, _ secs: Int) { update(id) { $0.restSec = secs } }
+
+    /// Exercises chosen in the library come in with a starting target: three sets, ten reps (a hold of 30 seconds), 90 seconds of rest.
+    private func addPicked(_ picked: [NunaPickedExercise]) {
+        for p in picked where !p.name.isEmpty {
+            let kind = NunaExerciseKind.of(p.name)
+            items.append(LiftProgramItemRow(id: UUID().uuidString, deviceId: repo.deviceId, programId: "", ord: items.count, exercise: p.name, targetSets: 3,
+                                            targetRepsLow: kind == .timed ? 30 : 10, targetRepsHigh: nil, targetRpe: nil, targetWeightKg: nil, restSec: 90, note: nil))
+        }
+        // The muscles of the exercises that came with them are remembered, so the weekly sets per muscle count them.
+        Task {
+            guard let store = await repo.storeHandle() else { return }
+            let now = Int(Date().timeIntervalSince1970)
+            let known = (try? await store.liftExercises(deviceId: repo.deviceId)) ?? []
+            for p in picked where p.primary != nil && !known.contains(where: { $0.name == p.name }) {
+                let row = LiftExerciseRow(id: UUID().uuidString, deviceId: repo.deviceId, name: p.name, primaryMuscle: p.primary,
+                                          secondaryMuscles: p.secondary.filter { $0 != p.primary }, createdAt: now, lastUsedTs: now)
+                _ = try? await store.upsertLiftExercises([row])
+            }
+        }
     }
 
     private var summaryCard: some View {
@@ -864,6 +1019,26 @@ struct NunaProgramImportView: View {
         }
         await repo.refresh()
         dismiss()
+    }
+}
+
+/// A number or time typed into a target. It keeps what is being typed ("62." on the way to "62.5") and hands the program its value as soon as
+/// the text reads as one.
+private struct NunaTargetField: View {
+    let prompt: String
+    var keyboard: UIKeyboardType = .numberPad
+    let get: () -> String
+    let set: (String) -> Void
+    @State private var text = ""
+    @State private var loaded = false
+
+    var body: some View {
+        TextField("", text: $text, prompt: Text(verbatim: prompt).foregroundStyle(NunaPalette.textMuted))
+            .font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).multilineTextAlignment(.center)
+            .keyboardType(keyboard).frame(height: 44).frame(maxWidth: .infinity)
+            .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .onAppear { if !loaded { text = get(); loaded = true } }
+            .onChange(of: text) { _, new in set(new.replacingOccurrences(of: ",", with: ".")) }
     }
 }
 #endif

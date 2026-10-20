@@ -163,6 +163,11 @@ struct NunaGymView: View {
     @State private var programs: [LiftProgramRow] = []
     @State private var itemCounts: [String: (exercises: Int, sets: Int)] = [:]
     @State private var previews: [String: [String]] = [:]
+    @EnvironmentObject private var profile: ProfileStore
+    @StateObject private var anyaModel = NunaGymAnyaModel()
+    @StateObject private var anyaDay = NunaTodayModel()
+    @AppStorage("nuna.gym.programView") private var programView = "folders"
+    @State private var kinds: [String: Set<NunaProgramType>] = [:]
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
     @State private var deletingProgram: LiftProgramRow?
     @State private var lastUsed: [String: Int] = [:]
@@ -187,6 +192,7 @@ struct NunaGymView: View {
     private static let setsBarSpan = 20.0
 
     @ViewBuilder private var content: some View {
+        NunaGymAnyaCard(model: anyaModel)
         emptyCard
         programsSection
         NunaMuscleReadinessCard(readings: readiness)
@@ -206,7 +212,7 @@ struct NunaGymView: View {
     var body: some View {
         VStack(spacing: NunaSpacing.section) { content }
         .nunaWorkoutDestinations()
-        .task(id: "\(repo.refreshSeq)-\(session.savedSessions)") { await load() }
+        .task(id: "\(repo.refreshSeq)-\(session.savedSessions)") { await load(); await anyaModel.load(repo: repo, profile: profile, day: anyaDay) }
         .alert(groupDialogTitle, isPresented: Binding(get: { groupDialog != nil }, set: { if !$0 { groupDialog = nil } })) {
             TextField("Group name", text: $groupName)
             Button("Save") { saveGroupDialog() }
@@ -281,12 +287,19 @@ struct NunaGymView: View {
                     Text("No programs yet. A program is a named list of exercises with your targets for each.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
-            if let suggestion { suggestionCard(suggestion) }
-            ForEach(groupsModel.groups) { g in groupSection(g) }
-            if !groupsModel.groups.isEmpty, !loose.isEmpty {
-                Text("Ungrouped").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).padding(.top, 4)
+            if !programs.isEmpty {
+                NunaSegmented([(value: "folders", title: "My folders"), (value: "types", title: "By type")], selection: $programView)
             }
-            ForEach(loose, id: \.id) { p in programRow(p) }
+            if programView == "types" {
+                typeSections
+            } else {
+                if let suggestion { suggestionCard(suggestion) }
+                ForEach(groupsModel.groups) { g in groupSection(g) }
+                if !groupsModel.groups.isEmpty, !loose.isEmpty {
+                    Text("Ungrouped").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).padding(.top, 4)
+                }
+                ForEach(loose, id: \.id) { p in programRow(p) }
+            }
             HStack(spacing: 10) {
                 NavigationLink(value: NunaWorkoutRoute.program("new")) { programButton("New program", "plus") }.buttonStyle(.plain)
                 NavigationLink(value: NunaWorkoutRoute.programImport) { programButton("Import", "tablecells") }.buttonStyle(.plain)
@@ -347,6 +360,24 @@ struct NunaGymView: View {
         .padding(.top, 4)
     }
 
+    /// The programs grouped by what they need: a program shows under every type it fits (a dumbbell program is also an at-home one).
+    @ViewBuilder private var typeSections: some View {
+        ForEach(NunaProgramType.allCases) { t in
+            let inType = programs.filter { kinds[$0.id]?.contains(t) == true }
+            if !inType.isEmpty {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack(spacing: 10) {
+                        Image(systemName: t.icon).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(t.title).font(.nuna(size: 17, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: "\(inType.count)").font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
+                        Spacer(minLength: 0)
+                    }.padding(.horizontal, 4)
+                    ForEach(inType, id: \.id) { p in programRow(p) }
+                }.padding(.top, 4)
+            }
+        }
+    }
+
     private func programButton(_ title: LocalizedStringKey, _ icon: String) -> some View {
         HStack(spacing: 8) {
             Image(systemName: icon).font(.nuna(size: 14, weight: .bold))
@@ -373,7 +404,7 @@ struct NunaGymView: View {
             NavigationLink(value: NunaWorkoutRoute.programEdit(p.id)) { Label("Edit routine", systemImage: "pencil") }
             Button(role: .destructive) { deletingProgram = p } label: { Label("Delete routine", systemImage: "trash") }
         } label: {
-            Image(systemName: "ellipsis").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 30, height: 42).contentShape(Rectangle())
+            Image(systemName: "ellipsis").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 36, height: 32).contentShape(Rectangle())
         }
         .accessibilityLabel(Text("Program options"))
     }
@@ -390,27 +421,37 @@ struct NunaGymView: View {
         await repo.refresh()
     }
 
+    /// One program as a card like the others in the app: the name with its menu at the top right, what it holds, the exercises as a
+    /// muted line, and Start along the bottom. Tapping the card opens the program.
     private func programRow(_ p: LiftProgramRow) -> some View {
         let c = itemCounts[p.id]
+        let empty = (c?.exercises ?? 0) == 0
         return NunaCard(small: true) {
-            HStack(spacing: 12) {
-                NavigationLink(value: NunaWorkoutRoute.program(p.id)) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(verbatim: p.name).font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2)
-                        Text(verbatim: String(localized: "\(c?.exercises ?? 0) exercises") + " · " + String(localized: "\(c?.sets ?? 0) sets")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        Text(verbatim: lastUsed[p.id].map { String(localized: "Last \(NunaWorkoutFormat.day($0))") } ?? String(localized: "Never run"))
-                            .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-                        if let names = previews[p.id], !names.isEmpty {
-                            Text(verbatim: names.joined(separator: ", ")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).lineLimit(2)
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(alignment: .top, spacing: 8) {
+                    NavigationLink(value: NunaWorkoutRoute.program(p.id)) {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(verbatim: p.name).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).multilineTextAlignment(.leading)
+                            Text(verbatim: String(localized: "\(c?.exercises ?? 0) exercises") + " · " + String(localized: "\(c?.sets ?? 0) sets") + " · "
+                                 + (lastUsed[p.id].map { String(localized: "Last \(NunaWorkoutFormat.day($0))") } ?? String(localized: "Never run")))
+                                .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
+                            if let names = previews[p.id], !names.isEmpty {
+                                Text(verbatim: names.joined(separator: ", ")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).lineLimit(2)
+                                    .multilineTextAlignment(.leading)
+                            }
                         }
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
-                }.buttonStyle(.plain)
-                programMenu(p)
+                        .frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
+                    }.buttonStyle(.plain)
+                    programMenu(p)
+                }
                 Button { Task { await NunaGymStore.start(program: p, repo: repo, session: session) } } label: {
-                    Text(session.isActive ? "Open" : "Start").font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
-                        .padding(.horizontal, 20).frame(height: 42).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                }.buttonStyle(.plain).disabled((c?.exercises ?? 0) == 0).opacity((c?.exercises ?? 0) == 0 ? 0.4 : 1)
+                    HStack(spacing: 8) {
+                        Image(systemName: session.isActive ? "arrow.up.forward" : "play.fill").font(.nuna(size: 12, weight: .bold))
+                        Text(session.isActive ? "Open" : "Start").font(.nuna(size: 15, weight: .bold))
+                    }
+                    .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 44)
+                    .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                }.buttonStyle(.plain).disabled(empty).opacity(empty ? 0.4 : 1)
             }
         }
     }
@@ -494,10 +535,13 @@ struct NunaGymView: View {
         let ps = (try? await store.liftPrograms(deviceId: repo.deviceId)) ?? []
         var counts: [String: (exercises: Int, sets: Int)] = [:]
         var names: [String: [String]] = [:]
+        var types: [String: Set<NunaProgramType>] = [:]
+        let anya = NunaAnyaPrograms.ids
         for p in ps {
             let items = (try? await store.liftProgramItems(programId: p.id)) ?? []
             counts[p.id] = (items.count, items.reduce(0) { $0 + ($1.targetSets ?? 1) })
             names[p.id] = items.prefix(5).map(\.exercise)
+            types[p.id] = NunaProgramType.classify(exercises: items.map(\.exercise), isAnya: anya.contains(p.id))
         }
         let now = Int(Date().timeIntervalSince1970)
         let all = ((try? await store.liftSessions(deviceId: repo.deviceId, fromTs: now - 180 * 86_400, toTs: now + 86_400)) ?? [])
@@ -514,7 +558,7 @@ struct NunaGymView: View {
         }
         readiness = NunaMuscleReadiness.readings(sets: dated, now: now)
         groupsModel.prune(existing: Set(ps.map(\.id)))
-        programs = ps; itemCounts = counts; previews = names; lastUsed = last; history = all; volumes = vols; loaded = true
+        programs = ps; itemCounts = counts; previews = names; kinds = types; lastUsed = last; history = all; volumes = vols; loaded = true
     }
 }
 #endif
