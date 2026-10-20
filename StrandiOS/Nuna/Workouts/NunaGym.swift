@@ -276,12 +276,7 @@ struct NunaGymView: View {
         let loose = groupsModel.ungrouped(programs)
         let suggestion = groupsModel.suggestions(for: programs).first
         return VStack(alignment: .leading, spacing: 12) {
-            NunaTitleRow(title: "Programs") {
-                Button { askForGroup(.new(programId: nil)) } label: {
-                    HStack(spacing: 6) { Image(systemName: "folder.badge.plus").font(.nuna(size: 13, weight: .bold)); Text("New group").font(.nuna(size: 13.5, weight: .bold)) }
-                        .foregroundStyle(NunaPalette.textPrimary)
-                }.buttonStyle(.plain)
-            }
+            NunaTitleRow(title: "Programs") { EmptyView() }
             if loaded, programs.isEmpty {
                 NunaCard(small: true) {
                     Text("No programs yet. A program is a named list of exercises with your targets for each.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
@@ -300,9 +295,13 @@ struct NunaGymView: View {
                 }
                 ForEach(loose, id: \.id) { p in programRow(p) }
             }
-            HStack(spacing: 10) {
-                NavigationLink(value: NunaWorkoutRoute.program("new")) { programButton("New program", "plus") }.buttonStyle(.plain)
-                NavigationLink(value: NunaWorkoutRoute.programImport) { programButton("Import", "tablecells") }.buttonStyle(.plain)
+            if programView == "types" {
+                NavigationLink(value: NunaWorkoutRoute.explore) { programButton("Explore", "safari") }.buttonStyle(.plain)
+            } else {
+                HStack(spacing: 10) {
+                    NavigationLink(value: NunaWorkoutRoute.program("new")) { programButton("New program", "plus") }.buttonStyle(.plain)
+                    Button { askForGroup(.new(programId: nil)) } label: { programButton("New group", "folder.badge.plus") }.buttonStyle(.plain)
+                }
             }
         }
     }
