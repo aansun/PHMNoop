@@ -45,7 +45,7 @@ struct NunaLiftSessionView: View {
 
     private var system: UnitSystem { UnitSystem(rawValue: unitSystemRaw) ?? .metric }
     private var engine: LiftSessionEngine? { session.engine }
-    private let setColumn: CGFloat = 30, tickColumn: CGFloat = 36, kgColumn: CGFloat = 66, repsColumn: CGFloat = 56, rpeColumn: CGFloat = 46, timeColumn: CGFloat = 96
+    private let setColumn: CGFloat = 30, kgColumn: CGFloat = 66, repsColumn: CGFloat = 56, rpeColumn: CGFloat = 46, timeColumn: CGFloat = 96
 
     var body: some View {
         ZStack {
@@ -379,7 +379,6 @@ struct NunaLiftSessionView: View {
             if kind == .weighted { Text(system == .imperial ? "Lb" : "Kg").frame(width: kgColumn, alignment: .center) }
             if kind == .timed { Text("Time").frame(width: timeColumn, alignment: .center) } else { Text("Reps").frame(width: repsColumn, alignment: .center) }
             if showRpe { Text("RPE").frame(width: rpeColumn, alignment: .center) }
-            Image(systemName: "checkmark").frame(width: tickColumn)
         }
         .font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
     }
@@ -429,16 +428,18 @@ struct NunaLiftSessionView: View {
                 field(text: repsBinding(slot), ghost: ghostReps(slot), target: .reps(slot), decimal: false, big: isWorking, done: recorded != nil).frame(width: repsColumn)
             }
             if showRpe { field(text: rpeBinding(slot), ghost: ghostRpe(engine, slot: slot), target: .rpe(slot), decimal: true, big: false, done: recorded != nil).frame(width: rpeColumn) }
-            Button { session.start(slot) } label: {
-                Image(systemName: "checkmark").font(.nuna(size: 15, weight: .bold))
-                    .foregroundStyle(recorded == nil ? NunaPalette.textMuted : Color.white)
-                    .frame(width: tickColumn, height: 40)
-                    .background(recorded == nil ? NunaPalette.field : (isWorking ? NunaPalette.rest : NunaPalette.charge), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-            }.buttonStyle(.plain)
-                .accessibilityLabel(recorded == nil ? Text("Start this set") : Text("Redo this set"))
         }
         .padding(.vertical, 3).padding(.horizontal, 4)
         .background(isWorking ? NunaPalette.rest.opacity(0.14) : (recorded != nil ? NunaPalette.charge.opacity(0.10) : Color.clear), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .nunaSwipeToDelete(enabled: engine.canRemoveSet(slot)) { removeSet(slot) }
+    }
+
+    /// Delete one set. The numbers being typed or timed for that exercise are let go with it, because the rows below move up.
+    private func removeSet(_ slot: LiftSlot) {
+        if timing?.slot.exerciseIndex == slot.exerciseIndex { timing = nil }
+        focused = nil
+        draft = [:]
+        withAnimation(.easeOut(duration: 0.2)) { _ = session.removeSet(slot) }
     }
 
     private func field(text: Binding<String>, ghost: String, target: FocusTarget, decimal: Bool, big: Bool, done: Bool) -> some View {
@@ -801,5 +802,40 @@ struct NunaLiftBar: View {
             }.buttonStyle(.plain)
         }
     }
+}
+
+/// Swipe a row to the left to reveal a red Delete button, as in a list. A tap on the row, or a swipe back, closes it again.
+private struct NunaSwipeToDelete: ViewModifier {
+    let enabled: Bool
+    let onDelete: () -> Void
+    @State private var offset: CGFloat = 0
+    @State private var start: CGFloat?
+    private let reveal: CGFloat = 84
+
+    func body(content: Content) -> some View {
+        ZStack(alignment: .trailing) {
+            if offset < 0 {
+                Button(role: .destructive) { offset = 0; onDelete() } label: {
+                    Text("Delete").font(.nuna(size: 14, weight: .bold)).foregroundStyle(Color.white)
+                        .frame(width: reveal - 6, height: 40).background(NunaPalette.alert, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                }.buttonStyle(.plain).frame(width: -offset, alignment: .trailing).clipped()
+            }
+            content.offset(x: offset)
+                .simultaneousGesture(DragGesture(minimumDistance: 16).onChanged { g in
+                    guard enabled, abs(g.translation.width) > abs(g.translation.height) else { return }
+                    let from = start ?? offset
+                    start = from
+                    offset = min(0, max(-reveal, from + g.translation.width))
+                }.onEnded { _ in
+                    start = nil
+                    guard enabled else { return }
+                    withAnimation(.easeOut(duration: 0.18)) { offset = offset < -reveal / 2 ? -reveal : 0 }
+                })
+        }
+    }
+}
+
+private extension View {
+    func nunaSwipeToDelete(enabled: Bool, onDelete: @escaping () -> Void) -> some View { modifier(NunaSwipeToDelete(enabled: enabled, onDelete: onDelete)) }
 }
 #endif
