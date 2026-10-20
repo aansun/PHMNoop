@@ -29,6 +29,8 @@ struct NunaExercisePicker: View {
     @State private var query = ""
     @State private var group: Group?
     @State private var chosen: [NunaPickedExercise] = []
+    /// The exercise whose demo, muscles and history are open in a sheet: choosing no longer has to be blind.
+    @State private var detail: NunaLibraryExercise?
     @FocusState private var focused: Bool
 
     /// The parts of the body to filter by, in the library's own muscle names.
@@ -123,6 +125,10 @@ struct NunaExercisePicker: View {
             .toolbar(.hidden, for: .navigationBar)
         }
         .preferredColorScheme(NunaTheme.colorScheme)
+        .sheet(item: $detail) { e in
+            NavigationStack { NunaExerciseDetailView(exerciseId: e.id) }
+                .preferredColorScheme(NunaTheme.colorScheme).presentationDragIndicator(.visible)
+        }
         .task { if let s = await repo.storeHandle() { vocabulary = (try? await s.liftExercises(deviceId: repo.deviceId)) ?? [] } }
     }
 
@@ -164,7 +170,7 @@ struct NunaExercisePicker: View {
     private func recentRow(_ r: LiftExerciseRow) -> some View {
         let pick = NunaPickedExercise(name: r.name, primary: r.primaryMuscle, secondary: r.secondaryMuscles)
         return row(thumb: NunaExerciseThumb(name: r.name), name: r.name,
-                   detail: r.primaryMuscle?.displayName ?? String(localized: "Not classified"), selected: isChosen(r.name)) { toggle(pick) }
+                   detail: r.primaryMuscle?.displayName ?? String(localized: "Not classified"), selected: isChosen(r.name), info: NunaExerciseLibrary.match(r.name)) { toggle(pick) }
     }
 
     private func libraryRow(_ e: NunaLibraryExercise) -> some View {
@@ -173,22 +179,30 @@ struct NunaExercisePicker: View {
         let pick = own.map { NunaPickedExercise(name: $0.name, primary: $0.primaryMuscle ?? e.liftPrimary, secondary: $0.secondaryMuscles.isEmpty ? e.liftSecondary : $0.secondaryMuscles) }
             ?? NunaPickedExercise(name: e.name, primary: e.liftPrimary, secondary: e.liftSecondary)
         let detail = e.primaryMuscles.map(NunaLibraryExercise.title).joined(separator: ", ") + (e.equipmentTitle.map { " · " + $0 } ?? "")
-        return row(thumb: NunaExerciseThumb(e), name: e.name, detail: detail, selected: isChosen(pick.name)) { toggle(pick) }
+        return row(thumb: NunaExerciseThumb(e), name: e.name, detail: detail, selected: isChosen(pick.name), info: e) { toggle(pick) }
     }
 
-    private func row(thumb: NunaExerciseThumb, name: String, detail: String, selected: Bool, _ action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            HStack(spacing: 12) {
-                thumb
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(verbatim: name).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).multilineTextAlignment(.leading)
-                    Text(verbatim: detail).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1)
+    /// A tap on the row chooses it; the info button opens the exercise (its demo, muscles and your history) when the library has it.
+    private func row(thumb: NunaExerciseThumb, name: String, detail: String, selected: Bool, info: NunaLibraryExercise?, _ action: @escaping () -> Void) -> some View {
+        HStack(spacing: 4) {
+            Button(action: action) {
+                HStack(spacing: 12) {
+                    thumb
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(verbatim: name).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).multilineTextAlignment(.leading)
+                        Text(verbatim: detail).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1)
+                    }
+                    Spacer(minLength: 8)
+                    Image(systemName: selected ? "checkmark.circle.fill" : "circle").font(.nuna(size: 22)).foregroundStyle(selected ? NunaPalette.accent : NunaPalette.textMuted)
                 }
-                Spacer(minLength: 8)
-                Image(systemName: selected ? "checkmark.circle.fill" : "circle").font(.nuna(size: 22)).foregroundStyle(selected ? NunaPalette.accent : NunaPalette.textMuted)
+                .padding(.vertical, 8).contentShape(Rectangle())
+            }.buttonStyle(.plain)
+            if let info {
+                Button { focused = false; self.detail = info } label: {
+                    Image(systemName: "info.circle").font(.nuna(size: 20, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 40, height: 48).contentShape(Rectangle())
+                }.buttonStyle(.plain).accessibilityLabel(Text("Show the demo"))
             }
-            .padding(.vertical, 8).contentShape(Rectangle())
-        }.buttonStyle(.plain)
+        }
     }
 
     @ViewBuilder private var confirmBar: some View {

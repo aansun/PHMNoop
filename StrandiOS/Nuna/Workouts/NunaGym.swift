@@ -202,9 +202,6 @@ struct NunaGymView: View {
         NavigationLink(value: NunaWorkoutRoute.loadMuscle) {
             NunaCard(small: true) { NunaListRow("Muscle load", description: "Volume, recovery and personal records", systemImage: "chart.bar", showsChevron: true) }
         }.buttonStyle(.plain)
-        NavigationLink(value: NunaWorkoutRoute.exerciseLibrary) {
-            NunaCard(small: true) { NunaListRow("Exercise library", description: "Animated demos and the muscles each one works", systemImage: "figure.strengthtraining.traditional", showsChevron: true) }
-        }.buttonStyle(.plain)
     }
 
     var body: some View {
