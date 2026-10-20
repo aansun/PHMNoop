@@ -115,6 +115,10 @@
     "Key statistics": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Statistik utama"}}}},
     "vs. 30 day average": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "vs. rata-rata 30 hari"}}}},
     "Edit time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ubah waktu"}}}},
+    "Latest weight": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Berat terbaru"}}}},
+    "Rest timer": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Timer istirahat"}}}},
+    ", volume up %lld%% on the 15 days before": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": ", volume naik %lld%% dari 15 hari sebelumnya"}}}},
+    ", volume down %lld%% on the 15 days before": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": ", volume turun %lld%% dari 15 hari sebelumnya"}}}},
     "State chips": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Chip status"}}}},
     "Readiness, Charge state and heart rate": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kesiapan, status Charge, dan detak jantung"}}}},
     "Route map": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Peta rute"}}}},
@@ -9708,10 +9712,10 @@
     "Counted from the muscles you assigned each exercise: direct sets count once, indirect ones half. The tick is about 4 sets a week — below that, studies across GROUPS of people stop reliably detecting growth. It is a research reference, not a target for you, and above it gains continue with strongly diminishing returns and no clear ceiling, so the bar has no \"full\".": { "localizations": {
       "de": {"stringUnit": {"state": "translated", "value": "Gezählt nach den Muskeln, die du jeder Übung zugeordnet hast: direkte Sätze zählen einfach, indirekte halb. Der Strich markiert etwa 4 Sätze pro Woche — darunter weisen Studien über GRUPPEN von Menschen Wachstum nicht mehr zuverlässig nach. Das ist ein Forschungsbezug, kein Ziel für dich; darüber geht es weiter, mit stark abnehmendem Ertrag und ohne klare Obergrenze, der Balken hat deshalb kein „voll“."}}, "es": {"stringUnit": {"state": "translated", "value": "Se cuenta según los músculos que asignaste a cada ejercicio: las series directas cuentan una vez y las indirectas media. La marca señala unas 4 series por semana: por debajo, los estudios sobre GRUPOS de personas dejan de detectar crecimiento de forma fiable. Es una referencia de investigación, no un objetivo para ti; por encima se sigue ganando, con rendimientos muy decrecientes y sin techo claro, así que la barra no tiene «lleno»."}}, "fr": {"stringUnit": {"state": "translated", "value": "Compté d'après les muscles que tu as attribués à chaque exercice : les séries directes comptent une fois, les indirectes pour moitié. Le repère marque environ 4 séries par semaine : en dessous, les études portant sur des GROUPES de personnes ne détectent plus la croissance de façon fiable. C'est une référence issue de la recherche, pas un objectif pour toi ; au-dessus, les gains continuent, avec des rendements très décroissants et sans plafond net, donc la barre n'a pas de « plein »."}}, "it": {"stringUnit": {"state": "translated", "value": "Conteggiato dai muscoli che hai assegnato a ogni esercizio: le serie dirette contano una volta, quelle indirette metà. La tacca segna circa 4 serie a settimana: sotto quella soglia gli studi su GRUPPI di persone non rilevano più la crescita in modo affidabile. È un riferimento della ricerca, non un obiettivo per te; sopra i guadagni continuano, con rendimenti fortemente decrescenti e senza un tetto chiaro, quindi la barra non ha un «pieno»."}}, "pl": {"stringUnit": {"state": "translated", "value": "Liczone na podstawie mięśni przypisanych do każdego ćwiczenia: serie bezpośrednie liczą się raz, pośrednie za pół. Znacznik to około 4 serie tygodniowo — poniżej badania na GRUPACH ludzi przestają wiarygodnie wykrywać wzrost. To odniesienie z badań, a nie cel dla ciebie; powyżej przyrosty trwają, przy mocno malejących zyskach i bez wyraźnego sufitu, więc pasek nie ma „pełna”."}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "Contado a partir dos músculos que atribuíste a cada exercício: as séries diretas contam uma vez e as indiretas metade. A marca assinala cerca de 4 séries por semana — abaixo disso, os estudos sobre GRUPOS de pessoas deixam de detetar crescimento de forma fiável. É uma referência da investigação, não um objetivo para ti; acima, os ganhos continuam, com rendimentos muito decrescentes e sem teto claro, por isso a barra não tem «cheio»."}}, "ru": {"stringUnit": {"state": "translated", "value": "Считается по мышцам, которые ты назначил каждому упражнению: прямые подходы идут за один, косвенные за половину. Отметка — примерно 4 подхода в неделю: ниже неё исследования на ГРУППАХ людей перестают надёжно фиксировать рост. Это ориентир из исследований, а не цель для тебя; выше прогресс продолжается, с резко убывающей отдачей и без явного потолка, поэтому у шкалы нет «полного»."}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "根据你为每个动作指定的肌群统计：直接组算一组，间接组算半组。刻度约为每周 4 组——低于此线，针对人群的研究就无法可靠地检测到增长。这是研究参考，不是给你设定的目标；高于它仍会继续增长，但收益显著递减且没有明确上限，所以这个条没有“满”。"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "根據你為每個動作指定的肌群統計：直接組算一組，間接組算半組。刻度約為每週 4 組——低於此線，針對人群的研究就無法可靠地偵測到增長。這是研究參考，不是給你設定的目標；高於它仍會繼續增長，但收益顯著遞減且沒有明確上限，所以這個條沒有「滿」。"}}
     } },
-    "%@ reps": { "localizations": {
+    "%@ reps": { "localizations": { "id": {"stringUnit": {"state": "translated", "value": "%@ repetisi"}},
       "de": {"stringUnit": {"state": "translated", "value": "%@ Wdh."}}, "en": {"stringUnit": {"state": "translated", "value": "%@ reps"}}, "es": {"stringUnit": {"state": "translated", "value": "%@ reps"}}, "fr": {"stringUnit": {"state": "translated", "value": "%@ répétitions"}}, "it": {"stringUnit": {"state": "translated", "value": "%@ ripetizioni"}}, "pl": {"stringUnit": {"state": "translated", "value": "%@ powtórzeń"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "%@ repetições"}}, "ru": {"stringUnit": {"state": "translated", "value": "%@ повторений"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "%@ 次"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "%@ 次"}}
     } },
-    "%lld reps": { "localizations": {
+    "%lld reps": { "localizations": { "id": {"stringUnit": {"state": "translated", "value": "%lld repetisi"}},
       "de": {"stringUnit": {"state": "translated", "value": "%lld Wdh."}}, "en": {"stringUnit": {"state": "translated", "value": "%lld reps"}}, "es": {"stringUnit": {"state": "translated", "value": "%lld reps"}}, "fr": {"stringUnit": {"state": "translated", "value": "%lld répétitions"}}, "it": {"stringUnit": {"state": "translated", "value": "%lld ripetizioni"}}, "pl": {"stringUnit": {"state": "translated", "value": "%lld powtórzeń"}}, "pt-PT": {"stringUnit": {"state": "translated", "value": "%lld repetições"}}, "ru": {"stringUnit": {"state": "translated", "value": "%lld повторений"}}, "zh-Hans": {"stringUnit": {"state": "translated", "value": "%lld 次"}}, "zh-Hant": {"stringUnit": {"state": "translated", "value": "%lld 次"}}
     } },
     "%@ rest": { "localizations": {
@@ -10713,7 +10717,7 @@
       "zh-Hans": { "stringUnit": { "state": "translated", "value": "sauna" } },
       "zh-Hant": { "stringUnit": { "state": "translated", "value": "sauna" } }
     } },
-    "Travel": { "localizations": {
+    "Travel": { "localizations": { "id": {"stringUnit": {"state": "translated", "value": "Perjalanan"}},
       "de": { "stringUnit": { "state": "translated", "value": "Reise" } }, "en": { "stringUnit": { "state": "translated", "value": "travel" } }, "es": { "stringUnit": { "state": "translated", "value": "viaje" } }, "fr": { "stringUnit": { "state": "translated", "value": "voyage" } }, "pt-PT": { "stringUnit": { "state": "translated", "value": "viagem" } },
       "it": { "stringUnit": { "state": "translated", "value": "viagem" } },
       "pl": { "stringUnit": { "state": "translated", "value": "viagem" } },
@@ -100479,7 +100483,7 @@
       }
     },
     "Last year": {
-      "localizations": {
+      "localizations": { "id": {"stringUnit": {"state": "translated", "value": "Setahun terakhir"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -116320,7 +116324,7 @@
       }
     },
     "Next week": {
-      "localizations": {
+      "localizations": { "id": {"stringUnit": {"state": "translated", "value": "Minggu berikutnya"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -122970,7 +122974,7 @@
       }
     },
     "Notes": {
-      "localizations": {
+      "localizations": { "id": {"stringUnit": {"state": "translated", "value": "Catatan"}},
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -133817,7 +133821,7 @@
       }
     },
     "Previous week": {
-      "localizations": {
+      "localizations": { "id": {"stringUnit": {"state": "translated", "value": "Minggu sebelumnya"}},
         "de": {
           "stringUnit": {
             "state": "translated",
