@@ -1,5 +1,6 @@
 #if os(iOS)
 import SwiftUI
+import MuscleMap
 import StrandDesign
 import StrandAnalytics
 import WhoopStore
@@ -31,6 +32,35 @@ enum NunaMuscleGroup: String, CaseIterable {
         case .legs: return "Legs"; case .chest: return "Chest"; case .back: return "Back"
         case .shoulders: return "Shoulders"; case .arms: return "Arms"; case .core: return "Core"
         }
+    }
+
+    /// The body part to draw for the group: the side it is seen from, and how far down the figure to look.
+    var picture: (side: BodySide, focus: CGFloat, zoom: CGFloat) {
+        switch self {
+        case .chest: return (.front, 0.27, 2.3); case .shoulders: return (.front, 0.23, 2.3); case .arms: return (.front, 0.34, 2.0)
+        case .core: return (.front, 0.40, 2.3); case .legs: return (.front, 0.72, 1.7); case .back: return (.back, 0.30, 2.3)
+        }
+    }
+
+    /// The muscles of the figure that belong to the group.
+    var bodyMuscles: [Muscle] { LiftMuscle.allCases.filter { NunaMuscleGroup.of($0) == self }.map(\.bodyMap) }
+}
+
+/// A small tile with the figure and the muscles of one group lit, like the pictures of a muscle list.
+struct NunaMuscleGroupThumb: View {
+    let group: NunaMuscleGroup
+    var body: some View {
+        let pic = group.picture
+        // The rest of the body is dimmed so only the group is lit; the figure is enlarged and moved so the group sits in the middle of the tile.
+        let dim = BodyViewStyle(defaultFillColor: NunaPalette.textMuted.opacity(0.4), headColor: NunaPalette.textMuted.opacity(0.4), hairColor: NunaPalette.textMuted.opacity(0.3))
+        ZStack {
+            BodyView(gender: .male, side: pic.side).bodyStyle(dim).highlight(group.bodyMuscles, color: NunaPalette.textPrimary)
+                .frame(width: 46, height: 96)
+                .scaleEffect(pic.zoom)
+                .offset(y: (0.5 - pic.focus) * 96 * pic.zoom)
+        }
+        .frame(width: 46, height: 46).background(NunaPalette.field).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .accessibilityHidden(true)
     }
 }
 
@@ -174,6 +204,8 @@ struct NunaGymView: View {
     @State private var readiness: [LiftMuscle: Double] = [:]
     @State private var volumes: [String: Double] = [:]
     @State private var loaded = false
+    /// How many weeks back the history shows; 0 is this week.
+    @State private var weekOffset = 0
     @State private var picking = false
     @ObservedObject private var groupsModel = NunaProgramGroupsModel.shared
     @State private var groupDialog: GroupDialog?
@@ -448,6 +480,8 @@ struct NunaGymView: View {
                     }
                     ForEach(ordered, id: \.self) { g in
                         let n = sums[g] ?? 0
+                        HStack(alignment: .center, spacing: 12) {
+                        NunaMuscleGroupThumb(group: g)
                         VStack(spacing: 6) {
                             HStack { Text(g.title).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary); Spacer()
                                 Text(verbatim: LiftFormat.trim(n)).font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary) }
@@ -458,6 +492,7 @@ struct NunaGymView: View {
                                     RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(n >= floorSets ? NunaPalette.onAccent.opacity(0.7) : NunaPalette.accent.opacity(0.55)).frame(width: 2, height: 12).offset(x: geo.size.width * min(1, floorSets / Self.setsBarSpan) - 1)
                                 }
                             }.frame(height: 8)
+                        }
                         }
                     }
                     if !ordered.isEmpty {
@@ -472,20 +507,73 @@ struct NunaGymView: View {
         }
     }
 
-    // MARK: Last sessions
+    // MARK: Week history
 
+    /// Weeks run Monday to Sunday, whatever the region setting says.
+    private static var weekCalendar: Calendar {
+        var c = Calendar.current
+        c.firstWeekday = 2; c.minimumDaysInFirstWeek = 4
+        return c
+    }
+
+    private var weekStart: Date {
+        let cal = Self.weekCalendar
+        let monday = cal.dateInterval(of: .weekOfYear, for: Date())?.start ?? cal.startOfDay(for: Date())
+        return cal.date(byAdding: .weekOfYear, value: weekOffset, to: monday) ?? monday
+    }
+
+    private var weekSessions: [LiftSessionRow] {
+        let cal = Self.weekCalendar
+        let start = Int(weekStart.timeIntervalSince1970)
+        let end = Int((cal.date(byAdding: .day, value: 7, to: weekStart) ?? weekStart).timeIntervalSince1970)
+        return history.filter { $0.startTs >= start && $0.startTs < end }
+    }
+
+    private var weekTitle: String {
+        let cal = Self.weekCalendar
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("d MMM")
+        let last = cal.date(byAdding: .day, value: 6, to: weekStart) ?? weekStart
+        return weekOffset == 0 ? String(localized: "This week") + " · " + f.string(from: weekStart) + " – " + f.string(from: last)
+                               : f.string(from: weekStart) + " – " + f.string(from: last)
+    }
+
+    /// The week as seven days from Monday, a dot under the days with a session, and the sessions of that week below. The arrows go to the weeks before.
     private var sessionsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            NunaTitleRow(title: "Last sessions") {
+        let cal = Self.weekCalendar
+        let sessions = weekSessions
+        let letter = DateFormatter(); letter.locale = AppLanguage.activeLocale; letter.setLocalizedDateFormatFromTemplate("EEEEE")
+        return VStack(alignment: .leading, spacing: 12) {
+            NunaTitleRow(title: "History") {
                 NavigationLink(value: NunaWorkoutRoute.history) { Text("All").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary) }
             }
-            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                VStack(spacing: 0) {
-                    if history.isEmpty {
-                        NunaListRow("No gym sessions yet", subtitle: "Finished sessions land here with every set", systemImage: "dumbbell")
+            NunaCard(small: true) {
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack(spacing: 4) {
+                        Button { weekOffset -= 1 } label: { Image(systemName: "chevron.left").font(.nuna(size: 13, weight: .bold)).frame(width: 36, height: 34).contentShape(Rectangle()) }
+                            .buttonStyle(.plain).accessibilityLabel(Text("Previous week"))
+                        Text(verbatim: weekTitle).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).lineLimit(1).minimumScaleFactor(0.8)
+                        Button { weekOffset += 1 } label: { Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).frame(width: 36, height: 34).contentShape(Rectangle()) }
+                            .buttonStyle(.plain).disabled(weekOffset >= 0).opacity(weekOffset >= 0 ? 0.3 : 1).accessibilityLabel(Text("Next week"))
+                    }.foregroundStyle(NunaPalette.textPrimary)
+                    HStack(spacing: 0) {
+                        ForEach(0..<7, id: \.self) { i in
+                            let day = cal.date(byAdding: .day, value: i, to: weekStart) ?? weekStart
+                            let trained = sessions.contains { cal.isDate(Date(timeIntervalSince1970: TimeInterval($0.startTs)), inSameDayAs: day) }
+                            let today = cal.isDateInToday(day)
+                            VStack(spacing: 6) {
+                                Text(verbatim: letter.string(from: day)).font(.nuna(size: 11, weight: .heavy)).foregroundStyle(NunaPalette.textSecondary).textCase(.uppercase)
+                                Text(verbatim: "\(cal.component(.day, from: day))").font(.nuna(size: 15, weight: .bold, design: NunaType.design))
+                                    .foregroundStyle(today ? NunaPalette.onAccent : NunaPalette.textPrimary)
+                                    .frame(width: 32, height: 32).background(today ? NunaPalette.accent : Color.clear, in: Circle())
+                                Circle().fill(trained ? NunaPalette.charge : Color.clear).frame(width: 6, height: 6)
+                            }.frame(maxWidth: .infinity)
+                        }
                     }
-                    ForEach(Array(history.prefix(3).enumerated()), id: \.element.id) { i, s in
-                        if i > 0 { NunaDivider() }
+                    if sessions.isEmpty {
+                        Text("No gym sessions this week").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    }
+                    ForEach(Array(sessions.enumerated()), id: \.element.id) { i, s in
+                        NunaDivider()
                         NavigationLink(value: NunaWorkoutRoute.gymSession(s.id)) {
                             NunaListRow(LocalizedStringKey(s.programName ?? String(localized: "Gym")),
                                         subtitle: LocalizedStringKey(sessionLine(s)), systemImage: "dumbbell", showsChevron: true)
