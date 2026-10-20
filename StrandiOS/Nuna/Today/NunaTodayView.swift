@@ -828,9 +828,7 @@ struct NunaTodayView: View {
             text.font(.nuna(size: 11, weight: .bold)).lineLimit(1).minimumScaleFactor(0.8)
         }
         .foregroundStyle(tint ?? NunaPalette.textPrimary)
-        .padding(.horizontal, 9).frame(height: 24)
-        .background(tint.map { NunaPalette.tint($0) } ?? NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous).strokeBorder(tint?.opacity(0.35) ?? NunaPalette.hairline, lineWidth: 1))
+        .frame(height: 24)
         .fixedSize()
     }
 

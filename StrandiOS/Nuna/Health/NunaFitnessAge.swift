@@ -111,8 +111,7 @@ struct NunaFitnessAgeView: View {
                             .font(.nuna(size: 13, weight: .bold))
                     }
                     .foregroundStyle(weekly < 0 ? NunaPalette.charge : NunaPalette.warning)
-                    .padding(.horizontal, 14).frame(height: 32)
-                    .background((weekly < 0 ? NunaPalette.charge : NunaPalette.warning).opacity(0.16), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                    .frame(height: 32)
                 } else if weekly == 0 {
                     Text("Steady since last week").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
@@ -156,8 +155,7 @@ struct NunaFitnessAgeView: View {
                             Text(move < 0 ? "slower vs last week" : "faster vs last week").font(.nuna(size: 12, weight: .bold))
                         }
                         .foregroundStyle(move < 0 ? NunaPalette.charge : NunaPalette.warning)
-                        .padding(.horizontal, 10).frame(height: 28)
-                        .background((move < 0 ? NunaPalette.charge : NunaPalette.warning).opacity(0.16), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                        .frame(height: 28)
                     }
                 }
                 if let now {

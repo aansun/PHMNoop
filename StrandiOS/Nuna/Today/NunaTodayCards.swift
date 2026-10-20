@@ -469,9 +469,8 @@ struct NunaStressCard: View {
                 Text(verbatim: flat ? String(localized: "At your baseline") : String(format: String(localized: "%@ vs baseline"), Self.format(abs(diff))))
                     .font(.nuna(size: 11.5, weight: .bold)).lineLimit(1).minimumScaleFactor(0.65)
             }
-            .foregroundStyle(tint).padding(.horizontal, 10).frame(height: 28)
-            .background(tint.opacity(0.16), in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous).strokeBorder(tint.opacity(0.35), lineWidth: 1))
+            // Information inside a card is plain text: no pill, no outline. The colour carries the meaning.
+            .foregroundStyle(tint).frame(height: 28)
             .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -643,9 +642,7 @@ struct NunaMetricsGrid: View {
         let tint: Color = good == nil ? NunaPalette.textSecondary : (good! ? NunaPalette.charge : NunaPalette.warning)
         return Text(verbatim: text)
             .font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(tint)
-            .padding(.horizontal, 8).frame(height: 24)
-            .background(NunaPalette.tint(tint), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(tint.opacity(0.35), lineWidth: 1))
+            .frame(height: 24)
     }
 
     private var grid: some View {
@@ -714,9 +711,7 @@ struct NunaMetricsGrid: View {
                     : (tile.deltaGood! ? NunaPalette.charge : NunaPalette.warning)
                 Text(verbatim: delta)
                     .font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(tint)
-                    .padding(.horizontal, 9).frame(height: 24)
-                    .background(NunaPalette.tint(tint), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(tint.opacity(0.35), lineWidth: 1))
+                    .frame(height: 24)
             } else if anyDelta {
                 Color.clear.frame(height: 24)
             }
