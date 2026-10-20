@@ -443,6 +443,32 @@ public enum StrainScorer {
     }
     private static let strainCache = AnalyticsMemoCache<StrainKey, Double?>(capacity: 48)
 
+    /// The Effort of a session that is still running, from its own HR window. It does not wait for the day-sized gate of `strain`
+    /// (600 readings or 10 minutes of span): that gate protects a whole day from being scored on a few samples, and on a live session it
+    /// held the gauge at 0 for the first ten minutes. From two readings on, TRIMP integrates over what is there, so the gauge starts to
+    /// move with the first minute and the number agrees with the one the saved session gets.
+    public static func liveStrain(_ hr: [HRSample],
+                                  maxHR: Double? = nil,
+                                  restingHR: Double = defaultRestingHR,
+                                  method: Method = .edwards,
+                                  sex: String = "male") -> Double? {
+        let effMax = maxHR ?? Double(defaultMaxHR())
+        guard hr.count >= 2, effMax > restingHR else { return nil }
+        let durations = sampleDurationsMinutes(hr)
+        let hrReserve = effMax - restingHR
+        let denominator = logMapDenominator(method: method, sex: sex)
+        let trimp: Double
+        switch method {
+        case .banister:
+            let b = sex.lowercased().hasPrefix("f") ? banisterBWomen : banisterBMen
+            trimp = banisterTRIMP(hr, restingHR: restingHR, hrReserve: hrReserve, durations: durations, b: b,
+                                  floorRatePerMinute: banisterBaselineRatePerMinute(b: b))
+        case .edwards:
+            trimp = edwardsTRIMP(hr, restingHR: restingHR, hrReserve: hrReserve, durations: durations)
+        }
+        return trimpToStrain(trimp, denominator: denominator)
+    }
+
     private static func strainUncached(_ hr: [HRSample], maxHR: Double?, restingHR: Double,
                                        method: Method, sex: String, denominator: Double,
                                        diag: ((String) -> Void)? = nil, day: String = "") -> Double? {

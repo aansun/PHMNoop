@@ -441,14 +441,17 @@ final class AppModel: ObservableObject {
             }
             #endif
             #if DEBUG
-            // DEBUG-only: `--demo-hr` feeds a heart rate that climbs from 70 to 180 bpm over about 45 seconds, so the live workout screen can be
+            // DEBUG-only: `--demo-hr` feeds a heart rate that climbs from 70 to 180 bpm every 90 seconds, with a little wobble, so the live workout screen can be
             // walked through every zone on a simulator with no strap.
             if CommandLine.arguments.contains("--demo-hr") {
                 Task { @MainActor [weak self] in
                     var t = 0.0
                     while let self {
-                        self.live.heartRate = Int(70 + min(t / 45, 1) * 110)
+                        // A ramp from 70 to 180 bpm every 90 seconds, with a little wobble so each reading differs, as a real one does.
+                        let ramp = (t.truncatingRemainder(dividingBy: 90)) / 90
+                        self.live.heartRate = Int(70 + ramp * 110 + 3 * sin(t * 2))
                         self.live.connected = true
+                        self.ingestHR()
                         t += 0.25
                         try? await Task.sleep(nanoseconds: 250_000_000)
                     }
@@ -1035,10 +1038,12 @@ final class AppModel: ObservableObject {
         // disagree with its own re-score. Read once here, at save time; the live readout during the
         // session is a transient running estimate and deliberately left alone.
         let restingHR = repo.today?.restingHr.map(Double.init) ?? StrainScorer.defaultRestingHR
+        // Scored as the live gauge was: a session is its own window, so the day-sized gate of `strain` (10 minutes of data) does not apply,
+        // and a short session keeps the Effort the wearer watched build instead of ending on a dash.
         let strain = samples.count >= 2
-            ? StrainScorer.strain(samples, maxHR: Double(profile.hrMax),
-                                  restingHR: restingHR,
-                                  method: PuffinExperiment.effortMethod, sex: profile.sex) : nil
+            ? StrainScorer.liveStrain(samples, maxHR: Double(profile.hrMax),
+                                      restingHR: restingHR,
+                                      method: PuffinExperiment.effortMethod, sex: profile.sex) : nil
         // Estimate calories from the captured HR window (same Keytel/Harris–Benedict model the
         // auto-detector uses) so a manual session shows energy too, not just duration/strain. (#117)
         let up = UserProfile(weightKg: profile.weightKg, heightCm: profile.heightCm,
@@ -1093,8 +1098,10 @@ final class AppModel: ObservableObject {
         w.samples.append(HRSample(ts: Int(Date().timeIntervalSince1970), bpm: hr))
         w.peakHr = max(w.peakHr, hr)
         w.avgHr = Int((Double(w.samples.map(\.bpm).reduce(0, +)) / Double(w.samples.count)).rounded())
-        w.liveStrain = StrainScorer.strain(w.samples, maxHR: Double(profile.hrMax),
-                                              method: PuffinExperiment.effortMethod, sex: profile.sex) ?? 0
+        // The same resting heart rate the saved session is scored with, and no day-sized gate, so the gauge moves from the first minute.
+        let restingHR = repo.today?.restingHr.map(Double.init) ?? StrainScorer.defaultRestingHR
+        w.liveStrain = StrainScorer.liveStrain(w.samples, maxHR: Double(profile.hrMax), restingHR: restingHR,
+                                               method: PuffinExperiment.effortMethod, sex: profile.sex) ?? 0
         activeWorkout = w
         // Re-snapshot the durable session so a kill keeps the latest accumulated HR window (#529).
         persistActiveWorkout()
