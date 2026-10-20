@@ -196,9 +196,6 @@ struct NunaGymView: View {
         NunaMuscleReadinessCard(readings: readiness)
         weekSection
         sessionsSection
-        NavigationLink(value: NunaWorkoutRoute.loadMuscle) {
-            NunaCard(small: true) { NunaListRow("Muscle load", description: "Volume, recovery and personal records", systemImage: "chart.bar", showsChevron: true) }
-        }.buttonStyle(.plain)
     }
 
     var body: some View {
@@ -229,22 +226,19 @@ struct NunaGymView: View {
     private var topActions: some View {
         HStack(spacing: 10) {
             Button { if session.isActive { session.present() } else { picking = true } } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: session.isActive ? "arrow.up.forward" : "plus").font(.nuna(size: 14, weight: .bold))
-                    Text(session.isActive ? "Open session" : "Empty session").font(.nuna(size: 15, weight: .bold)).lineLimit(1).minimumScaleFactor(0.8)
-                }
-                .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 52)
-                .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                topActionLabel(session.isActive ? "Open session" : "Empty session", session.isActive ? "arrow.up.forward" : "plus")
             }.buttonStyle(.plain)
-            NavigationLink(value: NunaWorkoutRoute.explore) {
-                HStack(spacing: 8) {
-                    Image(systemName: "safari").font(.nuna(size: 14, weight: .bold))
-                    Text("Explore Program").font(.nuna(size: 15, weight: .bold)).lineLimit(1).minimumScaleFactor(0.8)
-                }
-                .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52)
-                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-            }.buttonStyle(.plain)
+            NavigationLink(value: NunaWorkoutRoute.explore) { topActionLabel("Explore Program", "safari") }.buttonStyle(.plain)
         }
+    }
+
+    /// Plain words and an icon in the text colour, no fill: the two sit side by side as equals.
+    private func topActionLabel(_ title: LocalizedStringKey, _ icon: String) -> some View {
+        HStack(spacing: 8) {
+            Image(systemName: icon).font(.nuna(size: 14, weight: .bold))
+            Text(title).font(.nuna(size: 15, weight: .bold)).lineLimit(1).minimumScaleFactor(0.8)
+        }
+        .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 48).contentShape(Rectangle())
     }
 
     // MARK: Programs
