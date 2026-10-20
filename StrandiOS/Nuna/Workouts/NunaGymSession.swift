@@ -172,7 +172,7 @@ struct NunaGymSessionView: View {
     /// 30-day average where there is one.
     private func keyStatistics(_ secs: Int, averages: NunaWorkoutAverages?) -> some View {
         let volume = LiftMetrics.volumeLoadKg(sets)
-        let reps = working.compactMap(\.reps).reduce(0, +)
+        let reps = working.filter { NunaExerciseKind.of($0.exercise) != .timed }.compactMap(\.reps).reduce(0, +)
         var tiles: [StatTile] = [
             .init(id: "vol", icon: "scalemass", label: "Volume", value: volume.map { NunaTrendsFormat.num($0) } ?? "–", unit: UnitFormatter.massUnit(system)),
             .init(id: "sets", icon: "list.number", label: "Sets", value: "\(working.count)"),
@@ -306,12 +306,7 @@ struct NunaGymSessionView: View {
     }
 
     private func setText(_ r: LiftSetRow) -> String {
-        switch (r.weightKg, r.reps) {
-        case let (w?, n?): return "\(LiftFormat.weight(w, system: system)) × \(n)"
-        case let (w?, nil): return LiftFormat.weight(w, system: system)
-        case let (nil, n?): return "× \(n)"
-        default: return "–"
-        }
+        NunaExerciseKind.of(r.exercise).setText(weightKg: r.weightKg, reps: r.reps, system: system)
     }
 
     private var muscleVolume: some View {

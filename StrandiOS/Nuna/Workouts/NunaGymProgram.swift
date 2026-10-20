@@ -115,7 +115,7 @@ struct NunaProgramEditor: View {
                                 }
                                 Spacer(minLength: 6)
                                 if let s = item.targetSets {
-                                    Text(verbatim: item.targetRepsLow.map { "\(s) × \($0)" } ?? "\(s)").font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                                    Text(verbatim: NunaExerciseKind.of(item.exercise).targetText(sets: s, reps: item.targetRepsLow) ?? "\(s)").font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                                 }
                             }.contentShape(Rectangle())
                         }.buttonStyle(.plain)
@@ -164,7 +164,7 @@ struct NunaProgramEditor: View {
     /// "70 kg · rest 90 s": only what was filled in.
     private func detail(_ item: LiftProgramItemRow) -> String {
         var parts: [String] = []
-        if let kg = item.targetWeightKg { parts.append(LiftFormat.weight(kg, system: system)) }
+        if NunaExerciseKind.of(item.exercise).usesWeight, let kg = item.targetWeightKg { parts.append(LiftFormat.weight(kg, system: system)) }
         if let rest = item.restSec { parts.append(String(localized: "rest \(rest) s")) }
         if parts.isEmpty, item.targetSets == nil { parts.append(String(localized: "No targets set")) }
         let pinned = NunaExerciseNotes.note(forName: item.exercise)
@@ -400,7 +400,7 @@ struct NunaProgramDetailView: View {
                         }
                         Spacer(minLength: 6)
                         if let s = item.targetSets {
-                            Text(verbatim: item.targetRepsLow.map { "\(s) × \($0)" } ?? "\(s)").font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: NunaExerciseKind.of(item.exercise).targetText(sets: s, reps: item.targetRepsLow) ?? "\(s)").font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         }
                     }.padding(.vertical, 12)
                 }
@@ -410,7 +410,7 @@ struct NunaProgramDetailView: View {
 
     private func detail(_ item: LiftProgramItemRow) -> String {
         var parts: [String] = []
-        if let kg = item.targetWeightKg { parts.append(LiftFormat.weight(kg, system: system)) }
+        if NunaExerciseKind.of(item.exercise).usesWeight, let kg = item.targetWeightKg { parts.append(LiftFormat.weight(kg, system: system)) }
         if let rest = item.restSec { parts.append(String(localized: "rest \(rest) s")) }
         return parts.joined(separator: " · ")
     }
@@ -478,6 +478,7 @@ struct NunaProgramItemView: View {
     @State private var secondaries: Set<LiftMuscle> = []
     @State private var setsText = ""
     @State private var repsText = ""
+    @State private var timeText = ""
     @State private var weightText = ""
     @State private var restText = ""
     @State private var note = ""
@@ -490,6 +491,8 @@ struct NunaProgramItemView: View {
     private var system: UnitSystem { UnitSystem(rawValue: unitSystemRaw) ?? .metric }
     private var trimmed: String { exercise.trimmingCharacters(in: .whitespacesAndNewlines) }
     private var canSave: Bool { !trimmed.isEmpty }
+    /// How the exercise is logged: weight and reps, reps alone, or a time. The target fields follow it.
+    private var kind: NunaExerciseKind { NunaExerciseKind.of(trimmed) }
     private var suggestions: [LiftExerciseRow] {
         let q = trimmed.lowercased()
         guard !q.isEmpty else { return Array(vocabulary.prefix(8)) }
@@ -629,10 +632,14 @@ struct NunaProgramItemView: View {
                 nunaTrendsCap("Target")
                 HStack(spacing: 12) {
                     NunaFormField("Sets") { TextField("", text: $setsText, prompt: Text("4").foregroundStyle(NunaPalette.textMuted)).keyboardType(.numberPad) }
-                    NunaFormField("Reps") { TextField("", text: $repsText, prompt: Text("8").foregroundStyle(NunaPalette.textMuted)).keyboardType(.numberPad) }
+                    if kind == .timed {
+                        NunaFormField("Time (mm:ss)") { TextField("", text: $timeText, prompt: Text("00:45").foregroundStyle(NunaPalette.textMuted)).keyboardType(.numbersAndPunctuation) }
+                    } else {
+                        NunaFormField("Reps") { TextField("", text: $repsText, prompt: Text("8").foregroundStyle(NunaPalette.textMuted)).keyboardType(.numberPad) }
+                    }
                 }
                 HStack(spacing: 12) {
-                    NunaFormField(system == .imperial ? "Weight (lb)" : "Weight (kg)") { TextField("", text: $weightText, prompt: Text("70").foregroundStyle(NunaPalette.textMuted)).keyboardType(.decimalPad) }
+                    if kind.usesWeight { NunaFormField(system == .imperial ? "Weight (lb)" : "Weight (kg)") { TextField("", text: $weightText, prompt: Text("70").foregroundStyle(NunaPalette.textMuted)).keyboardType(.decimalPad) } }
                     NunaFormField("Rest (s)") { TextField("", text: $restText, prompt: Text("90").foregroundStyle(NunaPalette.textMuted)).keyboardType(.numberPad) }
                 }
             }
@@ -664,6 +671,7 @@ struct NunaProgramItemView: View {
             exercise = item.exercise
             setsText = item.targetSets.map(String.init) ?? ""
             repsText = item.targetRepsLow.map(String.init) ?? ""
+            if NunaExerciseKind.of(item.exercise) == .timed { timeText = item.targetRepsLow.map(NunaExerciseKind.clock) ?? ""; repsText = "" }
             weightText = item.targetWeightKg.map { LiftFormat.trim(LiftFormat.display(fromKilograms: $0, system: system)) } ?? ""
             restText = item.restSec.map(String.init) ?? ""
             note = item.note ?? ""
@@ -689,9 +697,11 @@ struct NunaProgramItemView: View {
         }
         let n = note.trimmingCharacters(in: .whitespacesAndNewlines)
         onSave(LiftProgramItemRow(id: item?.id ?? UUID().uuidString, deviceId: repo.deviceId, programId: item?.programId ?? "", ord: item?.ord ?? 0, exercise: name,
-                                  targetSets: Int(setsText.trimmingCharacters(in: .whitespaces)), targetRepsLow: Int(repsText.trimmingCharacters(in: .whitespaces)),
+                                  targetSets: Int(setsText.trimmingCharacters(in: .whitespaces)),
+                                  // A hold's time, in seconds, takes the place of the reps.
+                                  targetRepsLow: kind == .timed ? NunaExerciseKind.seconds(from: timeText) : Int(repsText.trimmingCharacters(in: .whitespaces)),
                                   targetRepsHigh: nil, targetRpe: nil,
-                                  targetWeightKg: LiftFormat.number(weightText).map { LiftFormat.kilograms(fromDisplay: $0, system: system) },
+                                  targetWeightKg: kind.usesWeight ? LiftFormat.number(weightText).map { LiftFormat.kilograms(fromDisplay: $0, system: system) } : nil,
                                   restSec: Int(restText.trimmingCharacters(in: .whitespaces)), note: n.isEmpty ? nil : n))
         dismiss()
     }

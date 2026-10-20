@@ -25,9 +25,20 @@ struct NunaExerciseDetailView: View {
     private enum Tab: String, CaseIterable { case summary, history, howTo
         var title: LocalizedStringKey { switch self { case .summary: "Summary"; case .history: "History"; case .howTo: "How to" } }
     }
-    private enum Metric: String, CaseIterable { case heaviest, oneRepMax, setVolume, sessionVolume
+    private enum Metric: String, CaseIterable { case heaviest, oneRepMax, setVolume, sessionVolume, mostReps, totalReps, longestHold, totalTime
         var title: LocalizedStringKey {
-            switch self { case .heaviest: "Heaviest weight"; case .oneRepMax: "One rep max"; case .setVolume: "Best set volume"; case .sessionVolume: "Session volume" }
+            switch self {
+            case .heaviest: "Heaviest weight"; case .oneRepMax: "One rep max"; case .setVolume: "Best set volume"; case .sessionVolume: "Session volume"
+            case .mostReps: "Most reps in a set"; case .totalReps: "Total reps"; case .longestHold: "Longest hold"; case .totalTime: "Total time"
+            }
+        }
+        /// What an exercise can be charted by, depending on how it is logged.
+        static func available(for kind: NunaExerciseKind) -> [Metric] {
+            switch kind {
+            case .weighted: return [.heaviest, .oneRepMax, .setVolume, .sessionVolume]
+            case .bodyweight: return [.mostReps, .totalReps]
+            case .timed: return [.longestHold, .totalTime]
+            }
         }
     }
     private enum Period: String, CaseIterable {
@@ -80,8 +91,8 @@ struct NunaExerciseDetailView: View {
             if let m = e.mechanic { NunaChip(verbatim: m == "compound" ? String(localized: "Compound") : String(localized: "Isolation")) }
             Spacer(minLength: 0)
         }
-        progressCard
-        recordsCard
+        progressCard(kind: NunaExerciseKind.of(e.name))
+        recordsCard(kind: NunaExerciseKind.of(e.name))
         musclesCard(e)
     }
 
@@ -91,11 +102,26 @@ struct NunaExerciseDetailView: View {
         case .oneRepMax: return s.oneRepMax
         case .setVolume: return s.bestSetVolume
         case .sessionVolume: return s.volume > 0 ? s.volume : nil
+        case .mostReps, .longestHold: return s.working.compactMap(\.reps).max().map(Double.init)
+        case .totalReps, .totalTime: let t = s.working.compactMap(\.reps).reduce(0, +); return t > 0 ? Double(t) : nil
         }
     }
 
+    private func isMass(_ m: Metric) -> Bool { [.heaviest, .oneRepMax, .setVolume, .sessionVolume].contains(m) }
+    private func chartValue(_ v: Double, _ m: Metric) -> Double { isMass(m) ? LiftFormat.display(fromKilograms: v, system: system) : v }
+    private func figure(_ v: Double, _ m: Metric) -> String {
+        switch m {
+        case .longestHold, .totalTime: return NunaExerciseKind.clock(Int(v))
+        case .mostReps, .totalReps: return "\(Int(v))"
+        default: return LiftFormat.trim(LiftFormat.display(fromKilograms: v, system: system))
+        }
+    }
+    private func unit(_ m: Metric) -> String? { isMass(m) ? UnitFormatter.massUnit(system) : (m == .mostReps || m == .totalReps ? String(localized: "reps") : nil) }
+
     /// The chart for the chosen metric and period. Dragging over it reads any session; the header says its figure and day.
-    private var progressCard: some View {
+    private func progressCard(kind: NunaExerciseKind) -> some View {
+        let metrics = Metric.available(for: kind)
+        let activeMetric = metrics.contains(metric) ? metric : metrics[0]
         let cutoff = period.days.map { Date().addingTimeInterval(-Double($0) * 86_400) }
         let points = history.sessions.reversed().compactMap { s -> (date: Date, kg: Double)? in
             let d = Date(timeIntervalSince1970: TimeInterval(s.startTs))
@@ -108,12 +134,12 @@ struct NunaExerciseDetailView: View {
                 HStack(alignment: .firstTextBaseline) {
                     if let last = shown {
                         HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            Text(verbatim: LiftFormat.trim(LiftFormat.display(fromKilograms: last.kg, system: system))).font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            Text(verbatim: UnitFormatter.massUnit(system)).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: figure(last.kg, activeMetric)).font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            if let unit = unit(activeMetric) { Text(verbatim: unit).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                             Text(verbatim: NunaWorkoutFormat.day(Int(last.date.timeIntervalSince1970))).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.restText).textCase(nil)
                         }
                     } else {
-                        nunaTrendsCap(metric.title)
+                        nunaTrendsCap(activeMetric.title)
                     }
                     Spacer(minLength: 8)
                     Menu {
@@ -131,13 +157,13 @@ struct NunaExerciseDetailView: View {
                 } else {
                     Chart {
                         ForEach(Array(points), id: \.date) { p in
-                            let v = LiftFormat.display(fromKilograms: p.kg, system: system)
+                            let v = chartValue(p.kg, activeMetric)
                             LineMark(x: .value("Date", p.date), y: .value("Weight", v)).foregroundStyle(NunaPalette.textPrimary).interpolationMethod(.monotone)
                             PointMark(x: .value("Date", p.date), y: .value("Weight", v)).foregroundStyle(NunaPalette.textPrimary).symbolSize(points.count > 40 ? 8 : 30)
                         }
                         if let sel = shown {
                             RuleMark(x: .value("Date", sel.date)).foregroundStyle(NunaPalette.restText.opacity(0.5))
-                            PointMark(x: .value("Date", sel.date), y: .value("Weight", LiftFormat.display(fromKilograms: sel.kg, system: system)))
+                            PointMark(x: .value("Date", sel.date), y: .value("Weight", chartValue(sel.kg, activeMetric)))
                                 .foregroundStyle(NunaPalette.restText).symbolSize(90)
                         }
                     }
@@ -149,10 +175,10 @@ struct NunaExerciseDetailView: View {
                 }
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        ForEach(Metric.allCases, id: \.self) { m in
+                        ForEach(metrics, id: \.self) { m in
                             Button { metric = m } label: {
-                                Text(m.title).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(metric == m ? NunaPalette.onAccent : NunaPalette.textPrimary)
-                                    .padding(.horizontal, 16).frame(height: 36).background(metric == m ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                                Text(m.title).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(activeMetric == m ? NunaPalette.onAccent : NunaPalette.textPrimary)
+                                    .padding(.horizontal, 16).frame(height: 36).background(activeMetric == m ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                             }.buttonStyle(.plain)
                         }
                     }
@@ -161,7 +187,7 @@ struct NunaExerciseDetailView: View {
         }
     }
 
-    private var recordsCard: some View {
+    private func recordsCard(kind: NunaExerciseKind) -> some View {
         let r = NunaExerciseHistory.records(history.sessions)
         func mass(_ kg: Double?) -> String { LiftFormat.weight(kg, system: system) }
         return NunaCard(small: true) {
@@ -170,13 +196,22 @@ struct NunaExerciseDetailView: View {
                 if history.sessions.isEmpty {
                     Text("No sets logged yet.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 } else {
-                    recordRow("Heaviest weight", mass(r.heaviest))
-                    recordRow("One rep max", mass(r.oneRepMax))
-                    recordRow("Best set volume", mass(r.bestSetVolume))
-                    recordRow("Best session volume", mass(r.bestSessionVolume))
-                    recordRow("Most reps in a set", r.mostReps.map(String.init) ?? "—")
-                    Text("The one rep max is an estimate from sets of 12 reps or fewer.").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-                    setRecords
+                    switch kind {
+                    case .weighted:
+                        recordRow("Heaviest weight", mass(r.heaviest))
+                        recordRow("One rep max", mass(r.oneRepMax))
+                        recordRow("Best set volume", mass(r.bestSetVolume))
+                        recordRow("Best session volume", mass(r.bestSessionVolume))
+                        recordRow("Most reps in a set", r.mostReps.map(String.init) ?? "—")
+                        Text("The one rep max is an estimate from sets of 12 reps or fewer.").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                        setRecords
+                    case .bodyweight:
+                        recordRow("Most reps in a set", r.mostReps.map(String.init) ?? "—")
+                        recordRow("Most reps in a session", r.mostRepsInSession.map(String.init) ?? "—")
+                    case .timed:
+                        recordRow("Longest hold", r.mostReps.map(NunaExerciseKind.clock) ?? "—")
+                        recordRow("Most time in a session", r.mostRepsInSession.map(NunaExerciseKind.clock) ?? "—")
+                    }
                 }
             }
         }
@@ -290,12 +325,7 @@ struct NunaExerciseDetailView: View {
     }
 
     private func setText(_ s: LiftSetRow) -> String {
-        switch (s.weightKg, s.reps) {
-        case let (w?, r?): return "\(LiftFormat.weight(w, system: system)) × \(r)"
-        case let (w?, nil): return LiftFormat.weight(w, system: system)
-        case let (nil, r?): return "× \(r)"
-        default: return "—"
-        }
+        NunaExerciseKind.of(s.exercise).setText(weightKg: s.weightKg, reps: s.reps, system: system)
     }
 
     // MARK: How to

@@ -34,14 +34,18 @@ struct NunaLiftSessionView: View {
     @AppStorage(AudioCoachingPreferences.restEndSoundKey) private var restEndSound = true
     @State private var draft: [FocusTarget: String] = [:]
     @FocusState private var focused: FocusTarget?
+    /// The set whose hold is being timed, and when it started.
+    @State private var timing: (slot: LiftSlot, since: Date)?
+    /// The exercise whose how-to video is open, for the ones the library has no demo for.
+    @State private var video: String?
 
     private enum UnfinishedChoice: Hashable { case complete, discard }
     private enum ProgramChoice: Hashable { case update, keep }
-    private enum FocusTarget: Hashable { case weight(LiftSlot), reps(LiftSlot), rpe(LiftSlot), sessionRpe }
+    private enum FocusTarget: Hashable { case weight(LiftSlot), reps(LiftSlot), time(LiftSlot), rpe(LiftSlot), sessionRpe }
 
     private var system: UnitSystem { UnitSystem(rawValue: unitSystemRaw) ?? .metric }
     private var engine: LiftSessionEngine? { session.engine }
-    private let setColumn: CGFloat = 30, tickColumn: CGFloat = 36, kgColumn: CGFloat = 66, repsColumn: CGFloat = 56, rpeColumn: CGFloat = 46
+    private let setColumn: CGFloat = 30, tickColumn: CGFloat = 36, kgColumn: CGFloat = 66, repsColumn: CGFloat = 56, rpeColumn: CGFloat = 46, timeColumn: CGFloat = 96
 
     var body: some View {
         ZStack {
@@ -98,6 +102,7 @@ struct NunaLiftSessionView: View {
             NunaExercisePicker(confirm: { $0 == 1 ? String(localized: "Add 1 exercise") : String(localized: "Add \($0) exercises") }, title: "Add exercise") { picked in addExercises(picked) }
         }
         .sheet(isPresented: $showingSettings) { settingsSheet }
+        .sheet(item: Binding(get: { video.map { NunaVideoTarget(name: $0) } }, set: { video = $0?.name })) { t in NunaExerciseVideoSheet(name: t.name) }
     }
 
     /// Exercises added in the gym go to the end of the session, three sets each, and open so the first set can be typed.
@@ -279,13 +284,14 @@ struct NunaLiftSessionView: View {
         let slots = engine.slots(forExercise: index)
         let done = slots.filter { engine.isCompleted($0) }.count
         let lib = NunaExerciseLibrary.match(item.exercise)
+        let kind = NunaExerciseKind.of(item.exercise)
         if isOpen(engine, index) {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack(alignment: .center, spacing: 12) {
-                        Button { demo = lib } label: { NunaExerciseThumb(lib, width: 58, height: 44) }
-                            .buttonStyle(.plain).disabled(lib == nil).accessibilityLabel(Text("Show the demo"))
-                        Button { if let lib { demo = lib } else { opened.remove(index) } } label: {
+                        Button { if let lib { demo = lib } else { video = item.exercise } } label: { NunaExerciseThumb(lib, width: 58, height: 44) }
+                            .buttonStyle(.plain).accessibilityLabel(lib == nil ? Text("Watch a video") : Text("Show the demo"))
+                        Button { if let lib { demo = lib } else { video = item.exercise } } label: {
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(verbatim: item.exercise).font(.nuna(size: 18, weight: .bold)).foregroundStyle(lib == nil ? NunaPalette.textPrimary : NunaPalette.restText).multilineTextAlignment(.leading).lineLimit(2)
                                 Text(verbatim: LiftMuscleSummary.line(primary: item.primaryMuscle, secondaries: item.secondaryMuscles)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1)
@@ -302,8 +308,14 @@ struct NunaLiftSessionView: View {
                         Image(systemName: "timer").font(.nuna(size: 14, weight: .semibold))
                         Text(verbatim: String(localized: "Rest timer: \(LiftFormat.duration(item.restSec))")).font(.nuna(size: 14, weight: .bold)).textCase(nil)
                     }.foregroundStyle(NunaPalette.restText)
-                    columnHeadings
-                    VStack(spacing: 6) { ForEach(slots, id: \.self) { slot in setRow(engine, slot: slot) } }
+                    columnHeadings(kind)
+                    VStack(spacing: 6) { ForEach(slots, id: \.self) { slot in setRow(engine, slot: slot, kind: kind) } }
+                    if lib == nil {
+                        Button { video = item.exercise } label: {
+                            HStack(spacing: 8) { Image(systemName: "play.rectangle.fill").font(.nuna(size: 14, weight: .semibold)); Text("Watch how it is done").font(.nuna(size: 14, weight: .bold)) }
+                                .foregroundStyle(NunaPalette.restText).frame(maxWidth: .infinity, minHeight: 40)
+                        }.buttonStyle(.plain)
+                    }
                     Button { session.addSet(toExercise: index) } label: {
                         HStack(spacing: 8) { Image(systemName: "plus").font(.nuna(size: 13, weight: .bold)); Text("Add set").font(.nuna(size: 14.5, weight: .bold)) }
                             .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 44).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
@@ -333,6 +345,13 @@ struct NunaLiftSessionView: View {
     private func exerciseMenu(_ engine: LiftSessionEngine, index: Int, item: LiftPlanItem, lib: NunaLibraryExercise?) -> some View {
         Menu {
             if let lib { Button { demo = lib } label: { Label("Show the demo", systemImage: "play.rectangle") } }
+            else { Button { video = item.exercise } label: { Label("Watch a video", systemImage: "play.rectangle") } }
+            if NunaExerciseKind.natural(item.exercise) == .bodyweight {
+                let tracks = NunaExerciseKind.weightOverrides.contains(item.exercise)
+                Button { NunaExerciseKind.setTracksWeight(!tracks, for: item.exercise) } label: {
+                    Label(tracks ? "Bodyweight only" : "Add weight", systemImage: tracks ? "figure.stand" : "scalemass")
+                }
+            }
             Button { session.addSet(toExercise: index) } label: { Label("Add set", systemImage: "plus") }
                 .disabled(item.targetSets >= LiftSessionEngine.maxSetsPerExercise)
             Button { session.removeSet(fromExercise: index) } label: { Label("Remove last set", systemImage: "minus") }
@@ -353,12 +372,12 @@ struct NunaLiftSessionView: View {
         return muscle + " · " + String(localized: "\(done) of \(total) sets done")
     }
 
-    private var columnHeadings: some View {
+    private func columnHeadings(_ kind: NunaExerciseKind) -> some View {
         HStack(spacing: 8) {
             Text("Set").frame(width: setColumn, alignment: .center)
             Text("Previous").frame(maxWidth: .infinity, alignment: .leading)
-            Text(system == .imperial ? "Lb" : "Kg").frame(width: kgColumn, alignment: .center)
-            Text("Reps").frame(width: repsColumn, alignment: .center)
+            if kind == .weighted { Text(system == .imperial ? "Lb" : "Kg").frame(width: kgColumn, alignment: .center) }
+            if kind == .timed { Text("Time").frame(width: timeColumn, alignment: .center) } else { Text("Reps").frame(width: repsColumn, alignment: .center) }
             if showRpe { Text("RPE").frame(width: rpeColumn, alignment: .center) }
             Image(systemName: "checkmark").frame(width: tickColumn)
         }
@@ -366,17 +385,22 @@ struct NunaLiftSessionView: View {
     }
 
     /// What the last session did on this set, or what the previous set of this one did: "60 kg × 8".
-    private func previousText(_ slot: LiftSlot) -> String {
+    private func previousText(_ slot: LiftSlot, kind: NunaExerciseKind) -> String {
         let c = session.carry(for: slot)
-        switch (c.weightKg, c.reps) {
-        case let (w?, r?): return "\(display(w)) \(UnitFormatter.massUnit(system)) × \(r)"
-        case let (w?, nil): return "\(display(w)) \(UnitFormatter.massUnit(system))"
-        case let (nil, r?): return "× \(r)"
-        default: return "—"
+        switch kind {
+        case .timed: return c.reps.map(NunaExerciseKind.clock) ?? "—"
+        case .bodyweight: return c.reps.map { "× \($0)" } ?? "—"
+        case .weighted:
+            switch (c.weightKg, c.reps) {
+            case let (w?, r?): return "\(display(w)) \(UnitFormatter.massUnit(system)) × \(r)"
+            case let (w?, nil): return "\(display(w)) \(UnitFormatter.massUnit(system))"
+            case let (nil, r?): return "× \(r)"
+            default: return "—"
+            }
         }
     }
 
-    private func setRow(_ engine: LiftSessionEngine, slot: LiftSlot) -> some View {
+    private func setRow(_ engine: LiftSessionEngine, slot: LiftSlot, kind: NunaExerciseKind) -> some View {
         let recorded = engine.recordedSet(for: slot)
         let isWorking = engine.stage == .working(slot)
         let warm = session.isWarmup(slot)
@@ -389,13 +413,21 @@ struct NunaLiftSessionView: View {
                 .accessibilityLabel(warm ? Text("Warm-up set — tap to make it a working set") : Text("Set \(slot.setIndex) — tap to mark it a warm-up"))
             Group {
                 if isWorking {
-                    HStack(spacing: 6) { stepButton("minus") { bump(slot, -step) }; stepButton("plus") { bump(slot, step) } }
+                    HStack(spacing: 6) {
+                        stepButton("minus") { stepSet(slot, kind, -1) }; stepButton("plus") { stepSet(slot, kind, 1) }
+                    }
                 } else {
-                    Text(verbatim: previousText(slot)).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).lineLimit(1).minimumScaleFactor(0.7)
+                    Text(verbatim: previousText(slot, kind: kind)).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).lineLimit(1).minimumScaleFactor(0.7)
                 }
             }.frame(maxWidth: .infinity, alignment: .leading)
-            field(text: weightBinding(slot), ghost: ghostWeight(slot), target: .weight(slot), decimal: true, big: isWorking, done: recorded != nil).frame(width: kgColumn)
-            field(text: repsBinding(slot), ghost: ghostReps(slot), target: .reps(slot), decimal: false, big: isWorking, done: recorded != nil).frame(width: repsColumn)
+            if kind == .weighted {
+                field(text: weightBinding(slot), ghost: ghostWeight(slot), target: .weight(slot), decimal: true, big: isWorking, done: recorded != nil).frame(width: kgColumn)
+            }
+            if kind == .timed {
+                timeField(slot, isWorking: isWorking, done: recorded != nil).frame(width: timeColumn)
+            } else {
+                field(text: repsBinding(slot), ghost: ghostReps(slot), target: .reps(slot), decimal: false, big: isWorking, done: recorded != nil).frame(width: repsColumn)
+            }
             if showRpe { field(text: rpeBinding(slot), ghost: ghostRpe(engine, slot: slot), target: .rpe(slot), decimal: true, big: false, done: recorded != nil).frame(width: rpeColumn) }
             Button { session.start(slot) } label: {
                 Image(systemName: "checkmark").font(.nuna(size: 15, weight: .bold))
@@ -417,6 +449,60 @@ struct NunaLiftSessionView: View {
             .focused($focused, equals: target)
             .frame(height: 40)
             .background(done ? NunaPalette.charge.opacity(0.16) : NunaPalette.field, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+    }
+
+    /// A hold: a play button that times it, and the time as 00:45. Typing "45" or "1:05" works too.
+    private func timeField(_ slot: LiftSlot, isWorking: Bool, done: Bool) -> some View {
+        let running = timing?.slot == slot
+        return HStack(spacing: 6) {
+            Button { toggleTimer(slot) } label: {
+                Image(systemName: running ? "stop.fill" : "play.fill").font(.nuna(size: 12, weight: .bold)).foregroundStyle(Color.white)
+                    .frame(width: 30, height: 30).background(NunaPalette.rest, in: Circle())
+            }.buttonStyle(.plain).accessibilityLabel(running ? Text("Stop the timer") : Text("Time this set"))
+            if running, let since = timing?.since {
+                TimelineView(.periodic(from: .now, by: 1)) { ctx in
+                    Text(verbatim: NunaExerciseKind.clock(Int(ctx.date.timeIntervalSince(since))))
+                        .font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.restText).monospacedDigit()
+                        .frame(maxWidth: .infinity, minHeight: 40).background(NunaPalette.field, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                }
+            } else {
+                TextField("", text: timeBinding(slot), prompt: Text(verbatim: ghostTime(slot)).foregroundStyle(NunaPalette.textMuted))
+                    .font(.nuna(size: isWorking ? 17 : 15.5, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
+                    .multilineTextAlignment(.center).keyboardType(.numbersAndPunctuation)
+                    .focused($focused, equals: .time(slot)).frame(height: 40)
+                    .background(done ? NunaPalette.charge.opacity(0.16) : NunaPalette.field, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            }
+        }
+    }
+
+    /// Starts timing the hold of a set (and the set with it), or stops, writes the seconds and finishes the set.
+    private func toggleTimer(_ slot: LiftSlot) {
+        if let t = timing, t.slot == slot {
+            let secs = max(1, Int(Date().timeIntervalSince(t.since)))
+            timing = nil
+            draft[.time(slot)] = nil
+            write(slot) { $0.reps = secs }
+            if engine?.stage == .working(slot) { session.advance() }
+        } else {
+            if let t = timing { write(t.slot) { $0.reps = max(1, Int(Date().timeIntervalSince(t.since))) } }
+            if engine?.stage != .working(slot) { session.start(slot) }
+            timing = (slot, Date())
+        }
+    }
+
+    /// One step of the working set's number: weight for a barbell lift, reps for a bodyweight one, five seconds for a hold.
+    private func stepSet(_ slot: LiftSlot, _ kind: NunaExerciseKind, _ direction: Int) {
+        switch kind {
+        case .weighted: bump(slot, step * Double(direction))
+        case .bodyweight:
+            let cur = session.enteredValues(for: slot).reps ?? session.carry(for: slot).reps ?? 0
+            draft[.reps(slot)] = nil
+            write(slot) { $0.reps = max(0, cur + direction) }
+        case .timed:
+            let cur = session.enteredValues(for: slot).reps ?? session.carry(for: slot).reps ?? 0
+            draft[.time(slot)] = nil
+            write(slot) { $0.reps = max(0, cur + 5 * direction) }
+        }
     }
 
     private func stepButton(_ icon: String, _ action: @escaping () -> Void) -> some View {
@@ -498,6 +584,7 @@ struct NunaLiftSessionView: View {
 
     private func ghostWeight(_ slot: LiftSlot) -> String { session.carry(for: slot).weightKg.map { display($0) } ?? "—" }
     private func ghostReps(_ slot: LiftSlot) -> String { session.carry(for: slot).reps.map(String.init) ?? "—" }
+    private func ghostTime(_ slot: LiftSlot) -> String { session.carry(for: slot).reps.map(NunaExerciseKind.clock) ?? "00:00" }
     private func ghostRpe(_ engine: LiftSessionEngine, slot: LiftSlot) -> String { engine.previousSetInSession(for: slot)?.rpe.map { LiftFormat.trim($0) } ?? "—" }
     private func display(_ kg: Double) -> String { LiftFormat.trim(LiftFormat.display(fromKilograms: kg, system: system)) }
 
@@ -518,6 +605,13 @@ struct NunaLiftSessionView: View {
     private func repsBinding(_ slot: LiftSlot) -> Binding<String> {
         fieldBinding(.reps(slot), formatted: { session.enteredValues(for: slot).reps.map(String.init) ?? "" }, store: { text in
             write(slot) { $0.reps = Int(text.trimmingCharacters(in: .whitespaces)) }
+        })
+    }
+    private func timeBinding(_ slot: LiftSlot) -> Binding<String> {
+        Binding(get: { draft[.time(slot)] ?? session.enteredValues(for: slot).reps.map(NunaExerciseKind.clock) ?? "" }, set: { typed in
+            draft[.time(slot)] = typed
+            // Stored as soon as it reads as a time; a half-typed "1:" waits.
+            write(slot) { $0.reps = typed.trimmingCharacters(in: .whitespaces).isEmpty ? nil : NunaExerciseKind.seconds(from: typed) ?? $0.reps }
         })
     }
     private func rpeBinding(_ slot: LiftSlot) -> Binding<String> {

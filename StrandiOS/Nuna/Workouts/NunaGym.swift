@@ -119,8 +119,9 @@ enum NunaGymStore {
         lines.append("")
         for (i, it) in items.enumerated() {
             var line = "\(i + 1). \(it.exercise)"
-            if let s = it.targetSets { line += " · \(s)" + (it.targetRepsLow.map { " × \($0)" } ?? "") }
-            if let w = it.targetWeightKg { line += " · " + LiftFormat.weight(w, system: system) }
+            let kind = NunaExerciseKind.of(it.exercise)
+            if let t = kind.targetText(sets: it.targetSets, reps: it.targetRepsLow) { line += " · " + t }
+            if kind.usesWeight, let w = it.targetWeightKg { line += " · " + LiftFormat.weight(w, system: system) }
             lines.append(line)
         }
         lines.append(""); lines.append("PHMN")

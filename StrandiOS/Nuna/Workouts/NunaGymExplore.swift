@@ -46,7 +46,7 @@ enum NunaStarterPrograms {
 
     static let all: [NunaStarterProgram] = [
         .init(id: "full-body-beginner-gym", name: "Beginner Full Body (Gym)", level: .beginner, goal: .muscle, equipment: .gym, routines: [
-            r("Full Body A", [m("Barbell Squat", 3, 8, rest: 120), m("Barbell Bench Press - Medium Grip", 3, 8, rest: 120), m("Seated Cable Rows", 3, 10), m("Dumbbell Shoulder Press", 3, 10), m("Plank", 3, rest: 60)]),
+            r("Full Body A", [m("Barbell Squat", 3, 8, rest: 120), m("Barbell Bench Press - Medium Grip", 3, 8, rest: 120), m("Seated Cable Rows", 3, 10), m("Dumbbell Shoulder Press", 3, 10), m("Plank", 3, 30, rest: 60)]),
             r("Full Body B", [m("Leg Press", 3, 10, rest: 120), m("Wide-Grip Lat Pulldown", 3, 10), m("Incline Dumbbell Press", 3, 10), m("Romanian Deadlift", 3, 10, rest: 120), m("Triceps Pushdown", 3, 12), m("Dumbbell Bicep Curl", 3, 12)]),
         ]),
         .init(id: "ppl-beginner-gym", name: "Beginner Push/Pull/Legs (Gym)", level: .beginner, goal: .muscle, equipment: .gym, routines: [
@@ -75,7 +75,7 @@ enum NunaStarterPrograms {
             r("Lower", [m("Barbell Squat", 5, 3, rest: 210), m("Barbell Deadlift", 3, 3, rest: 240), m("Front Barbell Squat", 3, 6, rest: 150), m("Romanian Deadlift", 3, 6, rest: 120), m("Hanging Leg Raise", 3, 10, rest: 60), m("Standing Calf Raises", 4, 10, rest: 60)]),
         ]),
         .init(id: "dumbbell-full-body", name: "Dumbbell Full Body", level: .beginner, goal: .muscle, equipment: .dumbbells, routines: [
-            r("Full Body A", [m("Goblet Squat", 3, 10), m("Dumbbell Bench Press", 3, 10), m("One-Arm Dumbbell Row", 3, 10), m("Dumbbell Shoulder Press", 3, 10), m("Dumbbell Bicep Curl", 3, 12, rest: 60), m("Plank", 3, rest: 60)]),
+            r("Full Body A", [m("Goblet Squat", 3, 10), m("Dumbbell Bench Press", 3, 10), m("One-Arm Dumbbell Row", 3, 10), m("Dumbbell Shoulder Press", 3, 10), m("Dumbbell Bicep Curl", 3, 12, rest: 60), m("Plank", 3, 30, rest: 60)]),
             r("Full Body B", [m("Dumbbell Lunges", 3, 10), m("Incline Dumbbell Press", 3, 10), m("Bent Over Two-Dumbbell Row", 3, 10), m("Side Lateral Raise", 3, 12, rest: 60), m("Hammer Curls", 3, 12, rest: 60), m("Standing Dumbbell Calf Raise", 3, 15, rest: 60)]),
         ]),
         .init(id: "dumbbell-upper-lower", name: "Dumbbell Upper/Lower", level: .medium, goal: .muscle, equipment: .dumbbells, routines: [
@@ -83,12 +83,12 @@ enum NunaStarterPrograms {
             r("Lower", [m("Goblet Squat", 4, 10, rest: 120), m("Dumbbell Rear Lunge", 3, 10), m("Dumbbell Step Ups", 3, 10), m("Standing Dumbbell Calf Raise", 4, 15, rest: 60), m("Reverse Crunch", 3, 15, rest: 60)]),
         ]),
         .init(id: "bodyweight-basics", name: "Bodyweight Basics", level: .beginner, goal: .loseWeight, equipment: .none, routines: [
-            r("Day A", [m("Bodyweight Squat", 3, 15, rest: 60), m("Pushups", 3, 10, rest: 60), m("Superman", 3, 12, rest: 45), m("Bodyweight Walking Lunge", 3, 10, rest: 60), m("Plank", 3, rest: 45), m("Mountain Climbers", 3, rest: 45)]),
+            r("Day A", [m("Bodyweight Squat", 3, 15, rest: 60), m("Pushups", 3, 10, rest: 60), m("Superman", 3, 12, rest: 45), m("Bodyweight Walking Lunge", 3, 10, rest: 60), m("Plank", 3, 30, rest: 45), m("Mountain Climbers", 3, 20, rest: 45)]),
             r("Day B", [m("Incline Push-Up", 3, 12, rest: 60), m("Single Leg Glute Bridge", 3, 12, rest: 45), m("Bench Dips", 3, 12, rest: 60), m("Crunches", 3, 15, rest: 45), m("Reverse Crunch", 3, 12, rest: 45)]),
         ]),
         .init(id: "bodyweight-strength", name: "Bodyweight Strength", level: .medium, goal: .strength, equipment: .none, routines: [
             r("Upper", [m("Pullups", 4, 6, rest: 120), m("Decline Push-Up", 4, 10, rest: 90), m("Dips - Triceps Version", 3, 10, rest: 90), m("Chin-Up", 4, 6, rest: 120), m("Hanging Leg Raise", 3, 10, rest: 60)]),
-            r("Lower and core", [m("Bodyweight Walking Lunge", 4, 12, rest: 60), m("Single Leg Glute Bridge", 3, 12, rest: 60), m("Bodyweight Squat", 4, 20, rest: 60), m("Plank", 3, rest: 45), m("Mountain Climbers", 3, rest: 45)]),
+            r("Lower and core", [m("Bodyweight Walking Lunge", 4, 12, rest: 60), m("Single Leg Glute Bridge", 3, 12, rest: 60), m("Bodyweight Squat", 4, 20, rest: 60), m("Plank", 3, 30, rest: 45), m("Mountain Climbers", 3, 20, rest: 45)]),
         ]),
         .init(id: "band-full-body", name: "Resistance Band Full Body", level: .beginner, goal: .muscle, equipment: .bands, routines: [
             r("Full Body", [m("Band Pull Apart", 3, 15, rest: 45), m("Bench Press - With Bands", 3, 12, rest: 60), m("Lateral Raise - With Bands", 3, 15, rest: 45), m("Bodyweight Squat", 3, 15, rest: 60), m("Calf Raises - With Bands", 3, 15, rest: 45)]),
@@ -306,7 +306,7 @@ struct NunaStarterProgramView: View {
                                     NunaExerciseThumb(name: mv.name, width: 50, height: 38)
                                     Text(verbatim: mv.name).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2)
                                     Spacer(minLength: 6)
-                                    Text(verbatim: mv.reps.map { "\(mv.sets) × \($0)" } ?? "\(mv.sets)").font(.nuna(size: 15.5, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                                    Text(verbatim: NunaExerciseKind.of(mv.name).targetText(sets: mv.sets, reps: mv.reps) ?? "\(mv.sets)").font(.nuna(size: 15.5, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                                 }.padding(.vertical, 10)
                             }
                         }
