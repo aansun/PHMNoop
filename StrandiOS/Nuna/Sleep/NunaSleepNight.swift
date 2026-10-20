@@ -440,7 +440,8 @@ struct NunaSleepStageSection: View {
                         Image(systemName: st.status == .usual ? "checkmark.circle.fill" : "info.circle.fill").font(.nuna(size: 15, weight: .bold)).foregroundStyle(st.tint)
                         Text(statusText(st.status)).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }
-                    .padding(.vertical, 4).frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 12).padding(.vertical, 10).frame(maxWidth: .infinity, alignment: .leading)
+                    .background(st.tint.opacity(0.14), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 }
                 Text(m.id == "hr"
                      ? "Figures cover the time you were asleep. This compares with your own recent nights and is not a medical assessment; if you feel unwell, talk to a professional."
