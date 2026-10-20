@@ -115,6 +115,7 @@
     "Key statistics": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Statistik utama"}}}},
     "vs. 30 day average": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "vs. rata-rata 30 hari"}}}},
     "Edit time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ubah waktu"}}}},
+    "Route map": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Peta rute"}}}},
     "No animation for this exercise yet": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Latihan ini belum punya animasi"}}}},
     "See a GIF": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lihat GIF"}}}},
     "Video": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Video"}}}},

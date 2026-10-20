@@ -440,6 +440,21 @@ final class AppModel: ObservableObject {
                 self.live.batteryPct = 68
             }
             #endif
+            #if DEBUG
+            // DEBUG-only: `--demo-hr` feeds a heart rate that climbs from 70 to 180 bpm over about 45 seconds, so the live workout screen can be
+            // walked through every zone on a simulator with no strap.
+            if CommandLine.arguments.contains("--demo-hr") {
+                Task { @MainActor [weak self] in
+                    var t = 0.0
+                    while let self {
+                        self.live.heartRate = Int(70 + min(t / 45, 1) * 110)
+                        self.live.connected = true
+                        t += 0.25
+                        try? await Task.sleep(nanoseconds: 250_000_000)
+                    }
+                }
+            }
+            #endif
             await self.repo.refresh()                          // surface any imported data at once
             await self.wireSourceCoordinator()                 // dormant unless a generic strap is active
             await self.recordAppVersionChangeIfNeeded()        // #1410: stamp an update transition once

@@ -447,6 +447,9 @@ public final class LiveState: ObservableObject {
     @Published public var sensorCadence: Double? = nil
     /// Instantaneous power in watts from a connected cycling-power (CPS) sensor.
     @Published public var sensorPowerWatts: Int? = nil
+    /// Total distance in metres a connected fitness machine (FTMS treadmill, bike, rower) reports for its own session; it counts from the
+    /// machine's start, not the app's, so a reader takes the change since the session began.
+    @Published public var sensorDistanceM: Int? = nil
 
     /// Clear the standard fitness-sensor live metrics (called on disconnect / source teardown), the twin
     /// of `clearBiometrics()` for the additive sensor surface. Leaves HR + R-R untouched.
@@ -454,13 +457,14 @@ public final class LiveState: ObservableObject {
         sensorSpeedKmh = nil
         sensorCadence = nil
         sensorPowerWatts = nil
+        sensorDistanceM = nil
     }
 
     /// True when ANY standard fitness-sensor metric is currently present — drives whether the additive
     /// in-workout sensor readout shows at all (it stays hidden until a real sensor feeds a value, so a
     /// workout with only HR looks exactly as it does today).
     public var hasSensorMetrics: Bool {
-        sensorSpeedKmh != nil || sensorCadence != nil || sensorPowerWatts != nil
+        sensorSpeedKmh != nil || sensorCadence != nil || sensorPowerWatts != nil || sensorDistanceM != nil
     }
 
     /// Pure, honest display strings for the additive in-workout sensor readout. Each returns nil when the
