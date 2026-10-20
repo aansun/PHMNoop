@@ -167,6 +167,7 @@ struct NunaGymView: View {
     @StateObject private var anyaModel = NunaGymAnyaModel()
     @StateObject private var anyaDay = NunaTodayModel()
     @AppStorage("nuna.gym.programView") private var programView = "folders"
+    @AppStorage("nuna.gym.collapsedTypes") private var collapsedTypesRaw = ""
     @State private var kinds: [String: Set<NunaProgramType>] = [:]
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
     @State private var deletingProgram: LiftProgramRow?
@@ -357,18 +358,33 @@ struct NunaGymView: View {
     }
 
     /// The programs grouped by what they need: a program shows under every type it fits (a dumbbell program is also an at-home one).
+    /// The types folded away in the By type view, kept between visits.
+    private var collapsedTypes: Set<String> { Set(collapsedTypesRaw.split(separator: ",").map(String.init)) }
+
+    private func toggleType(_ t: NunaProgramType) {
+        var set = collapsedTypes
+        let key = String(t.rawValue)
+        if set.contains(key) { set.remove(key) } else { set.insert(key) }
+        collapsedTypesRaw = set.sorted().joined(separator: ",")
+    }
+
     @ViewBuilder private var typeSections: some View {
         ForEach(NunaProgramType.allCases) { t in
             let inType = programs.filter { kinds[$0.id]?.contains(t) == true }
             if !inType.isEmpty {
+                let folded = collapsedTypes.contains(String(t.rawValue))
                 VStack(alignment: .leading, spacing: 10) {
-                    HStack(spacing: 10) {
-                        Image(systemName: t.icon).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(t.title).font(.nuna(size: 17, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: "\(inType.count)").font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
-                        Spacer(minLength: 0)
-                    }.padding(.horizontal, 4)
-                    ForEach(inType, id: \.id) { p in programRow(p) }
+                    Button { withAnimation(.easeInOut(duration: 0.2)) { toggleType(t) } } label: {
+                        HStack(spacing: 10) {
+                            Image(systemName: t.icon).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(t.title).font(.nuna(size: 17, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: "\(inType.count)").font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
+                            Spacer(minLength: 6)
+                            Image(systemName: "chevron.down").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted).rotationEffect(.degrees(folded ? -90 : 0))
+                        }.contentShape(Rectangle())
+                    }.buttonStyle(.plain).padding(.horizontal, 4)
+                    .accessibilityLabel(Text(verbatim: "\(t.title), \(inType.count)")).accessibilityValue(folded ? Text("Collapsed") : Text("Expanded"))
+                    if !folded { ForEach(inType, id: \.id) { p in programRow(p) } }
                 }.padding(.top, 4)
             }
         }
