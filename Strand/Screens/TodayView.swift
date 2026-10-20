@@ -2706,6 +2706,10 @@ struct TodayView: View {
             RollingStepsAverageCard(day: selectedDayKey)
         case .stress:
             StressTodayCardView()
+        case .weight:
+            // A tap-through to the Weight detail; the figure itself is on the Nuna Today.
+            pinnedCardRow(icon: card.icon, tint: tint, title: card.title, subtitle: card.subtitle,
+                          value: "", route: .metric("weight"))
         case .fitnessAge, .vo2max, .vitality, .steps, .calories:
             pinnedCardRow(icon: card.icon, tint: tint, title: card.title, subtitle: card.subtitle,
                           value: dashboardValue(card), route: .health)
@@ -2754,6 +2758,7 @@ struct TodayView: View {
         case .steps, .stepsAverage30: return StrandPalette.metricCyan
         case .calories:    return StrandPalette.metricAmber
         case .hydration:   return StrandPalette.metricCyan
+        case .weight:      return StrandPalette.accent
         case .coupled:     return StrandPalette.chargeColor
         case .coach:       return StrandPalette.accent
         }
@@ -2863,6 +2868,8 @@ struct TodayView: View {
             // value (a fresh day reads "0.0 / 3.2 L"); the goal is always derivable from the profile.
             guard let goal = hydrationGoalML else { return "—" }
             return HydrationGoal.cardValueString(totalML: hydrationTotalML ?? 0, goalML: goal)
+        case .weight:
+            return ""
         case .coupled:
             // A tap-through row with no metric value of its own, the row shows just the chevron. Returning
             // an empty string (not "—") renders no number and leaves it un-dimmed (it isn't a missing value).

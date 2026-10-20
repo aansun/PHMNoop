@@ -90,6 +90,7 @@ struct NunaMetricHost: View {
         case ("sleep_performance", _): NunaRestDetailView()
         case ("skin_temp", _): NunaSkinTempView()
         case ("fitness_age", _): NunaFitnessAgeView()
+        case ("weight", _): NunaWeightView()
         default: NunaMetricDetailView(metric: m)
         }
     }

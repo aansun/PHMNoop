@@ -1065,6 +1065,10 @@ struct LiquidTodayView: View {
                      frac: hydrationGoalML.map {
                          HydrationGoal.fraction(totalML: hydrationTotalML ?? 0, goalML: $0)
                      })
+        case .weight:
+            // A tap-through to the Weight detail; the figure itself is on the Nuna Today.
+            cardLink(.metric("weight"), title: card.title, sub: card.subtitle,
+                     value: "", tint: StrandPalette.accent, frac: nil)
         case .coupled:
             // A tap-through to the full Coupled day screen. No value.
             cardLink(.coupled, title: card.title, sub: card.subtitle,

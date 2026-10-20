@@ -172,11 +172,9 @@ struct NunaGymSessionView: View {
     /// 30-day average where there is one.
     private func keyStatistics(_ secs: Int, averages: NunaWorkoutAverages?) -> some View {
         let volume = LiftMetrics.volumeLoadKg(sets)
-        let reps = working.filter { NunaExerciseKind.of($0.exercise) != .timed }.compactMap(\.reps).reduce(0, +)
         var tiles: [StatTile] = [
             .init(id: "vol", icon: "scalemass", label: "Volume", value: volume.map { NunaTrendsFormat.num($0) } ?? "–", unit: UnitFormatter.massUnit(system)),
             .init(id: "sets", icon: "list.number", label: "Sets", value: "\(working.count)"),
-            .init(id: "reps", icon: "repeat", label: "Reps", value: "\(reps)"),
         ]
         var dur = StatTile(id: "dur", icon: "timer", label: "Duration", value: secs > 0 ? "\(max(1, secs / 60))" : "–", unit: "min")
         if secs > 0, let avg = averages?.durationS { dur.pill = (Double(secs), avg, "\(max(1, Int((avg / 60).rounded()))) min") }
