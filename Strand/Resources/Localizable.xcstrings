@@ -115,6 +115,7 @@
     "Key statistics": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Statistik utama"}}}},
     "vs. 30 day average": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "vs. rata-rata 30 hari"}}}},
     "Edit time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ubah waktu"}}}},
+    "More details": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Detail lengkap"}}}},
     "Empty session": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Sesi kosong"}}}},
     "Open session": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Buka sesi"}}}},
     "Every program is in a group. The ones you have not moved are here.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Setiap program ada di dalam grup. Yang belum Anda pindahkan ada di sini."}}}},
