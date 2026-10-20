@@ -33,6 +33,8 @@ struct NunaLiftSessionView: View {
     /// A sound when a rest period ends.
     @AppStorage(AudioCoachingPreferences.restEndSoundKey) private var restEndSound = true
     @State private var draft: [FocusTarget: String] = [:]
+    /// Set when the saved session's summary is about to replace this screen, so the session going away does not close it.
+    @State private var showingSummary = false
     @FocusState private var focused: FocusTarget?
     /// The set whose hold is being timed, and when it started.
     @State private var timing: (slot: LiftSlot, since: Date)?
@@ -91,7 +93,7 @@ struct NunaLiftSessionView: View {
         .task { await loadLastTime() }
         // A screen with no session behind it has nothing to show: it closes itself, in case the presenter's own dismissal was ignored
         // (UIKit drops a dismissal asked for while another one is still running).
-        .onChange(of: session.engine == nil) { _, gone in if gone { dismiss() } }
+        .onChange(of: session.engine == nil) { _, gone in if gone, !showingSummary { dismiss() } }
         .onChange(of: focused) { now in draft = draft.filter { $0.key == now } }
         .sheet(isPresented: $showingFinish) { finishSheet }
         .sheet(item: $demo) { e in
@@ -743,7 +745,16 @@ struct NunaLiftSessionView: View {
                 await StravaAutoUploadCoordinator.uploadIfNeeded(row)
             }
         }
-        await finishAndDismiss()
+        await finishAndShowSummary(sessionId)
+    }
+
+    /// The session is saved: its finish sheet closes and the screen turns into the summary page, with no trip back to the Gym tab.
+    private func finishAndShowSummary(_ sessionId: String) async {
+        showingSummary = true
+        showingFinish = false
+        await repo.refresh()
+        try? await Task.sleep(nanoseconds: 600_000_000)
+        session.finishedSaving(summaryId: sessionId)
     }
 
     /// Starts the screen's slide down and waits for it to end.
