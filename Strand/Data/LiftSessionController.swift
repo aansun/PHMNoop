@@ -401,6 +401,22 @@ final class LiftSessionController: ObservableObject {
         return true
     }
 
+    /// Delete one set of an exercise (swipe on its row). The sets after it move up, and so do their warm-up marks and typed numbers.
+    @discardableResult
+    func removeSet(_ slot: LiftSlot) -> Bool {
+        guard let engine, engine.canRemoveSet(slot) else { return false }
+        func moved(_ s: LiftSlot) -> LiftSlot {
+            s.exerciseIndex == slot.exerciseIndex && s.setIndex > slot.setIndex ? LiftSlot(exerciseIndex: s.exerciseIndex, setIndex: s.setIndex - 1) : s
+        }
+        self.engine?.removeSet(slot)
+        pendingWarmups = Set(pendingWarmups.filter { $0 != slot }.map(moved))
+        var values: [LiftSlot: PendingSetValues] = [:]
+        for (k, v) in pendingValues where k != slot { values[moved(k)] = v }
+        pendingValues = values
+        persist()
+        return true
+    }
+
     /// Fill in or correct a set's numbers — **any** set, at any time.
     ///
     /// A set that has been performed is edited in the engine. A set that has NOT been performed

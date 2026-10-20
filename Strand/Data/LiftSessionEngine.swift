@@ -429,6 +429,34 @@ struct LiftSessionEngine: Equatable {
         return true
     }
 
+    /// Whether one specific set can be deleted: any set of a line that keeps at least one, except the one being worked or rested from.
+    func canRemoveSet(_ slot: LiftSlot) -> Bool {
+        guard plan.indices.contains(slot.exerciseIndex),
+              plan[slot.exerciseIndex].targetSets > 1,
+              (1...plan[slot.exerciseIndex].targetSets).contains(slot.setIndex) else { return false }
+        return currentSlot != slot
+    }
+
+    /// Delete one set from the middle of a line. The sets after it move up by one, so the sheet stays 1…n with no gap, and a recorded set
+    /// keeps its numbers under its new position.
+    @discardableResult
+    mutating func removeSet(_ slot: LiftSlot) -> Bool {
+        guard canRemoveSet(slot) else { return false }
+        pushHistory()
+        func moved(_ s: LiftSlot) -> LiftSlot {
+            s.exerciseIndex == slot.exerciseIndex && s.setIndex > slot.setIndex ? LiftSlot(exerciseIndex: s.exerciseIndex, setIndex: s.setIndex - 1) : s
+        }
+        sets.removeAll { $0.slot == slot }
+        for i in sets.indices where sets[i].exerciseIndex == slot.exerciseIndex && sets[i].setIndex > slot.setIndex { sets[i].setIndex -= 1 }
+        switch stage {
+        case .working(let s): stage = .working(moved(s))
+        case .resting(let s, let endsAt): stage = .resting(moved(s), endsAt: endsAt)
+        case .warmup, .finished: break
+        }
+        plan[slot.exerciseIndex].targetSets -= 1
+        return true
+    }
+
     /// End the session. The rest that was running is closed out first, so its measured duration is
     /// not silently lost.
     mutating func finish(now: Int) {
