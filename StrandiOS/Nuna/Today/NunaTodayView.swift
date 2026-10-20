@@ -19,7 +19,7 @@ enum NunaTodayDefaults {
     /// Rings and the synthesis chips, Anya, what was done today, key metrics, the stress card, the journal with mood, then the
     /// add-or-arrange card. Everything else (heart rate, start session, your cards, cycle, added cards) stays out until the person adds it.
     static let order: [TodaySection] = [
-        .hero, .synthesis, .workouts, .keyMetrics, .recoveryVitals, .vitalMonitor, .journal,
+        .hero, .stateChips, .synthesis, .workouts, .keyMetrics, .recoveryVitals, .vitalMonitor, .journal,
         .heartRate, .liveSession, .yourCards, .menstrualCycle, .addedCards,
     ]
     static let hidden: [TodaySection] = [.heartRate, .liveSession, .yourCards, .menstrualCycle, .addedCards, .vitalMonitor]
@@ -400,6 +400,7 @@ struct NunaTodayView: View {
     private func nunaTitle(_ s: TodaySection) -> LocalizedStringKey {
         switch s {
         case .hero: return "Daily scores"
+        case .stateChips: return "State chips"
         case .synthesis: return "Anya"
         case .recoveryVitals: return "Stress monitor"
         case .vitalMonitor: return "Vital and stress monitors"
@@ -508,6 +509,9 @@ struct NunaTodayView: View {
                 miniRing(model.rest, "Rest", NunaPalette.rest, "%")
             }
             .padding(.vertical, 12).frame(maxWidth: .infinity).background(inner)
+        case .stateChips:
+            // Only a picture of the chips while arranging: tapping one must not open its page.
+            HStack(spacing: 8) { Spacer(minLength: 0); synthesisChips; heartRatePill }.allowsHitTesting(false)
         case .synthesis:
             previewRow("sparkles", nil, synthLine, "Anya suggestion").background(inner)
         case .recoveryVitals:
@@ -686,14 +690,14 @@ struct NunaTodayView: View {
     @ViewBuilder private func sectionView(_ section: TodaySection) -> some View {
         switch section {
         case .hero:
-            // The rings themselves are pinned at the top; what belongs with them stays here.
-            VStack(spacing: NunaSpacing.section) {
-                if readyLine != nil || model.charge.pct != nil {
-                    // Readiness, Charge state and heart rate: three chips of one shape on one line.
-                    HStack(spacing: 8) { Spacer(minLength: 0); synthesisChips; heartRatePill }
-                }
+            // The rings themselves are pinned at the top; the state chips are a section of their own.
+            Color.clear.frame(height: 0)
+                .background { if model.isToday { NunaIllnessNotifier() } }
+        case .stateChips:
+            if readyLine != nil || model.charge.pct != nil {
+                // Readiness, Charge state and heart rate: three chips of one shape on one line.
+                HStack(spacing: 8) { Spacer(minLength: 0); synthesisChips; heartRatePill }
             }
-            .background { if model.isToday { NunaIllnessNotifier() } }
         case .synthesis:
             if coachEnabled && model.isToday {
                 NunaAnyaTodayCard(plan: dayPlan, fallbackLine: synthLine, workouts: model.workouts, effort: model.effort,

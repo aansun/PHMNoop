@@ -115,6 +115,8 @@
     "Key statistics": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Statistik utama"}}}},
     "vs. 30 day average": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "vs. rata-rata 30 hari"}}}},
     "Edit time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ubah waktu"}}}},
+    "State chips": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Chip status"}}}},
+    "Readiness, Charge state and heart rate": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kesiapan, status Charge, dan detak jantung"}}}},
     "Route map": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Peta rute"}}}},
     "No animation for this exercise yet": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Latihan ini belum punya animasi"}}}},
     "See a GIF": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lihat GIF"}}}},
