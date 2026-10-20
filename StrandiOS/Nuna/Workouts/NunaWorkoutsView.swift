@@ -36,6 +36,8 @@ extension View {
 struct NunaWorkoutsView: View {
     var autoOpenStart = false
     @State private var openStart = false
+    /// The banner of a running session opens the start screen straight on its live screen.
+    @State private var resumeLive = false
     @State private var didAutoOpen = false
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var intelligence: IntelligenceEngine
@@ -66,7 +68,7 @@ struct NunaWorkoutsView: View {
             VStack(spacing: NunaSpacing.section) {
                 header
                 NunaPageTabs([(value: 0, title: "Workout"), (value: 1, title: "Gym"), (value: 2, title: "Insight")], selection: $tab)
-                NunaActiveWorkoutBanner()
+                NunaActiveWorkoutBanner { resumeLive = true; openStart = true }
                 if tab == 1 {
                     NunaGymView()
                 } else if !m.loaded {
@@ -89,7 +91,8 @@ struct NunaWorkoutsView: View {
         .toolbar(.hidden, for: .navigationBar)
         .nunaWorkoutDestinations()
         .nunaTodayDestinations()
-        .navigationDestination(isPresented: $openStart) { NunaWorkoutStartView(sport: nil, resume: autoOpenStart) }
+        .navigationDestination(isPresented: $openStart) { NunaWorkoutStartView(sport: nil, resume: autoOpenStart || resumeLive) }
+        .onChange(of: openStart) { _, open in if !open { resumeLive = false } }
         .onAppear { if autoOpenStart, !didAutoOpen { didAutoOpen = true; openStart = true } }
         .task(id: repo.refreshSeq) {
             await m.load(repo: repo)
@@ -585,13 +588,58 @@ struct NunaWorkoutMonthGrid: View {
     }
 }
 
-/// Shown at the top of Workouts while a session is running; opens the live screen again.
+/// The running session as a bar above the tab bar, on every tab: the sport, how long it has run and the heart rate, and a button that opens the
+/// live screen again. It is there so a session is never lost behind another screen, and it goes away when the session ends.
+struct NunaWorkoutBar: View {
+    @EnvironmentObject private var model: AppModel
+    @EnvironmentObject private var router: NavRouter
+
+    var body: some View {
+        // Opened through the same route as the Resume button on Today (the Workouts page, on its start screen, on its live screen), never as a
+        // cover of its own: a cover owned by something that goes away with the session is closed with it, before its result can be seen.
+        if let w = model.activeWorkout { bar(w) }
+    }
+
+    private func bar(_ w: AppModel.ActiveWorkout) -> some View {
+        Group {
+            Button { router.requestedDestination = .activeWorkout } label: {
+                TimelineView(.periodic(from: .now, by: 1)) { tick in
+                    let secs = max(0, Int(w.elapsed(at: tick.date)))
+                    let time = secs >= 3600 ? String(format: "%d:%02d:%02d", secs / 3600, (secs % 3600) / 60, secs % 60) : String(format: "%02d:%02d", secs / 60, secs % 60)
+                    HStack(spacing: 12) {
+                        Image(systemName: w.isPaused ? "pause.fill" : ActivitySport.symbol(for: w.sport)).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                            .frame(width: 38, height: 38)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(verbatim: WorkoutSource.displaySport(w.sport)).font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+                            Text(verbatim: [time, model.bpm.map { "\($0) bpm" }].compactMap { $0 }.joined(separator: " · "))
+                                .font(.nuna(size: 12.5, weight: .semibold)).monospacedDigit().foregroundStyle(w.isPaused ? NunaPalette.warning : NunaPalette.textSecondary).textCase(nil)
+                        }
+                        Spacer()
+                        Text("Open").font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 16).frame(height: 34)
+                            .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                    }
+                    .padding(.horizontal, 14).padding(.vertical, 10)
+                    .background(RoundedRectangle(cornerRadius: 12, style: .continuous).fill(NunaPalette.canvas))
+                    .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                    .padding(.horizontal, 12).padding(.bottom, 6)
+                }
+            }
+            .buttonStyle(.plain).accessibilityLabel(Text("Workout in progress"))
+        }
+    }
+}
+
+/// Shown at the top of Workouts while a session is running; opens the live screen again. It hands the opening to its page, which shows the
+/// start screen on its live screen: the screen that ends the session must not be one the banner owns, or the refresh after saving rebuilds the
+/// banner and closes it before the saved activity can be seen.
 struct NunaActiveWorkoutBanner: View {
     @EnvironmentObject private var model: AppModel
-    @State private var live = false
+    let onOpen: () -> Void
+
     var body: some View {
         if let w = model.activeWorkout {
-            Button { live = true } label: {
+            Button(action: onOpen) {
                 NunaCard(highlight: true) {
                     HStack(spacing: 12) {
                         Circle().fill(NunaPalette.charge).frame(width: 10, height: 10)
@@ -604,7 +652,6 @@ struct NunaActiveWorkoutBanner: View {
                     }
                 }
             }.buttonStyle(.plain)
-            .fullScreenCover(isPresented: $live) { NunaLiveWorkoutView(goal: NunaWorkoutGoal(), zoneBuzz: false, onClose: { live = false }) }
         }
     }
 }

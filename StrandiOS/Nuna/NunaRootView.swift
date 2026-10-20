@@ -58,6 +58,7 @@ struct NunaRootView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if !keyboardUp {
                 VStack(spacing: 0) {
+                    NunaWorkoutBar()
                     NunaLiftBar()
                     NunaTabBar(items: items, selection: $selection, minimized: autoHide && barHidden,
                                onExpand: { barHidden = false }) { id in

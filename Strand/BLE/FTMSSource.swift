@@ -155,7 +155,7 @@ public final class FTMSSource: NSObject, ObservableObject {
         loggedFirstReading = false
         latest = nil
         batteryPct = nil
-        if feedsLive { live.connected = false }
+        if feedsLive { live.connected = false; live.clearSensorMetrics() }
     }
 
     // MARK: - Reading handling
@@ -169,6 +169,12 @@ public final class FTMSSource: NSObject, ObservableObject {
         if let hr = reading.heartRate, hr >= 30, hr <= 220 {
             live.heartRate = hr
         }
+        // The machine's own speed, cadence, power and distance go to the additive sensor channel the live workout screen reads; nothing here
+        // touches heart rate or scoring.
+        if let kmh = reading.speedKmh { live.sensorSpeedKmh = kmh }
+        if let c = reading.cadence { live.sensorCadence = c }
+        if let w = reading.powerWatts { live.sensorPowerWatts = w }
+        if let d = reading.distanceM { live.sensorDistanceM = d }
         live.connected = true
     }
 }
@@ -187,7 +193,7 @@ extension FTMSSource: @preconcurrency CBCentralManagerDelegate {
                                            options: [CBCentralManagerScanOptionAllowDuplicatesKey: false])
             }
         default:
-            if feedsLive { live.connected = false }
+            if feedsLive { live.connected = false; live.clearSensorMetrics() }
         }
     }
 
@@ -222,7 +228,7 @@ extension FTMSSource: @preconcurrency CBCentralManagerDelegate {
     public func centralManager(_ central: CBCentralManager,
                                didFailToConnect peripheral: CBPeripheral, error: Error?) {
         log("FTMS: WARNING failed to connect — \(error?.localizedDescription ?? "unknown error")")
-        if feedsLive { live.connected = false }
+        if feedsLive { live.connected = false; live.clearSensorMetrics() }
     }
 
     public func centralManager(_ central: CBCentralManager,
@@ -235,7 +241,7 @@ extension FTMSSource: @preconcurrency CBCentralManagerDelegate {
         loggedFirstReading = false
         latest = nil
         batteryPct = nil
-        if feedsLive { live.connected = false }
+        if feedsLive { live.connected = false; live.clearSensorMetrics() }
         if self.peripheral?.identifier == peripheral.identifier { self.peripheral = nil }
     }
 }

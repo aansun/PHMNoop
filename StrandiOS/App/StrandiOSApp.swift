@@ -258,8 +258,10 @@ struct StrandiOSApp: App {
                 }
                 // Once a manual workout is saved, take the user straight to the Workouts log so the
                 // completed session and its detail are visible instead of leaving them on Today/Live.
+                // Nuna does not need it: its live screen opens the saved activity itself, and sending the shell to the list here
+                // replaced the sheet that holds that screen, so the wearer landed on the list instead of the activity.
                 .onReceive(model.$lastWorkout.compactMap { $0 }) { row in
-                    router.openWorkouts()
+                    if ExperienceMode(rawValue: UserDefaults.standard.string(forKey: ExperienceMode.storageKey) ?? ExperienceMode.nuna.rawValue) != .nuna { router.openWorkouts() }
                     Task { await StravaAutoUploadCoordinator.uploadIfNeeded(row) }
                 }
                 // End the Live Activity the moment the link drops, even if no further HR tick arrives.

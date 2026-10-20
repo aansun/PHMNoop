@@ -459,6 +459,9 @@ final class GpsWorkoutRecorder: NSObject, ObservableObject {
     /// The encoded polyline + distance for the captured route, or nil when fewer than two points landed
     /// (honest: no route drawn unless points were actually captured). Used by `AppModel` to persist via
     /// `RouteStore` when the session ends.
+    /// The accepted points so far, for a live map. Read each time the point count changes.
+    var currentTrack: [RouteMath.LatLng] { track }
+
     func capturedRoute() -> WorkoutRoute? {
         guard track.count >= 2 else { return nil }
         return WorkoutRoute(polyline: RouteMath.encode(track),

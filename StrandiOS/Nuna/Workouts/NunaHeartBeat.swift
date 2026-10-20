@@ -46,28 +46,45 @@ struct NunaHeartBeat: View {
     /// Under the disc: the zone and its range with a reading, "Waiting for WHOOP" without.
     var caption: String?
     var captionColor: Color = NunaPalette.textSecondary
+    /// How far up the five zones the heart rate sits, 0 to 1, for the tempo. Without it the middle of the zone is used.
+    var level: Double?
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @StateObject private var clock = NunaPulseClock()
 
+    /// The beat is slow on purpose and follows the zone, not the heart: about 26 beats a minute in the lowest zone, rising to about 66 in the highest,
+    /// so a climbing heart rate reads as a quickening, never as a flutter.
+    private var tempo: Double? {
+        guard bpm != nil else { return nil }
+        let l = level ?? (zone > 0 ? (Double(zone) - 0.5) / 5 : 0.1)
+        return 26 + 40 * min(max(l, 0), 1)
+    }
+
+    /// Rings that leave the disc: none in zone 1, one more with each zone above it.
+    private var rings: Int { bpm == nil ? 0 : max(0, min(zone, 5) - 1) }
+
     var body: some View {
         TimelineView(.animation(minimumInterval: 1.0 / 60, paused: reduceMotion)) { timeline in
-            let _ = clock.advance(to: timeline.date, target: bpm.map(Double.init))
+            let _ = clock.advance(to: timeline.date, target: tempo)
+            let calm = zone <= 1
             let swell = NunaBeat.swell(clock.phase) * (0.7 + 0.3 * clock.presence)
             VStack(spacing: 14) {
                 ZStack {
-                    // A ripple that leaves the disc with each beat.
-                    Circle()
-                        .stroke(color.opacity(0.45 * swell), lineWidth: 4)
-                        .frame(width: size, height: size)
-                        .scaleEffect(1 + 0.16 * swell)
+                    ForEach(0..<rings, id: \.self) { k in
+                        // Each ring starts a little after the one before and widens as it fades; higher zones have more of them.
+                        let p = (clock.phase * 0.5 + Double(k) / Double(max(rings, 1))).truncatingRemainder(dividingBy: 1)
+                        Circle()
+                            .stroke(color.opacity(0.7 * (1 - p)), lineWidth: 3)
+                            .frame(width: size, height: size)
+                            .scaleEffect(1.02 + (0.10 + 0.04 * Double(rings)) * p)
+                    }
                     Circle()
                         .fill(color.opacity(0.93))
                         .frame(width: size, height: size)
-                        .scaleEffect(0.95 + 0.09 * swell)
+                        .scaleEffect(calm ? 0.97 + 0.04 * swell : 0.95 + 0.09 * swell)
                     VStack(spacing: 4) {
                         Image(systemName: "heart.fill")
                             .font(.nuna(size: size * 0.16, weight: .bold))
-                            .scaleEffect(0.94 + 0.2 * swell)
+                            .scaleEffect(calm ? 0.97 + 0.08 * swell : 0.94 + 0.2 * swell)
                         Text(verbatim: numberText ?? bpm.map(String.init) ?? "–")
                             .font(.nuna(size: size * 0.336, weight: .bold, design: NunaType.design))
                             .tracking(nunaTrackingNumber(size * 0.336))

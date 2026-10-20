@@ -1167,6 +1167,10 @@ struct NunaLiveWorkoutView: View {
     @State private var savedActivityRow: WorkoutRow?
     @State private var openingSavedActivity = false
     @State private var saveError: String?
+    /// The machine's own distance counter when the session began, so only the session's share is shown.
+    @State private var treadmillBase: Int?
+    /// The saved activity opens by itself once; coming back from it does not open it again.
+    @State private var autoOpened = false
 
     private var zoneSet: HRZoneSet { model.profile.hrZoneSet }
     private enum LiveTab: Hashable { case effort, heartRate }
@@ -1198,6 +1202,8 @@ struct NunaLiveWorkoutView: View {
             .navigationDestination(item: $savedActivity) { key in
                 NunaWorkoutSummaryView(key: key, initialRow: savedActivityRow)
             }
+            // Back from the summary of a session that has ended leaves the live screen too: there is nothing left on it.
+            .onChange(of: savedActivity == nil) { _, gone in if gone, autoOpened || model.activeWorkout == nil, model.lastWorkout != nil { onClose() } }
         }
         .onAppear {
             holdScreenAwake()
@@ -1257,6 +1263,12 @@ struct NunaLiveWorkoutView: View {
         }
         .scrollIndicators(.hidden)
         .scrollDismissesKeyboard(.interactively)
+        // However the session ended, the saved activity opens by itself; this page is only the way back when it could not be saved or loaded.
+        .task {
+            guard let last = model.lastWorkout, savedActivity == nil, !autoOpened else { return }
+            autoOpened = true
+            openSavedActivity(last)
+        }
     }
 
     /// The summary opens at once from the row just built; the screen fills in the heart-rate curve and the rest as the save lands. Waiting for
@@ -1324,7 +1336,8 @@ struct NunaLiveWorkoutView: View {
                 ScrollView {
                     VStack(spacing: NunaSpacing.section) {
                         if selectedTab == .heartRate {
-                            heartRateBeat(bpm: bpm, zone: zone, color: tone, height: viewport.size.height)
+                            heartRateBeat(bpm: bpm, zone: zone, color: tone, height: viewport.size.height,
+                                          showMap: hideBpm && usesRoute(w) && gps.isRecording)
                         } else {
                             activityRing(w, bpm: bpm, zone: zone, color: tone,
                                          size: min(260,
@@ -1388,24 +1401,37 @@ struct NunaLiveWorkoutView: View {
         }
     }
 
-    /// The Heart rate tab: the beating disc in the colour of the current zone (see `NunaHeartBeat`).
-    private func heartRateBeat(bpm: Int?, zone: Int, color: Color, height: CGFloat) -> some View {
+    /// The Heart rate tab: the beating disc in the colour of the current zone (see `NunaHeartBeat`). With the heart rate hidden and a route being
+    /// recorded, the tab shows the map of the run instead.
+    private func heartRateBeat(bpm: Int?, zone: Int, color: Color, height: CGFloat, showMap: Bool) -> some View {
         let range = zoneSet.zones.first(where: { $0.number == zone })
         let caption = range.map { String(localized: "Zone \(zone) · \(Int($0.lower.rounded()))–\(Int($0.upper.rounded())) bpm") }
-        return NunaHeartBeat(bpm: bpm, color: bpm == nil ? NunaPalette.effortModerate : color, zone: zone,
-                             numberText: hideBpm ? "•••" : nil, size: min(250, max(170, (height - NunaSpacing.section * 2 - 40) / 1.2)),
-                             caption: hideBpm ? nil : caption)
-            .frame(maxWidth: .infinity, minHeight: max(height - NunaSpacing.section * 2, 0), alignment: .center)
-            .overlay(alignment: .topTrailing) {
-                Button { hideBpm.toggle() } label: {
-                    Image(systemName: hideBpm ? "eye" : "eye.slash")
-                        .font(.nuna(size: NunaTypeSize.h3, weight: .semibold))
-                        .foregroundStyle(NunaPalette.textSecondary)
-                        .frame(width: NoopButtonMetrics.minHitTarget, height: NoopButtonMetrics.minHitTarget)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(Text(hideBpm ? "Show bpm" : "Hide bpm"))
+        let level = bpm.map { NunaLiveMetrics.barPosition(bpm: $0, zoneSet: zoneSet) }
+        return Group {
+            if showMap {
+                NunaLiveRouteMap(gps: model.gpsRecorder)
+                    .frame(maxWidth: .infinity).frame(height: max(height - NunaSpacing.section * 2, 220))
+                    .clipShape(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+            } else {
+                // The disc is always the colour of the zone the bar below shows; whether that zone is the one aimed for is said in words.
+                NunaHeartBeat(bpm: bpm, color: bpm == nil ? NunaPalette.effortModerate : Self.zoneColors[min(max(zone, 1), 5) - 1], zone: zone,
+                              numberText: hideBpm ? "•••" : nil, size: min(250, max(170, (height - NunaSpacing.section * 2 - 40) / 1.2)),
+                              caption: hideBpm ? nil : caption, level: level)
+                    .frame(maxWidth: .infinity, minHeight: max(height - NunaSpacing.section * 2, 0), alignment: .center)
             }
+        }
+        .overlay(alignment: .topTrailing) {
+            Button { hideBpm.toggle() } label: {
+                Image(systemName: hideBpm ? "eye" : "eye.slash")
+                    .font(.nuna(size: NunaTypeSize.h3, weight: .semibold))
+                    .foregroundStyle(showMap ? NunaPalette.mapOverlayText : NunaPalette.textSecondary)
+                    .frame(width: NoopButtonMetrics.minHitTarget, height: NoopButtonMetrics.minHitTarget)
+                    .background(showMap ? AnyShapeStyle(.black.opacity(0.45)) : AnyShapeStyle(Color.clear), in: Circle())
+                    .padding(showMap ? 8 : 0)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text(hideBpm ? "Show bpm" : "Hide bpm"))
+        }
     }
 
     private func activityRing(_ w: AppModel.ActiveWorkout, bpm: Int?, zone: Int, color: Color, size: CGFloat) -> some View {
@@ -1664,18 +1690,37 @@ struct NunaLiveWorkoutView: View {
     }
 
     private func kcal(_ w: AppModel.ActiveWorkout) -> Int? { NunaLiveMetrics.kcal(w, model: model) }
+
+    /// Metres on a treadmill so far: what the machine counted since the session began, or the step estimate.
+    private func treadmillDistance(_ w: AppModel.ActiveWorkout, steps: Int?, seconds: TimeInterval) -> Double? {
+        if let total = model.live.sensorDistanceM {
+            if treadmillBase == nil || total < (treadmillBase ?? 0) { treadmillBase = total }
+            return Double(max(0, total - (treadmillBase ?? total)))
+        }
+        guard let steps else { return nil }
+        return NunaTreadmillEstimate.meters(sport: w.sport, steps: steps, durationS: seconds)
+    }
     @ViewBuilder private func metricRow(_ w: AppModel.ActiveWorkout, calories: Int?) -> some View {
         let gps = model.gpsRecorder
         let sys = distanceSystem
         let dash = "–"
-        let dist = gps.pointCount > 0 ? split(UnitFormatter.distanceFromMeters(gps.distanceM, system: sys)) : (dash, sys == .imperial ? "mi" : "km")
         let sensorSpeed = model.live.sensorSpeedKmh.flatMap { $0 > 0 ? $0 : nil }
-        let paceSeconds = gps.paceSecPerKm ?? sensorSpeed.map { 3600 / $0 }
-        let pace = paceSeconds != nil ? split(UnitFormatter.paceFromSecPerKm(paceSeconds, system: sys)) : (dash, sys == .imperial ? "/mi" : "/km")
-        let kmh = gps.paceSecPerKm.flatMap { $0 > 0 ? 3600 / $0 : nil } ?? sensorSpeed
+        let activeSeconds = w.elapsed(at: Date())
+        // A treadmill has no GPS: its own distance when the machine reports one, otherwise steps times a stride taken from the wearer's height.
+        let treadmillMeters: Double? = StravaActivityType.isTreadmill(w.sport) ? treadmillDistance(w, steps: sessionSteps, seconds: activeSeconds) : nil
+        let meters: Double? = gps.pointCount > 0 ? gps.distanceM : treadmillMeters
+        let dist = meters.map { split(UnitFormatter.distanceFromMeters($0, system: sys)) } ?? (dash, sys == .imperial ? "mi" : "km")
+        // Pace: the GPS's, else the machine's speed, else the session average from the distance so far.
+        let averagePace: Double? = treadmillMeters.flatMap { $0 >= 20 && activeSeconds >= 20 ? activeSeconds / ($0 / 1000) : nil }
+        let paceSeconds = gps.paceSecPerKm ?? sensorSpeed.map { 3600 / $0 } ?? averagePace
+        // A pace slower than 40 minutes a kilometre is a standstill, not a pace.
+        let pace = paceSeconds.map { $0 <= 2400 } == true ? split(UnitFormatter.paceFromSecPerKm(paceSeconds, system: sys)) : (dash, sys == .imperial ? "/mi" : "/km")
+        let kmh = gps.paceSecPerKm.flatMap { $0 > 0 ? 3600 / $0 : nil } ?? sensorSpeed ?? averagePace.map { 3600 / $0 }
         let speed = UnitFormatter.speedFromKilometersPerHour(kmh, system: sys).map(split) ?? (dash, sys == .imperial ? "mph" : "km/h")
         let gain = sys == .imperial ? gps.elevationGainM * 3.28084 : gps.elevationGainM
-        let cadence = model.live.sensorCadence.map { String(Int($0.rounded())) } ?? dash
+        // Cadence: the sensor's, else the steps of the session over its active minutes.
+        let stepCadence = sessionSteps.flatMap { activeSeconds >= 30 ? Double($0) / (activeSeconds / 60) : nil }
+        let cadence = (model.live.sensorCadence ?? stepCadence).map { String(Int($0.rounded())) } ?? dash
         let fields = NunaLiveMetricLayout.fields(sport: w.sport, usesGPS: usesRoute(w))
         let tiles: [Statistic] = fields.map { field in
             switch field {
@@ -1815,6 +1860,22 @@ struct NunaLiveWorkoutView: View {
 
     private func clock(_ s: TimeInterval) -> String {
         let t = Int(s); return t >= 3600 ? String(format: "%d:%02d:%02d", t / 3600, (t % 3600) / 60, t % 60) : String(format: "%02d:%02d", t / 60, t % 60)
+    }
+}
+
+/// The run so far on a map: the blue dot of the wearer and the route drawn behind it. It follows the wearer and is only for looking.
+struct NunaLiveRouteMap: View {
+    @ObservedObject var gps: GpsWorkoutRecorder
+    @State private var position: MapCameraPosition = .userLocation(followsHeading: false, fallback: .automatic)
+
+    var body: some View {
+        let coords = gps.currentTrack.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
+        Map(position: $position, interactionModes: []) {
+            UserAnnotation()
+            if coords.count > 1 { MapPolyline(coordinates: coords).stroke(NunaPalette.effortModerate, lineWidth: 5) }
+        }
+        .mapStyle(.standard(elevation: .flat))
+        .accessibilityLabel(Text("Route map"))
     }
 }
 

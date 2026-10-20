@@ -31,6 +31,13 @@ enum NunaTreadmillEstimate {
         return TreadmillDistance.estimateMeters(steps: steps, heightCm: height, durationS: secs, gait: TreadmillDistance.gait(forSport: row.sport))
     }
 
+    /// The same estimate for a session still running, from its steps and active seconds.
+    static func meters(sport: String, steps: Int, durationS: Double) -> Double? {
+        guard StravaActivityType.isTreadmill(sport) else { return nil }
+        let height = UserDefaults.standard.object(forKey: "profile.heightCm") as? Double ?? 178
+        return TreadmillDistance.estimateMeters(steps: steps, heightCm: height, durationS: durationS, gait: TreadmillDistance.gait(forSport: sport))
+    }
+
     /// The row as it should be read and shared: the estimate stands in for a missing distance.
     static func filled(_ row: WorkoutRow, steps: Int?) -> (row: WorkoutRow, estimated: Bool) {
         guard let m = meters(row: row, steps: steps) else { return (row, false) }
