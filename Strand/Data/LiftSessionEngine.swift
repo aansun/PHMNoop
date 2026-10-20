@@ -246,6 +246,17 @@ struct LiftSessionEngine: Equatable {
         stage = .resting(slot, endsAt: max(now, endsAt + seconds))
     }
 
+    /// Change the rest an exercise's line uses, at any time. A rest already running from that exercise follows it: it now ends
+    /// `seconds` after it began. Not undoable and not a snapshot, like `adjustRest`: it is a setting, not a step of the session.
+    mutating func setRest(forExercise index: Int, seconds: Int, now: Int) {
+        guard plan.indices.contains(index) else { return }
+        let rest = max(0, min(seconds, 3600))
+        plan[index].restSec = rest
+        if case .resting(let slot, _) = stage, slot.exerciseIndex == index {
+            stage = .resting(slot, endsAt: max(now, stageStartedAt + rest))
+        }
+    }
+
     /// The nearest earlier set of this exercise already performed in THIS session. Nil for the first
     /// set, or when nothing before it has been done yet.
     func previousSetInSession(for slot: LiftSlot) -> LiftRecordedSet? {

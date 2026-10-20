@@ -54,10 +54,17 @@ struct NunaLiftSessionView: View {
             NunaPalette.canvas.ignoresSafeArea()
             if let engine {
                 VStack(spacing: 0) {
+                    // Pinned: the header and the running timer stay on screen however many exercises are below.
+                    VStack(spacing: 10) {
+                        header(engine)
+                        statusCard(engine)
+                    }
+                    .padding(.horizontal, NunaSpacing.screenH).padding(.top, 12).padding(.bottom, 10)
+                    .background(NunaPalette.canvas)
+                    .overlay(alignment: .bottom) { Rectangle().fill(NunaPalette.hairline).frame(height: 0.5) }
                     ScrollViewReader { proxy in
                         ScrollView {
                             VStack(spacing: NunaSpacing.section) {
-                                header(engine)
                                 if let name = session.programName {
                                     // The whole name, under the header, however long it is.
                                     Text(verbatim: name).font(.nuna(size: NunaTypeSize.h2, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
@@ -65,18 +72,21 @@ struct NunaLiftSessionView: View {
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                 }
                                 statsCard(engine)
-                                statusCard(engine)
                                 ForEach(Array(engine.plan.enumerated()), id: \.offset) { i, item in exerciseCard(engine, index: i, item: item).id(i) }
                                 musclesCard(engine)
                                 bottomButtons
                             }
-                            .padding(.horizontal, NunaSpacing.screenH).padding(.top, 20).padding(.bottom, 24)
+                            .padding(.horizontal, NunaSpacing.screenH).padding(.top, 14).padding(.bottom, 24)
                         }
                         .scrollIndicators(.hidden)
                         .scrollDismissesKeyboard(.interactively)
-                        .onChange(of: engine.currentSlot) { slot in
-                            guard let slot else { return }
-                            withAnimation { proxy.scrollTo(slot.exerciseIndex, anchor: .top) }
+                        .onChange(of: focusIndex(engine)) { index in
+                            guard let index else { return }
+                            withAnimation { proxy.scrollTo(index, anchor: .top) }
+                        }
+                        // An exercise whose sets are all done folds itself away, unless it was opened by hand afterwards.
+                        .onChange(of: engine.sets.count) { _ in
+                            opened = opened.filter { i in !engine.slots(forExercise: i).allSatisfy { engine.isCompleted($0) } }
                         }
                     }
                     controlBar(engine)
@@ -228,58 +238,69 @@ struct NunaLiftSessionView: View {
         .accessibilityHidden(true)
     }
 
+    /// The timer, compact, pinned under the header: the rest counting down, the set being timed, or a hint before the first set.
     @ViewBuilder private func statusCard(_ engine: LiftSessionEngine) -> some View {
         switch engine.stage {
         case .resting(let slot, _):
             let remaining = engine.restRemaining(now: session.now) ?? 0
             let total = Double(max(engine.planItem(for: slot)?.restSec ?? LiftPlanItem.defaultRestSec, 1))
             let done = engine.allCompleted
-            NunaCard(highlight: true) {
-                HStack(spacing: 16) {
-                    NunaRingGauge(fraction: done ? 1 : min(1, Double(remaining) / total), color: NunaPalette.rest, size: 96, lineWidth: 8) {
-                        Text(verbatim: LiftFormat.duration(remaining)).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
-                    }
-                    VStack(alignment: .leading, spacing: 8) {
+            VStack(spacing: 8) {
+                HStack(spacing: 12) {
+                    Text(verbatim: LiftFormat.duration(remaining)).font(.nuna(size: 30, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
+                    VStack(alignment: .leading, spacing: 2) {
                         Text("Rest period").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.restText)
                         Text(verbatim: done ? String(localized: "All sets done") : String(localized: "Set \(engine.slotAfter(slot)?.setIndex ?? slot.setIndex) is ready soon"))
-                            .font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
-                        HStack(spacing: 8) {
-                            restChip("−15 s") { session.adjustRest(by: -15) }
-                            restChip("+15 s") { session.adjustRest(by: 15) }
-                        }
+                            .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
                     }
-                    Spacer(minLength: 0)
+                    Spacer(minLength: 4)
+                    restChip("−15 s") { session.adjustRest(by: -15) }
+                    restChip("+15 s") { session.adjustRest(by: 15) }
                 }
+                GeometryReader { g in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(NunaPalette.glassStrong)
+                        Capsule().fill(NunaPalette.rest).frame(width: g.size.width * (done ? 1 : min(1, Double(remaining) / total)))
+                    }
+                }.frame(height: 4)
             }
+            .padding(.horizontal, 14).padding(.vertical, 10)
+            .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
         case .working:
-            NunaCard(highlight: true) {
-                HStack(spacing: 14) {
-                    Text(verbatim: LiftFormat.duration(max(0, session.now - engine.stageStartedAt))).font(.nuna(size: 30, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("This set").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.charge)
-                        Text("Tap Set done when you finish").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    }
-                    Spacer(minLength: 0)
+            HStack(spacing: 12) {
+                Text(verbatim: LiftFormat.duration(max(0, session.now - engine.stageStartedAt))).font(.nuna(size: 30, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("This set").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.charge)
+                    Text("Tap Set done when you finish").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
                 }
+                Spacer(minLength: 0)
             }
+            .padding(.horizontal, 14).padding(.vertical, 10)
+            .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
         default:
-            NunaCard(small: true) {
-                Text("Start the first set when you are ready.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
-            }
+            Text("Start the first set when you are ready.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 14).padding(.vertical, 12)
+                .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
         }
     }
 
     private func restChip(_ t: String, _ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(verbatim: t).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 34).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+            Text(verbatim: t).font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 12).frame(height: 32).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
         }.buttonStyle(.plain)
     }
 
     // MARK: Exercises
 
+    /// The exercise the session is on: the one being worked, or after its last set the next one waiting. Opened for the user; the rest fold.
+    private func focusIndex(_ engine: LiftSessionEngine) -> Int? {
+        guard let slot = engine.currentSlot else { return engine.sets.isEmpty ? 0 : engine.nextPendingSlot?.exerciseIndex }
+        let finished = engine.slots(forExercise: slot.exerciseIndex).allSatisfy { engine.isCompleted($0) }
+        return finished ? (engine.nextPendingSlot?.exerciseIndex ?? slot.exerciseIndex) : slot.exerciseIndex
+    }
+
     private func isOpen(_ engine: LiftSessionEngine, _ index: Int) -> Bool {
-        opened.contains(index) || engine.currentSlot?.exerciseIndex == index
-            || (engine.currentSlot == nil && index == 0)
+        opened.contains(index) || focusIndex(engine) == index
     }
 
     @ViewBuilder private func exerciseCard(_ engine: LiftSessionEngine, index: Int, item: LiftPlanItem) -> some View {
@@ -306,10 +327,7 @@ struct NunaLiftSessionView: View {
                         Text(verbatim: note).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(4).padding(10)
                             .frame(maxWidth: .infinity, alignment: .leading).background(NunaPalette.warning.opacity(0.12), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
                     }
-                    HStack(spacing: 8) {
-                        Image(systemName: "timer").font(.nuna(size: 14, weight: .semibold))
-                        Text(verbatim: String(localized: "Rest timer: \(LiftFormat.duration(item.restSec))")).font(.nuna(size: 14, weight: .bold)).textCase(nil)
-                    }.foregroundStyle(NunaPalette.restText)
+                    restMenu(index: index, item: item)
                     columnHeadings(kind)
                     VStack(spacing: 6) { ForEach(slots, id: \.self) { slot in setRow(engine, slot: slot, kind: kind) } }
                     if lib == nil {
@@ -343,21 +361,16 @@ struct NunaLiftSessionView: View {
         }
     }
 
-    /// The three dots of an exercise: its demo, one set more or fewer, the RPE column, and folding it away.
+    /// The three dots of an exercise: weight on a bodyweight move, the RPE column, and folding it away. The demo is on its picture and name;
+    /// sets are added with Add set and deleted by swiping the row.
     private func exerciseMenu(_ engine: LiftSessionEngine, index: Int, item: LiftPlanItem, lib: NunaLibraryExercise?) -> some View {
         Menu {
-            if let lib { Button { demo = lib } label: { Label("Show the demo", systemImage: "play.rectangle") } }
-            else { Button { video = item.exercise } label: { Label("Watch a video", systemImage: "play.rectangle") } }
             if NunaExerciseKind.natural(item.exercise) == .bodyweight {
                 let tracks = NunaExerciseKind.weightOverrides.contains(item.exercise)
                 Button { NunaExerciseKind.setTracksWeight(!tracks, for: item.exercise) } label: {
                     Label(tracks ? "Bodyweight only" : "Add weight", systemImage: tracks ? "figure.stand" : "scalemass")
                 }
             }
-            Button { session.addSet(toExercise: index) } label: { Label("Add set", systemImage: "plus") }
-                .disabled(item.targetSets >= LiftSessionEngine.maxSetsPerExercise)
-            Button { session.removeSet(fromExercise: index) } label: { Label("Remove last set", systemImage: "minus") }
-                .disabled(!engine.canRemoveSet(fromExercise: index))
             Button { showRpe.toggle() } label: { Label(showRpe ? "Hide RPE" : "Show RPE", systemImage: "gauge.with.needle") }
             Button { opened.remove(index) } label: { Label("Fold away", systemImage: "chevron.up") }
         } label: {
@@ -365,6 +378,26 @@ struct NunaLiftSessionView: View {
                 .frame(width: 34, height: 40).contentShape(Rectangle())
         }
         .accessibilityLabel(Text("More"))
+    }
+
+    /// The rest after each set of this exercise. Changeable at any time, also mid-session; a rest already running follows it.
+    private func restMenu(index: Int, item: LiftPlanItem) -> some View {
+        let presets = [15, 30, 45, 60, 90, 120, 150, 180, 240, 300]
+        let options = (presets + [item.restSec]).sorted().reduce(into: [Int]()) { if $0.last != $1 { $0.append($1) } }
+        return Menu {
+            ForEach(options, id: \.self) { sec in
+                Button { session.setRest(forExercise: index, seconds: sec) } label: {
+                    if sec == item.restSec { Label(LiftFormat.duration(sec), systemImage: "checkmark") } else { Text(verbatim: LiftFormat.duration(sec)) }
+                }
+            }
+        } label: {
+            HStack(spacing: 8) {
+                Image(systemName: "timer").font(.nuna(size: 14, weight: .semibold))
+                Text(verbatim: String(localized: "Rest timer: \(LiftFormat.duration(item.restSec))")).font(.nuna(size: 14, weight: .bold)).textCase(nil)
+                Image(systemName: "chevron.down").font(.nuna(size: 10, weight: .heavy))
+            }.foregroundStyle(NunaPalette.restText).frame(minHeight: 34).contentShape(Rectangle())
+        }
+        .accessibilityLabel(Text("Rest timer"))
     }
 
     private func collapsedLine(_ item: LiftPlanItem, done: Int, total: Int) -> String {

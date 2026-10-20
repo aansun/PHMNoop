@@ -229,6 +229,16 @@ final class LiftSessionController: ObservableObject {
         persist()
     }
 
+    /// Set the rest of one exercise's sets, also while the session runs. Only this session changes; the program it came from is left alone.
+    func setRest(forExercise index: Int, seconds: Int) {
+        guard engine != nil else { return }
+        let stamp = Int(Date().timeIntervalSince1970)
+        engine?.setRest(forExercise: index, seconds: seconds, now: stamp)
+        now = stamp
+        warnedFor = nil
+        persist()
+    }
+
     // MARK: - Presentation
     //
     // What a running session looks like, resolved ONCE here rather than in each surface that shows
