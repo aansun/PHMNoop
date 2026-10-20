@@ -101,7 +101,12 @@ enum NunaStarterPrograms {
     static func add(_ p: NunaStarterProgram, repo: Repository) async -> Int {
         guard let store = await repo.storeHandle() else { return 0 }
         let now = Int(Date().timeIntervalSince1970)
-        let group = p.routines.count > 1 ? NunaProgramGroupsModel.shared.add(name: p.name) : nil
+        // A plan of several routines gets a group of its own; a single routine goes into the group of its type (Gym, At home, ...).
+        var group: NunaProgramGroup? = p.routines.count > 1 ? NunaProgramGroupsModel.shared.add(name: p.name) : nil
+        if group == nil {
+            let moves = p.routines.flatMap { $0.moves.map(\.name) }
+            if let type = NunaProgramType.primary(of: NunaProgramType.classify(exercises: moves, isAnya: false)) { group = NunaProgramGroupsModel.shared.add(name: type.name) }
+        }
         var added = 0
         for (index, routine) in p.routines.enumerated() {
             let id = UUID().uuidString
