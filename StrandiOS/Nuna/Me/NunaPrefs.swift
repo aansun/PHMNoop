@@ -351,6 +351,8 @@ struct NunaPrivacyView: View {
                 NunaDivider()
                 NavigationLink(value: NunaMeRoute.backup) { NunaListRow("Export and backup", description: "Only when you ask for it", systemImage: "square.and.arrow.up", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
+                NunaListRow("Exercise videos", subtitle: "Only when you tap Watch a video: YouTube gets the exercise name", systemImage: "play.rectangle")
+                NunaDivider()
                 NunaListRow("Anything else", subtitle: "No other app receives your data", systemImage: "nosign") { NunaChip("None") }
             }
             nunaFootnote("Raw heartbeat intervals, PPG and motion are never sent to an AI provider.")
