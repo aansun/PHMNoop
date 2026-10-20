@@ -19,6 +19,8 @@ struct NunaExercisePicker: View {
     var title: LocalizedStringKey = "Choose exercises"
     /// One exercise only: a tap picks it and closes the sheet.
     var single = false
+    /// The name of an exercise being replaced: the ones that work the same muscle come first, as suggestions.
+    var suggestingFor: String?
     let onPick: ([NunaPickedExercise]) -> Void
 
     @EnvironmentObject private var repo: Repository
@@ -54,6 +56,19 @@ struct NunaExercisePicker: View {
         guard trimmed.isEmpty, group == nil else { return [] }
         return vocabulary.filter { $0.lastUsedTs != nil }.sorted { ($0.lastUsedTs ?? 0) > ($1.lastUsedTs ?? 0) }.prefix(8).map { $0 }
     }
+    /// Same main muscle as the exercise being replaced, the same equipment first.
+    private var suggested: [NunaLibraryExercise] {
+        guard let name = suggestingFor, trimmed.isEmpty, group == nil, let current = NunaExerciseLibrary.match(name),
+              let muscle = current.primaryMuscles.first else { return [] }
+        return NunaExerciseLibrary.all
+            .filter { $0.id != current.id && $0.primaryMuscles.first == muscle }
+            .sorted { a, b in
+                let sa = a.equipment == current.equipment, sb = b.equipment == current.equipment
+                if sa != sb { return sa }
+                return (a.mechanic == current.mechanic) && (b.mechanic != current.mechanic)
+            }
+            .prefix(5).map { $0 }
+    }
     private var canCreate: Bool {
         !trimmed.isEmpty && NunaExerciseLibrary.match(trimmed) == nil && !chosen.contains { $0.name.caseInsensitiveCompare(trimmed) == .orderedSame }
     }
@@ -84,11 +99,15 @@ struct NunaExercisePicker: View {
                 .padding(.horizontal, NunaSpacing.screenH).padding(.top, 18).padding(.bottom, 10)
                 ScrollView {
                     LazyVStack(alignment: .leading, spacing: 0) {
+                        if !suggested.isEmpty {
+                            sectionTitle("Suggested")
+                            ForEach(suggested) { e in libraryRow(e) }
+                        }
                         if !recents.isEmpty {
                             sectionTitle("Recent")
                             ForEach(recents, id: \.id) { r in recentRow(r) }
-                            sectionTitle("All exercises")
                         }
+                        if !recents.isEmpty || !suggested.isEmpty { sectionTitle("All exercises") }
                         ForEach(results) { e in libraryRow(e) }
                         if canCreate { createRow.padding(.top, results.isEmpty ? 0 : 10) }
                         if results.isEmpty && !canCreate {

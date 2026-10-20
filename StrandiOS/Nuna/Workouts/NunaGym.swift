@@ -75,12 +75,64 @@ enum NunaGymStore {
         let vocabulary = (try? await store.liftExercises(deviceId: repo.deviceId)) ?? []
         let plan = items.map { item -> LiftPlanItem in
             let known = vocabulary.first { $0.name == item.exercise }
-            return LiftPlanItem(exercise: item.exercise, primaryMuscle: known?.primaryMuscle, secondaryMuscles: known?.secondaryMuscles ?? [],
+            let lib = NunaExerciseLibrary.match(item.exercise)
+            return LiftPlanItem(exercise: item.exercise, primaryMuscle: known?.primaryMuscle ?? lib?.liftPrimary,
+                                secondaryMuscles: known?.secondaryMuscles ?? lib?.liftSecondary ?? [],
                                 targetSets: item.targetSets, restSec: item.restSec, targetRepsLow: item.targetRepsLow,
                                 targetRepsHigh: item.targetRepsHigh, targetRpe: item.targetRpe, targetWeightKg: item.targetWeightKg,
-                                note: item.note, programItemId: item.id)
+                                note: mergedNote(item.note, pinned: NunaExerciseNotes.note(forName: item.exercise)), programItemId: item.id)
         }
         session.start(plan: plan, programId: program.id, programName: program.name)
+    }
+
+    /// The program's own note for the exercise, then the note pinned to the exercise itself.
+    static func mergedNote(_ own: String?, pinned: String) -> String? {
+        let parts = [own, pinned.isEmpty ? nil : pinned].compactMap { $0 }.filter { !$0.isEmpty }
+        return parts.isEmpty ? nil : parts.joined(separator: "\n")
+    }
+
+    /// A copy of a program with the same exercises and targets, named "<name> copy".
+    @discardableResult
+    static func duplicate(_ program: LiftProgramRow, repo: Repository) async -> String? {
+        guard let store = await repo.storeHandle() else { return nil }
+        let now = Int(Date().timeIntervalSince1970)
+        let id = UUID().uuidString
+        let name = String((program.name + " " + String(localized: "copy")).prefix(60))
+        _ = try? await store.upsertLiftPrograms([LiftProgramRow(id: id, deviceId: repo.deviceId, name: name, note: program.note, createdAt: now, updatedAt: now, archived: false)])
+        let items = ((try? await store.liftProgramItems(programId: program.id)) ?? []).map {
+            LiftProgramItemRow(id: UUID().uuidString, deviceId: repo.deviceId, programId: id, ord: $0.ord, exercise: $0.exercise, targetSets: $0.targetSets,
+                               targetRepsLow: $0.targetRepsLow, targetRepsHigh: $0.targetRepsHigh, targetRpe: $0.targetRpe, targetWeightKg: $0.targetWeightKg,
+                               restSec: $0.restSec, note: $0.note)
+        }
+        _ = try? await store.replaceLiftProgramItems(programId: id, items: items)
+        if let g = NunaProgramGroupsModel.shared.group(of: program.id) { NunaProgramGroupsModel.shared.move(id, to: g) }
+        await repo.refresh()
+        return id
+    }
+
+    /// The program as plain text, for the share sheet: the name, the note and one line per exercise.
+    static func shareText(_ program: LiftProgramRow, repo: Repository, system: UnitSystem) async -> String {
+        var items: [LiftProgramItemRow] = []
+        if let store = await repo.storeHandle() { items = (try? await store.liftProgramItems(programId: program.id)) ?? [] }
+        var lines = [program.name]
+        if let n = program.note, !n.isEmpty { lines.append(n) }
+        lines.append("")
+        for (i, it) in items.enumerated() {
+            var line = "\(i + 1). \(it.exercise)"
+            if let s = it.targetSets { line += " · \(s)" + (it.targetRepsLow.map { " × \($0)" } ?? "") }
+            if let w = it.targetWeightKg { line += " · " + LiftFormat.weight(w, system: system) }
+            lines.append(line)
+        }
+        lines.append(""); lines.append("PHMN")
+        return lines.joined(separator: "\n")
+    }
+
+    /// Opens the iOS share sheet over whatever is on top.
+    static func presentShare(_ text: String) {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        guard var top = scenes.flatMap(\.windows).first(where: \.isKeyWindow)?.rootViewController else { return }
+        while let next = top.presentedViewController { top = next }
+        top.present(UIActivityViewController(activityItems: [text], applicationActivities: nil), animated: true)
     }
 
     /// Start with exercises chosen on the spot and no program behind them.
@@ -92,7 +144,8 @@ enum NunaGymStore {
         let plan = picked.map { p -> LiftPlanItem in
             let known = p.primary == nil ? vocabulary.first { $0.name == p.name } : nil
             return LiftPlanItem(exercise: p.name, primaryMuscle: p.primary ?? known?.primaryMuscle,
-                                secondaryMuscles: p.primary == nil ? (known?.secondaryMuscles ?? []) : p.secondary, targetSets: 3)
+                                secondaryMuscles: p.primary == nil ? (known?.secondaryMuscles ?? []) : p.secondary, targetSets: 3,
+                                note: mergedNote(nil, pinned: NunaExerciseNotes.note(forName: p.name)))
         }
         guard !plan.isEmpty else { return }
         session.start(plan: plan, programId: nil, programName: nil)
@@ -108,6 +161,9 @@ struct NunaGymView: View {
     @EnvironmentObject private var session: LiftSessionController
     @State private var programs: [LiftProgramRow] = []
     @State private var itemCounts: [String: (exercises: Int, sets: Int)] = [:]
+    @State private var previews: [String: [String]] = [:]
+    @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
+    @State private var deletingProgram: LiftProgramRow?
     @State private var lastUsed: [String: Int] = [:]
     @State private var history: [LiftSessionRow] = []
     @State private var weekCounts: [LiftMuscle: Double] = [:]
@@ -135,6 +191,9 @@ struct NunaGymView: View {
         NunaMuscleReadinessCard(readings: readiness)
         weekSection
         sessionsSection
+        NavigationLink(value: NunaWorkoutRoute.explore) {
+            NunaCard(small: true) { NunaListRow("Explore programs", description: "Ready-made routines by level, goal and equipment", systemImage: "safari", showsChevron: true) }
+        }.buttonStyle(.plain)
         NavigationLink(value: NunaWorkoutRoute.loadMuscle) {
             NunaCard(small: true) { NunaListRow("Muscle load", description: "Volume, recovery and personal records", systemImage: "chart.bar", showsChevron: true) }
         }.buttonStyle(.plain)
@@ -152,6 +211,10 @@ struct NunaGymView: View {
             Button("Save") { saveGroupDialog() }
             Button("Cancel", role: .cancel) {}
         }
+        .confirmationDialog("Delete this routine?", isPresented: Binding(get: { deletingProgram != nil }, set: { if !$0 { deletingProgram = nil } }), titleVisibility: .visible) {
+            Button("Delete", role: .destructive) { if let p = deletingProgram { Task { await deleteProgram(p) } }; deletingProgram = nil }
+            Button("Cancel", role: .cancel) { deletingProgram = nil }
+        } message: { Text("Sessions you already logged from it are kept.") }
         .confirmationDialog("Delete this group?", isPresented: Binding(get: { deletingGroup != nil }, set: { if !$0 { deletingGroup = nil } }), titleVisibility: .visible) {
             Button("Delete group", role: .destructive) { if let g = deletingGroup { groupsModel.delete(g) }; deletingGroup = nil }
             Button("Cancel", role: .cancel) { deletingGroup = nil }
@@ -303,10 +366,27 @@ struct NunaGymView: View {
                 if groupsModel.group(of: p.id) != nil { Button { groupsModel.move(p.id, to: nil) } label: { Label("No group", systemImage: "xmark") } }
                 Button { askForGroup(.new(programId: p.id)) } label: { Label("New group", systemImage: "folder.badge.plus") }
             } label: { Label("Move to group", systemImage: "folder") }
+            Divider()
+            Button { Task { await shareProgram(p) } } label: { Label("Share routine", systemImage: "square.and.arrow.up") }
+            Button { Task { _ = await NunaGymStore.duplicate(p, repo: repo) } } label: { Label("Duplicate routine", systemImage: "plus.square.on.square") }
+            NavigationLink(value: NunaWorkoutRoute.programEdit(p.id)) { Label("Edit routine", systemImage: "pencil") }
+            Button(role: .destructive) { deletingProgram = p } label: { Label("Delete routine", systemImage: "trash") }
         } label: {
             Image(systemName: "ellipsis").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 30, height: 42).contentShape(Rectangle())
         }
         .accessibilityLabel(Text("Program options"))
+    }
+
+    private var system: UnitSystem { UnitSystem(rawValue: unitSystemRaw) ?? .metric }
+
+    private func shareProgram(_ p: LiftProgramRow) async {
+        NunaGymStore.presentShare(await NunaGymStore.shareText(p, repo: repo, system: system))
+    }
+
+    private func deleteProgram(_ p: LiftProgramRow) async {
+        guard let store = await repo.storeHandle() else { return }
+        _ = try? await store.deleteLiftProgram(id: p.id)
+        await repo.refresh()
     }
 
     private func programRow(_ p: LiftProgramRow) -> some View {
@@ -319,7 +399,9 @@ struct NunaGymView: View {
                         Text(verbatim: String(localized: "\(c?.exercises ?? 0) exercises") + " · " + String(localized: "\(c?.sets ?? 0) sets")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         Text(verbatim: lastUsed[p.id].map { String(localized: "Last \(NunaWorkoutFormat.day($0))") } ?? String(localized: "Never run"))
                             .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-                        Text("Tap to see the exercises").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                        if let names = previews[p.id], !names.isEmpty {
+                            Text(verbatim: names.joined(separator: ", ")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).lineLimit(2)
+                        }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
                 }.buttonStyle(.plain)
@@ -410,9 +492,11 @@ struct NunaGymView: View {
         guard let store = await repo.storeHandle() else { return }
         let ps = (try? await store.liftPrograms(deviceId: repo.deviceId)) ?? []
         var counts: [String: (exercises: Int, sets: Int)] = [:]
+        var names: [String: [String]] = [:]
         for p in ps {
             let items = (try? await store.liftProgramItems(programId: p.id)) ?? []
             counts[p.id] = (items.count, items.reduce(0) { $0 + ($1.targetSets ?? 1) })
+            names[p.id] = items.prefix(5).map(\.exercise)
         }
         let now = Int(Date().timeIntervalSince1970)
         let all = ((try? await store.liftSessions(deviceId: repo.deviceId, fromTs: now - 180 * 86_400, toTs: now + 86_400)) ?? [])
@@ -429,7 +513,7 @@ struct NunaGymView: View {
         }
         readiness = NunaMuscleReadiness.readings(sets: dated, now: now)
         groupsModel.prune(existing: Set(ps.map(\.id)))
-        programs = ps; itemCounts = counts; lastUsed = last; history = all; volumes = vols; loaded = true
+        programs = ps; itemCounts = counts; previews = names; lastUsed = last; history = all; volumes = vols; loaded = true
     }
 }
 #endif

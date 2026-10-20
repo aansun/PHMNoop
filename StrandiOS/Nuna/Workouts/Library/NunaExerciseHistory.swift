@@ -28,6 +28,29 @@ enum NunaExerciseHistory {
         var heaviest: Double?, oneRepMax: Double?, bestSetVolume: Double?, bestSessionVolume: Double?, mostReps: Int?
     }
 
+    /// For each number of reps you have done, the heaviest weight you did it with, fewest reps first.
+    static func setRecords(_ sessions: [NunaExerciseSession]) -> [(reps: Int, kg: Double)] {
+        var best: [Int: Double] = [:]
+        for s in sessions { for set in s.working { if let w = set.weightKg, w > 0, let r = set.reps, r > 0 { best[r] = max(best[r] ?? 0, w) } } }
+        return best.keys.sorted().map { (reps: $0, kg: best[$0] ?? 0) }
+    }
+
+    /// Which sets were a record when they were done: a heavier weight than any set before it, or a higher estimated one rep max. Walks the
+    /// sessions oldest first, so a later session never takes a record from an earlier one. Keyed by set id, with the words to show.
+    static func records(inSets sessions: [NunaExerciseSession]) -> [String: [String]] {
+        var out: [String: [String]] = [:]
+        var bestWeight = 0.0, bestMax = 0.0
+        for s in sessions.sorted(by: { $0.startTs < $1.startTs }) {
+            for set in s.sets where !set.isWarmup {
+                var labels: [String] = []
+                if let w = set.weightKg, w > bestWeight { if bestWeight > 0 { labels.append(String(localized: "Weight")) }; bestWeight = w }
+                if let m = oneRepMax(set), m > bestMax { if bestMax > 0 { labels.append("1RM") }; bestMax = m }
+                if !labels.isEmpty { out[set.id] = labels }
+            }
+        }
+        return out
+    }
+
     static func records(_ sessions: [NunaExerciseSession]) -> Records {
         var r = Records()
         for s in sessions {
@@ -61,5 +84,25 @@ final class NunaExerciseHistoryModel: ObservableObject {
         }
         sessions = out; loaded = true
     }
+}
+#endif
+
+#if os(iOS)
+/// The note pinned to an exercise, by library id. It lives on this iPhone, beside the exercise's own history.
+enum NunaExerciseNotes {
+    private static let key = "nuna.gym.exerciseNotes"
+    private static var all: [String: String] { (UserDefaults.standard.dictionary(forKey: key) as? [String: String]) ?? [:] }
+
+    static func note(for libraryId: String) -> String { all[libraryId] ?? "" }
+
+    static func set(_ text: String, for libraryId: String) {
+        var a = all
+        let t = String(text.trimmingCharacters(in: .whitespacesAndNewlines).prefix(300))
+        if t.isEmpty { a.removeValue(forKey: libraryId) } else { a[libraryId] = t }
+        UserDefaults.standard.set(a, forKey: key)
+    }
+
+    /// The pinned note of the library exercise a logged name stands for, or "".
+    static func note(forName name: String) -> String { NunaExerciseLibrary.match(name).map { note(for: $0.id) } ?? "" }
 }
 #endif

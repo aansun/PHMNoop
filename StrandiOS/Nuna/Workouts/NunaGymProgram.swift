@@ -1,5 +1,6 @@
 #if os(iOS)
 import SwiftUI
+import Charts
 import UniformTypeIdentifiers
 import StrandDesign
 import StrandAnalytics
@@ -15,6 +16,8 @@ private func nunaPill(_ title: String, on: Bool, action: @escaping () -> Void) -
             .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: on ? 0 : 1))
     }.buttonStyle(.plain)
 }
+
+extension LiftProgramItemRow: Identifiable {}
 
 private struct NunaItemTarget: Identifiable { let id: String; let item: LiftProgramItemRow? }
 
@@ -34,6 +37,7 @@ struct NunaProgramEditor: View {
     @State private var loaded = false
     @State private var saving = false
     @State private var editing: NunaItemTarget?
+    @State private var replacing: LiftProgramItemRow?
     @State private var confirmDelete = false
 
     private var isNew: Bool { programId == "new" }
@@ -70,6 +74,14 @@ struct NunaProgramEditor: View {
         .task { await loadIfNeeded() }
         .sheet(item: $editing) { t in
             NunaProgramItemView(item: t.item) { saved in apply(saved, replacing: t.item) }
+        }
+        .sheet(item: $replacing) { old in
+            NunaExercisePicker(title: "Replace exercise", single: true, suggestingFor: old.exercise) { picked in
+                guard let p = picked.first, let i = items.firstIndex(where: { $0.id == old.id }) else { return }
+                var next = items[i]
+                next.exercise = p.name
+                items[i] = next
+            }
         }
         .confirmationDialog("Delete this program?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) { Task { await deleteProgram() } }
@@ -110,6 +122,7 @@ struct NunaProgramEditor: View {
                         Menu {
                             Button { move(i, -1) } label: { Label("Move up", systemImage: "arrow.up") }.disabled(i == 0)
                             Button { move(i, 1) } label: { Label("Move down", systemImage: "arrow.down") }.disabled(i == items.count - 1)
+                            Button { replacing = item } label: { Label("Replace exercise", systemImage: "arrow.triangle.2.circlepath") }
                             Button(role: .destructive) { items.removeAll { $0.id == item.id } } label: { Label("Remove exercise", systemImage: "trash") }
                         } label: {
                             Image(systemName: "ellipsis").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 32, height: 40)
@@ -154,6 +167,8 @@ struct NunaProgramEditor: View {
         if let kg = item.targetWeightKg { parts.append(LiftFormat.weight(kg, system: system)) }
         if let rest = item.restSec { parts.append(String(localized: "rest \(rest) s")) }
         if parts.isEmpty, item.targetSets == nil { parts.append(String(localized: "No targets set")) }
+        let pinned = NunaExerciseNotes.note(forName: item.exercise)
+        if !pinned.isEmpty { parts.append("📌 " + pinned) }
         return parts.joined(separator: " · ")
     }
 
@@ -203,6 +218,9 @@ struct NunaProgramEditor: View {
     }
 }
 
+/// One finished run of a program, for its progress chart.
+struct NunaProgramRun { let date: Date; let volumeKg: Double; let reps: Int; let minutes: Double }
+
 // MARK: - Program page
 
 /// A program as it is opened from the Gym list or a shortcut: its name in full, the note, the exercises and what they add up to, with
@@ -218,6 +236,20 @@ struct NunaProgramDetailView: View {
     @State private var loaded = false
     @State private var confirmDelete = false
     @State private var starting = false
+    @State private var runs: [NunaProgramRun] = []
+    @State private var metric = RunMetric.volume
+    @State private var period = RunPeriod.threeMonths
+    @State private var selectedDate: Date?
+
+    private enum RunMetric: String, CaseIterable {
+        case volume, reps, duration
+        var title: LocalizedStringKey { switch self { case .volume: "Volume"; case .reps: "Reps"; case .duration: "Duration" } }
+    }
+    private enum RunPeriod: String, CaseIterable {
+        case threeMonths, year, all
+        var title: LocalizedStringKey { switch self { case .threeMonths: "Last 3 months"; case .year: "Last year"; case .all: "All time" } }
+        var days: Int? { switch self { case .threeMonths: 92; case .year: 366; case .all: nil } }
+    }
 
     private var system: UnitSystem { UnitSystem(rawValue: unitSystemRaw) ?? .metric }
     private var totalSets: Int { items.reduce(0) { $0 + ($1.targetSets ?? 1) } }
@@ -239,6 +271,7 @@ struct NunaProgramDetailView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 summaryCard
+                if !runs.isEmpty { progressCard }
                 NunaTitleRow(title: "Exercises") { EmptyView() }
                 exerciseList
             } else if loaded {
@@ -255,6 +288,8 @@ struct NunaProgramDetailView: View {
 
     private var menu: some View {
         Menu {
+            Button { Task { if let program { NunaGymStore.presentShare(await NunaGymStore.shareText(program, repo: repo, system: system)) } } } label: { Label("Share routine", systemImage: "square.and.arrow.up") }
+            Button { Task { if let program { _ = await NunaGymStore.duplicate(program, repo: repo); dismiss() } } } label: { Label("Duplicate routine", systemImage: "plus.square.on.square") }
             NavigationLink(value: NunaWorkoutRoute.programEdit(programId)) { Label("Edit program", systemImage: "pencil") }
             Button(role: .destructive) { confirmDelete = true } label: { Label("Delete program", systemImage: "trash") }
         } label: { NunaBareIcon("ellipsis") }
@@ -279,6 +314,73 @@ struct NunaProgramDetailView: View {
                 if let unit { Text(verbatim: unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
             }
         }.frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private func runValue(_ r: NunaProgramRun) -> Double {
+        switch metric { case .volume: return r.volumeKg; case .reps: return Double(r.reps); case .duration: return r.minutes }
+    }
+
+    /// What this routine added up to each time it was run: volume, reps or how long it took, over the period chosen.
+    private var progressCard: some View {
+        let cutoff = period.days.map { Date().addingTimeInterval(-Double($0) * 86_400) }
+        let points = runs.filter { cutoff == nil || $0.date >= cutoff! }.map { (date: $0.date, v: runValue($0)) }
+        let shown = selectedDate.flatMap { sel in points.min { abs($0.date.timeIntervalSince(sel)) < abs($1.date.timeIntervalSince(sel)) } } ?? points.last
+        func text(_ v: Double) -> (String, String) {
+            switch metric {
+            case .volume: return (NunaTrendsFormat.num(LiftFormat.display(fromKilograms: v, system: system)), UnitFormatter.massUnit(system))
+            case .reps: return ("\(Int(v))", "")
+            case .duration: return ("\(Int(v.rounded()))", "min")
+            }
+        }
+        return NunaCard {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(alignment: .firstTextBaseline) {
+                    if let p = shown {
+                        let t = text(p.v)
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            Text(verbatim: t.0).font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            if !t.1.isEmpty { Text(verbatim: t.1).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+                            Text(verbatim: NunaWorkoutFormat.day(Int(p.date.timeIntervalSince1970))).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.restText).textCase(nil)
+                        }
+                    }
+                    Spacer(minLength: 8)
+                    Menu {
+                        Picker("Period", selection: $period) { ForEach(RunPeriod.allCases, id: \.self) { Text($0.title).tag($0) } }
+                    } label: {
+                        HStack(spacing: 4) { Text(period.title).font(.nuna(size: 13.5, weight: .bold)); Image(systemName: "chevron.down").font(.nuna(size: 11, weight: .bold)) }
+                            .foregroundStyle(NunaPalette.restText).frame(minHeight: 32)
+                    }
+                }
+                if points.count >= 2 {
+                    Chart {
+                        ForEach(Array(points), id: \.date) { p in
+                            LineMark(x: .value("Date", p.date), y: .value("Value", p.v)).foregroundStyle(NunaPalette.textPrimary).interpolationMethod(.monotone)
+                            PointMark(x: .value("Date", p.date), y: .value("Value", p.v)).foregroundStyle(NunaPalette.textPrimary)
+                        }
+                        if let sel = shown {
+                            RuleMark(x: .value("Date", sel.date)).foregroundStyle(NunaPalette.restText.opacity(0.5))
+                            PointMark(x: .value("Date", sel.date), y: .value("Value", sel.v)).foregroundStyle(NunaPalette.restText).symbolSize(90)
+                        }
+                    }
+                    .chartXSelection(value: $selectedDate)
+                    .chartYScale(domain: .automatic(includesZero: false))
+                    .chartXAxis { AxisMarks(values: .automatic(desiredCount: 4)) { _ in AxisValueLabel(format: .dateTime.day().month(.abbreviated)).foregroundStyle(NunaPalette.textMuted) } }
+                    .chartYAxis { AxisMarks(position: .leading) { _ in AxisGridLine().foregroundStyle(NunaPalette.hairline); AxisValueLabel().foregroundStyle(NunaPalette.textMuted) } }
+                    .frame(height: 170)
+                } else {
+                    Text("Run this routine a couple of times and its progress shows here.").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                }
+                HStack(spacing: 8) {
+                    ForEach(RunMetric.allCases, id: \.self) { m in
+                        Button { metric = m } label: {
+                            Text(m.title).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(metric == m ? NunaPalette.onAccent : NunaPalette.textPrimary)
+                                .padding(.horizontal, 16).frame(height: 36).background(metric == m ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                        }.buttonStyle(.plain)
+                    }
+                    Spacer(minLength: 0)
+                }
+            }
+        }
     }
 
     @ViewBuilder private var exerciseList: some View {
@@ -332,6 +434,18 @@ struct NunaProgramDetailView: View {
         guard let store = await repo.storeHandle() else { return }
         program = ((try? await store.liftPrograms(deviceId: repo.deviceId)) ?? []).first { $0.id == programId }
         items = (try? await store.liftProgramItems(programId: programId)) ?? []
+        // Every finished run of this program, oldest first, with what it added up to.
+        let now = Int(Date().timeIntervalSince1970)
+        let sessions = ((try? await store.liftSessions(deviceId: repo.deviceId, fromTs: 0, toTs: now + 86_400)) ?? [])
+            .filter { $0.programId == programId && $0.endTs != nil }.sorted { $0.startTs < $1.startTs }
+        var out: [NunaProgramRun] = []
+        for s in sessions {
+            let sets = ((try? await store.liftSets(sessionId: s.id)) ?? [])
+            let working = sets.filter { !$0.isWarmup }
+            out.append(NunaProgramRun(date: Date(timeIntervalSince1970: TimeInterval(s.startTs)), volumeKg: LiftMetrics.volumeLoadKg(sets) ?? 0,
+                                      reps: working.compactMap(\.reps).reduce(0, +), minutes: Double(max(0, (s.endTs ?? s.startTs) - s.startTs)) / 60))
+        }
+        runs = out
         loaded = true
     }
 
