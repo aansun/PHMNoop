@@ -8,6 +8,7 @@ extension TodaySection {
     var nunaName: String {
         switch self {
         case .hero: return String(localized: "Daily scores")
+        case .stateChips: return String(localized: "State chips")
         case .synthesis: return "Anya"
         case .recoveryVitals: return String(localized: "Stress monitor")
         case .vitalMonitor: return String(localized: "Vital and stress monitors")
@@ -25,6 +26,7 @@ extension TodaySection {
     var nunaNote: String {
         switch self {
         case .hero: return String(localized: "Charge, Effort and Rest")
+        case .stateChips: return String(localized: "Readiness, Charge state and heart rate")
         case .synthesis: return String(localized: "One suggestion for today")
         case .recoveryVitals: return String(localized: "Average and timeline")
         case .vitalMonitor: return String(localized: "Vital signs and stress side by side")

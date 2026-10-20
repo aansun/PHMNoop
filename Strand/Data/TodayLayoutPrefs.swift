@@ -24,6 +24,9 @@ import SwiftUI
 /// to the Android `TodaySection` enum so a backup/restore reads the same layout on either OS.
 enum TodaySection: String, CaseIterable, Identifiable {
     case hero
+    /// Nuna only: the Rest / Solid chips under the rings (readiness, Charge state and the live heart rate), as a card of their own that can be
+    /// moved, hidden and brought back. The Default looks render nothing for it and leave it out of their Arrange sheets.
+    case stateChips
     case liveSession
     case synthesis
     case keyMetrics
@@ -48,6 +51,7 @@ enum TodaySection: String, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .hero:           return String(localized: "Charge / Effort / Rest")
+        case .stateChips:     return String(localized: "State chips")
         case .liveSession:    return String(localized: "Start session")
         case .synthesis:      return String(localized: "Synthesis")
         case .keyMetrics:     return String(localized: "Key Metrics")
@@ -65,7 +69,7 @@ enum TodaySection: String, CaseIterable, Identifiable {
     /// The original, hard-coded section order — the default when the layout isn't customised. The journal
     /// widget (#656) is last by default, where it was first added, above the data-sources card.
     static let defaultOrder: [TodaySection] = [
-        .hero, .liveSession, .synthesis, .keyMetrics, .workouts, .heartRate, .recoveryVitals, .vitalMonitor, .yourCards,
+        .hero, .stateChips, .liveSession, .synthesis, .keyMetrics, .workouts, .heartRate, .recoveryVitals, .vitalMonitor, .yourCards,
         .menstrualCycle, .journal, .addedCards,
     ]
 }
