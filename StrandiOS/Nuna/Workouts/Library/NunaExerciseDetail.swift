@@ -15,12 +15,25 @@ struct NunaExerciseDetailView: View {
     @StateObject private var history = NunaExerciseHistoryModel()
     @State private var tab = Tab.summary
     @State private var metric = Metric.heaviest
+    @State private var period = Period.threeMonths
+    @State private var selectedDate: Date?
+    @State private var showSetRecords = false
+    @State private var editingNote = false
+    @State private var noteDraft = ""
+    @State private var pinnedNote = ""
 
     private enum Tab: String, CaseIterable { case summary, history, howTo
         var title: LocalizedStringKey { switch self { case .summary: "Summary"; case .history: "History"; case .howTo: "How to" } }
     }
-    private enum Metric: String, CaseIterable { case heaviest, oneRepMax, setVolume
-        var title: LocalizedStringKey { switch self { case .heaviest: "Heaviest weight"; case .oneRepMax: "One rep max"; case .setVolume: "Best set volume" } }
+    private enum Metric: String, CaseIterable { case heaviest, oneRepMax, setVolume, sessionVolume
+        var title: LocalizedStringKey {
+            switch self { case .heaviest: "Heaviest weight"; case .oneRepMax: "One rep max"; case .setVolume: "Best set volume"; case .sessionVolume: "Session volume" }
+        }
+    }
+    private enum Period: String, CaseIterable {
+        case threeMonths, year, all
+        var title: LocalizedStringKey { switch self { case .threeMonths: "Last 3 months"; case .year: "Last year"; case .all: "All time" } }
+        var days: Int? { switch self { case .threeMonths: 92; case .year: 366; case .all: nil } }
     }
 
     private var system: UnitSystem { UnitSystem(rawValue: unitSystemRaw) ?? .metric }
@@ -28,7 +41,7 @@ struct NunaExerciseDetailView: View {
     var body: some View {
         if let e = NunaExerciseLibrary.exercise(id: exerciseId) {
             NunaDetailScreen(LocalizedStringKey(e.name)) { content(e) }
-                .task { await history.load(libraryId: e.id, repo: repo) }
+                .task { await history.load(libraryId: e.id, repo: repo); pinnedNote = NunaExerciseNotes.note(for: e.id) }
         } else {
             NunaDetailScreen("Exercise") {
                 NunaCard { Text("This exercise is not in the library.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
@@ -73,36 +86,66 @@ struct NunaExerciseDetailView: View {
     }
 
     private func value(_ s: NunaExerciseSession) -> Double? {
-        switch metric { case .heaviest: return s.heaviest; case .oneRepMax: return s.oneRepMax; case .setVolume: return s.bestSetVolume }
+        switch metric {
+        case .heaviest: return s.heaviest
+        case .oneRepMax: return s.oneRepMax
+        case .setVolume: return s.bestSetVolume
+        case .sessionVolume: return s.volume > 0 ? s.volume : nil
+        }
     }
 
+    /// The chart for the chosen metric and period. Dragging over it reads any session; the header says its figure and day.
     private var progressCard: some View {
-        let points = history.sessions.reversed().compactMap { s in value(s).map { (date: Date(timeIntervalSince1970: TimeInterval(s.startTs)), kg: $0) } }.suffix(30)
+        let cutoff = period.days.map { Date().addingTimeInterval(-Double($0) * 86_400) }
+        let points = history.sessions.reversed().compactMap { s -> (date: Date, kg: Double)? in
+            let d = Date(timeIntervalSince1970: TimeInterval(s.startTs))
+            if let cutoff, d < cutoff { return nil }
+            return value(s).map { (date: d, kg: $0) }
+        }
+        let shown = selectedDate.flatMap { sel in points.min { abs($0.date.timeIntervalSince(sel)) < abs($1.date.timeIntervalSince(sel)) } } ?? points.last
         return NunaCard {
             VStack(alignment: .leading, spacing: 14) {
-                nunaTrendsCap(metric.title)
+                HStack(alignment: .firstTextBaseline) {
+                    if let last = shown {
+                        HStack(alignment: .firstTextBaseline, spacing: 6) {
+                            Text(verbatim: LiftFormat.trim(LiftFormat.display(fromKilograms: last.kg, system: system))).font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: UnitFormatter.massUnit(system)).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: NunaWorkoutFormat.day(Int(last.date.timeIntervalSince1970))).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.restText).textCase(nil)
+                        }
+                    } else {
+                        nunaTrendsCap(metric.title)
+                    }
+                    Spacer(minLength: 8)
+                    Menu {
+                        Picker("Period", selection: $period) { ForEach(Period.allCases, id: \.self) { Text($0.title).tag($0) } }
+                    } label: {
+                        HStack(spacing: 4) {
+                            Text(period.title).font(.nuna(size: 13.5, weight: .bold))
+                            Image(systemName: "chevron.down").font(.nuna(size: 11, weight: .bold))
+                        }.foregroundStyle(NunaPalette.restText).frame(minHeight: 32)
+                    }
+                }
                 if points.isEmpty {
                     Text(history.loaded ? "Log this exercise in a gym session and its progress shows here." : " ")
                         .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 } else {
-                    if let last = points.last {
-                        HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            Text(verbatim: LiftFormat.trim(LiftFormat.display(fromKilograms: last.kg, system: system))).font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            Text(verbatim: UnitFormatter.massUnit(system)).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                            Text(verbatim: NunaWorkoutFormat.day(Int(last.date.timeIntervalSince1970))).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-                        }
-                    }
                     Chart {
                         ForEach(Array(points), id: \.date) { p in
                             let v = LiftFormat.display(fromKilograms: p.kg, system: system)
                             LineMark(x: .value("Date", p.date), y: .value("Weight", v)).foregroundStyle(NunaPalette.textPrimary).interpolationMethod(.monotone)
-                            PointMark(x: .value("Date", p.date), y: .value("Weight", v)).foregroundStyle(NunaPalette.textPrimary)
+                            PointMark(x: .value("Date", p.date), y: .value("Weight", v)).foregroundStyle(NunaPalette.textPrimary).symbolSize(points.count > 40 ? 8 : 30)
+                        }
+                        if let sel = shown {
+                            RuleMark(x: .value("Date", sel.date)).foregroundStyle(NunaPalette.restText.opacity(0.5))
+                            PointMark(x: .value("Date", sel.date), y: .value("Weight", LiftFormat.display(fromKilograms: sel.kg, system: system)))
+                                .foregroundStyle(NunaPalette.restText).symbolSize(90)
                         }
                     }
+                    .chartXSelection(value: $selectedDate)
                     .chartYScale(domain: .automatic(includesZero: false))
                     .chartXAxis { AxisMarks(values: .automatic(desiredCount: 4)) { _ in AxisValueLabel(format: .dateTime.day().month(.abbreviated)).foregroundStyle(NunaPalette.textMuted) } }
                     .chartYAxis { AxisMarks(position: .leading) { _ in AxisGridLine().foregroundStyle(NunaPalette.hairline); AxisValueLabel().foregroundStyle(NunaPalette.textMuted) } }
-                    .frame(height: 170)
+                    .frame(height: 190)
                 }
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
@@ -133,6 +176,36 @@ struct NunaExerciseDetailView: View {
                     recordRow("Best session volume", mass(r.bestSessionVolume))
                     recordRow("Most reps in a set", r.mostReps.map(String.init) ?? "—")
                     Text("The one rep max is an estimate from sets of 12 reps or fewer.").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                    setRecords
+                }
+            }
+        }
+    }
+
+    /// For every number of reps you have done, the heaviest weight you did it with.
+    @ViewBuilder private var setRecords: some View {
+        let table = NunaExerciseHistory.setRecords(history.sessions)
+        if !table.isEmpty {
+            NunaDivider()
+            Button { withAnimation(.easeInOut(duration: 0.2)) { showSetRecords.toggle() } } label: {
+                HStack {
+                    Text("Set records").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                    Spacer()
+                    Image(systemName: "chevron.down").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted).rotationEffect(.degrees(showSetRecords ? 180 : 0))
+                }.frame(minHeight: 36).contentShape(Rectangle())
+            }.buttonStyle(.plain)
+            if showSetRecords {
+                HStack {
+                    Text("Reps").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Spacer()
+                    Text("Personal best").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                }
+                ForEach(table, id: \.reps) { row in
+                    HStack {
+                        Text(verbatim: "\(row.reps)").font(.nuna(size: 15, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Spacer()
+                        Text(verbatim: LiftFormat.weight(row.kg, system: system)).font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.restText)
+                    }
                 }
             }
         }
@@ -176,24 +249,43 @@ struct NunaExerciseDetailView: View {
                 Text(history.loaded ? "You have not logged this exercise yet." : " ").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
             }
         }
+        let badges = NunaExerciseHistory.records(inSets: history.sessions)
         ForEach(history.sessions) { s in
-            NunaCard(small: true) {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack {
-                        Text(verbatim: NunaWorkoutFormat.day(s.startTs)).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                        Spacer()
-                        if let p = s.program { Text(verbatim: p).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1) }
-                    }
-                    ForEach(Array(s.sets.enumerated()), id: \.element.id) { i, set in
-                        HStack {
-                            Text(verbatim: set.isWarmup ? String(localized: "W") : "\(set.setIndex)").font(.nuna(size: 13, weight: .bold, design: NunaType.design))
-                                .foregroundStyle(set.isWarmup ? NunaPalette.warning : NunaPalette.textSecondary).frame(width: 26)
-                            Text(verbatim: setText(set)).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            NavigationLink(value: NunaWorkoutRoute.gymSession(s.id)) {
+                NunaCard(small: true) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(alignment: .top) {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(verbatim: s.program ?? String(localized: "Gym session")).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).lineLimit(2)
+                                Text(verbatim: NunaWorkoutFormat.day(s.startTs) + " · " + NunaWorkoutFormat.clock(s.startTs)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                            }
                             Spacer()
+                            Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted).padding(.top, 4)
+                        }
+                        HStack {
+                            Text("Set").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).frame(width: 40, alignment: .leading)
+                            Text("Weight and reps").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                            Spacer()
+                        }
+                        ForEach(Array(s.sets.enumerated()), id: \.element.id) { i, set in
+                            HStack(spacing: 8) {
+                                Text(verbatim: set.isWarmup ? String(localized: "W") : "\(set.setIndex)").font(.nuna(size: 13, weight: .bold, design: NunaType.design))
+                                    .foregroundStyle(set.isWarmup ? NunaPalette.warning : NunaPalette.textSecondary).frame(width: 40, alignment: .leading)
+                                Text(verbatim: setText(set)).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                                Spacer()
+                                ForEach(badges[set.id] ?? [], id: \.self) { label in
+                                    HStack(spacing: 4) {
+                                        Image(systemName: "medal.fill").font(.nuna(size: 11, weight: .bold))
+                                        Text(verbatim: label).font(.nuna(size: 11.5, weight: .bold)).textCase(nil)
+                                    }
+                                    .foregroundStyle(NunaPalette.warning).padding(.horizontal, 8).frame(height: 22)
+                                    .background(NunaPalette.tint(NunaPalette.warning), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                                }
+                            }
                         }
                     }
                 }
-            }
+            }.buttonStyle(.plain)
         }
     }
 
@@ -209,6 +301,39 @@ struct NunaExerciseDetailView: View {
     // MARK: How to
 
     private func howTo(_ e: NunaLibraryExercise) -> some View {
+        VStack(spacing: NunaSpacing.section) {
+            howToSteps(e)
+            pinnedNoteCard(e)
+        }
+    }
+
+    /// A note that goes with this exercise wherever it appears: a program, a session. Kept on this iPhone.
+    private func pinnedNoteCard(_ e: NunaLibraryExercise) -> some View {
+        NunaCard(small: true) {
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    HStack(spacing: 8) {
+                        Image(systemName: "pin.fill").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Pinned exercise note").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                    }
+                    Spacer()
+                    Button { noteDraft = pinnedNote; editingNote = true } label: {
+                        Text(pinnedNote.isEmpty ? "Add note" : "Edit").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.restText).frame(minHeight: 32)
+                    }.buttonStyle(.plain)
+                }
+                if !pinnedNote.isEmpty {
+                    Text(verbatim: pinnedNote).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                }
+            }
+        }
+        .alert("Pinned exercise note", isPresented: $editingNote) {
+            TextField("Setup, grip, cues", text: $noteDraft)
+            Button("Save") { NunaExerciseNotes.set(noteDraft, for: e.id); pinnedNote = NunaExerciseNotes.note(for: e.id) }
+            Button("Cancel", role: .cancel) {}
+        } message: { Text("It shows with this exercise in your programs and sessions.") }
+    }
+
+    private func howToSteps(_ e: NunaLibraryExercise) -> some View {
         NunaCard {
             VStack(alignment: .leading, spacing: 14) {
                 nunaTrendsCap("How to do it")

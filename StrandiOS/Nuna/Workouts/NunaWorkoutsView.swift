@@ -25,6 +25,7 @@ extension View {
             case .gymSession(let id): NunaGymSessionView(sessionId: id)
             case .exerciseLibrary: NunaExerciseLibraryView()
             case .exercise(let id): NunaExerciseDetailView(exerciseId: id)
+            case .explore: NunaGymExploreView()
             }
         }
     }
