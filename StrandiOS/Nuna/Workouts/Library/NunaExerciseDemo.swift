@@ -26,9 +26,17 @@ struct NunaExerciseDemo: View {
     }
 
     var body: some View {
+        if exercise.frames.first.flatMap(NunaExerciseLibrary.image) == nil {
+            NunaMissingDemoPanel(name: exercise.name, height: height)
+        } else {
+            photos
+        }
+    }
+
+    private var photos: some View {
         let first = exercise.frames.first.flatMap(NunaExerciseLibrary.image)
         let last = exercise.frames.count > 1 ? NunaExerciseLibrary.image(exercise.frames[1]) : nil
-        ZStack {
+        return ZStack {
             if let first, let last, !(reduceMotion && !paused) {
                 TimelineView(.animation(minimumInterval: 1.0 / 30, paused: paused)) { tl in
                     let p = paused ? Self.phase(at: pausedAt) : Self.phase(at: tl.date.timeIntervalSinceReferenceDate)
