@@ -290,13 +290,28 @@ public struct NunaChip: View {
         self.text = Text(verbatim: verbatim); self.systemImage = systemImage; self.color = color
     }
     public var body: some View {
-        // Information inside a card is plain text: no pill, no outline. Colour still carries the meaning.
+        // Important information is a chip: a tinted background and a thin outline in its own colour, so a status reads at a glance.
+        let tint = color ?? NunaPalette.textSecondary
         HStack(spacing: 5) {
-            if let systemImage { Image(systemName: systemImage).font(.system(size: 12, weight: .bold)) }
-            text.font(.system(size: 12.5, weight: .bold))
+            if let systemImage { Image(systemName: systemImage).font(.system(size: 11, weight: .bold)) }
+            text.font(.system(size: 12.5, weight: .bold)).lineLimit(1).minimumScaleFactor(0.8)
         }
-        .foregroundStyle(color ?? NunaPalette.textSecondary)
-        .frame(minHeight: 30)
+        .foregroundStyle(tint)
+        .padding(.horizontal, 10).frame(minHeight: 26)
+        .background(NunaPalette.tint(tint), in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous).strokeBorder(tint.opacity(0.35), lineWidth: 1))
+        .fixedSize()
+    }
+}
+
+extension View {
+    /// Wraps a status word in the chip look (tinted background, thin outline in its own colour) for a status that a card draws itself.
+    public func nunaStatusChip(_ tint: Color, height: CGFloat = 26) -> some View {
+        self.foregroundStyle(tint)
+            .padding(.horizontal, 10).frame(minHeight: height)
+            .background(NunaPalette.tint(tint), in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous).strokeBorder(tint.opacity(0.35), lineWidth: 1))
+            .fixedSize(horizontal: false, vertical: true)
     }
 }
 

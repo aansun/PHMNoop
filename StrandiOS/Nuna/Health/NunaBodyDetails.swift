@@ -86,8 +86,8 @@ struct NunaBodyHealthCard: View {
     }
 
     private func word(_ text: LocalizedStringKey, good: Bool) -> some View {
-        Text(text).font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-            .foregroundStyle(good ? NunaPalette.charge : NunaPalette.warning)
+        Text(text).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+            .nunaStatusChip(good ? NunaPalette.charge : NunaPalette.warning)
     }
 
     var body: some View {
