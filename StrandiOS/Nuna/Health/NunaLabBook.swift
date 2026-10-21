@@ -13,11 +13,12 @@ import WhoopStore
 /// Adding a result, by hand or from a file, is one sheet.
 struct NunaLabBookView: View {
     @EnvironmentObject private var repo: Repository
+    @EnvironmentObject private var profile: ProfileStore
     @State private var rows: [LabMarkerRow] = []
     @State private var loaded = false
     @State private var adding = false
 
-    private var markers: [NunaLabMarker] { NunaLabGrouping.markers(rows) }
+    private var markers: [NunaLabMarker] { NunaLabGrouping.markers(rows, reference: .init(heightCm: profile.heightCm, sex: profile.sex)) }
 
     var body: some View {
         let ms = markers
@@ -40,7 +41,7 @@ struct NunaLabBookView: View {
             }
             if loaded { addButton }
             NunaExpandRow(title: "About the Lab Book", subtitle: "", systemImage: "lock",
-                          text: "Lab Book keeps your own numbers. It doesn't test, read, or judge them, and it's not medical advice. A range only shows where a reading sits against the one you copied from your own report. Everything stays on this iPhone.")
+                          text: "Lab Book keeps your own numbers. It doesn't test, read, or judge them, and it's not medical advice. A range shows where a reading sits against the one you copied from your own report or, for weight and waist, against the WHO reference. Everything stays on this iPhone.")
         }
         .task(id: repo.refreshSeq) { rows = await NunaLabStore.load(repo); loaded = true }
         .sheet(isPresented: $adding) {
@@ -156,7 +157,7 @@ struct NunaLabBookView: View {
                                 .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
                         }
                         Spacer(minLength: 4)
-                        if let s = m.latestStatus { NunaChip(NunaLabRange.word(s), color: NunaLabRange.tint(s)).fixedSize() }
+                        if let s = m.latestStatus { NunaChip(NunaLabRange.word(s, who: m.rangeIsWho), color: NunaLabRange.tint(s)).fixedSize() }
                         if let c = m.change, abs(c.delta) > 0.000_001 {
                             Text(verbatim: (c.delta > 0 ? "▲ " : "▼ ") + LabBookFormat.value(abs(c.delta), key: m.key))
                                 .font(.nuna(size: 13, weight: .heavy)).foregroundStyle(m.changeTone(c.delta)).fixedSize().padding(.top, 6)
@@ -165,7 +166,17 @@ struct NunaLabBookView: View {
                     }
                     if let r = m.range, let v = value {
                         NunaLabValueBar(position: Self.position(v, r), valueText: latest.map(m.text) ?? "", tint: m.latestStatus.map(NunaLabRange.tint) ?? NunaPalette.textSecondary,
-                                        rangeText: LabBookFormat.value(r.low, key: m.key) + "–" + LabBookFormat.value(r.high, key: m.key) + " " + m.unit)
+                                        rangeText: r.label(key: m.key) + " " + m.unit, caption: m.rangeIsWho ? "WHO range" : "Your range")
+                    } else if let v = value {
+                        // No range from a report: the bar spans the person's own lowest and highest reading, so the pill still says where this one sits.
+                        let values = m.numeric.compactMap(\.value)
+                        let lo = values.min() ?? v, hi = values.max() ?? v
+                        if hi > lo {
+                            NunaLabValueBar(position: 0.2 + 0.6 * (v - lo) / (hi - lo), valueText: latest.map(m.text) ?? "", tint: NunaPalette.textSecondary,
+                                            rangeText: LabBookFormat.value(lo, key: m.key) + "–" + LabBookFormat.value(hi, key: m.key) + " " + m.unit, caption: "Your readings")
+                        } else {
+                            NunaLabValueBar(position: 0.5, valueText: (latest.map(m.text) ?? "") + " " + m.unit, tint: NunaPalette.textSecondary)
+                        }
                     }
                 }
             }
@@ -189,6 +200,7 @@ struct NunaMarkerDetailView: View {
     let markerKey: String
 
     @EnvironmentObject private var repo: Repository
+    @EnvironmentObject private var profile: ProfileStore
     @Environment(\.dismiss) private var dismiss
     @State private var rows: [LabMarkerRow] = []
     @State private var loaded = false
@@ -203,7 +215,7 @@ struct NunaMarkerDetailView: View {
     @State private var correlation: Correlation?
     @State private var computing = false
 
-    private var marker: NunaLabMarker? { NunaLabGrouping.markers(rows).first { $0.key == markerKey } }
+    private var marker: NunaLabMarker? { NunaLabGrouping.markers(rows, reference: .init(heightCm: profile.heightCm, sex: profile.sex)).first { $0.key == markerKey } }
     private var title: String {
         NunaLabGrouping.markerName(markerKey)
     }
@@ -255,7 +267,7 @@ struct NunaMarkerDetailView: View {
                                 stat("Systolic", rangeText(m.range, key: m.key), unit: m.unit)
                                 stat("Diastolic", rangeText(m.diastolicRange, key: LabBookProjection.bpDiastolicKey), unit: m.unit)
                             } else {
-                                stat("Your range", rangeText(r, key: m.key), unit: m.unit)
+                                stat(m.rangeIsWho ? "WHO range" : "Your range", rangeText(r, key: m.key), unit: m.unit)
                                 changeStat(m)
                             }
                         }.padding(.top, 10)
@@ -263,7 +275,7 @@ struct NunaMarkerDetailView: View {
                 }
                 .frame(height: 300)
                 HStack(spacing: 10) {
-                    if let s = status { NunaChip(NunaLabRange.word(s), color: NunaLabRange.tint(s)) }
+                    if let s = status { NunaChip(NunaLabRange.word(s, who: m.rangeIsWho), color: NunaLabRange.tint(s)) }
                     Text(verbatim: latest.map { LabBookFormat.dayFromKey($0.day) } ?? "").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             } else {
@@ -284,7 +296,7 @@ struct NunaMarkerDetailView: View {
 
     private func rangeText(_ r: NunaLabRange?, key: String) -> String {
         guard let r else { return "–" }
-        return LabBookFormat.value(r.low, key: key) + "–" + LabBookFormat.value(r.high, key: key)
+        return r.label(key: key)
     }
 
     private func stat(_ label: LocalizedStringKey, _ value: String, unit: String) -> some View {
@@ -525,7 +537,9 @@ struct NunaLabValueBar: View {
     let position: Double
     let valueText: String
     let tint: Color
-    let rangeText: String
+    /// The span written under the bar between two marks; nil draws the bar and its pill alone (one reading, nothing to span).
+    var rangeText: String?
+    var caption: LocalizedStringKey = "Your range"
 
     private let barHeight: CGFloat = 32
     private var rowY: CGFloat { barHeight + 38 }
@@ -549,31 +563,35 @@ struct NunaLabValueBar: View {
                 }
                 .frame(width: x, height: barHeight)
                 .clipShape(UnevenRoundedRectangle(topLeadingRadius: 8, bottomLeadingRadius: 8, bottomTrailingRadius: 0, topTrailingRadius: 0, style: .continuous))
-                ForEach([0.2, 0.8], id: \.self) { t in
-                    Capsule().fill(NunaPalette.ink).frame(width: 3, height: barHeight + 6).offset(x: w * t - 1.5, y: -3)
+                if rangeText != nil {
+                    ForEach([0.2, 0.8], id: \.self) { t in
+                        Capsule().fill(NunaPalette.ink).frame(width: 3, height: barHeight + 6).offset(x: w * t - 1.5, y: -3)
+                    }
                 }
                 Text(verbatim: valueText).font(.nuna(size: 15, weight: .heavy, design: NunaType.design)).foregroundStyle(tint).lineLimit(1)
                     .frame(width: pillW, height: barHeight - 2)
                     .background(NunaPalette.card, in: Capsule())
                     .overlay(Capsule().stroke(tint, lineWidth: 2))
                     .offset(x: x - pillW / 2, y: 1)
-                Canvas { ctx, _ in
-                    var bracket = Path()
-                    for t in [0.2, 0.8] { bracket.move(to: CGPoint(x: w * t, y: barHeight + 4)); bracket.addLine(to: CGPoint(x: w * t, y: rowY)) }
-                    let half = CGFloat(rangeText.count) * 3.3 + 7
-                    bracket.move(to: CGPoint(x: w * 0.2, y: rowY)); bracket.addLine(to: CGPoint(x: w * 0.5 - half, y: rowY))
-                    bracket.move(to: CGPoint(x: w * 0.5 + half, y: rowY)); bracket.addLine(to: CGPoint(x: w * 0.8, y: rowY))
-                    ctx.stroke(bracket, with: .color(NunaPalette.textMuted), style: StrokeStyle(lineWidth: 1.2, lineCap: .round, dash: [3, 3]))
+                if let rangeText {
+                    Canvas { ctx, _ in
+                        var bracket = Path()
+                        for t in [0.2, 0.8] { bracket.move(to: CGPoint(x: w * t, y: barHeight + 4)); bracket.addLine(to: CGPoint(x: w * t, y: rowY)) }
+                        let half = CGFloat(rangeText.count) * 3.6 + 10
+                        bracket.move(to: CGPoint(x: w * 0.2, y: rowY)); bracket.addLine(to: CGPoint(x: w * 0.5 - half, y: rowY))
+                        bracket.move(to: CGPoint(x: w * 0.5 + half, y: rowY)); bracket.addLine(to: CGPoint(x: w * 0.8, y: rowY))
+                        ctx.stroke(bracket, with: .color(NunaPalette.textMuted), style: StrokeStyle(lineWidth: 1.2, lineCap: .round, dash: [3, 3]))
+                    }
+                    .frame(width: w, height: rowY + 2)
+                    Text(caption).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textMuted)
+                        .position(x: w * 0.5, y: barHeight + 14)
+                    Text(verbatim: rangeText)
+                        .position(x: w * 0.5, y: rowY)
                 }
-                .frame(width: w, height: rowY + 2)
-                Text("Your range").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textMuted)
-                    .position(x: w * 0.5, y: barHeight + 14)
-                Text(verbatim: rangeText)
-                    .position(x: w * 0.5, y: rowY)
             }
             .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
         }
-        .frame(height: barHeight + 50)
+        .frame(height: rangeText == nil ? barHeight + 4 : barHeight + 50)
         .accessibilityHidden(true)
     }
 }
@@ -611,6 +629,7 @@ struct NunaLabShareRing: View {
 /// Holds the marker on show and puts the dropdown in the header, so the wearer goes from one marker to the next without going back to the list.
 struct NunaLabMarkerHost: View {
     @EnvironmentObject private var repo: Repository
+    @EnvironmentObject private var profile: ProfileStore
     @State private var current: String
     @State private var items: [NunaDetailSwitch.Item] = []
     @State private var bodyKeys: Set<String>
@@ -629,7 +648,7 @@ struct NunaLabMarkerHost: View {
         .environment(\.nunaDetailSwitch, items.count > 1 && items.contains { $0.key == current }
             ? NunaDetailSwitch(current: current, items: items) { current = $0 } : nil)
         .task(id: repo.refreshSeq) {
-            let markers = NunaLabGrouping.markers(await NunaLabStore.load(repo))
+            let markers = NunaLabGrouping.markers(await NunaLabStore.load(repo), reference: .init(heightCm: profile.heightCm, sex: profile.sex))
             bodyKeys = Set(markers.filter { $0.category == .bodyMeasurement }.map(\.key))
             items = NunaLabGrouping.categoryOrder.flatMap { cat in
                 markers.filter { $0.category == cat }.sorted { $0.name < $1.name }

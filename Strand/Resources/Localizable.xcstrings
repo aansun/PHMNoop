@@ -1,6 +1,12 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Within WHO range": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Dalam rentang WHO"}}}},
+    "Above WHO range": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Di atas rentang WHO"}}}},
+    "Below WHO range": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Di bawah rentang WHO"}}}},
+    "WHO range": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Rentang WHO"}}}},
+    "Lab Book keeps your own numbers. It doesn't test, read, or judge them, and it's not medical advice. A range shows where a reading sits against the one you copied from your own report or, for weight and waist, against the WHO reference. Everything stays on this iPhone.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lab Book menyimpan angkamu sendiri. Ia tidak menguji, membaca, atau menilainya, dan bukan saran medis. Rentang menunjukkan posisi hasil terhadap rentang yang kamu salin dari laporanmu sendiri atau, untuk berat dan lingkar pinggang, terhadap acuan WHO. Semuanya tetap di iPhone ini."}}}},
+    "Your readings": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Hasilmu"}}}},
     "No usable results found in that FHIR file.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidak ada hasil yang bisa dipakai di file FHIR itu."}}}},
     "Fill in the template, or bring a CSV or a FHIR file (.json) from your lab. Names that match the catalog fold onto your existing markers; anything else comes in as a custom marker. Rows that can't be read are skipped and counted, never guessed. Everything you import stays on this iPhone.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Isi templatenya, atau masukkan file CSV atau FHIR (.json) dari lab-mu. Nama yang cocok dengan katalog digabung ke penandamu yang ada; selain itu masuk sebagai penanda kustom. Baris yang tidak terbaca dilewati dan dihitung, tidak pernah ditebak. Semua yang kamu impor tetap di iPhone ini."}}}},
     "date as yyyy-MM-dd · range and note are optional · copy the range from your own report. Blood pressure goes on two lines, systolic and diastolic.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "tanggal dalam yyyy-MM-dd · rentang dan catatan opsional · salin rentang dari laporanmu sendiri. Tekanan darah ditulis di dua baris, sistolik dan diastolik."}}}},
