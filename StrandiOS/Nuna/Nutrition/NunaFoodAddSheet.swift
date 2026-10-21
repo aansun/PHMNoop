@@ -9,13 +9,15 @@ struct NunaFoodAddSheet: View {
     /// `yyyy-MM-dd` the entries are for.
     let day: String
     let initialMeal: NunaMeal
+    /// Stay on the Anya tab even when she is not connected, so the tab can say how to connect her.
+    var anyaFirst = false
 
     enum Mode: Hashable { case quick, saved, recent, anya }
 
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var coach: AICoachEngine
     @Environment(\.dismiss) private var dismiss
-    @State private var mode: Mode = .quick
+    @State private var mode: Mode = .anya
     @State private var meal: NunaMeal
     @State private var name = ""
     @State private var kcalText = ""
@@ -32,8 +34,8 @@ struct NunaFoodAddSheet: View {
     @State private var estimateError: String?
     @FocusState private var focused: Bool
 
-    init(day: String, meal: NunaMeal) {
-        self.day = day; self.initialMeal = meal
+    init(day: String, meal: NunaMeal, anyaFirst: Bool = false) {
+        self.day = day; self.initialMeal = meal; self.anyaFirst = anyaFirst
         _meal = State(initialValue: meal)
     }
 
@@ -49,7 +51,7 @@ struct NunaFoodAddSheet: View {
             header
             ScrollView {
                 VStack(spacing: 16) {
-                    NunaSegmented([(Mode.quick, "Quick add"), (.saved, "Saved"), (.recent, "Recent"), (.anya, "Anya")], selection: $mode)
+                    NunaSegmented([(Mode.anya, "Anya"), (.quick, "Quick add"), (.saved, "Saved"), (.recent, "Recent")], selection: $mode)
                     mealChips
                     switch mode {
                     case .quick: quick
@@ -70,7 +72,11 @@ struct NunaFoodAddSheet: View {
             }
         }
         .background(NunaPalette.canvas.ignoresSafeArea())
-        .task { saved = await NunaFoodStore.savedFoods(repo: repo); recent = await NunaFoodStore.recentFoods(repo: repo) }
+        .task {
+            // Anya comes first; without a connection there is nothing to ask her, so the sheet opens on typing the numbers instead.
+            if !coach.isConfigured, !anyaFirst { mode = .quick }
+            saved = await NunaFoodStore.savedFoods(repo: repo); recent = await NunaFoodStore.recentFoods(repo: repo)
+        }
         .nunaKeyboardDone()
     }
 

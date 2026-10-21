@@ -27,6 +27,8 @@ struct NunaNutritionView: View {
     @State private var deleting: FoodEntryRow?
     @State private var checkIn: NutritionMath.CheckIn?
     @State private var weightKg: Double?
+    @State private var addInAnya = false
+    @AppStorage("noop.coachEnabled") private var coachEnabled = true
 
     private var date: Date { Calendar.current.date(byAdding: .day, value: -offset, to: Date()) ?? Date() }
     private var dayKey: String { Repository.localDayKey(date) }
@@ -51,9 +53,10 @@ struct NunaNutritionView: View {
 
     var body: some View {
         NunaDetailScreen("Nutrition") {
-            dayStepper
             hero
-            macroRow
+            macroCard
+            dayStepper
+            if coachEnabled { anyaPrompt }
             if checkInDue, let checkIn { checkInCard(checkIn) }
             ForEach(NunaMeal.allCases) { mealCard($0) }
             if food.entries.isEmpty, let imported { importedCard(imported) }
@@ -100,65 +103,94 @@ struct NunaNutritionView: View {
     }
 
     private var dayTitle: String {
-        if offset == 0 { return String(localized: "Today") }
-        if offset == 1 { return String(localized: "Yesterday") }
-        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE d MMM")
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("d MMM")
+        if offset == 0 { return String(localized: "Today") + ", " + f.string(from: date) }
+        if offset == 1 { return String(localized: "Yesterday") + ", " + f.string(from: date) }
+        f.setLocalizedDateFormatFromTemplate("EEE d MMM")
         return f.string(from: date)
     }
 
     // MARK: Hero
 
+    /// The ring with what is left in the middle, what was eaten on one side and the active burn on the other.
     private var hero: some View {
-        VStack(spacing: 8) {
-            if let target {
-                let left = target - eaten
-                nunaTrendsCap(left >= 0 ? "Left to eat" : "Over the target")
-                Text(verbatim: nutFmt(abs(left))).font(.nuna(size: 64, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(64))
-                    .foregroundStyle(left >= 0 ? NunaPalette.textPrimary : NunaPalette.warning).minimumScaleFactor(0.6).lineLimit(1)
-                Text(verbatim: String(localized: "kcal · target \(nutFmt(target))")).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                NunaProgressBar(fraction: eaten / target, color: left >= 0 ? NunaPalette.charge : NunaPalette.warning).padding(.top, 6)
-                HStack {
-                    Text(verbatim: String(localized: "Eaten \(nutFmt(eaten))"))
-                    Spacer()
-                    if offset == 0, let a = today.calories, a > 0 { Text(verbatim: String(localized: "Active burn \(nutFmt(a))")) }
+        let left = (target ?? 0) - eaten
+        let over = target != nil && left < 0
+        return VStack(spacing: 6) {
+            HStack(alignment: .center, spacing: 0) {
+                sideFigure(nutFmt(eaten), "Eaten").frame(maxWidth: .infinity)
+                NunaRingGauge(fraction: target.map { $0 > 0 ? eaten / $0 : 0 } ?? 0, color: over ? NunaPalette.warning : NunaPalette.charge, size: 196, lineWidth: 12) {
+                    VStack(spacing: 2) {
+                        Text(verbatim: nutFmt(target == nil ? eaten : abs(left))).font(.nuna(size: 52, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(52))
+                            .foregroundStyle(over ? NunaPalette.warning : NunaPalette.textPrimary).minimumScaleFactor(0.5).lineLimit(1)
+                        Text(target == nil ? "kcal eaten" : (over ? "kcal over" : "kcal left")).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                            .foregroundStyle(NunaPalette.textSecondary)
+                    }.padding(.horizontal, 24)
                 }
-                .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            } else {
-                nunaTrendsCap("Eaten")
-                Text(verbatim: nutFmt(eaten)).font(.nuna(size: 64, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(64)).foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
-                Text("kcal").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                sideFigure(offset == 0 ? (today.calories.map { nutFmt($0) } ?? "–") : "–", "Active burn").frame(maxWidth: .infinity)
             }
+            NavigationLink { NunaNutritionPlanView() } label: {
+                HStack(spacing: 6) {
+                    Text(target.map { LocalizedStringKey("Target \(nutFmt($0)) kcal") } ?? LocalizedStringKey("Set a plan")).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    Image(systemName: "chevron.right").font(.nuna(size: 11, weight: .bold))
+                }.foregroundStyle(NunaPalette.textSecondary).frame(height: 36)
+            }.buttonStyle(.plain)
         }
-        .frame(maxWidth: .infinity).padding(.vertical, 6)
+        .frame(maxWidth: .infinity).padding(.top, 4)
+    }
+
+    private func sideFigure(_ value: String, _ label: LocalizedStringKey) -> some View {
+        VStack(spacing: 4) {
+            Text(verbatim: value).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
+            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.7)
+        }
     }
 
     // MARK: Macros
 
-    private var macroRow: some View {
+    private var macroCard: some View {
         let m = eatenMacros
         let t = macroTargets
-        return HStack(spacing: 10) {
-            macroTile("Protein", eaten: m.p, goal: t?.proteinG, color: NunaPalette.charge)
-            macroTile("Carbs", eaten: m.c, goal: t?.carbsG, color: NunaPalette.effort)
-            macroTile("Fat", eaten: m.f, goal: t?.fatG, color: NunaPalette.warning)
+        return NunaCard(small: true, padding: EdgeInsets(top: 16, leading: 18, bottom: 16, trailing: 18)) {
+            HStack(alignment: .top, spacing: 16) {
+                macroColumn("Carbs", eaten: m.c, goal: t?.carbsG, color: NunaPalette.effort)
+                macroColumn("Protein", eaten: m.p, goal: t?.proteinG, color: NunaPalette.charge)
+                macroColumn("Fat", eaten: m.f, goal: t?.fatG, color: NunaPalette.warning)
+            }
         }
     }
 
-    private func macroTile(_ label: LocalizedStringKey, eaten g: Double, goal: Double?, color: Color) -> some View {
-        NunaCard(small: true, padding: EdgeInsets(top: 12, leading: 8, bottom: 12, trailing: 8)) {
-            VStack(spacing: 8) {
-                NunaRingGauge(fraction: goal.map { $0 > 0 ? g / $0 : 0 } ?? 0, color: color, size: 62, lineWidth: 7) { EmptyView() }
-                if let goal {
-                    let left = goal - g
-                    Text(verbatim: "\(nutFmt(abs(left))) g").font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(left >= 0 ? NunaPalette.textPrimary : NunaPalette.warning).lineLimit(1).minimumScaleFactor(0.7)
-                    Text(left >= 0 ? "left" : "over").font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                } else {
-                    Text(verbatim: "\(nutFmt(g)) g").font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
-                }
-                Text(label).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            }
-            .frame(maxWidth: .infinity)
+    private func macroColumn(_ label: LocalizedStringKey, eaten g: Double, goal: Double?, color: Color) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(label).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            NunaProgressBar(fraction: goal.map { $0 > 0 ? g / $0 : 0 } ?? 0, color: g > (goal ?? .infinity) ? NunaPalette.warning : color)
+            Text(verbatim: goal.map { "\(nutFmt(g))/\(nutFmt($0)) g" } ?? "\(nutFmt(g)) g").font(.nuna(size: 12.5, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
+                .lineLimit(1).minimumScaleFactor(0.7).textCase(nil)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    // MARK: Anya
+
+    /// An invitation to say what was eaten in plain words. It opens Add food on the Anya tab.
+    private var anyaPrompt: some View {
+        Button { addInAnya = true } label: {
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Tell Anya what you ate").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                Text("Describe a meal in your own words and she works out the calories and macros. You check it before it goes in the diary.")
+                    .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                HStack(spacing: 8) {
+                    Text("Add with Anya").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    Image(systemName: "arrow.right").font(.nuna(size: 13, weight: .bold))
+                }
+                .foregroundStyle(LinearGradient(colors: NunaAnyaWing.colors, startPoint: .leading, endPoint: .trailing))
+            }
+            .padding(18).frame(maxWidth: .infinity, alignment: .leading)
+            .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(LinearGradient(colors: NunaAnyaWing.colors, startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1.5))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .sheet(isPresented: $addInAnya) { NunaFoodAddSheet(day: dayKey, meal: NunaMeal.suggested(), anyaFirst: true).nunaSheetChrome(detents: [.large]) }
     }
 
     // MARK: Check-in
