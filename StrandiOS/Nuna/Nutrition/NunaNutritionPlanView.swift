@@ -20,6 +20,11 @@ struct NunaNutritionPlanView: View {
     @State private var weights: [NutritionMath.WeightPoint] = []
     @State private var maintenance: (kcal: Double, source: NunaFoodStore.MaintenanceSource)?
     @State private var showGoal = false
+    @EnvironmentObject private var coach: AICoachEngine
+    @AppStorage("noop.coachEnabled") private var coachEnabled = true
+    @State private var asking = false
+    @State private var suggestion: AnyaPlanSpec?
+    @State private var askError: String?
 
     private static let paces: [Double] = [-1, -0.75, -0.5, -0.25, 0, 0.25, 0.5]
     private var trendKg: Double? { NutritionMath.trend(weights).last?.kg }
@@ -34,6 +39,7 @@ struct NunaNutritionPlanView: View {
     var body: some View {
         NunaDetailScreen("Strategy") {
             planCard
+            if coachEnabled { anyaAsk }
             if hasPlan, targetKcal > 0 { weekCard; checkInCard }
             NunaExpandRow(title: "How this is worked out", subtitle: "", systemImage: "function",
                           text: "Your trend weight smooths each weigh-in so water and salt swings don't read as fat. What your body spends is worked out from what you ate and how the trend moved, at 7,700 kcal per kg, once there are two weeks of both; until then it comes from your profile. The target is that figure plus your pace. Protein follows your body weight, fat is a share of the calories and carbs are the rest. Everything is an estimate from your own numbers, not medical advice.")
@@ -119,6 +125,39 @@ struct NunaNutritionPlanView: View {
                 }
             }
         }
+    }
+
+    // MARK: Anya
+
+    private var anyaAsk: some View {
+        VStack(spacing: 10) {
+            Button { Task { await askAnya() } } label: {
+                HStack(spacing: 8) {
+                    if asking { ProgressView().tint(NunaPalette.textPrimary) } else { Image(systemName: "sparkles").font(.nuna(size: 15, weight: .bold)) }
+                    Text(asking ? "Working it out…" : "Ask Anya for a plan").font(.nuna(size: 16, weight: .bold))
+                }
+                .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 54)
+                .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(LinearGradient(colors: NunaAnyaWing.colors, startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1.5))
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain).disabled(asking || !coach.isConfigured).opacity(asking || !coach.isConfigured ? 0.5 : 1)
+            if !coach.isConfigured {
+                Text("Connect Anya in More to use this.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+            }
+            if let askError { Text(verbatim: askError).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.warning).fixedSize(horizontal: false, vertical: true).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) }
+            if let suggestion { NunaAnyaPlanCard(spec: suggestion, onDiscard: { self.suggestion = nil }).id(suggestion.targetKcal) }
+        }
+    }
+
+    private func askAnya() async {
+        asking = true; suggestion = nil; askError = nil
+        defer { asking = false }
+        let snapshot = await NunaNutritionSnapshot.build(repo: repo, profile: profile, includeLabBook: coach.includeOnDeviceSignals)
+        guard let reply = await coach.suggestNutritionPlan(snapshot: snapshot) else {
+            askError = String(localized: "Anya couldn't answer. Check her connection in More, then try again."); return
+        }
+        if let spec = AnyaActions.parse(reply).compactMap({ b -> AnyaPlanSpec? in if case .plan(let p) = b { return p } else { return nil } }).first { suggestion = spec }
+        else { askError = String(localized: "Anya didn't return a plan this time. Try again.") }
     }
 
     private func row<T: View>(_ label: LocalizedStringKey, @ViewBuilder trailing: () -> T) -> some View {

@@ -29,6 +29,7 @@ struct NunaNutritionView: View {
     @State private var weightKg: Double?
     @State private var addInAnya = false
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
+    @AppStorage(NunaNutritionPrefs.nudges) private var nudgesOn = true
 
     private var date: Date { Calendar.current.date(byAdding: .day, value: -offset, to: Date()) ?? Date() }
     private var dayKey: String { Repository.localDayKey(date) }
@@ -52,17 +53,17 @@ struct NunaNutritionView: View {
     }
 
     var body: some View {
-        NunaDetailScreen("Nutrition") {
+        NunaDetailScreen("Nutrition", trailing: AnyView(
+            NavigationLink { NunaNutritionSettingsView() } label: { NunaBareIcon("gearshape") }.accessibilityLabel(Text("Nutrition settings"))
+        )) {
             hero
             macroCard
             dayStepper
-            if coachEnabled { anyaPrompt }
+            if coachEnabled, nudgesOn { if let nudge { nudgeCard(nudge) } else { anyaPrompt } }
             if checkInDue, let checkIn { checkInCard(checkIn) }
             ForEach(NunaMeal.allCases) { mealCard($0) }
             if food.entries.isEmpty, let imported { importedCard(imported) }
             addButton
-            planLink
-            importCard
             caffeineCard
         }
         .sheet(item: $addMeal) { m in NunaFoodAddSheet(day: dayKey, meal: m).nunaSheetChrome(detents: [.large]) }
@@ -191,6 +192,61 @@ struct NunaNutritionView: View {
         }
         .buttonStyle(.plain)
         .sheet(isPresented: $addInAnya) { NunaFoodAddSheet(day: dayKey, meal: NunaMeal.suggested(), anyaFirst: true).nunaSheetChrome(detents: [.large]) }
+    }
+
+    // MARK: Proactive Anya
+
+    /// What Anya says unprompted: over the target, behind where the day should be, short on protein, or on track.
+    private var nudge: NutritionMath.Nudge? {
+        guard let target, let t = macroTargets else { return nil }
+        let hour = Calendar.current.component(.hour, from: Date())
+        return NutritionMath.nudge(eaten: eaten, target: target, proteinEaten: eatenMacros.p, proteinTarget: t.proteinG, hour: hour, isToday: offset == 0)
+    }
+
+    private func nudgeCard(_ n: NutritionMath.Nudge) -> some View {
+        let today = offset == 0
+        let line: String, detail: String
+        var canAdd = true
+        switch n {
+        case .over(let k):
+            line = today ? String(localized: "You're \(nutFmt(k)) kcal over today's target.") : String(localized: "That day ended \(nutFmt(k)) kcal over the target.")
+            detail = overDetail
+            canAdd = false
+        case .behind(let k):
+            line = today ? String(localized: "You've eaten \(nutFmt(eaten)) of \(nutFmt(target ?? 0)) kcal and the day is getting on.") : String(localized: "That day ended \(nutFmt(k)) kcal under the target.")
+            detail = today ? String(localized: "\(nutFmt(k)) kcal to go. A meal with protein would close most of it.") : String(localized: "A day under the target is not a problem by itself. The weekly check-in looks at the trend.")
+        case .proteinLow(let g):
+            line = String(localized: "Protein is \(nutFmt(g)) g short of your target.")
+            detail = String(localized: "The calories are there, but not the protein. A protein-rich food would close most of the gap.")
+        case .nothingLogged:
+            line = String(localized: "Nothing logged yet today.")
+            detail = String(localized: "Tell Anya what you ate and she logs it for you.")
+        case .onTrack:
+            line = String(localized: "You're right on your target today.")
+            detail = String(localized: "Calories and protein are where they should be.")
+            canAdd = false
+        }
+        let card: NunaAnyaCard = canAdd
+            ? NunaAnyaCard(verbatim: line, detail: detail, buttonTitle: "Add with Anya", onButton: { addInAnya = true }) { addInAnya = true }
+            : NunaAnyaCard(verbatim: line, detail: detail) { }
+        return card
+            .environment(\.nunaAnyaCardContext, "nutrition")
+            .sheet(isPresented: $addInAnya) { NunaFoodAddSheet(day: dayKey, meal: NunaMeal.suggested(), anyaFirst: true).nunaSheetChrome(detents: [.large]) }
+    }
+
+    /// Which macros ran over and which stayed under, and what a single day over means for the week.
+    private var overDetail: String {
+        let m = eatenMacros
+        var over: [String] = [], under: [String] = []
+        if let t = macroTargets {
+            for (name, eatenG, goal) in [(String(localized: "Carbs"), m.c, t.carbsG), (String(localized: "Protein"), m.p, t.proteinG), (String(localized: "Fat"), m.f, t.fatG)] {
+                if eatenG > goal * 1.05 { over.append(name) } else if eatenG < goal * 0.8 { under.append(name) }
+            }
+        }
+        var parts: [String] = []
+        if !over.isEmpty { parts.append(String(localized: "Over on \(over.joined(separator: ", "))") + (under.isEmpty ? "." : String(localized: ", under on \(under.joined(separator: ", "))."))) }
+        parts.append(String(localized: "One day over does not undo a week. The weekly check-in looks at the trend, not a single day."))
+        return parts.joined(separator: " ")
     }
 
     // MARK: Check-in

@@ -169,4 +169,48 @@ public enum NutritionMath {
         guard abs(rounded) >= 50 else { return nil }
         return CheckIn(actualKgPerWeek: perWeek, plannedKgPerWeek: plannedKgPerWeek, changeKcal: rounded, newTarget: max(floorKcal, currentTarget + rounded))
     }
+
+    // MARK: Proactive nudge
+
+    /// What Anya should say about a day's food without being asked.
+    public enum Nudge: Equatable, Sendable {
+        /// Past the target by this many kcal.
+        case over(kcal: Double)
+        /// Well short of where the day should be (today) or of the target (a past day), by this many kcal.
+        case behind(kcal: Double)
+        /// Plenty of calories but little protein, short by this many grams.
+        case proteinLow(grams: Double)
+        /// Nothing logged although the day is well along.
+        case nothingLogged
+        /// Within the target's reach late in the day.
+        case onTrack
+    }
+
+    /// The share of the day's target that should usually be eaten by `hour` (0 to 24); a rough shape of three meals and snacks.
+    static func expectedShare(hour: Int) -> Double {
+        switch hour {
+        case ..<11: return 0
+        case 11..<14: return 0.25
+        case 14..<18: return 0.45
+        case 18..<21: return 0.7
+        default: return 0.9
+        }
+    }
+
+    /// The one thing worth saying about a day, or nil when there is nothing to say. For today it follows the clock; for a finished day (`isToday` false)
+    /// it judges the whole day. Calories first, then protein.
+    public static func nudge(eaten: Double, target: Double, proteinEaten: Double?, proteinTarget: Double?, hour: Int, isToday: Bool) -> Nudge? {
+        guard target > 0, eaten.isFinite else { return nil }
+        let h = isToday ? min(max(hour, 0), 24) : 24
+        if eaten <= 0 { return isToday && h >= 12 ? .nothingLogged : nil }
+        if eaten > target * (isToday ? 1.05 : 1.1) { return .over(kcal: (eaten - target).rounded()) }
+        if isToday {
+            if h >= 14, eaten < target * (expectedShare(hour: h) - 0.15) { return .behind(kcal: (target - eaten).rounded()) }
+        } else if eaten < target * 0.8 {
+            return .behind(kcal: (target - eaten).rounded())
+        }
+        if h >= 17, let pt = proteinTarget, pt > 0, let pe = proteinEaten, pe < pt * 0.6 { return .proteinLow(grams: (pt - pe).rounded()) }
+        if h >= 19, eaten >= target * 0.9 { return .onTrack }
+        return nil
+    }
 }

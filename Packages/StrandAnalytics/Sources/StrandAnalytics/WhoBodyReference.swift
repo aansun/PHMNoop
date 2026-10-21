@@ -28,3 +28,33 @@ public enum WhoBodyReference {
         }
     }
 }
+
+/// The WHO references a nutrition plan is measured against, each with where it comes from. Population references for healthy adults, not a diagnosis.
+public enum WhoNutritionReference {
+    /// WHO adult BMI classification (WHO 2000; the 18.5 and 25 cut-offs are unchanged since).
+    public enum BmiClass: String, Sendable { case underweight, normal, overweight, obese }
+
+    public static func bmiClass(_ bmi: Double) -> BmiClass {
+        bmi < 18.5 ? .underweight : (bmi < 25 ? .normal : (bmi < 30 ? .overweight : .obese))
+    }
+
+    /// Safe level of protein intake for adults, g per kg of body weight a day (WHO/FAO/UNU 2007).
+    public static let proteinSafeGPerKg = 0.83
+    /// Total fat, share of energy (WHO/FAO 2008 fats and fatty acids consultation).
+    public static let fatShareRange = 0.20...0.35
+    /// Carbohydrate, share of energy (WHO Technical Report 916, 2003).
+    public static let carbShareRange = 0.55...0.75
+
+    public struct Shares: Equatable, Sendable {
+        public var protein: Double
+        public var carbs: Double
+        public var fat: Double
+    }
+
+    /// Where the energy comes from in a plan (4 / 4 / 9 kcal per gram), as shares of the calories those macros add up to. nil when they add up to nothing.
+    public static func shares(proteinG: Double, carbsG: Double, fatG: Double) -> Shares? {
+        let total = proteinG * 4 + carbsG * 4 + fatG * 9
+        guard total > 0 else { return nil }
+        return Shares(protein: proteinG * 4 / total, carbs: carbsG * 4 / total, fat: fatG * 9 / total)
+    }
+}

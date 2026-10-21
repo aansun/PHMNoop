@@ -330,6 +330,7 @@ targets:
         # a typed question already uses.
         NSSpeechRecognitionUsageDescription: "PHMN transcribes your question on-device so you can ask the coach out loud instead of typing. Audio never leaves your iPhone."
         NSMicrophoneUsageDescription: "PHMN uses the microphone to let you ask the coach a question by voice. The audio is transcribed on-device and never leaves your iPhone."
+        NSCameraUsageDescription: "PHMN uses the camera to photograph a meal so Anya can estimate its calories. The photo is used only for that, and only goes to the Anya provider you chose when you ask her to work it out."
         # #187: the opt-in AI Coach's "Custom (OpenAI-compatible)" provider can point at a LOCAL LLM on
         # the LAN (Ollama / LM Studio at http://192.168.x.x:11434). ATS blocks cleartext by default;
         # NSAllowsLocalNetworking exempts loopback/.local/private-LAN hosts ONLY — public HTTPS endpoints
