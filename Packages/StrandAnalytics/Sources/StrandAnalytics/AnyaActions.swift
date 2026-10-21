@@ -63,6 +63,9 @@ public struct AnyaFoodItem: Equatable, Sendable {
     public var proteinG: Double?
     public var carbsG: Double?
     public var fatG: Double?
+    public init(name: String, amount: String? = nil, kcal: Double, proteinG: Double? = nil, carbsG: Double? = nil, fatG: Double? = nil) {
+        self.name = name; self.amount = amount; self.kcal = kcal; self.proteinG = proteinG; self.carbsG = carbsG; self.fatG = fatG
+    }
 }
 
 /// A meal to check before it goes in the diary.
@@ -72,6 +75,7 @@ public struct AnyaFoodSpec: Equatable, Sendable {
     /// `yyyy-MM-dd`, only when the person named a day.
     public var day: String?
     public var items: [AnyaFoodItem]
+    public init(meal: String? = nil, day: String? = nil, items: [AnyaFoodItem]) { self.meal = meal; self.day = day; self.items = items }
 }
 
 /// Results for the person to check before anything is saved to the Lab Book. `day` is the day of the whole report, used for a result without its own.

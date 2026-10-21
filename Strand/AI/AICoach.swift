@@ -1278,6 +1278,18 @@ final class AICoachEngine: ObservableObject {
         return clean.isEmpty ? nil : clean
     }
 
+    /// Estimates the calories and macros of a meal the person described. Only their description goes to the provider, none of their health data, and nothing
+    /// enters the Coach transcript. nil when Anya is off or not connected, or the provider did not answer.
+    func estimateFood(_ description: String) async -> String? {
+        guard CoachBriefScheduler.coachMasterEnabled, isConfigured, dataConsent, let key = resolvedKey else { return nil }
+        let text = description.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return nil }
+        let prompt = AnyaActions.foodInstruction + "\n\nWhat the person ate:\n" + String(text.prefix(600))
+        guard let reply = try? await callProvider(key: key, messages: [(.user, prompt)]) else { return nil }
+        let clean = reply.trimmingCharacters(in: .whitespacesAndNewlines)
+        return clean.isEmpty ? nil : clean
+    }
+
     /// Answer a question inside the compact Anya notice without touching the persistent Coach transcript.
     /// The notice, page context and turns supplied by the caller exist only for this sheet session.
     func answerContextualMessage(pageContext: String,

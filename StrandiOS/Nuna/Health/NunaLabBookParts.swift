@@ -168,12 +168,14 @@ enum NunaLabStore {
         guard !drafts.isEmpty, let store = await repo.storeHandle() else { return }
         _ = try? await store.upsertLabMarkers(drafts)
         await repo.refresh()
+        NunaDataChanges.shared.bump()
     }
 
     static func delete(ids: [String], repo: Repository) async {
         guard let store = await repo.storeHandle() else { return }
         for id in ids { _ = try? await store.deleteLabMarker(id: id) }
         await repo.refresh()
+        NunaDataChanges.shared.bump()
     }
 
     /// Stored rows for parsed readings. Noon of each reading's own day, so bringing the same reading in again updates it in place instead of adding a copy.
@@ -211,6 +213,7 @@ enum NunaLabStore {
             guard let store = await repo.storeHandle() else { return (String(localized: "Couldn't open the local store."), true) }
             try await store.upsertLabMarkers(storedRows(result.rows, source: sourceId, deviceId: repo.deviceId))
             await repo.refresh()
+            NunaDataChanges.shared.bump()
             var msg = String(localized: "Imported \(result.importedReadings) readings (\(result.distinctMarkers) markers)")
             if let a = result.earliestDay, let b = result.latestDay, a != b { msg += " · \(a)-\(b)" }
             if result.skippedRows > 0 {
