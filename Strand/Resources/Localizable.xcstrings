@@ -129249,6 +129249,12 @@
     },
     "Outside range": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Di luar rentang"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
