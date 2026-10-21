@@ -44,6 +44,8 @@ enum NunaMeal: String, CaseIterable, Identifiable {
 /// What the person set in Strategy: the pace they want, how protein and fat are worked out, and the daily target that came of it.
 enum NunaNutritionPrefs {
     static let hasPlan = "nuna.nutrition.hasPlan"
+    /// Whether Anya speaks up on the Nutrition page when the day is over or short of the target. On by default.
+    static let nudges = "nuna.nutrition.nudges"
     /// Kg of body weight per week, negative to lose.
     static let paceKgPerWeek = "nuna.nutrition.paceKgPerWeek"
     static let proteinPerKg = "nuna.nutrition.proteinPerKg"

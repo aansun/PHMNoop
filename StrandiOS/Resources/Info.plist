@@ -62,6 +62,8 @@
 	</dict>
 	<key>NSBluetoothAlwaysUsageDescription</key>
 	<string>PHMN connects directly to your WHOOP strap over Bluetooth to read heart rate, R-R intervals, battery, and sensor data locally on your iPhone. Nothing leaves your device.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>PHMN uses the camera to photograph a meal so Anya can estimate its calories. The photo is used only for that, and only goes to the Anya provider you chose when you ask her to work it out.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>PHMN reads your own Apple Health data on-device to compute recovery, strain, and sleep. Nothing leaves your device.</string>
 	<key>NSHealthUpdateUsageDescription</key>

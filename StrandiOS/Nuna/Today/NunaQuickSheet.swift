@@ -22,6 +22,10 @@ struct NunaQuickSheet: View {
     @State private var mePanel: NunaMeRoute?
     @State private var workoutPanel: NunaWorkoutRoute?
     @State private var breathing = false
+    @State private var addingFood = false
+    @State private var foodToday = NunaFoodDay()
+    @AppStorage(NunaNutritionPrefs.hasPlan) private var hasPlan = false
+    @AppStorage(NunaNutritionPrefs.targetKcal) private var targetKcal = 0.0
 
     private var actions: [NunaQuickAction] {
         let ids = NunaQuickActions.decode(actionsRaw.isEmpty ? NunaQuickActions.encode(NunaQuickActions.defaultIDs) : actionsRaw)
@@ -44,12 +48,16 @@ struct NunaQuickSheet: View {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 3), spacing: 14) {
                 ForEach(actions) { a in tile(LocalizedStringKey(a.title), a.icon, nil) { run(a) } }
             }
+            foodRow
             if hydrationEnabled { waterRow }
             Spacer(minLength: 0)
         }
         .padding(.horizontal, NunaSpacing.screenH)
         .preferredColorScheme(NunaTheme.colorScheme)
-        .task { await reloadWater() }
+        .task { await reloadWater(); foodToday = await NunaFoodStore.day(Repository.localDayKey(Date()), repo: repo) }
+        .sheet(isPresented: $addingFood, onDismiss: { Task { foodToday = await NunaFoodStore.day(Repository.localDayKey(Date()), repo: repo) } }) {
+            NunaFoodAddSheet(day: Repository.localDayKey(Date()), meal: NunaMeal.suggested()).nunaSheetChrome(detents: [.large])
+        }
         .sheet(isPresented: $editing) { NunaQuickActionsEditor(raw: $actionsRaw).nunaSheetChrome(detents: [.large]) }
         .sheet(isPresented: $breathing) {
             NavigationStack { NunaBreathView().toolbar(.hidden, for: .navigationBar) }
@@ -68,8 +76,26 @@ struct NunaQuickSheet: View {
         case .today(let r): todayPanel = r
         case .me(let r): mePanel = r
         case .workout(let r): workoutPanel = r
+        case .foodAdd: addingFood = true
         case .metric(let key):
             if let m = MetricCatalog.metric(key: key, source: "my-whoop") { todayPanel = .metric(m) }
+        }
+    }
+
+    /// Today's food next to the water: what has been eaten against the target, and a button that opens Add food.
+    private var foodRow: some View {
+        NunaAnyaPlain(padding: EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0)) {
+            HStack(spacing: 12) {
+                NunaIconTile("fork.knife", tint: NunaPalette.charge)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Food today").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: hasPlan && targetKcal > 0 ? String(localized: "\(nutFmt(foodToday.kcal)) of \(nutFmt(targetKcal)) kcal") : String(localized: "\(nutFmt(foodToday.kcal)) kcal"))
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                }
+                Spacer(minLength: 4)
+                Button { addingFood = true } label: { Text("Add food") }
+                    .buttonStyle(.nuna(.primary, height: 44)).fixedSize()
+            }
         }
     }
 

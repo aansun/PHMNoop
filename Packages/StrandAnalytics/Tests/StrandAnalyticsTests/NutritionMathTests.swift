@@ -97,3 +97,71 @@ final class AnyaFoodBlockTests: XCTestCase {
         XCTAssertTrue(AnyaActions.instruction.contains("anya-food")); XCTAssertTrue(AnyaActions.foodInstruction.contains("anya-food"))
     }
 }
+
+final class AnyaPlanBlockTests: XCTestCase {
+    func testPlanParsesAndIsClamped() {
+        let r = "Here is a plan.\n```anya-plan\n{\"targetKcal\":900,\"paceKgPerWeek\":-3,\"proteinPerKg\":5,\"fatShare\":0.9,\"reasons\":[\"Weight 75 kg\",\"\"],\"cautions\":[\"a\",\"b\",\"c\",\"d\"]}\n```"
+        guard case .plan(let p)? = AnyaActions.parse(r).last else { return XCTFail() }
+        XCTAssertEqual(p.targetKcal, 1200); XCTAssertEqual(p.paceKgPerWeek, -1); XCTAssertEqual(p.proteinPerKg, 2.4); XCTAssertEqual(p.fatShare ?? 0, 0.40, accuracy: 1e-9)
+        XCTAssertEqual(p.reasons, ["Weight 75 kg"]); XCTAssertEqual(p.cautions.count, 3)
+        XCTAssertEqual(AnyaActions.proseOnly(r), "Here is a plan.")
+    }
+
+    func testRoundingAndMissingFields() {
+        guard case .plan(let p)? = AnyaActions.parse("```anya-plan\n{\"targetKcal\":\"2153.4\",\"paceKgPerWeek\":-0.43,\"proteinPerKg\":1.84}\n```").first else { return XCTFail() }
+        XCTAssertEqual(p.targetKcal, 2153); XCTAssertEqual(p.paceKgPerWeek ?? 0, -0.45, accuracy: 1e-9); XCTAssertEqual(p.proteinPerKg ?? 0, 1.8, accuracy: 1e-9)
+        XCTAssertNil(p.fatShare)
+        XCTAssertTrue(AnyaActions.parse("```anya-plan\n{\"paceKgPerWeek\":-0.4}\n```").isEmpty)   // no target, no card
+        XCTAssertTrue(AnyaActions.instruction.contains("anya-plan")); XCTAssertTrue(AnyaActions.planInstruction.contains("anya-plan"))
+    }
+}
+
+final class NutritionNudgeTests: XCTestCase {
+    private func n(_ eaten: Double, hour: Int, today: Bool = true, p: Double? = nil, pt: Double? = 135) -> NutritionMath.Nudge? {
+        NutritionMath.nudge(eaten: eaten, target: 2000, proteinEaten: p, proteinTarget: pt, hour: hour, isToday: today)
+    }
+
+    func testQuietEarlyInTheDay() {
+        XCTAssertNil(n(0, hour: 8)); XCTAssertNil(n(300, hour: 9))
+    }
+
+    func testNothingLoggedByNoon() { XCTAssertEqual(n(0, hour: 13), .nothingLogged); XCTAssertNil(n(0, hour: 13, today: false)) }
+
+    func testOverTheTarget() {
+        XCTAssertEqual(n(2300, hour: 20), .over(kcal: 300))
+        XCTAssertNil(n(2080, hour: 12))            // 4% over is still fine
+        XCTAssertEqual(n(2300, hour: 12), .over(kcal: 300))   // over is over, even at noon
+        XCTAssertEqual(NutritionMath.nudge(eaten: 2150, target: 2000, proteinEaten: nil, proteinTarget: nil, hour: 9, isToday: false), .onTrack)   // 7.5% over a past day is still on track
+        XCTAssertEqual(NutritionMath.nudge(eaten: 2300, target: 2000, proteinEaten: nil, proteinTarget: nil, hour: 9, isToday: false), .over(kcal: 300))
+    }
+
+    func testBehindFollowsTheClock() {
+        XCTAssertNil(n(500, hour: 12))
+        XCTAssertEqual(n(300, hour: 15), .behind(kcal: 1700))
+        XCTAssertNil(n(700, hour: 15))
+        XCTAssertEqual(n(900, hour: 19), .behind(kcal: 1100))
+        XCTAssertEqual(n(1300, hour: 22), .behind(kcal: 700))
+        XCTAssertEqual(n(1500, hour: 9, today: false), .behind(kcal: 500))
+        XCTAssertNil(n(1700, hour: 9, today: false))
+    }
+
+    func testProteinThenOnTrack() {
+        XCTAssertEqual(n(1500, hour: 18, p: 40), .proteinLow(grams: 95))
+        XCTAssertNil(n(1500, hour: 18, p: 100))
+        XCTAssertNil(n(1500, hour: 16, p: 40))     // too early to worry about protein
+        XCTAssertEqual(n(1950, hour: 20, p: 130), .onTrack)
+        XCTAssertNil(n(1950, hour: 15, p: 130))
+        XCTAssertNil(NutritionMath.nudge(eaten: 1000, target: 0, proteinEaten: nil, proteinTarget: nil, hour: 20, isToday: true))
+    }
+}
+
+final class AnyaFoodFallbackTests: XCTestCase {
+    func testFencedAndBareJsonBothReadAsFood() {
+        let items = "{\"meal\":\"lunch\",\"items\":[{\"name\":\"Rice\",\"kcal\":200,\"carbsG\":45}]}"
+        XCTAssertEqual(AnyaActions.parseFood(from: "About 200 kcal.\n```anya-food\n\(items)\n```")?.items.first?.name, "Rice")
+        XCTAssertEqual(AnyaActions.parseFood(from: "Here you go:\n```json\n\(items)\n```")?.items.first?.name, "Rice")
+        XCTAssertEqual(AnyaActions.parseFood(from: "Estimate: \(items) done")?.meal, "lunch")
+        XCTAssertNil(AnyaActions.parseFood(from: "I can't tell what that is."))
+        XCTAssertNil(AnyaActions.parseFood(from: "{\"other\":1}"))
+    }
+}

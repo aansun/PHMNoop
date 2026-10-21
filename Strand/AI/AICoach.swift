@@ -1278,16 +1278,50 @@ final class AICoachEngine: ObservableObject {
         return clean.isEmpty ? nil : clean
     }
 
-    /// Estimates the calories and macros of a meal the person described. Only their description goes to the provider, none of their health data, and nothing
-    /// enters the Coach transcript. nil when Anya is off or not connected, or the provider did not answer.
-    func estimateFood(_ description: String) async -> String? {
+    /// Anya's suggestion for the nutrition plan. The whole health context goes first (profile, sleep, recovery, training and, when the person shares them,
+    /// the Lab Book and patterns), then the nutrition snapshot the screen put together. Nothing is applied: the reply carries a plan block the person reads and applies.
+    /// nil when Anya is off or not connected, or the provider did not answer.
+    func suggestNutritionPlan(snapshot: String) async -> String? {
         guard CoachBriefScheduler.coachMasterEnabled, isConfigured, dataConsent, let key = resolvedKey else { return nil }
-        let text = description.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !text.isEmpty else { return nil }
-        let prompt = AnyaActions.foodInstruction + "\n\nWhat the person ate:\n" + String(text.prefix(600))
+        var prompt = await buildFullContext()
+        prompt += "\n\n---\n\n" + AnyaActions.planInstruction + "\n\nNUTRITION SNAPSHOT:\n" + snapshot
         guard let reply = try? await callProvider(key: key, messages: [(.user, prompt)]) else { return nil }
         let clean = reply.trimmingCharacters(in: .whitespacesAndNewlines)
         return clean.isEmpty ? nil : clean
+    }
+
+    /// Estimates the calories and macros of a meal the person described. Only their description goes to the provider, none of their health data, and nothing
+    /// enters the Coach transcript. nil when Anya is off or not connected, or the provider did not answer.
+    func estimateFood(_ description: String, imageBase64: String? = nil) async -> String? {
+        guard CoachBriefScheduler.coachMasterEnabled, isConfigured, dataConsent, let key = resolvedKey else { return nil }
+        let text = description.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty || imageBase64 != nil else { return nil }
+        var prompt = AnyaActions.foodInstruction + "\n\nWhat the person ate:\n" + (text.isEmpty ? "(see the photo)" : String(text.prefix(600)))
+        if imageBase64 != nil { prompt += "\n\nA photo of the meal is attached. Estimate each item you can see at the portion shown, and use the description for anything the photo does not show." }
+        if let imageBase64, supportsImages {
+            var reply = ""
+            do {
+                try await provider.client.streamWithImage(key: key, model: model, systemPrompt: systemPrompt, messages: [(.user, prompt)], inlineImage: imageBase64, session: session) { reply += $0 }
+            } catch { return nil }
+            let clean = reply.trimmingCharacters(in: .whitespacesAndNewlines)
+            return clean.isEmpty ? nil : clean
+        }
+        guard let reply = try? await callProvider(key: key, messages: [(.user, prompt)]) else { return nil }
+        let clean = reply.trimmingCharacters(in: .whitespacesAndNewlines)
+        return clean.isEmpty ? nil : clean
+    }
+
+    /// Whether the chosen provider can look at a photo. Apple Intelligence on the device and a Custom server cannot, so a photo is read on the phone for food
+    /// names instead and the person confirms them as text.
+    var supportsImages: Bool {
+        switch provider {
+        case .gemini, .anthropic: return true
+        case .openAI: return model.trimmingCharacters(in: .whitespacesAndNewlines).lowercased().hasPrefix("gpt-5")
+        #if os(iOS)
+        case .chatGPT: return true
+        #endif
+        default: return false
+        }
     }
 
     /// Answer a question inside the compact Anya notice without touching the persistent Coach transcript.

@@ -76,6 +76,43 @@ struct AnthropicClient: AIProviderClient {
         }
     }
 
+    /// Stream with an optional inline image (base64 PNG): the last user turn becomes a text block plus an image block.
+    func streamWithImage(
+        key: String,
+        model: String,
+        systemPrompt: String,
+        messages: [(role: ChatMessage.Role, content: String)],
+        inlineImage: String?,
+        session: URLSession,
+        onDelta: (String) -> Void
+    ) async throws {
+        guard let inlineImage, !inlineImage.isEmpty else {
+            try await stream(key: key, model: model, systemPrompt: systemPrompt, messages: messages, session: session, onDelta: onDelta)
+            return
+        }
+        var wire: [[String: Any]] = []
+        for (i, m) in messages.enumerated() {
+            if i == messages.count - 1, m.role == .user {
+                wire.append(["role": "user", "content": [
+                    ["type": "image", "source": ["type": "base64", "media_type": "image/png", "data": inlineImage]],
+                    ["type": "text", "text": m.content],
+                ]])
+            } else {
+                wire.append(["role": m.role.rawValue, "content": m.content])
+            }
+        }
+        let body: [String: Any] = ["model": model, "max_tokens": 4096, "system": systemPrompt, "messages": wire, "stream": true]
+        var req = URLRequest(url: AIProvider.anthropic.endpoint)
+        req.httpMethod = "POST"
+        req.setValue(key, forHTTPHeaderField: "x-api-key")
+        req.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+        req.setValue("application/json", forHTTPHeaderField: "content-type")
+        req.httpBody = try JSONSerialization.data(withJSONObject: body)
+        try await performStreamingRequest(req, session: session) { payload in
+            if let delta = SseDeltas.anthropicDelta(payload) { onDelta(delta) }
+        }
+    }
+
     func fetchModels(key: String, session: URLSession) async throws -> [String] {
         var req = URLRequest(url: AIProvider.anthropic.modelsEndpoint)
         req.httpMethod = "GET"

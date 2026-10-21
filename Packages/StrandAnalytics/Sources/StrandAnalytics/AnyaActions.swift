@@ -1,9 +1,9 @@
 import Foundation
 
-// AnyaActions.swift — what Anya can hand back besides prose: a chart, a gym program, a workout, lab results and meals to review.
+// AnyaActions.swift — what Anya can hand back besides prose: a chart, a gym program, a workout, lab results, meals and a nutrition plan to review.
 //
 // PURE and unit-tested. The provider is told (see `instruction`) to put each such item in a fenced block tagged
-// `anya-chart`, `anya-program`, `anya-workout`, `anya-lab` or `anya-food` holding a small JSON object. The app parses them out of the reply and draws
+// `anya-chart`, `anya-program`, `anya-workout`, `anya-lab`, `anya-food` or `anya-plan` holding a small JSON object. The app parses them out of the reply and draws
 // native cards. A chart names a metric and a window, never numbers: the app draws it from the readings stored on the phone, so
 // a chart can never show a figure the model made up. Everything is clamped to sane ranges; a block that does not parse or fails
 // validation falls back to plain text and is never executed.
@@ -78,6 +78,22 @@ public struct AnyaFoodSpec: Equatable, Sendable {
     public init(meal: String? = nil, day: String? = nil, items: [AnyaFoodItem]) { self.meal = meal; self.day = day; self.items = items }
 }
 
+/// A nutrition plan Anya worked out from the person's own data, for them to read and apply. Every number is clamped here, so a reply can never
+/// set a target outside what the app allows.
+public struct AnyaPlanSpec: Equatable, Sendable {
+    public var targetKcal: Double
+    /// Kg of body weight per week, negative to lose.
+    public var paceKgPerWeek: Double?
+    public var proteinPerKg: Double?
+    public var fatShare: Double?
+    /// A few sentences on how the plan follows from the person's data, naming the data used and, where relevant, the WHO reference it is measured against.
+    public var explanation: String?
+    /// Why, one line each, pointing at the data the plan rests on.
+    public var reasons: [String]
+    /// What to watch or take to a clinician, one line each.
+    public var cautions: [String]
+}
+
 /// Results for the person to check before anything is saved to the Lab Book. `day` is the day of the whole report, used for a result without its own.
 public struct AnyaLabSpec: Equatable, Sendable {
     public var title: String?
@@ -92,6 +108,7 @@ public enum AnyaBlock: Equatable, Sendable {
     case workout(AnyaWorkoutSpec)
     case lab(AnyaLabSpec)
     case food(AnyaFoodSpec)
+    case plan(AnyaPlanSpec)
 }
 
 public enum AnyaActions {
@@ -132,7 +149,30 @@ public enum AnyaActions {
     {"meal":"lunch","items":[{"name":"Nasi goreng","amount":"1 plate","kcal":520,"proteinG":14,"carbsG":68,"fatG":21},{"name":"Fried egg","amount":"1","kcal":90,"proteinG":6,"carbsG":0,"fatG":7}]}
     ```
     meal is breakfast, lunch, dinner or snack, only when said or clear from the time; day is yyyy-MM-dd, only when the person names one; up to 20 items; kcal is per item as eaten, macros in grams.
+    NUTRITION PLAN: When the person asks you to set or adjust their nutrition targets, answer with one short line of prose AND one block, working only from the data above (profile, weight, \
+    sleep, recovery, training, food diary and, when shown, the Lab Book values with the ranges from their own reports). Say in reasons which of that data each choice rests on. Never diagnose; \
+    when a value is outside its own report range or the data is thin, say so in cautions and suggest talking to their clinician.
+    ```anya-plan
+    {"targetKcal":2150,"paceKgPerWeek":-0.4,"proteinPerKg":1.8,"fatShare":0.28,"reasons":["Weight 75 kg trending down 0.2 kg a week"],"cautions":["Your ferritin is below its report range; ask your clinician before cutting calories further"]}
+    ```
+    targetKcal 1200 to 4500, paceKgPerWeek -1 to 0.5, proteinPerKg 0.8 to 2.4, fatShare 0.20 to 0.40; the app lets the person apply it.
     Keep the prose short and put the details in the block.
+    """
+
+    /// What Anya is told when the Strategy screen asks her for a plan. The person's data comes before it.
+    public static let planInstruction = """
+    Work out a daily nutrition plan for this person, using only the data above and the NUTRITION SNAPSHOT below: profile, weight trend, food diary, sleep, recovery, training and, when present, \
+    the Lab Book values with the ranges from their own reports. Reply with ONE short line and ONE fenced block, exactly as below, valid JSON, no comments. \
+    explanation: 3 to 6 sentences, in plain words, saying how you got to the target, pace and macros: name the actual figures you used (weight, trend, sleep, recovery, training load, intake, any Lab Book value) \
+    and, where it helps, measure the choice against these WHO references and no others: healthy adult BMI 18.5 to 24.9; protein safe level 0.83 g per kg a day; total fat 20 to 35 percent of energy; \
+    carbohydrate 55 to 75 percent of energy; free sugars under 10 percent of energy; salt under 5 g a day. Say plainly when the person's own situation (training, goal, Lab Book) is why you go beyond a reference. \
+    reasons: up to 5 short lines, one per data point used. Never diagnose and never call a value normal or abnormal yourself, only say where it sits against the range on their own report; \
+    if a Lab Book value is outside its report range, or the data is thin, say so in cautions (up to 3 short lines) and suggest talking to their clinician. \
+    Keep the target at or above 1200 kcal, the pace within -1 to 0.5 kg a week and protein between 0.8 and 2.4 g per kg (a kidney marker outside its range means keeping protein modest); \
+    when the person has a goal weight, choose the pace that reaches it in a reasonable time without going past those limits, and when they are already at it, choose maintenance.
+    ```anya-plan
+    {"targetKcal":2150,"paceKgPerWeek":-0.4,"proteinPerKg":1.8,"fatShare":0.28,"explanation":"...","reasons":["..."],"cautions":["..."]}
+    ```
     """
 
     /// What Anya is told when the person describes a meal inside the Add food sheet: only this, with none of their health data.
@@ -240,6 +280,30 @@ public enum AnyaActions {
         return AnyaFoodSpec(meal: ["breakfast", "lunch", "dinner", "snack"].contains(meal ?? "") ? meal : nil, day: day(o["day"]), items: items)
     }
 
+    static func plan(_ o: [String: Any]) -> AnyaPlanSpec? {
+        guard let kcal = double(o["targetKcal"]), kcal.isFinite else { return nil }
+        func lines(_ any: Any?, _ cap: Int) -> [String] { ((any as? [Any]) ?? []).compactMap { text($0, max: 160) }.prefix(cap).map { $0 } }
+        func clampD(_ v: Double?, _ lo: Double, _ hi: Double, step: Double) -> Double? {
+            v.map { (((min(max($0, lo), hi)) / step).rounded() * step * 10_000).rounded() / 10_000 }
+        }
+        return AnyaPlanSpec(targetKcal: min(max(kcal, 1200), 4500).rounded(),
+                            paceKgPerWeek: clampD(double(o["paceKgPerWeek"]), -1, 0.5, step: 0.05),
+                            proteinPerKg: clampD(double(o["proteinPerKg"]), 0.8, 2.4, step: 0.1),
+                            fatShare: clampD(double(o["fatShare"]), 0.20, 0.40, step: 0.01),
+                            explanation: text(o["explanation"], max: 900),
+                            reasons: lines(o["reasons"], 5), cautions: lines(o["cautions"], 3))
+    }
+
+    /// The meal in a reply, tolerant of small models: the `anya-food` block when it is there, else the first JSON object in the text (in a ```json fence or bare)
+    /// that carries an `items` list.
+    public static func parseFood(from reply: String) -> AnyaFoodSpec? {
+        for b in parse(reply) { if case .food(let f) = b { return f } }
+        guard let open = reply.firstIndex(of: "{"), let close = reply.lastIndex(of: "}"), open < close,
+              let data = String(reply[open...close]).data(using: .utf8),
+              let obj = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any], obj["items"] != nil else { return nil }
+        return food(obj)
+    }
+
     // MARK: Parsing a reply
 
     /// Splits a reply into prose and action blocks, in order. An action fence that is still open (a reply that is streaming) or
@@ -269,6 +333,7 @@ public enum AnyaActions {
             case "workout": if let w = workout(obj) { out.append(.workout(w)) }
             case "lab": if let l = lab(obj) { out.append(.lab(l)) }
             case "food": if let f = food(obj) { out.append(.food(f)) }
+            case "plan": if let p = plan(obj) { out.append(.plan(p)) }
             default: break
             }
         }
