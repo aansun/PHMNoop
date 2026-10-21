@@ -148,28 +148,30 @@ struct NunaLabBookView: View {
         let value = latest?.value
         return NavigationLink { NunaLabMarkerHost(markerKey: m.key, isBody: m.category == .bodyMeasurement) } label: {
             NunaCard(small: true) {
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack(alignment: .firstTextBaseline, spacing: 8) {
-                        Text(verbatim: m.name).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).multilineTextAlignment(.leading)
-                        Spacer(minLength: 6)
-                        if let s = m.latestStatus { NunaChip(NunaLabRange.word(s), color: NunaLabRange.tint(s)) }
-                    }
-                    HStack(alignment: .firstTextBaseline, spacing: 5) {
-                        Text(verbatim: latest.map(m.text) ?? "—").font(.nuna(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
-                        Text(verbatim: m.unit).font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .top, spacing: 8) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(verbatim: m.name).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).multilineTextAlignment(.leading)
+                            Text(verbatim: latest.map { LabBookFormat.day($0.takenAt) + " · " + (m.readings.count == 1 ? String(localized: "1 reading") : String(localized: "\(m.readings.count) readings")) } ?? "")
+                                .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
+                        }
+                        Spacer(minLength: 4)
+                        if let s = m.latestStatus { NunaChip(NunaLabRange.word(s), color: NunaLabRange.tint(s)).fixedSize() }
                         if let c = m.change, abs(c.delta) > 0.000_001 {
                             Text(verbatim: (c.delta > 0 ? "▲ " : "▼ ") + LabBookFormat.value(abs(c.delta), key: m.key))
-                                .font(.nuna(size: 12.5, weight: .bold)).foregroundStyle(m.changeTone(c.delta))
+                                .font(.nuna(size: 13, weight: .heavy)).foregroundStyle(m.changeTone(c.delta)).fixedSize().padding(.top, 6)
                         }
+                    }
+                    HStack(alignment: .firstTextBaseline, spacing: 5) {
+                        Text(verbatim: latest.map(m.text) ?? "—").font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
+                        Text(verbatim: m.unit).font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                         Spacer(minLength: 4)
                         Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                     }
                     if let r = m.range, let v = value {
                         NunaLabValueBar(position: Self.position(v, r), valueText: latest.map(m.text) ?? "", tint: m.latestStatus.map(NunaLabRange.tint) ?? NunaPalette.textSecondary,
-                                        lowText: LabBookFormat.value(r.low, key: m.key), highText: LabBookFormat.value(r.high, key: m.key))
+                                        rangeText: LabBookFormat.value(r.low, key: m.key) + "–" + LabBookFormat.value(r.high, key: m.key))
                     }
-                    Text(verbatim: latest.map { String(localized: "last taken \(LabBookFormat.day($0.takenAt))") + " · " + (m.readings.count == 1 ? String(localized: "1 reading") : String(localized: "\(m.readings.count) readings")) } ?? "")
-                        .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
         }.buttonStyle(.plain)
@@ -522,14 +524,13 @@ struct NunaMarkerDetailView: View {
 
 // MARK: - Value on a hatched bar
 
-/// The latest reading on a bar: a blue hatched run up to a pill with the value, and a white tick at each end of the range from the report with its number
-/// underneath. The middle of the bar is the range, the sides what is below and above it.
+/// The latest reading on a bar: a blue hatched run up to a pill with the value, and a white tick at each end of the range from the report, with the
+/// range itself written between two small marks underneath. The middle of the bar is the range, the sides what is below and above it.
 struct NunaLabValueBar: View {
     let position: Double
     let valueText: String
     let tint: Color
-    let lowText: String
-    let highText: String
+    let rangeText: String
 
     private let barHeight: CGFloat = 32
 
@@ -560,8 +561,10 @@ struct NunaLabValueBar: View {
                     .background(NunaPalette.card, in: Capsule())
                     .overlay(Capsule().stroke(tint, lineWidth: 2))
                     .offset(x: x - pillW / 2, y: 1)
-                Text(verbatim: lowText).position(x: w * 0.2, y: barHeight + 17)
-                Text(verbatim: highText).position(x: w * 0.8, y: barHeight + 17)
+                ForEach([0.2, 0.8], id: \.self) { t in
+                    Capsule().fill(NunaPalette.textMuted).frame(width: 1.5, height: 8).offset(x: w * t - 0.75, y: barHeight + 7)
+                }
+                Text(verbatim: rangeText).position(x: w * 0.5, y: barHeight + 20)
             }
             .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
         }
