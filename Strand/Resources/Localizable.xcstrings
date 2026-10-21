@@ -6239,6 +6239,9 @@
         "Tones: a soft tone for each step, a double blip for a hold, muted by the silent switch. Anya's voice: each step said aloud, also with the screen locked.": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Nada: satu nada lembut tiap langkah, dua bunyi pendek untuk tahan napas, dibisukan tombol senyap. Suara Anya: tiap langkah diucapkan, juga saat layar terkunci."}}
         } },
+        "+Log": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "+Catat"}}
+        } },
         "Charge and Rest": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Charge dan Rest"}}
         } },
