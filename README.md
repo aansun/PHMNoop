@@ -279,7 +279,7 @@ The **More** tab is the settings hub: grouped, with a profile on top, and every 
 "live activity" and it opens the right switch, and the ones you opened last are listed.
 
 - **Personalize**: **Devices** (the strap, its battery and last sync), **Achievements**, **Anya** (provider, key, memory and the morning brief) and **Appearance**.
-  - *Appearance*: two looks (Default and WHP) with their own typography, **units** (metric or imperial, and Effort on 0 to 100 or WHOOP's 0 to 21), and the **language**, English or Indonesian, with Anya's reply language set on its own.
+  - *Appearance*: three looks (Default, WHP and Flow) with their own typography; Flow is a warm cream-and-berry style with rounded shapes, Fraunces figures and Plus Jakarta Sans text, and follows Light, Dark or Automatic, **units** (metric or imperial, and Effort on 0 to 100 or WHOOP's 0 to 21), and the **language**, English or Indonesian, with Anya's reply language set on its own.
   - Your **persona** (age, height, weight, maximum heart rate), your **heart-rate zones** and your **targets**.
 - **Notifications and automation**
   - *Notifications*: Anya's morning brief, the early-illness warning, a summary after a workout, a journal reminder, "Effort target reached", strap battery, and alarms and bedtime.
@@ -364,7 +364,7 @@ The full licence texts are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) a
 **NOOP.** Everything underneath is **NOOP** and its contributors: [github.com/ryanbr/noop](https://github.com/ryanbr/noop). NOOP builds on
 [johnmiddleton12/my-whoop](https://github.com/johnmiddleton12/my-whoop) and [b-nnett/goose](https://github.com/b-nnett/goose); see
 [ATTRIBUTION.md](ATTRIBUTION.md) and [NOTICE](NOTICE). NOOP's own README is kept as [docs/NOOP_README.md](docs/NOOP_README.md), and the documents
-in [`docs/`](docs/) and [CHANGELOG.md](CHANGELOG.md) describe NOOP. Fonts: D-DIN-PRO and Montserrat, under the SIL Open Font License.
+in [`docs/`](docs/) and [CHANGELOG.md](CHANGELOG.md) describe NOOP. Fonts: D-DIN-PRO, Montserrat, Fraunces and Plus Jakarta Sans, under the SIL Open Font License.
 
 PHMN stays under NOOP's license, [PolyForm Noncommercial 1.0.0](LICENSE): free for noncommercial use.
 

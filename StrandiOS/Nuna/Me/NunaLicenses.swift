@@ -40,8 +40,8 @@ struct NunaLicensesView: View {
                text: "openGym is licensed under the GNU Affero General Public License v3.0. Its text is at https://www.gnu.org/licenses/agpl-3.0.html. Because none of its code is included, PHMN is not a derivative work of openGym and keeps NOOP's PolyForm Noncommercial licence."),
         Notice(id: "markdown", name: "MarkdownUI", author: "Guillermo Gonzalez", licence: "MIT", url: "https://github.com/gonzalezreal/swift-markdown-ui",
                used: "Formatting of Anya's replies.", text: mit("2020", "Guillermo Gonzalez")),
-        Notice(id: "fonts", name: "D-DIN-PRO and Montserrat", author: "Datto; The Montserrat Project Authors", licence: "SIL Open Font License 1.1", url: "https://openfontlicense.org",
-               used: "The typefaces of the WHP style. The full licence texts ship with the app's font files.", text: "These fonts are licensed under the SIL Open Font License, Version 1.1. The licence is at https://openfontlicense.org."),
+        Notice(id: "fonts", name: "D-DIN-PRO, Montserrat, Fraunces and Plus Jakarta Sans", author: "Datto; The Montserrat Project Authors; The Fraunces Project Authors; The Plus Jakarta Sans Project Authors", licence: "SIL Open Font License 1.1", url: "https://openfontlicense.org",
+               used: "The typefaces of the WHP and Flow styles. The full licence texts ship with the app's font files.", text: "These fonts are licensed under the SIL Open Font License, Version 1.1. The licence is at https://openfontlicense.org."),
     ]
 
     @State private var open: String?

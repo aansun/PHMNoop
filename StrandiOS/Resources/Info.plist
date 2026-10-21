@@ -91,6 +91,8 @@
 		<string>D-DIN-PRO-600-SemiBold.otf</string>
 		<string>D-DIN-PRO-700-Bold.otf</string>
 		<string>Montserrat-VF.ttf</string>
+		<string>Fraunces-VF.ttf</string>
+		<string>PlusJakartaSans-VF.ttf</string>
 	</array>
 	<key>UIBackgroundModes</key>
 	<array>
