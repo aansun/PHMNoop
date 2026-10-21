@@ -110,7 +110,9 @@ struct NunaFoodAddSheet: View {
                     Image(systemName: "chevron.down").font(.nuna(size: 11, weight: .bold))
                 }
                 .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 36)
-                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                // A fill and an outline that read against the sheet in both themes: it is a control, not a label.
+                .background(NunaPalette.ink.opacity(0.13), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.cardBorderHighlight, lineWidth: 1))
             }
             .accessibilityLabel(Text("Meal"))
         }
