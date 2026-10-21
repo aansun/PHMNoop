@@ -77,6 +77,8 @@ public enum NunaPalette {
     public static let effortMinimal = Color(light: "#1D4C9C", dark: "#2A66C8")
     public static let effortModerate = Color(light: "#1480DA", dark: "#2BA0F5")
     public static let effortAllOut  = Color(light: "#19A8E0", dark: "#66DCFF")
+    /// The full circle behind a score ring, so the ring always reads as a closed loop whatever the style or theme.
+    public static var ringTrack: Color { skinned(light: "#0A0D1020", dark: "#FFFFFF1F", whp: "#FFFFFF1F", flow: ("#E6D6CE", "#3D2D36")) }
     public static var zoneBase: Color { skinned(light: "#C3C9D6", dark: "#3F3F46", whp: "#3A4650", flow: ("#E6D6CE", "#3D2D36")) }   // zone 1 / awake track
 
     // Primary action: white (the theme ink) on dark.
@@ -400,7 +402,7 @@ public struct NunaRingGauge<Center: View>: View {
     }
     public var body: some View {
         ZStack {
-            Circle().stroke(Color.white.opacity(0.09), lineWidth: lineWidth)
+            Circle().stroke(NunaPalette.ringTrack, lineWidth: lineWidth)
             if let target {
                 Circle().trim(from: min(max(target.lowerBound, 0), 1), to: min(max(target.upperBound, 0), 1))
                     .stroke(Color.gray.opacity(0.5), style: StrokeStyle(lineWidth: lineWidth, lineCap: .butt))
