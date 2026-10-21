@@ -45,9 +45,15 @@ public struct LabMarkerCsvRow: Sendable, Equatable {
     /// column, source-attributed). nil for the generic (date,marker,value,unit) importer, which
     /// never annotates. Maps to `LabMarker.note`.
     public var note: String?
+    /// The range printed on the person's own report for this reading, VERBATIM ("3.9 - 5.6", "<3.4"). nil when the file carries none.
+    /// Maps to `LabMarkerRow.referenceText`; NOOP never fills it in itself.
+    public var referenceText: String?
+    /// The marker name as the file wrote it, so a custom marker can be shown (and added) under the name the person knows.
+    public var markerName: String?
 
     public init(markerKey: String, category: LabMarkerCategory, day: String,
-                value: Double, unit: String, isCustomMarker: Bool, note: String? = nil) {
+                value: Double, unit: String, isCustomMarker: Bool, note: String? = nil,
+                referenceText: String? = nil, markerName: String? = nil) {
         self.markerKey = markerKey
         self.category = category
         self.day = day
@@ -55,6 +61,8 @@ public struct LabMarkerCsvRow: Sendable, Equatable {
         self.unit = unit
         self.isCustomMarker = isCustomMarker
         self.note = note
+        self.referenceText = referenceText
+        self.markerName = markerName
     }
 }
 
@@ -127,6 +135,45 @@ public enum LabMarkerCsvImport {
         parseTable(CSVTable(text: text), maxRows: maxRows)
     }
 
+    // MARK: - One reading from outside a CSV (the Anya card, a FHIR file)
+
+    /// Turns one named reading into its stored row: the catalog marker when the name matches, a custom marker otherwise, with the unit and range kept
+    /// verbatim. nil for a name that is empty, a non-finite value or a day that is not `yyyy-MM-dd`. A combined blood-pressure name has no single marker
+    /// to land on, so it is nil too (send the systolic and the diastolic as two readings).
+    public static func makeRow(name: String, value: Double, unit: String?, day: String,
+                               referenceText: String? = nil, note: String? = nil) -> LabMarkerCsvRow? {
+        guard value.isFinite, let day = canonicalDay(day), let key = resolveMarker(name).key else { return nil }
+        let trimmedUnit = unit?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let category: LabMarkerCategory
+        let finalUnit: String
+        if let def = MarkerCatalog.definition(for: key) {
+            category = def.category
+            finalUnit = (trimmedUnit?.isEmpty == false) ? trimmedUnit! : def.canonicalUnit
+        } else {
+            category = .other
+            finalUnit = trimmedUnit ?? ""
+        }
+        let range = referenceText?.trimmingCharacters(in: .whitespacesAndNewlines)
+        let memo = note?.trimmingCharacters(in: .whitespacesAndNewlines)
+        return LabMarkerCsvRow(markerKey: key, category: category, day: day, value: value, unit: finalUnit,
+                               isCustomMarker: MarkerCatalog.definition(for: key) == nil,
+                               note: (memo?.isEmpty == false) ? String(memo!.prefix(200)) : nil,
+                               referenceText: (range?.isEmpty == false) ? String(range!.prefix(60)) : nil,
+                               markerName: name.trimmingCharacters(in: .whitespacesAndNewlines))
+    }
+
+    /// The template the Lab Book offers, written so that filling it in gives a file this importer reads in full: one reading per line, the date as
+    /// `yyyy-MM-dd`, the range copied from the person's own report (optional), a note (optional).
+    public static let template = """
+    date,marker,value,unit,range,note
+    2026-10-07,LDL cholesterol,3.1,mmol/L,<3.4,
+    2026-10-07,HDL cholesterol,1.3,mmol/L,1.0 - 2.2,
+    2026-10-07,Fasting glucose,5.1,mmol/L,3.9 - 5.6,Fasted 10 hours
+    2026-10-07,Systolic blood pressure,118,mmHg,90 - 120,
+    2026-10-07,Diastolic blood pressure,78,mmHg,60 - 80,
+    2026-10-07,Weight,75,kg,,
+    """
+
     // MARK: - Core (row cap injectable for tests)
 
     static func parseTable(_ table: CSVTable, maxRows: Int) -> LabMarkerCsvResult {
@@ -151,6 +198,16 @@ public enum LabMarkerCsvImport {
                               exact: ["unit", "units", "uom"],
                               contains: ["unit"])
 
+        // Optional columns of the template: the range from the person's own report, and a note.
+        let rangeCol = resolve(headers,
+                               exact: ["range", "reference", "reference_range", "ref_range", "normal_range", "reference_interval", "ref"],
+                               contains: ["range", "reference"],
+                               excluding: ["date", "value", "result", "unit", "marker", "test"])
+        let noteCol = resolve(headers,
+                              exact: ["note", "notes", "comment", "comments", "remark", "remarks"],
+                              contains: [],
+                              excluding: [])
+
         var byCell: [String: LabMarkerCsvRow] = [:]   // (markerKey \u{1} day) → last row wins
         var skipped = 0
         var truncated = false
@@ -171,6 +228,10 @@ public enum LabMarkerCsvImport {
 
             let rawValue = row.cell(valueCol) ?? ""
             let rawUnit = unitCol.flatMap { row.cell($0) }
+            let rawRange = rangeCol.flatMap { row.cell($0) }?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let rawNote = noteCol.flatMap { row.cell($0) }?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let rangeText = (rawRange?.isEmpty == false) ? String(rawRange!.prefix(60)) : nil
+            let noteText = (rawNote?.isEmpty == false) ? String(rawNote!.prefix(200)) : nil
 
             // Blood pressure: a combined "120/80" cell (under any bp-family name) becomes
             // the systolic/diastolic PAIR — a one-row-one-marker mapping would silently
@@ -180,10 +241,10 @@ public enum LabMarkerCsvImport {
                 let unit = rawUnit ?? "mmHg"
                 store(&byCell, LabMarkerCsvRow(markerKey: bpSystolicKey, category: .bloodPressure,
                                                day: day, value: pair.systolic, unit: unit,
-                                               isCustomMarker: false))
+                                               isCustomMarker: false, note: noteText, markerName: rawName))
                 store(&byCell, LabMarkerCsvRow(markerKey: bpDiastolicKey, category: .bloodPressure,
                                                day: day, value: pair.diastolic, unit: unit,
-                                               isCustomMarker: false))
+                                               isCustomMarker: false, note: noteText, markerName: rawName))
                 continue
             }
 
@@ -205,7 +266,8 @@ public enum LabMarkerCsvImport {
             }
             store(&byCell, LabMarkerCsvRow(markerKey: key, category: category, day: day,
                                            value: value, unit: unit,
-                                           isCustomMarker: MarkerCatalog.definition(for: key) == nil))
+                                           isCustomMarker: MarkerCatalog.definition(for: key) == nil,
+                                           note: noteText, referenceText: rangeText, markerName: rawName))
         }
 
         let rows = byCell.values.sorted {

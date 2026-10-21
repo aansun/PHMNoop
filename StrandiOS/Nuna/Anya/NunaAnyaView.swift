@@ -3,6 +3,7 @@ import SwiftUI
 import MarkdownUI
 import PhotosUI
 import PDFKit
+import StrandImport
 import UniformTypeIdentifiers
 import StrandDesign
 import StrandAnalytics
@@ -85,8 +86,10 @@ struct NunaAnyaView: View {
     enum Attachment {
         case image(name: String, base64: String)
         case document(name: String, text: String)
-        var name: String { switch self { case .image(let n, _), .document(let n, _): return n } }
-        var symbol: String { switch self { case .image: return "photo"; case .document: return "doc.text" } }
+        /// A CSV or FHIR file of lab results, read on this iPhone: the block for the card that lets the person check and save them.
+        case labResults(name: String, block: String, count: Int)
+        var name: String { switch self { case .image(let n, _), .document(let n, _), .labResults(let n, _, _): return n } }
+        var symbol: String { switch self { case .image: return "photo"; case .document: return "doc.text"; case .labResults: return "testtube.2" } }
     }
 
     private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
@@ -400,7 +403,11 @@ struct NunaAnyaView: View {
                     Button { attachment = nil } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(NunaPalette.textMuted) }.buttonStyle(.plain).accessibilityLabel(Text("Remove attachment"))
                 }
                 .frame(height: 40)
-                Text("The file is read on this iPhone and only its text is sent with your question.").font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                if case .labResults(_, _, let n) = a {
+                    Text(verbatim: String(localized: "\(n) lab results found. Read on this iPhone, nothing is sent.")).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                } else {
+                    Text("The file is read on this iPhone and only its text is sent with your question.").font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                }
             }
             HStack(spacing: 10) {
                 Button { showAttach = true } label: {
@@ -446,6 +453,13 @@ struct NunaAnyaView: View {
             let question = prompt.isEmpty ? "Please review the attached document and explain the points most relevant to my recovery today." : prompt
             prompt = "\(question)\n\n[Attached document: \(name)]\n\(body)\n[/Attached document]"
             coach.pendingChartImage = nil
+        case .labResults(let name, let block, let count):
+            // Read here and answered here: the card is built from the file, so no provider is called.
+            coach.pendingChartImage = nil
+            coach.appendLocalExchange(user: trimmed.isEmpty ? String(localized: "Add the lab results in \(name)") : trimmed,
+                                      assistant: String(localized: "I found \(count) lab results in \(name), read on this iPhone. Check them, then save them to your Lab Book.") + "\n```anya-lab\n\(block)\n```")
+            attachment = nil; photoItem = nil; draft = ""; focused = false
+            return
         case nil: coach.pendingChartImage = nil
         }
         attachment = nil; photoItem = nil; draft = ""; focused = false
@@ -472,6 +486,7 @@ struct NunaAnyaView: View {
         let secured = url.startAccessingSecurityScopedResource(); defer { if secured { url.stopAccessingSecurityScopedResource() } }
         do {
             let data = try Data(contentsOf: url)
+            if let lab = Self.labAttachment(name: url.lastPathComponent, ext: url.pathExtension.lowercased(), data: data) { attachment = lab; return }
             let text: String
             switch url.pathExtension.lowercased() {
             case "pdf":
@@ -542,4 +557,28 @@ struct NunaAnyaVoiceSheet: View {
     }
 }
 private extension String { var nilIfEmpty: String? { isEmpty ? nil : self } }
+
+extension NunaAnyaView {
+    /// A FHIR JSON or markers CSV file read right here into lab results. nil for any other file, which goes to Anya as text as before.
+    static func labAttachment(name: String, ext: String, data: Data) -> Attachment? {
+        let result: LabMarkerCsvResult
+        switch ext {
+        case "json": guard LabFhirImport.matches(data: data) else { return nil }; result = LabFhirImport.parse(data: data)
+        case "csv", "txt":
+            result = WhoopBiomarkerExportParser.matches(data: data) ? WhoopBiomarkerExportParser.parse(data: data) : LabMarkerCsvImport.parse(data: data)
+        default: return nil
+        }
+        guard !result.fileTooLarge, result.importedReadings > 0 else { return nil }
+        let items: [[String: Any]] = result.rows.prefix(200).map { r in
+            var d: [String: Any] = ["marker": MarkerCatalog.definition(for: r.markerKey)?.displayName ?? r.markerName ?? r.markerKey, "value": r.value, "day": r.day]
+            if !r.unit.isEmpty { d["unit"] = r.unit }
+            if let range = r.referenceText { d["range"] = range }
+            if let note = r.note { d["note"] = note }
+            return d
+        }
+        guard let json = try? JSONSerialization.data(withJSONObject: ["results": items], options: [.sortedKeys]), let block = String(data: json, encoding: .utf8) else { return nil }
+        return .labResults(name: name, block: block, count: items.count)
+    }
+}
+
 #endif

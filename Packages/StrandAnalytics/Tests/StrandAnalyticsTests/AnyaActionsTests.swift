@@ -63,3 +63,31 @@ final class AnyaActionsTests: XCTestCase {
         for m in AnyaActions.chartMetrics { XCTAssertTrue(AnyaActions.instruction.contains(m), m) }
     }
 }
+
+final class AnyaLabBlockTests: XCTestCase {
+    func testLabBlockParsesAndKeepsTextVerbatim() {
+        let r = "Here is what I read.\n```anya-lab\n{\"day\":\"2026-10-07\",\"results\":[{\"marker\":\"LDL cholesterol\",\"value\":3.1,\"unit\":\"mmol/L\",\"range\":\"<3.4\"},{\"marker\":\"Glucose\",\"value\":\"5,1\",\"day\":\"2026-10-01\",\"note\":\"fasted\"}]}\n```"
+        guard case .lab(let l)? = AnyaActions.parse(r).last else { return XCTFail() }
+        XCTAssertEqual(l.day, "2026-10-07")
+        XCTAssertEqual(l.results.count, 2)
+        XCTAssertEqual(l.results[0].unit, "mmol/L"); XCTAssertEqual(l.results[0].range, "<3.4")
+        XCTAssertEqual(l.results[1].value, 5.1); XCTAssertEqual(l.results[1].day, "2026-10-01")
+        XCTAssertEqual(AnyaActions.proseOnly(r), "Here is what I read.")
+    }
+
+    func testBadResultsAreDroppedAndAnEmptyBlockIsNotACard() {
+        let r = "```anya-lab\n{\"day\":\"2026-13-40\",\"results\":[{\"marker\":\"\",\"value\":1},{\"marker\":\"X\",\"value\":\"abc\"},{\"marker\":\"Y\",\"value\":2,\"day\":\"soon\"}]}\n```"
+        guard case .lab(let l)? = AnyaActions.parse(r).first else { return XCTFail() }
+        XCTAssertNil(l.day)
+        XCTAssertEqual(l.results.map(\.marker), ["Y"])
+        XCTAssertNil(l.results[0].day)
+        XCTAssertTrue(AnyaActions.parse("```anya-lab\n{\"results\":[]}\n```").isEmpty)
+    }
+
+    func testResultCapAndTheInstructionMentionsTheBlock() {
+        let many = (0..<250).map { "{\"marker\":\"M\($0)\",\"value\":\($0)}" }.joined(separator: ",")
+        guard case .lab(let l)? = AnyaActions.parse("```anya-lab\n{\"results\":[\(many)]}\n```").first else { return XCTFail() }
+        XCTAssertEqual(l.results.count, 200)
+        XCTAssertTrue(AnyaActions.instruction.contains("anya-lab"))
+    }
+}

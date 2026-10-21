@@ -100,6 +100,13 @@ struct NunaLabMarker: Identifiable {
 }
 
 enum NunaLabGrouping {
+    /// What a marker is called: the catalog name, "Blood pressure" for the pair, or the words of a custom marker's key without its prefix.
+    static func markerName(_ key: String) -> String {
+        if key == LabBookProjection.bpSystolicKey { return String(localized: "Blood pressure") }
+        if let def = MarkerCatalog.definition(for: key) { return def.displayName }
+        return LabBookView.humanise(key.hasPrefix("custom_") ? String(key.dropFirst(7)) : key)
+    }
+
     static let categoryOrder: [LabMarkerCategory] = [.bloodPanel, .bloodPressure, .bodyMeasurement, .imaging, .appointmentNote, .other]
 
     static func markers(_ rows: [LabMarkerRow]) -> [NunaLabMarker] {
@@ -109,8 +116,7 @@ enum NunaLabGrouping {
         return grouped.map { key, list in
             let sorted = list.sorted { $0.takenAt < $1.takenAt }
             let cat = LabMarkerCategory(rawValue: sorted.last?.category ?? "") ?? MarkerCatalog.definition(for: key)?.category ?? .other
-            let name = key == LabBookProjection.bpSystolicKey ? String(localized: "Blood pressure")
-                : (MarkerCatalog.definition(for: key)?.displayName ?? LabBookView.humanise(key))
+            let name = markerName(key)
             return NunaLabMarker(key: key, name: name, category: cat, readings: sorted, diastolic: key == LabBookProjection.bpSystolicKey ? diastolic : [:])
         }
         .sorted { ($0.latest?.takenAt ?? 0) > ($1.latest?.takenAt ?? 0) }
@@ -142,29 +148,40 @@ enum NunaLabStore {
         await repo.refresh()
     }
 
-    /// Reads a markers CSV (a WHOOP biomarker export or the generic date, marker, value, unit file) and adds its readings. Returns the line to show.
+    /// Stored rows for parsed readings. Noon of each reading's own day, so bringing the same reading in again updates it in place instead of adding a copy.
+    static func storedRows(_ rows: [LabMarkerCsvRow], source: String, deviceId: String) -> [LabMarkerRow] {
+        rows.map { r in
+            let epoch = LabBookFormat.noonEpoch(r.day)
+            return LabMarkerRow(id: "\(r.markerKey)-\(epoch)-\(UUID().uuidString.prefix(8))", deviceId: deviceId, markerKey: r.markerKey,
+                                category: r.category.rawValue, day: r.day, takenAt: epoch, value: r.value, valueText: nil, unit: r.unit,
+                                source: source, note: r.note, referenceText: r.referenceText)
+        }
+    }
+
+    /// The template file to share, so a filled-in copy reads in full.
+    static func templateFile() -> URL? {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("labbook-template.csv")
+        do { try LabMarkerCsvImport.template.write(to: url, atomically: true, encoding: .utf8); return url } catch { return nil }
+    }
+
+    /// Reads a file of lab results (the Lab Book template or any date, marker, value, unit CSV, a WHOOP biomarker export, or a FHIR JSON file) and adds its
+    /// readings. Returns the line to show.
     static func importCsv(url: URL, repo: Repository, log: (String) -> Void) async -> (summary: String, failed: Bool) {
         let scoped = url.startAccessingSecurityScopedResource()
         defer { if scoped { url.stopAccessingSecurityScopedResource() } }
         do {
             let data = try Data(contentsOf: url)
-            let isWhoop = WhoopBiomarkerExportParser.matches(data: data)
-            let result = isWhoop ? WhoopBiomarkerExportParser.parse(data: data) : LabMarkerCsvImport.parse(data: data)
-            let sourceId = isWhoop ? WhoopBiomarkerExportParser.sourceId : LabMarkerCsvImport.sourceId
+            let isFhir = LabFhirImport.matches(data: data)
+            let isWhoop = !isFhir && WhoopBiomarkerExportParser.matches(data: data)
+            let result = isFhir ? LabFhirImport.parse(data: data) : (isWhoop ? WhoopBiomarkerExportParser.parse(data: data) : LabMarkerCsvImport.parse(data: data))
+            let sourceId = isFhir ? LabFhirImport.sourceId : (isWhoop ? WhoopBiomarkerExportParser.sourceId : LabMarkerCsvImport.sourceId)
             guard !result.fileTooLarge else { return (String(localized: "That file is too large for a markers CSV import."), true) }
             guard result.importedReadings > 0 else {
-                log("Lab Book CSV: no usable rows (\(result.skippedRows) skipped)")
-                return (String(localized: "No usable rows found. Check the file has date, marker and value columns."), true)
+                log("Lab Book file: no usable rows (\(result.skippedRows) skipped)")
+                return (isFhir ? String(localized: "No usable results found in that FHIR file.") : String(localized: "No usable rows found. Check the file has date, marker and value columns."), true)
             }
             guard let store = await repo.storeHandle() else { return (String(localized: "Couldn't open the local store."), true) }
-            let rows = result.rows.map { r -> LabMarkerRow in
-                // Noon of the row's own day, so importing the same file again updates in place instead of adding a copy.
-                let epoch = LabBookFormat.noonEpoch(r.day)
-                return LabMarkerRow(id: "\(r.markerKey)-\(epoch)-\(UUID().uuidString.prefix(8))", deviceId: repo.deviceId, markerKey: r.markerKey,
-                                    category: r.category.rawValue, day: r.day, takenAt: epoch, value: r.value, valueText: nil, unit: r.unit,
-                                    source: sourceId, note: r.note, referenceText: nil)
-            }
-            try await store.upsertLabMarkers(rows)
+            try await store.upsertLabMarkers(storedRows(result.rows, source: sourceId, deviceId: repo.deviceId))
             await repo.refresh()
             var msg = String(localized: "Imported \(result.importedReadings) readings (\(result.distinctMarkers) markers)")
             if let a = result.earliestDay, let b = result.latestDay, a != b { msg += " · \(a)-\(b)" }
@@ -174,10 +191,10 @@ enum NunaLabStore {
             if result.notMeasured > 0 {
                 msg += " · " + (result.notMeasured == 1 ? String(localized: "1 not measured") : String(localized: "\(result.notMeasured) not measured"))
             }
-            log("Lab Book CSV: \(result.importedReadings) readings, \(result.distinctMarkers) markers, \(result.skippedRows) rejected")
+            log("Lab Book file: \(result.importedReadings) readings, \(result.distinctMarkers) markers, \(result.skippedRows) rejected")
             return (msg, false)
         } catch {
-            log("Lab Book CSV failed: \(error.localizedDescription)")
+            log("Lab Book import failed: \(error.localizedDescription)")
             return (String(localized: "Import failed: \(error.localizedDescription)"), true)
         }
     }
