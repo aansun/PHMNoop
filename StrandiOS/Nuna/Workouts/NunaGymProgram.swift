@@ -27,6 +27,7 @@ private struct NunaItemTarget: Identifiable { let id: String; let item: LiftProg
 /// and written together on Save, the same way the Default editor does, so history is never rewritten.
 struct NunaProgramEditor: View {
     let programId: String
+    @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var repo: Repository
     @Environment(\.dismiss) private var dismiss
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
@@ -290,6 +291,8 @@ struct NunaProgramEditor: View {
                                           secondaryMuscles: p.secondary.filter { $0 != p.primary }, createdAt: now, lastUsedTs: now)
                 _ = try? await store.upsertLiftExercises([row])
             }
+            // An exercise of the person's own gets a page and a history like any library exercise, and Anya fills in its muscles if it has none.
+            await NunaCustomExercises.remember(picked, repo: repo, coach: model.coach)
         }
     }
 
@@ -396,6 +399,8 @@ struct NunaProgramDetailView: View {
     @State private var metric = RunMetric.volume
     @State private var period = RunPeriod.threeMonths
     @State private var selectedDate: Date?
+    /// The exercise whose movement is open in a sheet, so it can be seen before the session starts.
+    @State private var preview: String?
 
     private enum RunMetric: String, CaseIterable {
         case volume, reps, duration
@@ -429,12 +434,17 @@ struct NunaProgramDetailView: View {
                 summaryCard
                 if !runs.isEmpty { progressCard }
                 NunaTitleRow(title: "Exercises") { EmptyView() }
+                if !items.isEmpty {
+                    Text("Tap an exercise to see how it is done.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        .frame(maxWidth: .infinity, alignment: .leading).padding(.top, -6)
+                }
                 exerciseList
             } else if loaded {
                 Text("This program is no longer there.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
         }
         .task(id: repo.refreshSeq) { await load() }
+        .sheet(item: Binding(get: { preview.map { NunaVideoTarget(name: $0) } }, set: { preview = $0?.name })) { t in NunaExercisePreviewSheet(name: t.name) }
         .safeAreaInset(edge: .bottom, spacing: 0) { startBar }
         .confirmationDialog("Delete this program?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) { Task { await deleteProgram() } }
@@ -548,6 +558,7 @@ struct NunaProgramDetailView: View {
                 }
                 ForEach(Array(items.enumerated()), id: \.element.id) { i, item in
                     if i > 0 { NunaDivider() }
+                    Button { preview = item.exercise } label: {
                     HStack(spacing: 12) {
                         NunaExerciseThumb(name: item.exercise, width: 50, height: 38)
                         VStack(alignment: .leading, spacing: 3) {
@@ -558,7 +569,8 @@ struct NunaProgramDetailView: View {
                         if let s = item.targetSets {
                             Text(verbatim: NunaExerciseKind.of(item.exercise).targetText(sets: s, reps: item.targetRepsLow) ?? "\(s)").font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         }
-                    }.padding(.vertical, 12)
+                    }.padding(.vertical, 12).contentShape(Rectangle())
+                    }.buttonStyle(.plain).accessibilityHint(Text("Shows how the exercise is done"))
                 }
             }
         }
@@ -1041,6 +1053,23 @@ private struct NunaTargetField: View {
             .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             .onAppear { if !loaded { text = get(); loaded = true } }
             .onChange(of: text) { _, new in set(new.replacingOccurrences(of: ",", with: ".")) }
+    }
+}
+#endif
+
+
+#if os(iOS)
+/// How an exercise is done, for looking at before it is started: the library's demo, muscles and history where the exercise is in the
+/// library, and the how-to video where it is not (an exercise the person made up).
+struct NunaExercisePreviewSheet: View {
+    let name: String
+    var body: some View {
+        if let lib = NunaExerciseLibrary.match(name) {
+            NavigationStack { NunaExerciseDetailView(exerciseId: lib.id) }
+                .preferredColorScheme(NunaTheme.colorScheme).presentationDragIndicator(.visible)
+        } else {
+            NunaExerciseVideoSheet(name: name)
+        }
     }
 }
 #endif

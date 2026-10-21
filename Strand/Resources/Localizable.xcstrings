@@ -6089,6 +6089,45 @@
         "The last 7 days, side by side": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "7 hari terakhir, berdampingan"}}
         } },
+        "Start this exercise": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Mulai gerakan ini"}}
+        } },
+        "Continue after rest": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lanjut setelah istirahat"}}
+        } },
+        "Starts the next set of the same exercise when the rest ends, so the phone can stay in your pocket": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Memulai set berikutnya dari gerakan yang sama saat istirahat selesai, jadi ponsel boleh tetap di saku"}}
+        } },
+        "You changed the program during this session. Save the changes for next time, or keep them for this session only?": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kamu mengubah program saat sesi ini. Simpan perubahan untuk seterusnya, atau hanya untuk sesi ini?"}}
+        } },
+        "Save for next time": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Simpan untuk seterusnya"}}
+        } },
+        "This session only": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hanya sesi ini"}}
+        } },
+        "Tap an exercise to see how it is done.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sentuh gerakan untuk melihat cara melakukannya."}}
+        } },
+        "Shows how the exercise is done": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Menampilkan cara melakukan gerakan"}}
+        } },
+        "Your own exercise. Its muscles are not known yet; Anya fills them in from its name when she is connected.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Gerakan buatanmu sendiri. Ototnya belum diketahui; Anya mengisinya dari namanya saat terhubung."}}
+        } },
+        "Your own exercise. Anya worked out its muscles from the name. Correct them under Muscles and technique in a program.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Gerakan buatanmu sendiri. Anya menentukan ototnya dari namanya. Koreksi di Otot dan teknik pada program."}}
+        } },
+        "Your own exercise. Its muscles come from the closest exercise in the library. Correct them under Muscles and technique in a program.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Gerakan buatanmu sendiri. Ototnya diambil dari gerakan terdekat di perpustakaan. Koreksi di Otot dan teknik pada program."}}
+        } },
+        "Your own exercise, with the muscles you gave it.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Gerakan buatanmu sendiri, dengan otot yang kamu tentukan."}}
+        } },
+        "There are no written steps for your own exercise. The video on the Summary tab shows the movement.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Gerakan buatanmu sendiri tidak punya langkah tertulis. Video di tab Ringkasan menunjukkan gerakannya."}}
+        } },
         "Charge and Rest": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Charge dan Rest"}}
         } },

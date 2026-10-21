@@ -401,6 +401,28 @@ final class LiftSessionController: ObservableObject {
         return true
     }
 
+    /// Swap the exercise of a line that has not been started (see `LiftSessionEngine.replaceExercise`). What was typed or marked ahead of
+    /// time for its sets belonged to the old exercise, so it is let go; the grey numbers are re-read for the new one by the sheet.
+    @discardableResult
+    func replaceExercise(at index: Int, with item: LiftPlanItem) -> Bool {
+        guard engine?.replaceExercise(at: index, with: item) == true else { return false }
+        pendingWarmups = pendingWarmups.filter { $0.exerciseIndex != index }
+        pendingValues = pendingValues.filter { $0.key.exerciseIndex != index }
+        persist()
+        return true
+    }
+
+    /// Start on a set the user picked, whichever exercise it belongs to. See `LiftSessionEngine.jump`.
+    func jump(to slot: LiftSlot) {
+        guard engine != nil else { return }
+        let stamp = Int(Date().timeIntervalSince1970)
+        engine?.jump(to: slot, now: stamp)
+        applyPendingInput()
+        now = stamp
+        warnedFor = nil
+        persist()
+    }
+
     /// Drop the last pending set of an exercise. See `LiftSessionEngine.canRemoveSet(fromExercise:)`
     /// for what "can" means — a completed set is never removed this way.
     @discardableResult
@@ -551,6 +573,37 @@ final class LiftSessionController: ObservableObject {
         }
     }
 
+    /// A program line whose exercise this session swapped for another.
+    struct ExerciseReplacement: Equatable {
+        var itemId: String
+        var from: String
+        var to: String
+        var primary: LiftMuscle?
+        var secondary: [LiftMuscle]
+    }
+
+    /// Lines whose exercise in this session differs from the program's, matched by the program line they came from.
+    static func exerciseReplacements(plan: [LiftPlanItem], program items: [LiftProgramItemRow]) -> [ExerciseReplacement] {
+        let byId = Dictionary(items.map { ($0.id, $0) }, uniquingKeysWith: { first, _ in first })
+        return plan.compactMap { line in
+            guard let id = line.programItemId, let row = byId[id], row.exercise != line.exercise else { return nil }
+            return ExerciseReplacement(itemId: id, from: row.exercise, to: line.exercise, primary: line.primaryMuscle, secondary: line.secondaryMuscles)
+        }
+    }
+
+    /// The program's lines with the swaps applied. The line's planned weight and note belonged to the old exercise, so they are cleared.
+    static func applying(_ replacements: [ExerciseReplacement], to items: [LiftProgramItemRow]) -> [LiftProgramItemRow] {
+        let byId = Dictionary(replacements.map { ($0.itemId, $0) }, uniquingKeysWith: { first, _ in first })
+        return items.map { row in
+            guard let swap = byId[row.id] else { return row }
+            var edited = row
+            edited.exercise = swap.to
+            edited.targetWeightKg = nil
+            edited.note = nil
+            return edited
+        }
+    }
+
     // MARK: - The rest warning
 
     /// How long after its end a rest can still be announced.
@@ -560,6 +613,22 @@ final class LiftSessionController: ObservableObject {
         guard let engine, case .resting(_, let endsAt) = engine.stage, endedFor != endsAt, now >= endsAt else { return }
         endedFor = endsAt
         if now - endsAt <= Self.restEndGraceSec { onRestEnded?() }
+        autoContinueIfWanted(after: engine, endsAt: endsAt)
+    }
+
+    /// The user's choice (Session settings) to carry on by itself when a rest runs out, for someone who cannot hold the phone between sets.
+    static let autoContinueKey = "nuna.gym.autoContinue"
+    /// A rest that ended longer ago than this (the app was asleep) is left for the person to resume: starting a set they are not ready for
+    /// would be worse than waiting.
+    static let autoContinueGraceSec = 120
+
+    /// Start the next set when a rest ends, but only inside the exercise being worked: moving to another machine is the person's decision.
+    private func autoContinueIfWanted(after engine: LiftSessionEngine, endsAt: Int) {
+        guard UserDefaults.standard.bool(forKey: Self.autoContinueKey),
+              now - endsAt <= Self.autoContinueGraceSec,
+              case .resting(let slot, _) = engine.stage,
+              let next = engine.slotAfter(slot), next.exerciseIndex == slot.exerciseIndex else { return }
+        advance()
     }
 
     private func fireRestWarningIfDue() {

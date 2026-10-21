@@ -67,7 +67,9 @@ struct NunaExerciseDetailView: View {
         case .history: historyList
         case .howTo: howTo(e)
         }
-        nunaFootnote("Photos and text: free-exercise-db, public domain (The Unlicense). The body map is MuscleMap, MIT licence. Both are listed under About › Open-source notices.")
+        if !e.id.hasPrefix("custom-") {
+            nunaFootnote("Photos and text: free-exercise-db, public domain (The Unlicense). The body map is MuscleMap, MIT licence. Both are listed under About › Open-source notices.")
+        }
     }
 
     private var tabs: some View {
@@ -91,9 +93,29 @@ struct NunaExerciseDetailView: View {
             if let m = e.mechanic { NunaChip(verbatim: m == "compound" ? String(localized: "Compound") : String(localized: "Isolation")) }
             Spacer(minLength: 0)
         }
+        if e.id.hasPrefix("custom-") { customNote(e) }
         progressCard(kind: NunaExerciseKind.of(e.name))
         recordsCard(kind: NunaExerciseKind.of(e.name))
-        musclesCard(e)
+        if !(e.id.hasPrefix("custom-") && e.primaryMuscles.isEmpty) { musclesCard(e) }
+    }
+
+    /// An exercise the person made up has a page like any other; this says where its muscles came from, so they can be trusted or corrected.
+    private func customNote(_ e: NunaLibraryExercise) -> some View {
+        let words: LocalizedStringKey
+        if e.primaryMuscles.isEmpty { words = "Your own exercise. Its muscles are not known yet; Anya fills them in from its name when she is connected." }
+        else {
+            switch NunaCustomExercises.source(forName: e.name) {
+            case "anya": words = "Your own exercise. Anya worked out its muscles from the name. Correct them under Muscles and technique in a program."
+            case "library": words = "Your own exercise. Its muscles come from the closest exercise in the library. Correct them under Muscles and technique in a program."
+            default: words = "Your own exercise, with the muscles you gave it."
+            }
+        }
+        return NunaCard(small: true) {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: "person.crop.circle.badge.checkmark").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text(words).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+            }
+        }
     }
 
     private func value(_ s: NunaExerciseSession) -> Double? {
@@ -367,6 +389,9 @@ struct NunaExerciseDetailView: View {
         NunaCard {
             VStack(alignment: .leading, spacing: 14) {
                 nunaTrendsCap("How to do it")
+                if e.instructions.isEmpty {
+                    Text("There are no written steps for your own exercise. The video on the Summary tab shows the movement.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                }
                 ForEach(Array(e.instructions.enumerated()), id: \.offset) { i, step in
                     HStack(alignment: .top, spacing: 12) {
                         Text(verbatim: "\(i + 1)").font(.nuna(size: 12, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.onAccent)

@@ -346,3 +346,66 @@ public enum AnyaActions {
         parse(reply).compactMap { if case .text(let t) = $0 { return t } else { return nil } }.joined(separator: "\n\n")
     }
 }
+
+
+// MARK: - Classifying an exercise the person made up
+
+/// What Anya worked out about an exercise that is not in the library: which muscles it works, what it is done with and how a set of it is
+/// logged. Every word is checked against the library's own names here, so a reply can never invent a muscle.
+public struct AnyaExerciseSpec: Equatable, Sendable {
+    /// The library's muscle names (free-exercise-db): "chest", "lats", "quadriceps".
+    public var primary: [String]
+    public var secondary: [String]
+    /// barbell, dumbbell, cable, machine, body only, kettlebells, bands or other.
+    public var equipment: String?
+    /// weighted, bodyweight or timed.
+    public var kind: String?
+    public init(primary: [String], secondary: [String] = [], equipment: String? = nil, kind: String? = nil) {
+        self.primary = primary; self.secondary = secondary; self.equipment = equipment; self.kind = kind
+    }
+}
+
+extension AnyaActions {
+    public static let exerciseMuscles: Set<String> = ["abdominals", "abductors", "adductors", "biceps", "calves", "chest", "forearms", "glutes", "hamstrings",
+                                                      "lats", "lower back", "middle back", "neck", "quadriceps", "shoulders", "traps", "triceps"]
+    public static let exerciseEquipment: Set<String> = ["barbell", "dumbbell", "cable", "machine", "body only", "kettlebells", "bands", "other"]
+    public static let exerciseKinds: Set<String> = ["weighted", "bodyweight", "timed"]
+
+    /// Asks only about the exercise's name; nothing about the person goes with it.
+    public static let exerciseInstruction = """
+    You classify one gym exercise for a training log. The name may be in any language and may carry a brand or app suffix; ignore that and judge the movement. \
+    Reply with ONE fenced block, valid JSON, no comments and no other text. primary is the 1 or 2 muscles that do the work, secondary up to 3 that assist. \
+    Use ONLY these muscle names: abdominals, abductors, adductors, biceps, calves, chest, forearms, glutes, hamstrings, lats, lower back, middle back, neck, \
+    quadriceps, shoulders, traps, triceps. equipment is one of: barbell, dumbbell, cable, machine, body only, kettlebells, bands, other. \
+    kind is weighted when a load is lifted, bodyweight when reps of the body are counted, timed when it is a hold for time. If you are not sure what the movement is, reply {"unknown":true}.
+    ```anya-exercise
+    {"primary":["chest"],"secondary":["triceps","shoulders"],"equipment":"machine","kind":"weighted"}
+    ```
+    """
+
+    /// The classification in a reply, from a fenced block or a bare JSON object; nil when the reply says it does not know or names no valid muscle.
+    public static func parseExercise(from reply: String) -> AnyaExerciseSpec? {
+        guard let open = reply.firstIndex(of: "{"), let close = reply.lastIndex(of: "}"), open < close,
+              let data = String(reply[open...close]).data(using: .utf8),
+              let obj = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any], obj["unknown"] as? Bool != true else { return nil }
+        func muscles(_ any: Any?) -> [String] {
+            let raw = (any as? [Any]) ?? (any as? String).map { [$0] } ?? []
+            var out: [String] = []
+            for m in raw {
+                guard let k = (m as? String)?.trimmingCharacters(in: .whitespaces).lowercased(), exerciseMuscles.contains(k), !out.contains(k) else { continue }
+                out.append(k)
+            }
+            return out
+        }
+        let primary = Array(muscles(obj["primary"]).prefix(2))
+        guard !primary.isEmpty else { return nil }
+        let secondary = Array(muscles(obj["secondary"]).filter { !primary.contains($0) }.prefix(3))
+        func pick(_ any: Any?, from allowed: Set<String>) -> String? {
+            guard let s = (any as? String)?.trimmingCharacters(in: .whitespaces).lowercased(), allowed.contains(s) else { return nil }
+            return s
+        }
+        let equipment = pick(obj["equipment"], from: exerciseEquipment)
+        let kind = pick(obj["kind"], from: exerciseKinds)
+        return AnyaExerciseSpec(primary: primary, secondary: secondary, equipment: equipment, kind: kind)
+    }
+}

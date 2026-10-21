@@ -74,6 +74,15 @@ struct NunaExercisePicker: View {
     private var canCreate: Bool {
         !trimmed.isEmpty && NunaExerciseLibrary.match(trimmed) == nil && !chosen.contains { $0.name.caseInsensitiveCompare(trimmed) == .orderedSame }
     }
+    /// The person's own exercises that fit what is typed, so one made up before is offered back instead of being created again.
+    private var ownResults: [LiftExerciseRow] {
+        let q = NunaExerciseLibrary.words(trimmed)
+        guard !q.isEmpty else { return [] }
+        return vocabulary.filter { row in
+            NunaExerciseLibrary.matchBundled(row.name) == nil
+                && { let w = NunaExerciseLibrary.words(row.name); return q.allSatisfy { qw in w.contains { $0.hasPrefix(qw) } } }()
+        }
+    }
 
     var body: some View {
         NavigationStack {
@@ -110,9 +119,10 @@ struct NunaExercisePicker: View {
                             ForEach(recents, id: \.id) { r in recentRow(r) }
                         }
                         if !recents.isEmpty || !suggested.isEmpty { sectionTitle("All exercises") }
+                        ForEach(ownResults, id: \.id) { r in recentRow(r) }
                         ForEach(results) { e in libraryRow(e) }
                         if canCreate { createRow.padding(.top, results.isEmpty ? 0 : 10) }
-                        if results.isEmpty && !canCreate {
+                        if results.isEmpty && ownResults.isEmpty && !canCreate {
                             Text("No exercise matches").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).padding(.vertical, 24).frame(maxWidth: .infinity)
                         }
                     }

@@ -83,6 +83,7 @@ final class NunaHevyModel: ObservableObject {
 /// Hevy (HevyConnect): your own API key in the Keychain, then two buttons, one for the workout history and one for the routines. Read only.
 struct NunaHevyView: View {
     @EnvironmentObject private var repo: Repository
+    @EnvironmentObject private var appModel: AppModel
     @AppStorage(HevyExperiment.enabledKey) private var enabled = false
     @StateObject private var model = NunaHevyModel()
     @State private var key = ""
@@ -98,6 +99,8 @@ struct NunaHevyView: View {
             if let r = model.result { resultCard(r.job, r.summary) }
         }
         .scrollDismissesKeyboard(.interactively)
+        // What came in from Hevy may include exercises the library does not know: they get their muscles and a page like any other.
+        .onChange(of: model.busy) { _, busy in if !busy { Task { await NunaCustomExercises.sync(repo: repo, coach: appModel.coach) } } }
     }
 
     // MARK: Off

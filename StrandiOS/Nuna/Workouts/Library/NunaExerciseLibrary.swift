@@ -122,7 +122,8 @@ enum NunaExerciseLibrary {
 
     private static let byId: [String: NunaLibraryExercise] = Dictionary(all.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
 
-    static func exercise(id: String) -> NunaLibraryExercise? { byId[id] }
+    /// An exercise by id: the bundled library's, or one the person made up (`NunaCustomExercises`).
+    static func exercise(id: String) -> NunaLibraryExercise? { byId[id] ?? NunaCustomExercises.entry(id: id) }
 
     // MARK: Matching a logged name to the library
 
@@ -162,10 +163,14 @@ enum NunaExerciseLibrary {
 
     /// The library entry for an exercise logged under a person's own name: the same words, or the same words in another order, or a
     /// known alias. Nil when the library has nothing by that name.
-    static func match(_ name: String) -> NunaLibraryExercise? {
+    static func matchBundled(_ name: String) -> NunaLibraryExercise? {
         ordered[normalized(name)] ?? unordered[wordSet(name)]
             ?? { let bare = withoutBracketedEquipment(name); return bare == name ? nil : (ordered[normalized(bare)] ?? unordered[wordSet(bare)]) }()
     }
+
+    /// The exercise a name stands for: the bundled library's, or else the person's own exercise of that name, which is given the same shape
+    /// (muscles, a page, a history) so a custom exercise is never second class.
+    static func match(_ name: String) -> NunaLibraryExercise? { matchBundled(name) ?? NunaCustomExercises.entry(forName: name) }
 
     // MARK: Searching
 
