@@ -102,7 +102,12 @@ struct NunaAnyaSheet: View {
             // The questions stay the screen's; the line and the signals are the card's.
             // Without a card line of its own, the page's read carries the weather and air in its detail.
             if cardLine == nil, let o = read?.outdoor { read?.detail = [read?.detail, o].compactMap { $0 }.joined(separator: " ") }
-            if let c = cardLine { read = NunaAnyaRead(headline: c.headline, detail: c.detail, read: c.read, module: read?.module ?? module, questions: read?.questions ?? []) }
+            if let c = cardLine {
+                // On Nutrition the card is one line; the sheet adds the day's figures, the week and the weight trend behind it.
+                var detail = c.detail
+                if module == .nutrition, let r = read { detail = [c.detail, r.headline + ".", r.detail].compactMap { $0 }.joined(separator: " ") }
+                read = NunaAnyaRead(headline: c.headline, detail: detail, read: module == .nutrition ? (read?.read ?? c.read) : c.read, module: read?.module ?? module, questions: read?.questions ?? [])
+            }
             loaded = true
         }
     }

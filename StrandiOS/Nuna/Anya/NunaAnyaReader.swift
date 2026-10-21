@@ -69,7 +69,8 @@ enum NunaAnyaReader {
         if context.lowercased() == "body" { return await body(repo: repo, profile: profile, scale: scale) }
         let module = NunaAnyaModule(context: context)
         switch module {
-        case .today, .nutrition, .device: return await today(module, repo: repo, profile: profile, scale: scale)
+        case .nutrition: return await nutrition(repo: repo, profile: profile)
+        case .today, .device: return await today(module, repo: repo, profile: profile, scale: scale)
         case .sleep: return await sleep(repo: repo, profile: profile)
         case .health: return await health(repo: repo, profile: profile)
         case .trends: return trends(repo: repo)
@@ -279,6 +280,61 @@ enum NunaAnyaReader {
          NunaAnyaQuestion(title: String(localized: "What does my nutrition show?"), prompt: "Look at my nutrition and my training and tell me one thing to adjust.")]
     }
 
+    // MARK: Nutrition
+
+    /// Today's food read against the plan: calories and macros so far, the week, the weight trend and what the body spends. Every figure is stored data;
+    /// parts without data are left out, and with nothing eaten and no plan there is no read.
+    @MainActor private static func nutrition(repo: Repository, profile: ProfileStore) async -> NunaAnyaRead? {
+        func n(_ v: Double) -> String { String(format: "%.0f", locale: AppLanguage.activeLocale, v) }
+        let d = UserDefaults.standard
+        let today = Repository.localDayKey(Date())
+        let food = await NunaFoodStore.day(today, repo: repo)
+        let intake = await NunaFoodStore.intakeByDay(days: 14, repo: repo)
+        var eaten = intake[today] ?? 0
+        if !food.entries.isEmpty { eaten = food.kcal }
+        let plan = d.bool(forKey: NunaNutritionPrefs.hasPlan) ? d.double(forKey: NunaNutritionPrefs.targetKcal) : 0
+        var head: [String] = [], detail: [String] = [], read: [String] = [], vals: [String: Double] = [:]
+
+        if plan > 0 {
+            let weights = await NunaFoodStore.weights(days: 120, repo: repo)
+            let kg = NutritionMath.trend(weights).last?.kg ?? (profile.weightKg > 0 ? profile.weightKg : 70)
+            let m = NutritionMath.macroTargets(kcal: plan, weightKg: kg, proteinPerKg: d.object(forKey: NunaNutritionPrefs.proteinPerKg) as? Double ?? NunaNutritionPrefs.defaultProteinPerKg,
+                                               fatShare: d.object(forKey: NunaNutritionPrefs.fatShare) as? Double ?? NunaNutritionPrefs.defaultFatShare)
+            let left = plan - eaten
+            head.append(left >= 0 ? String(localized: "\(n(eaten)) of \(n(plan)) kcal eaten, \(n(left)) left") : String(localized: "\(n(eaten)) of \(n(plan)) kcal eaten, \(n(-left)) over"))
+            if !food.entries.isEmpty {
+                detail.append(String(localized: "Protein \(n(food.proteinG)) of \(n(m.proteinG)) g, carbs \(n(food.carbsG)) of \(n(m.carbsG)) g, fat \(n(food.fatG)) of \(n(m.fatG)) g."))
+                vals["protein"] = food.proteinG
+            }
+            read.append("Daily target"); vals["target"] = plan
+        } else if eaten > 0 {
+            head.append(String(localized: "\(n(eaten)) kcal eaten today"))
+            if !food.entries.isEmpty { detail.append(String(localized: "Protein \(n(food.proteinG)) g, carbs \(n(food.carbsG)) g, fat \(n(food.fatG)) g. Set a plan in Strategy to get a daily target.")) }
+        }
+        guard !head.isEmpty else { return nil }
+        vals["kcal"] = eaten; read.append("Food diary")
+
+        let others = intake.filter { $0.key != today && $0.value > 0 }
+        if others.count >= 3 {
+            let avg = others.values.reduce(0, +) / Double(others.count)
+            detail.append(String(localized: "On the \(others.count) earlier days logged in the last two weeks you averaged \(n(avg)) kcal."))
+        }
+        let weights = NutritionMath.trend(await NunaFoodStore.weights(days: 60, repo: repo))
+        if let last = weights.last, let first = weights.first(where: { (NutritionMath.dayIndex(last.day) ?? 0) - (NutritionMath.dayIndex($0.day) ?? 0) <= 28 }),
+           first.day != last.day {
+            let diff = last.kg - first.kg
+            detail.append(abs(diff) < 0.1 ? String(localized: "Trend weight \(String(format: "%.1f", locale: AppLanguage.activeLocale, last.kg)) kg, steady.")
+                          : String(localized: "Trend weight \(String(format: "%.1f", locale: AppLanguage.activeLocale, last.kg)) kg, \(diff < 0 ? "down" : "up") \(String(format: "%.1f", locale: AppLanguage.activeLocale, abs(diff))) kg in four weeks."))
+            read.append("Weight")
+        }
+        if let burn = NunaFoodStore.maintenance(intake: await NunaFoodStore.intakeByDay(days: 30, repo: repo), weights: await NunaFoodStore.weights(days: 120, repo: repo), profile: profile) {
+            detail.append(burn.source == .foodAndWeight ? String(localized: "Your body spends about \(n(burn.kcal)) kcal a day, worked out from your food and weight.")
+                          : String(localized: "Your body spends roughly \(n(burn.kcal)) kcal a day, a rough figure from your profile for now."))
+        }
+        return remembering(NunaAnyaRead(headline: String(head[0].prefix(1)).uppercased() + String(head[0].dropFirst()), detail: detail.isEmpty ? nil : detail.joined(separator: " "),
+                                        read: read, module: .nutrition, questions: questions(.nutrition)), values: vals)
+    }
+
     // MARK: Trends
 
     private static func trends(repo: Repository) -> NunaAnyaRead? {
@@ -412,8 +468,9 @@ enum NunaAnyaReader {
                     NunaAnyaQuestion(title: String(localized: "Plan this week"), prompt: "Plan my training for this week from my current load and recovery."),
                     NunaAnyaQuestion(title: String(localized: "Recover faster"), prompt: "What helps me recover faster after my recent sessions?")]
         case .nutrition:
-            return [NunaAnyaQuestion(title: String(localized: "Dinner suggestion"), prompt: "Suggest what to eat tonight given today's activity."),
-                    NunaAnyaQuestion(title: String(localized: "How much protein do I need?"), prompt: "How much protein should I aim for, given my training?")]
+            return [NunaAnyaQuestion(title: String(localized: "How is my day going?"), prompt: "Look at what I have eaten today against my target and macros and tell me what to do for the rest of the day."),
+                    NunaAnyaQuestion(title: String(localized: "Dinner suggestion"), prompt: "Suggest what to eat tonight given what I have eaten today, my target and today's activity."),
+                    NunaAnyaQuestion(title: String(localized: "How much protein do I need?"), prompt: "How much protein should I aim for, given my training and my weight?")]
         case .breathing:
             return [NunaAnyaQuestion(title: String(localized: "Which exercise fits me now?"), prompt: "Which breathing exercise fits me right now? Use my live heart rate, HRV, stress and Charge, and what worked in my earlier breathing sessions."),
                     NunaAnyaQuestion(title: String(localized: "How did my last sessions go?"), prompt: "How did my recent breathing sessions go? Look at the HRV and heart rate change in each and tell me what is working."),
