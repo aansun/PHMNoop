@@ -128,7 +128,7 @@ extension NunaTodayView {
                 made = (nil, NunaRowTarget(kind: .nuna(.hydration)), "drop.fill", NunaPalette.effortText)
             case .weight:
                 // The latest reading (Apple Health or one added on the Weight page), else the weight in the profile.
-                made = (num(ex["weight"] ?? (profile.weightKg > 0 ? profile.weightKg : nil), 1).map { $0 + " kg" }, NunaRowTarget(kind: .nuna(.weight)), "scalemass.fill", nil)
+                made = (num(ex["weight"] ?? (profile.weightKg > 0 ? profile.weightKg : nil), 1), NunaRowTarget(kind: .nuna(.weight)), "scalemass.fill", nil)
             case .coupled:     made = (nil, NunaRowTarget(kind: .tab(.coupled)), "square.split.2x1.fill", nil)
             case .coach:
                 guard coachEnabled else { return nil }
