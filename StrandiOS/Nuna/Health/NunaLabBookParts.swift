@@ -28,12 +28,18 @@ struct NunaLabRange: Equatable {
         return nil
     }
 
+    /// "3.9–5.6", or "<3.4" for a range that starts at zero.
+    func label(key: String) -> String {
+        low <= 0 ? "<" + LabBookFormat.value(high, key: key) : LabBookFormat.value(low, key: key) + "–" + LabBookFormat.value(high, key: key)
+    }
+
     func status(_ v: Double) -> Status { v < low ? .below : (v > high ? .above : .within) }
 
     static func tint(_ s: Status) -> Color { s == .within ? NunaPalette.charge : NunaPalette.warning }
 
-    static func word(_ s: Status) -> LocalizedStringKey {
-        switch s { case .within: "Within your range"; case .above: "Above your range"; case .below: "Below your range" }
+    static func word(_ s: Status, who: Bool = false) -> LocalizedStringKey {
+        if who { switch s { case .within: return "Within WHO range"; case .above: return "Above WHO range"; case .below: return "Below WHO range" } }
+        switch s { case .within: return "Within your range"; case .above: return "Above your range"; case .below: return "Below your range" }
     }
 }
 
@@ -47,13 +53,18 @@ struct NunaLabMarker: Identifiable {
     let readings: [LabMarkerRow]
     /// For blood pressure: the diastolic value of each systolic reading, by the time it was taken.
     let diastolic: [Int: LabMarkerRow]
+    /// The WHO reference for this marker (weight from the height, waist by sex), used only when no report gave a range of its own.
+    var whoRange: NunaLabRange? = nil
 
     var id: String { key }
     var isPressure: Bool { key == LabBookProjection.bpSystolicKey }
     var unit: String { readings.last?.unit ?? MarkerCatalog.definition(for: key)?.canonicalUnit ?? "" }
     var numeric: [LabMarkerRow] { readings.filter { $0.value != nil } }
     var latest: LabMarkerRow? { readings.last }
-    var range: NunaLabRange? { NunaLabRange.parse(readings.last(where: { $0.referenceText?.isEmpty == false })?.referenceText) }
+    /// The range from the person's own report. It always wins over the WHO reference.
+    var ownRange: NunaLabRange? { NunaLabRange.parse(readings.last(where: { $0.referenceText?.isEmpty == false })?.referenceText) }
+    var range: NunaLabRange? { ownRange ?? whoRange }
+    var rangeIsWho: Bool { ownRange == nil && whoRange != nil }
     var diastolicRange: NunaLabRange? {
         NunaLabRange.parse(diastolic.values.sorted { $0.takenAt < $1.takenAt }.last(where: { $0.referenceText?.isEmpty == false })?.referenceText)
     }
@@ -109,7 +120,23 @@ enum NunaLabGrouping {
 
     static let categoryOrder: [LabMarkerCategory] = [.bloodPanel, .bloodPressure, .bodyMeasurement, .imaging, .appointmentNote, .other]
 
-    static func markers(_ rows: [LabMarkerRow]) -> [NunaLabMarker] {
+    /// What the WHO reference needs to know about the person.
+    struct Reference { var heightCm: Double; var sex: String }
+
+    /// The WHO reference range for a marker whose latest reading is in the unit it is defined in.
+    static func whoRange(key: String, unit: String, reference: Reference?) -> NunaLabRange? {
+        guard let reference else { return nil }
+        switch (key, unit.lowercased()) {
+        case ("weight", "kg"):
+            return WhoBodyReference.weightRangeKg(heightCm: reference.heightCm).map { NunaLabRange(low: $0.low, high: $0.high) }
+        case ("waist", "cm"):
+            return WhoBodyReference.waistCeilingCm(sex: reference.sex).map { NunaLabRange(low: 0, high: $0) }
+        default:
+            return nil
+        }
+    }
+
+    static func markers(_ rows: [LabMarkerRow], reference: Reference? = nil) -> [NunaLabMarker] {
         let diastolicRows = rows.filter { $0.markerKey == LabBookProjection.bpDiastolicKey }
         let diastolic = Dictionary(diastolicRows.map { ($0.takenAt, $0) }, uniquingKeysWith: { _, l in l })
         let grouped = Dictionary(grouping: rows.filter { $0.markerKey != LabBookProjection.bpDiastolicKey }, by: \.markerKey)
@@ -117,7 +144,8 @@ enum NunaLabGrouping {
             let sorted = list.sorted { $0.takenAt < $1.takenAt }
             let cat = LabMarkerCategory(rawValue: sorted.last?.category ?? "") ?? MarkerCatalog.definition(for: key)?.category ?? .other
             let name = markerName(key)
-            return NunaLabMarker(key: key, name: name, category: cat, readings: sorted, diastolic: key == LabBookProjection.bpSystolicKey ? diastolic : [:])
+            return NunaLabMarker(key: key, name: name, category: cat, readings: sorted, diastolic: key == LabBookProjection.bpSystolicKey ? diastolic : [:],
+                                 whoRange: whoRange(key: key, unit: sorted.last?.unit ?? "", reference: reference))
         }
         .sorted { ($0.latest?.takenAt ?? 0) > ($1.latest?.takenAt ?? 0) }
     }
