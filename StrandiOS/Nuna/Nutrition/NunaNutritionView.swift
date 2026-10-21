@@ -59,7 +59,7 @@ struct NunaNutritionView: View {
             hero
             macroCard
             dayStepper
-            if coachEnabled, nudgesOn { if let nudge { nudgeCard(nudge) } else { anyaPrompt } }
+            if coachEnabled { if nudgesOn, let nudge { nudgeCard(nudge) } else if let status = statusCard { status } else { anyaPrompt } }
             if checkInDue, let checkIn { checkInCard(checkIn) }
             ForEach(NunaMeal.allCases) { mealCard($0) }
             if food.entries.isEmpty, let imported { importedCard(imported) }
@@ -124,7 +124,7 @@ struct NunaNutritionView: View {
                     VStack(spacing: 2) {
                         Text(verbatim: nutFmt(target == nil ? eaten : abs(left))).font(.nuna(size: 52, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(52))
                             .foregroundStyle(over ? NunaPalette.warning : NunaPalette.textPrimary).minimumScaleFactor(0.5).lineLimit(1)
-                        Text(target == nil ? "kcal eaten" : (over ? "kcal over" : "kcal left")).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        Text(LocalizedStringKey(target == nil ? "kcal eaten" : (over ? "kcal over" : "kcal left"))).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                             .foregroundStyle(NunaPalette.textSecondary)
                     }.padding(.horizontal, 24)
                 }
@@ -163,7 +163,7 @@ struct NunaNutritionView: View {
 
     private func macroColumn(_ label: LocalizedStringKey, eaten g: Double, goal: Double?, color: Color) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text(label).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            Text(label).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.55)
             NunaProgressBar(fraction: goal.map { $0 > 0 ? g / $0 : 0 } ?? 0, color: g > (goal ?? .infinity) ? NunaPalette.warning : color)
             Text(verbatim: goal.map { "\(nutFmt(g))/\(nutFmt($0)) g" } ?? "\(nutFmt(g)) g").font(.nuna(size: 12.5, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
                 .lineLimit(1).minimumScaleFactor(0.7).textCase(nil)
@@ -232,6 +232,24 @@ struct NunaNutritionView: View {
         return card
             .environment(\.nunaAnyaCardContext, "nutrition")
             .sheet(isPresented: $addInAnya) { NunaFoodAddSheet(day: dayKey, meal: NunaMeal.suggested(), anyaFirst: true).nunaSheetChrome(detents: [.large]) }
+    }
+
+    /// With nothing to say unprompted, Anya still reads the day back from the stored figures: what is eaten against the target and where protein stands.
+    private var statusCard: AnyView? {
+        guard eaten > 0 || target != nil else { return nil }
+        let m = eatenMacros
+        let line: String
+        if let target {
+            line = String(localized: "\(nutFmt(eaten)) of \(nutFmt(target)) kcal so far.") + (macroTargets.map { " " + String(localized: "Protein \(nutFmt(m.p)) of \(nutFmt($0.proteinG)) g.") } ?? "")
+        } else {
+            line = String(localized: "\(nutFmt(eaten)) kcal so far, \(nutFmt(m.p)) g protein.")
+        }
+        let detail = target == nil ? String(localized: "Set a plan in Strategy and Anya reads the day against a target.") : String(localized: "Tell Anya what you ate next and she adds it for you.")
+        return AnyView(
+            NunaAnyaCard(verbatim: line, detail: detail, buttonTitle: "Add with Anya", onButton: { addInAnya = true }) { addInAnya = true }
+                .environment(\.nunaAnyaCardContext, "nutrition")
+                .sheet(isPresented: $addInAnya) { NunaFoodAddSheet(day: dayKey, meal: NunaMeal.suggested(), anyaFirst: true).nunaSheetChrome(detents: [.large]) }
+        )
     }
 
     /// Which macros ran over and which stayed under, and what a single day over means for the week.

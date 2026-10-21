@@ -8,6 +8,8 @@ import WhoopStore
 /// day can be changed, and the numbers are shown as an estimate. Used in the chat and inside the Add food sheet.
 struct NunaAnyaFoodCard: View {
     let spec: AnyaFoodSpec
+    /// Set inside the Add food sheet, where the meal and the day are already chosen: the card then shows no meal chips or day row.
+    var fixed: (meal: NunaMeal, day: String)?
     /// Called once the items are in the diary (the Add food sheet closes itself).
     var onAdded: (() -> Void)?
 
@@ -25,8 +27,8 @@ struct NunaAnyaFoodCard: View {
     @State private var addedCount: Int?
     @State private var showNutrition = false
 
-    init(spec: AnyaFoodSpec, onAdded: (() -> Void)? = nil) {
-        self.spec = spec; self.onAdded = onAdded
+    init(spec: AnyaFoodSpec, fixed: (meal: NunaMeal, day: String)? = nil, onAdded: (() -> Void)? = nil) {
+        self.spec = spec; self.fixed = fixed; self.onAdded = onAdded
         func text(_ v: Double?) -> String { v.map { $0 == $0.rounded() ? String(Int($0)) : String(format: "%.1f", $0) } ?? "" }
         _drafts = State(initialValue: spec.items.map { Draft(name: $0.name, kcal: text($0.kcal), protein: text($0.proteinG), carbs: text($0.carbsG), fat: text($0.fatG)) })
         _meal = State(initialValue: spec.meal.flatMap(NunaMeal.init(rawValue:)) ?? NunaMeal.suggested())
@@ -55,7 +57,7 @@ struct NunaAnyaFoodCard: View {
                     }
                     Spacer(minLength: 0)
                 }
-                if addedCount == nil {
+                if addedCount == nil, fixed == nil {
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) { ForEach(NunaMeal.allCases) { m in mealChip(m) } }
                     }
@@ -74,7 +76,7 @@ struct NunaAnyaFoodCard: View {
                     }
                 } else {
                     Button { Task { await add() } } label: {
-                        Text(String(localized: "Add \(chosen.count) to \(mealName)")).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 46)
+                        Text(String(localized: "Add \(chosen.count) to \(fixed.map { Self.name($0.meal) } ?? mealName)")).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 46)
                             .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
                     }.buttonStyle(.plain).disabled(adding || chosen.isEmpty).opacity(adding || chosen.isEmpty ? 0.5 : 1)
                     Text("These are estimates. Change the size, or tap the pencil to edit the name, calories and macros, before you add.").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
@@ -82,6 +84,10 @@ struct NunaAnyaFoodCard: View {
             }
         }
         .sheet(isPresented: $showNutrition) { NunaQuickPanel(route: NunaTodayRoute.nutrition) }
+    }
+
+    private static func name(_ m: NunaMeal) -> String {
+        switch m { case .breakfast: String(localized: "Breakfast"); case .lunch: String(localized: "Lunch"); case .dinner: String(localized: "Dinner"); case .snack: String(localized: "Snacks") }
     }
 
     private var mealName: String {
@@ -173,11 +179,12 @@ struct NunaAnyaFoodCard: View {
 
     private func add() async {
         adding = true; defer { adding = false }
-        let day = Repository.localDayKey(date)
+        let day = fixed?.day ?? Repository.localDayKey(date)
+        let target = fixed?.meal ?? meal
         let entries = chosen.map { i -> FoodEntryRow in
             let d = drafts[i]
             let name = d.name.trimmingCharacters(in: .whitespaces).isEmpty ? spec.items[i].name : d.name
-            return NunaFoodStore.entry(day: day, meal: meal, name: name, kcal: kcal(i), proteinG: macro(i, d.protein), carbsG: macro(i, d.carbs), fatG: macro(i, d.fat), source: "anya", repo: repo)
+            return NunaFoodStore.entry(day: day, meal: target, name: name, kcal: kcal(i), proteinG: macro(i, d.protein), carbsG: macro(i, d.carbs), fatG: macro(i, d.fat), source: "anya", repo: repo)
         }
         await NunaFoodStore.add(entries, repo: repo)
         addedCount = entries.count

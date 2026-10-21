@@ -5,20 +5,21 @@ import StrandAnalytics
 import WhoopStore
 import PhotosUI
 
-/// Add food: type the numbers in, pick a saved or recent food, or describe the meal to Anya and let her work the calories and macros out.
+/// Add food on one screen. The box at the top is for telling Anya what you ate, in words or with a photo; under it are the foods you keep or ate lately,
+/// one tap each, and a way in to type the numbers yourself. The meal is chosen in the header.
 struct NunaFoodAddSheet: View {
     /// `yyyy-MM-dd` the entries are for.
     let day: String
     let initialMeal: NunaMeal
-    /// Stay on the Anya tab even when she is not connected, so the tab can say how to connect her.
+    /// Kept so callers need not change; Anya is always the first thing on the screen now.
     var anyaFirst = false
 
-    enum Mode: Hashable { case quick, saved, recent, anya }
+    private enum Page { case home, manual }
 
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var coach: AICoachEngine
     @Environment(\.dismiss) private var dismiss
-    @State private var mode: Mode = .anya
+    @State private var page: Page = .home
     @State private var meal: NunaMeal
     @State private var name = ""
     @State private var kcalText = ""
@@ -51,38 +52,29 @@ struct NunaFoodAddSheet: View {
     private var fat: Double? { number(fatText) }
     private var kcal: Double? { fromMacros ? NutritionMath.kcal(proteinG: protein, carbsG: carbs, fatG: fat) : number(kcalText) }
     private var canAdd: Bool { (kcal ?? 0) > 0 }
+    private var hasText: Bool { !description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    private var canEstimate: Bool { !estimating && !readingPhoto && (mealPhoto != nil || hasText) }
 
     var body: some View {
         VStack(spacing: 0) {
             header
             ScrollView {
-                VStack(spacing: 16) {
-                    NunaSegmented([(Mode.anya, "Anya"), (.quick, "Quick add"), (.saved, "Saved"), (.recent, "Recent")], selection: $mode)
-                    mealChips
-                    switch mode {
-                    case .quick: quick
-                    case .saved: savedList
-                    case .recent: recentList
-                    case .anya: anya
-                    }
+                VStack(spacing: 18) {
+                    if page == .home { home } else { manual }
                 }
-                .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 40)
+                .padding(.horizontal, NunaSpacing.screenH).padding(.top, 6).padding(.bottom, 40)
             }
             .scrollIndicators(.hidden).scrollDismissesKeyboard(.interactively)
             .safeAreaInset(edge: .bottom) {
                 // The button rides above the keyboard, so a typed entry can be added without putting the keyboard away.
-                if mode == .quick {
-                    addButton(title: String(localized: "Add to \(mealName)"), enabled: canAdd) { Task { await addQuick() } }
+                if page == .manual {
+                    primaryButton(String(localized: "Add to \(mealName)"), enabled: canAdd) { Task { await addManual() } }
                         .padding(.horizontal, NunaSpacing.screenH).padding(.vertical, 10).background(NunaPalette.canvas)
                 }
             }
         }
         .background(NunaPalette.canvas.ignoresSafeArea())
-        .task {
-            // Anya comes first; without a connection there is nothing to ask her, so the sheet opens on typing the numbers instead.
-            if !coach.isConfigured, !anyaFirst { mode = .quick }
-            saved = await NunaFoodStore.savedFoods(repo: repo); recent = await NunaFoodStore.recentFoods(repo: repo)
-        }
+        .task { saved = await NunaFoodStore.savedFoods(repo: repo); recent = await NunaFoodStore.recentFoods(repo: repo) }
         .nunaKeyboardDone()
         .onChange(of: photoItem) { _, item in
             guard let item else { return }
@@ -100,56 +92,200 @@ struct NunaFoodAddSheet: View {
         }
     }
 
+    // MARK: Header
+
     private var header: some View {
-        HStack {
-            Button { dismiss() } label: { NunaBareIcon("xmark") }.accessibilityLabel(Text("Close"))
-            Spacer()
-            Text("Add food").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-            Spacer()
-            Color.clear.frame(width: 44, height: 44)
-        }
-        .padding(.horizontal, 8).padding(.top, 8)
-    }
-
-    private var mealChips: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
+        HStack(spacing: 8) {
+            Button { if page == .manual { page = .home } else { dismiss() } } label: { NunaBareIcon(page == .manual ? "chevron.left" : "xmark") }
+                .buttonStyle(.plain).accessibilityLabel(Text(page == .manual ? "Back" : "Close"))
+            Text(page == .manual ? "Type the numbers" : "Add food").font(.nuna(size: 20, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            Spacer(minLength: 8)
+            Menu {
                 ForEach(NunaMeal.allCases) { m in
-                    let on = meal == m
-                    Button { meal = m } label: {
-                        Text(m.singular).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary)
-                            .padding(.horizontal, 14).frame(height: 34)
-                            .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                    }.buttonStyle(.plain)
+                    Button { meal = m } label: { if meal == m { Label(m.singular, systemImage: "checkmark") } else { Text(m.singular) } }
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Text(meal.singular).font(.nuna(size: 14, weight: .bold))
+                    Image(systemName: "chevron.down").font(.nuna(size: 11, weight: .bold))
+                }
+                .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 36)
+                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+            }
+            .accessibilityLabel(Text("Meal"))
+        }
+        .padding(.leading, 8).padding(.trailing, 18).padding(.top, 8).padding(.bottom, 6)
+    }
+
+    private var mealName: String {
+        switch meal { case .breakfast: String(localized: "Breakfast"); case .lunch: String(localized: "Lunch"); case .dinner: String(localized: "Dinner"); case .snack: String(localized: "Snacks") }
+    }
+
+    private func primaryButton(_ title: String, enabled: Bool, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(verbatim: title).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54)
+                .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+        }.buttonStyle(.plain).disabled(!enabled).opacity(enabled ? 1 : 0.5)
+    }
+
+    // MARK: Home
+
+    @ViewBuilder private var home: some View {
+        anyaBox
+        if let estimate {
+            NunaAnyaFoodCard(spec: AnyaFoodSpec(meal: meal.rawValue, day: day, items: estimate.items), fixed: (meal, day)) { Task { try? await Task.sleep(nanoseconds: 700_000_000); dismiss() } }
+                .id(estimate.items.map(\.name).joined())
+        }
+        foodsList
+        Button { focused = false; page = .manual } label: {
+            NunaCard(small: true) {
+                NunaListRow("Type the numbers yourself", subtitle: "Calories and macros, saved for next time if you like", systemImage: "square.and.pencil", showsChevron: true)
+            }
+        }.buttonStyle(.plain)
+    }
+
+    /// The box for telling Anya: the words, a photo, and one round button to work it out.
+    @ViewBuilder private var anyaBox: some View {
+        if !coach.isConfigured {
+            NunaCard(small: true) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Connect Anya to log by telling her").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                    Text("Connect Anya in More to describe a meal and have the calories and macros worked out for you.")
+                        .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                }.frame(maxWidth: .infinity, alignment: .leading)
+            }
+        } else {
+            VStack(spacing: 8) {
+                VStack(alignment: .leading, spacing: 10) {
+                    if let image = mealPhoto {
+                        HStack(spacing: 12) {
+                            Image(uiImage: image).resizable().scaledToFill().frame(width: 64, height: 64).clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            Text(readingPhoto ? "Reading the photo…" : (coach.supportsImages ? "Anya will look at it" : "Read on this iPhone"))
+                                .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                            Spacer(minLength: 0)
+                            Button { mealPhoto = nil; photoBase64 = nil; photoItem = nil; estimateError = nil } label: {
+                                Image(systemName: "xmark.circle.fill").font(.nuna(size: 22, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).frame(width: 44, height: 44)
+                            }.buttonStyle(.plain).accessibilityLabel(Text("Remove photo"))
+                        }
+                    }
+                    TextField("", text: $description, prompt: Text(mealPhoto == nil ? "Two eggs and a plate of nasi goreng" : "Portion sizes, anything the photo does not show").foregroundStyle(NunaPalette.textMuted), axis: .vertical)
+                        .font(.nuna(size: 17, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2...6).focused($focused)
+                    HStack(spacing: 10) {
+                        if NunaCameraPicker.isAvailable { roundIcon("camera") { showCamera = true }.accessibilityLabel(Text("Take photo")) }
+                        PhotosPicker(selection: $photoItem, matching: .images) { roundGlyph("photo.on.rectangle") }.buttonStyle(.plain).accessibilityLabel(Text("Choose photo"))
+                        Spacer(minLength: 0)
+                        Button { Task { await estimateMeal() } } label: {
+                            Group {
+                                if estimating || readingPhoto { ProgressView().tint(NunaPalette.onAccent) } else { Image(systemName: "sparkles").font(.nuna(size: 16, weight: .bold)) }
+                            }
+                            .foregroundStyle(NunaPalette.onAccent).frame(width: 46, height: 46).background(NunaPalette.accent, in: Circle())
+                        }.buttonStyle(.plain).disabled(!canEstimate).opacity(canEstimate ? 1 : 0.4).accessibilityLabel(Text("Work out calories"))
+                    }
+                }
+                .padding(16).frame(maxWidth: .infinity, alignment: .leading)
+                .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(LinearGradient(colors: NunaAnyaWing.colors, startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1.5))
+                Text(photoNote).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
+                if let estimateError { Text(verbatim: estimateError).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.warning).fixedSize(horizontal: false, vertical: true).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) }
+            }
+        }
+    }
+
+    private func roundIcon(_ symbol: String, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) { roundGlyph(symbol) }.buttonStyle(.plain)
+    }
+
+    private func roundGlyph(_ symbol: String) -> some View {
+        Image(systemName: symbol).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 46, height: 46).background(NunaPalette.glassStrong, in: Circle())
+    }
+
+    /// What the person is told about where the photo goes.
+    private var photoNote: LocalizedStringKey {
+        if mealPhoto == nil { return "Only this description is sent to Anya, with none of your health data. She estimates each item; you check it before it is added." }
+        return coach.supportsImages
+            ? "The photo and your details go to the Anya provider you chose, with none of your health data. She estimates each item you can see; you check it before it is added."
+            : "This Anya can't see photos, so the photo was read on this iPhone for food names and nothing was sent. Check the names, add portions, then work out the calories."
+    }
+
+    // MARK: Your foods
+
+    private struct Food: Identifiable {
+        let id: String; let name: String; let kcal: Double; let p: Double?; let c: Double?; let f: Double?; let savedID: String?; let source: String
+    }
+
+    /// Saved foods first, most used first, then what was eaten lately that is not already saved.
+    private var foods: [Food] {
+        var out = saved.map { Food(id: "s" + $0.id, name: $0.name, kcal: $0.kcal, p: $0.proteinG, c: $0.carbsG, f: $0.fatG, savedID: $0.id, source: "saved") }
+        let names = Set(saved.map { $0.name.lowercased() })
+        out += recent.filter { !names.contains($0.name.lowercased()) }.map { Food(id: "r" + $0.id, name: $0.name, kcal: $0.kcal, p: $0.proteinG, c: $0.carbsG, f: $0.fatG, savedID: nil, source: $0.source == "anya" ? "anya" : "saved") }
+        return Array(out.prefix(10))
+    }
+
+    @ViewBuilder private var foodsList: some View {
+        let list = foods
+        if !list.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                nunaTrendsCap("Your foods").padding(.leading, 4)
+                NunaCard(small: true, padding: EdgeInsets(top: 2, leading: 16, bottom: 2, trailing: 8)) {
+                    VStack(spacing: 0) {
+                        ForEach(Array(list.enumerated()), id: \.element.id) { i, f in
+                            if i > 0 { NunaDivider() }
+                            Button { Task { await add(f) } } label: { foodRow(f) }.buttonStyle(.plain)
+                                .contextMenu {
+                                    if let sid = f.savedID {
+                                        Button(role: .destructive) { Task { await NunaFoodStore.deleteSaved(id: sid, repo: repo); saved = await NunaFoodStore.savedFoods(repo: repo) } } label: { Label("Delete", systemImage: "trash") }
+                                    }
+                                }
+                        }
+                    }
                 }
             }
         }
     }
 
-    // MARK: Quick add
+    private func foodRow(_ f: Food) -> some View {
+        HStack(spacing: 10) {
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
+                    Text(verbatim: f.name).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).textCase(nil)
+                    if f.savedID != nil { Image(systemName: "bookmark.fill").font(.nuna(size: 10, weight: .bold)).foregroundStyle(NunaPalette.textMuted) }
+                }
+                let macros = [f.p.map { "P \(Int($0.rounded()))" }, f.c.map { "C \(Int($0.rounded()))" }, f.f.map { "F \(Int($0.rounded()))" }].compactMap { $0 }
+                Text(verbatim: ([String(localized: "\(Int(f.kcal.rounded())) kcal")] + macros).joined(separator: " · ")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            }
+            Spacer(minLength: 6)
+            Image(systemName: "plus").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 36, height: 36).background(NunaPalette.glassStrong, in: Circle())
+        }
+        .padding(.vertical, 10).contentShape(Rectangle())
+    }
 
-    private var quick: some View {
-        VStack(spacing: 14) {
-            NunaFormField("Name") {
-                TextField("", text: $name, prompt: Text("Chicken rice bowl").foregroundStyle(NunaPalette.textMuted)).focused($focused)
+    private func add(_ f: Food) async {
+        await NunaFoodStore.add([NunaFoodStore.entry(day: day, meal: meal, name: f.name, kcal: f.kcal, proteinG: f.p, carbsG: f.c, fatG: f.f, source: f.source, repo: repo)], repo: repo)
+        if let sid = f.savedID { await NunaFoodStore.bump(sid, repo: repo) }
+        dismiss()
+    }
+
+    // MARK: Type the numbers
+
+    @ViewBuilder private var manual: some View {
+        NunaFormField("Name") {
+            TextField("", text: $name, prompt: Text("Chicken rice bowl").foregroundStyle(NunaPalette.textMuted)).focused($focused)
+        }
+        NunaFormField("Calories") {
+            if fromMacros {
+                HStack { Text(verbatim: "\(Int((kcal ?? 0).rounded()))").foregroundStyle(NunaPalette.textPrimary); Spacer(); Text("kcal").foregroundStyle(NunaPalette.textSecondary) }
+            } else {
+                HStack { TextField("", text: $kcalText, prompt: Text("0").foregroundStyle(NunaPalette.textMuted)).keyboardType(.decimalPad).focused($focused); Text("kcal").foregroundStyle(NunaPalette.textSecondary) }
             }
-            NunaFormField("Calories") {
-                if fromMacros {
-                    HStack { Text(verbatim: "\(Int((kcal ?? 0).rounded()))").foregroundStyle(NunaPalette.textPrimary); Spacer(); Text("kcal").foregroundStyle(NunaPalette.textSecondary) }
-                } else {
-                    HStack { TextField("", text: $kcalText, prompt: Text("0").foregroundStyle(NunaPalette.textMuted)).keyboardType(.decimalPad).focused($focused); Text("kcal").foregroundStyle(NunaPalette.textSecondary) }
-                }
-            }
-            HStack(spacing: 10) {
-                macroField("Protein", $proteinText)
-                macroField("Carbs", $carbsText)
-                macroField("Fat", $fatText)
-            }
-            NunaCard(small: true) {
-                VStack(spacing: 4) {
-                    NunaToggleRow("Work calories out from macros", subtitle: "4 kcal per gram of protein and carbs, 9 per gram of fat", isOn: $fromMacros)
-                    NunaToggleRow("Save as a food to reuse", isOn: $keepIt)
-                }
+        }
+        HStack(spacing: 10) {
+            macroField("Protein", $proteinText)
+            macroField("Carbs", $carbsText)
+            macroField("Fat", $fatText)
+        }
+        NunaCard(small: true) {
+            VStack(spacing: 4) {
+                NunaToggleRow("Work calories out from macros", subtitle: "4 kcal per gram of protein and carbs, 9 per gram of fat", isOn: $fromMacros)
+                NunaToggleRow("Save as a food to reuse", isOn: $keepIt)
             }
         }
     }
@@ -163,18 +299,7 @@ struct NunaFoodAddSheet: View {
         }
     }
 
-    private var mealName: String {
-        switch meal { case .breakfast: String(localized: "Breakfast"); case .lunch: String(localized: "Lunch"); case .dinner: String(localized: "Dinner"); case .snack: String(localized: "Snacks") }
-    }
-
-    private func addButton(title: String, enabled: Bool, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(verbatim: title).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54)
-                .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-        }.buttonStyle(.plain).disabled(!enabled).opacity(enabled ? 1 : 0.5)
-    }
-
-    private func addQuick() async {
+    private func addManual() async {
         guard let kcal else { return }
         let label = name.trimmingCharacters(in: .whitespaces).isEmpty ? String(localized: "Quick add") : name
         await NunaFoodStore.add([NunaFoodStore.entry(day: day, meal: meal, name: label, kcal: kcal, proteinG: protein, carbsG: carbs, fatG: fat, source: "manual", repo: repo)], repo: repo)
@@ -182,161 +307,7 @@ struct NunaFoodAddSheet: View {
         dismiss()
     }
 
-    // MARK: Saved and recent
-
-    private var savedList: some View {
-        Group {
-            if saved.isEmpty {
-                emptyNote("Foods you save show up here, most used first. Turn on “Save as a food to reuse” when you add one.")
-            } else {
-                NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 16, bottom: 4, trailing: 8)) {
-                    VStack(spacing: 0) {
-                        ForEach(Array(saved.enumerated()), id: \.element.id) { i, f in
-                            if i > 0 { NunaDivider() }
-                            HStack(spacing: 8) {
-                                Button { Task { await addSaved(f) } } label: { foodLabel(f.name, f.kcal, f.proteinG, f.carbsG, f.fatG) }.buttonStyle(.plain)
-                                Button { Task { await NunaFoodStore.deleteSaved(id: f.id, repo: repo); saved = await NunaFoodStore.savedFoods(repo: repo) } } label: {
-                                    Image(systemName: "trash").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.alertText).frame(width: 40, height: 40)
-                                }.buttonStyle(.plain).accessibilityLabel(Text("Delete"))
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private var recentList: some View {
-        Group {
-            if recent.isEmpty {
-                emptyNote("What you eat shows up here, newest first, so you can add it again with one tap.")
-            } else {
-                NunaCard(small: true) {
-                    VStack(spacing: 0) {
-                        ForEach(Array(recent.enumerated()), id: \.element.id) { i, e in
-                            if i > 0 { NunaDivider() }
-                            Button { Task { await addRecent(e) } } label: { foodLabel(e.name, e.kcal, e.proteinG, e.carbsG, e.fatG) }.buttonStyle(.plain)
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private func foodLabel(_ name: String, _ kcal: Double, _ p: Double?, _ c: Double?, _ f: Double?) -> some View {
-        HStack(spacing: 10) {
-            VStack(alignment: .leading, spacing: 3) {
-                Text(verbatim: name).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).multilineTextAlignment(.leading).textCase(nil)
-                let macros = [p.map { "P \(Int($0.rounded()))" }, c.map { "C \(Int($0.rounded()))" }, f.map { "F \(Int($0.rounded()))" }].compactMap { $0 }
-                if !macros.isEmpty { Text(verbatim: macros.joined(separator: " · ")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
-            }
-            Spacer(minLength: 6)
-            Text(verbatim: "\(Int(kcal.rounded()))").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-            Text("kcal").font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-        }
-        .padding(.vertical, 12).contentShape(Rectangle())
-    }
-
-    private func emptyNote(_ text: LocalizedStringKey) -> some View {
-        NunaCard(small: true) {
-            Text(text).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-
-    private func addSaved(_ f: SavedFoodRow) async {
-        await NunaFoodStore.add([NunaFoodStore.entry(day: day, meal: meal, name: f.name, kcal: f.kcal, proteinG: f.proteinG, carbsG: f.carbsG, fatG: f.fatG, source: "saved", repo: repo)], repo: repo)
-        await NunaFoodStore.bump(f.id, repo: repo)
-        dismiss()
-    }
-
-    private func addRecent(_ e: FoodEntryRow) async {
-        await NunaFoodStore.add([NunaFoodStore.entry(day: day, meal: meal, name: e.name, kcal: e.kcal, proteinG: e.proteinG, carbsG: e.carbsG, fatG: e.fatG, source: e.source == "anya" ? "anya" : "saved", repo: repo)], repo: repo)
-        dismiss()
-    }
-
     // MARK: Anya
-
-    private var anya: some View {
-        VStack(spacing: 14) {
-            if !coach.isConfigured {
-                emptyNote("Connect Anya in More to describe a meal and have the calories and macros worked out for you.")
-            } else {
-                photoRow
-                NunaFormField(mealPhoto == nil ? "What did you eat?" : "Details (optional)") {
-                    TextField("", text: $description, prompt: Text(mealPhoto == nil ? "Two eggs and a plate of nasi goreng" : "Portion sizes, anything the photo does not show").foregroundStyle(NunaPalette.textMuted), axis: .vertical)
-                        .lineLimit(2...5).focused($focused).padding(.vertical, 10)
-                }
-                Text(photoNote)
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
-                Button { Task { await estimateMeal() } } label: {
-                    HStack(spacing: 8) {
-                        if estimating || readingPhoto { ProgressView().tint(NunaPalette.onAccent) } else { Image(systemName: "sparkles").font(.nuna(size: 15, weight: .bold)) }
-                        Text(estimating ? "Working it out…" : "Work out calories").font(.nuna(size: 17, weight: .bold))
-                    }
-                    .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54)
-                    .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                }.buttonStyle(.plain).disabled(!canEstimate).opacity(canEstimate ? 1 : 0.5)
-                if let estimateError {
-                    Text(verbatim: estimateError).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.warning).fixedSize(horizontal: false, vertical: true).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
-                }
-                if let estimate {
-                    NunaAnyaFoodCard(spec: AnyaFoodSpec(meal: meal.rawValue, day: day, items: estimate.items)) { Task { try? await Task.sleep(nanoseconds: 700_000_000); dismiss() } }
-                        .id(estimate.items.map(\.name).joined())
-                }
-            }
-        }
-    }
-
-    private var canEstimate: Bool {
-        !estimating && !readingPhoto && (mealPhoto != nil || !description.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-    }
-
-    /// What the person is told about where the photo goes.
-    private var photoNote: LocalizedStringKey {
-        if mealPhoto == nil { return "Only this description is sent to Anya, with none of your health data. She estimates each item; you check it before it is added." }
-        return coach.supportsImages
-            ? "The photo and your details go to the Anya provider you chose, with none of your health data. She estimates each item you can see; you check it before it is added."
-            : "This Anya can't see photos, so the photo was read on this iPhone for food names and nothing was sent. Check the names, add portions, then work out the calories."
-    }
-
-    private var photoRow: some View {
-        VStack(spacing: 10) {
-            if let image = mealPhoto {
-                HStack(spacing: 12) {
-                    Image(uiImage: image).resizable().scaledToFill().frame(width: 72, height: 72).clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("Photo added").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                        Text(readingPhoto ? "Reading the photo…" : (coach.supportsImages ? "Anya will look at it" : "Read on this iPhone")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    }
-                    Spacer(minLength: 0)
-                    Button { mealPhoto = nil; photoBase64 = nil; photoItem = nil; estimateError = nil } label: { Image(systemName: "xmark.circle.fill").font(.nuna(size: 22, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).frame(width: 44, height: 44) }
-                        .buttonStyle(.plain).accessibilityLabel(Text("Remove photo"))
-                }
-            } else {
-                HStack(spacing: 10) {
-                    if NunaCameraPicker.isAvailable {
-                        photoButton("camera", "Take photo") { showCamera = true }
-                    }
-                    PhotosPicker(selection: $photoItem, matching: .images) {
-                        photoLabel("photo.on.rectangle", "Choose photo")
-                    }.buttonStyle(.plain)
-                }
-            }
-        }
-    }
-
-    private func photoButton(_ symbol: String, _ title: LocalizedStringKey, _ action: @escaping () -> Void) -> some View {
-        Button(action: action) { photoLabel(symbol, title) }.buttonStyle(.plain)
-    }
-
-    private func photoLabel(_ symbol: String, _ title: LocalizedStringKey) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: symbol).font(.nuna(size: 15, weight: .bold))
-            Text(title).font(.nuna(size: 15, weight: .bold))
-        }
-        .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 48)
-        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-    }
 
     /// Keeps the photo; when Anya cannot see it, reads food names from it here and puts them in the box for the person to correct.
     private func take(_ image: UIImage, base64: String) async {
