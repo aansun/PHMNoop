@@ -179,7 +179,7 @@ struct NunaRootView: View {
     @ViewBuilder private func destinationView(_ dest: NavRouter.Destination) -> some View {
         switch dest {
         case .insightsHub: InsightsHubView()
-        case .labBook: LabBookView()
+        case .labBook: NunaLabBookView()
         case .fusedRecord: FusedRecordHost()
         case .rhythm: RhythmHost(onClose: { routed = nil })
         case .devices: NunaDevicesView()

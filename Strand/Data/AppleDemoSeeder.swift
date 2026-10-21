@@ -283,11 +283,11 @@ enum AppleDemoSeeder {
         // would from their own report, so the Lab Book screens can be looked at under `--demo-seed`.
         let labDays: [(Int, [(String, String, Double, String, String?)])] = [
             (95, [("ldl", "bloodPanel", 3.6, "mmol/L", "0 - 3.4"), ("hdl", "bloodPanel", 1.2, "mmol/L", "1 - 2.2"), ("fasting_glucose", "bloodPanel", 5.4, "mmol/L", "3.9 - 5.6"),
-                  ("vitamin_d", "bloodPanel", 46, "nmol/L", "50 - 125"), ("ferritin", "bloodPanel", 62, "µg/L", "30 - 300"), ("bp_systolic", "bloodPressure", 128, "mmHg", "90 - 120"),
+                  ("vitamin_d", "bloodPanel", 46, "nmol/L", "50 - 125"), ("ferritin", "bloodPanel", 62, "µg/L", "30 - 300"), ("bp_systolic", "bloodPressure", 128, "mmHg", "90 - 120"), ("bp_diastolic", "bloodPressure", 84, "mmHg", "60 - 80"), ("resting_pulse", "bloodPressure", 71, "bpm", "60 - 100"),
                   ("weight", "bodyMeasurement", 77.2, "kg", nil)]),
             (14, [("ldl", "bloodPanel", 3.1, "mmol/L", "0 - 3.4"), ("hdl", "bloodPanel", 1.3, "mmol/L", "1 - 2.2"), ("fasting_glucose", "bloodPanel", 5.1, "mmol/L", "3.9 - 5.6"),
                   ("vitamin_d", "bloodPanel", 68, "nmol/L", "50 - 125"), ("ferritin", "bloodPanel", 58, "µg/L", "30 - 300"), ("tsh", "bloodPanel", 4.8, "mIU/L", "0.4 - 4.0"),
-                  ("bp_systolic", "bloodPressure", 118, "mmHg", "90 - 120"), ("weight", "bodyMeasurement", 75.0, "kg", nil), ("waist", "bodyMeasurement", 84.5, "cm", nil)]),
+                  ("bp_systolic", "bloodPressure", 118, "mmHg", "90 - 120"), ("bp_diastolic", "bloodPressure", 78, "mmHg", "60 - 80"), ("resting_pulse", "bloodPressure", 66, "bpm", "60 - 100"), ("weight", "bodyMeasurement", 75.0, "kg", nil), ("waist", "bodyMeasurement", 84.5, "cm", nil)]),
         ]
         var labRows: [LabMarkerRow] = []
         for (ago, items) in labDays {
