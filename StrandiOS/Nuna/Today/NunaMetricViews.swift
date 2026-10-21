@@ -39,6 +39,8 @@ enum NunaTodayRoute: Hashable {
     case sleepSettings
     /// The seven-night sleep overview (what the Health tab used to show for sleep).
     case sleepOverview
+    /// How Charge and Effort move together: the page the Last 7 days card opens.
+    case chargeEffort
 }
 
 extension View {
@@ -72,6 +74,7 @@ extension View {
             case .vitalSigns: NunaHealthView(vitalsOnly: true)
             case .sleepSettings: NunaSleepSettingsView()
             case .sleepOverview: NunaHealthView()
+            case .chargeEffort: NunaChargeEffortView()
             }
         }
     }

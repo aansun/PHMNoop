@@ -89,7 +89,7 @@ struct NunaChargeEffortView: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack { nunaTrendsCap(LocalizedStringKey(String(localized: "\(range) days"))); Spacer(); Text("Capsule: Charge · Line: Effort").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                 NunaCapsuleChart(start: start, days: range, charge: ch, effort: m.window(m.effort, days: range), effortScale: scale,
-                                 selected: range > 7 ? $selected : nil)
+                                 selected: $selected)
                 NunaCapsuleLegend()
                 if let sel, let d = m.date(sel) {
                     HStack(spacing: 10) {
