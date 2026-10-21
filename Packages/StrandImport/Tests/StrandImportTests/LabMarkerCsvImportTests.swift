@@ -338,3 +338,24 @@ final class LabMarkerCsvImportTests: XCTestCase {
         XCTAssertEqual(names.map(LabMarkerCsvImport.customKey), expected)
     }
 }
+
+final class LabMarkerCsvTemplateTests: XCTestCase {
+    func testTheTemplateIsReadInFullWithItsRanges() {
+        let r = LabMarkerCsvImport.parse(text: LabMarkerCsvImport.template)
+        XCTAssertEqual(r.skippedRows, 0)
+        XCTAssertEqual(r.rows.count, 6)
+        XCTAssertEqual(r.rows.first { $0.markerKey == "ldl" }?.referenceText, "<3.4")
+        XCTAssertEqual(r.rows.first { $0.markerKey == "fasting_glucose" }?.note, "Fasted 10 hours")
+        XCTAssertEqual(r.rows.first { $0.markerKey == "bp_systolic" }?.referenceText, "90 - 120")
+        XCTAssertNil(r.rows.first { $0.markerKey == "weight" }?.referenceText)
+    }
+
+    func testMakeRowKeepsUnitAndRangeVerbatimAndRejectsBadInput() {
+        let r = LabMarkerCsvImport.makeRow(name: "Vitamin D", value: 68, unit: "nmol/L", day: "2026-10-07", referenceText: "50 - 125")
+        XCTAssertEqual(r?.markerKey, "vitamin_d"); XCTAssertEqual(r?.unit, "nmol/L"); XCTAssertEqual(r?.referenceText, "50 - 125")
+        XCTAssertEqual(LabMarkerCsvImport.makeRow(name: "My own marker", value: 1, unit: nil, day: "2026-10-07")?.isCustomMarker, true)
+        XCTAssertNil(LabMarkerCsvImport.makeRow(name: "Vitamin D", value: .nan, unit: nil, day: "2026-10-07"))
+        XCTAssertNil(LabMarkerCsvImport.makeRow(name: "Vitamin D", value: 1, unit: nil, day: "yesterday"))
+        XCTAssertNil(LabMarkerCsvImport.makeRow(name: "Blood pressure", value: 118, unit: nil, day: "2026-10-07"))
+    }
+}

@@ -1064,6 +1064,13 @@ final class AICoachEngine: ObservableObject {
         persistMessages()
     }
 
+    /// Adds a question and its answer that were made on this iPhone (a lab file read here, for instance): no provider is called and nothing leaves the phone.
+    func appendLocalExchange(user: String, assistant: String) {
+        appendMessage(ChatMessage(role: .user, text: user))
+        appendMessage(ChatMessage(role: .assistant, text: assistant))
+        persistMessages()
+    }
+
     /// K11: An optional chart image (base64-encoded PNG) to send with the next user message.
     /// Set by the composer's "Attach chart" toggle when multimodal is enabled and the provider
     /// is Gemini. Consumed (cleared) on the next send. nil when no image is attached.

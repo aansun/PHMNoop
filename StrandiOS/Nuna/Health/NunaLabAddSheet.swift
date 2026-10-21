@@ -254,17 +254,29 @@ struct NunaLabAddSheet: View {
                         .frame(width: 40, height: 40).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
                     Text("Import readings").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 }
-                Text("Bring in a markers CSV (date, marker, value, unit). Names that match the catalog fold onto your existing markers; anything else comes in as a custom marker. Rows that can't be read are skipped and counted, never guessed. Everything you import stays on this iPhone.")
+                Text("Fill in the template, or bring a CSV or a FHIR file (.json) from your lab. Names that match the catalog fold onto your existing markers; anything else comes in as a custom marker. Rows that can't be read are skipped and counted, never guessed. Everything you import stays on this iPhone.")
                     .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                VStack(alignment: .leading, spacing: 6) {
-                    nunaTrendsCap("Example row")
-                    Text(verbatim: "2026-10-07, LDL cholesterol, 3.1, mmol/L").font(.system(size: 13, weight: .semibold, design: .monospaced)).foregroundStyle(NunaPalette.textPrimary)
+                VStack(alignment: .leading, spacing: 8) {
+                    nunaTrendsCap("Template")
+                    Text(verbatim: "date,marker,value,unit,range,note\n2026-10-07,LDL cholesterol,3.1,mmol/L,<3.4,\n2026-10-07,Weight,75,kg,,").font(.system(size: 11, weight: .semibold, design: .monospaced)).foregroundStyle(NunaPalette.textPrimary)
                         .padding(12).frame(maxWidth: .infinity, alignment: .leading).background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
+                    Text("date as yyyy-MM-dd · range and note are optional · copy the range from your own report. Blood pressure goes on two lines, systolic and diastolic.")
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                }
+                if let template = NunaLabStore.templateFile() {
+                    ShareLink(item: template, subject: Text("Lab Book template"), message: Text("Lab Book template")) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "arrow.down.doc").font(.nuna(size: 15, weight: .bold))
+                            Text("Download template").font(.nuna(size: 17, weight: .bold))
+                        }
+                        .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 54)
+                        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                    }.buttonStyle(.plain)
                 }
                 Button { Task { await chooseFile() } } label: {
                     HStack(spacing: 8) {
                         if importing { ProgressView().tint(NunaPalette.onAccent) } else { Image(systemName: "square.and.arrow.down").font(.nuna(size: 15, weight: .bold)) }
-                        Text("Choose CSV…").font(.nuna(size: 17, weight: .bold))
+                        Text("Choose file…").font(.nuna(size: 17, weight: .bold))
                     }
                     .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54)
                     .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
@@ -280,7 +292,7 @@ struct NunaLabAddSheet: View {
     }
 
     private func chooseFile() async {
-        guard let url = await DocumentPicker.importFile([.commaSeparatedText, .plainText]) else { return }
+        guard let url = await DocumentPicker.importFile([.commaSeparatedText, .plainText, .json]) else { return }
         importing = true; importSummary = nil
         let result = await NunaLabStore.importCsv(url: url, repo: repo) { line in
             live.append(log: "[\(AppModel.logTimeFormatter.string(from: Date()))] Import \(line)")

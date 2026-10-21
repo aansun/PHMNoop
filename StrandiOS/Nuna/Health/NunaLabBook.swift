@@ -205,7 +205,7 @@ struct NunaMarkerDetailView: View {
 
     private var marker: NunaLabMarker? { NunaLabGrouping.markers(rows).first { $0.key == markerKey } }
     private var title: String {
-        markerKey == LabBookProjection.bpSystolicKey ? String(localized: "Blood pressure") : (MarkerCatalog.definition(for: markerKey)?.displayName ?? LabBookView.humanise(markerKey))
+        NunaLabGrouping.markerName(markerKey)
     }
 
     var body: some View {

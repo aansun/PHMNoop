@@ -1,9 +1,9 @@
 import Foundation
 
-// AnyaActions.swift — what Anya can hand back besides prose: a chart, a gym program, a workout.
+// AnyaActions.swift — what Anya can hand back besides prose: a chart, a gym program, a workout, lab results to review.
 //
 // PURE and unit-tested. The provider is told (see `instruction`) to put each such item in a fenced block tagged
-// `anya-chart`, `anya-program` or `anya-workout` holding a small JSON object. The app parses them out of the reply and draws
+// `anya-chart`, `anya-program`, `anya-workout` or `anya-lab` holding a small JSON object. The app parses them out of the reply and draws
 // native cards. A chart names a metric and a window, never numbers: the app draws it from the readings stored on the phone, so
 // a chart can never show a figure the model made up. Everything is clamped to sane ranges; a block that does not parse or fails
 // validation falls back to plain text and is never executed.
@@ -43,11 +43,30 @@ public struct AnyaWorkoutSpec: Equatable, Sendable {
     public var note: String?
 }
 
+/// One lab result Anya read out of what the person typed or attached, copied as written: the unit and the range are verbatim, never converted.
+public struct AnyaLabResult: Equatable, Sendable {
+    public var marker: String
+    public var value: Double
+    public var unit: String?
+    /// `yyyy-MM-dd`, when the source states the day this result was taken.
+    public var day: String?
+    public var range: String?
+    public var note: String?
+}
+
+/// Results for the person to check before anything is saved to the Lab Book. `day` is the day of the whole report, used for a result without its own.
+public struct AnyaLabSpec: Equatable, Sendable {
+    public var title: String?
+    public var day: String?
+    public var results: [AnyaLabResult]
+}
+
 public enum AnyaBlock: Equatable, Sendable {
     case text(String)
     case chart(AnyaChartSpec)
     case program(AnyaProgramSpec)
     case workout(AnyaWorkoutSpec)
+    case lab(AnyaLabSpec)
 }
 
 public enum AnyaActions {
@@ -73,6 +92,14 @@ public enum AnyaActions {
     {"title":"Easy zone 2 run","sport":"Running","minutes":40,"zone":2}
     ```
     minutes 5 to 240; zone 1 to 5 (optional); sport optional. The app offers a Start button. \
+    LAB RESULTS: When the person types lab results (a medical check-up, a blood panel, a blood pressure) or attaches a lab report and wants them in their Lab Book, \
+    answer with one short line of prose AND one block listing what you read. Copy each name, value, unit and range exactly as the source writes them; never convert a unit, \
+    estimate, add or fix a value, and leave out anything you cannot read. Give blood pressure as two results, "Systolic blood pressure" and "Diastolic blood pressure". \
+    Do not judge, rate or diagnose any value: the person checks the card and saves it themselves.
+    ```anya-lab
+    {"day":"2026-10-07","results":[{"marker":"LDL cholesterol","value":3.1,"unit":"mmol/L","range":"<3.4"},{"marker":"Vitamin D","value":68,"unit":"nmol/L","day":"2026-10-07"}]}
+    ```
+    day is the day the sample was taken, yyyy-MM-dd, when the source says so (leave it out when it does not); up to 60 results; range and note are optional.
     Keep the prose short and put the details in the block.
     """
 
@@ -130,6 +157,34 @@ public enum AnyaActions {
                                zone: int(o["zone"]).map { clamp($0, 1, 5) }, note: text(o["note"], max: 200))
     }
 
+    static func double(_ any: Any?) -> Double? {
+        if let d = any as? Double, d.isFinite { return d }
+        if let i = any as? Int { return Double(i) }
+        if let s = (any as? String)?.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: ",", with: "."), let d = Double(s), d.isFinite { return d }
+        return nil
+    }
+
+    /// `yyyy-MM-dd` with a real month and day, or nil.
+    static func day(_ any: Any?) -> String? {
+        guard let s = text(any, max: 10), s.count == 10 else { return nil }
+        let p = s.split(separator: "-")
+        guard p.count == 3, p[0].count == 4, let y = Int(p[0]), let m = Int(p[1]), let d = Int(p[2]), (1900...2100).contains(y), (1...12).contains(m), (1...31).contains(d) else { return nil }
+        return s
+    }
+
+    /// What a card shows: a long lab file read on the phone, never more than this.
+    static let maxLabResults = 200
+
+    static func lab(_ o: [String: Any]) -> AnyaLabSpec? {
+        var results: [AnyaLabResult] = []
+        for r in ((o["results"] as? [Any]) ?? []).prefix(maxLabResults) {
+            guard let ro = r as? [String: Any], let name = text(ro["marker"] ?? ro["name"], max: 60), let v = double(ro["value"]) else { continue }
+            results.append(AnyaLabResult(marker: name, value: v, unit: text(ro["unit"], max: 20), day: day(ro["day"]), range: text(ro["range"], max: 60), note: text(ro["note"], max: 200)))
+        }
+        guard !results.isEmpty else { return nil }
+        return AnyaLabSpec(title: text(o["title"], max: 80), day: day(o["day"]), results: results)
+    }
+
     // MARK: Parsing a reply
 
     /// Splits a reply into prose and action blocks, in order. An action fence that is still open (a reply that is streaming) or
@@ -157,6 +212,7 @@ public enum AnyaActions {
             case "chart": if let c = chart(obj) { out.append(.chart(c)) }
             case "program": if let p = program(obj) { out.append(.program(p)) }
             case "workout": if let w = workout(obj) { out.append(.workout(w)) }
+            case "lab": if let l = lab(obj) { out.append(.lab(l)) }
             default: break
             }
         }

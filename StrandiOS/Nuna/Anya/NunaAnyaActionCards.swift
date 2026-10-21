@@ -3,6 +3,7 @@ import SwiftUI
 import StrandDesign
 import StrandAnalytics
 import WhoopStore
+import StrandImport
 
 /// An assistant reply drawn as prose plus native cards for the charts, programs and workouts it carries.
 struct NunaAnyaReply: View {
@@ -21,6 +22,7 @@ struct NunaAnyaReply: View {
                 case .chart(let c): NunaAnyaChartCard(spec: c)
                 case .program(let p): NunaAnyaProgramCard(spec: p)
                 case .workout(let w): NunaAnyaWorkoutCard(spec: w)
+                case .lab(let l): NunaAnyaLabCard(spec: l)
                 }
             }
         }
@@ -194,6 +196,109 @@ struct NunaAnyaWorkoutCard: View {
         parts.append(String(localized: "\(spec.minutes) min"))
         if let z = spec.zone { parts.append(String(localized: "Zone \(z)")) }
         return parts.joined(separator: " · ")
+    }
+}
+
+// MARK: - Lab results
+
+/// Lab results Anya read from what was typed or attached, or that a CSV or FHIR file held. Nothing is saved until the person taps Save, and each line can
+/// be left out; values, units and ranges are shown exactly as read, and a name that matches the catalog joins that marker's history.
+struct NunaAnyaLabCard: View {
+    let spec: AnyaLabSpec
+    @EnvironmentObject private var repo: Repository
+    @State private var excluded: Set<Int> = []
+    @State private var fallbackDay = Date()
+    @State private var saving = false
+    @State private var savedCount: Int?
+    @State private var showLab = false
+
+    private var needsDay: Bool { spec.day == nil && spec.results.contains { $0.day == nil } }
+    private var fallbackKey: String { Repository.localDayKey(fallbackDay) }
+
+    private func made(_ r: AnyaLabResult) -> LabMarkerCsvRow? {
+        LabMarkerCsvImport.makeRow(name: r.marker, value: r.value, unit: r.unit, day: r.day ?? spec.day ?? fallbackKey, referenceText: r.range, note: r.note)
+    }
+
+    private var chosen: [LabMarkerCsvRow] {
+        spec.results.enumerated().compactMap { i, r in excluded.contains(i) ? nil : made(r) }
+    }
+
+    var body: some View {
+        NunaCard(small: true) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 10) {
+                    NunaIconTile("testtube.2")
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(verbatim: spec.title ?? String(localized: "Lab results")).font(.nuna(size: 16.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                        Text(verbatim: String(localized: "\(spec.results.count) results to check")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    }
+                    Spacer(minLength: 0)
+                }
+                if needsDay && savedCount == nil {
+                    HStack {
+                        Text("Taken on").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                        Spacer()
+                        DatePicker("", selection: $fallbackDay, in: ...Date(), displayedComponents: .date).labelsHidden()
+                    }
+                }
+                ForEach(Array(spec.results.enumerated()), id: \.offset) { i, r in line(i, r) }
+                if let n = savedCount {
+                    HStack(spacing: 10) {
+                        Label(String(localized: "Saved \(n) results"), systemImage: "checkmark.circle.fill").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.charge)
+                        Spacer()
+                        Button { showLab = true } label: { Text("Open Lab Book").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary) }.buttonStyle(.plain)
+                    }
+                } else {
+                    Button { Task { await save() } } label: {
+                        Text(String(localized: "Save \(chosen.count) to Lab Book")).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 46)
+                            .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+                    }.buttonStyle(.plain).disabled(saving || chosen.isEmpty).opacity(saving || chosen.isEmpty ? 0.5 : 1)
+                    Text("Nothing is saved until you tap Save. Check each value against your report.").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                }
+            }
+        }
+        .sheet(isPresented: $showLab) { NunaQuickPanel(route: NunaTodayRoute.labBook) }
+    }
+
+    @ViewBuilder private func line(_ i: Int, _ r: AnyaLabResult) -> some View {
+        let row = made(r)
+        let on = row != nil && !excluded.contains(i)
+        let range = NunaLabRange.parse(row?.referenceText)
+        let status = row.flatMap { range?.status($0.value) }
+        Button { if row != nil, savedCount == nil { if on { excluded.insert(i) } else { excluded.remove(i) } } } label: {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: on ? "checkmark.circle.fill" : "circle").font(.nuna(size: 20, weight: .semibold))
+                    .foregroundStyle(on ? NunaPalette.charge : NunaPalette.textMuted).padding(.top, 1)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(verbatim: row.flatMap { MarkerCatalog.definition(for: $0.markerKey)?.displayName } ?? r.marker).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    Text(verbatim: detail(r, row)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    if status != nil || row?.isCustomMarker == true {
+                        HStack(spacing: 6) {
+                            if let status { NunaChip(NunaLabRange.word(status), color: NunaLabRange.tint(status)) }
+                            if let row, row.isCustomMarker { NunaChip("New marker") }
+                        }
+                    }
+                    if row == nil { Text("Can't be added. Give blood pressure as systolic and diastolic.").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.warning).textCase(nil) }
+                }
+                Spacer(minLength: 0)
+            }
+            .opacity(on || savedCount != nil ? 1 : 0.5).contentShape(Rectangle())
+        }.buttonStyle(.plain)
+    }
+
+    private func detail(_ r: AnyaLabResult, _ row: LabMarkerCsvRow?) -> String {
+        var parts = [LabBookFormat.value(r.value, key: row?.markerKey ?? "") + ((row?.unit ?? r.unit ?? "").isEmpty ? "" : " " + (row?.unit ?? r.unit ?? ""))]
+        if let range = row?.referenceText { parts.append(String(localized: "range \(range)")) }
+        if let day = row?.day { parts.append(LabBookFormat.dayFromKey(day)) }
+        return parts.joined(separator: " · ")
+    }
+
+    private func save() async {
+        let rows = chosen
+        guard !rows.isEmpty else { return }
+        saving = true; defer { saving = false }
+        await NunaLabStore.save(NunaLabStore.storedRows(rows, source: "anya-lab", deviceId: repo.deviceId), repo: repo)
+        savedCount = rows.count
     }
 }
 #endif
