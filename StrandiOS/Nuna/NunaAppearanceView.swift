@@ -111,7 +111,7 @@ struct NunaAppearanceView: View {
         }
     }
 
-    /// Default (the black-and-neon Nuna look) or WHP (a slate, blue-grey night look). WHP has no light mode.
+    /// Default (the black-and-neon Nuna look), WHP (a slate, blue-grey night look, no light mode) or Flow (a warm berry and cream look, light and dark).
     private var skinSection: some View {
         VStack(alignment: .leading, spacing: 10) {
             nunaRuledHeader("Style")
@@ -136,15 +136,21 @@ struct NunaAppearanceView: View {
     }
 
     private func skinThumb(_ k: NunaThemePrefs.Skin) -> some View {
-        let whp = k == .whp
+        let c: (bg: String, card: String, line: String, accent: String, muted: String)
+        switch k {
+        case .standard: c = ("#000000", "#121214", "#202024", "#00FF66", "#71717A")
+        case .whp: c = ("#0F1519", "#1B242B", "#27333B", "#7FB5E6", "#6F7C86")
+        case .flow: c = ("#FBF6F2", "#FFFFFF", "#E6D6CE", "#8A2F5C", "#9C8590")
+        }
+        let soft = k == .flow
         return ZStack {
-            Color(hex: whp ? "#0F1519" : "#000000")
+            Color(hex: c.bg)
             VStack(alignment: .leading, spacing: 6) {
-                RoundedRectangle(cornerRadius: 5).fill(Color(hex: whp ? "#1B242B" : "#121214")).frame(height: 26)
-                    .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(Color(hex: whp ? "#27333B" : "#202024"), lineWidth: 1))
+                RoundedRectangle(cornerRadius: soft ? 8 : 5).fill(Color(hex: c.card)).frame(height: 26)
+                    .overlay(RoundedRectangle(cornerRadius: soft ? 8 : 5).strokeBorder(Color(hex: c.line), lineWidth: 1))
                 HStack(spacing: 6) {
-                    RoundedRectangle(cornerRadius: 3).fill(Color(hex: whp ? "#7FB5E6" : "#00FF66")).frame(width: 28, height: 8)
-                    RoundedRectangle(cornerRadius: 3).fill(Color(hex: whp ? "#6F7C86" : "#71717A")).frame(width: 18, height: 8)
+                    RoundedRectangle(cornerRadius: soft ? 4 : 3).fill(Color(hex: c.accent)).frame(width: 28, height: 8)
+                    RoundedRectangle(cornerRadius: soft ? 4 : 3).fill(Color(hex: c.muted)).frame(width: 18, height: 8)
                 }
             }.padding(9)
         }.clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))

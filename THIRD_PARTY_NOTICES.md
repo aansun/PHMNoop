@@ -62,4 +62,5 @@ not used.
 ## Fonts and MarkdownUI
 
 - D-DIN-PRO and Montserrat: **SIL Open Font License 1.1**; the license texts ship in `StrandiOS/Resources/Fonts/`.
+- Fraunces and Plus Jakarta Sans (the Flow style): **SIL Open Font License 1.1**; the license texts (`OFL-Fraunces.txt`, `OFL-PlusJakartaSans.txt`) ship beside the variable font files in `StrandiOS/Resources/Fonts/`.
 - MarkdownUI (`gonzalezreal/swift-markdown-ui`): **MIT License**, Guillermo Gonzalez.

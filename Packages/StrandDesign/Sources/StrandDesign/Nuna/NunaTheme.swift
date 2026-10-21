@@ -16,29 +16,30 @@ import CoreText
 
 public enum NunaPalette {
     /// A token that follows the selected skin: the light and dark values of the Default skin, or the WHP slate in dark.
-    static func skinned(light: String, dark: String, whp: String) -> Color {
-        Color(light: light, dark: NunaThemePrefs.skin == .whp ? whp : dark)
+    static func skinned(light: String, dark: String, whp: String, flow: (light: String, dark: String)? = nil) -> Color {
+        if NunaThemePrefs.skin == .flow, let flow { return Color(light: flow.light, dark: flow.dark) }
+        return Color(light: light, dark: NunaThemePrefs.skin == .whp ? whp : dark)
     }
 
     // Every surface and text token is adaptive: the first hex is the light value, the second the dark one. The dark
     // values are the Nuna originals; the light ones keep the same hierarchy on a white-grey canvas.
 
     // Surfaces. Dark values follow the "Rekomendasi Palet Warna Health App Dark Mode" guide: pure black canvas, #121214 cards.
-    public static var canvas: Color { skinned(light: "#E9ECEF", dark: "#000000", whp: "#0F1519") }
-    public static var card: Color { skinned(light: "#FFFFFF", dark: "#121214", whp: "#1B242B") }
-    public static var cardHighlight: Color { skinned(light: "#E9EEF2", dark: "#1B1B1F", whp: "#25313A") }
+    public static var canvas: Color { skinned(light: "#E9ECEF", dark: "#000000", whp: "#0F1519", flow: ("#FBF6F2", "#1A1217")) }
+    public static var card: Color { skinned(light: "#FFFFFF", dark: "#121214", whp: "#1B242B", flow: ("#FFFFFF", "#241A20")) }
+    public static var cardHighlight: Color { skinned(light: "#E9EEF2", dark: "#1B1B1F", whp: "#25313A", flow: ("#F3E9E3", "#2E2228")) }
     /// The well of a text field or a segmented control: a dark inset on the dark themes, a soft light grey on the light one (a dark
     /// inset on a light card would make the text in it hard to read).
-    public static var field: Color { skinned(light: "#F1F3F5", dark: "#00000047", whp: "#0000004D") }
-    public static var glass: Color { skinned(light: "#0A0D100D", dark: "#FFFFFF0D", whp: "#FFFFFF0D") }
+    public static var field: Color { skinned(light: "#F1F3F5", dark: "#00000047", whp: "#0000004D", flow: ("#F3E9E3", "#120C10")) }
+    public static var glass: Color { skinned(light: "#0A0D100D", dark: "#FFFFFF0D", whp: "#FFFFFF0D", flow: ("#2A1B240D", "#F5EBEF0D")) }
     /// The surface of every card and tile: the ink at a low opacity over the canvas, so it follows the skin and the light or dark theme.
-    public static var tile: Color { skinned(light: "#0A0D1014", dark: "#FFFFFF17", whp: "#FFFFFF17") }
-    public static var glassStrong: Color { skinned(light: "#0A0D1014", dark: "#FFFFFF17", whp: "#FFFFFF17") }
+    public static var tile: Color { skinned(light: "#0A0D1014", dark: "#FFFFFF17", whp: "#FFFFFF17", flow: ("#2A1B2410", "#F5EBEF14")) }
+    public static var glassStrong: Color { skinned(light: "#0A0D1014", dark: "#FFFFFF17", whp: "#FFFFFF17", flow: ("#2A1B2410", "#F5EBEF14")) }
     // Lines are opaque tones a step off the card colour, so a card edge reads as part of the card instead of a drawn outline.
     // The card itself stays clearly apart from the canvas (#121214 on #000000, white on #E9ECEF).
-    public static var hairline: Color { skinned(light: "#D5DAE0", dark: "#2A2A30", whp: "#2F3B44") }
-    public static var hairlineSoft: Color { skinned(light: "#E1E5EA", dark: "#202024", whp: "#27333B") }
-    public static var cardBorderHighlight: Color { skinned(light: "#C3CAD2", dark: "#34343B", whp: "#3B4A55") }
+    public static var hairline: Color { skinned(light: "#D5DAE0", dark: "#2A2A30", whp: "#2F3B44", flow: ("#E6D6CE", "#3D2D36")) }
+    public static var hairlineSoft: Color { skinned(light: "#E1E5EA", dark: "#202024", whp: "#27333B", flow: ("#E6D6CE99", "#3D2D3699")) }
+    public static var cardBorderHighlight: Color { skinned(light: "#C3CAD2", dark: "#34343B", whp: "#3B4A55", flow: ("#9C8590", "#8A7380")) }
     /// The contrast layer and label colour placed above a system map. These deliberately stay constant so controls
     /// retain legibility regardless of the selected app theme or map tiles beneath them.
     public static let mapOverlay = Color(light: "#0A0D10B3", dark: "#000000B3")
@@ -46,14 +47,14 @@ public enum NunaPalette {
 
     /// The foreground ink of the theme (white on dark, near-black on light) and the matching shade for wells.
     /// Use `.opacity` on them wherever a translucent overlay of the text colour is wanted.
-    public static let ink   = Color(light: "#0A0D10", dark: "#FFFFFF")
-    public static let shade = Color(light: "#0A0D10", dark: "#000000")
+    public static var ink: Color { NunaThemePrefs.skin == .flow ? Color(light: "#2A1B24", dark: "#F5EBEF") : Color(light: "#0A0D10", dark: "#FFFFFF") }
+    public static var shade: Color { NunaThemePrefs.skin == .flow ? Color(light: "#2A1B24", dark: "#120C10") : Color(light: "#0A0D10", dark: "#000000") }
 
     // Text. The guide's #71717A (grid lines and chart labels) is `textMuted`; running secondary text uses #A1A1AA, which keeps
     // its contrast on the #121214 cards where #71717A alone would not.
-    public static let textPrimary   = Color(light: "#0A0D10", dark: "#FFFFFF")
-    public static var textSecondary: Color { skinned(light: "#4C565E", dark: "#A1A1AA", whp: "#9FABB4") }
-    public static var textMuted: Color { skinned(light: "#7A848C", dark: "#71717A", whp: "#6F7C86") }
+    public static var textPrimary: Color { NunaThemePrefs.skin == .flow ? Color(light: "#2A1B24", dark: "#F5EBEF") : Color(light: "#0A0D10", dark: "#FFFFFF") }
+    public static var textSecondary: Color { skinned(light: "#4C565E", dark: "#A1A1AA", whp: "#9FABB4", flow: ("#6B5562", "#C4B0BA")) }
+    public static var textMuted: Color { skinned(light: "#7A848C", dark: "#71717A", whp: "#6F7C86", flow: ("#9C8590", "#8A7380")) }
 
     // Meaning colours (fills) and their readable text variants. Each area has its own neon: Sleep / Rest cyan, Health / Charge
     // green, Trend / Effort yellow; alert is the guide's #FF3366. Light values stay readable on white.
@@ -64,9 +65,9 @@ public enum NunaPalette {
     public static let restText      = Color(light: "#007C90", dark: "#5CEFFF")
     public static let restLight     = Color(light: "#4FC3D6", dark: "#9BF4FF")   // REM
     public static let restDeep      = Color(light: "#00697A", dark: "#0093A8")   // deep sleep
-    public static let warning       = Color(light: "#C98A00", dark: "#FFB020")
-    public static let alert         = Color(light: "#E0003C", dark: "#FF3366")
-    public static let alertText     = Color(light: "#D0103C", dark: "#FF6B8E")
+    public static var warning: Color { NunaThemePrefs.skin == .flow ? Color(light: "#8A5A00", dark: "#F0C060") : Color(light: "#C98A00", dark: "#FFB020") }
+    public static var alert: Color { NunaThemePrefs.skin == .flow ? Color(light: "#B42318", dark: "#FF8A7A") : Color(light: "#E0003C", dark: "#FF3366") }
+    public static var alertText: Color { NunaThemePrefs.skin == .flow ? Color(light: "#B42318", dark: "#FF8A7A") : Color(light: "#D0103C", dark: "#FF6B8E") }
 
     // Charge zones (low, mid, high) and Effort levels (minimal, moderate, all out) from the score guide: red, yellow and green for how ready the
     // body is; dark to light blue for how hard the day was.
@@ -76,7 +77,7 @@ public enum NunaPalette {
     public static let effortMinimal = Color(light: "#1D4C9C", dark: "#2A66C8")
     public static let effortModerate = Color(light: "#1480DA", dark: "#2BA0F5")
     public static let effortAllOut  = Color(light: "#19A8E0", dark: "#66DCFF")
-    public static var zoneBase: Color { skinned(light: "#C3C9D6", dark: "#3F3F46", whp: "#3A4650") }   // zone 1 / awake track
+    public static var zoneBase: Color { skinned(light: "#C3C9D6", dark: "#3F3F46", whp: "#3A4650", flow: ("#E6D6CE", "#3D2D36")) }   // zone 1 / awake track
 
     // Primary action: white (the theme ink) on dark.
     public static var accent: Color { NunaThemePrefs.Accent.fill }
@@ -91,19 +92,20 @@ public enum NunaPalette {
 public enum NunaThemePrefs {
     /// Primary action: the theme ink (white on dark). Not configurable.
     public enum Accent {
-        public static var fill: Color { Color(light: "#0A0D10", dark: "#FFFFFF") }
-        public static var label: Color { Color(light: "#FFFFFF", dark: "#000000") }
+        public static var fill: Color { NunaThemePrefs.skin == .flow ? Color(light: "#8A2F5C", dark: "#EB9BBD") : Color(light: "#0A0D10", dark: "#FFFFFF") }
+        public static var label: Color { NunaThemePrefs.skin == .flow ? Color(light: "#FFFFFF", dark: "#2A0F1C") : Color(light: "#FFFFFF", dark: "#000000") }
     }
 
     public static let densityKey = "nuna.density"
     public static let skinKey = "nuna.skin"
 
     /// Which palette the app wears. Default is the black-and-neon Nuna look (light, dark or automatic); WHP is a slate,
-    /// blue-grey night look in the style of the WHOOP app and is dark only.
+    /// blue-grey night look in the style of the WHOOP app and is dark only; Flow is a warm berry and cream look (Fraunces and Plus Jakarta Sans,
+    /// soft pill shapes) with its own light and dark.
     public enum Skin: String, CaseIterable, Identifiable {
-        case standard, whp
+        case standard, whp, flow
         public var id: String { rawValue }
-        public var displayName: String { self == .standard ? "Default" : "WHP" }
+        public var displayName: String { switch self { case .standard: return "Default"; case .whp: return "WHP"; case .flow: return "Flow" } }
     }
 
     public static var skin: Skin { Skin(rawValue: UserDefaults.standard.string(forKey: skinKey) ?? "") ?? .standard }
@@ -138,14 +140,15 @@ public extension Font {
         // the DIN role of the sheet; words are Proxima Nova: main headers (24 to 31) bold, card headers (16 to 23) semibold, body (13 to 15)
         // regular, captions and menu labels medium. When a font file is not in the app the system font stands in with the same weights.
         if NunaThemePrefs.skin == .whp { return NunaWHPFont.font(size: size, weight: weight, design: design) }
+        if NunaThemePrefs.skin == .flow { return NunaFlowFont.font(size: size, weight: weight, design: design) }
         return .system(size: size, weight: weight, design: design)
     }
 }
 
 /// The font design the Nuna screens use for numerals and headings: SF Pro, as the typography guide recommends.
 public enum NunaType {
-    /// The design every figure and heading asks for. In WHP it is a marker (`.rounded`) that `Font.nuna` turns into D-DIN-PRO.
-    public static var design: Font.Design { NunaThemePrefs.skin == .whp ? .rounded : .default }
+    /// The design every figure and heading asks for. In WHP and Flow it is a marker (`.rounded`) that `Font.nuna` turns into the skin's figure font (D-DIN-PRO, Fraunces).
+    public static var design: Font.Design { NunaThemePrefs.skin != .standard ? .rounded : .default }
 }
 
 /// The WHP style's fonts: D-DIN-PRO for figures, Montserrat (the cheat sheet's free stand-in for Proxima Nova) for words, with the system
@@ -191,17 +194,59 @@ enum NunaWHPFont {
     }
 }
 
+/// The Flow style's fonts: Fraunces (SIL OFL) for the large figures and titles, Plus Jakarta Sans (SIL OFL) for everything else. Both ship as
+/// one variable file; the system font stands in with the same weights when a file is missing.
+enum NunaFlowFont {
+    private static func family(_ name: String) -> Bool {
+        CTFontCopyFamilyName(CTFontCreateWithName(name as CFString, 12, nil)) as String == name
+    }
+    private static let frauncesOK = family("Fraunces")
+    private static let jakartaOK = family("Plus Jakarta Sans")
+
+    // Variation axis tags (four-character codes as integers): weight, optical size, softness, wonk.
+    private static let wght = 2003265652, opsz = 1869640570, soft = 1397704276, wonk = 1464815179
+
+    static func font(size: CGFloat, weight: Font.Weight, design: Font.Design) -> Font {
+        let bold = weight == .bold || weight == .heavy || weight == .black
+        // Fraunces is for the numeral (48), display (32) and title-lg (24) roles only: a figure or a heading from 24 pt up. Below that, figures are words.
+        if size >= 24 && (design == .rounded || bold) {
+            guard frauncesOK else { return .system(size: size, weight: .semibold, design: .serif) }
+            let d = CTFontDescriptorCreateWithAttributes([
+                kCTFontFamilyNameAttribute: "Fraunces",
+                kCTFontVariationAttribute: [wght: 600, opsz: min(max(size, 9), 144), soft: 50, wonk: 0],
+            ] as CFDictionary)
+            return Font(CTFontCreateWithFontDescriptor(d, size, nil))
+        }
+        let value: Double
+        switch weight {
+        case .bold, .heavy, .black: value = 700
+        case .semibold: value = 600
+        case .medium: value = 500
+        default: value = 400
+        }
+        guard jakartaOK else { return .system(size: size, weight: weight, design: .default) }
+        let d = CTFontDescriptorCreateWithAttributes([
+            kCTFontFamilyNameAttribute: "Plus Jakarta Sans",
+            kCTFontVariationAttribute: [wght: value],
+        ] as CFDictionary)
+        return Font(CTFontCreateWithFontDescriptor(d, size, nil))
+    }
+}
+
 public enum NunaRadius {
-    // Firm corners: cards and controls are rectangles with a modest radius, not pills.
-    public static let card: CGFloat = 14
-    public static let cardSmall: CGFloat = 12
-    public static let chip: CGFloat = 8        // height 30
-    public static let pill: CGFloat = 10       // chips, buttons and bars that used to be capsules
-    public static let button: CGFloat = 12     // height 48
-    public static let iconButton: CGFloat = 12 // 44 x 44
-    public static let tabBar: CGFloat = 18     // height 72
-    public static let sheet: CGFloat = 20
-    public static let iconTile: CGFloat = 10   // 40 x 40
+    // Firm corners: cards and controls are rectangles with a modest radius, not pills. Flow is the opposite: soft, organic shapes, with pills for
+    // buttons, chips and controls (its radius tokens: md 16, sm 12, lg 24, full).
+    private static var flow: Bool { NunaThemePrefs.skin == .flow }
+    private static let full: CGFloat = 9999
+    public static var card: CGFloat { flow ? 16 : 14 }
+    public static var cardSmall: CGFloat { 12 }
+    public static var chip: CGFloat { flow ? full : 8 }        // height 30
+    public static var pill: CGFloat { flow ? full : 10 }       // chips, buttons and bars that used to be capsules
+    public static var button: CGFloat { flow ? full : 12 }     // height 48
+    public static var iconButton: CGFloat { flow ? full : 12 } // 44 x 44
+    public static var tabBar: CGFloat { flow ? 28 : 18 }       // height 72
+    public static var sheet: CGFloat { flow ? 24 : 20 }
+    public static var iconTile: CGFloat { flow ? full : 10 }   // 40 x 40
 }
 
 public enum NunaSpacing {
@@ -259,6 +304,12 @@ public struct NunaCard<Content: View>: View {
                 @ViewBuilder content: () -> Content) {
         self.small = small; self.highlight = highlight; self.padding = padding; self.content = content()
     }
+    /// Flow draws a card as a raised surface (white on cream, a lifted plum-tinted dark); the others keep the soft tile.
+    private var cardFill: Color {
+        if NunaThemePrefs.skin == .flow { return highlight ? NunaPalette.cardHighlight : NunaPalette.card }
+        return highlight ? NunaPalette.cardHighlight : NunaPalette.tile
+    }
+
     public var body: some View {
         content
             .padding(padding ?? EdgeInsets(top: small ? NunaSpacing.cardInnerSmall : NunaSpacing.cardInner,
@@ -267,14 +318,30 @@ public struct NunaCard<Content: View>: View {
                                            trailing: small ? NunaSpacing.cardInnerSmall : NunaSpacing.cardInner))
             .frame(maxWidth: .infinity, alignment: .leading)
             // One flat tile: a soft lift off the canvas, no outline. Only the highlighted card (Anya, the selected one) keeps an edge.
-            .background(highlight ? NunaPalette.cardHighlight : NunaPalette.tile,
-                        in: RoundedRectangle(cornerRadius: small ? NunaRadius.cardSmall : NunaRadius.card, style: .continuous))
+            .background(cardFill, in: RoundedRectangle(cornerRadius: small ? NunaRadius.cardSmall : NunaRadius.card, style: .continuous))
+            .modifier(FlowCardLift(radius: small ? NunaRadius.cardSmall : NunaRadius.card, on: NunaThemePrefs.skin == .flow))
             .overlay {
                 if highlight {
                     RoundedRectangle(cornerRadius: small ? NunaRadius.cardSmall : NunaRadius.card, style: .continuous)
                         .strokeBorder(NunaPalette.cardBorderHighlight, lineWidth: 1)
                 }
             }
+    }
+}
+
+/// Flow's elevation: a small plum-tinted shadow under a card in light, a 1 px border in dark (where a shadow would not show).
+private struct FlowCardLift: ViewModifier {
+    let radius: CGFloat
+    let on: Bool
+    @Environment(\.colorScheme) private var scheme
+    func body(content: Content) -> some View {
+        if on {
+            content
+                .shadow(color: scheme == .dark ? .clear : Color(hex: "#2A1B24").opacity(0.07), radius: 3, x: 0, y: 1)
+                .overlay { if scheme == .dark { RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1) } }
+        } else {
+            content
+        }
     }
 }
 

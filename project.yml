@@ -274,12 +274,15 @@ targets:
               UIPrerenderedIcon: false
         NSSupportsLiveActivities: true
         # Fonts for the WHP style: D-DIN-PRO (SIL OFL) for figures and Montserrat (SIL OFL, the sheet's stand-in for Proxima Nova) for words.
+        # Fonts for the Flow style: Fraunces for large figures and titles, Plus Jakarta Sans for the rest (both SIL OFL).
         UIAppFonts:
           - D-DIN-PRO-400-Regular.otf
           - D-DIN-PRO-500-Medium.otf
           - D-DIN-PRO-600-SemiBold.otf
           - D-DIN-PRO-700-Bold.otf
           - Montserrat-VF.ttf
+          - Fraunces-VF.ttf
+          - PlusJakartaSans-VF.ttf
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
         UISupportedInterfaceOrientations~ipad:
