@@ -36,9 +36,10 @@ enum AppleDemoSeeder {
         guard requested else { return }
         seedDemoDeviceIfNeeded(into: store)
         let existing = (try? await store.dailyMetrics(deviceId: whoop, from: "0000-00-00", to: "9999-99-99")) ?? []
-        guard existing.isEmpty else { return }
+        guard existing.isEmpty else { await seedLabBookIfNeeded(into: store); return }
         do { try await seed(into: store) }
         catch { NSLog("AppleDemoSeeder: seed failed — \(error)") }
+        await seedLabBookIfNeeded(into: store)
     }
 
     /// DEBUG/demo-only: so the Devices screen renders with content under `--demo-seed`, pair a second
@@ -270,6 +271,34 @@ enum AppleDemoSeeder {
             _ = try await store.upsertLiftSets(liftSets)
         }
         NSLog("AppleDemoSeeder: seeded \(daily.count) days, \(workouts.count) workouts.")
+    }
+
+    /// A lab book: a blood panel taken twice, a blood pressure reading and the body measurements, with the reference range typed in as a person
+    /// would from their own report, so the Lab Book screens can be looked at under `--demo-seed`. Added on its own, so a device that was seeded
+    /// before the Lab Book existed gets it too.
+    private static func seedLabBookIfNeeded(into store: WhoopStore) async {
+        let existing = (try? await store.labMarkers(deviceId: whoop, category: "bloodPanel")) ?? []
+        guard existing.isEmpty else { return }
+        let now = Int(Date().timeIntervalSince1970)
+        // would from their own report, so the Lab Book screens can be looked at under `--demo-seed`.
+        let labDays: [(Int, [(String, String, Double, String, String?)])] = [
+            (95, [("ldl", "bloodPanel", 3.6, "mmol/L", "0 - 3.4"), ("hdl", "bloodPanel", 1.2, "mmol/L", "1 - 2.2"), ("fasting_glucose", "bloodPanel", 5.4, "mmol/L", "3.9 - 5.6"),
+                  ("vitamin_d", "bloodPanel", 46, "nmol/L", "50 - 125"), ("ferritin", "bloodPanel", 62, "µg/L", "30 - 300"), ("bp_systolic", "bloodPressure", 128, "mmHg", "90 - 120"),
+                  ("weight", "bodyMeasurement", 77.2, "kg", nil)]),
+            (14, [("ldl", "bloodPanel", 3.1, "mmol/L", "0 - 3.4"), ("hdl", "bloodPanel", 1.3, "mmol/L", "1 - 2.2"), ("fasting_glucose", "bloodPanel", 5.1, "mmol/L", "3.9 - 5.6"),
+                  ("vitamin_d", "bloodPanel", 68, "nmol/L", "50 - 125"), ("ferritin", "bloodPanel", 58, "µg/L", "30 - 300"), ("tsh", "bloodPanel", 4.8, "mIU/L", "0.4 - 4.0"),
+                  ("bp_systolic", "bloodPressure", 118, "mmHg", "90 - 120"), ("weight", "bodyMeasurement", 75.0, "kg", nil), ("waist", "bodyMeasurement", 84.5, "cm", nil)]),
+        ]
+        var labRows: [LabMarkerRow] = []
+        for (ago, items) in labDays {
+            let at = now - ago * 86_400 + 8 * 3_600
+            let day = Repository.localDayKey(Date(timeIntervalSince1970: TimeInterval(at)))
+            for (key, category, value, unit, range) in items {
+                labRows.append(LabMarkerRow(id: "demo-lab-\(key)-\(ago)", deviceId: whoop, markerKey: key, category: category, day: day, takenAt: at, value: value,
+                                            valueText: nil, unit: unit, source: "manual", note: nil, referenceText: range))
+            }
+        }
+        _ = try? await store.upsertLabMarkers(labRows)
     }
 
     // MARK: - helpers
