@@ -115,12 +115,23 @@ final class StravaSettingsModel: ObservableObject {
         defer { setBusy(false) }
         do {
             let client = StravaAPIClient(credentials: credentials)
-            let initialResponse = try await client.upload(
-                row: row,
-                route: route,
-                elevationGainM: storedRoute?.elevationGainM,
-                allowWithoutRoute: ownGym)
-            let response = try await client.waitForUploadCompletion(initialResponse)
+            let response: StravaUploadResponse
+            if ownGym && route.count < 2, let gym = await StravaOwnGym.summary(for: row) {
+                // A gym session has no route and no records for a file: it goes up the way Hevy sends one, as an activity with its sets in the description.
+                response = try await client.createManualActivity(row: row, name: gym.name, description: gym.description)
+            } else {
+                let initialResponse = try await client.upload(
+                    row: row,
+                    route: route,
+                    elevationGainM: storedRoute?.elevationGainM,
+                    allowWithoutRoute: ownGym)
+                response = try await client.waitForUploadCompletion(initialResponse)
+            }
+            // Strava can accept a file and then refuse it while processing: that is a failure, not "processing", and it is shown as one.
+            if let refusal = response.error, !refusal.isEmpty {
+                statusText = String(localized: "Strava could not use this activity: \(refusal)")
+                return
+            }
             let record = StravaUploadRecord(
                 workoutKey: workoutKey(for: row), startTs: row.startTs, sport: row.sport,
                 uploadId: response.id, activityId: response.activityId,

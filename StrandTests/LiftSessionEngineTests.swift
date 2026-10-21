@@ -685,4 +685,56 @@ final class LiftSessionEngineTests: XCTestCase {
         e.start(slot(99, 1), now: t0)
         XCTAssertEqual(e.stage, .warmup)
     }
+
+    // MARK: - Replacing an exercise and choosing where to start
+
+    func testAnUnstartedExerciseCanBeReplacedAndKeepsItsPlace() {
+        var e = LiftSessionEngine(plan: twoExercisePlan(), startTs: t0)
+        XCTAssertTrue(e.canReplaceExercise(at: 0))
+        XCTAssertTrue(e.replaceExercise(at: 0, with: LiftPlanItem(exercise: "Chest press machine", primaryMuscle: .chest)))
+        XCTAssertEqual(e.plan[0].exercise, "Chest press machine")
+        XCTAssertEqual(e.plan[0].targetSets, 2)
+        XCTAssertEqual(e.plan[0].restSec, 90)
+        XCTAssertNil(e.plan[0].targetWeightKg)
+        XCTAssertEqual(e.plan[1].exercise, "Lat pulldown")
+    }
+
+    func testAnExerciseWithAPerformedSetCannotBeReplaced() {
+        var e = LiftSessionEngine(plan: twoExercisePlan(), startTs: t0)
+        e.start(slot(0, 1), now: t0)
+        e.advance(now: t0 + 30)
+        XCTAssertFalse(e.canReplaceExercise(at: 0))
+        XCTAssertFalse(e.replaceExercise(at: 0, with: LiftPlanItem(exercise: "Chest press machine")))
+        XCTAssertEqual(e.plan[0].exercise, "Incline dumbbell press")
+        XCTAssertTrue(e.canReplaceExercise(at: 1))
+    }
+
+    func testReplacingCanBeUndone() {
+        var e = LiftSessionEngine(plan: twoExercisePlan(), startTs: t0)
+        e.replaceExercise(at: 1, with: LiftPlanItem(exercise: "Seated row"))
+        e.undo()
+        XCTAssertEqual(e.plan[1].exercise, "Lat pulldown")
+    }
+
+    func testJumpingFromTheWarmUpStartsTheChosenSet() {
+        var e = LiftSessionEngine(plan: threeExercisePlan(), startTs: t0)
+        e.jump(to: slot(2, 1), now: t0 + 5)
+        XCTAssertEqual(e.stage, .working(slot(2, 1)))
+        e.advance(now: t0 + 40)
+        e.advance(now: t0 + 100)
+        // Staying on the exercise it is standing at, not going back to the first one.
+        XCTAssertEqual(e.stage, .working(slot(2, 2)))
+    }
+
+    func testJumpingFromARestRecordsTheRestTakenSoFar() {
+        var e = LiftSessionEngine(plan: threeExercisePlan(), startTs: t0)
+        e.start(slot(0, 1), now: t0)
+        e.advance(now: t0 + 30)
+        e.jump(to: slot(1, 1), now: t0 + 50)
+        XCTAssertEqual(e.recordedSet(for: slot(0, 1))?.restSec, 20)
+        XCTAssertEqual(e.stage, .working(slot(1, 1)))
+        e.undo()
+        XCTAssertNotNil(e.recordedSet(for: slot(0, 1)))
+        XCTAssertNil(e.recordedSet(for: slot(0, 1))?.restSec)
+    }
 }

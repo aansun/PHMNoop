@@ -104,6 +104,42 @@ final class StravaAPIClient {
         }
     }
 
+    /// A strength session goes up the way Hevy sends one: an activity made by hand (`POST /activities`) whose description lists every exercise and
+    /// set. A file would have to carry a route or heart-rate records, which a gym session has none of by nature, and Strava turns an empty file away.
+    func createManualActivity(row: WorkoutRow, name: String, description: String) async throws -> StravaUploadResponse {
+        let token = try await validAccessToken()
+        let local = DateFormatter()
+        local.locale = Locale(identifier: "en_US_POSIX"); local.timeZone = .current
+        // Strava reads this as the wall-clock time of the person, written with a "Z".
+        local.dateFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'"
+        var request = URLRequest(url: StravaOAuth.apiBase.appendingPathComponent("activities"))
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        var allowed = CharacterSet.alphanumerics
+        allowed.insert(charactersIn: "-._~")
+        func encode(_ v: String) -> String { v.addingPercentEncoding(withAllowedCharacters: allowed) ?? v }
+        let fields: [(String, String)] = [
+            ("name", name),
+            ("sport_type", StravaActivityType.value(for: row.sport)),
+            ("start_date_local", local.string(from: Date(timeIntervalSince1970: TimeInterval(row.startTs)))),
+            ("elapsed_time", String(max(60, row.endTs - row.startTs))),
+            ("description", description),
+        ]
+        request.httpBody = fields.map { "\(encode($0.0))=\(encode($0.1))" }.joined(separator: "&").data(using: .utf8)
+        do {
+            let (data, response) = try await session.data(for: request)
+            try StravaOAuthProvider.validate(response, data: data)
+            guard let object = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any],
+                  let id = (object["id"] as? Int) ?? (object["id"] as? NSNumber)?.intValue else { throw StravaError.invalidUpload }
+            return StravaUploadResponse(id: nil, activityId: id, status: "Uploaded", error: nil, message: nil)
+        } catch let error as StravaError {
+            throw error
+        } catch {
+            throw StravaError.network(error.localizedDescription)
+        }
+    }
+
     func waitForUploadCompletion(_ initial: StravaUploadResponse,
                                  attempts: Int = 10,
                                  intervalNanoseconds: UInt64 = 2_000_000_000) async throws -> StravaUploadResponse {
