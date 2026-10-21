@@ -1,6 +1,9 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Animation": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Animasi"}}}},
+    "The video could not be loaded.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Video tidak bisa dimuat."}}}},
+    "Open YouTube": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Buka YouTube"}}}},
     "A day under the target is not a problem by itself. The weekly check-in looks at the trend.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Satu hari di bawah target bukan masalah. Check-in mingguan melihat trennya."}}}},
     "The calories are there, but not the protein. A protein-rich food would close most of the gap.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kalorinya sudah cukup, tetapi proteinnya belum. Makanan kaya protein akan menutup sebagian besar kekurangannya."}}}},
     "Over on %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Berlebih di %@"}}}},
