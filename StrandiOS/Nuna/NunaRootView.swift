@@ -88,10 +88,16 @@ struct NunaRootView: View {
         .id("\(themeRaw)-\(densityRaw)-\(skinRaw)")
         // Nuna is dark-first. The Appearance setting is honoured again once Phase 7 lands the Nuna theme screen.
         .preferredColorScheme(NunaTheme.colorScheme)
-        .onAppear { Self.applyWindowStyle() }
+        // Changing the theme or style swaps this view's identity (see `.id` above): the new shell appears and the old one disappears, in
+        // either order. Only the last shell to go away may hand the windows back, or a switch to Light would be undone a moment after it was
+        // applied and every pushed page would stay dark.
+        .onAppear { Self.liveShells += 1; Self.applyWindowStyle() }
         .onChange(of: themeRaw) { _, _ in Self.applyWindowStyle() }
         .onChange(of: skinRaw) { _, _ in Self.applyWindowStyle() }
-        .onDisappear { Self.applyWindowStyle(reset: true) }
+        .onDisappear {
+            Self.liveShells = max(Self.liveShells - 1, 0)
+            if Self.liveShells == 0 { Self.applyWindowStyle(reset: true) }
+        }
         // The gym session is full screen, like the live workout of every other sport, and never a sheet that a swipe could close by accident:
         // it is put away with the chevron in its header. It is presented by UIKit over whatever is on top, so starting it from a sheet
         // (Gym in Quick actions) does not close the sheet first.
@@ -132,6 +138,8 @@ struct NunaRootView: View {
 
     /// Light or dark is also set on the windows themselves, because pages pushed inside the tabs are hosted by UIKit and
     /// do not always pick up `preferredColorScheme`. Cleared when this shell goes away so the Default look is untouched.
+    private static var liveShells = 0
+
     static func applyWindowStyle(reset: Bool = false) {
         let style: UIUserInterfaceStyle = reset ? .unspecified : (NunaTheme.colorScheme.map { $0 == .dark ? .dark : .light } ?? .unspecified)
         for scene in UIApplication.shared.connectedScenes {
