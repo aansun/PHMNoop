@@ -6194,6 +6194,51 @@
         "Anya couldn't make a program from that. Say a little more about what you want.": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Anya tidak bisa membuat program dari itu. Ceritakan sedikit lebih banyak tentang yang kamu mau."}}
         } },
+        "Hold": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tahan"}}
+        } },
+        "Well done. Breathe normally.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bagus sekali. Bernapaslah seperti biasa."}}
+        } },
+        "Inhale": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tarik"}}
+        } },
+        "Exhale": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hembus"}}
+        } },
+        "s": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "dtk"}}
+        } },
+        "Tones": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Nada"}}
+        } },
+        "Anya's voice": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Suara Anya"}}
+        } },
+        "An exercise Anya made for you.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Latihan yang Anya buat untukmu."}}
+        } },
+        "Your own exercise": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Latihanmu sendiri"}}
+        } },
+        "Something slow to fall asleep, no holds, 6 minutes…": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Yang pelan untuk tidur, tanpa tahan napas, 6 menit…"}}
+        } },
+        "Anya is making it…": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Anya sedang membuatnya…"}}
+        } },
+        "Make it with Anya": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Buat dengan Anya"}}
+        } },
+        "Connect Anya in More › Anya to ask for an exercise of your own.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hubungkan Anya di More › Anya untuk meminta latihan buatanmu sendiri."}}
+        } },
+        "Anya couldn't make an exercise from that. Say a little more about what you need.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Anya tidak bisa membuat latihan dari itu. Ceritakan sedikit lebih banyak tentang yang kamu butuhkan."}}
+        } },
+        "Tones: a soft tone for each step, a double blip for a hold, muted by the silent switch. Anya's voice: each step said aloud, also with the screen locked.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Nada: satu nada lembut tiap langkah, dua bunyi pendek untuk tahan napas, dibisukan tombol senyap. Suara Anya: tiap langkah diucapkan, juga saat layar terkunci."}}
+        } },
         "Charge and Rest": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Charge dan Rest"}}
         } },
@@ -48555,6 +48600,12 @@
     },
     "Breathe in": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tarik napas"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
@@ -48847,6 +48898,12 @@
     },
     "Breathe out": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hembuskan"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",

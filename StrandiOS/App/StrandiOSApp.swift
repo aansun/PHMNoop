@@ -301,6 +301,7 @@ struct StrandiOSApp: App {
                 .onReceive(liftSession.$engine) { _ in DispatchQueue.main.async { pushLiftActivity() } }
                 // Which gym sessions were logged in PHMN (the only ones that may go to Strava), read at launch and after each saved session.
                 .task { await StravaOwnGym.refresh(repo: model.repo) }
+                .task { NunaCustomBreath.registerAll() }
                 .onReceive(liftSession.$savedSessions) { _ in Task { await StravaOwnGym.refresh(repo: model.repo) } }
                 // An activity left behind by an earlier run (the app was closed with a session going) is ended as soon as the app is up.
                 .task { pushLiftActivity() }

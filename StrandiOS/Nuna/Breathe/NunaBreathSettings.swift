@@ -7,7 +7,7 @@ struct NunaBreathSettingsView: View {
     let onAdvanced: () -> Void
     let onClose: () -> Void
     @AppStorage(NunaBreathPrefs.hapticsKey) private var haptics = true
-    @AppStorage(NunaBreathPrefs.audioKey) private var audio = false
+    @AppStorage(NunaBreathAudioMode.key) private var audioModeRaw = ""
     @AppStorage(NunaBreathPrefs.countdownKey) private var countdown = true
     @AppStorage(NunaBreathPrefs.lengthKey) private var length = 0
     @AppStorage(NunaBreathPrefs.anyaKey) private var anya = true
@@ -30,7 +30,16 @@ struct NunaBreathSettingsView: View {
                 NunaSettingsGroup("Cues") {
                     NunaToggleRow("Strap haptics", subtitle: "One pulse on the inhale, two on the exhale", systemImage: "applewatch.radiowaves.left.and.right", isOn: $haptics).padding(.vertical, 8)
                     NunaDivider()
-                    NunaToggleRow("Audio cues", subtitle: "A soft tone on each phase, muted by the silent switch", systemImage: "speaker.wave.2", isOn: $audio).padding(.vertical, 8)
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(spacing: 10) {
+                            Image(systemName: "speaker.wave.2").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 24)
+                            Text("Audio cues").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        }
+                        NunaSegmented(NunaBreathAudioMode.allCases.map { (value: $0.rawValue, title: $0.title) }, selection: Binding(
+                            get: { NunaBreathAudioMode.stored.rawValue }, set: { audioModeRaw = $0 }))
+                        Text("Tones: a soft tone for each step, a double blip for a hold, muted by the silent switch. Anya's voice: each step said aloud, also with the screen locked.")
+                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    }.padding(.vertical, 10)
                     NunaDivider()
                     NunaToggleRow("Countdown", subtitle: "Three seconds to settle before the first breath", systemImage: "timer", isOn: $countdown).padding(.vertical, 8)
                 }

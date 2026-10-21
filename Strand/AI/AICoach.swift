@@ -1324,6 +1324,19 @@ final class AICoachEngine: ObservableObject {
         return clean.isEmpty ? nil : clean
     }
 
+    /// A breathing exercise made to what the person typed. The provider gets those words and, if the screen has them, a line on how they are right now
+    /// (heart rate, HRV, stress, Charge, the hour), and nothing enters the Coach transcript. nil when Anya is off, not connected, or did not answer.
+    func suggestBreath(request: String, context: String) async -> String? {
+        guard CoachBriefScheduler.coachMasterEnabled, isConfigured, dataConsent, let key = resolvedKey else { return nil }
+        let text = request.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !text.isEmpty else { return nil }
+        var prompt = AnyaActions.breathInstruction + "\n\nWHAT THE PERSON ASKED FOR:\n" + String(text.prefix(500))
+        if !context.isEmpty { prompt += "\n\n" + context }
+        guard let reply = try? await callProvider(key: key, messages: [(.user, prompt)]) else { return nil }
+        let clean = reply.trimmingCharacters(in: .whitespacesAndNewlines)
+        return clean.isEmpty ? nil : clean
+    }
+
     /// Which muscles an exercise the person made up works, and how it is done. Only the exercise's NAME goes to the provider, none of the person's
     /// health data, and nothing enters the Coach transcript. nil when Anya is off or not connected, or the provider did not answer.
     func classifyExercise(_ name: String) async -> String? {
