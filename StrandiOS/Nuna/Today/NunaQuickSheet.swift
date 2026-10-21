@@ -96,9 +96,9 @@ struct NunaQuickSheet: View {
                         .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 Spacer(minLength: 4)
-                // Both rows end in a control of the same width, so the two buttons line up down the right edge.
-                Button { addingFood = true } label: { Text("Add food") }
-                    .buttonStyle(.nuna(.primary, height: 44, fullWidth: true)).frame(width: Self.controlWidth)
+                // The same width as the + button of the water row below it, so the two line up down the right edge.
+                Button { addingFood = true } label: { Text("+Log").lineLimit(1) }
+                    .buttonStyle(.nuna(.primary, height: 44, fullWidth: true)).frame(width: Self.controlWidth - 52)
             }
         }
     }
