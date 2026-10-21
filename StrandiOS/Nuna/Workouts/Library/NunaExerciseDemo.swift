@@ -10,6 +10,8 @@ struct NunaExerciseDemo: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var paused = false
     @State private var pausedAt = 0.0
+    /// The animation by default; the small icon at the right swaps it for a video of the same exercise and back.
+    @State private var showVideo = false
 
     /// One loop, in seconds: hold the start, move, hold the end, move back.
     private static let hold = 0.9, move = 0.7
@@ -27,10 +29,36 @@ struct NunaExerciseDemo: View {
 
     var body: some View {
         if exercise.frames.first.flatMap(NunaExerciseLibrary.image) == nil {
-            NunaMissingDemoPanel(name: exercise.name, height: height)
+            // No animation for this exercise: the video is the demonstration.
+            NunaVideoPlayer(name: exercise.name)
         } else {
-            photos
+            VStack(spacing: 8) {
+                HStack {
+                    Spacer(minLength: 0)
+                    HStack(spacing: 2) {
+                        switchIcon("figure.strengthtraining.traditional", "Animation", on: !showVideo) { showVideo = false }
+                        switchIcon("play.rectangle.fill", "Video", on: showVideo) { showVideo = true }
+                    }
+                    .padding(3).background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                }
+                if showVideo {
+                    VStack(spacing: 6) {
+                        NunaVideoPlayer(name: exercise.name)
+                        Text("Opens YouTube. Only the exercise name is sent.").font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                    }
+                } else {
+                    photos
+                }
+            }
         }
+    }
+
+    private func switchIcon(_ symbol: String, _ label: LocalizedStringKey, on: Bool, _ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: symbol).font(.nuna(size: 13, weight: .bold)).foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+                .frame(width: 38, height: 30).background(on ? NunaPalette.ink.opacity(0.14) : .clear, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+        }
+        .buttonStyle(.plain).accessibilityLabel(Text(label)).accessibilityAddTraits(on ? .isSelected : [])
     }
 
     private var photos: some View {
