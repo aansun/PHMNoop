@@ -22,6 +22,9 @@ struct NunaLiftSessionView: View {
     @State private var unfinishedChoice: UnfinishedChoice?
     @State private var programChoice: ProgramChoice?
     @State private var setCountChanges: [LiftSessionController.SetCountChange] = []
+    @State private var replacements: [LiftSessionController.ExerciseReplacement] = []
+    /// The exercise line being swapped for another one.
+    @State private var replacing: ReplaceTarget?
     /// Exercises the user opened by hand, on top of the one being worked.
     @State private var opened: Set<Int> = []
     /// The library entry whose demo is open in a sheet.
@@ -32,6 +35,8 @@ struct NunaLiftSessionView: View {
     @AppStorage("nuna.gym.showRpe") private var showRpe = false
     /// A sound when a rest period ends.
     @AppStorage(AudioCoachingPreferences.restEndSoundKey) private var restEndSound = true
+    /// Start the next set of the same exercise by itself when a rest ends.
+    @AppStorage(LiftSessionController.autoContinueKey) private var autoContinue = false
     @State private var draft: [FocusTarget: String] = [:]
     /// Set when the saved session's summary is about to replace this screen, so the session going away does not close it.
     @State private var showingSummary = false
@@ -41,6 +46,7 @@ struct NunaLiftSessionView: View {
     /// The exercise whose how-to video is open, for the ones the library has no demo for.
     @State private var video: String?
 
+    private struct ReplaceTarget: Identifiable { let index: Int; var id: Int { index } }
     private enum UnfinishedChoice: Hashable { case complete, discard }
     private enum ProgramChoice: Hashable { case update, keep }
     private enum FocusTarget: Hashable { case weight(LiftSlot), reps(LiftSlot), time(LiftSlot), rpe(LiftSlot), sessionRpe }
@@ -114,6 +120,7 @@ struct NunaLiftSessionView: View {
             NunaExercisePicker(confirm: { $0 == 1 ? String(localized: "Add 1 exercise") : String(localized: "Add \($0) exercises") }, title: "Add exercise") { picked in addExercises(picked) }
         }
         .sheet(isPresented: $showingSettings) { settingsSheet }
+        .sheet(item: $replacing) { target in replacePicker(target) }
         .sheet(item: Binding(get: { video.map { NunaVideoTarget(name: $0) } }, set: { video = $0?.name })) { t in NunaExerciseVideoSheet(name: t.name) }
     }
 
@@ -127,7 +134,34 @@ struct NunaLiftSessionView: View {
             }
         }
         if let i = firstNew { opened.insert(i) }
-        Task { await loadLastTime() }
+        Task {
+            await NunaCustomExercises.remember(picked, repo: repo, coach: model.coach)
+            await loadLastTime()
+        }
+    }
+
+    private func replacePicker(_ target: ReplaceTarget) -> some View {
+        let old: String? = session.engine.flatMap { $0.plan.indices.contains(target.index) ? $0.plan[target.index].exercise : nil }
+        return NunaExercisePicker(title: "Replace exercise", single: true, suggestingFor: old) { picked in
+            if let p = picked.first { replaceExercise(target.index, with: p) }
+        }
+    }
+
+    /// Swap one exercise line for another and remember the muscles of a new name, so the weekly sets per muscle count it.
+    private func replaceExercise(_ index: Int, with p: NunaPickedExercise) {
+        guard session.replaceExercise(at: index, with: LiftPlanItem(exercise: p.name, primaryMuscle: p.primary, secondaryMuscles: p.secondary)) else { return }
+        opened.insert(index)
+        Task {
+            await NunaCustomExercises.remember([p], repo: repo, coach: model.coach)
+            await loadLastTime()
+            guard p.primary != nil, let store = await repo.storeHandle() else { return }
+            let known = (try? await store.liftExercises(deviceId: repo.deviceId)) ?? []
+            guard !known.contains(where: { $0.name == p.name }) else { return }
+            let now = Int(Date().timeIntervalSince1970)
+            let row = LiftExerciseRow(id: UUID().uuidString, deviceId: repo.deviceId, name: p.name, primaryMuscle: p.primary,
+                                      secondaryMuscles: p.secondary.filter { $0 != p.primary }, createdAt: now, lastUsedTs: now)
+            _ = try? await store.upsertLiftExercises([row])
+        }
     }
 
     private var settingsSheet: some View {
@@ -135,6 +169,9 @@ struct NunaLiftSessionView: View {
             NunaDetailScreen("Session settings") {
                 NunaCard(small: true) {
                     NunaToggleRow("Sound when rest ends", subtitle: "A short rising tone; music is lowered for it", systemImage: "speaker.wave.2", isOn: $restEndSound)
+                }
+                NunaCard(small: true) {
+                    NunaToggleRow("Continue after rest", subtitle: "Starts the next set of the same exercise when the rest ends, so the phone can stay in your pocket", systemImage: "forward.end", isOn: $autoContinue)
                 }
                 NunaCard(small: true) {
                     NunaToggleRow("RPE column", subtitle: "How hard each set felt, from 1 to 10", systemImage: "gauge.with.needle", isOn: $showRpe)
@@ -370,6 +407,12 @@ struct NunaLiftSessionView: View {
                 Button { NunaExerciseKind.setTracksWeight(!tracks, for: item.exercise) } label: {
                     Label(tracks ? "Bodyweight only" : "Add weight", systemImage: tracks ? "figure.stand" : "scalemass")
                 }
+            }
+            if engine.canReplaceExercise(at: index) {
+                Button { replacing = ReplaceTarget(index: index) } label: { Label("Replace exercise", systemImage: "arrow.triangle.2.circlepath") }
+            }
+            if let next = engine.slots(forExercise: index).first(where: { !engine.isCompleted($0) }), engine.currentSlot?.exerciseIndex != index {
+                Button { session.jump(to: next); opened.insert(index) } label: { Label("Start this exercise", systemImage: "play") }
             }
             Button { showRpe.toggle() } label: { Label(showRpe ? "Hide RPE" : "Show RPE", systemImage: "gauge.with.needle") }
             Button { opened.remove(index) } label: { Label("Fold away", systemImage: "chevron.up") }
@@ -657,6 +700,7 @@ struct NunaLiftSessionView: View {
     }
 
     private func write(_ slot: LiftSlot, _ mutate: (inout LiftRecordedSet) -> Void) {
+        startWhereTyped(slot)
         let e = session.enteredValues(for: slot)
         var row = LiftRecordedSet(exerciseIndex: slot.exerciseIndex, setIndex: slot.setIndex, weightKg: e.weightKg, reps: e.reps, rpe: e.rpe,
                                   isWarmup: session.isWarmup(slot), startTs: 0, endTs: 0, restSec: nil)
@@ -664,11 +708,24 @@ struct NunaLiftSessionView: View {
         session.updateSet(slot, weightKg: row.weightKg, reps: row.reps, rpe: row.rpe, isWarmup: row.isWarmup)
     }
 
+    /// The exercise to begin with is the person's choice (a machine may be taken), and it is shown by where they type: numbers typed into a set
+    /// of an exercise other than the one being worked make that the one being worked, before the session starts or while it rests. Mid-set it
+    /// never moves, because that would abandon a set in progress.
+    private func startWhereTyped(_ slot: LiftSlot) {
+        guard let engine, !engine.isCompleted(slot), engine.stage != .working(slot) else { return }
+        switch engine.stage {
+        case .warmup: session.jump(to: slot)
+        case .resting(let current, _): if current.exerciseIndex != slot.exerciseIndex { session.jump(to: slot) }
+        default: break
+        }
+        opened.insert(slot.exerciseIndex)
+    }
+
     // MARK: Finish
 
     private var finishSheet: some View {
         let unfinished = session.unfinishedSlots.count
-        let answered = (unfinished == 0 || unfinishedChoice != nil) && (setCountChanges.isEmpty || programChoice != nil)
+        let answered = (unfinished == 0 || unfinishedChoice != nil) && ((setCountChanges.isEmpty && replacements.isEmpty) || programChoice != nil)
         return NavigationStack {
             NunaDetailScreen("Finish session") {
                 NunaCard {
@@ -691,15 +748,18 @@ struct NunaLiftSessionView: View {
                         }
                     }
                 }
-                if !setCountChanges.isEmpty {
+                if !setCountChanges.isEmpty || !replacements.isEmpty {
                     NunaCard {
                         VStack(alignment: .leading, spacing: 12) {
                             nunaTrendsCap("Program")
-                            Text("You changed the number of sets. Keep the new counts in the program for next time?").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                            Text("You changed the program during this session. Save the changes for next time, or keep them for this session only?").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                            ForEach(replacements, id: \.itemId) { r in
+                                Text(verbatim: "\(r.from) → \(r.to)").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                            }
                             ForEach(setCountChanges, id: \.itemId) { c in
                                 Text("\(c.exercise): \(c.from) → \(c.to) sets").font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
                             }
-                            NunaSegmented([(value: ProgramChoice?.some(.update), title: "Update program"), (value: ProgramChoice?.some(.keep), title: "Keep as it was")], selection: $programChoice)
+                            NunaSegmented([(value: ProgramChoice?.some(.update), title: "Save for next time"), (value: ProgramChoice?.some(.keep), title: "This session only")], selection: $programChoice)
                         }
                     }
                 }
@@ -810,13 +870,16 @@ struct NunaLiftSessionView: View {
         guard let programId = session.programId, let plan = session.engine?.plan, let store = await repo.storeHandle(),
               let rows = try? await store.liftProgramItems(programId: programId) else { return }
         setCountChanges = LiftSessionController.setCountChanges(plan: plan, program: rows)
+        replacements = LiftSessionController.exerciseReplacements(plan: plan, program: rows)
     }
 
     private func writeSetCountsToProgram(store: WhoopStore, plan: [LiftPlanItem]) async {
         guard let programId = session.programId, let rows = try? await store.liftProgramItems(programId: programId) else { return }
         let changes = LiftSessionController.setCountChanges(plan: plan, program: rows)
-        guard !changes.isEmpty else { return }
-        _ = try? await store.replaceLiftProgramItems(programId: programId, items: LiftSessionController.applying(changes, to: rows))
+        let swaps = LiftSessionController.exerciseReplacements(plan: plan, program: rows)
+        guard !changes.isEmpty || !swaps.isEmpty else { return }
+        let edited = LiftSessionController.applying(swaps, to: LiftSessionController.applying(changes, to: rows))
+        _ = try? await store.replaceLiftProgramItems(programId: programId, items: edited)
     }
 }
 

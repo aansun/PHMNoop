@@ -29,6 +29,8 @@ enum NunaExerciseKind: Equatable {
 
     /// The kind without the person's override.
     static func natural(_ name: String) -> NunaExerciseKind {
+        // What is known of a custom exercise (it says how a set of it is logged) comes before the guess from its words.
+        if NunaExerciseLibrary.matchBundled(name) == nil, let known = NunaCustomExercises.kind(forName: name) { return known }
         let n = name.lowercased()
         let lib = NunaExerciseLibrary.match(name)
         if isTimed(n, lib) { return .timed }

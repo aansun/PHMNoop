@@ -417,6 +417,45 @@ struct LiftSessionEngine: Equatable {
         return true
     }
 
+    /// Whether a line's exercise can be swapped for another: only while none of its sets has been performed. A set already recorded under
+    /// the old exercise is DATA about that exercise, and re-labelling it would put a number in the history of a movement nobody did.
+    func canReplaceExercise(at index: Int) -> Bool {
+        plan.indices.contains(index) && slots(forExercise: index).allSatisfy { !isCompleted($0) }
+    }
+
+    /// Swap the exercise of a line for another, for the machine that is taken or missing. The line keeps its place, its set count, its rest,
+    /// its rep target and the program line it came from, so that finishing can offer the swap back to the program. The planned weight and
+    /// the technique note belonged to the old exercise and do not carry over. Returns false when a set of the line has been performed.
+    @discardableResult
+    mutating func replaceExercise(at index: Int, with item: LiftPlanItem) -> Bool {
+        guard canReplaceExercise(at: index),
+              !item.exercise.trimmingCharacters(in: .whitespaces).isEmpty else { return false }
+        pushHistory()
+        let old = plan[index]
+        var line = old
+        line.exercise = item.exercise
+        line.primaryMuscle = item.primaryMuscle
+        line.secondaryMuscles = item.secondaryMuscles
+        line.targetWeightKg = nil
+        line.note = nil
+        plan[index] = line
+        return true
+    }
+
+    /// Jump to a set the user chose, from wherever the session is: the exercise to start with is theirs to pick, because it depends on which
+    /// machine is free. Standing in a rest it records the rest taken so far, exactly as the big button would; mid-set the set in progress
+    /// is abandoned (nothing is recorded for it), as `start` documents.
+    mutating func jump(to slot: LiftSlot, now: Int) {
+        guard planItem(for: slot) != nil, stage != .finished else { return }
+        pushHistory()
+        if case .resting(let rested, _) = stage, let i = sets.firstIndex(where: { $0.slot == rested }) {
+            sets[i].restSec = max(0, now - stageStartedAt)
+        }
+        sets.removeAll { $0.slot == slot }
+        stage = .working(slot)
+        stageStartedAt = now
+    }
+
     /// Whether the last set of a line can be dropped.
     ///
     /// Only the LAST one, and only while it is still pending. Set numbers are positions — the sheet
