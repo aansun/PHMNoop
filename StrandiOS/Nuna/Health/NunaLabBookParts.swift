@@ -185,10 +185,20 @@ enum NunaLabStore {
 
 // MARK: - The gauge
 
-/// A half circle laid out like the range from the report: amber below it, green inside it, amber above it, with a dot where the reading is.
-struct NunaRangeGauge: View {
+/// The latest reading as a needle on a ring that curls in at both ends: amber below the range from the report, green inside it, amber above. The ring
+/// glows, a soft tint fills the space inside it, and whatever the screen puts in `content` sits in the middle of it.
+struct NunaRangeGauge<Content: View>: View {
     let value: Double
     let range: NunaLabRange
+    let content: Content
+
+    init(value: Double, range: NunaLabRange, @ViewBuilder content: () -> Content) {
+        self.value = value; self.range = range; self.content = content()
+    }
+
+    /// How far round the ring goes, in degrees, and where it starts: centred on the top, so both ends droop below the middle.
+    private static var sweep: Double { 220 }
+    private static var start: Double { 270 - sweep / 2 }
 
     private var domain: (lo: Double, hi: Double) {
         let span = max(range.high - range.low, 0.000_1)
@@ -199,30 +209,60 @@ struct NunaRangeGauge: View {
     }
 
     var body: some View {
+        GeometryReader { geo in
+            let lw: CGFloat = 16
+            let tail = CGFloat(sin((Self.start + Self.sweep - 360) * .pi / 180)) // how far the ends fall below the centre, in radii
+            let r = min((geo.size.width - lw) / 2 - 12, (geo.size.height - lw - 12) / (1 + tail))
+            let c = CGPoint(x: geo.size.width / 2, y: lw / 2 + 6 + r)
+            ZStack {
+                Canvas { ctx, _ in draw(ctx, c: c, r: r, lw: lw) }
+                content.frame(width: r * 1.5).position(x: c.x, y: c.y + r * 0.08)
+            }
+        }
+    }
+
+    private func draw(_ ctx: GraphicsContext, c: CGPoint, r: CGFloat, lw: CGFloat) {
         let d = domain
         let span = max(d.hi - d.lo, 0.000_1)
         let f: (Double) -> Double = { max(0, min(1, ($0 - d.lo) / span)) }
-        return Canvas { ctx, size in
-            let lw: CGFloat = 14
-            let r = min(size.width / 2 - lw / 2, size.height - lw)
-            let c = CGPoint(x: size.width / 2, y: size.height - lw / 2)
-            func arc(_ a: Double, _ b: Double) -> Path {
-                var p = Path()
-                p.addArc(center: c, radius: r, startAngle: .degrees(180 + 180 * a), endAngle: .degrees(180 + 180 * b), clockwise: false)
-                return p
-            }
-            let gap = 0.008
-            let lowEnd = f(range.low), highStart = f(range.high)
-            if lowEnd > gap { ctx.stroke(arc(0, lowEnd - gap), with: .color(NunaPalette.warning.opacity(0.5)), style: StrokeStyle(lineWidth: lw, lineCap: .butt)) }
-            ctx.stroke(arc(lowEnd + (lowEnd > gap ? gap : 0), highStart - (highStart < 1 - gap ? gap : 0)), with: .color(NunaPalette.charge.opacity(0.85)), style: StrokeStyle(lineWidth: lw, lineCap: .butt))
-            if highStart < 1 - gap { ctx.stroke(arc(highStart + gap, 1), with: .color(NunaPalette.warning.opacity(0.5)), style: StrokeStyle(lineWidth: lw, lineCap: .butt)) }
-            let a = Angle.degrees(180 + 180 * f(value)).radians
-            let inner = CGPoint(x: c.x + (r - 22) * CGFloat(cos(a)), y: c.y + (r - 22) * CGFloat(sin(a)))
-            let outer = CGPoint(x: c.x + (r + 4) * CGFloat(cos(a)), y: c.y + (r + 4) * CGFloat(sin(a)))
-            var needle = Path(); needle.move(to: inner); needle.addLine(to: outer)
-            ctx.stroke(needle, with: .color(NunaPalette.ink), style: StrokeStyle(lineWidth: 5, lineCap: .round))
+        func angle(_ t: Double) -> Angle { .degrees(Self.start + Self.sweep * t) }
+        func arc(_ a: Double, _ b: Double, radius: CGFloat) -> Path {
+            var p = Path(); p.addArc(center: c, radius: radius, startAngle: angle(a), endAngle: angle(b), clockwise: false); return p
         }
-        .accessibilityHidden(true)
+        let gap = 0.012
+        let lowEnd = f(range.low), highStart = f(range.high)
+        var segments: [(Double, Double, Color)] = []
+        if lowEnd > gap { segments.append((0, lowEnd - gap / 2, NunaPalette.warning)) }
+        segments.append((lowEnd > gap ? lowEnd + gap / 2 : 0, highStart < 1 - gap ? highStart - gap / 2 : 1, NunaPalette.charge))
+        if highStart < 1 - gap { segments.append((highStart + gap / 2, 1, NunaPalette.warning)) }
+        // A soft dish inside the ring, tinted by where the reading sits.
+        let dishTint = value < range.low || value > range.high ? NunaPalette.warning : NunaPalette.charge
+        let dish = Path(ellipseIn: CGRect(x: c.x - (r - lw / 2), y: c.y - (r - lw / 2), width: 2 * (r - lw / 2), height: 2 * (r - lw / 2)))
+        let floor = c.y + r * CGFloat(sin((Self.start + Self.sweep - 360) * .pi / 180))
+        ctx.drawLayer { layer in
+            layer.clipToLayer { mask in
+                mask.fill(Path(CGRect(x: 0, y: 0, width: c.x * 2, height: floor + 8)),
+                          with: .linearGradient(Gradient(stops: [.init(color: .black, location: 0), .init(color: .black, location: 0.7), .init(color: .clear, location: 1)]),
+                                                startPoint: CGPoint(x: 0, y: c.y - r), endPoint: CGPoint(x: 0, y: floor + 8)))
+            }
+            layer.fill(dish, with: .radialGradient(Gradient(colors: [dishTint.opacity(0), dishTint.opacity(0), dishTint.opacity(0.16)]), center: c, startRadius: 0, endRadius: r - lw / 2))
+        }
+        for (a, b, color) in segments {
+            ctx.drawLayer { layer in
+                layer.addFilter(.shadow(color: color.opacity(0.5), radius: 8, x: 0, y: 3))
+                layer.stroke(arc(a, b, radius: r), with: .color(color), style: StrokeStyle(lineWidth: lw, lineCap: .round))
+            }
+        }
+        let t = f(value), a = angle(t).radians
+        func point(_ radius: CGFloat) -> CGPoint { CGPoint(x: c.x + radius * CGFloat(cos(a)), y: c.y + radius * CGFloat(sin(a))) }
+        var trail = Path(); trail.move(to: point(r - lw / 2)); trail.addLine(to: point(r * 0.62))
+        ctx.stroke(trail, with: .linearGradient(Gradient(colors: [NunaPalette.ink.opacity(0.4), NunaPalette.ink.opacity(0)]), startPoint: point(r - lw / 2), endPoint: point(r * 0.62)),
+                   style: StrokeStyle(lineWidth: 13, lineCap: .round))
+        var needle = Path(); needle.move(to: point(r - lw * 0.95)); needle.addLine(to: point(r + lw * 0.95))
+        ctx.drawLayer { layer in
+            layer.addFilter(.shadow(color: .black.opacity(0.5), radius: 4, x: 0, y: 2))
+            layer.stroke(needle, with: .color(NunaPalette.ink), style: StrokeStyle(lineWidth: 8, lineCap: .round))
+        }
     }
 }
 
