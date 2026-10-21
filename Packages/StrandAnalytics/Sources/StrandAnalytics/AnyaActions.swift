@@ -1,9 +1,9 @@
 import Foundation
 
-// AnyaActions.swift — what Anya can hand back besides prose: a chart, a gym program, a workout, lab results to review.
+// AnyaActions.swift — what Anya can hand back besides prose: a chart, a gym program, a workout, lab results and meals to review.
 //
 // PURE and unit-tested. The provider is told (see `instruction`) to put each such item in a fenced block tagged
-// `anya-chart`, `anya-program`, `anya-workout` or `anya-lab` holding a small JSON object. The app parses them out of the reply and draws
+// `anya-chart`, `anya-program`, `anya-workout`, `anya-lab` or `anya-food` holding a small JSON object. The app parses them out of the reply and draws
 // native cards. A chart names a metric and a window, never numbers: the app draws it from the readings stored on the phone, so
 // a chart can never show a figure the model made up. Everything is clamped to sane ranges; a block that does not parse or fails
 // validation falls back to plain text and is never executed.
@@ -54,6 +54,26 @@ public struct AnyaLabResult: Equatable, Sendable {
     public var note: String?
 }
 
+/// One food or drink Anya estimated from what the person described, for the portion they named. Numbers are an estimate, shown as one.
+public struct AnyaFoodItem: Equatable, Sendable {
+    public var name: String
+    /// The portion the estimate is for, in the person's words ("1 plate", "2 eggs"), or what Anya assumed.
+    public var amount: String?
+    public var kcal: Double
+    public var proteinG: Double?
+    public var carbsG: Double?
+    public var fatG: Double?
+}
+
+/// A meal to check before it goes in the diary.
+public struct AnyaFoodSpec: Equatable, Sendable {
+    /// breakfast | lunch | dinner | snack, when the person said or implied it.
+    public var meal: String?
+    /// `yyyy-MM-dd`, only when the person named a day.
+    public var day: String?
+    public var items: [AnyaFoodItem]
+}
+
 /// Results for the person to check before anything is saved to the Lab Book. `day` is the day of the whole report, used for a result without its own.
 public struct AnyaLabSpec: Equatable, Sendable {
     public var title: String?
@@ -67,6 +87,7 @@ public enum AnyaBlock: Equatable, Sendable {
     case program(AnyaProgramSpec)
     case workout(AnyaWorkoutSpec)
     case lab(AnyaLabSpec)
+    case food(AnyaFoodSpec)
 }
 
 public enum AnyaActions {
@@ -100,7 +121,25 @@ public enum AnyaActions {
     {"day":"2026-10-07","results":[{"marker":"LDL cholesterol","value":3.1,"unit":"mmol/L","range":"<3.4"},{"marker":"Vitamin D","value":68,"unit":"nmol/L","day":"2026-10-07"}]}
     ```
     day is the day the sample was taken, yyyy-MM-dd, when the source says so (leave it out when it does not); up to 60 results; range and note are optional.
+    FOOD LOG: When the person says what they ate or drank (in any language) and wants it logged, answer with one short line of prose AND one block with an estimate for each item at the \
+    portion they named. Use typical values; for Indonesian and other local dishes use the usual home or street-food serving. If the portion is unclear, assume a typical serving and say so in amount. \
+    Say it is an estimate. Do not judge, rate or advise on the food.
+    ```anya-food
+    {"meal":"lunch","items":[{"name":"Nasi goreng","amount":"1 plate","kcal":520,"proteinG":14,"carbsG":68,"fatG":21},{"name":"Fried egg","amount":"1","kcal":90,"proteinG":6,"carbsG":0,"fatG":7}]}
+    ```
+    meal is breakfast, lunch, dinner or snack, only when said or clear from the time; day is yyyy-MM-dd, only when the person names one; up to 20 items; kcal is per item as eaten, macros in grams.
     Keep the prose short and put the details in the block.
+    """
+
+    /// What Anya is told when the person describes a meal inside the Add food sheet: only this, with none of their health data.
+    public static let foodInstruction = """
+    You estimate calories and macros for a food diary. The person describes what they ate or drank, in any language. Reply with ONE short line (say it is an estimate) \
+    and ONE fenced block, exactly as below, valid JSON, no comments. Give each item its own estimate at the portion they named; use typical values, and for Indonesian and other local dishes \
+    the usual home or street-food serving. If the portion is unclear, assume a typical serving and say so in amount. meal is breakfast, lunch, dinner or snack only when said or clear; \
+    day is yyyy-MM-dd only when named. Up to 20 items. Never judge, rate or advise on the food.
+    ```anya-food
+    {"meal":"lunch","items":[{"name":"Nasi goreng","amount":"1 plate","kcal":520,"proteinG":14,"carbsG":68,"fatG":21}]}
+    ```
     """
 
     static func clamp(_ v: Int, _ lo: Int, _ hi: Int) -> Int { min(max(v, lo), hi) }
@@ -185,6 +224,18 @@ public enum AnyaActions {
         return AnyaLabSpec(title: text(o["title"], max: 80), day: day(o["day"]), results: results)
     }
 
+    static func food(_ o: [String: Any]) -> AnyaFoodSpec? {
+        var items: [AnyaFoodItem] = []
+        func grams(_ any: Any?) -> Double? { double(any).flatMap { (0...1000).contains($0) ? $0 : nil } }
+        for i in ((o["items"] as? [Any]) ?? []).prefix(20) {
+            guard let io = i as? [String: Any], let name = text(io["name"], max: 60), let kcal = double(io["kcal"]), (0...6000).contains(kcal) else { continue }
+            items.append(AnyaFoodItem(name: name, amount: text(io["amount"], max: 40), kcal: kcal, proteinG: grams(io["proteinG"]), carbsG: grams(io["carbsG"]), fatG: grams(io["fatG"])))
+        }
+        guard !items.isEmpty else { return nil }
+        let meal = (o["meal"] as? String)?.lowercased()
+        return AnyaFoodSpec(meal: ["breakfast", "lunch", "dinner", "snack"].contains(meal ?? "") ? meal : nil, day: day(o["day"]), items: items)
+    }
+
     // MARK: Parsing a reply
 
     /// Splits a reply into prose and action blocks, in order. An action fence that is still open (a reply that is streaming) or
@@ -213,6 +264,7 @@ public enum AnyaActions {
             case "program": if let p = program(obj) { out.append(.program(p)) }
             case "workout": if let w = workout(obj) { out.append(.workout(w)) }
             case "lab": if let l = lab(obj) { out.append(.lab(l)) }
+            case "food": if let f = food(obj) { out.append(.food(f)) }
             default: break
             }
         }
