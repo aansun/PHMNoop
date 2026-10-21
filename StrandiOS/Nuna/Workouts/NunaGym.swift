@@ -208,6 +208,7 @@ struct NunaGymView: View {
     /// How many weeks back the history shows; 0 is this week.
     @State private var weekOffset = 0
     @State private var picking = false
+    @State private var buildingWithAnya = false
     @ObservedObject private var groupsModel = NunaProgramGroupsModel.shared
     @State private var groupDialog: GroupDialog?
     @State private var groupName = ""
@@ -259,12 +260,16 @@ struct NunaGymView: View {
 
     /// Two buttons side by side under Anya: an empty session, and the ready-made programs.
     private var topActions: some View {
-        HStack(spacing: 10) {
-            Button { if session.isActive { session.present() } else { picking = true } } label: {
-                topActionLabel(session.isActive ? "Open session" : "Empty session", session.isActive ? "arrow.up.forward" : "plus")
-            }.buttonStyle(.plain)
-            NavigationLink(value: NunaWorkoutRoute.explore) { topActionLabel("Explore Program", "safari") }.buttonStyle(.plain)
+        VStack(spacing: 4) {
+            HStack(spacing: 10) {
+                Button { if session.isActive { session.present() } else { picking = true } } label: {
+                    topActionLabel(session.isActive ? "Open session" : "Empty session", session.isActive ? "arrow.up.forward" : "plus")
+                }.buttonStyle(.plain)
+                NavigationLink(value: NunaWorkoutRoute.explore) { topActionLabel("Explore Program", "safari") }.buttonStyle(.plain)
+            }
+            Button { buildingWithAnya = true } label: { topActionLabel("Program with Anya", "sparkles") }.buttonStyle(.plain)
         }
+        .sheet(isPresented: $buildingWithAnya) { NunaAnyaProgramBuilder() }
     }
 
     /// Plain words and an icon in the text colour, no fill: the two sit side by side as equals.
