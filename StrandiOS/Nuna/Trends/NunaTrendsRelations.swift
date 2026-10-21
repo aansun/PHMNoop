@@ -87,9 +87,10 @@ struct NunaChargeEffortView: View {
         let eSel = sel.flatMap { s in ef.first { $0.day == s } }, cSel = sel.flatMap { s in ch.first { $0.day == s } }
         return NunaCard {
             VStack(alignment: .leading, spacing: 12) {
-                HStack { nunaTrendsCap(LocalizedStringKey(String(localized: "\(range) days"))); Spacer(); Text("Bars: Effort · Line: Charge").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
-                NunaComboChart(start: start, days: range, bars: ef, barMax: eMax, line: ch, lineMax: 100, selected: $selected, height: 150)
-                HStack(spacing: 14) { NunaLegendItem(color: NunaScoreStyle.chargeSeries, text: "Charge"); NunaLegendItem(color: NunaScoreStyle.effortSeries, text: "Effort", dot: true) }
+                HStack { nunaTrendsCap(LocalizedStringKey(String(localized: "\(range) days"))); Spacer(); Text("Capsule: Charge · Line: Effort").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
+                NunaCapsuleChart(start: start, days: range, charge: ch, effort: m.window(m.effort, days: range), effortScale: scale,
+                                 selected: range > 7 ? $selected : nil)
+                NunaCapsuleLegend()
                 if let sel, let d = m.date(sel) {
                     HStack(spacing: 10) {
                         Image(systemName: "bolt").foregroundStyle(NunaPalette.textPrimary)

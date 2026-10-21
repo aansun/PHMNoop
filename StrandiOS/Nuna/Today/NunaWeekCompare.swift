@@ -3,9 +3,8 @@ import SwiftUI
 import StrandDesign
 import WhoopStore
 
-/// "Last 7 days": Charge and Effort for each of the seven days ending on the day shown, side by side. Both are drawn on the same 0 to 100
-/// height, so a taller bar always means more, with no second axis to decode. A day's Charge bar takes the colour its ring had that day
-/// (green, yellow or red) and its Effort bar the blue of its level, so the colours read exactly as they do on the rings above.
+/// "Last 7 days": Charge and Effort for each of the seven days ending on the day shown, as a capsule (Charge) with a line across it
+/// (Effort), both on the same 0 to 100 height. The colours read exactly as they do on the rings above.
 struct NunaWeekCompare: View {
     let endDay: Date
     let effortScale: EffortScale
@@ -15,8 +14,6 @@ struct NunaWeekCompare: View {
     @State private var charge: [String: Double] = [:]
     @State private var effort: [String: Double] = [:]
     @State private var loaded = false
-
-    private let plotHeight: CGFloat = 96
 
     private struct Slot: Identifiable {
         let key: String
@@ -51,11 +48,11 @@ struct NunaWeekCompare: View {
                             .foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     } else {
                         averages(days)
-                        HStack(alignment: .bottom, spacing: 0) { ForEach(days) { column($0, isLast: $0.key == days.last?.key) } }
-                        HStack(spacing: 16) {
-                            NunaLegendItem(color: NunaScoreStyle.chargeSeries, text: "Charge", dot: true)
-                            NunaLegendItem(color: NunaScoreStyle.effortSeries, text: "Effort", dot: true)
-                        }
+                        NunaCapsuleChart(start: days.first?.key ?? Repository.localDayKey(endDay), days: 7,
+                                         charge: days.compactMap { s in charge[s.key].map { (s.key, $0) } },
+                                         effort: days.compactMap { s in effort[s.key].map { (s.key, $0) } },
+                                         effortScale: effortScale, highlightLast: true)
+                        NunaCapsuleLegend()
                     }
                 }
             }
@@ -85,37 +82,6 @@ struct NunaWeekCompare: View {
             Text("7-day average").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func column(_ s: Slot, isLast: Bool) -> some View {
-        let c = charge[s.key], e = effort[s.key]
-        return VStack(spacing: 6) {
-            HStack(alignment: .bottom, spacing: 3) {
-                bar(c.map { "\(Int($0.rounded()))" }, fraction: c.map { $0 / 100 }, color: c.map(nunaChargeColor) ?? NunaPalette.textMuted)
-                bar(e.map { UnitFormatter.effortDisplay($0, scale: effortScale) }, fraction: e.map { $0 / 100 }, color: e.map(nunaEffortColor) ?? NunaPalette.textMuted)
-            }
-            .frame(height: plotHeight + 16, alignment: .bottom)
-            Text(verbatim: Self.weekday(s.date)).font(.nuna(size: 11, weight: .bold))
-                .foregroundStyle(isLast ? NunaPalette.textPrimary : NunaPalette.textSecondary)
-        }
-        .padding(.vertical, 6)
-        .frame(maxWidth: .infinity)
-        .background(NunaPalette.ink.opacity(isLast ? 0.06 : 0), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-    }
-
-    private func bar(_ label: String?, fraction: Double?, color: Color) -> some View {
-        VStack(spacing: 3) {
-            Text(verbatim: label ?? "").font(.nuna(size: 9.5, weight: .bold)).monospacedDigit().foregroundStyle(NunaPalette.textSecondary)
-                .lineLimit(1).minimumScaleFactor(0.6).fixedSize()
-            RoundedRectangle(cornerRadius: 5, style: .continuous).fill(color)
-                .frame(width: 13, height: fraction == nil ? 0 : max(6, plotHeight * CGFloat(min(max(fraction ?? 0, 0), 1))))
-        }
-        .frame(width: 20)
-    }
-
-    private static func weekday(_ d: Date) -> String {
-        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE")
-        return f.string(from: d)
     }
 
     private func load() async {

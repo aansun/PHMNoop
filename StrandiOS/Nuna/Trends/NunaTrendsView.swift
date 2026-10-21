@@ -216,6 +216,8 @@ struct NunaTrendsView: View {
         }
     }
 
+    @State private var capsuleSelected: String?
+
     private var windowStart: String { TrendInsights.shift(m.todayKey, by: -(back + range - 1)) ?? m.todayKey }
 
     private var chargeEffortCard: some View {
@@ -232,9 +234,9 @@ struct NunaTrendsView: View {
                         Spacer()
                         if let corr { NunaChip(verbatim: NunaTrendsFormat.relationChip(corr.r)) }
                     }
-                    NunaComboChart(start: windowStart, days: range, bars: efDisp, barMax: max(efDisp.map(\.value).max() ?? 1, 1),
-                                   line: ch, lineMax: 100, selected: .constant(nil), height: 110, interactive: false)
-                    HStack(spacing: 14) { NunaLegendItem(color: NunaScoreStyle.chargeSeries, text: "Charge"); NunaLegendItem(color: NunaScoreStyle.effortSeries, text: "Effort", dot: true) }
+                    NunaCapsuleChart(start: windowStart, days: range, charge: ch, effort: m.window(m.effort, days: range, back: back), effortScale: scale,
+                                     selected: range > 7 ? $capsuleSelected : nil)
+                    NunaCapsuleLegend()
                     if let hi = b[2].meanOutcome, let lo = b[0].meanOutcome {
                         insightRow("bolt", Text("After a high-Effort day, next-morning Charge averages \(Int(hi.rounded()))%. After a light day, \(Int(lo.rounded()))%."))
                     }
