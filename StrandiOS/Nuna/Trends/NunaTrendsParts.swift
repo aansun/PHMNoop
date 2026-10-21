@@ -25,6 +25,9 @@ struct NunaTrendChart: View {
         let max: Double
         let color: Color
         var bars = false
+        /// Colours each day's dot by its value, the way the ring would be coloured that day; nil keeps `color`.
+        var pointColor: ((Double) -> Color)? = nil
+        var dashed = false
     }
     let start: String
     let days: Int
@@ -77,14 +80,14 @@ struct NunaTrendChart: View {
                             if let d = date(p.day) {
                                 LineMark(x: .value("Day", d), y: .value("Value", scaled(p.value, s)), series: .value("Series", s.id.uuidString))
                                     .interpolationMethod(.catmullRom)
-                                    .lineStyle(StrokeStyle(lineWidth: days > 120 ? 1.5 : 2.5, lineCap: .round, lineJoin: .round))
+                                    .lineStyle(StrokeStyle(lineWidth: days > 120 ? 1.5 : 2.5, lineCap: .round, lineJoin: .round, dash: s.dashed ? [5, 4] : []))
                                     .foregroundStyle(s.color)
                             }
                         }
                         if s.points.count <= 60 {
                             ForEach(s.points, id: \.day) { p in
                                 if let d = date(p.day) {
-                                    PointMark(x: .value("Day", d), y: .value("Value", scaled(p.value, s))).symbolSize(18).foregroundStyle(s.color)
+                                    PointMark(x: .value("Day", d), y: .value("Value", scaled(p.value, s))).symbolSize(s.pointColor == nil ? 18 : 30).foregroundStyle(s.pointColor?(p.value) ?? s.color)
                                 }
                             }
                         }
@@ -168,15 +171,17 @@ struct NunaComboChart: View {
     let barMax: Double
     let line: NunaDaySeries
     let lineMax: Double
-    var barColor: Color = NunaPalette.effort
-    var lineColor: Color = NunaPalette.charge
+    var barColor: Color = NunaScoreStyle.effortSeries
+    var lineColor: Color = NunaScoreStyle.chargeSeries
+    /// The line is Charge in every use, so its dots take the Charge ring colour for that day.
+    var linePointColor: ((Double) -> Color)? = nunaChargeColor
     @Binding var selected: String?
     var height: CGFloat = 150
     var interactive = true
 
     var body: some View {
         NunaTrendChart(start: start, days: days,
-                       series: [.init(points: bars, max: barMax, color: barColor, bars: true), .init(points: line, max: lineMax, color: lineColor)],
+                       series: [.init(points: bars, max: barMax, color: barColor, bars: true), .init(points: line, max: lineMax, color: lineColor, pointColor: linePointColor)],
                        height: height + 24,
                        selected: interactive ? $selected : nil)
     }
@@ -184,14 +189,14 @@ struct NunaComboChart: View {
 
 /// Two or more lines on the same 0 to 100 scale (each by its own maximum), for "two lines moving together".
 struct NunaMultiLineChart: View {
-    struct Line { let series: NunaDaySeries; let max: Double; let color: Color }
+    struct Line { let series: NunaDaySeries; let max: Double; let color: Color; var pointColor: ((Double) -> Color)? = nil; var dashed = false }
     let start: String
     let days: Int
     let lines: [Line]
     var height: CGFloat = 130
 
     var body: some View {
-        NunaTrendChart(start: start, days: days, series: lines.map { .init(points: $0.series, max: $0.max, color: $0.color) }, height: height + 24)
+        NunaTrendChart(start: start, days: days, series: lines.map { .init(points: $0.series, max: $0.max, color: $0.color, pointColor: $0.pointColor, dashed: $0.dashed) }, height: height + 24)
     }
 }
 
@@ -228,7 +233,7 @@ struct NunaScatter: View {
     let yRange: ClosedRange<Double>
     var slope: Double?
     var intercept: Double?
-    var color: Color = NunaPalette.charge
+    var color: Color = NunaScoreStyle.chargeSeries
     var body: some View {
         Canvas { ctx, size in
             let pad: CGFloat = 10
@@ -262,9 +267,14 @@ struct NunaLegendItem: View {
     let color: Color
     let text: LocalizedStringKey
     var dot = false
+    var dashed = false
     var body: some View {
         HStack(spacing: 6) {
-            RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(color).frame(width: dot ? 10 : 14, height: dot ? 10 : 8)
+            if dashed {
+                HStack(spacing: 2) { ForEach(0..<2, id: \.self) { _ in RoundedRectangle(cornerRadius: 1.5, style: .continuous).fill(color).frame(width: 6, height: 3) } }
+            } else {
+                RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(color).frame(width: dot ? 10 : 14, height: dot ? 10 : 8)
+            }
             Text(text).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
         }
     }

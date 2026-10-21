@@ -37,6 +37,9 @@ enum TodaySection: String, CaseIterable, Identifiable {
     /// drawn by the Default looks (they render nothing for it and their Arrange sheets leave it out), and an older Android build drops
     /// the unknown id when it reads a saved order.
     case vitalMonitor
+    /// Nuna only: Charge and Effort for the last seven days, side by side. Not drawn by the Default looks (they render nothing for it and
+    /// their Arrange sheets leave it out), and an older Android build drops the unknown id when it reads a saved order.
+    case weekCompare
     case yourCards
     case menstrualCycle
     case journal
@@ -59,6 +62,7 @@ enum TodaySection: String, CaseIterable, Identifiable {
         case .heartRate:      return String(localized: "Heart Rate")
         case .recoveryVitals: return String(localized: "Recovery Vitals")
         case .vitalMonitor:   return String(localized: "Vital and stress monitors")
+        case .weekCompare:    return String(localized: "Last 7 days")
         case .yourCards:      return String(localized: "Your Cards")
         case .menstrualCycle: return String(localized: "Menstrual Cycle")
         case .journal:        return String(localized: "Journal")
@@ -69,7 +73,7 @@ enum TodaySection: String, CaseIterable, Identifiable {
     /// The original, hard-coded section order — the default when the layout isn't customised. The journal
     /// widget (#656) is last by default, where it was first added, above the data-sources card.
     static let defaultOrder: [TodaySection] = [
-        .hero, .stateChips, .liveSession, .synthesis, .keyMetrics, .workouts, .heartRate, .recoveryVitals, .vitalMonitor, .yourCards,
+        .hero, .stateChips, .liveSession, .synthesis, .keyMetrics, .workouts, .heartRate, .recoveryVitals, .vitalMonitor, .weekCompare, .yourCards,
         .menstrualCycle, .journal, .addedCards,
     ]
 }

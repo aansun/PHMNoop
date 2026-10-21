@@ -25,7 +25,7 @@ struct NunaInsightsView: View {
             NunaCard(small: true) {
                 NunaListRow(ready ? "Enough data" : "Not enough data yet",
                             subtitle: LocalizedStringKey(String(localized: "\(m.charge.count) days recorded. At least 14 needed.")), systemImage: ready ? "checkmark" : "hourglass") {
-                    NunaChip(ready ? "Ready" : "Waiting", color: ready ? NunaPalette.charge : NunaPalette.warning)
+                    NunaChip(ready ? "Ready" : "Waiting", color: ready ? NunaScoreStyle.chargeSeries : NunaPalette.warning)
                 }
             }
             behaviourSection
@@ -81,14 +81,14 @@ struct NunaInsightsView: View {
                             Text(verbatim: e.behavior).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             Spacer()
                             Text(verbatim: NunaTrendsFormat.signed(e.delta, 0)).font(.nuna(size: 26, weight: .bold, design: NunaType.design))
-                                .foregroundStyle(e.delta >= 0 ? NunaPalette.charge : NunaPalette.warning)
+                                .foregroundStyle(e.delta >= 0 ? NunaScoreStyle.chargeSeries : NunaPalette.warning)
                         }
                         HStack {
                             Text(verbatim: String(localized: "\(e.nWith) days with, \(e.nWithout) days without")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                             Spacer()
                             Text("Charge, points").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
-                        NunaChip(confidence(e), color: e.significant ? NunaPalette.restText : nil)
+                        NunaChip(confidence(e), color: e.significant ? NunaScoreStyle.restSeries : nil)
                     }
                 }
             }
@@ -106,7 +106,7 @@ struct NunaInsightsView: View {
                         HStack {
                             Text(verbatim: WorkoutSource.displaySport(cost.sport)).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             Spacer()
-                            Text(verbatim: NunaTrendsFormat.signed(-cost.delta, 0)).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(cost.delta >= 1 ? NunaPalette.warning : NunaPalette.charge)
+                            Text(verbatim: NunaTrendsFormat.signed(-cost.delta, 0)).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(cost.delta >= 1 ? NunaPalette.warning : NunaScoreStyle.chargeSeries)
                         }
                         Text(verbatim: cost.sentence()).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                         if let d = cost.daysToBaseline {
@@ -262,7 +262,7 @@ struct NunaCompareView: View {
         static func store(_ v: [SavedComparison]) { if let d = try? JSONEncoder().encode(v) { UserDefaults.standard.set(d, forKey: key) } }
     }
 
-    private var colors: [Color] { [NunaPalette.charge, NunaPalette.restLight, NunaPalette.effortText, NunaPalette.warning] }
+    private var colors: [Color] { [NunaScoreStyle.chargeSeries, NunaPalette.restLight, NunaScoreStyle.effortSeries, NunaPalette.warning] }
     private var start: String { TrendInsights.shift(today, by: -(range - 1)) ?? today }
 
     private func window(_ id: String, back: Int = 0) -> NunaDaySeries {
@@ -359,7 +359,7 @@ struct NunaCompareView: View {
             VStack(alignment: .leading, spacing: 12) {
                 nunaTrendsCap("Shift the period")
                 NunaListRow(LocalizedStringKey(String(localized: "Compare with the previous \(range) days")), description: "Draws the first metric from the period before as a faint line") {
-                    Toggle("", isOn: $shiftBack).labelsHidden().tint(NunaPalette.charge)
+                    Toggle("", isOn: $shiftBack).labelsHidden().tint(NunaScoreStyle.chargeSeries)
                 }
                 Button {
                     let item = SavedComparison(keys: picked, days: range)

@@ -3,6 +3,12 @@ import SwiftUI
 /// How the three score rings are coloured, in one place: the app draws its rings with these and so do the widgets, so a ring
 /// cannot read differently on the Home Screen than it does in Today.
 public enum NunaScoreStyle {
+    /// The one colour each score keeps in a chart line or a bar, where the ring's own colour (which follows the value) cannot be used:
+    /// Charge green, Effort blue, Rest the green of an excellent night. A chart marks each day's dot with the ring colour for that day.
+    public static var chargeSeries: Color { NunaPalette.scoreHigh }
+    public static var effortSeries: Color { NunaPalette.effortModerate }
+    public static var restSeries: Color { NunaPalette.charge }
+
     /// Charge: green from 67, yellow from 34, red below.
     public static func chargeColor(_ v: Double) -> Color {
         v >= 67 ? NunaPalette.scoreHigh : (v >= 34 ? NunaPalette.scoreMid : NunaPalette.scoreLow)

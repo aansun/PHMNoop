@@ -12,6 +12,7 @@ extension TodaySection {
         case .heartRate: return "waveform.path.ecg"
         case .recoveryVitals: return "heart.text.square"
         case .vitalMonitor: return "heart.text.square"
+        case .weekCompare: return "chart.bar.xaxis"
         case .stateChips: return "bolt.heart"
         case .yourCards: return "rectangle.stack"
         case .menstrualCycle: return "drop.degreesign"
@@ -30,6 +31,7 @@ extension TodaySection {
         case .heartRate: return StrandPalette.metricRose
         case .recoveryVitals: return StrandPalette.metricCyan
         case .vitalMonitor: return StrandPalette.metricCyan
+        case .weekCompare: return StrandPalette.chargeColor
         case .stateChips: return StrandPalette.chargeColor
         case .yourCards: return StrandPalette.accent
         case .menstrualCycle: return StrandPalette.restColor

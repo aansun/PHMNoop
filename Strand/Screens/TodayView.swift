@@ -2015,7 +2015,7 @@ struct TodayView: View {
             heartRateTrendSection
         case .recoveryVitals:
             recoveryVitalsSection
-        case .vitalMonitor, .stateChips:
+        case .vitalMonitor, .stateChips, .weekCompare:
             EmptyView()   // Nuna only
         case .yourCards:
             yourCardsSection

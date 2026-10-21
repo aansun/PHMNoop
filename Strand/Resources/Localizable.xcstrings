@@ -6065,6 +6065,18 @@
         "Charge and Effort": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Charge dan Effort"}}
         } },
+        "Last 7 days": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "7 hari terakhir"}}
+        } },
+        "7-day average": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rata-rata 7 hari"}}
+        } },
+        "No readings in the last 7 days yet": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Belum ada data dalam 7 hari terakhir"}}
+        } },
+        "Charge and Effort side by side": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Charge dan Effort berdampingan"}}
+        } },
         "Charge and Rest": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Charge dan Rest"}}
         } },

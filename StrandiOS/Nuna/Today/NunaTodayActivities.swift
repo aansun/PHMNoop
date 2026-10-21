@@ -45,6 +45,7 @@ struct NunaTodayActivities: View {
 
     var body: some View {
         let rows = items
+        return NunaCard(padding: EdgeInsets(top: 10, leading: 12, bottom: 12, trailing: 12)) {
         VStack(alignment: .leading, spacing: 10) {
             // The heading of Key Metrics, in the same place inside its card, with the same chevron.
             NunaTitleRow(title: "Today's activities") {
@@ -64,7 +65,7 @@ struct NunaTodayActivities: View {
                         Spacer(minLength: 0)
                     }
                     .padding(.horizontal, 12).frame(minHeight: 52)
-                    .background(NunaPalette.ink.opacity(0.07), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .background(NunaPalette.ink.opacity(0.09), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 } else {
                     ForEach(rows) { item in row(item) }
                 }
@@ -77,9 +78,8 @@ struct NunaTodayActivities: View {
                 .padding(.top, 3)
             }
         }
-        .padding(.horizontal, 12).padding(.top, 10).padding(.bottom, 12)
-        // The same surface as every other card, so it follows the active look (Default or WHP) with them.
-        .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+        }
+        // The card is the same surface as every other card; only the rows and buttons inside it are a shade darker.
         .task(id: "\(repo.refreshSeq)-\(dayStart.timeIntervalSince1970)-\(includesSleep)") {
             if includesSleep { await loadNight() }
             else { night = nil; naps = [] }
@@ -96,7 +96,7 @@ struct NunaTodayActivities: View {
             .foregroundStyle(NunaPalette.textPrimary)
             .padding(.horizontal, 8)
             .frame(maxWidth: .infinity, minHeight: 42, maxHeight: 42)
-            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.chip + 2, style: .continuous))
+            .background(NunaPalette.ink.opacity(0.09), in: RoundedRectangle(cornerRadius: NunaRadius.chip + 2, style: .continuous))
         }
         .buttonStyle(.plain)
     }
@@ -130,7 +130,7 @@ struct NunaTodayActivities: View {
             }
             .foregroundStyle(NunaPalette.textPrimary)
             .frame(width: 92, height: 40)
-            .background(NunaPalette.ink.opacity(0.11), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+            .background(NunaPalette.ink.opacity(0.12), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
             name.font(.nuna(size: 13, weight: .heavy)).tracking(0.8).foregroundStyle(NunaPalette.textPrimary)
                 .lineLimit(2).minimumScaleFactor(0.85).multilineTextAlignment(.leading)
             Spacer(minLength: 6)
@@ -147,8 +147,8 @@ struct NunaTodayActivities: View {
             .padding(.trailing, 2)
         }
         .padding(.horizontal, 6).padding(.vertical, 6)
-        // A step lighter than the card it sits on (a thin wash of the text colour), not a dark well: it follows the active look.
-        .background(NunaPalette.ink.opacity(0.07), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        // A shade darker than the card it sits on (a thin wash of the text colour): it follows the active look.
+        .background(NunaPalette.ink.opacity(0.09), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .contentShape(Rectangle())
     }
 

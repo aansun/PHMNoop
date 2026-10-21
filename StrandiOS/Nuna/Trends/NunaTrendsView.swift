@@ -121,15 +121,15 @@ struct NunaTrendsView: View {
                 HStack {
                     nunaTrendsCap("Summary")
                     Spacer()
-                    if !win.isEmpty { NunaChip(verbatim: String(localized: "\(green) of \(win.count) days green"), color: NunaPalette.charge) }
+                    if !win.isEmpty { NunaChip(verbatim: String(localized: "\(green) of \(win.count) days green"), color: NunaScoreStyle.chargeSeries) }
                 }
-                Text(verbatim: summarySentence(c: c, e: e, r: r)).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: summarySentence(c: c, e: e, r: r)).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).lineSpacing(2)
                     .fixedSize(horizontal: false, vertical: true).textCase(nil)
                 HStack(alignment: .top, spacing: 0) {
-                    ring(.charge, "Charge", c.now.map { $0 / 100 }, NunaTrendsFormat.num(c.now), "%", NunaPalette.charge, delta(c.now, c.before), suffix: String(localized: "points"), upGood: true)
-                    ring(.effort, "Effort", e.now.map { $0 / 100 }, e.now.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–", "", NunaPalette.effortText,
+                    ring(.charge, "Charge", c.now.map { $0 / 100 }, NunaTrendsFormat.num(c.now), "%", c.now.map(nunaChargeColor) ?? NunaPalette.scoreHigh, nil, delta(c.now, c.before), suffix: String(localized: "points"), upGood: true)
+                    ring(.effort, "Effort", e.now.map { $0 / 100 }, e.now.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–", "", e.now.map(nunaEffortColor) ?? NunaPalette.effortModerate, e.now.map(nunaEffortRingColors),
                          delta(e.now, e.before).map { UnitFormatter.effortValue($0, scale: scale) }, suffix: "", upGood: nil)
-                    ring(.rest, "Rest", r.now.map { $0 / 100 }, NunaTrendsFormat.num(r.now), "%", NunaPalette.restText, delta(r.now, r.before), suffix: String(localized: "points"), upGood: true)
+                    ring(.rest, "Rest", r.now.map { $0 / 100 }, NunaTrendsFormat.num(r.now), "%", r.now.map(nunaRestColor) ?? NunaScoreStyle.restSeries, nil, delta(r.now, r.before), suffix: String(localized: "points"), upGood: true)
                 }
                 if best != nil || worst != nil {
                     NunaDivider()
@@ -153,11 +153,11 @@ struct NunaTrendsView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private func ring(_ route: NunaTrendsRoute, _ title: LocalizedStringKey, _ frac: Double?, _ value: String, _ unit: String, _ color: Color,
+    private func ring(_ route: NunaTrendsRoute, _ title: LocalizedStringKey, _ frac: Double?, _ value: String, _ unit: String, _ color: Color, _ gradient: [Color]?,
                       _ d: Double?, suffix: String, upGood: Bool?) -> some View {
         NavigationLink(value: route) {
             VStack(spacing: 8) {
-                NunaRingGauge(fraction: frac ?? 0, color: color, size: 96, lineWidth: 9) {
+                NunaRingGauge(fraction: frac ?? 0, color: color, gradient: gradient, size: 96, lineWidth: 9) {
                     HStack(alignment: .firstTextBaseline, spacing: 1) {
                         Text(verbatim: value).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
@@ -167,7 +167,7 @@ struct NunaTrendsView: View {
                 if let d, abs(d) >= 0.05 {
                     Text(verbatim: (d > 0 ? "▲ " : "▼ ") + String(format: "%.1f", locale: AppLanguage.activeLocale, abs(d)) + (suffix.isEmpty ? "" : " " + suffix))
                         .font(.nuna(size: 12.5, weight: .heavy))
-                        .foregroundStyle(upGood.map { (d > 0) == $0 ? NunaPalette.charge : NunaPalette.warning } ?? NunaPalette.textSecondary)
+                        .foregroundStyle(upGood.map { (d > 0) == $0 ? NunaScoreStyle.chargeSeries : NunaPalette.warning } ?? NunaPalette.textSecondary)
                 }
                 Text("Average").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
@@ -234,7 +234,7 @@ struct NunaTrendsView: View {
                     }
                     NunaComboChart(start: windowStart, days: range, bars: efDisp, barMax: max(efDisp.map(\.value).max() ?? 1, 1),
                                    line: ch, lineMax: 100, selected: .constant(nil), height: 110, interactive: false)
-                    HStack(spacing: 14) { NunaLegendItem(color: NunaPalette.charge, text: "Charge"); NunaLegendItem(color: NunaPalette.effort, text: "Effort", dot: true) }
+                    HStack(spacing: 14) { NunaLegendItem(color: NunaScoreStyle.chargeSeries, text: "Charge"); NunaLegendItem(color: NunaScoreStyle.effortSeries, text: "Effort", dot: true) }
                     if let hi = b[2].meanOutcome, let lo = b[0].meanOutcome {
                         insightRow("bolt", Text("After a high-Effort day, next-morning Charge averages \(Int(hi.rounded()))%. After a light day, \(Int(lo.rounded()))%."))
                     }
@@ -256,8 +256,8 @@ struct NunaTrendsView: View {
                         Spacer()
                         if let corr { NunaChip(verbatim: NunaTrendsFormat.relationChip(corr.r)) }
                     }
-                    NunaMultiLineChart(start: windowStart, days: range, lines: [.init(series: rs, max: 100, color: NunaPalette.rest), .init(series: ch, max: 100, color: NunaPalette.charge)], height: 110)
-                    HStack(spacing: 14) { NunaLegendItem(color: NunaPalette.charge, text: "Charge"); NunaLegendItem(color: NunaPalette.rest, text: "Rest") }
+                    NunaMultiLineChart(start: windowStart, days: range, lines: [.init(series: rs, max: 100, color: NunaScoreStyle.restSeries, pointColor: nunaRestColor, dashed: true), .init(series: ch, max: 100, color: NunaScoreStyle.chargeSeries, pointColor: nunaChargeColor)], height: 110)
+                    HStack(spacing: 14) { NunaLegendItem(color: NunaScoreStyle.chargeSeries, text: "Charge"); NunaLegendItem(color: NunaScoreStyle.restSeries, text: "Rest", dashed: true) }
                     if let hi = b[2].meanOutcome, let lo = b[0].meanOutcome {
                         insightRow("moon", Text("Nights with Rest above 86% are followed by Charge \(Int(hi.rounded()))%, versus \(Int(lo.rounded()))% when Rest is below 78%."))
                     }
@@ -303,7 +303,7 @@ struct NunaTrendsView: View {
                     Spacer(minLength: 4)
                     if let d, abs(d) >= (digits == 0 ? 0.5 : 0.05) {
                         Text(verbatim: (d > 0 ? "▲ " : "▼ ") + String(format: "%.\(digits)f", locale: AppLanguage.activeLocale, abs(d)))
-                            .font(.nuna(size: 12.5, weight: .heavy)).foregroundStyle((d > 0) == upGood ? NunaPalette.charge : NunaPalette.warning)
+                            .font(.nuna(size: 12.5, weight: .heavy)).foregroundStyle((d > 0) == upGood ? NunaScoreStyle.chargeSeries : NunaPalette.warning)
                     }
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 3) {
@@ -335,7 +335,7 @@ struct NunaTrendsView: View {
                         Text("12 weeks · a year").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     NunaHeatGrid(model: m, weeks: 12, cell: 22)
-                    HStack(spacing: 14) { zoneKey(NunaPalette.charge, "67+"); zoneKey(NunaPalette.warning, "34–66"); zoneKey(NunaPalette.alert, "0–33") }
+                    HStack(spacing: 14) { zoneKey(NunaPalette.scoreHigh, "67+"); zoneKey(NunaPalette.scoreMid, "34–66"); zoneKey(NunaPalette.scoreLow, "0–33") }
                 }
             }
         }.buttonStyle(.plain)
@@ -353,9 +353,9 @@ struct NunaTrendsView: View {
         return NunaCard {
             VStack(alignment: .leading, spacing: 16) {
                 nunaTrendsCap("Against the previous period")
-                since("Charge", c, NunaPalette.charge, { NunaTrendsFormat.num($0, 1) + "%" }, 100)
-                since("Effort", e, NunaPalette.effort, { $0.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–" }, 100)
-                since("Rest", r, NunaPalette.rest, { NunaTrendsFormat.num($0, 1) + "%" }, 100)
+                since("Charge", c, NunaScoreStyle.chargeSeries, { NunaTrendsFormat.num($0, 1) + "%" }, 100)
+                since("Effort", e, NunaScoreStyle.effortSeries, { $0.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–" }, 100)
+                since("Rest", r, NunaScoreStyle.restSeries, { NunaTrendsFormat.num($0, 1) + "%" }, 100)
                 HStack(spacing: 16) {
                     HStack(spacing: 6) { RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.ink).frame(width: 14, height: 8); Text("This period") }
                     HStack(spacing: 6) { RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.ink.opacity(0.3)).frame(width: 14, height: 5); Text("Previous period") }
