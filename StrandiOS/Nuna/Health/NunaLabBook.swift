@@ -115,7 +115,7 @@ struct NunaLabBookView: View {
     private func markerRow(_ m: NunaLabMarker) -> some View {
         let latest = m.latest
         let value = latest?.value
-        return NavigationLink { NunaMarkerDetailView(markerKey: m.key) } label: {
+        return NavigationLink { NunaLabMarkerHost(markerKey: m.key, isBody: m.category == .bodyMeasurement) } label: {
             NunaCard(small: true) {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -158,7 +158,7 @@ struct NunaLabBookView: View {
 // MARK: - One marker
 
 /// One marker on its own page: the latest reading on a gauge laid out like the range from the report, the readings over time, what the numbers say in
-/// words, the signal of the wearable they can be set beside, and every reading with its date.
+/// words, and the signal of the wearable they can be set beside.
 struct NunaMarkerDetailView: View {
     let markerKey: String
 
@@ -170,7 +170,6 @@ struct NunaMarkerDetailView: View {
     @State private var span = 365
     @State private var page = 0
     @State private var adding = false
-    @State private var deleting: LabMarkerRow?
 
     @State private var signal: MetricDescriptor?
     @State private var window: LabWindow = .fortnight
@@ -190,7 +189,6 @@ struct NunaMarkerDetailView: View {
                 trendCard(m)
                 meaningCard(m)
                 if !m.numeric.isEmpty { compareCard(m) }
-                historyCard(m)
                 Button { adding = true } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "plus").font(.nuna(size: 14, weight: .bold))
@@ -212,18 +210,6 @@ struct NunaMarkerDetailView: View {
             }
             .nunaSheetChrome(detents: [.large])
         }
-        .confirmationDialog("Delete this reading?", isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }), titleVisibility: .visible) {
-            Button("Delete", role: .destructive) { if let r = deleting { Task { await delete(r) } }; deleting = nil }
-            Button("Cancel", role: .cancel) { deleting = nil }
-        } message: { Text("It is removed from this iPhone. This cannot be undone.") }
-    }
-
-    private func delete(_ row: LabMarkerRow) async {
-        var ids = [row.id]
-        if let m = marker, m.isPressure, let d = m.diastolic[row.takenAt] { ids.append(d.id) }
-        await NunaLabStore.delete(ids: ids, repo: repo)
-        rows = await NunaLabStore.load(repo)
-        if marker == nil { dismiss() }
     }
 
     // MARK: Hero
@@ -231,42 +217,41 @@ struct NunaMarkerDetailView: View {
     private func hero(_ m: NunaLabMarker) -> some View {
         let latest = m.latest
         let status = m.latestStatus
-        return NunaCard(padding: EdgeInsets(top: 20, leading: 20, bottom: 20, trailing: 20)) {
-            VStack(spacing: 14) {
-                HStack {
-                    nunaTrendsCap("Latest reading")
-                    Spacer()
-                    Text(verbatim: latest.map { LabBookFormat.dayFromKey($0.day) } ?? "").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                }
-                if let r = m.range, let v = latest?.value {
-                    ZStack(alignment: .bottom) {
-                        NunaRangeGauge(value: v, range: r).frame(height: 150)
-                        VStack(spacing: 2) {
-                            Text(verbatim: latest.map(m.text) ?? "—").font(.nuna(size: 44, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
-                            Text(verbatim: m.unit).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                        }.padding(.bottom, 4)
+        return VStack(spacing: 14) {
+            if let r = m.range, let v = latest?.value {
+                NunaRangeGauge(value: v, range: r) {
+                    VStack(spacing: 4) {
+                        nunaTrendsCap("Latest reading")
+                        Text(verbatim: latest.map(m.text) ?? "—").font(.nuna(size: 46, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+                        Text(verbatim: m.unit).font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        HStack(alignment: .top, spacing: 0) {
+                            if m.isPressure {
+                                stat("Systolic", rangeText(m.range, key: m.key), unit: m.unit)
+                                stat("Diastolic", rangeText(m.diastolicRange, key: LabBookProjection.bpDiastolicKey), unit: m.unit)
+                            } else {
+                                stat("Your range", rangeText(r, key: m.key), unit: m.unit)
+                                changeStat(m)
+                            }
+                        }.padding(.top, 10)
                     }
+                }
+                .frame(height: 300)
+                HStack(spacing: 10) {
                     if let s = status { NunaChip(NunaLabRange.word(s), color: NunaLabRange.tint(s)) }
-                    HStack(alignment: .top, spacing: 0) {
-                        if m.isPressure {
-                            stat("Systolic", rangeText(m.range, key: m.key), unit: m.unit)
-                            stat("Diastolic", rangeText(m.diastolicRange, key: LabBookProjection.bpDiastolicKey), unit: m.unit)
-                        } else {
-                            stat("Your range", rangeText(r, key: m.key), unit: m.unit)
-                            changeStat(m)
-                        }
-                    }
-                } else {
-                    VStack(spacing: 6) {
-                        HStack(alignment: .firstTextBaseline, spacing: 6) {
-                            Text(verbatim: latest.map(m.text) ?? "—").font(.nuna(size: 56, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
-                            Text(verbatim: m.unit).font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                        }
-                        if let c = m.change, abs(c.delta) > 0.000_001 { changeLine(m, c) }
-                    }.frame(maxWidth: .infinity)
-                    Text("Add the range from your own report with a reading, and a gauge here shows where it sits.")
-                        .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    Text(verbatim: latest.map { LabBookFormat.dayFromKey($0.day) } ?? "").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
+            } else {
+                VStack(spacing: 8) {
+                    nunaTrendsCap("Latest reading")
+                    HStack(alignment: .firstTextBaseline, spacing: 6) {
+                        Text(verbatim: latest.map(m.text) ?? "—").font(.nuna(size: 64, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+                        Text(verbatim: m.unit).font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    }
+                    Text(verbatim: latest.map { LabBookFormat.dayFromKey($0.day) } ?? "").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    if let c = m.change, abs(c.delta) > 0.000_001 { changeLine(m, c) }
+                }.frame(maxWidth: .infinity).padding(.top, 8)
+                Text("Add the range from your own report with a reading, and a gauge here shows where it sits.")
+                    .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
         }
     }
@@ -504,40 +489,48 @@ struct NunaMarkerDetailView: View {
         pairs = built
         correlation = built.count >= LabBookSignals.floor ? CorrelationEngine.pearson(LabBookProjection.correlationInput(built)) : nil
     }
+}
 
-    // MARK: History
+// MARK: - Moving between markers
 
-    private func historyCard(_ m: NunaLabMarker) -> some View {
-        NunaCard(small: true, padding: EdgeInsets(top: 8, leading: 18, bottom: 8, trailing: 18)) {
-            VStack(spacing: 0) {
-                HStack {
-                    nunaTrendsCap("History")
-                    Spacer()
-                    Text(verbatim: "\(m.readings.count)").font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
-                }.padding(.vertical, 10)
-                ForEach(Array(m.readings.reversed().enumerated()), id: \.element.id) { i, row in
-                    NunaDivider()
-                    HStack(alignment: .top, spacing: 12) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack(alignment: .firstTextBaseline, spacing: 5) {
-                                Text(verbatim: m.text(row)).font(.nuna(size: 18, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                                Text(verbatim: row.unit).font(.nuna(size: 12.5, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                            }
-                            Text(verbatim: LabBookFormat.dayFromKey(row.day)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                            if let note = row.note, !note.isEmpty {
-                                Text(verbatim: note).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                            }
-                        }
-                        Spacer(minLength: 8)
-                        if let s = m.status(row) { NunaChip(NunaLabRange.word(s), color: NunaLabRange.tint(s)) }
-                        Button { deleting = row } label: {
-                            Image(systemName: "trash").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.alertText).frame(width: 38, height: 38).contentShape(Rectangle())
-                        }.buttonStyle(.plain).accessibilityLabel(Text("Delete this reading"))
-                    }
-                    .padding(.vertical, 10).accessibilityElement(children: .combine)
-                    .id(i)
-                }
+/// Holds the marker on show and puts the dropdown in the header, so the wearer goes from one marker to the next without going back to the list.
+struct NunaLabMarkerHost: View {
+    @EnvironmentObject private var repo: Repository
+    @State private var current: String
+    @State private var items: [NunaDetailSwitch.Item] = []
+    @State private var bodyKeys: Set<String>
+
+    init(markerKey: String, isBody: Bool) {
+        _current = State(initialValue: markerKey)
+        _bodyKeys = State(initialValue: isBody ? [markerKey] : [])
+    }
+
+    var body: some View {
+        // Body measurements keep the Weight page they already had, with its BMI and waist cards, rather than a second page of their own.
+        Group {
+            if bodyKeys.contains(current) { NunaWeightView() } else { NunaMarkerDetailView(markerKey: current) }
+        }
+        .id(current)
+        .environment(\.nunaDetailSwitch, items.count > 1 && items.contains { $0.key == current }
+            ? NunaDetailSwitch(current: current, items: items) { current = $0 } : nil)
+        .task(id: repo.refreshSeq) {
+            let markers = NunaLabGrouping.markers(await NunaLabStore.load(repo))
+            bodyKeys = Set(markers.filter { $0.category == .bodyMeasurement }.map(\.key))
+            items = NunaLabGrouping.categoryOrder.flatMap { cat in
+                markers.filter { $0.category == cat }.sorted { $0.name < $1.name }
+                    .map { NunaDetailSwitch.Item(key: $0.key, title: $0.name, icon: Self.icon($0)) }
             }
+        }
+    }
+
+    private static func icon(_ m: NunaLabMarker) -> String {
+        switch m.category {
+        case .bloodPanel: return "testtube.2"
+        case .bloodPressure: return "waveform.path.ecg"
+        case .bodyMeasurement: return "figure.arms.open"
+        case .imaging: return "photo"
+        case .appointmentNote: return "note.text"
+        case .other: return "list.bullet.clipboard"
         }
     }
 }
