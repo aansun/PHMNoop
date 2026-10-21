@@ -44,6 +44,11 @@ struct StrandiOSApp: App {
     @Environment(\.scenePhase) private var scenePhase
     /// Appearance preference (System/Light/Dark). Default follows the OS; the Settings picker writes it.
     @AppStorage(AppearanceMode.storageKey) private var appearanceRaw = AppearanceMode.system.rawValue
+    /// The Nuna look keeps its own light / dark / automatic choice. Observed here so the root follows it: a root that still forced the Default
+    /// look's choice (often Dark) would override Nuna's Light in every page hosted by UIKit.
+    @AppStorage(ExperienceMode.storageKey) private var experienceRaw = ExperienceMode.nuna.rawValue
+    @AppStorage(NunaTheme.storageKey) private var nunaThemeRaw = NunaTheme.Mode.dark.rawValue
+    @AppStorage(NunaThemePrefs.skinKey) private var nunaSkinRaw = NunaThemePrefs.Skin.standard.rawValue
     /// Chart data-colour style (Titanium / Classic throwback). Re-colours gauges + charts.
     @AppStorage(ChartStyle.storageKey) private var chartStyleRaw = ChartStyle.titanium.rawValue
     /// Chrome accent colour (mint / WHOOP blue / custom). Chrome only — never the data colour worlds.
@@ -202,6 +207,12 @@ struct StrandiOSApp: App {
         }
     }
 
+    private var rootColorScheme: ColorScheme? {
+        guard ExperienceMode(rawValue: experienceRaw) == .nuna else { return AppearanceMode.resolve(appearanceRaw).colorScheme }
+        _ = (nunaThemeRaw, nunaSkinRaw)   // read so a change of either redraws the root
+        return NunaTheme.colorScheme
+    }
+
     var body: some Scene {
         WindowGroup {
             iOSRootView()
@@ -221,7 +232,7 @@ struct StrandiOSApp: App {
                 // v5 L3: the shared stress check-in nudge surface, so the Breathe screen's passive
                 // card observes the SAME instance the central detector (AppModel.evaluateStress) posts to.
                 .environment(\.stressNudgeCenter, model.stressNudgeCenter)
-                .preferredColorScheme(AppearanceMode.resolve(appearanceRaw).colorScheme)
+                .preferredColorScheme(rootColorScheme)
                 // Match SwiftUI format styles to the localization selected by the app's bundles. Language
                 // changes are process-wide on Apple and are applied after the documented reopen.
                 .environment(\.locale, AppLanguage.activeLocale)
