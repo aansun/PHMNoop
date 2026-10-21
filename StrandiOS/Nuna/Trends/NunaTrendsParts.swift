@@ -163,30 +163,6 @@ struct NunaTrendChart: View {
     }
 }
 
-/// Bars (one per day, e.g. Effort) with a line over them (e.g. Charge) on one shared day axis.
-struct NunaComboChart: View {
-    let start: String
-    let days: Int
-    let bars: NunaDaySeries
-    let barMax: Double
-    let line: NunaDaySeries
-    let lineMax: Double
-    var barColor: Color = NunaScoreStyle.effortSeries
-    var lineColor: Color = NunaScoreStyle.chargeSeries
-    /// The line is Charge in every use, so its dots take the Charge ring colour for that day.
-    var linePointColor: ((Double) -> Color)? = nunaChargeColor
-    @Binding var selected: String?
-    var height: CGFloat = 150
-    var interactive = true
-
-    var body: some View {
-        NunaTrendChart(start: start, days: days,
-                       series: [.init(points: bars, max: barMax, color: barColor, bars: true), .init(points: line, max: lineMax, color: lineColor, pointColor: linePointColor)],
-                       height: height + 24,
-                       selected: interactive ? $selected : nil)
-    }
-}
-
 /// Two or more lines on the same 0 to 100 scale (each by its own maximum), for "two lines moving together".
 struct NunaMultiLineChart: View {
     struct Line { let series: NunaDaySeries; let max: Double; let color: Color; var pointColor: ((Double) -> Color)? = nil; var dashed = false }

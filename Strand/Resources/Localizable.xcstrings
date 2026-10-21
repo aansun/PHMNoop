@@ -6077,6 +6077,12 @@
         "Charge and Effort side by side": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Charge dan Effort berdampingan"}}
         } },
+        "Capsule: Charge · Line: Effort": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kapsul: Charge · Garis: Effort"}}
+        } },
+        "Touch a day for its figures": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sentuh satu hari untuk melihat angkanya"}}
+        } },
         "Charge and Rest": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Charge dan Rest"}}
         } },
