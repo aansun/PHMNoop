@@ -10,7 +10,7 @@ showing a number.
 Contents: [Effort](#effort) · [Effort target and plan](#effort-target-and-plan) · [Session reads](#session-reads) ·
 [Resting heart rate](#resting-heart-rate) · [Sleep](#sleep) · [Training load](#training-load-and-readiness) ·
 [Treadmill distance](#treadmill-distance) · [Fitness age pace](#pace-of-aging) · [Weather and air](#weather-and-air) ·
-[Breathing](#breathing) · [Ranges and colours](#ranges-and-colours)
+[Breathing](#breathing) · [Nutrition](#nutrition) · [Lab Book ranges](#lab-book-ranges) · [Ranges and colours](#ranges-and-colours)
 
 ---
 
@@ -158,6 +158,33 @@ and the later hour is at least 3 °C kinder. Code: `Environment` and `Environmen
 The breathing advisor is rule-based and on the phone, with no provider. It weighs live heart rate against resting, short-window HRV, the day's stress, how recovered you are,
 the time of day and what has worked for you before, then picks a goal (calm, sleep, focus, energise, recover) and one of 15 templates. It never picks a forceful protocol on
 its own. Code: `BreathAdvisor`.
+
+## Nutrition
+
+Everything is arithmetic over what you logged and weighed, in `NutritionMath` (pure, with tests). Nothing here is applied for you: the check-in only suggests.
+
+- **Trend weight**: each weigh-in moves the trend by 10% of the way to it for every day since the last one (`1 − 0.9^days`), so water and salt swings do not read as fat. Several weigh-ins on a day count as their mean.
+- **What your body spends**: over the last 14 days, the mean intake minus the change of the trend weight at **7,700 kcal per kg**, spread over the days between. It needs food logged on at least 10 of the 14 days and a trend that spans at least 10; until then
+  the page uses a rough figure from your profile (Mifflin-St Jeor times 1.4) and says so.
+- **Daily target**: what the body spends plus the pace you chose (7,700 kcal per kg, over 7 days), never below **1,200 kcal**.
+- **Macros**: protein from your body weight (1.8 g per kg unless you change it), fat as a share of the calories (28% unless you change it), carbohydrate the rest.
+- **Weekly check-in**: the trend over the last 7 to 14 days against the pace you planned. It needs 5 days of food in the week and weigh-ins across a week; it suggests a change to the target of at most 250 kcal either way, in steps of 10, and stays quiet under 50 kcal.
+- **Anya speaking up**: over the target by more than 5% today (10% for a finished day), behind where the day should be (a quarter of the target by early afternoon, rising to nine tenths late), protein under 60% of its target in the evening,
+  nothing logged by noon, or on track. One line at most, and the card has no Add button when the day is already over.
+- **Anya's plan** is a suggestion from her, worked out from your profile, weight, food, sleep, recovery, training and, when you share it, the Lab Book. The app clamps every number (1,200 to 4,500 kcal, pace −1 to +0.5 kg a week, protein 0.8 to 2.4 g per kg, fat 20 to 40%) and shows it
+  against the WHO references below before you apply it.
+- **WHO references used**: healthy adult BMI 18.5 to 24.9; a safe level of protein intake of 0.83 g per kg a day; fat 20 to 35% and carbohydrate 55 to 75% of the energy.
+
+Code: `NutritionMath`, `WhoNutritionReference`, `NunaNutritionView`, `NunaNutritionPlanView`, `NunaAnyaPlanCard`.
+
+## Lab Book ranges
+
+A reading is placed against the range **copied from your own report**; PHMN ships no ranges of its own for blood markers and never judges a value. Two body markers have a reference when your report has none:
+
+- **Weight**: the weight a WHO normal BMI (18.5 up to 25) allows at your profile height, `BMI × height²`.
+- **Waist**: below 94 cm for men and 80 cm for women (WHO expert consultation, 2008), by the sex on your profile.
+
+A range from your own report always wins over these. They apply to kg and cm only; a reading in another unit has no reference rather than a converted one. Code: `WhoBodyReference`.
 
 ## Ranges and colours
 

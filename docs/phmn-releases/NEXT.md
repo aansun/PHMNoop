@@ -1,27 +1,25 @@
-## PHMN 1.0.0
+## PHMN 1.1.0
 
-Gym summary redesigned, tappable explanations on Today, a Trends header that pages through your history, and fixes for workouts that lost their targets when the app was away.
+Nutrition rebuilt around a daily budget and a diary you can fill by telling Anya, a Lab Book in the Nuna style that Anya can fill from a report, a Weight page, and exercise videos.
 
 ### New / Enhancement
-- **Gym summary, redesigned.** The page opens with the date and program, the Activity Effort with its 30-day average and the cardio and muscular share beside it, then key statistics for lifting
-  (volume, sets, reps, duration, heart rate, calories). Two tabs below: **Exercises**, where each exercise opens to its sets, its record and its demo, and **Heart rate zones**, with the curve and the zones.
-  Save as program, Edit sets and Delete are in the three dots.
-- **The chips under the rings explain themselves.** Tap Solid, Last night, Calibrating or No data to see why Charge is in that state, what to do, and what the green, yellow, red and grey dot mean.
-  Tap Push, Maintain or Rest to see the signals behind your readiness, each with its figure and flag.
-- **Trends pages through your history.** Week, month, six months and year now sit beside the title with a date stepper under them, the same controls as every metric card, and the arrows move to earlier periods.
-- **Key metrics tiles** use the vital signs design: icon and label, the value, and the change as a chip beneath. With trend lines on, every tile is the same height.
-- **Early warning** no longer takes a card on Today. It arrives in the notifications bell once a day per level, Anya adds one short line, and the full page is still in quick actions.
-- **What's new** follows the latest GitHub release by itself, and shows each release in two groups, New / Enhancement and Bug Fixing.
-- **More room in the target sheet**, between the effort figures, the bar and Anya's line.
-- **Demo data** includes a finished gym session, so the gym screens can be looked at without logging one.
+- **Nutrition, rebuilt.** A ring shows what is left to eat today, with eaten and active burn beside it; protein, carbs and fat sit against your targets, and the day's food is listed by meal. Step back through earlier days. The gear holds Strategy, Import CSV and a switch for Anya speaking up.
+- **Add food.** Tell Anya what you ate in words or with a photo and she estimates each item; type the numbers yourself (calories can be worked out from the macros); or pick from saved and recent foods. Whatever Anya estimates can be edited, item by item, before it is added. A photo goes to the provider you chose only if it can look at pictures; otherwise the iPhone reads food names from it and sends nothing.
+- **Strategy and the weekly check-in.** Choose a goal weight and a pace and get a daily target and macros from what your body spends, worked out from your food and weight once there are two weeks of both. Once a week the page compares your trend with your pace and suggests a change to the target, which you apply or keep. Anya can also suggest a whole plan from your profile, weight, food, sleep, recovery, training and, if you share it, the Lab Book, shown against the WHO references; nothing changes until you apply it, and you can discard it.
+- **Anya speaks up on Nutrition** when the day runs over or short of your target, or protein lags; when you are already over there is no Add button to mislead.
+- **Quick add on Today.** The + sheet shows today's food against the target with an Add food button, and *Log food* is a quick action you can choose.
+- **Lab Book in the Nuna style.** A summary ring of the markers inside their range, the ones outside it, then a card per marker with the date, status, change and a bar that shows the reading against the range from your own report. Each marker has its own page with a gauge, the readings over time with their numbers, what the numbers say in words, a comparison with a wearable signal, and a dropdown in the header to move between markers. Weight and waist use the WHO reference when your report gives no range.
+- **Add a result.** One sheet to type a result or import a file: a CSV template you can download and fill in (with range and note), any date, marker, value, unit CSV, a WHOOP biomarker export, or a FHIR file from a lab.
+- **Anya can fill the Lab Book.** Tell her your results or attach a report (PDF, CSV or FHIR) and they come back as a card to check; CSV and FHIR files are read on the phone without being sent anywhere.
+- **Weight page and card.** Weight is a card in Your cards and in Key metrics, and opens a page with the trend, BMI and waist, and body composition when Apple Health has it.
+- **Gym exercise demos.** An exercise with an animation has a small switch to a video of it; one with no animation opens straight to the video, and only the player is shown. The GIF option is gone.
+- **Gym tab** has Anya at the top, programs grouped in one card with a group dropdown, a muscle map with a link to more details, sets per muscle with body thumbnails, and a history that starts the week on Monday.
+- **State chips** are their own section on Today, and chips for important information have a tinted background.
 
 ### Bug Fixing
-- **Targets survive the app being away.** After a few minutes in another app, iOS can end PHMN; the workout was restored but its time, distance and zone targets were lost, so the strap stopped buzzing and
-  the audio coach went quiet. The targets are now saved with the workout and come back with it.
-- **"Start workout" is not said twice.** A workout picked up after the app was reopened no longer announces its start again, and a time target already passed is not announced a second time.
-- **The screen stays on during a live workout** after you lock the phone or visit another app. The setting is asked for again every time the app comes back, and a finished Strava or Oura task no longer releases it.
-- **The summary opens at once** after End and save, instead of waiting on a *Saving activity* page.
-- **Metric tiles no longer shift** when one has no history yet, and the figures of the Effort rows (such as Strength training time) line up with the rest.
+- **The live workout** opens its summary after End, shows distance and pace on the treadmill and for GPS runs, keeps its session bar on every tab, and the heart beats in the colour of the zone.
+- **The Effort ring moves during a live workout.** It used to stay still until the session ended.
+- **Indonesian translations** were completed across the screens added in this release and the ones before it.
 
 ### Install
 `PHMN-ios-unsigned.ipa` is **unsigned** and has no Apple Watch app. Sign it with a sideloader (AltStore or SideStore), or yourself: see [docs/SIGNING.md](https://github.com/aansun/PHMNoop/blob/phm/docs/SIGNING.md).

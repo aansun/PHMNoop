@@ -189,6 +189,7 @@ A module of its own, in the style of Hevy.
 - **Muscle map**: a body map showing which muscles are recovering and which are ready, and sets per muscle.
 - **The summary**: Activity Effort and the **cardio / muscular split** against your usual sessions, key statistics for lifting (volume, sets, reps, duration, heart rate, calories), an **Exercises** tab where each
   exercise opens to its sets, its record and its demo, and a **Heart rate zones** tab. Personal records are flagged.
+- **Demos**: an animation from the two photos of each exercise, and a **video** one tap away in the same place (an exercise with no animation opens straight to the video, which shows only the player).
 - **Hevy** workouts and routines can be imported, read-only.
 
 </td>
@@ -227,6 +228,8 @@ Anya reads your **computed scores, not raw data**, and answers in plain language
 - **Bring your own provider and key**, run a local model, or use **Apple Intelligence** on the device. With none, Anya still writes her reads from rules on the phone.
 - She builds **the day's session** with the Effort it should earn, reads **weather and air** before an outdoor session, writes a **daily brief**, and keeps **memories** you can edit, pause or delete.
 - She says what a figure **means**, names a cause only as far as your numbers go, and gives no verdict without enough history.
+- **Log by talking**: tell her what you ate, in words or with a **photo**, and she estimates each item; you can change the name, calories, macros and portion before anything is added. Tell her your lab results, or attach a report (PDF, CSV or FHIR), and they
+  come back as a card to check before they go into the Lab Book. On Nutrition she speaks up when the day runs over or short of your target, and she can suggest a **plan** from your own data and the WHO references; nothing changes until you apply it.
 
 ### Breathing and recovery
 
@@ -236,7 +239,11 @@ Anya reads your **computed scores, not raw data**, and answers in plain language
 ### Health and body
 
 - **Vital signs**: live heart rate on a timeline of the day, and your vitals against your own range. **Early warning** watches for a body under strain, without saying more than the numbers show.
-- **Fitness age** and its **pace of aging**, **weight** and body composition, **nutrition**, **mood** check-ins, **menstrual cycle**, a **lab book** and a rhythm view.
+- **Fitness age** and its **pace of aging**, **weight** and body composition, **mood** check-ins, **menstrual cycle** and a rhythm view.
+- **Nutrition**: what is left to eat today in a ring, protein, carbs and fat against your targets, and a diary by meal. Add food by typing the numbers, from saved or recent foods, or by telling Anya (text or photo). **Strategy** sets a pace, a daily target and the macros,
+  shows the week against the target, and offers a weekly check-in. Import from Cronometer or MacroFactor is in the settings.
+- **Lab Book**: every marker as a card with its range from your own report, a detail page per marker with the readings over time, and one **Add a result** sheet to type a result, import a file (a CSV template to fill in, or a FHIR file) or choose the marker. Weight and waist
+  use the WHO reference when your report has none.
 - **Achievements**: a level, your data streak, your best and lowest days.
 
 ### The strap
@@ -294,7 +301,7 @@ The **More** tab is the settings hub: grouped, with a profile on top, and every 
 ### Data and privacy
 
 - **Import** WHOOP CSV and Apple Health exports, **back up** and restore to a folder, **export** a PDF report of your trends, and export a session as FIT or GPX.
-- **Privacy** lists exactly what can leave the phone and its live state: a text summary to an AI provider, Strava, Apple Health, weather and air, and your own exports and backups, and nothing else. It also opens iOS Settings for every permission,
+- **Privacy** lists exactly what can leave the phone and its live state: a text summary to an AI provider (and the words or photo of a meal you ask Anya to estimate), Strava, Apple Health, weather and air, and your own exports and backups, and nothing else. It also opens iOS Settings for every permission,
   and can delete the Apple Health data PHMN imported without touching the strap's.
 
 ---
@@ -308,6 +315,7 @@ PHMN adds several calculations on top of NOOP's, and each one is written down wi
 - **Cardio and muscular split**, **workout reads** against your last 30 days, and the 30-day average pills.
 - **Resting heart rate** as the mean of the night's longest session, with its limits stated.
 - **Sleep**: where a night ends, how debt builds, and when a habit is named as a cause.
+- **Nutrition**: the trend weight, what the body spends, the daily target and macros, the weekly check-in, and the WHO references an Anya plan is shown against. **Lab Book ranges** and where a WHO reference stands in for one.
 - **Training load**, **readiness**, **treadmill distance**, **pace of aging**, **weather and air advice** and the **breathing advisor**.
 
 ---

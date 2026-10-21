@@ -47,7 +47,8 @@
     "v43-coach-messages",
     "v44-ppg-waveform-base-code",
     "v45-rr-source-index",
-    "v46-lift-log"
+    "v46-lift-log",
+    "v47-food-log"
   ],
   "divergenceReasons": {
     "android-orphan-synced-column": "REAL COLUMN DRIFT: `synced` exists on Android only. GRDB's v10 note is explicit that stepSample gets no `synced` column ('unused; see StreamStore'), and v12's ppgHrSample never had one either; the Room entities copied the flag from the older per-second entities. Nothing reads it on Android \u2014 the per-row upload flag belongs to an upload path that does not exist there \u2014 so it is dead width, not divergent data. Removing it needs a Room table rebuild.",
@@ -626,6 +627,91 @@
         "kind"
       ],
       "indices": []
+    },
+    "foodEntry": {
+      "platform": "ios_only",
+      "reason": "Nutrition diary (GRDB v47): one row per thing eaten, and the foods kept to reuse. The Room twin is a follow-up; Android has no food diary yet.",
+      "columns": [
+        {
+          "name": "id",
+          "affinity": "TEXT",
+          "notNull": false,
+          "default": null
+        },
+        {
+          "name": "deviceId",
+          "affinity": "TEXT",
+          "notNull": true,
+          "default": null
+        },
+        {
+          "name": "day",
+          "affinity": "TEXT",
+          "notNull": true,
+          "default": null
+        },
+        {
+          "name": "meal",
+          "affinity": "TEXT",
+          "notNull": true,
+          "default": null
+        },
+        {
+          "name": "name",
+          "affinity": "TEXT",
+          "notNull": true,
+          "default": null
+        },
+        {
+          "name": "kcal",
+          "affinity": "REAL",
+          "notNull": true,
+          "default": null
+        },
+        {
+          "name": "proteinG",
+          "affinity": "REAL",
+          "notNull": false,
+          "default": null
+        },
+        {
+          "name": "carbsG",
+          "affinity": "REAL",
+          "notNull": false,
+          "default": null
+        },
+        {
+          "name": "fatG",
+          "affinity": "REAL",
+          "notNull": false,
+          "default": null
+        },
+        {
+          "name": "source",
+          "affinity": "TEXT",
+          "notNull": true,
+          "default": null
+        },
+        {
+          "name": "createdAt",
+          "affinity": "INTEGER",
+          "notNull": true,
+          "default": null
+        }
+      ],
+      "primaryKey": [
+        "id"
+      ],
+      "indices": [
+        {
+          "name": "idx_foodEntry_device_day",
+          "unique": false,
+          "columns": [
+            "deviceId",
+            "day"
+          ]
+        }
+      ]
     },
     "gravitySample": {
       "platform": "both",
@@ -1873,6 +1959,79 @@
           "columns": [
             "srcChannel",
             "tsSuspect"
+          ]
+        }
+      ]
+    },
+    "savedFood": {
+      "platform": "ios_only",
+      "reason": "Nutrition diary (GRDB v47): one row per thing eaten, and the foods kept to reuse. The Room twin is a follow-up; Android has no food diary yet.",
+      "columns": [
+        {
+          "name": "id",
+          "affinity": "TEXT",
+          "notNull": false,
+          "default": null
+        },
+        {
+          "name": "deviceId",
+          "affinity": "TEXT",
+          "notNull": true,
+          "default": null
+        },
+        {
+          "name": "name",
+          "affinity": "TEXT",
+          "notNull": true,
+          "default": null
+        },
+        {
+          "name": "kcal",
+          "affinity": "REAL",
+          "notNull": true,
+          "default": null
+        },
+        {
+          "name": "proteinG",
+          "affinity": "REAL",
+          "notNull": false,
+          "default": null
+        },
+        {
+          "name": "carbsG",
+          "affinity": "REAL",
+          "notNull": false,
+          "default": null
+        },
+        {
+          "name": "fatG",
+          "affinity": "REAL",
+          "notNull": false,
+          "default": null
+        },
+        {
+          "name": "useCount",
+          "affinity": "INTEGER",
+          "notNull": true,
+          "default": null
+        },
+        {
+          "name": "updatedAt",
+          "affinity": "INTEGER",
+          "notNull": true,
+          "default": null
+        }
+      ],
+      "primaryKey": [
+        "id"
+      ],
+      "indices": [
+        {
+          "name": "idx_savedFood_natural",
+          "unique": true,
+          "columns": [
+            "deviceId",
+            "name"
           ]
         }
       ]
