@@ -6128,6 +6128,9 @@
         "There are no written steps for your own exercise. The video on the Summary tab shows the movement.": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Gerakan buatanmu sendiri tidak punya langkah tertulis. Video di tab Ringkasan menunjukkan gerakannya."}}
         } },
+        "Strava could not use this activity: %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Strava tidak bisa memakai aktivitas ini: %@"}}
+        } },
         "Charge and Rest": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Charge dan Rest"}}
         } },
