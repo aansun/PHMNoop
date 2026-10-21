@@ -404,7 +404,7 @@ struct NunaTodayView: View {
         case .synthesis: return "Anya"
         case .recoveryVitals: return "Stress monitor"
         case .vitalMonitor: return "Vital and stress monitors"
-        case .weekCompare: return "Last 7 days"
+        case .weekCompare: return "Charge & Effort"
         case .keyMetrics: return "Key metrics"
         case .workouts: return "Activity"
         case .journal: return "Quick log"
@@ -518,7 +518,7 @@ struct NunaTodayView: View {
         case .recoveryVitals:
             previewRow("wind", NunaPalette.charge, model.stress.map { String(localized: "Stress \(String(format: "%.1f", locale: AppLanguage.activeLocale, $0)) / 3") } ?? String(localized: "Stress"), "Intraday curve").background(inner)
         case .weekCompare:
-            previewRow("chart.bar.xaxis", NunaPalette.charge, String(localized: "Last 7 days"), "Charge and Effort").background(inner)
+            previewRow("chart.bar.xaxis", NunaPalette.charge, String(localized: "Charge & Effort"), "Last 7 days").background(inner)
         case .vitalMonitor:
             HStack(spacing: 8) {
                 previewRow("heart.text.square", NunaPalette.charge, String(localized: "Vital signs"), "Within range").background(inner)

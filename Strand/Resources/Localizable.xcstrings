@@ -6083,6 +6083,12 @@
         "Touch a day for its figures": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Sentuh satu hari untuk melihat angkanya"}}
         } },
+        "Charge & Effort": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Charge & Effort"}}
+        } },
+        "The last 7 days, side by side": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "7 hari terakhir, berdampingan"}}
+        } },
         "Charge and Rest": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Charge dan Rest"}}
         } },

@@ -3,7 +3,7 @@ import SwiftUI
 import StrandDesign
 import WhoopStore
 
-/// "Last 7 days": Charge and Effort for each of the seven days ending on the day shown, as a capsule (Charge) with a line across it
+/// "Charge & Effort": the last seven days of Charge and Effort for each of the seven days ending on the day shown, as a capsule (Charge) with a line across it
 /// (Effort), both on the same 0 to 100 height. The colours read exactly as they do on the rings above.
 struct NunaWeekCompare: View {
     let endDay: Date
@@ -40,7 +40,7 @@ struct NunaWeekCompare: View {
         NavigationLink(value: NunaTodayRoute.chargeEffort) {
             NunaCard {
                 VStack(alignment: .leading, spacing: 14) {
-                    NunaTitleRow(title: "Last 7 days") {
+                    NunaTitleRow(title: "Charge & Effort") {
                         Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
                     }
                     if loaded && !hasData {
