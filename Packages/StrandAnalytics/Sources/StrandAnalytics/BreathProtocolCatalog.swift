@@ -26,7 +26,29 @@ Consciously Connected Breathing (CCB): inhale and exhale in one continuous loop 
     }()
 
     public static func protocolById(_ id: String) -> BreathProtocol? {
-        all.first { $0.id == id }
+        all.first { $0.id == id } ?? custom(id)
+    }
+
+    // MARK: - Exercises made to a person's request (Anya)
+
+    private static let customLock = NSLock()
+    nonisolated(unsafe) private static var customList: [String: BreathProtocol] = [:]
+
+    /// Makes an exercise the person asked for playable and findable by id, like a bundled one. It is not part of `all` (the picker lists the bundled
+    /// protocols), and registering the same id again replaces it.
+    public static func registerCustom(_ proto: BreathProtocol) {
+        customLock.lock(); defer { customLock.unlock() }
+        customList[proto.id] = proto
+    }
+
+    public static func unregisterCustom(id: String) {
+        customLock.lock(); defer { customLock.unlock() }
+        customList.removeValue(forKey: id)
+    }
+
+    private static func custom(_ id: String) -> BreathProtocol? {
+        customLock.lock(); defer { customLock.unlock() }
+        return customList[id]
     }
 
     /// Pace pills shown in Breathe (playable + guided). Resonance stays a separate UI case.

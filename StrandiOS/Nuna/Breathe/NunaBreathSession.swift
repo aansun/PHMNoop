@@ -44,9 +44,9 @@ struct NunaBreathSessionView: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ObservedObject private var motion = NoopMotionState.shared
     @AppStorage(NunaBreathPrefs.hapticsKey) private var haptics = true
-    @AppStorage(NunaBreathPrefs.audioKey) private var audioCues = false
+    @AppStorage(NunaBreathAudioMode.key) private var audioModeRaw = ""
     @AppStorage(NunaBreathPrefs.countdownKey) private var useCountdown = true
-    @StateObject private var tone = BreathTonePlayer()
+    @StateObject private var cue = NunaBreathCue()
 
     @State private var countdown: Int?
     @State private var running = false
@@ -69,10 +69,18 @@ struct NunaBreathSessionView: View {
     @State private var hrSeries: [Double] = []
     @State private var rmssdSeries: [Double] = []
     @State private var confirmEnd = false
-
-    private let phaseTimer = Timer.publish(every: 0.05, on: .main, in: .common).autoconnect()
-    private let secondTimer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    /// Time is read from the wall clock, never counted from ticks, and the timer lives in this view's state. Held as a plain constant it was made
+    /// again whenever the parent redrew (the strap's heart rate does that every second), which cancelled the one-second timer before it fired
+    /// and left the clock crawling on a phone with the strap connected.
+    @State private var clockTimer = Timer.publish(every: 0.05, on: .main, in: .common).autoconnect()
+    @State private var countdownFrom = Date()
+    @State private var pausedTotal: TimeInterval = 0
+    @State private var pausedAt: Date?
     private let step = 10
+
+    private var audioMode: NunaBreathAudioMode {
+        NunaBreathAudioMode(rawValue: audioModeRaw) ?? (UserDefaults.standard.bool(forKey: NunaBreathPrefs.audioKey) ? .tone : .off)
+    }
 
     private var proto: BreathProtocol? { BreathProtocolCatalog.protocolById(request.protocolId) }
     private var stages: [BreathStage] { proto?.stages.filter { $0.durationMs > 0 } ?? [] }
@@ -111,11 +119,10 @@ struct NunaBreathSessionView: View {
         .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 20)
         .background(NunaPalette.canvas.ignoresSafeArea())
         .preferredColorScheme(NunaTheme.colorScheme)
-        .onReceive(phaseTimer) { now in advance(now) }
-        .onReceive(secondTimer) { _ in tick() }
+        .onReceive(clockTimer) { now in onClock(now) }
         .onRRPackets(live) { ingest($0) }
         .onAppear { begin() }
-        .onDisappear { tone.deactivate(); ScreenIdle.keepAwake(false) }
+        .onDisappear { cue.deactivate(); ScreenIdle.keepAwake(false) }
         .confirmationDialog("End this session?", isPresented: $confirmEnd, titleVisibility: .visible) {
             Button("End and see report") { finish() }
             Button("Keep breathing", role: .cancel) {}
@@ -135,10 +142,16 @@ struct NunaBreathSessionView: View {
                 Text(request.goal.title).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             Spacer()
-            Button { audioCues.toggle(); audioCues ? tone.activate() : tone.deactivate() } label: {
-                Image(systemName: audioCues ? "speaker.wave.2" : "speaker.slash").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    .frame(width: 44, height: 44)
-            }.buttonStyle(.plain).accessibilityLabel(Text("Audio cues"))
+            Menu {
+                ForEach(NunaBreathAudioMode.allCases) { m in
+                    Button { audioModeRaw = m.rawValue; cue.apply(m) } label: {
+                        if audioMode == m { Label(m.title, systemImage: "checkmark") } else { Text(m.title) }
+                    }
+                }
+            } label: {
+                Image(systemName: audioMode == .off ? "speaker.slash" : (audioMode == .voice ? "person.wave.2" : "speaker.wave.2")).font(.nuna(size: 15, weight: .bold))
+                    .foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44).contentShape(Rectangle())
+            }.accessibilityLabel(Text("Audio cues"))
         }
     }
 
@@ -196,16 +209,17 @@ struct NunaBreathSessionView: View {
 
     private func begin() {
         model.startRealtimeHR()
-        if audioCues { tone.activate() }
+        cue.apply(audioMode)
         ScreenIdle.keepAwake(true)
         startedAt = Date()
-        if useCountdown { countdown = 3 } else { go() }
+        if useCountdown { countdown = 3; countdownFrom = Date() } else { go() }
     }
 
     private func go() {
         countdown = nil
         running = true
         seconds = 0; breaths = 0; stageIndex = 0
+        pausedTotal = 0; pausedAt = nil
         rmssdSum = 0; rmssdCount = 0; rmssdPeak = 0; hrSeries = []; rmssdSeries = []
         startedAt = Date()
         if guided {
@@ -216,25 +230,36 @@ struct NunaBreathSessionView: View {
         }
     }
 
-    private func tick() {
-        if let c = countdown { if c > 1 { countdown = c - 1 } else { go() }; return }
-        guard running, !paused else { return }
-        seconds += 1
-        if seconds % step == 0 {
-            hrSeries.append(live.worn ? Double(model.bpm ?? 0) : 0)
-            rmssdSeries.append(rmssd ?? 0)
+    /// One clock for everything: the countdown, the session seconds and the phases are all read off `now`.
+    private func onClock(_ now: Date) {
+        if countdown != nil {
+            let left = 3 - Int(now.timeIntervalSince(countdownFrom))
+            if left <= 0 { go() } else if left != countdown { countdown = left }
+            return
         }
-        if seconds >= request.seconds { finish() }
+        guard running, !paused else { return }
+        let elapsed = max(0, Int(now.timeIntervalSince(startedAt) - pausedTotal))
+        // Every second that went by is counted, also after the app was away for a while, so the series keep their spacing.
+        while seconds < elapsed {
+            seconds += 1
+            if seconds % step == 0 {
+                hrSeries.append(live.worn ? Double(model.bpm ?? 0) : 0)
+                rmssdSeries.append(rmssd ?? 0)
+            }
+        }
+        if seconds >= request.seconds { finish(); return }
+        advance(now)
     }
 
     private func advance(_ now: Date) {
-        guard running, !paused, !guided, now.timeIntervalSince(startedAt) > 0 else { return }
+        guard !guided else { return }
         let left = Int(ceil(phaseDeadline.timeIntervalSince(now)))
         if left != phaseLeft { phaseLeft = max(0, left) }
         guard now >= phaseDeadline, !stages.isEmpty else { return }
         if stages[stageIndex % stages.count].type == .exhale { breaths += 1 }
         stageIndex += 1
-        arm(from: now, buzz: true)
+        // A phase that ended long ago (the screen was off) is not announced late, and the pace resumes from now.
+        arm(from: now, buzz: now.timeIntervalSince(phaseDeadline) < 1.5)
     }
 
     private func arm(from now: Date, buzz: Bool, remaining: TimeInterval? = nil) {
@@ -256,9 +281,9 @@ struct NunaBreathSessionView: View {
         if buzz {
             let loops = BreathProtocolPlayer.loops(for: stage.type)
             if loops > 0, haptics { model.buzz(loops: UInt8(clamping: loops), gate: HapticPrefs.breathing) }
-            if audioCues {
-                switch stage.type { case .inhale: tone.play(.inhale); case .exhale: tone.play(.exhale); default: break }
-            }
+            // A hold is told by its own cue, and by whether the lungs are full or empty: the step before says which.
+            let before = stages[(stageIndex + stages.count - 1) % stages.count].type
+            cue.cue(stage.type, previous: before, label: stage.label)
         }
     }
 
@@ -266,12 +291,15 @@ struct NunaBreathSessionView: View {
         guard running else { return }
         if paused {
             paused = false
+            if let began = pausedAt { pausedTotal += Date().timeIntervalSince(began) }
+            pausedAt = nil
             if !guided { arm(from: Date(), buzz: false, remaining: max(pausedLeft, 0.3)) }
         } else {
             pausedLeft = max(0, phaseDeadline.timeIntervalSinceNow)
             paused = true
+            pausedAt = Date()
             phaseDeadline = .distantFuture
-            model.stopHaptics()
+            model.stopHaptics(); cue.silence()
         }
     }
 
@@ -289,7 +317,7 @@ struct NunaBreathSessionView: View {
     }
 
     private func cancel() {
-        model.stopHaptics(); tone.deactivate(); ScreenIdle.keepAwake(false)
+        model.stopHaptics(); cue.deactivate(); ScreenIdle.keepAwake(false)
         onEnd(nil)
     }
 
@@ -297,7 +325,8 @@ struct NunaBreathSessionView: View {
         guard running || countdown != nil else { onEnd(nil); return }
         let wasRunning = running
         running = false; paused = false
-        model.stopHaptics(); tone.deactivate(); ScreenIdle.keepAwake(false)
+        model.stopHaptics(); ScreenIdle.keepAwake(false)
+        if wasRunning, seconds >= request.seconds { cue.releaseAfterFinishing() } else { cue.deactivate() }
         guard wasRunning, seconds >= 20 else { onEnd(nil); return }
         func mean(_ a: ArraySlice<Double>) -> Double? { let v = a.filter { $0 > 0 }; return v.isEmpty ? nil : v.reduce(0, +) / Double(v.count) }
         let record = NunaBreathRecord(

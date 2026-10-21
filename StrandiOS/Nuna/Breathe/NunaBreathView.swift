@@ -33,6 +33,7 @@ struct NunaBreathView: View {
             if anyaOn { anyaCard }
             goalPicker
             templates
+            NunaBreathAskAnya(inputs: suggestion?.inputs)
             sessions
             advancedRow
         }

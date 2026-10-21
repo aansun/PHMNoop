@@ -951,12 +951,15 @@ private final class ControllerBox: ObservableObject {
 @MainActor
 final class BreathTonePlayer: ObservableObject {
 
-    enum Tone { case inhale, exhale }
+    enum Tone { case inhale, exhale, holdFull, holdEmpty }
 
     private let engine = AVAudioEngine()
     private let player = AVAudioPlayerNode()
     private var inhaleBuffer: AVAudioPCMBuffer?
     private var exhaleBuffer: AVAudioPCMBuffer?
+    /// A short double blip for a hold: higher after the inhale (lungs full), lower after the exhale (lungs empty).
+    private var holdFullBuffer: AVAudioPCMBuffer?
+    private var holdEmptyBuffer: AVAudioPCMBuffer?
     private var active = false
 
     /// Phase tone frequencies (Hz). A gentle rising/falling pair — a soft cue, not a chime.
@@ -979,6 +982,8 @@ final class BreathTonePlayer: ObservableObject {
 
         if inhaleBuffer == nil { inhaleBuffer = makeTone(frequency: inhaleHz, format: format) }
         if exhaleBuffer == nil { exhaleBuffer = makeTone(frequency: exhaleHz, format: format) }
+        if holdFullBuffer == nil { holdFullBuffer = makeBlips(frequency: 523, format: format) }
+        if holdEmptyBuffer == nil { holdEmptyBuffer = makeBlips(frequency: 262, format: format) }
 
         engine.attach(player)
         engine.connect(player, to: engine.mainMixerNode, format: format)
@@ -1009,9 +1014,35 @@ final class BreathTonePlayer: ObservableObject {
     /// still carry the pace, so a missed tone is harmless.
     func play(_ tone: Tone) {
         guard active else { return }
-        let buffer = (tone == .inhale) ? inhaleBuffer : exhaleBuffer
+        let buffer: AVAudioPCMBuffer?
+        switch tone {
+        case .inhale: buffer = inhaleBuffer
+        case .exhale: buffer = exhaleBuffer
+        case .holdFull: buffer = holdFullBuffer
+        case .holdEmpty: buffer = holdEmptyBuffer
+        }
         guard let buffer else { return }
         player.scheduleBuffer(buffer, at: nil, options: .interrupts, completionHandler: nil)
+    }
+
+    /// Two short soft blips with a gap between them: "hold", told apart from the long tones of the inhale and the exhale.
+    private func makeBlips(frequency: Double, format: AVAudioFormat) -> AVAudioPCMBuffer? {
+        let blip = 0.14, gap = 0.12
+        let frameCount = AVAudioFrameCount((blip * 2 + gap) * sampleRate)
+        guard frameCount > 0,
+              let buffer = AVAudioPCMBuffer(pcmFormat: format, frameCapacity: frameCount),
+              let channel = buffer.floatChannelData?[0] else { return nil }
+        buffer.frameLength = frameCount
+        let total = Int(frameCount), blipN = Int(blip * sampleRate), gapN = Int(gap * sampleRate)
+        let edge = Int(0.015 * sampleRate)
+        for i in 0..<total {
+            let local = i < blipN ? i : (i >= blipN + gapN ? i - blipN - gapN : -1)
+            guard local >= 0, local < blipN else { channel[i] = 0; continue }
+            var env: Float = 1
+            if local < edge { env = Float(local) / Float(max(edge, 1)) } else if local > blipN - edge { env = Float(blipN - local) / Float(max(edge, 1)) }
+            channel[i] = Float(sin(2.0 * Double.pi * frequency * Double(i) / sampleRate)) * env * 0.26
+        }
+        return buffer
     }
 
     /// Generate a single soft sine tone with a short attack/decay envelope so it fades in and out rather

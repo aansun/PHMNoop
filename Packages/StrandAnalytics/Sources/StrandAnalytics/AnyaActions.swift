@@ -35,6 +35,31 @@ public struct AnyaProgramSpec: Equatable, Sendable {
     public var days: [AnyaProgramDay]
 }
 
+/// One timed phase of a breathing exercise Anya made.
+public struct AnyaBreathStage: Equatable, Sendable {
+    /// inhale | hold | exhale
+    public var phase: String
+    public var seconds: Double
+    public init(phase: String, seconds: Double) { self.phase = phase; self.seconds = seconds }
+}
+
+/// A breathing exercise made to the person's request: stages that repeat for some minutes. Every number is bounded here so a reply can never ask for
+/// a forceful or unsafe pattern (long holds, a very short cycle of fast over-breathing).
+public struct AnyaBreathSpec: Equatable, Sendable {
+    public var title: String
+    /// calm | sleep | focus | energize | recover
+    public var goal: String
+    public var minutes: Int
+    public var stages: [AnyaBreathStage]
+    public var note: String?
+    public init(title: String, goal: String, minutes: Int, stages: [AnyaBreathStage], note: String? = nil) {
+        self.title = title; self.goal = goal; self.minutes = minutes; self.stages = stages; self.note = note
+    }
+
+    /// One full cycle, in seconds.
+    public var cycleSeconds: Double { stages.reduce(0) { $0 + $1.seconds } }
+}
+
 public struct AnyaWorkoutSpec: Equatable, Sendable {
     public var title: String
     public var sport: String?
@@ -109,6 +134,7 @@ public enum AnyaBlock: Equatable, Sendable {
     case lab(AnyaLabSpec)
     case food(AnyaFoodSpec)
     case plan(AnyaPlanSpec)
+    case breath(AnyaBreathSpec)
 }
 
 public enum AnyaActions {
@@ -130,6 +156,11 @@ public enum AnyaActions {
     {"name":"Beginner full body","note":"3 days a week","days":[{"title":"Day A","items":[{"exercise":"Goblet squat","sets":3,"repsLow":8,"repsHigh":10,"restSec":90}]}]}
     ```
     Up to 7 days and 12 exercises a day; sets 1 to 10; reps 1 to 100; restSec 0 to 600; the app lets the person save each day as a program. Name each exercise the way a standard exercise library does, in English and in full (for example "Barbell Bench Press - Medium Grip", "Lat Pulldown"), and plan only equipment the person has.
+    ```anya-breath
+    {"title":"Evening wind-down","goal":"sleep","minutes":5,"stages":[{"phase":"inhale","seconds":4},{"phase":"hold","seconds":2},{"phase":"exhale","seconds":6}]}
+    ```
+    For a custom breathing exercise ask for: phase is inhale, hold or exhale; 2 to 6 stages that repeat; minutes 1 to 30; goal one of calm, sleep, focus, energize, recover. Keep it gentle and non-clinical: \
+    no hold longer than 8 seconds, no fast over-breathing, the exhale at least as long as the inhale unless the person asked for focus or energy. The app offers a Start button.
     ```anya-workout
     {"title":"Easy zone 2 run","sport":"Running","minutes":40,"zone":2}
     ```
@@ -234,6 +265,59 @@ public enum AnyaActions {
         return AnyaProgramSpec(name: name, note: text(o["note"], max: 200), days: days)
     }
 
+    /// The limits of a breathing exercise: nothing here can be exceeded by whatever a model writes.
+    public static let breathGoals: Set<String> = ["calm", "sleep", "focus", "energize", "recover"]
+    static let breathLimits: [String: ClosedRange<Double>] = ["inhale": 1.5...10, "hold": 1...8, "exhale": 2...12]
+    /// Under this a cycle is fast over-breathing, which is not offered.
+    static let minBreathCycleSeconds = 6.0
+
+    static func breath(_ o: [String: Any]) -> AnyaBreathSpec? {
+        guard let title = text(o["title"], max: 60) else { return nil }
+        var stages: [AnyaBreathStage] = []
+        for s in ((o["stages"] as? [Any]) ?? []).prefix(6) {
+            guard let so = s as? [String: Any], let phase = (so["phase"] as? String)?.lowercased().trimmingCharacters(in: .whitespaces),
+                  let range = breathLimits[phase], let secs = double(so["seconds"]) else { continue }
+            stages.append(AnyaBreathStage(phase: phase, seconds: min(max(secs, range.lowerBound), range.upperBound).rounded(toPlaces: 1)))
+        }
+        // Something to breathe in and out, and a cycle slow enough to be calm.
+        guard stages.count >= 2, stages.contains(where: { $0.phase == "inhale" }), stages.contains(where: { $0.phase == "exhale" }) else { return nil }
+        var spec = AnyaBreathSpec(title: title, goal: (text(o["goal"], max: 12)?.lowercased()).flatMap { breathGoals.contains($0) ? $0 : nil } ?? "calm",
+                                  minutes: clamp(int(o["minutes"]) ?? 5, 1, 30), stages: stages, note: text(o["note"], max: 160))
+        if spec.cycleSeconds < minBreathCycleSeconds {
+            // Stretch the breathing phases, not the holds, until the cycle is slow enough.
+            let factor = minBreathCycleSeconds / max(spec.cycleSeconds, 0.1)
+            spec.stages = spec.stages.map { s in
+                guard s.phase != "hold", let range = breathLimits[s.phase] else { return s }
+                return AnyaBreathStage(phase: s.phase, seconds: min(s.seconds * factor, range.upperBound).rounded(toPlaces: 1))
+            }
+            if spec.cycleSeconds < minBreathCycleSeconds { return nil }
+        }
+        return spec
+    }
+
+    /// The breathing exercise in a reply, from a fenced block or a bare JSON object with `stages`.
+    public static func parseBreath(from reply: String) -> AnyaBreathSpec? {
+        for b in parse(reply) { if case .breath(let s) = b { return s } }
+        guard let open = reply.firstIndex(of: "{"), let close = reply.lastIndex(of: "}"), open < close,
+              let data = String(reply[open...close]).data(using: .utf8),
+              let obj = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any], obj["stages"] != nil else { return nil }
+        return breath(obj)
+    }
+
+    /// Asked for in the Breathing screen: one exercise from what the person typed and how they are right now.
+    public static let breathInstruction = """
+    You make ONE breathing exercise for the person from what they ask for and, when given, how they are right now (heart rate, HRV, stress, Charge, the hour). \
+    Reply with one or two plain sentences saying what it is for and how it should feel, then ONE fenced block exactly like the example, valid JSON, no comments.
+    ```anya-breath
+    {"title":"Box breathing, 4 4 4 4","goal":"focus","minutes":5,"stages":[{"phase":"inhale","seconds":4},{"phase":"hold","seconds":4},{"phase":"exhale","seconds":4},{"phase":"hold","seconds":4}],"note":"Breathe through the nose"}
+    ```
+    phase is inhale, hold or exhale; 2 to 6 stages that repeat; each inhale 2 to 10 s, each hold 1 to 8 s, each exhale 2 to 12 s; minutes 1 to 30; goal is calm, sleep, \
+    focus, energize or recover. Keep it gentle and non-clinical: never a hold longer than 8 seconds, never fast over-breathing, and unless the person asked for focus or energy \
+    the exhale is at least as long as the inhale. Give the exercise a short clear title, in the person's language. If the person mentions a medical condition, pregnancy, \
+    dizziness or panic, choose a slow, comfortable pace without holds and say in the reply to stop if it feels wrong and to ask a clinician. \
+    If you cannot make an exercise from what was asked, say what is missing and leave out the block.
+    """
+
     static func workout(_ o: [String: Any]) -> AnyaWorkoutSpec? {
         guard let title = text(o["title"], max: 80), let minutes = int(o["minutes"]) else { return nil }
         return AnyaWorkoutSpec(title: title, sport: text(o["sport"], max: 40), minutes: clamp(minutes, 5, 240),
@@ -334,6 +418,7 @@ public enum AnyaActions {
             case "lab": if let l = lab(obj) { out.append(.lab(l)) }
             case "food": if let f = food(obj) { out.append(.food(f)) }
             case "plan": if let p = plan(obj) { out.append(.plan(p)) }
+            case "breath": if let b = breath(obj) { out.append(.breath(b)) }
             default: break
             }
         }
@@ -440,4 +525,9 @@ extension AnyaActions {
         let kind = pick(obj["kind"], from: exerciseKinds)
         return AnyaExerciseSpec(primary: primary, secondary: secondary, equipment: equipment, kind: kind)
     }
+}
+
+
+private extension Double {
+    func rounded(toPlaces p: Int) -> Double { let m = pow(10.0, Double(p)); return (self * m).rounded() / m }
 }
