@@ -560,7 +560,7 @@ struct NunaLabValueBar: View {
                 Canvas { ctx, _ in
                     var bracket = Path()
                     for t in [0.2, 0.8] { bracket.move(to: CGPoint(x: w * t, y: barHeight + 4)); bracket.addLine(to: CGPoint(x: w * t, y: rowY)) }
-                    let half = CGFloat(rangeText.count) * 3.7 + 10
+                    let half = CGFloat(rangeText.count) * 3.3 + 7
                     bracket.move(to: CGPoint(x: w * 0.2, y: rowY)); bracket.addLine(to: CGPoint(x: w * 0.5 - half, y: rowY))
                     bracket.move(to: CGPoint(x: w * 0.5 + half, y: rowY)); bracket.addLine(to: CGPoint(x: w * 0.8, y: rowY))
                     ctx.stroke(bracket, with: .color(NunaPalette.textMuted), style: StrokeStyle(lineWidth: 1.2, lineCap: .round, dash: [3, 3]))
