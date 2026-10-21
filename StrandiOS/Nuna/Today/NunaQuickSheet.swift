@@ -27,6 +27,9 @@ struct NunaQuickSheet: View {
     @AppStorage(NunaNutritionPrefs.hasPlan) private var hasPlan = false
     @AppStorage(NunaNutritionPrefs.targetKcal) private var targetKcal = 0.0
 
+    /// The width of the button at the end of the food row and of the pair at the end of the water row.
+    private static let controlWidth: CGFloat = 176
+
     private var actions: [NunaQuickAction] {
         let ids = NunaQuickActions.decode(actionsRaw.isEmpty ? NunaQuickActions.encode(NunaQuickActions.defaultIDs) : actionsRaw)
         return ids.compactMap(NunaQuickActions.action)
@@ -93,8 +96,9 @@ struct NunaQuickSheet: View {
                         .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 Spacer(minLength: 4)
+                // Both rows end in a control of the same width, so the two buttons line up down the right edge.
                 Button { addingFood = true } label: { Text("Add food") }
-                    .buttonStyle(.nuna(.primary, height: 44)).fixedSize()
+                    .buttonStyle(.nuna(.primary, height: 44, fullWidth: true)).frame(width: Self.controlWidth)
             }
         }
     }
@@ -109,13 +113,16 @@ struct NunaQuickSheet: View {
                         .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 Spacer(minLength: 4)
-                Button { Task { await undoWater() } } label: {
-                    Image(systemName: "minus").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(width: 44, height: 44)
+                HStack(spacing: 8) {
+                    Button { Task { await undoWater() } } label: {
+                        Image(systemName: "minus").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            .frame(width: 44, height: 44).background(NunaPalette.glassStrong, in: Circle())
+                    }
+                    .buttonStyle(.plain).accessibilityLabel(Text("Remove last drink"))
+                    Button { Task { await addWater(waterAdd) } } label: { Text(verbatim: "+\(waterAdd)") }
+                        .buttonStyle(.nuna(.primary, height: 44, fullWidth: true))
                 }
-                .buttonStyle(.plain).accessibilityLabel(Text("Remove last drink"))
-                Button { Task { await addWater(waterAdd) } } label: { Text(verbatim: "+\(waterAdd)") }
-                    .buttonStyle(.nuna(.primary, height: 44)).fixedSize()
+                .frame(width: Self.controlWidth)
             }
         }
     }
