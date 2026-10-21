@@ -165,10 +165,8 @@ struct NunaLabBookView: View {
                         Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                     }
                     if let r = m.range, let v = value {
-                        NunaScaleBar(parts: [(2, NunaPalette.warning.opacity(0.5)), (6, NunaPalette.charge.opacity(0.85)), (2, NunaPalette.warning.opacity(0.5))], position: Self.position(v, r))
-                        HStack {
-                            Text(verbatim: LabBookFormat.value(r.low, key: m.key)); Spacer(); Text(verbatim: LabBookFormat.value(r.high, key: m.key))
-                        }.font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        NunaLabValueBar(position: Self.position(v, r), valueText: latest.map(m.text) ?? "", tint: m.latestStatus.map(NunaLabRange.tint) ?? NunaPalette.textSecondary,
+                                        lowText: LabBookFormat.value(r.low, key: m.key), highText: LabBookFormat.value(r.high, key: m.key))
                     }
                     Text(verbatim: latest.map { String(localized: "last taken \(LabBookFormat.day($0.takenAt))") + " · " + (m.readings.count == 1 ? String(localized: "1 reading") : String(localized: "\(m.readings.count) readings")) } ?? "")
                         .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
@@ -519,6 +517,56 @@ struct NunaMarkerDetailView: View {
         let built = LabBookProjection.pairMarkerToWearable(marker: markerSeries, wearable: wearable, windowDays: window.days)
         pairs = built
         correlation = built.count >= LabBookSignals.floor ? CorrelationEngine.pearson(LabBookProjection.correlationInput(built)) : nil
+    }
+}
+
+// MARK: - Value on a hatched bar
+
+/// The latest reading on a bar: a blue hatched run up to a pill with the value, and a white tick at each end of the range from the report with its number
+/// underneath. The middle of the bar is the range, the sides what is below and above it.
+struct NunaLabValueBar: View {
+    let position: Double
+    let valueText: String
+    let tint: Color
+    let lowText: String
+    let highText: String
+
+    private let barHeight: CGFloat = 32
+
+    var body: some View {
+        GeometryReader { geo in
+            let w = geo.size.width
+            let pillW = max(58, CGFloat(valueText.count) * 10 + 32)
+            let x = min(max(CGFloat(position) * w, pillW / 2), w - pillW / 2)
+            ZStack(alignment: .topLeading) {
+                RoundedRectangle(cornerRadius: 8, style: .continuous).fill(NunaPalette.field).frame(width: w, height: barHeight)
+                Canvas { ctx, size in
+                    ctx.fill(Path(CGRect(origin: .zero, size: size)), with: .color(NunaPalette.effortModerate.opacity(0.2)))
+                    var lines = Path()
+                    var startX: CGFloat = -size.height
+                    while startX < size.width {
+                        lines.move(to: CGPoint(x: startX, y: size.height)); lines.addLine(to: CGPoint(x: startX + size.height, y: 0))
+                        startX += 7
+                    }
+                    ctx.stroke(lines, with: .color(NunaPalette.effortModerate), lineWidth: 2.2)
+                }
+                .frame(width: x, height: barHeight)
+                .clipShape(UnevenRoundedRectangle(topLeadingRadius: 8, bottomLeadingRadius: 8, bottomTrailingRadius: 0, topTrailingRadius: 0, style: .continuous))
+                ForEach([0.2, 0.8], id: \.self) { t in
+                    Capsule().fill(NunaPalette.ink).frame(width: 3, height: barHeight + 6).offset(x: w * t - 1.5, y: -3)
+                }
+                Text(verbatim: valueText).font(.nuna(size: 15, weight: .heavy, design: NunaType.design)).foregroundStyle(tint).lineLimit(1)
+                    .frame(width: pillW, height: barHeight - 2)
+                    .background(NunaPalette.card, in: Capsule())
+                    .overlay(Capsule().stroke(tint, lineWidth: 2))
+                    .offset(x: x - pillW / 2, y: 1)
+                Text(verbatim: lowText).position(x: w * 0.2, y: barHeight + 17)
+                Text(verbatim: highText).position(x: w * 0.8, y: barHeight + 17)
+            }
+            .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+        }
+        .frame(height: barHeight + 28)
+        .accessibilityHidden(true)
     }
 }
 
