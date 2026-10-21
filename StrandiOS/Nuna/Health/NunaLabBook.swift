@@ -161,16 +161,11 @@ struct NunaLabBookView: View {
                             Text(verbatim: (c.delta > 0 ? "▲ " : "▼ ") + LabBookFormat.value(abs(c.delta), key: m.key))
                                 .font(.nuna(size: 13, weight: .heavy)).foregroundStyle(m.changeTone(c.delta)).fixedSize().padding(.top, 6)
                         }
-                    }
-                    HStack(alignment: .firstTextBaseline, spacing: 5) {
-                        Text(verbatim: latest.map(m.text) ?? "—").font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
-                        Text(verbatim: m.unit).font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                        Spacer(minLength: 4)
-                        Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                        Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted).padding(.top, 8)
                     }
                     if let r = m.range, let v = value {
                         NunaLabValueBar(position: Self.position(v, r), valueText: latest.map(m.text) ?? "", tint: m.latestStatus.map(NunaLabRange.tint) ?? NunaPalette.textSecondary,
-                                        rangeText: LabBookFormat.value(r.low, key: m.key) + "–" + LabBookFormat.value(r.high, key: m.key))
+                                        rangeText: LabBookFormat.value(r.low, key: m.key) + "–" + LabBookFormat.value(r.high, key: m.key) + " " + m.unit)
                     }
                 }
             }
@@ -533,6 +528,7 @@ struct NunaLabValueBar: View {
     let rangeText: String
 
     private let barHeight: CGFloat = 32
+    private var rowY: CGFloat { barHeight + 38 }
 
     var body: some View {
         GeometryReader { geo in
@@ -561,14 +557,23 @@ struct NunaLabValueBar: View {
                     .background(NunaPalette.card, in: Capsule())
                     .overlay(Capsule().stroke(tint, lineWidth: 2))
                     .offset(x: x - pillW / 2, y: 1)
-                ForEach([0.2, 0.8], id: \.self) { t in
-                    Capsule().fill(NunaPalette.textMuted).frame(width: 1.5, height: 8).offset(x: w * t - 0.75, y: barHeight + 7)
+                Canvas { ctx, _ in
+                    var bracket = Path()
+                    for t in [0.2, 0.8] { bracket.move(to: CGPoint(x: w * t, y: barHeight + 4)); bracket.addLine(to: CGPoint(x: w * t, y: rowY)) }
+                    let half = CGFloat(rangeText.count) * 3.7 + 10
+                    bracket.move(to: CGPoint(x: w * 0.2, y: rowY)); bracket.addLine(to: CGPoint(x: w * 0.5 - half, y: rowY))
+                    bracket.move(to: CGPoint(x: w * 0.5 + half, y: rowY)); bracket.addLine(to: CGPoint(x: w * 0.8, y: rowY))
+                    ctx.stroke(bracket, with: .color(NunaPalette.textMuted), style: StrokeStyle(lineWidth: 1.2, lineCap: .round, dash: [3, 3]))
                 }
-                Text(verbatim: rangeText).position(x: w * 0.5, y: barHeight + 20)
+                .frame(width: w, height: rowY + 2)
+                Text("Your range").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textMuted)
+                    .position(x: w * 0.5, y: barHeight + 14)
+                Text(verbatim: rangeText)
+                    .position(x: w * 0.5, y: rowY)
             }
             .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
         }
-        .frame(height: barHeight + 28)
+        .frame(height: barHeight + 50)
         .accessibilityHidden(true)
     }
 }
