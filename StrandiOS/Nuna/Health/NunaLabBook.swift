@@ -620,7 +620,7 @@ struct NunaLabShareRing: View {
         let gap = within > 0 && outside > 0 ? 0.035 : 0
         let w = Double(within) / total
         return ZStack {
-            Circle().stroke(NunaPalette.field, lineWidth: lw)
+            Circle().stroke(NunaPalette.ringTrack, lineWidth: lw)
             if within > 0 {
                 Circle().trim(from: 0, to: max(0.001, w - gap / 2)).stroke(NunaPalette.charge, style: StrokeStyle(lineWidth: lw, lineCap: .round))
                     .shadow(color: NunaPalette.charge.opacity(0.45), radius: 6)
