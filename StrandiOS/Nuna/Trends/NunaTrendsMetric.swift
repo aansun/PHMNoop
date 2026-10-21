@@ -24,8 +24,8 @@ struct NunaTrendsMetricView: View {
     // MARK: Per-kind configuration
 
     private var title: LocalizedStringKey { kind == .charge ? "Charge" : (kind == .effort ? "Effort" : "Rest") }
-    private var color: Color { kind == .charge ? NunaPalette.charge : (kind == .effort ? NunaPalette.effortText : NunaPalette.restText) }
-    private var bar: Color { kind == .charge ? NunaPalette.charge : (kind == .effort ? NunaPalette.effort : NunaPalette.rest) }
+    private var color: Color { kind == .charge ? NunaScoreStyle.chargeSeries : (kind == .effort ? NunaScoreStyle.effortSeries : NunaScoreStyle.restSeries) }
+    private var bar: Color { kind == .charge ? NunaScoreStyle.chargeSeries : (kind == .effort ? NunaScoreStyle.effortSeries : NunaScoreStyle.restSeries) }
     private var raw: NunaDaySeries { kind == .charge ? m.charge : (kind == .effort ? m.effort : m.rest) }
     /// Display value for a stored one (Effort follows the chosen scale).
     private func disp(_ v: Double) -> Double { kind == .effort ? UnitFormatter.effortValue(v, scale: scale) : v }
@@ -49,9 +49,9 @@ struct NunaTrendsMetricView: View {
     }
     private var zoneColors: [Color] {
         switch kind {
-        case .charge: return [NunaPalette.alert, NunaPalette.warning, NunaPalette.charge]
-        case .effort: return [NunaPalette.zoneBase, NunaPalette.rest, NunaPalette.effort, NunaPalette.alert]
-        case .rest: return [NunaPalette.zoneBase, NunaPalette.rest, NunaPalette.restLight]
+        case .charge: return [NunaPalette.scoreLow, NunaPalette.scoreMid, NunaPalette.scoreHigh]
+        case .effort: return [NunaPalette.effortMinimal, NunaPalette.effortModerate, NunaPalette.effortAllOut.opacity(0.6), NunaPalette.effortAllOut]
+        case .rest: return [NunaPalette.alert, NunaPalette.warning, NunaScoreStyle.restSeries]
         }
     }
     private func level(_ v: Double) -> LocalizedStringKey {
@@ -165,7 +165,7 @@ struct NunaTrendsMetricView: View {
                         NunaColumns(items: t.enumerated().map { i, w in
                             NunaColumns.Item(weekday: "W\(i + 1)", date: m.date(w.endDay) ?? Date(), fraction: w.total / top,
                                              valueText: NunaTrendsFormat.num(disp(w.total), 0), highlight: i == t.count - 1)
-                        }, color: NunaPalette.effort, highlightColor: NunaPalette.effortText)
+                        }, color: NunaScoreStyle.effortSeries, highlightColor: NunaScoreStyle.effortSeries)
                         if let last = t.last {
                             let avg = t.map(\.total).reduce(0, +) / Double(t.count)
                             Text(verbatim: String(localized: "Total Effort for every 7 days. This week \(NunaTrendsFormat.num(disp(last.total), 0)), average \(NunaTrendsFormat.num(disp(avg), 0))."))

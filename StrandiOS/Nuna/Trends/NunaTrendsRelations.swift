@@ -89,7 +89,7 @@ struct NunaChargeEffortView: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack { nunaTrendsCap(LocalizedStringKey(String(localized: "\(range) days"))); Spacer(); Text("Bars: Effort · Line: Charge").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                 NunaComboChart(start: start, days: range, bars: ef, barMax: eMax, line: ch, lineMax: 100, selected: $selected, height: 150)
-                HStack(spacing: 14) { NunaLegendItem(color: NunaPalette.charge, text: "Charge"); NunaLegendItem(color: NunaPalette.effort, text: "Effort", dot: true) }
+                HStack(spacing: 14) { NunaLegendItem(color: NunaScoreStyle.chargeSeries, text: "Charge"); NunaLegendItem(color: NunaScoreStyle.effortSeries, text: "Effort", dot: true) }
                 if let sel, let d = m.date(sel) {
                     HStack(spacing: 10) {
                         Image(systemName: "bolt").foregroundStyle(NunaPalette.textPrimary)
@@ -130,7 +130,7 @@ struct NunaChargeEffortView: View {
             VStack(alignment: .leading, spacing: 12) {
                 nunaTrendsCap("Spread")
                 if pairs.count >= 3 {
-                    NunaScatter(points: pairs.map { ($0.x, $0.y) }, xRange: lo...hi, yRange: 0...100, slope: c?.slope, intercept: c?.intercept, color: NunaPalette.effortText)
+                    NunaScatter(points: pairs.map { ($0.x, $0.y) }, xRange: lo...hi, yRange: 0...100, slope: c?.slope, intercept: c?.intercept, color: NunaScoreStyle.effortSeries)
                     HStack { Text("Effort →").font(.nuna(size: 11.5, weight: .semibold)); Spacer(); Text("↑ next-day Charge").font(.nuna(size: 11.5, weight: .semibold)) }.foregroundStyle(NunaPalette.textMuted).textCase(nil)
                     Text("Each dot is one day. The dashed line is the general direction.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 } else {
@@ -191,8 +191,8 @@ struct NunaChargeRestView: View {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack { nunaTrendsCap(LocalizedStringKey(String(localized: "\(range) days"))); Spacer(); Text("Two lines moving together").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
-                    NunaMultiLineChart(start: start, days: range, lines: [.init(series: rs, max: 100, color: NunaPalette.rest), .init(series: ch, max: 100, color: NunaPalette.charge)], height: 150)
-                    HStack(spacing: 14) { NunaLegendItem(color: NunaPalette.charge, text: "Charge"); NunaLegendItem(color: NunaPalette.rest, text: "Rest") }
+                    NunaMultiLineChart(start: start, days: range, lines: [.init(series: rs, max: 100, color: NunaScoreStyle.restSeries, pointColor: nunaRestColor, dashed: true), .init(series: ch, max: 100, color: NunaScoreStyle.chargeSeries, pointColor: nunaChargeColor)], height: 150)
+                    HStack(spacing: 14) { NunaLegendItem(color: NunaScoreStyle.chargeSeries, text: "Charge"); NunaLegendItem(color: NunaScoreStyle.restSeries, text: "Rest", dashed: true) }
                 }
             }
             NunaTitleRow(title: "Charge, by last night's Rest") { EmptyView() }
@@ -217,7 +217,7 @@ struct NunaChargeRestView: View {
                     nunaTrendsCap("Spread")
                     if pairs.count >= 3 {
                         let xs = pairs.map(\.x), lo = xs.min() ?? 0, hi = max(xs.max() ?? 1, lo + 1)
-                        NunaScatter(points: pairs.map { ($0.x, $0.y) }, xRange: lo...hi, yRange: 0...100, slope: corr?.slope, intercept: corr?.intercept, color: NunaPalette.restText)
+                        NunaScatter(points: pairs.map { ($0.x, $0.y) }, xRange: lo...hi, yRange: 0...100, slope: corr?.slope, intercept: corr?.intercept, color: NunaScoreStyle.restSeries)
                         HStack { Text("Rest →").font(.nuna(size: 11.5, weight: .semibold)); Spacer(); Text("↑ Charge").font(.nuna(size: 11.5, weight: .semibold)) }.foregroundStyle(NunaPalette.textMuted).textCase(nil)
                     } else { Text("Not enough paired days yet.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                 }
@@ -278,7 +278,7 @@ struct NunaHeatmapView: View {
                     HStack { nunaTrendsCap(LocalizedStringKey(String(localized: "Last \(weeks) weeks"))); Spacer(); Text("One square = one day").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                     NunaHeatGrid(model: m, weeks: min(weeks, 26), cell: weeks > 20 ? 10 : 14)
                     HStack(spacing: 14) {
-                        key(NunaPalette.charge, "67+"); key(NunaPalette.warning, "34–66"); key(NunaPalette.alert, "0–33")
+                        key(NunaPalette.scoreHigh, "67+"); key(NunaPalette.scoreMid, "34–66"); key(NunaPalette.scoreLow, "0–33")
                     }
                 }
             }
@@ -295,7 +295,7 @@ struct NunaHeatmapView: View {
                         NunaColumns(items: [2, 3, 4, 5, 6, 7, 1].map { wd in
                             NunaColumns.Item(weekday: NunaTrendsFormat.weekdayShort(wd), date: Date(), fraction: means[wd].map { $0 / top }, valueText: means[wd].map { NunaTrendsFormat.num($0) },
                                              highlight: wd == means.max { $0.value < $1.value }?.key, color: means[wd].map(nunaChargeColor))
-                        }, color: NunaPalette.charge, showsDates: false)
+                        }, color: NunaScoreStyle.chargeSeries, showsDates: false)
                         if let hi = means.max(by: { $0.value < $1.value }), let lo = means.min(by: { $0.value < $1.value }), hi.key != lo.key {
                             Text(verbatim: String(localized: "Charge is highest on \(day(hi.key)) and lowest on \(day(lo.key))."))
                                 .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
@@ -332,7 +332,7 @@ struct NunaHeatmapView: View {
                     let v = byMonth[k] ?? []
                     let avg = v.reduce(0, +) / Double(max(v.count, 1))
                     return NunaColumns.Item(weekday: p.date(from: k).map { f.string(from: $0) } ?? k, date: p.date(from: k) ?? Date(), fraction: avg / 100, valueText: NunaTrendsFormat.num(avg), color: nunaChargeColor(avg))
-                }, color: NunaPalette.charge, showsDates: false)
+                }, color: NunaScoreStyle.chargeSeries, showsDates: false)
             }
         }
     }

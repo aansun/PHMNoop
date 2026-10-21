@@ -19,7 +19,7 @@ enum NunaTodayDefaults {
     /// Rings and the synthesis chips, Anya, what was done today, key metrics, the stress card, the journal with mood, then the
     /// add-or-arrange card. Everything else (heart rate, start session, your cards, cycle, added cards) stays out until the person adds it.
     static let order: [TodaySection] = [
-        .hero, .stateChips, .synthesis, .workouts, .keyMetrics, .recoveryVitals, .vitalMonitor, .journal,
+        .hero, .stateChips, .synthesis, .workouts, .keyMetrics, .weekCompare, .recoveryVitals, .vitalMonitor, .journal,
         .heartRate, .liveSession, .yourCards, .menstrualCycle, .addedCards,
     ]
     static let hidden: [TodaySection] = [.heartRate, .liveSession, .yourCards, .menstrualCycle, .addedCards, .vitalMonitor]
@@ -404,6 +404,7 @@ struct NunaTodayView: View {
         case .synthesis: return "Anya"
         case .recoveryVitals: return "Stress monitor"
         case .vitalMonitor: return "Vital and stress monitors"
+        case .weekCompare: return "Last 7 days"
         case .keyMetrics: return "Key metrics"
         case .workouts: return "Activity"
         case .journal: return "Quick log"
@@ -516,6 +517,8 @@ struct NunaTodayView: View {
             previewRow("sparkles", nil, synthLine, "Anya suggestion").background(inner)
         case .recoveryVitals:
             previewRow("wind", NunaPalette.charge, model.stress.map { String(localized: "Stress \(String(format: "%.1f", locale: AppLanguage.activeLocale, $0)) / 3") } ?? String(localized: "Stress"), "Intraday curve").background(inner)
+        case .weekCompare:
+            previewRow("chart.bar.xaxis", NunaPalette.charge, String(localized: "Last 7 days"), "Charge and Effort").background(inner)
         case .vitalMonitor:
             HStack(spacing: 8) {
                 previewRow("heart.text.square", NunaPalette.charge, String(localized: "Vital signs"), "Within range").background(inner)
@@ -712,6 +715,8 @@ struct NunaTodayView: View {
             if model.stress != nil || model.stressCurve != nil {
                 NunaStressCard(score: model.stress, curve: model.stressCurve, baseline: model.stressBaseline, isToday: model.isToday)
             }
+        case .weekCompare:
+            NunaWeekCompare(endDay: model.displayDate, effortScale: effortScale)
         case .vitalMonitor:
             NunaMonitorPackCard(hrv: model.hrv, restingHr: model.restingHr, spo2: model.spo2, respiratory: model.respiratory,
                                 skinTemp: model.extras["skin_temp"], stress: model.stress, stressCurve: model.stressCurve)

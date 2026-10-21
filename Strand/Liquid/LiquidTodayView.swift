@@ -364,7 +364,7 @@ struct LiquidTodayView: View {
                         case .workouts: lastWorkoutsSection
                         case .heartRate: heartRateSection
                         case .recoveryVitals: recoveryVitalsSection
-                        case .vitalMonitor, .stateChips: EmptyView()   // Nuna only
+                        case .vitalMonitor, .stateChips, .weekCompare: EmptyView()   // Nuna only
                         case .yourCards: yourCardsSection
                         case .menstrualCycle:
                             if selectedDayOffset == 0 { MenstrualCycleHomeCard() }
