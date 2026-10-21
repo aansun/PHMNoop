@@ -119,10 +119,15 @@ struct NunaRootView: View {
             if phase == .active { CoachBriefScheduler.activateIfEnabled { await model.coach.generateBrief() } }
         }
         .onDisappear { model.coach.dayContextProvider = nil; model.coach.beforeBrief = nil }
-        // A session left running by a previous launch comes back as the bar, not as a sheet thrown in the user's face.
+        // A session left running by a previous launch comes back as the bar; if its screen was open when the app was killed, the screen comes back too.
         .task {
             guard !liftSession.isActive, let snapshot = LiftSessionPersistence.load() else { return }
             liftSession.resume(from: snapshot)
+            // The screen it was on comes back with it (a session left open before the app was killed), not only the small bar.
+            if snapshot.presented == true {
+                try? await Task.sleep(nanoseconds: 700_000_000)
+                liftSession.present()
+            }
         }
         .sheet(isPresented: $showDevices) { sheetStack { NunaDevicesView() } }
         .sheet(item: $routed) { dest in sheetStack { destinationView(dest) } }

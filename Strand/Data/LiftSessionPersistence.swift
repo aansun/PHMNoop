@@ -35,6 +35,9 @@ enum LiftSessionPersistence {
         /// as absent and the session resumes with nothing pending, which is exactly right.
         var pendingValues: [PendingValue]?
         var pendingWarmups: [SlotBox]?
+        /// Whether the session screen was open when this was written, so a session picked up again after the app was killed
+        /// comes back on its screen and not only as the small bar. Optional: older snapshots decode as nil, which keeps the bar.
+        var presented: Bool?
 
         struct PendingValue: Codable, Equatable {
             var exerciseIndex: Int
@@ -135,7 +138,8 @@ enum LiftSessionPersistence {
                          programId: String?,
                          programName: String?,
                          pendingValues: [LiftSlot: LiftSessionController.PendingSetValues],
-                         pendingWarmups: Set<LiftSlot>) -> Snapshot {
+                         pendingWarmups: Set<LiftSlot>,
+                         presented: Bool? = nil) -> Snapshot {
         Snapshot(
             startSec: engine.startTs,
             programId: programId,
@@ -171,7 +175,8 @@ enum LiftSessionPersistence {
                 },
             pendingWarmups: pendingWarmups
                 .sorted { ($0.exerciseIndex, $0.setIndex) < ($1.exerciseIndex, $1.setIndex) }
-                .map { Snapshot.SlotBox(exerciseIndex: $0.exerciseIndex, setIndex: $0.setIndex) })
+                .map { Snapshot.SlotBox(exerciseIndex: $0.exerciseIndex, setIndex: $0.setIndex) },
+            presented: presented)
     }
 
     /// The numbers typed in advance, back as the controller holds them.

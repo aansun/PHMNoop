@@ -90,6 +90,8 @@ enum ScreenIdle {
         /// A Strava or Oura import/upload running in the foreground (iOS), so finishing it does not release a workout's hold.
         case stravaBusy
         case ouraBusy
+        /// A gym session is running (iOS): the screen stays on between sets, also after the app was left and came back.
+        case gymSession
     }
 
     /// UserDefaults key for the "Keep screen on while syncing" toggle (default OFF). iOS-only behaviour;

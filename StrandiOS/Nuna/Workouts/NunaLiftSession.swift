@@ -37,6 +37,8 @@ struct NunaLiftSessionView: View {
     @AppStorage(AudioCoachingPreferences.restEndSoundKey) private var restEndSound = true
     /// Start the next set of the same exercise by itself when a rest ends.
     @AppStorage(LiftSessionController.autoContinueKey) private var autoContinue = false
+    /// The screen stays on while the session runs.
+    @AppStorage(LiftSessionController.keepScreenOnKey) private var keepScreenOn = true
     @State private var draft: [FocusTarget: String] = [:]
     /// Set when the saved session's summary is about to replace this screen, so the session going away does not close it.
     @State private var showingSummary = false
@@ -107,6 +109,7 @@ struct NunaLiftSessionView: View {
             Button("Done") { focused = nil }
         } }
         .task { await loadLastTime() }
+        .onChange(of: keepScreenOn) { _, _ in session.refreshScreenHold() }
         // A screen with no session behind it has nothing to show: it closes itself, in case the presenter's own dismissal was ignored
         // (UIKit drops a dismissal asked for while another one is still running).
         .onChange(of: session.engine == nil) { _, gone in if gone, !showingSummary { dismiss() } }
@@ -169,6 +172,9 @@ struct NunaLiftSessionView: View {
             NunaDetailScreen("Session settings") {
                 NunaCard(small: true) {
                     NunaToggleRow("Sound when rest ends", subtitle: "A short rising tone; music is lowered for it", systemImage: "speaker.wave.2", isOn: $restEndSound)
+                }
+                NunaCard(small: true) {
+                    NunaToggleRow("Keep the screen on", subtitle: "Stops the phone locking between sets, also after you come back from another app", systemImage: "iphone", isOn: $keepScreenOn)
                 }
                 NunaCard(small: true) {
                     NunaToggleRow("Continue after rest", subtitle: "Starts the next set of the same exercise when the rest ends, so the phone can stay in your pocket", systemImage: "forward.end", isOn: $autoContinue)
