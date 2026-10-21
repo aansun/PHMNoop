@@ -32,3 +32,5 @@ Rules:
 [`NEXT.md`](NEXT.md) holds the notes of the release being prepared. Copy it into the GitHub release when it ships, then replace it with a clean template.
 
 NOOP's own release notes, which this fork inherits, are in [docs/releases](../releases).
+
+**The sideload source** is `altstore-source.json` at the root of this repository (served from the `phm` branch). When a release ships, add its entry to `versions` (version, build, date, the release's IPA URL and its size in bytes) and update the top-level fields to match, in the same commit that bumps `project.yml`.

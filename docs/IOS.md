@@ -82,12 +82,12 @@ and the two reports that prompted this note were both the upstream bug.
 This is AltStore's own setup rather than anything NOOP controls, but it is the first step of the install,
 so it is written down here rather than left as a dead end.
 
-### Add NOOP as a source (recommended — auto-updates)
+### Add PHMN as a source (recommended — auto-updates)
 
-So you never have to manually re-download, add NOOP's **source** to AltStore/SideStore once — new
+So you never have to manually re-download, add PHMN's **source** to AltStore/SideStore once — new
 releases then show up (and re-sign) automatically:
 
-**Source URL:** `https://raw.githubusercontent.com/ryanbr/noop/main/altstore-source.json`
+**Source URL:** `https://raw.githubusercontent.com/aansun/PHMNoop/phm/altstore-source.json`
 
 > Make sure you copy the **raw** URL above exactly. If a sideloader says **"given data not valid
 > JSON"** when you add the source, you've pasted a normal web page URL (which returns HTML) instead of

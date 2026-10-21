@@ -324,7 +324,8 @@ PHMN adds several calculations on top of NOOP's, and each one is written down wi
 
 Go to the **[latest release](https://github.com/aansun/PHMNoop/releases/latest)** and download the IPA. It is **unsigned** and has no Apple Watch app, so iOS will not run it until it is signed for your device.
 
-- **With a sideloader** (AltStore or SideStore): open the IPA in the sideloader. It signs it on your phone with your Apple ID and refreshes it for you. Details and troubleshooting are in [docs/IOS.md](docs/IOS.md).
+- **SideStore or AltStore, with updates**: add this repository's source once, `https://raw.githubusercontent.com/aansun/PHMNoop/phm/altstore-source.json`, and every new release appears there by itself. Nothing outside this repository is used.
+- **With a sideloader** (AltStore or SideStore), by hand: open the IPA in the sideloader. It signs it on your phone with your Apple ID and refreshes it for you. Details and troubleshooting are in [docs/IOS.md](docs/IOS.md).
 - **Without a sideloader**: sign it yourself on a Mac, with a paid developer account or an enterprise certificate, or build it from source. Step by step in **[docs/SIGNING.md](docs/SIGNING.md)**.
 
 With a free Apple ID, **HealthKit is not available** to a sideloaded build. Build from source with Xcode (below) if you want Apple Health.
