@@ -366,6 +366,10 @@ struct NunaLabChart: View {
                 ctx.stroke(line, with: .color(NunaPalette.textSecondary.opacity(0.55)), style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
             }
             var lastLabel: CGFloat = -1000
+            // Every reading carries its number, so a rise or a fall reads at a glance. With many readings only the lowest, the highest and the latest do.
+            let mark: (Point) -> Bool = { p in
+                sorted.count <= 10 || p.id == sorted.last?.id || p.value == sorted.map(\.value).max() || p.value == sorted.map(\.value).min()
+            }
             for p in sorted {
                 let px = x(p.date)
                 let tint = p.status.map(NunaLabRange.tint) ?? NunaPalette.textPrimary
@@ -376,6 +380,16 @@ struct NunaLabChart: View {
                 }
                 ctx.fill(Path(ellipseIn: CGRect(x: px - 7, y: y(p.value) - 7, width: 14, height: 14)), with: .color(tint))
                 ctx.stroke(Path(ellipseIn: CGRect(x: px - 7, y: y(p.value) - 7, width: 14, height: 14)), with: .color(NunaPalette.card), lineWidth: 2)
+                if mark(p) {
+                    let lx = min(max(px, left + 18), left + w - 18)
+                    let up = y(p.value) - 20 >= top - 6
+                    ctx.draw(Text(verbatim: format(p.value)).font(.nuna(size: 12, weight: .heavy)).foregroundColor(NunaPalette.textPrimary),
+                             at: CGPoint(x: lx, y: y(p.value) + (up ? -13 : 13)), anchor: up ? .bottom : .top)
+                    if let s = p.second {
+                        ctx.draw(Text(verbatim: format(s)).font(.nuna(size: 12, weight: .heavy)).foregroundColor(NunaPalette.textSecondary),
+                                 at: CGPoint(x: lx, y: y(s) + 12), anchor: .top)
+                    }
+                }
                 if px - lastLabel > 62 {
                     lastLabel = px
                     ctx.draw(Text(verbatim: Self.dayFormat.string(from: p.date)).font(.nuna(size: 11, weight: .semibold)).foregroundColor(NunaPalette.textSecondary),

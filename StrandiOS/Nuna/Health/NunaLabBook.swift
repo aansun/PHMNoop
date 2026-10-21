@@ -360,20 +360,29 @@ struct NunaMarkerDetailView: View {
                                         back: { page += 1 }, forward: { page = max(0, page - 1) })
                     }
                 }
-                HStack(spacing: 14) {
-                    legend(NunaPalette.charge, "Within your range")
-                    legend(NunaPalette.warning, "Outside your range")
-                    Spacer(minLength: 0)
+                if !(span == 0 && !m.isPressure && inside.count >= 2) {
+                    HStack(spacing: 14) {
+                        legend(NunaPalette.charge, "Within your range")
+                        legend(NunaPalette.warning, "Outside your range")
+                        Spacer(minLength: 0)
+                    }
                 }
                 if inside.isEmpty {
                     Text("No readings in this period. Use the arrows to look at an earlier one.")
                         .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.center).textCase(nil)
                         .frame(maxWidth: .infinity, minHeight: 160)
                 } else {
+                    if span == 0, !m.isPressure, inside.count >= 2 {
+                        // The long view reads like the HRV page: one stretch per month with its average, over the range band.
+                        NunaSegmentedChart(points: inside.compactMap { r in r.value.map { (Date(timeIntervalSince1970: TimeInterval(r.takenAt)), $0) } },
+                                           color: NunaPalette.charge, decimals: MarkerCatalog.definition(for: m.key)?.decimals ?? 1,
+                                           band: m.range.map { $0.low...$0.high }, directional: false, height: 240)
+                    } else {
                     NunaLabChart(points: inside.map { r in
                         NunaLabChart.Point(id: r.id, date: Date(timeIntervalSince1970: TimeInterval(r.takenAt)), value: r.value ?? 0,
                                            second: m.isPressure ? m.diastolic[r.takenAt]?.value : nil, status: m.status(r))
                     }, range: m.range, from: w.from, to: w.to, format: { LabBookFormat.value($0, key: m.key) })
+                    }
                     NunaDivider()
                     HStack(alignment: .top, spacing: 0) {
                         summaryFigure("Lowest", values.min(), m)
