@@ -1,5 +1,8 @@
 import Foundation
 import Combine
+#if canImport(UIKit)
+import UIKit
+#endif
 import WhoopStore
 
 // The live session, owned ABOVE any screen.
@@ -29,7 +32,10 @@ final class LiftSessionController: ObservableObject {
     /// rather than each starting their own.
     @Published private(set) var now = Int(Date().timeIntervalSince1970)
     /// True while the full sheet is presented; false when minimised to the bottom bar.
-    @Published var isPresented = false
+    @Published var isPresented = false {
+        // The screen being open is remembered with the session, so a relaunch after the app was killed can bring it back.
+        didSet { if isPresented != oldValue, engine != nil { persist() } }
+    }
     /// Ask for the session sheet. When the flag is already true (a presentation that never came up), it is cycled so the request is seen again.
     func present() {
         if isPresented {
@@ -45,6 +51,29 @@ final class LiftSessionController: ObservableObject {
     @Published private(set) var savedSessions = 0
 
     var isActive: Bool { engine != nil && engine?.isFinished == false }
+
+    // MARK: - Keeping the screen on
+
+    /// Settings key: keep the screen on while a session runs. On unless the person turned it off.
+    static let keepScreenOnKey = "nuna.gym.keepScreenOn"
+    static var keepsScreenOn: Bool { UserDefaults.standard.object(forKey: keepScreenOnKey) as? Bool ?? true }
+    private var foregroundObserver: NSObjectProtocol?
+
+    /// Holds the screen on for as long as a session runs and the person has not turned it off. The hold belongs to the session, not to its screen, so
+    /// minimising the sheet to the bar does not let the phone lock. It is asserted again whenever the app comes back to the front, because the system
+    /// can drop it while the app is away (the same fix a running workout got).
+    func refreshScreenHold() {
+        ScreenIdle.hold(.gymSession, isActive && Self.keepsScreenOn)
+    }
+
+    private func watchForeground() {
+        #if canImport(UIKit)
+        guard foregroundObserver == nil else { return }
+        foregroundObserver = NotificationCenter.default.addObserver(forName: UIApplication.didBecomeActiveNotification, object: nil, queue: .main) { [weak self] _ in
+            Task { @MainActor in self?.refreshScreenHold() }
+        }
+        #endif
+    }
 
     /// Rest period the five-second warning has already fired for. Lives HERE, not in a view, so
     /// re-opening the sheet mid-rest cannot re-fire it.
@@ -126,6 +155,8 @@ final class LiftSessionController: ObservableObject {
         claimStrap()
         startTicking()
         persist()
+        watchForeground()
+        refreshScreenHold()
     }
 
     /// Rehydrate an interrupted session found on disk. Does NOT present the sheet: the session comes
@@ -152,6 +183,8 @@ final class LiftSessionController: ObservableObject {
         isPresented = present
         claimStrap()
         startTicking()
+        watchForeground()
+        refreshScreenHold()
     }
 
     /// Give up the session without saving.
@@ -180,6 +213,7 @@ final class LiftSessionController: ObservableObject {
         pendingWarmups = []
         pendingValues = [:]
         if !keepScreen { isPresented = false }
+        ScreenIdle.hold(.gymSession, false)
         ticker?.cancel()
         ticker = nil
         setStrapHandler(nil)
@@ -649,6 +683,7 @@ final class LiftSessionController: ObservableObject {
                                             programId: programId,
                                             programName: programName,
                                             pendingValues: pendingValues,
-                                            pendingWarmups: pendingWarmups))
+                                            pendingWarmups: pendingWarmups,
+                                            presented: isPresented))
     }
 }

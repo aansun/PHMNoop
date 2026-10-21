@@ -357,6 +357,11 @@ struct RootTabView: View {
         .task {
             guard !liftSession.isActive, let snapshot = LiftSessionPersistence.load() else { return }
             liftSession.resume(from: snapshot)
+            // The screen it was on comes back with it (a session left open before the app was killed), not only the small bar.
+            if snapshot.presented == true {
+                try? await Task.sleep(nanoseconds: 700_000_000)
+                liftSession.present()
+            }
         }
     }
 

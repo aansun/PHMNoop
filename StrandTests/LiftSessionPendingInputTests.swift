@@ -177,4 +177,25 @@ final class LiftSessionPendingInputTests: XCTestCase {
         XCTAssertFalse(c.isWarmup(slot(0, 3)))
         XCTAssertTrue(c.pendingValues.isEmpty)
     }
+
+    // MARK: - The screen stays on, and comes back
+
+    @MainActor
+    func testARunningSessionHoldsTheScreenAndReleasesItWhenItEnds() {
+        let c = controller()
+        c.start(plan: [LiftPlanItem(exercise: "Squat")], programId: nil, programName: nil)
+        XCTAssertTrue(ScreenIdle.isHeld)
+        c.discard()
+        XCTAssertFalse(ScreenIdle.isHeld)
+    }
+
+    @MainActor
+    func testWhetherTheScreenWasOpenIsKeptWithTheSession() {
+        let c = controller()
+        c.start(plan: [LiftPlanItem(exercise: "Squat")], programId: nil, programName: nil)
+        XCTAssertEqual(LiftSessionPersistence.load()?.presented, true)
+        c.isPresented = false
+        XCTAssertEqual(LiftSessionPersistence.load()?.presented, false)
+        c.discard()
+    }
 }
