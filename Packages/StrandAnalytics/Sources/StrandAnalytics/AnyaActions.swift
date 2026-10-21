@@ -129,7 +129,7 @@ public enum AnyaActions {
     ```anya-program
     {"name":"Beginner full body","note":"3 days a week","days":[{"title":"Day A","items":[{"exercise":"Goblet squat","sets":3,"repsLow":8,"repsHigh":10,"restSec":90}]}]}
     ```
-    Up to 7 days and 12 exercises a day; sets 1 to 10; reps 1 to 100; restSec 0 to 600; the app lets the person save each day as a program.
+    Up to 7 days and 12 exercises a day; sets 1 to 10; reps 1 to 100; restSec 0 to 600; the app lets the person save each day as a program. Name each exercise the way a standard exercise library does, in English and in full (for example "Barbell Bench Press - Medium Grip", "Lat Pulldown"), and plan only equipment the person has.
     ```anya-workout
     {"title":"Easy zone 2 run","sport":"Running","minutes":40,"zone":2}
     ```
@@ -341,12 +341,44 @@ public enum AnyaActions {
         return out
     }
 
+    /// The program in a reply, from a fenced block or, for a small model that skipped the fence, from a bare JSON object with `days`.
+    public static func parseProgram(from reply: String) -> AnyaProgramSpec? {
+        for b in parse(reply) { if case .program(let p) = b { return p } }
+        guard let open = reply.firstIndex(of: "{"), let close = reply.lastIndex(of: "}"), open < close,
+              let data = String(reply[open...close]).data(using: .utf8),
+              let obj = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any], obj["days"] != nil else { return nil }
+        return program(obj)
+    }
+
     /// The reply with every action block removed: what to copy, share, save to the journal or show where cards are not drawn.
     public static func proseOnly(_ reply: String) -> String {
         parse(reply).compactMap { if case .text(let t) = $0 { return t } else { return nil } }.joined(separator: "\n\n")
     }
 }
 
+
+// MARK: - Building a gym program from a goal
+
+extension AnyaActions {
+    /// The brief for a program built from what the person asked for: goal, days, session length, equipment and their own words. Only a summary
+    /// of their training goes with it. The reply is a short explanation and one `anya-program` block, which the app turns into a card to check and save.
+    public static let programInstruction = """
+    You build ONE gym program for the person from their goal, how many days they train, how long a session may last, the equipment they have, their level and \
+    their own instructions, and from the training summary below (what they already do, how much per muscle, how recovered they are). Reply with a short paragraph \
+    (about 60 words) saying how the days are split and how to progress, then ONE fenced block exactly like the example, valid JSON, no comments.
+    ```anya-program
+    {"name":"Upper / lower, 4 days","note":"Add the smallest weight step once every set reaches the top of the rep range","days":[{"title":"Day A: Upper","items":[{"exercise":"Dumbbell Bench Press","sets":3,"repsLow":8,"repsHigh":10,"restSec":120,"note":"Shoulder blades pinched"}]}]}
+    ```
+    Rules. One day per training day asked for, 7 at most. Fit the session length: count about 3.5 minutes per working set including the rest, so a 45 minute \
+    session has 10 to 13 sets in 4 to 6 exercises. Compound lifts first. Name every exercise the way a standard exercise library does, in English and in full \
+    ("Barbell Bench Press - Medium Grip", "Lat Pulldown", "Romanian Deadlift", "Dumbbell Lateral Raise"), never a nickname or a brand. Use ONLY equipment the person \
+    has. Rep ranges by goal: strength 3 to 6 with 150 to 240 s rest, muscle 6 to 12 with 60 to 120 s, endurance or fat loss 12 to 20 with 30 to 60 s. For muscle, aim at \
+    10 to 20 working sets a week for each big muscle, balance push and pull, and do not leave out legs or core unless told. Build on what they already do when it fits, and \
+    go easier on a muscle the summary shows is not recovered. Obey their instructions, including movements to avoid. Never invent weights. Put a note only where one short \
+    cue helps. If the instructions mention pain, an injury or a medical condition, choose gentle, general movements and say in the paragraph to check with a clinician first. \
+    If you cannot make a program from what was given, say what is missing and leave out the block.
+    """
+}
 
 // MARK: - Classifying an exercise the person made up
 

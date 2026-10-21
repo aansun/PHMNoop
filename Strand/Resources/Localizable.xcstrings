@@ -6131,6 +6131,69 @@
         "Strava could not use this activity: %@": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Strava tidak bisa memakai aktivitas ini: %@"}}
         } },
+        "Program with Anya": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Program dengan Anya"}}
+        } },
+        "Build muscle": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bangun otot"}}
+        } },
+        "Get stronger": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Lebih kuat"}}
+        } },
+        "Lose fat": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Turunkan lemak"}}
+        } },
+        "General fitness": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Kebugaran umum"}}
+        } },
+        "Muscular endurance": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Daya tahan otot"}}
+        } },
+        "Full gym": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Gym lengkap"}}
+        } },
+        "Home: barbell and dumbbells": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rumah: barbel dan dumbel"}}
+        } },
+        "Days per week": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Hari per minggu"}}
+        } },
+        "Minutes per session": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Menit per sesi"}}
+        } },
+        "Your instructions": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Instruksimu"}}
+        } },
+        "Wider shoulders, no squats because of my knee, 20 minutes of cardio at the end…": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bahu lebih lebar, tanpa squat karena lututku, 20 menit kardio di akhir…"}}
+        } },
+        "Build the program": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Buat programnya"}}
+        } },
+        "Anya is building it…": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Anya sedang menyusunnya…"}}
+        } },
+        "Change something": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ubah sesuatu"}}
+        } },
+        "Swap the leg day for a lighter one, add arms…": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Ganti hari kaki jadi lebih ringan, tambah lengan…"}}
+        } },
+        "Update the program": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Perbarui program"}}
+        } },
+        "Start over": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Mulai dari awal"}}
+        } },
+        "Anya is not connected. Connect her in More › Anya, then come back.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Anya belum terhubung. Hubungkan di More › Anya, lalu kembali."}}
+        } },
+        "Anya sees only what you fill in here and a summary of your recent training, never your other health data. A suggestion, not a prescription.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Anya hanya melihat yang kamu isi di sini dan ringkasan latihanmu belakangan ini, tidak pernah data kesehatanmu yang lain. Saran, bukan resep."}}
+        } },
+        "Anya couldn't make a program from that. Say a little more about what you want.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Anya tidak bisa membuat program dari itu. Ceritakan sedikit lebih banyak tentang yang kamu mau."}}
+        } },
         "Charge and Rest": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Charge dan Rest"}}
         } },

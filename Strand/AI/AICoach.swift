@@ -1311,6 +1311,19 @@ final class AICoachEngine: ObservableObject {
         return clean.isEmpty ? nil : clean
     }
 
+    /// A gym program built from a goal and instructions. The provider gets the brief the person filled in and a short summary of their training (never the
+    /// rest of their health data), and nothing enters the Coach transcript. `previous` is a program being changed, as text. nil when Anya is off, not
+    /// connected, or the provider did not answer.
+    func suggestProgram(brief: String, trainingSummary: String, previous: String? = nil) async -> String? {
+        guard CoachBriefScheduler.coachMasterEnabled, isConfigured, dataConsent, let key = resolvedKey else { return nil }
+        var prompt = AnyaActions.programInstruction + "\n\nWHAT THE PERSON ASKED FOR:\n" + String(brief.prefix(1200))
+        prompt += "\n\nTRAINING SUMMARY:\n" + String(trainingSummary.prefix(1500))
+        if let previous { prompt += "\n\nTHE PROGRAM TO CHANGE (keep everything the new instruction does not touch):\n" + String(previous.prefix(2500)) }
+        guard let reply = try? await callProvider(key: key, messages: [(.user, prompt)]) else { return nil }
+        let clean = reply.trimmingCharacters(in: .whitespacesAndNewlines)
+        return clean.isEmpty ? nil : clean
+    }
+
     /// Which muscles an exercise the person made up works, and how it is done. Only the exercise's NAME goes to the provider, none of the person's
     /// health data, and nothing enters the Coach transcript. nil when Anya is off or not connected, or the provider did not answer.
     func classifyExercise(_ name: String) async -> String? {

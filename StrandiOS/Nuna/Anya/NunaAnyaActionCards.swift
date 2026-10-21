@@ -91,6 +91,7 @@ private struct NunaAnyaMetricChart: View {
 struct NunaAnyaProgramCard: View {
     let spec: AnyaProgramSpec
     @EnvironmentObject private var repo: Repository
+    @EnvironmentObject private var model: AppModel
     @State private var saved = false
     @State private var saving = false
     @State private var showGym = false
@@ -158,7 +159,25 @@ struct NunaAnyaProgramCard: View {
                                    targetRepsLow: it.repsLow, targetRepsHigh: it.repsHigh, targetRpe: nil, targetWeightKg: nil, restSec: it.restSec, note: it.note)
             }
             _ = try? await store.replaceLiftProgramItems(programId: id, items: items)
+            // Anya's programs are kept together in the Gym tab.
+            NunaAnyaPrograms.add(id)
+            NunaProgramGroupsModel.shared.place(id, inGroupNamed: NunaProgramType.anya.name)
         }
+        // The muscles of each exercise are remembered (the library's for an exercise it has, Anya's or the closest match's for one it has not), so the
+        // weekly sets per muscle count them and the exercise has a page and a history from the first session.
+        let known = (try? await store.liftExercises(deviceId: repo.deviceId)) ?? []
+        var picks: [NunaPickedExercise] = []
+        for d in spec.days {
+            for it in d.items where !picks.contains(where: { $0.name == it.exercise }) {
+                let lib = NunaExerciseLibrary.matchBundled(it.exercise)
+                if let lib, !known.contains(where: { $0.name == it.exercise }) {
+                    _ = try? await store.upsertLiftExercises([LiftExerciseRow(id: UUID().uuidString, deviceId: repo.deviceId, name: it.exercise, primaryMuscle: lib.liftPrimary,
+                                                                              secondaryMuscles: lib.liftSecondary, createdAt: now, lastUsedTs: nil)])
+                }
+                if lib == nil { picks.append(NunaPickedExercise(name: it.exercise, primary: nil, secondary: [])) }
+            }
+        }
+        await NunaCustomExercises.remember(picks, repo: repo, coach: model.coach)
         await repo.refresh()
         saved = true
     }
