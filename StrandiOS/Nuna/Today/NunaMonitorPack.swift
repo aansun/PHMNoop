@@ -50,10 +50,12 @@ struct NunaMonitorPackCard: View {
     }
 
     var body: some View {
+        // Equal heights: the row is as tall as the taller card (a wrapped "Outside range" makes one), and both cards stretch to it.
         HStack(alignment: .top, spacing: 12) {
             NavigationLink(value: NunaTodayRoute.vitalSigns) { vitalTile }.buttonStyle(.plain)
             NavigationLink(value: stressRoute) { stressTile }.buttonStyle(.plain)
         }
+        .fixedSize(horizontal: false, vertical: true)
         .task(id: repo.refreshSeq) {
             await hrvS.load(repo: repo, key: "hrv", source: "my-whoop", days: 400)
             await rhrS.load(repo: repo, key: "rhr", source: "my-whoop", days: 400)
@@ -74,7 +76,7 @@ struct NunaMonitorPackCard: View {
                 }
                 content()
             }
-            .frame(maxWidth: .infinity, alignment: .topLeading)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
     }
 
