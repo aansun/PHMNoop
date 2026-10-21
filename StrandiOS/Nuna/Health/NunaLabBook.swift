@@ -75,40 +75,71 @@ struct NunaLabBookView: View {
 
     private func summary(_ ms: [NunaLabMarker]) -> some View {
         let last = rows.map(\.takenAt).max()
-        let judged = ms.compactMap(\.latestStatus)
-        let within = judged.filter { $0 == .within }.count
+        let judged = ms.filter { $0.latestStatus != nil }
+        let outside = judged.filter { $0.latestStatus != .within }
+        let within = judged.count - outside.count
+        let unranged = ms.count - judged.count
         return NunaCard {
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 5) {
-                        nunaTrendsCap("Last test")
-                        Text(verbatim: last.map(LabBookFormat.day) ?? "–").font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: String(localized: "\(ms.count) markers · \(rows.count) readings"))
-                            .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    }
-                    Spacer(minLength: 8)
+            VStack(alignment: .leading, spacing: 16) {
+                HStack(spacing: 18) {
                     if !judged.isEmpty {
-                        HStack(spacing: 20) {
-                            figure("Within", within, NunaPalette.charge)
-                            figure("Outside", judged.count - within, NunaPalette.warning)
+                        ZStack {
+                            NunaLabShareRing(within: within, outside: outside.count).frame(width: 104, height: 104)
+                            VStack(spacing: 0) {
+                                Text(verbatim: "\(within)/\(judged.count)").font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                                Text("Within").font(.nuna(size: 9.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                            }
                         }
                     }
+                    VStack(alignment: .leading, spacing: 5) {
+                        nunaTrendsCap("Last test")
+                        Text(verbatim: last.map(LabBookFormat.day) ?? "–").font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        if let last { Text(verbatim: Self.ago(last)).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
+                        Text(verbatim: String(localized: "\(ms.count) markers · \(rows.count) readings"))
+                            .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                    }
+                    Spacer(minLength: 0)
                 }
                 if judged.isEmpty {
                     Text("Add the range from your own report with a result, and this page shows which markers sit inside it.")
                         .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                } else if outside.isEmpty {
+                    HStack(spacing: 8) {
+                        Image(systemName: "checkmark.circle.fill").foregroundStyle(NunaPalette.charge)
+                        Text("Every marker with a range sits inside it.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                    }
                 } else {
-                    Text("Counted against the ranges you copied from your own reports, on each marker's latest reading.")
-                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    VStack(alignment: .leading, spacing: 0) {
+                        nunaTrendsCap("Outside your range").padding(.bottom, 4)
+                        ForEach(outside) { m in
+                            NunaDivider()
+                            NavigationLink { NunaLabMarkerHost(markerKey: m.key, isBody: m.category == .bodyMeasurement) } label: {
+                                HStack(spacing: 10) {
+                                    Image(systemName: m.latestStatus == .above ? "arrow.up.circle.fill" : "arrow.down.circle.fill").font(.nuna(size: 18, weight: .semibold)).foregroundStyle(NunaPalette.warning)
+                                    Text(verbatim: m.name).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+                                    Spacer(minLength: 6)
+                                    Text(verbatim: (m.latest.map(m.text) ?? "") + " " + m.unit).font(.nuna(size: 14, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1)
+                                    Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                                }.padding(.vertical, 11).contentShape(Rectangle())
+                            }.buttonStyle(.plain)
+                        }
+                    }
+                }
+                if unranged > 0 && !judged.isEmpty {
+                    Text(verbatim: String(localized: "\(unranged) without a range"))
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                 }
             }
         }
     }
 
-    private func figure(_ label: LocalizedStringKey, _ n: Int, _ tint: Color) -> some View {
-        VStack(alignment: .trailing, spacing: 3) {
-            Text(verbatim: "\(n)").font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(tint)
-            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+    private static func ago(_ epoch: Int) -> String {
+        let date = Date(timeIntervalSince1970: TimeInterval(epoch))
+        let days = Calendar.current.dateComponents([.day], from: Calendar.current.startOfDay(for: date), to: Calendar.current.startOfDay(for: Date())).day ?? 0
+        switch days {
+        case ..<1: return String(localized: "Today")
+        case 1: return String(localized: "Yesterday")
+        default: return String(localized: "\(days) days ago")
         }
     }
 
@@ -488,6 +519,34 @@ struct NunaMarkerDetailView: View {
         let built = LabBookProjection.pairMarkerToWearable(marker: markerSeries, wearable: wearable, windowDays: window.days)
         pairs = built
         correlation = built.count >= LabBookSignals.floor ? CorrelationEngine.pearson(LabBookProjection.correlationInput(built)) : nil
+    }
+}
+
+// MARK: - Share of markers inside the range
+
+/// A ring split into the markers inside their range (green) and outside it (amber), with a small gap between the two.
+struct NunaLabShareRing: View {
+    let within: Int
+    let outside: Int
+
+    var body: some View {
+        let total = Double(max(within + outside, 1))
+        let lw: CGFloat = 12
+        let gap = within > 0 && outside > 0 ? 0.035 : 0
+        let w = Double(within) / total
+        return ZStack {
+            Circle().stroke(NunaPalette.field, lineWidth: lw)
+            if within > 0 {
+                Circle().trim(from: 0, to: max(0.001, w - gap / 2)).stroke(NunaPalette.charge, style: StrokeStyle(lineWidth: lw, lineCap: .round))
+                    .shadow(color: NunaPalette.charge.opacity(0.45), radius: 6)
+            }
+            if outside > 0 {
+                Circle().trim(from: w + gap / 2, to: 1 - (within > 0 ? gap / 2 : 0)).stroke(NunaPalette.warning, style: StrokeStyle(lineWidth: lw, lineCap: .round))
+                    .shadow(color: NunaPalette.warning.opacity(0.45), radius: 6)
+            }
+        }
+        .rotationEffect(.degrees(-90)).padding(lw / 2)
+        .accessibilityHidden(true)
     }
 }
 

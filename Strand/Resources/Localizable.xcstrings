@@ -1,6 +1,8 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Every marker with a range sits inside it.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Semua penanda yang punya rentang berada di dalamnya."}}}},
+    "%lld without a range": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "%lld tanpa rentang"}}}},
     "About the Lab Book": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tentang Lab Book"}}}},
     "Lab Book keeps your own numbers. It doesn't test, read, or judge them, and it's not medical advice. A range only shows where a reading sits against the one you copied from your own report. Everything stays on this iPhone.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lab Book menyimpan angkamu sendiri. Ia tidak menguji, membaca, atau menilainya, dan bukan saran medis. Rentang hanya menunjukkan posisi hasil terhadap rentang yang kamu salin dari laporanmu sendiri. Semuanya tetap di iPhone ini."}}}},
     "Keep the numbers you get from your doctor or pharmacy, next to your wearable signals. Add a result by hand or bring in a file. Everything stays on this phone.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Simpan angka dari dokter atau apotek di samping sinyal wearable-mu. Tambahkan hasil secara manual atau masukkan file. Semuanya tetap di ponsel ini."}}}},
