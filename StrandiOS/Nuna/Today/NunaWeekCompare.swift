@@ -10,10 +10,10 @@ struct NunaWeekCompare: View {
     let effortScale: EffortScale
 
     @EnvironmentObject private var repo: Repository
-    @EnvironmentObject private var router: NavRouter
     @State private var charge: [String: Double] = [:]
     @State private var effort: [String: Double] = [:]
     @State private var loaded = false
+    @State private var selected: String?
 
     private struct Slot: Identifiable {
         let key: String
@@ -37,7 +37,7 @@ struct NunaWeekCompare: View {
     var body: some View {
         let days = slots
         let hasData = days.contains { charge[$0.key] != nil || effort[$0.key] != nil }
-        Button { router.requestedDestination = .trends } label: {
+        NavigationLink(value: NunaTodayRoute.chargeEffort) {
             NunaCard {
                 VStack(alignment: .leading, spacing: 14) {
                     NunaTitleRow(title: "Last 7 days") {
@@ -51,7 +51,7 @@ struct NunaWeekCompare: View {
                         NunaCapsuleChart(start: days.first?.key ?? Repository.localDayKey(endDay), days: 7,
                                          charge: days.compactMap { s in charge[s.key].map { (s.key, $0) } },
                                          effort: days.compactMap { s in effort[s.key].map { (s.key, $0) } },
-                                         effortScale: effortScale, highlightLast: true)
+                                         effortScale: effortScale, selected: $selected, highlightLast: true)
                         NunaCapsuleLegend()
                     }
                 }

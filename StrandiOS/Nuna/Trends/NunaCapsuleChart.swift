@@ -7,9 +7,9 @@ import StrandAnalytics
 /// day's value in the colour its ring had that day. The short line across it is Effort, at its own value on the same 0 to 100 height, in
 /// the blue of its level. A line above the fill means the day asked for more than the morning had; below it, there was room to spare.
 ///
-/// Up to a week the two figures of every day stand above its capsule. Over longer spans there is no room for them, so touching a
-/// capsule (or dragging across) selects a day and its figures appear above it. Past about six weeks the tracks are dropped and the
-/// capsules thin out into bars with a tick, which keeps a year readable.
+/// Touching a capsule (or dragging across) selects a day, and its two figures appear above it; nothing else is written on the chart, so
+/// a week and a year read the same way. Past about six weeks the tracks are dropped and the capsules thin out into bars with a tick,
+/// which keeps a year readable.
 struct NunaCapsuleChart: View {
     let start: String
     let days: Int
@@ -17,7 +17,7 @@ struct NunaCapsuleChart: View {
     let effort: NunaDaySeries          // stored 0-100
     let effortScale: EffortScale
     var plotHeight: CGFloat = 118
-    /// Selecting a day by touch, for spans of more than a week. nil leaves the chart read-only.
+    /// The day picked by touch. nil leaves the chart read-only, with no room kept for the figures.
     var selected: Binding<String?>?
     /// Stresses the newest day with a soft backdrop (the week on Today).
     var highlightLast = false
@@ -27,13 +27,12 @@ struct NunaCapsuleChart: View {
     /// Room at both ends so the first and last Effort lines are not cut off.
     private let sidePad: CGFloat = 8
 
-    private var showsAllFigures: Bool { days <= 7 }
     private var dense: Bool { days > 45 }
     private var keys: [String] { (0..<max(days, 1)).map { TrendInsights.shift(start, by: $0) ?? start } }
     private var chargeBy: [String: Double] { Dictionary(charge.map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l }) }
     private var effortBy: [String: Double] { Dictionary(effort.map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l }) }
 
-    private var hasLabelBand: Bool { showsAllFigures || selected != nil }
+    private var hasLabelBand: Bool { selected != nil }
     private var topInset: CGFloat { hasLabelBand ? labelBand : 6 }
 
     var body: some View {
@@ -56,7 +55,7 @@ struct NunaCapsuleChart: View {
 
     private func selection(width: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 0).onChanged { v in
-            guard let selected, !showsAllFigures else { return }
+            guard let selected else { return }
             let slot = (width - sidePad * 2) / CGFloat(max(days, 1))
             let i = Int(min(max((v.location.x - sidePad) / max(slot, 1), 0), CGFloat(days - 1)))
             let day = TrendInsights.shift(start, by: i)
@@ -88,7 +87,7 @@ struct NunaCapsuleChart: View {
                            height: plotHeight + (hasLabelBand ? labelBand - 4 : 0) + axisBand - 2)
             ctx.fill(Path(roundedRect: r, cornerRadius: 14), with: .color(NunaPalette.ink.opacity(0.06)))
         }
-        if let selected, let i = keys.firstIndex(of: selected), !highlightLast {
+        if let selected, let i = keys.firstIndex(of: selected) {
             let r = CGRect(x: sidePad + slot * CGFloat(i) + (slot > 12 ? 2 : -1), y: top - (labelBand - 4), width: max(slot - (slot > 12 ? 4 : -2), 4),
                            height: plotHeight + labelBand - 4 + axisBand - 2)
             ctx.fill(Path(roundedRect: r, cornerRadius: min(14, r.width / 2)), with: .color(NunaPalette.ink.opacity(0.06)))
@@ -116,9 +115,9 @@ struct NunaCapsuleChart: View {
                 let r = CGRect(x: cx - markW / 2, y: y(e) - markH / 2, width: markW, height: markH)
                 ctx.fill(Path(roundedRect: r, cornerRadius: markH / 2), with: .color(nunaEffortColor(e)))
             }
-            if showsAllFigures || selected == key { figures(&ctx, at: cx, width: size.width, charge: c, effort: e) }
+            if selected == key { figures(&ctx, at: cx, width: size.width, charge: c, effort: e) }
         }
-        if selected == nil && !showsAllFigures && hasLabelBand {
+        if selected == nil && hasLabelBand {
             ctx.draw(Text("Touch a day for its figures").font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted),
                      at: CGPoint(x: sidePad, y: 14), anchor: .leading)
         }

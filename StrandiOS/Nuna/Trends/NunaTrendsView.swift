@@ -235,7 +235,7 @@ struct NunaTrendsView: View {
                         if let corr { NunaChip(verbatim: NunaTrendsFormat.relationChip(corr.r)) }
                     }
                     NunaCapsuleChart(start: windowStart, days: range, charge: ch, effort: m.window(m.effort, days: range, back: back), effortScale: scale,
-                                     selected: range > 7 ? $capsuleSelected : nil)
+                                     selected: $capsuleSelected)
                     NunaCapsuleLegend()
                     if let hi = b[2].meanOutcome, let lo = b[0].meanOutcome {
                         insightRow("bolt", Text("After a high-Effort day, next-morning Charge averages \(Int(hi.rounded()))%. After a light day, \(Int(lo.rounded()))%."))
