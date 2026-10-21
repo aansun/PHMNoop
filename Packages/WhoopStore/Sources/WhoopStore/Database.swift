@@ -1091,6 +1091,51 @@ extension WhoopStore {
             try db.create(index: "idx_liftSet_session_ord", on: "liftSet",
                           columns: ["sessionId", "ord"], options: [.ifNotExists])
         }
+
+        // v47 (Nutrition diary): what the person ate, entry by entry, and the foods they keep to reuse.
+        //
+        // Nutrition used to be import-only: a daily calories-in total from a CSV, with nowhere to put a single meal. These
+        // two tables are that place. A `foodEntry` is one thing eaten on one day in one meal, with the calories and macros
+        // the person (or Anya's estimate, which they confirmed) put on it; the day's intake is derived on read by summing
+        // them. A `savedFood` is a food kept to add again with one tap.
+        //
+        // Deliberately NO food catalogue and no barcode lookup: a food is whatever the person typed, so nothing here needs a
+        // network or ships reference data. Calories and macros are stored as entered, never recomputed.
+        //   • `day` is the yyyy-MM-dd the entry belongs to, `meal` one of breakfast / lunch / dinner / snack, `source` how it
+        //     got there (manual / anya / saved) so an estimate stays recognisable as one.
+        //   • Both tables carry `deviceId` so `deleteAllData` clears the diary too (DeviceRegistryStore.deviceScopedTables).
+        //   • Every create is `ifNotExists` (the v38 idiom). Pinned in schema_oracle.json as `ios_only`: the Room twin is a
+        //     follow-up, not part of this change.
+        migrator.registerMigration("v47-food-log") { db in
+            try db.create(table: "foodEntry", options: [.ifNotExists]) { t in
+                t.column("id", .text).primaryKey()
+                t.column("deviceId", .text).notNull()
+                t.column("day", .text).notNull()            // yyyy-MM-dd
+                t.column("meal", .text).notNull()           // breakfast | lunch | dinner | snack
+                t.column("name", .text).notNull()
+                t.column("kcal", .double).notNull()
+                t.column("proteinG", .double)
+                t.column("carbsG", .double)
+                t.column("fatG", .double)
+                t.column("source", .text).notNull()         // manual | anya | saved
+                t.column("createdAt", .integer).notNull()   // unix seconds
+            }
+            try db.create(index: "idx_foodEntry_device_day", on: "foodEntry",
+                          columns: ["deviceId", "day"], options: [.ifNotExists])
+            try db.create(table: "savedFood", options: [.ifNotExists]) { t in
+                t.column("id", .text).primaryKey()
+                t.column("deviceId", .text).notNull()
+                t.column("name", .text).notNull()
+                t.column("kcal", .double).notNull()
+                t.column("proteinG", .double)
+                t.column("carbsG", .double)
+                t.column("fatG", .double)
+                t.column("useCount", .integer).notNull()
+                t.column("updatedAt", .integer).notNull()   // unix seconds
+            }
+            try db.create(index: "idx_savedFood_natural", on: "savedFood",
+                          columns: ["deviceId", "name"], options: [.unique, .ifNotExists])
+        }
         return migrator
     }
 }
