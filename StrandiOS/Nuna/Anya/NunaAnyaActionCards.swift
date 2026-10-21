@@ -23,6 +23,7 @@ struct NunaAnyaReply: View {
                 case .program(let p): NunaAnyaProgramCard(spec: p)
                 case .workout(let w): NunaAnyaWorkoutCard(spec: w)
                 case .lab(let l): NunaAnyaLabCard(spec: l)
+                case .food(let f): NunaAnyaFoodCard(spec: f)
                 }
             }
         }

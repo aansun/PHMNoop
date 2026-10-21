@@ -14,6 +14,7 @@ import WhoopStore
 struct NunaLabBookView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
+    @ObservedObject private var changes = NunaDataChanges.shared
     @State private var rows: [LabMarkerRow] = []
     @State private var loaded = false
     @State private var adding = false
@@ -43,7 +44,7 @@ struct NunaLabBookView: View {
             NunaExpandRow(title: "About the Lab Book", subtitle: "", systemImage: "lock",
                           text: "Lab Book keeps your own numbers. It doesn't test, read, or judge them, and it's not medical advice. A range shows where a reading sits against the one you copied from your own report or, for weight and waist, against the WHO reference. Everything stays on this iPhone.")
         }
-        .task(id: repo.refreshSeq) { rows = await NunaLabStore.load(repo); loaded = true }
+        .task(id: "\(repo.refreshSeq)-\(changes.seq)") { rows = await NunaLabStore.load(repo); loaded = true }
         .sheet(isPresented: $adding) {
             NunaLabAddSheet { drafts in await NunaLabStore.save(drafts, repo: repo); rows = await NunaLabStore.load(repo) }
                 .nunaSheetChrome(detents: [.large])
@@ -201,6 +202,7 @@ struct NunaMarkerDetailView: View {
 
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
+    @ObservedObject private var changes = NunaDataChanges.shared
     @Environment(\.dismiss) private var dismiss
     @State private var rows: [LabMarkerRow] = []
     @State private var loaded = false
@@ -241,7 +243,7 @@ struct NunaMarkerDetailView: View {
                 NunaCard { Text("No readings for this marker.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) }
             }
         }
-        .task(id: repo.refreshSeq) { rows = await NunaLabStore.load(repo); loaded = true }
+        .task(id: "\(repo.refreshSeq)-\(changes.seq)") { rows = await NunaLabStore.load(repo); loaded = true }
         .sheet(isPresented: $adding) {
             NunaLabAddSheet(preselect: markerKey, preselectName: title, preselectUnit: marker?.unit) { drafts in
                 await NunaLabStore.save(drafts, repo: repo); rows = await NunaLabStore.load(repo)
