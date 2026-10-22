@@ -214,6 +214,7 @@ struct NunaFeaturesView: View {
     @AppStorage("workoutKeepScreenOn") private var keepOn = false
     @AppStorage(ScreenIdle.strapSyncKeepAwakeKey) private var syncKeepOn = false
     @AppStorage(UnitPrefs.liveActivityKey) private var liveActivity = true
+    @AppStorage(LiveActivityController.designKey) private var liveDesign = "standard"
     @AppStorage(AppModel.cycleAwarenessKey) private var cycle = false
     @AppStorage(AppModel.cycleAwarenessHiddenKey) private var cycleHidden = false
     @EnvironmentObject private var profile: ProfileStore
@@ -242,6 +243,15 @@ struct NunaFeaturesView: View {
                 NunaToggleRow("Screen on during workouts", subtitle: "Heart rate stays visible while recording", systemImage: "sun.max", isOn: $keepOn).padding(.vertical, 8)
                 NunaDivider()
                 NunaToggleRow("Live Activity", subtitle: "Heart rate and your session on the Lock Screen and Dynamic Island", systemImage: "iphone.gen3", isOn: $liveActivity).padding(.vertical, 8)
+                if liveActivity {
+                    NunaDivider()
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Lock Screen design").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                        NunaSegmented([(value: "standard", title: "Default"), (value: "banner", title: "Banner")], selection: $liveDesign)
+                        Text("Banner: the clock, the PHMN mark and the heart rate on top; the five zones and two figures below.")
+                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    }.padding(.vertical, 10)
+                }
                 NunaDivider()
                 NunaToggleRow("Screen on while syncing", subtitle: "So a long sync finishes without locking", systemImage: "arrow.triangle.2.circlepath", isOn: $syncKeepOn).padding(.vertical, 8)
                 if profile.cycleAwarenessApplies {

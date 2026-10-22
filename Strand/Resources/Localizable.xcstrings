@@ -6245,6 +6245,15 @@
         "Apple Health: written by the sync": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Apple Health: ditulis oleh sinkronisasi"}}
         } },
+        "Lock Screen design": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tampilan Layar Kunci"}}
+        } },
+        "Banner": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Banner"}}
+        } },
+        "Banner: the clock, the PHMN mark and the heart rate on top; the five zones and two figures below.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Banner: jam, logo PHMN, dan detak jantung di atas; lima zona dan dua angka di bawah."}}
+        } },
         "Charge and Rest": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Charge dan Rest"}}
         } },

@@ -12,11 +12,20 @@ import StrandDesign
 struct NOOPLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: NOOPActivityAttributes.self) { context in
-            LockScreen(state: context.state, title: context.attributes.title)
-                .widgetURL(URL(string: "noop://workout"))
-                // Glass: a translucent tint over the system material, so the wallpaper shows through softly.
-                .activityBackgroundTint(NunaPalette.card.opacity(0.55))
-                .activitySystemActionForegroundColor(NunaPalette.textPrimary)
+            Group {
+                if context.state.design == "banner" && context.state.activityName != nil {
+                    NOOPBannerLockScreen(state: context.state)
+                        .widgetURL(URL(string: "noop://workout"))
+                        .activityBackgroundTint(NOOPBannerPalette.bottom)
+                        .activitySystemActionForegroundColor(NOOPBannerPalette.ink)
+                } else {
+                    LockScreen(state: context.state, title: context.attributes.title)
+                        .widgetURL(URL(string: "noop://workout"))
+                        // Glass: a translucent tint over the system material, so the wallpaper shows through softly.
+                        .activityBackgroundTint(NunaPalette.card.opacity(0.55))
+                        .activitySystemActionForegroundColor(NunaPalette.textPrimary)
+                }
+            }
         } dynamicIsland: { context in
             let s = context.state
             let tint = s.accent

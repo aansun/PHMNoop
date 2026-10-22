@@ -50,6 +50,9 @@ public struct NOOPActivityAttributes: ActivityAttributes {
         public var effortLabel: String?
         /// Steps so far for a walk, run or hike, from the strap's counter or the phone's pedometer. Nil when neither has a count.
         public var steps: Int?
+        /// The Lock Screen design the wearer chose in Settings: nil or "standard" for the default, "banner" for the two-band card. Optional so an
+        /// activity started by an older build still decodes.
+        public var design: String?
 
         public init(bpm: Int?, recovery: Int?, bonded: Bool, batteryPct: Int? = nil,
                     effort: Int? = nil,
@@ -58,7 +61,9 @@ public struct NOOPActivityAttributes: ActivityAttributes {
                     averageBPM: Int? = nil, peakBPM: Int? = nil,
                     distance: String? = nil, pace: String? = nil, speed: String? = nil,
                     calories: Int? = nil, subtitle: String? = nil, progress: Double? = nil, targetZone: Int? = nil,
-                    zonePosition: Double? = nil, zoneSeconds: Int? = nil, pausedAt: Date? = nil, effortLabel: String? = nil, steps: Int? = nil) {
+                    zonePosition: Double? = nil, zoneSeconds: Int? = nil, pausedAt: Date? = nil, effortLabel: String? = nil, steps: Int? = nil,
+                    design: String? = nil) {
+            self.design = design
             self.effortLabel = effortLabel
             self.steps = steps
             self.bpm = bpm
