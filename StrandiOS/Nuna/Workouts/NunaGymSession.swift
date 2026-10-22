@@ -28,6 +28,10 @@ struct NunaGymSessionView: View {
     @State private var tab = Tab.exercises
     @State private var open: Set<String> = []
     @State private var zonePick: Int?
+    /// Where the Strava upload of this session stands, shown in the three dots like any other workout.
+    @State private var stravaState: NunaStravaState = .off
+    @State private var stravaMessage: String?
+    @StateObject private var strava = StravaSettingsModel()
 
     private enum Tab: Hashable { case exercises, heartRate }
 
@@ -45,6 +49,9 @@ struct NunaGymSessionView: View {
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "workouts") }
         .environment(\.nunaAnyaCardContext, "workouts")
+        .alert(stravaMessage ?? "", isPresented: Binding(get: { stravaMessage != nil }, set: { if !$0 { stravaMessage = nil } })) {
+            Button("OK", role: .cancel) {}
+        }
         .confirmationDialog("Delete this workout?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete", role: .destructive) { Task { await deleteSession() } }
             Button("Cancel", role: .cancel) {}
@@ -66,6 +73,17 @@ struct NunaGymSessionView: View {
     /// The three dots: what used to be buttons at the foot of the page.
     private var actionsMenu: some View {
         Menu {
+            // The same place and the same wording as every other saved workout: where it can go.
+            Section("Share") {
+                if let w = workout {
+                    switch stravaState {
+                    case .ready: Button { Task { await sendToStrava(w) } } label: { Label("Upload to Strava", systemImage: "arrow.up.circle") }
+                    case .uploaded, .processing: Button {} label: { Label("On Strava", systemImage: "checkmark.circle") }.disabled(true)
+                    default: EmptyView()
+                    }
+                }
+                Button {} label: { Label("Apple Health: written by the sync", systemImage: "heart.text.square") }.disabled(true)
+            }
             Button { saveProgram = true } label: { Label("Save as program", systemImage: "square.and.arrow.down") }
             Button { editing = true } label: { Label("Edit sets", systemImage: "pencil") }
             Section {
@@ -75,8 +93,8 @@ struct NunaGymSessionView: View {
         .accessibilityLabel(Text("More"))
     }
 
-    /// Top to bottom: when it ran and the program, the Effort it added beside the cardio and muscular split, Anya's line, the key
-    /// statistics, then two tabs: the exercises (each opens to its sets) and the heart rate with its zones.
+    /// Top to bottom: when it ran and the program, the Effort it added beside the cardio and muscular split, the key statistics, two tabs
+    /// (the exercises, each opening to its sets, and the heart rate with its zones), Anya's line, then photos and how it felt.
     @ViewBuilder private func content(_ s: LiftSessionRow) -> some View {
         let secs = max(0, (s.endTs ?? s.startTs) - s.startTs)
         let averages = workout.flatMap { NunaWorkoutAverages(for: $0, in: history.rows) }
@@ -92,20 +110,23 @@ struct NunaGymSessionView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         effortAndSplit(s, averages: averages)
-        if !records.isEmpty {
-            NunaAnyaCard(verbatim: String(localized: "Personal record on \(records.joined(separator: ", ")). Give the trained muscles two days to recover before the next session.")) { showCoach = true }
-        } else if let line = volumeLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
         keyStatistics(secs, averages: averages)
         NunaPageTabs([(value: Tab.exercises, title: "Exercises"), (value: Tab.heartRate, title: "Heart rate zones")], selection: $tab)
         switch tab {
         case .exercises: exercisesTab
         case .heartRate: heartRateTab
         }
+        // Anya's line sits under the exercises and the heart rate, above the photos, as on every other saved workout.
+        if !records.isEmpty {
+            NunaAnyaCard(verbatim: String(localized: "Personal record on \(records.joined(separator: ", ")). Give the trained muscles two days to recover before the next session.")) { showCoach = true }
+        } else if let line = volumeLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
         NunaWorkoutReviewSection(startTs: s.startTs, sport: s.sport)
-        if let w = workout { NunaWorkoutStravaCard(row: w, afterWorkout: false, checked: .constant(false)) }
-        NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-            NunaListRow("Apple Health", description: "Strength workout, duration and energy are written by the sync. Manage it in Me", systemImage: "heart.text.square")
-        }
+    }
+
+    private func sendToStrava(_ w: WorkoutRow) async {
+        await strava.upload(w)
+        stravaState = NunaStravaCheck.state(w)
+        stravaMessage = strava.statusText
     }
 
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
@@ -342,7 +363,10 @@ struct NunaGymSessionView: View {
         // The same list Today and the Workouts hub read, not the raw stored row: the stored row has no Effort for a gym session (it is
         // filled in at read time from the measured heart rate), so reading it here showed a different figure, or none.
         workout = await repo.workoutRows().first { $0.startTs == s.startTs && $0.sport == s.sport }
-        if let w = workout { await data.load(startTs: w.startTs, endTs: w.endTs, sport: w.sport, source: w.source, repo: repo, zoneSet: profile.hrZoneSet) }
+        if let w = workout {
+            await data.load(startTs: w.startTs, endTs: w.endTs, sport: w.sport, source: w.source, repo: repo, zoneSet: profile.hrZoneSet)
+            stravaState = NunaStravaCheck.state(w)
+        }
         // The heaviest working set of each exercise across every earlier session: a record means beating all of them.
         var prev: [String: Double] = [:]
         let names = Set(sets.map(\.exercise))
