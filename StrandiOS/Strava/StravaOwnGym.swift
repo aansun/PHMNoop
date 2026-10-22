@@ -1,6 +1,7 @@
 import Foundation
 import WhoopStore
 import StrandAnalytics
+import StrandImport
 
 /// Which strength sessions may go to Strava: only the ones logged in PHMN's own gym session.
 ///
@@ -40,10 +41,17 @@ enum StravaEligibility {
 }
 
 
+/// What goes to Strava for a gym session: the name, the sets written out the way Hevy writes them, and the sets as structured data.
+struct StravaGymUpload {
+    var name: String
+    var description: String
+    var sets: [FitStrengthSet]
+}
+
 extension StravaOwnGym {
-    /// What Strava shows for a gym session: the program's name, and under it every exercise with its sets, as Hevy sends them. Nil when the
-    /// session cannot be found (its sets are what the description is made of).
-    static func summary(for row: WorkoutRow) async -> (name: String, description: String)? {
+    /// The program's name, a description listing every exercise with its sets and the totals, and the working sets for the FIT file (warm-ups are
+    /// written in the description with a W but are not counted as sets). Nil when the session cannot be found.
+    static func summary(for row: WorkoutRow) async -> StravaGymUpload? {
         guard let repo, let store = await repo.storeHandle() else { return nil }
         let sessions = (try? await store.liftSessions(deviceId: repo.deviceId, fromTs: row.startTs - 60, toTs: row.startTs + 60)) ?? []
         guard let session = sessions.first(where: { $0.startTs == row.startTs && !$0.id.hasPrefix(HevyImporter.idPrefix) }) else { return nil }
@@ -57,19 +65,35 @@ extension StravaOwnGym {
         for name in order {
             let kind = NunaExerciseKind.of(name)
             lines.append(name)
-            for (i, s) in (byExercise[name] ?? []).sorted(by: { $0.setIndex < $1.setIndex }).enumerated() {
-                let text = kind.setText(weightKg: s.weightKg, reps: s.reps, system: system)
-                lines.append("\(s.isWarmup ? "W" : String(i + 1)). \(text)")
+            var n = 0
+            for s in (byExercise[name] ?? []).sorted(by: { $0.setIndex < $1.setIndex }) {
+                if !s.isWarmup { n += 1 }
+                lines.append("\(s.isWarmup ? "W" : String(n)). \(kind.setText(weightKg: s.weightKg, reps: s.reps, system: system))")
             }
             lines.append("")
         }
         let working = sets.filter { !$0.isWarmup }
         let volume = LiftMetrics.volumeLoadKg(sets) ?? 0
+        let reps = working.compactMap { NunaExerciseKind.of($0.exercise) == .timed ? nil : $0.reps }.reduce(0, +)
         var footer = "\(working.count) sets"
+        if reps > 0 { footer += " · \(reps) reps" }
         if volume > 0 { footer += " · " + LiftFormat.weight(volume, system: system) }
         lines.append(footer)
         lines.append("Logged with PHMN")
         let name = (session.programName?.trimmingCharacters(in: .whitespacesAndNewlines)).flatMap { $0.isEmpty ? nil : $0 } ?? WorkoutSource.displaySport(row.sport)
-        return (name, String(lines.joined(separator: "\n").prefix(3000)))
+
+        // The working sets as FIT sets. A set with no times is given an even share of the session, in order, so the file stays in sequence.
+        let total = max(60, row.endTs - row.startTs)
+        let slot = Double(total) / Double(max(working.count, 1))
+        var fit: [FitStrengthSet] = []
+        for (i, s) in working.enumerated() {
+            let kind = NunaExerciseKind.of(s.exercise)
+            let start = s.startTs ?? (row.startTs + Int((slot * Double(i)).rounded()))
+            let hold = kind == .timed ? Double(s.reps ?? 30) : nil
+            let dur = hold ?? Double(s.endTs.flatMap { e in s.startTs.map { max(5, e - $0) } } ?? max(20, Int(slot * 0.5)))
+            fit.append(FitStrengthSet(startTs: start, durationS: dur, reps: kind == .timed ? nil : s.reps,
+                                      weightKg: kind.usesWeight ? s.weightKg : nil, category: FitExerciseCategory.category(for: s.exercise)))
+        }
+        return StravaGymUpload(name: name, description: String(lines.joined(separator: "\n").prefix(3000)), sets: fit)
     }
 }

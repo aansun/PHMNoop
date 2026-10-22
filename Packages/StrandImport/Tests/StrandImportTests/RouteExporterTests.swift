@@ -138,4 +138,32 @@ final class RouteExporterTests: XCTestCase {
         XCTAssertEqual(a?.distanceM ?? 0, 5000, accuracy: 0.5)
         XCTAssertEqual(a?.avgHr, 150)
     }
+
+    // MARK: - Strength sessions
+
+    func testExerciseCategoriesComeFromTheWordsMostSpecificFirst() {
+        XCTAssertEqual(FitExerciseCategory.category(for: "Bench Press (Barbell)"), 0)
+        XCTAssertEqual(FitExerciseCategory.category(for: "Lying Leg Curl"), 15)      // not a biceps curl
+        XCTAssertEqual(FitExerciseCategory.category(for: "Dumbbell Bicep Curl"), 7)
+        XCTAssertEqual(FitExerciseCategory.category(for: "Romanian Deadlift (Barbell)"), 8)
+        XCTAssertEqual(FitExerciseCategory.category(for: "Hip Thrust (Barbell)"), 10)
+        XCTAssertEqual(FitExerciseCategory.category(for: "Overhead Press (Barbell)"), 24)
+        XCTAssertEqual(FitExerciseCategory.category(for: "Lat Pulldown"), 21)
+        XCTAssertEqual(FitExerciseCategory.category(for: "Triceps Extension (Dumbbell)"), 30)
+        XCTAssertEqual(FitExerciseCategory.category(for: "Plank"), 19)
+        XCTAssertEqual(FitExerciseCategory.category(for: "Something unheard of"), FitExerciseCategory.unknown)
+    }
+
+    func testAStrengthFitCarriesItsSetsAndIsFiledAsStrengthTraining() {
+        let start = 1_723_000_000
+        let sets = [FitStrengthSet(startTs: start + 60, durationS: 30, reps: 8, weightKg: 62.5, category: 0),
+                    FitStrengthSet(startTs: start + 180, durationS: 30, reps: nil, weightKg: nil, category: 19)]
+        let bytes = [UInt8](RouteExporter.render(.fit, route: [], startTs: start, endTs: start + 1800, sport: "Strength Training", strengthSets: sets))
+        XCTAssertEqual(String(decoding: bytes[8..<12], as: UTF8.self), ".FIT")
+        // The CRC still closes the file.
+        XCTAssertEqual(RouteExporter.fitCrc(Array(bytes.dropLast(2))), Int(bytes[bytes.count - 2]) | (Int(bytes[bytes.count - 1]) << 8))
+        // 62.5 kg is stored x 16 = 1000 (0x03E8, little-endian), and the set message (global 225 = 0xE1) is defined.
+        XCTAssertTrue(bytes.contains(0xE8) && bytes.contains(0xE1))
+        XCTAssertEqual(RouteExporter.fitSubSport("Strength Training"), 20)
+    }
 }

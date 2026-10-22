@@ -115,10 +115,17 @@ final class StravaSettingsModel: ObservableObject {
         defer { setBusy(false) }
         do {
             let client = StravaAPIClient(credentials: credentials)
-            let response: StravaUploadResponse
+            var response: StravaUploadResponse
             if ownGym && route.count < 2, let gym = await StravaOwnGym.summary(for: row) {
-                // A gym session has no route and no records for a file: it goes up the way Hevy sends one, as an activity with its sets in the description.
-                response = try await client.createManualActivity(row: row, name: gym.name, description: gym.description)
+                // A gym session goes up as a strength FIT file: its sets are structured (Strava shows the exercises, the totals and the muscle map,
+                // with the heart rate and calories the strap measured) and the description lists them, as Hevy's does. If Strava turns the file away,
+                // the session is created as an activity with the same description, so it still arrives.
+                let first = try await client.upload(row: row, route: route, elevationGainM: nil, allowWithoutRoute: true,
+                                                    name: gym.name, description: gym.description, strengthSets: gym.sets)
+                response = try await client.waitForUploadCompletion(first)
+                if let refusal = response.error, !refusal.isEmpty {
+                    response = try await client.createManualActivity(row: row, name: gym.name, description: gym.description)
+                }
             } else {
                 let initialResponse = try await client.upload(
                     row: row,
