@@ -403,10 +403,17 @@ targets:
     resources:
       - path: StrandiOSWidgets/Resources/id.lproj
       - path: StrandiOSWidgets/Resources/Assets.xcassets
+      # D-DIN-PRO for the Banner design of the workout Live Activity (SIL Open Font License; its text is beside the files). A copy of the app's fonts: a file shared between two targets was dropped from this one.
+      - path: StrandiOSWidgets/Resources/Fonts
     info:
       path: StrandiOSWidgets/Info.plist
       properties:
         CFBundleDisplayName: PHMN
+        UIAppFonts:
+          - D-DIN-PRO-400-Regular.otf
+          - D-DIN-PRO-500-Medium.otf
+          - D-DIN-PRO-600-SemiBold.otf
+          - D-DIN-PRO-700-Bold.otf
         # Version keys MUST live here in the generated-Info.plist properties — NOT hand-edited into the
         # file — because xcodegen regenerates StrandiOSWidgets/Info.plist on every `xcodegen generate`
         # (which every release runs for the version bump) and would otherwise rewrite them to its

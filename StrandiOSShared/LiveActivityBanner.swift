@@ -1,6 +1,9 @@
 import WidgetKit
 import SwiftUI
 import StrandDesign
+#if canImport(UIKit)
+import UIKit
+#endif
 #if os(iOS)
 import ActivityKit
 #endif
@@ -16,6 +19,22 @@ enum NOOPBannerPalette {
     static let paused = Color(hex: "#F5B02E")
     static let muted = Color(hex: "#8794A1")
     static let track = Color(hex: "#3A4652")
+    static let soft = Color(hex: "#DDE3E8")
+
+    /// D-DIN-PRO, the typeface of the reference design (the app and the extension both carry it). The system's condensed bold stands in if it is missing.
+    static func din(_ size: CGFloat, _ weight: Font.Weight = .bold) -> Font {
+        let name: String
+        switch weight {
+        case .regular: name = "D-DIN-PRO-Regular"
+        case .medium: name = "D-DIN-PRO-Medium"
+        case .semibold: name = "D-DIN-PRO-SemiBold"
+        default: name = "D-DIN-PRO-Bold"
+        }
+        #if canImport(UIKit)
+        if UIFont(name: name, size: size) != nil { return .custom(name, size: size) }
+        #endif
+        return .system(size: size, weight: weight, design: .default).width(.condensed)
+    }
 
     /// The zones, easy to hard: slate, blue, teal, bronze, rust.
     static func zone(_ n: Int) -> Color {
@@ -29,7 +48,9 @@ struct NOOPBannerLockScreen: View {
     private var paused: Bool { state.pausedAt != nil }
     private var zone: Int? { state.heartRateZone }
 
-    /// A Lock Screen Live Activity may be about 160 pt tall; anything taller is squeezed and its rows collide. The two bands add up to about 140.
+    /// Laid out as the reference: a lighter upper band (clock at the left, the mark in the middle, heart and heart rate at the right) over a
+    /// darker lower one (the five zones with their names, then two figures under the zones, each with its name below). A Lock Screen
+    /// Live Activity has about 160 pt; the two bands add up to about 156.
     var body: some View {
         VStack(spacing: 0) {
             topBand
@@ -40,20 +61,23 @@ struct NOOPBannerLockScreen: View {
     // MARK: Upper band
 
     private var topBand: some View {
-        HStack(alignment: .center, spacing: 8) {
-            clockText.frame(maxWidth: .infinity, alignment: .leading)
+        ZStack {
+            HStack(alignment: .center, spacing: 0) {
+                clockText
+                Spacer(minLength: 0)
+                heartRate
+            }
             mark
-            heartRate.frame(maxWidth: .infinity, alignment: .trailing)
         }
-        .padding(.horizontal, 18).padding(.vertical, 10)
-        .frame(height: 58)
+        .padding(.horizontal, 22)
+        .frame(height: 68)
         .background(NOOPBannerPalette.top)
     }
 
-    /// The session clock; it stands still, in amber with a pause mark, while the session is paused.
+    /// The session clock; it stands still, amber, with a pause mark while the session is paused.
     private var clockText: some View {
         HStack(spacing: 5) {
-            if paused { Image(systemName: "pause.fill").font(.system(size: 15, weight: .bold)).foregroundStyle(NOOPBannerPalette.paused) }
+            if paused { Image(systemName: "pause.fill").font(.system(size: 16, weight: .bold)).foregroundStyle(NOOPBannerPalette.paused) }
             Group {
                 if let start = state.activityStartedAt {
                     Text(timerInterval: start...start.addingTimeInterval(86_400), pauseTime: state.pausedAt, countsDown: false)
@@ -61,28 +85,30 @@ struct NOOPBannerLockScreen: View {
                     Text(verbatim: "–")
                 }
             }
-            .font(.system(size: 32, weight: .bold, design: .rounded)).monospacedDigit()
+            .font(NOOPBannerPalette.din(38)).monospacedDigit()
             .foregroundStyle(paused ? NOOPBannerPalette.paused : NOOPBannerPalette.ink)
-            .lineLimit(1).minimumScaleFactor(0.6)
+            .lineLimit(1)
+            // A timer text takes all the width it is offered; give it its own: m:ss until the first hour, h:mm:ss after it.
+            .frame(width: (state.activityStartedAt.map { Date().timeIntervalSince($0) } ?? 0) >= 3600 ? 170 : 140, alignment: .leading)
         }
     }
 
-    /// The PHMN mark in a thin ring.
+    /// The PHMN mark in the middle, in grey and not in its colours: it carries its own thin ring.
     private var mark: some View {
-        ZStack {
-            Circle().strokeBorder(NOOPBannerPalette.muted.opacity(0.7), lineWidth: 1.4)
-            Image("PHMNMark").resizable().scaledToFill().frame(width: 32, height: 32).clipShape(Circle())
-        }
-        .frame(width: 38, height: 38)
-        .accessibilityHidden(true)
+        Image("PHMNMarkMono").renderingMode(.template).resizable().scaledToFit()
+            .frame(width: 46, height: 46)
+            .foregroundStyle(NOOPBannerPalette.muted)
+            .accessibilityHidden(true)
     }
 
+    /// A muted heart before the number, the number large, "bpm" small beside it, all on one baseline.
     private var heartRate: some View {
         HStack(alignment: .firstTextBaseline, spacing: 3) {
-            Image(systemName: "heart.fill").font(.system(size: 13, weight: .bold)).foregroundStyle(NOOPBannerPalette.muted)
-            Text(verbatim: state.bpm.map(String.init) ?? "–").font(.system(size: 32, weight: .bold, design: .rounded)).monospacedDigit()
+            Image(systemName: "heart.fill").font(.system(size: 14, weight: .bold)).foregroundStyle(NOOPBannerPalette.muted)
+                .alignmentGuide(.firstTextBaseline) { d in d[.bottom] - 3 }
+            Text(verbatim: state.bpm.map(String.init) ?? "–").font(NOOPBannerPalette.din(38)).monospacedDigit()
                 .foregroundStyle(NOOPBannerPalette.ink).lineLimit(1).minimumScaleFactor(0.6)
-            Text("bpm").font(.system(size: 14, weight: .semibold, design: .rounded)).foregroundStyle(NOOPBannerPalette.muted)
+            Text("bpm").font(NOOPBannerPalette.din(17, .medium)).foregroundStyle(NOOPBannerPalette.muted)
         }
         .fixedSize()
     }
@@ -95,7 +121,7 @@ struct NOOPBannerLockScreen: View {
             zoneNames
             figures
         }
-        .padding(.horizontal, 18).padding(.top, 10).padding(.bottom, 6)
+        .padding(.horizontal, 17).padding(.top, 12).padding(.bottom, 8)
         .frame(maxWidth: .infinity)
         .background(NOOPBannerPalette.bottom)
     }
@@ -106,24 +132,24 @@ struct NOOPBannerLockScreen: View {
             ZStack(alignment: .leading) {
                 HStack(spacing: 2) {
                     ForEach(1...5, id: \.self) { n in
-                        Capsule().fill(NOOPBannerPalette.zone(n).opacity(zone == n ? 1 : 0.45)).frame(height: 4)
+                        Capsule().fill(NOOPBannerPalette.zone(n).opacity(zone == n ? 1 : 0.4)).frame(height: 4)
                     }
                 }
                 if let p = state.zonePosition {
-                    Circle().fill(Color.white).frame(width: 10, height: 10)
-                        .offset(x: min(max(CGFloat(p) * w - 5, 0), w - 10))
+                    Circle().fill(Color.white).frame(width: 9, height: 9)
+                        .offset(x: min(max(CGFloat(p) * w - 4.5, 0), w - 9))
                 }
             }
-            .frame(height: 10)
+            .frame(height: 9)
         }
-        .frame(height: 10)
+        .frame(height: 9)
     }
 
     private var zoneNames: some View {
         HStack(spacing: 0) {
             ForEach(1...5, id: \.self) { n in
-                Text("Zone \(n)").font(.system(size: 12, weight: .bold, design: .rounded))
-                    .foregroundStyle(zone == n ? NOOPBannerPalette.zone(n) : NOOPBannerPalette.zone(n).opacity(0.55))
+                Text("Zone \(n)").font(NOOPBannerPalette.din(13))
+                    .foregroundStyle(zone == n ? NOOPBannerPalette.zone(n) : NOOPBannerPalette.zone(n).opacity(0.5))
                     .lineLimit(1).minimumScaleFactor(0.6).frame(maxWidth: .infinity)
             }
         }
@@ -163,25 +189,24 @@ struct NOOPBannerLockScreen: View {
         return [calories, effort]
     }
 
-    /// The first figure sits about a third of the way across the bar and the second about two thirds, as under zones 1 to 2 and 3 to 4.
+    /// The figures sit exactly under the middle of Zone 2 and of Zone 4 (3/10 and 7/10 of the bar), so the pair is symmetric about the centre mark.
     private var figures: some View {
         let items = figureList
         return GeometryReader { geo in
             ForEach(Array(items.enumerated()), id: \.element.id) { i, item in
-                VStack(spacing: 0) {
+                VStack(spacing: 1) {
                     HStack(alignment: .firstTextBaseline, spacing: 3) {
-                        Text(verbatim: item.value).font(.system(size: 24, weight: .bold, design: .rounded)).monospacedDigit()
+                        Text(verbatim: item.value).font(NOOPBannerPalette.din(28)).monospacedDigit()
                             .foregroundStyle(NOOPBannerPalette.ink).lineLimit(1).minimumScaleFactor(0.6)
-                        if !item.unit.isEmpty { Text(verbatim: item.unit).font(.system(size: 13, weight: .semibold, design: .rounded)).foregroundStyle(NOOPBannerPalette.muted) }
+                        if !item.unit.isEmpty { Text(verbatim: item.unit).font(NOOPBannerPalette.din(15, .medium)).foregroundStyle(NOOPBannerPalette.muted) }
                     }
-                    Text(item.label).font(.system(size: 10.5, weight: .heavy, design: .rounded)).tracking(0.8).foregroundStyle(NOOPBannerPalette.muted)
+                    Text(item.label).font(NOOPBannerPalette.din(11, .medium)).tracking(1).foregroundStyle(NOOPBannerPalette.muted)
                 }
                 .fixedSize()
-                .position(x: geo.size.width * (i == 0 ? 0.31 : 0.64), y: geo.size.height / 2)
+                .position(x: geo.size.width * (i == 0 ? 0.3 : 0.7), y: geo.size.height / 2)
             }
         }
-        .frame(height: 44)
-        .padding(.top, 4)
+        .frame(height: 46)
     }
 }
 
