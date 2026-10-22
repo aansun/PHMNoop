@@ -1799,15 +1799,20 @@ struct NunaLiveWorkoutView: View {
                 .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 60)
                 .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
             }.buttonStyle(.plain)
-            Button { confirmEnd = true } label: {
-                HStack(spacing: 8) {
-                    Image(systemName: "stop.fill").font(.nuna(size: NunaTypeSize.sub, weight: .bold))
-                    Text("End").font(.nuna(size: NunaTypeSize.h3, weight: .bold))
-                }
-                .foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 24).frame(height: 60)
-                .background(NunaPalette.alertText, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
-            }.buttonStyle(.plain)
+            // End is offered only while the session is paused: a running one cannot be ended by a stray tap, and pausing first is the way out.
+            if w.isPaused {
+                Button { confirmEnd = true } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "stop.fill").font(.nuna(size: NunaTypeSize.sub, weight: .bold))
+                        Text("End").font(.nuna(size: NunaTypeSize.h3, weight: .bold))
+                    }
+                    .foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 24).frame(height: 60)
+                    .background(NunaPalette.alertText, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+                }.buttonStyle(.plain)
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+            }
         }
+        .animation(.easeInOut(duration: 0.2), value: w.isPaused)
     }
 
     // MARK: zone guidance
