@@ -243,19 +243,18 @@ struct NunaFeaturesView: View {
                 NunaToggleRow("Screen on during workouts", subtitle: "Heart rate stays visible while recording", systemImage: "sun.max", isOn: $keepOn).padding(.vertical, 8)
                 NunaDivider()
                 NunaToggleRow("Live Activity", subtitle: "Heart rate and your session on the Lock Screen and Dynamic Island", systemImage: "iphone.gen3", isOn: $liveActivity).padding(.vertical, 8)
-                if liveActivity {
-                    NunaDivider()
-                    VStack(alignment: .leading, spacing: 10) {
-                        Text("Lock Screen design").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        NunaSegmented([(value: "standard", title: "Default"), (value: "banner", title: "Banner")], selection: $liveDesign)
-                        // The Banner as it will look on the Lock Screen, with made-up figures, at the height the system allows.
-                        NOOPBannerLockScreen(state: .bannerDemo())
-                            .frame(height: 156).clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-                            .opacity(liveDesign == "banner" ? 1 : 0.55)
-                        Text("Banner: the clock, the PHMN mark and the heart rate on top; the five zones and two figures below.")
-                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                    }.padding(.vertical, 10)
-                }
+                // The workout's own Live Activity does not depend on the switch above, so its design is always here to choose.
+                NunaDivider()
+                VStack(alignment: .leading, spacing: 10) {
+                    Text("Lock Screen design").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                    NunaSegmented([(value: "standard", title: "Default"), (value: "banner", title: "Banner")], selection: $liveDesign)
+                    // The Banner as it will look on the Lock Screen, with made-up figures, at the height the system allows.
+                    NOOPBannerLockScreen(state: .bannerDemo())
+                        .frame(height: 156).clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                        .opacity(liveDesign == "banner" ? 1 : 0.55)
+                    Text("Banner: the clock, the PHMN mark and the heart rate on top; the five zones and two figures below.")
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                }.padding(.vertical, 10)
                 NunaDivider()
                 NunaToggleRow("Screen on while syncing", subtitle: "So a long sync finishes without locking", systemImage: "arrow.triangle.2.circlepath", isOn: $syncKeepOn).padding(.vertical, 8)
                 if profile.cycleAwarenessApplies {
