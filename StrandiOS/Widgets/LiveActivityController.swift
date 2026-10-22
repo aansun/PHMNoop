@@ -40,6 +40,9 @@ final class LiveActivityController {
     /// A banner is replaced after this long, well inside the system's eight hours.
     private static let rolloverAfter: TimeInterval = 7.5 * 3600
 
+    /// Settings key for the Lock Screen design ("standard" or "banner").
+    static let designKey = "liveActivityDesign"
+
     deinit { workoutKeepAliveTask?.cancel() }
 
     /// Drive the activity from the latest live values. A workout starts immediately and is allowed to
@@ -117,7 +120,8 @@ final class LiveActivityController {
             zoneSeconds: zoneSeconds,
             pausedAt: pausedAt,
             effortLabel: effortLabel,
-            steps: steps)
+            steps: steps,
+            design: UserDefaults.standard.string(forKey: Self.designKey))
         // A workout owns this activity until End/Discard. Do not let a temporary strap disconnect or
         // quiet GPS stream make the Lock Screen activity stale while the workout clock is still live.
         // Ordinary live-HR activity keeps the shorter freshness date as a safety net.
