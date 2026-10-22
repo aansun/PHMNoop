@@ -248,6 +248,10 @@ struct NunaFeaturesView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("Lock Screen design").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                         NunaSegmented([(value: "standard", title: "Default"), (value: "banner", title: "Banner")], selection: $liveDesign)
+                        // The Banner as it will look on the Lock Screen, with made-up figures, at the height the system allows.
+                        NOOPBannerLockScreen(state: .bannerDemo())
+                            .frame(height: 156).clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                            .opacity(liveDesign == "banner" ? 1 : 0.55)
                         Text("Banner: the clock, the PHMN mark and the heart rate on top; the five zones and two figures below.")
                             .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }.padding(.vertical, 10)
