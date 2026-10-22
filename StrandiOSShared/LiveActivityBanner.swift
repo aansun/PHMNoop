@@ -70,7 +70,7 @@ struct NOOPBannerLockScreen: View {
             mark
         }
         .padding(.horizontal, 22)
-        .frame(height: 68)
+        .frame(height: 64)
         .background(NOOPBannerPalette.top)
     }
 
@@ -121,7 +121,7 @@ struct NOOPBannerLockScreen: View {
             zoneNames
             figures
         }
-        .padding(.horizontal, 17).padding(.top, 12).padding(.bottom, 8)
+        .padding(.horizontal, 17).padding(.top, 7).padding(.bottom, 6)
         .frame(maxWidth: .infinity)
         .background(NOOPBannerPalette.bottom)
     }
@@ -148,7 +148,7 @@ struct NOOPBannerLockScreen: View {
     private var zoneNames: some View {
         HStack(spacing: 0) {
             ForEach(1...5, id: \.self) { n in
-                Text("Zone \(n)").font(NOOPBannerPalette.din(13))
+                Text("Zone \(n)").font(NOOPBannerPalette.din(16))
                     .foregroundStyle(zone == n ? NOOPBannerPalette.zone(n) : NOOPBannerPalette.zone(n).opacity(0.5))
                     .lineLimit(1).minimumScaleFactor(0.6).frame(maxWidth: .infinity)
             }
@@ -206,7 +206,7 @@ struct NOOPBannerLockScreen: View {
                 .position(x: geo.size.width * (i == 0 ? 0.3 : 0.7), y: geo.size.height / 2)
             }
         }
-        .frame(height: 46)
+        .frame(height: 44)
     }
 }
 
