@@ -6242,6 +6242,9 @@
         "+Log": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "+Catat"}}
         } },
+        "Apple Health: written by the sync": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Apple Health: ditulis oleh sinkronisasi"}}
+        } },
         "Charge and Rest": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Charge dan Rest"}}
         } },

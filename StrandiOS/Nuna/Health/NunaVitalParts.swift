@@ -204,6 +204,7 @@ struct NunaFitnessOrb<Center: View>: View {
     var size: CGFloat = 270
     @ViewBuilder var center: () -> Center
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorScheme) private var scheme
     @ObservedObject private var motion = NoopMotionState.shared
 
     /// Closed smooth blob: a circle whose radius is nudged by a few low harmonics.
@@ -235,10 +236,12 @@ struct NunaFitnessOrb<Center: View>: View {
                         l.fill(Self.blob(in: rect, phase: phase, grow: 1.02), with: .color(tint.opacity(0.38)))
                     }
                     let shape = Self.blob(in: rect, phase: phase)
-                    // Dark core with a bright rim
+                    // The core carries the figure in the text colour, so it is dark on a dark theme and light on a light one: a black core under
+                    // dark text on the light theme hid the number and its caption.
+                    let core = scheme == .dark ? Color.black : NunaPalette.card
                     ctx.fill(shape, with: .radialGradient(Gradient(stops: [
-                        .init(color: Color.black.opacity(0.92), location: 0.0),
-                        .init(color: Color.black.opacity(0.85), location: 0.45),
+                        .init(color: core.opacity(0.92), location: 0.0),
+                        .init(color: core.opacity(0.85), location: 0.45),
                         .init(color: tint.opacity(0.55), location: 0.9),
                         .init(color: tint.opacity(0.85), location: 1.0)]),
                         center: CGPoint(x: rect.midX, y: rect.midY), startRadius: 0, endRadius: min(sz.width, sz.height) / 2 * 0.9))
