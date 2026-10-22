@@ -320,8 +320,7 @@ public struct NunaCard<Content: View>: View {
                                            trailing: small ? NunaSpacing.cardInnerSmall : NunaSpacing.cardInner))
             .frame(maxWidth: .infinity, alignment: .leading)
             // One flat tile: a soft lift off the canvas, no outline. Only the highlighted card (Anya, the selected one) keeps an edge.
-            .background(cardFill, in: RoundedRectangle(cornerRadius: small ? NunaRadius.cardSmall : NunaRadius.card, style: .continuous))
-            .modifier(FlowCardLift(radius: small ? NunaRadius.cardSmall : NunaRadius.card, on: NunaThemePrefs.skin == .flow))
+            .background(FlowCardSurface(fill: cardFill, radius: small ? NunaRadius.cardSmall : NunaRadius.card, lifted: NunaThemePrefs.skin == .flow))
             .overlay {
                 if highlight {
                     RoundedRectangle(cornerRadius: small ? NunaRadius.cardSmall : NunaRadius.card, style: .continuous)
@@ -331,18 +330,23 @@ public struct NunaCard<Content: View>: View {
     }
 }
 
-/// Flow's elevation: a small plum-tinted shadow under a card in light, a 1 px border in dark (where a shadow would not show).
-private struct FlowCardLift: ViewModifier {
+/// A card's surface. In Flow it carries the elevation (a small plum-tinted shadow in light, a 1 px border in dark where a shadow would not show).
+/// The shadow belongs to this plain rounded shape and not to the card's content: a shadow on the content makes the system draw all of it to an
+/// offscreen layer again on every frame of a scroll, which is slow on a page of many cards.
+private struct FlowCardSurface: View {
+    let fill: Color
     let radius: CGFloat
-    let on: Bool
+    let lifted: Bool
     @Environment(\.colorScheme) private var scheme
-    func body(content: Content) -> some View {
-        if on {
-            content
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: radius, style: .continuous)
+        if lifted {
+            shape.fill(fill)
                 .shadow(color: scheme == .dark ? .clear : Color(hex: "#2A1B24").opacity(0.07), radius: 3, x: 0, y: 1)
-                .overlay { if scheme == .dark { RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1) } }
+                .overlay { if scheme == .dark { shape.strokeBorder(NunaPalette.hairline, lineWidth: 1) } }
         } else {
-            content
+            shape.fill(fill)
         }
     }
 }

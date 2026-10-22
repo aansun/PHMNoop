@@ -49,7 +49,9 @@ struct NunaTrendsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: NunaSpacing.section) {
+            // Lazy: the charts, the heat map and the explore cards far down the page are built as they come near the screen, not all at once
+            // when Trends opens and again whenever one of them redraws.
+            LazyVStack(spacing: NunaSpacing.section) {
                 header
                 if !m.loaded {
                     ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 200)
