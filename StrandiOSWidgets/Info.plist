@@ -27,5 +27,12 @@
 		<key>NSExtensionPointIdentifier</key>
 		<string>com.apple.widgetkit-extension</string>
 	</dict>
+	<key>UIAppFonts</key>
+	<array>
+		<string>D-DIN-PRO-400-Regular.otf</string>
+		<string>D-DIN-PRO-500-Medium.otf</string>
+		<string>D-DIN-PRO-600-SemiBold.otf</string>
+		<string>D-DIN-PRO-700-Bold.otf</string>
+	</array>
 </dict>
 </plist>
