@@ -61,8 +61,11 @@ final class StravaAPIClient {
     }
 
     /// `allowWithoutRoute` is for a gym session logged in PHMN, which has no route by nature (the caller decides that, see `StravaOwnGym`).
+    /// A gym session passes its program name, a description of every set and the sets themselves: the FIT file then carries them as strength sets, and Strava
+    /// shows the exercises, the totals and the muscle map. `strengthSets` empty is every other kind of upload.
     func upload(row: WorkoutRow, route: [RouteMath.LatLng], elevationGainM: Double? = nil,
-                allowWithoutRoute: Bool = false) async throws -> StravaUploadResponse {
+                allowWithoutRoute: Bool = false, name: String? = nil, description: String? = nil,
+                strengthSets: [FitStrengthSet] = []) async throws -> StravaUploadResponse {
         guard route.count >= 2 || StravaActivityType.isTreadmill(row.sport) || allowWithoutRoute else { throw StravaError.noRoute }
         let token = try await validAccessToken()
         let steps = await Self.stepsForUpload(row: row)
@@ -71,18 +74,19 @@ final class StravaAPIClient {
         let file = RouteExporter.render(
             .fit, route: points, startTs: row.startTs, endTs: row.endTs, sport: row.sport,
             distanceM: distanceM, energyKcal: row.energyKcal, avgHr: row.avgHr, maxHr: row.maxHr,
-            movingTimeS: row.durationS, steps: steps, elevationGainM: elevationGainM)
+            movingTimeS: row.durationS, steps: steps, elevationGainM: elevationGainM, strengthSets: strengthSets)
         let boundary = "Boundary-\(UUID().uuidString)"
         var request = URLRequest(url: StravaOAuth.apiBase.appendingPathComponent("uploads"))
         request.httpMethod = "POST"
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         request.setValue("multipart/form-data; boundary=\(boundary)", forHTTPHeaderField: "Content-Type")
         var fields = [
-            "name": WorkoutSource.displaySport(row.sport),
+            "name": name ?? WorkoutSource.displaySport(row.sport),
             "sport_type": StravaActivityType.value(for: row.sport),
             "data_type": "fit",
             "external_id": "noop-\(row.startTs)-\(row.sport)",
         ]
+        if let description, !description.isEmpty { fields["description"] = description }
         // Indoor: Strava hides the map and keeps the session off the segment leaderboards.
         if StravaActivityType.isTreadmill(row.sport) { fields["trainer"] = "1" }
         request.httpBody = Self.multipartBody(

@@ -11,6 +11,62 @@ import Foundation
 /// speed is derived from the interpolated track, not a sensor measurement), and workout-level metadata
 /// when the source has it (sport, distance, moving time, steps, elevation gain, calories, avg/max HR).
 /// That's the honest maximum from what's stored.
+/// One performed set of a strength session, as a FIT `set` message carries it. Strava and Garmin Connect read these into the Exercises list, the
+/// totals (sets, reps, volume) and the muscle map of a strength activity, which a bare file or a typed description cannot give.
+public struct FitStrengthSet: Equatable, Sendable {
+    public var startTs: Int
+    public var durationS: Double
+    public var reps: Int?
+    public var weightKg: Double?
+    /// FIT `exercise_category` (see ``FitExerciseCategory``).
+    public var category: Int
+    public init(startTs: Int, durationS: Double, reps: Int?, weightKg: Double?, category: Int) {
+        self.startTs = startTs; self.durationS = durationS; self.reps = reps; self.weightKg = weightKg; self.category = category
+    }
+}
+
+/// The FIT `exercise_category` of an exercise, from its name. FIT has a fixed list (bench press, squat, row…), so a name is matched on its
+/// words, most specific first; anything unrecognised is "unknown", which still counts as a set.
+public enum FitExerciseCategory {
+    public static let unknown = 65_534
+
+    private static let rules: [(Int, [String])] = [
+        (19, ["plank"]),
+        (22, ["push-up", "pushup", "push up"]),
+        (27, ["sit-up", "situp", "sit up"]),
+        (16, ["leg raise", "hanging knee", "knee raise"]),
+        (6, ["crunch", "ab wheel", "ab roller", "russian twist"]),
+        (15, ["leg curl", "hamstring curl"]),
+        (8, ["deadlift", "good morning"]),
+        (10, ["hip thrust", "glute bridge", "hip raise"]),
+        (13, ["hyperextension", "back extension"]),
+        (17, ["lunge", "split squat", "step-up", "step up"]),
+        (1, ["calf raise", "calf press"]),
+        (14, ["lateral raise", "side raise", "front raise"]),
+        (25, ["face pull", "rear delt", "reverse fly", "reverse flye"]),
+        (24, ["overhead press", "shoulder press", "military press", "arnold press", "push press"]),
+        (9, ["fly", "flye", "pec deck", "crossover"]),
+        (0, ["bench press", "chest press", "floor press", "incline press", "decline press"]),
+        (30, ["triceps extension", "tricep extension", "pushdown", "skull", "kickback", "dip"]),
+        (7, ["curl"]),
+        (21, ["pull-up", "pullup", "pull up", "chin-up", "chinup", "chin up", "pulldown", "pull-down", "pull down"]),
+        (23, ["row"]),
+        (26, ["shrug"]),
+        (28, ["squat", "leg press", "hack"]),
+        (3, ["carry", "farmer", "suitcase"]),
+        (18, ["snatch", "clean", "jerk"]),
+        (20, ["jump", "burpee", "box jump"]),
+        (4, ["chop", "woodchop"]),
+    ]
+
+    /// The category for an exercise name; `unknown` when no rule matches. "Leg curl" is a leg curl, not a biceps curl, because it is matched first.
+    public static func category(for name: String) -> Int {
+        let n = name.lowercased()
+        for (category, words) in rules where words.contains(where: { n.contains($0) }) { return category }
+        return unknown
+    }
+}
+
 public enum RouteExporter {
 
     public enum Format: String, Sendable, Equatable {
@@ -39,7 +95,8 @@ public enum RouteExporter {
         maxHr: Int? = nil,
         movingTimeS: Double? = nil,
         steps: Int? = nil,
-        elevationGainM: Double? = nil
+        elevationGainM: Double? = nil,
+        strengthSets: [FitStrengthSet] = []
     ) -> Data {
         switch format {
         case .gpx:
@@ -47,7 +104,7 @@ public enum RouteExporter {
         case .fit:
             return buildFit(route: route, startTs: startTs, endTs: endTs, sport: sport,
                             distanceM: distanceM, energyKcal: energyKcal, avgHr: avgHr, maxHr: maxHr,
-                            movingTimeS: movingTimeS, steps: steps, elevationGainM: elevationGainM)
+                            movingTimeS: movingTimeS, steps: steps, elevationGainM: elevationGainM, strengthSets: strengthSets)
         }
     }
 
@@ -93,7 +150,8 @@ public enum RouteExporter {
         maxHr: Int? = nil,
         movingTimeS: Double? = nil,
         steps: Int? = nil,
-        elevationGainM: Double? = nil
+        elevationGainM: Double? = nil,
+        strengthSets: [FitStrengthSet] = []
     ) -> Data {
         let canon = canonicalSport(sport)
         let times = interpolatedTimes(route.count, startTs, endTs)
@@ -119,6 +177,26 @@ public enum RouteExporter {
             if includeRecordSpeed {
                 let speed = i == 0 ? nil : segmentSpeedMps(route[i - 1], route[i], from: times[i - 1], to: times[i])
                 u16(&body, speed.map(fitSpeed) ?? 0xFFFF)
+            }
+        }
+
+        // A strength session has no route. A record at the start and one at the end give it a timeline, and the sets carry the rest.
+        if route.isEmpty && !strengthSets.isEmpty {
+            defn(&body, local: 5, global: 20, fields: [(253, 4, 0x86)])
+            for ts in [startTs, endTs] { body.append(5); u32(&body, fitTime(ts)) }
+            // set (global 225): message_index, timestamp, duration (ms), repetitions, weight (kg x 16), set_type (1 = active), start_time, category.
+            defn(&body, local: 6, global: 225, fields: [(254, 2, 0x84), (253, 4, 0x86), (0, 4, 0x86), (3, 2, 0x84), (4, 2, 0x84), (5, 1, 0x00), (6, 4, 0x86), (7, 2, 0x84)])
+            for (i, s) in strengthSets.enumerated() {
+                let dur = max(1, s.durationS)
+                body.append(6)
+                u16(&body, UInt16(min(i, 65_534)))
+                u32(&body, fitTime(s.startTs + Int(dur.rounded())))
+                u32(&body, fitMilliseconds(dur))
+                u16(&body, s.reps.map { UInt16(min(max(0, $0), 65_534)) } ?? 0xFFFF)
+                u16(&body, s.weightKg.map { UInt16(min(max(0, ($0 * 16).rounded()), 65_534)) } ?? 0xFFFF)
+                u8(&body, 1)
+                u32(&body, fitTime(s.startTs))
+                u16(&body, UInt16(min(max(0, s.category), 65_534)))
             }
         }
 
@@ -280,6 +358,7 @@ public enum RouteExporter {
         case "swim": return 5
         case "walk": return 11
         case "hike": return 15
+        case "weightlifting", "strength", "strength training", "weight training", "bodybuilding", "powerlifting": return 10
         default: return 0
         }
     }
@@ -291,6 +370,7 @@ public enum RouteExporter {
         switch s {
         case "treadmill", "treadmill run": return 1
         case "treadmill walk": return 27
+        case "weightlifting", "strength", "strength training", "weight training", "bodybuilding", "powerlifting": return 20
         default: return nil
         }
     }
