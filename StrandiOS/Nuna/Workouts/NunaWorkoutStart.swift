@@ -1162,6 +1162,8 @@ struct NunaLiveWorkoutView: View {
     @State private var distanceHit = false
     @State private var lastBuzz = Date.distantPast
     @State private var selectedTab = LiveTab.effort
+    /// Whether iOS lets this app run Live Activities; read once and on change, not on every redraw of the live screen.
+    @State private var liveActivitiesOn = true
     @State private var sessionSteps: Int?
     @State private var savedActivity: NunaWorkoutKey?
     @State private var savedActivityRow: WorkoutRow?
@@ -1204,6 +1206,11 @@ struct NunaLiveWorkoutView: View {
             }
             // Back from the summary of a session that has ended leaves the live screen too: there is nothing left on it.
             .onChange(of: savedActivity == nil) { _, gone in if gone, autoOpened || model.activeWorkout == nil, model.lastWorkout != nil { onClose() } }
+        }
+        .task {
+            let info = ActivityAuthorizationInfo()
+            liveActivitiesOn = info.areActivitiesEnabled
+            for await on in info.activityEnablementUpdates { liveActivitiesOn = on }
         }
         .onAppear {
             holdScreenAwake()
@@ -1343,13 +1350,15 @@ struct NunaLiveWorkoutView: View {
                                          size: min(260,
                                                    max(188, viewport.size.height - NunaSpacing.section * 2)))
                         }
-                        if !ActivityAuthorizationInfo().areActivitiesEnabled { liveActivityOffCard }
+                        if !liveActivitiesOn { liveActivityOffCard }
                     }
                     .padding(.vertical, NunaSpacing.section)
                     .padding(.horizontal, NunaSpacing.screenH)
                 }
                 .scrollIndicators(.hidden)
             }
+            // The two tabs swap at once: only the underline above moves. A fade between a ring and a beating disc made the switch feel late.
+            .transaction(value: selectedTab) { $0.animation = nil }
             VStack(spacing: NunaSpacing.section) {
                 if selectedTab == .heartRate {
                     heartZoneSection(bpm: bpm, zone: zone, state: state, tone: tone)
@@ -1358,6 +1367,7 @@ struct NunaLiveWorkoutView: View {
                     metricRow(w, calories: calories)
                 }
             }
+            .transaction(value: selectedTab) { $0.animation = nil }
             .padding(.horizontal, NunaSpacing.screenH)
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
