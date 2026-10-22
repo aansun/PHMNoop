@@ -105,7 +105,7 @@ struct NOOPBannerLockScreen: View {
     private var heartRate: some View {
         HStack(alignment: .firstTextBaseline, spacing: 3) {
             Image(systemName: "heart.fill").font(.system(size: 14, weight: .bold)).foregroundStyle(NOOPBannerPalette.muted)
-                .alignmentGuide(.firstTextBaseline) { d in d[.bottom] - 3 }
+                .alignmentGuide(.firstTextBaseline) { d in d[.top] + 27 }
             Text(verbatim: state.bpm.map(String.init) ?? "–").font(NOOPBannerPalette.din(38)).monospacedDigit()
                 .foregroundStyle(NOOPBannerPalette.ink).lineLimit(1).minimumScaleFactor(0.6)
             Text("bpm").font(NOOPBannerPalette.din(17, .medium)).foregroundStyle(NOOPBannerPalette.muted)
