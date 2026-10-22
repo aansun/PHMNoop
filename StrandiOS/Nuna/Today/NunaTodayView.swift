@@ -108,10 +108,32 @@ private struct NunaPinnedHairline: View {
     var body: some View { Rectangle().fill(NunaPalette.hairline).frame(height: 1).opacity(Double(state.t)) }
 }
 
+/// The add button, raised above the session bar while a gym session runs. The only part of Today that watches the live session.
+private struct NunaFABHost: View {
+    let action: () -> Void
+    @EnvironmentObject private var liftSession: LiftSessionController
+    var body: some View {
+        NunaFAB(action: action).padding(.bottom, liftSession.isActive && !liftSession.isPresented ? 172 : 104)
+    }
+}
+
+/// Mirrors the number of saved gym sessions into the screen, writing only when it changes.
+private struct NunaSavedSessionsWatcher: View {
+    @Binding var count: Int
+    @EnvironmentObject private var liftSession: LiftSessionController
+    var body: some View {
+        Color.clear.frame(width: 0, height: 0)
+            .onAppear { if count != liftSession.savedSessions { count = liftSession.savedSessions } }
+            .onChange(of: liftSession.savedSessions) { _, n in if count != n { count = n } }
+    }
+}
+
 struct NunaTodayView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var router: NavRouter
-    @EnvironmentObject private var liftSession: LiftSessionController
+    /// How many gym sessions have been saved. The live session itself is NOT observed here: it ticks every second while it runs, and a screen that
+    /// observed it would be re-evaluated whole, cards and all, each second, which is what made scrolling Today stutter during a session.
+    @State private var savedSessions = 0
     @EnvironmentObject var profile: ProfileStore
     @EnvironmentObject private var updateStore: UpdateStore
     @EnvironmentObject private var intelligence: IntelligenceEngine
@@ -140,7 +162,7 @@ struct NunaTodayView: View {
     @State private var showMood = false
     /// The saved session the Anya card opens straight to.
     @State private var showBreath = false
-    @State private var showWindDown = false
+    @Environment(\.nunaPushToday) private var pushToday
     @AppStorage("nuna.keyMetricsLayout") private var metricsLayoutRaw = NunaMetricsLayout.cards.rawValue
     @State private var showAddCard = false
     /// 0 when Today is at the top, 1 once the pinned score rings have shrunk to their small size.
@@ -196,15 +218,13 @@ struct NunaTodayView: View {
             }
 
             if model.isToday && !editing {
-                NunaFAB { showQuick = true }
+                NunaFABHost { showQuick = true }
                     .padding(.trailing, NunaSpacing.screenH)
-                    .padding(.bottom, liftSession.isActive && !liftSession.isPresented ? 172 : 104)
             }
         }
         .background(NunaPalette.canvas.ignoresSafeArea())
         .nunaTodayDestinations()
         .nunaWorkoutDestinations()
-        .navigationDestination(isPresented: $showWindDown) { NunaWindDownView() }
         .sheet(isPresented: $showBreath) {
             NavigationStack { NunaBreathView().toolbar(.hidden, for: .navigationBar) }.preferredColorScheme(NunaTheme.colorScheme)
         }
@@ -250,7 +270,8 @@ struct NunaTodayView: View {
                 ? Self.nunaDefaultMetrics : KeyMetricPrefs.decodeEnabled(keyMetricsRaw)
             await sparks.load(repo: repo, metrics: chosen, days: max(keyMetricsWindowDays, 2))
         }
-        .task(id: "\(repo.refreshSeq)-\(model.dayOffset)-\(liftSession.savedSessions)") {
+        .background(NunaSavedSessionsWatcher(count: $savedSessions))
+        .task(id: "\(repo.refreshSeq)-\(model.dayOffset)-\(savedSessions)") {
             await model.load(repo: repo, profile: profile)
             dayPlan = model.isToday ? await NunaDayPlanResult.load(repo: repo, profile: profile) : nil
         }
@@ -705,7 +726,7 @@ struct NunaTodayView: View {
             if coachEnabled && model.isToday {
                 NunaAnyaTodayCard(plan: dayPlan, fallbackLine: synthLine, workouts: model.workouts, effort: model.effort,
                                   charge: model.charge.pct, onCoach: { showCoach = true },
-                                  onBreathe: { showBreath = true }, onWindDown: { showWindDown = true },
+                                  onBreathe: { showBreath = true }, onWindDown: { pushToday(.windDown) },
                                   stressNow: model.stressCurve.flatMap(StressDayCurve.latestLevel),
                                   stressHighMin: model.stressCurve.map(StressDayCurve.highMinutes),
                                   restingHr: model.restingHr, hrvDelta: model.hrvDelta, restingHrDelta: model.restingHrDelta,

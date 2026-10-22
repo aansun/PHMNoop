@@ -48,6 +48,9 @@ struct NunaRootView: View {
         return out
     }
 
+    /// The tab bar belongs to the main page of a tab. Once a page is pushed the bar steps away and the page's own back button is the way out.
+    private var atTabRoot: Bool { selection < paths.count ? paths[selection].isEmpty : true }
+
     var body: some View {
         TabView(selection: $selection) {
             stack(.today) { NunaTodayView() }
@@ -60,23 +63,28 @@ struct NunaRootView: View {
                 VStack(spacing: 0) {
                     NunaWorkoutBar()
                     NunaLiftBar()
-                    NunaTabBar(items: items, selection: $selection, minimized: autoHide && barHidden,
-                               onExpand: { barHidden = false }) { id in
-                        // Re-tapping the active tab pops it to its root.
-                        if id < paths.count { paths[id] = NavigationPath() }
+                    if atTabRoot {
+                        NunaTabBar(items: items, selection: $selection, minimized: autoHide && barHidden,
+                                   onExpand: { barHidden = false }) { id in
+                            // Re-tapping the active tab pops it to its root.
+                            if id < paths.count { paths[id] = NavigationPath() }
+                        }
+                        .transition(.move(edge: .bottom).combined(with: .opacity))
                     }
                 }
                 .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
         .animation(.easeOut(duration: 0.2), value: keyboardUp)
+        .animation(.easeInOut(duration: 0.22), value: atTabRoot)
         .animation(.easeInOut(duration: 0.22), value: barHidden)
         // Scrolling a page moves a finger up (content goes up) or down; read it beside the page's own scroll, never instead of it.
+        // Only while "Hide bar when scrolling" is on: a gesture on the whole shell is tracked on every touch, so it is not attached when it has no job.
         .simultaneousGesture(DragGesture(minimumDistance: 14).onChanged { v in
-            guard autoHide, abs(v.translation.height) > abs(v.translation.width) else { return }
+            guard abs(v.translation.height) > abs(v.translation.width) else { return }
             if v.translation.height < -14, !barHidden { barHidden = true }
             else if v.translation.height > 14, barHidden { barHidden = false }
-        })
+        }, including: autoHide ? .all : .subviews)
         .onChange(of: selection) { _, _ in barHidden = false }
         .onChange(of: autoHide) { _, on in if !on { barHidden = false } }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in keyboardUp = true }
@@ -165,6 +173,7 @@ struct NunaRootView: View {
                 .nunaMeDestinations()
         }
         .toolbar(.hidden, for: .tabBar)
+        .environment(\.nunaPushToday) { paths[Tab.today.rawValue].append($0) }
         // Pushed screens live in UIKit hosting; they need the choice stated again to resolve the adaptive palette.
         .preferredColorScheme(NunaTheme.colorScheme)
         .tag(tab.rawValue)
@@ -248,6 +257,16 @@ struct NunaRootView: View {
             routed = dest
         }
         router.requestedDestination = nil
+    }
+}
+
+/// Pushes a Today page from a screen that would otherwise push it by a flag: a push made by a flag is not in the tab's navigation path, so the
+/// shell could not tell a page had been opened and would keep the tab bar over it.
+private struct NunaPushTodayKey: EnvironmentKey { static let defaultValue: (NunaTodayRoute) -> Void = { _ in } }
+extension EnvironmentValues {
+    var nunaPushToday: (NunaTodayRoute) -> Void {
+        get { self[NunaPushTodayKey.self] }
+        set { self[NunaPushTodayKey.self] = newValue }
     }
 }
 #endif
