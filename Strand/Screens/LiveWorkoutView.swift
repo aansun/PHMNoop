@@ -346,13 +346,20 @@ struct LiveWorkoutView: View {
     /// `workoutHero` owns the single visible elapsed time.
     private var bottomControlRow: some View {
         HStack(spacing: 0) {
-            deleteWorkoutGlassButton
-                .frame(maxWidth: .infinity, alignment: .leading)
+            // Discard and End are offered only while the session is paused, so a running one is not ended by a stray tap.
+            let paused = model.activeWorkout?.isPaused == true
+            Group {
+                if paused { deleteWorkoutGlassButton } else { Color.clear.frame(width: Self.bottomControlDiameter, height: Self.bottomControlDiameter) }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
             pauseWorkoutGlassButton
                 .frame(maxWidth: .infinity, alignment: .center)
-            endWorkoutGlassButton
-                .frame(maxWidth: .infinity, alignment: .trailing)
+            Group {
+                if paused { endWorkoutGlassButton } else { Color.clear.frame(width: Self.bottomControlDiameter, height: Self.bottomControlDiameter) }
+            }
+            .frame(maxWidth: .infinity, alignment: .trailing)
         }
+        .animation(.easeInOut(duration: 0.2), value: model.activeWorkout?.isPaused)
         .padding(Self.bottomBarInset)
         .background {
             NoopPanelSurface(cornerRadius: NoopVisualStyle.pillRadius, elevated: true)

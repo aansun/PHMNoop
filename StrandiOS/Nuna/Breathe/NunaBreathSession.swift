@@ -185,12 +185,20 @@ struct NunaBreathSessionView: View {
                 .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54)
                 .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
             }.buttonStyle(.plain).disabled(countdown != nil).opacity(countdown != nil ? 0.4 : 1)
-            Button { seconds >= 20 ? finish() : cancel() } label: {
-                Text("End").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    .padding(.horizontal, 28).frame(height: 54)
-                    .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
-            }.buttonStyle(.plain)
+            // End is offered only while the session is paused, as in a workout: a running one cannot be ended by a stray tap.
+            if paused {
+                Button { seconds >= 20 ? finish() : cancel() } label: {
+                    HStack(spacing: 8) {
+                        Image(systemName: "stop.fill").font(.nuna(size: 15, weight: .bold))
+                        Text("End").font(.nuna(size: 17, weight: .bold))
+                    }
+                    .foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 24).frame(height: 54)
+                    .background(NunaPalette.alertText, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+                }.buttonStyle(.plain)
+                .transition(.move(edge: .trailing).combined(with: .opacity))
+            }
         }
+        .animation(.easeInOut(duration: 0.2), value: paused)
     }
 
     private var phaseWord: String {
