@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "1.2.0",
+          "buildVersion": "415",
+          "date": "2026-10-23",
+          "localizedDescription": "The Flow look, capsule charts for Charge and Effort, a Banner design for the workout Live Activity, a gym session you can change as you go, and gym sessions on Strava with their sets.",
+          "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v1.2.0/PHMN-v1.2.0-ios-unsigned.ipa",
+          "size": 75318307,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.1.0",
           "buildVersion": "414",
           "date": "2026-10-21",
@@ -87,12 +96,12 @@
           "NSSpeechRecognitionUsageDescription": "PHMN transcribes your question on-device so you can ask the coach out loud instead of typing. Audio never leaves your iPhone."
         }
       },
-      "version": "1.1.0",
-      "buildVersion": "414",
-      "versionDate": "2026-10-21",
-      "versionDescription": "Nutrition rebuilt with a daily budget and a diary you can fill by telling Anya; a Lab Book in the Nuna style that Anya can fill from a report; exercise videos.",
-      "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v1.1.0/PHMN-v1.1.0-ios-unsigned.ipa",
-      "size": 74270752,
+      "version": "1.2.0",
+      "buildVersion": "415",
+      "versionDate": "2026-10-23",
+      "versionDescription": "The Flow look, capsule charts for Charge and Effort, a Banner design for the workout Live Activity, a gym session you can change as you go, and gym sessions on Strava with their sets.",
+      "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v1.2.0/PHMN-v1.2.0-ios-unsigned.ipa",
+      "size": 75318307,
       "minOSVersion": "17.0"
     }
   ],
