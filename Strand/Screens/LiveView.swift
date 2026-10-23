@@ -439,9 +439,12 @@ struct LiveView: View {
                         showLiveWorkout = true
                     }
                 }
-                NoopButton("End workout", systemImage: "stop.circle.fill",
-                           kind: .destructive, fullWidth: true) {
-                    confirmingEndWorkout = true
+                // End is offered only while the session is paused, so a running one is not ended by a stray tap.
+                if w.isPaused {
+                    NoopButton("End workout", systemImage: "stop.circle.fill",
+                               kind: .destructive, fullWidth: true) {
+                        confirmingEndWorkout = true
+                    }
                 }
             }
         }

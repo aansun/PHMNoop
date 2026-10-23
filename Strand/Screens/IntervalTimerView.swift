@@ -272,12 +272,16 @@ struct IntervalTimerView: View {
                 toggleRunning()
             }
 
-            NoopButton("Reset", systemImage: "arrow.counterclockwise",
-                       kind: .secondary, fullWidth: true) {
-                stopAndReset()
+            // Reset is offered only while the timer is paused or finished, so a running one is not reset by a stray tap.
+            if !running {
+                NoopButton("Reset", systemImage: "arrow.counterclockwise",
+                           kind: .secondary, fullWidth: true) {
+                    stopAndReset()
+                }
+                .disabled(remaining == phaseDuration && currentRound == 1 && phase == .work && elapsed == 0)
             }
-            .disabled(!running && remaining == phaseDuration && currentRound == 1 && phase == .work && elapsed == 0)
         }
+        .animation(.easeInOut(duration: 0.2), value: running)
     }
 
     // MARK: Overview card — elapsed / planned
