@@ -470,8 +470,8 @@ struct NunaWorkoutStartView: View {
         ZStack {
             NunaPalette.shade.opacity(0.85).ignoresSafeArea()
             VStack(spacing: 16) {
-                Text(verbatim: "\(c)").font(.nuna(size: 120, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(120)).foregroundStyle(NunaPalette.textPrimary)
-                Button("Cancel") { countdown = nil }.font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: "\(c)").font(.nuna(size: 120, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(120)).foregroundStyle(NunaPalette.mapOverlayText)
+                Button("Cancel") { countdown = nil }.font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.mapOverlayText.opacity(0.8))
             }
         }
         .transition(.opacity)
