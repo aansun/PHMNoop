@@ -253,6 +253,10 @@ Anya reads your **computed scores, not raw data**, and answers in plain language
 
 ### Health and body
 
+<table>
+<tr>
+<td valign="top">
+
 - **Vital signs**: live heart rate on a timeline of the day, and your vitals against your own range. **Early warning** watches for a body under strain, without saying more than the numbers show.
 - **Fitness age** and its **pace of aging**, **weight** and body composition, **mood** check-ins, **menstrual cycle** and a rhythm view.
 - **Nutrition**: what is left to eat today in a ring, protein, carbs and fat against your targets, and a diary by meal. Add food by typing the numbers, from saved or recent foods, or by telling Anya (text or photo). **Strategy** sets a pace, a daily target and the macros,
@@ -261,16 +265,51 @@ Anya reads your **computed scores, not raw data**, and answers in plain language
   use the WHO reference when your report has none.
 - **Achievements**: a level, your data streak, your best and lowest days.
 
+</td>
+<td width="250" valign="top">
+
+<img src="docs/media/health.gif" alt="Fitness age, Nutrition and the Lab Book" width="230">
+
+</td>
+</tr>
+</table>
+
 ### The strap
+
+<table>
+<tr>
+<td valign="top">
 
 - A WHOOP-only **add-a-device** wizard (4.0 and 5.0 / MG) with a pairing checklist, and a **Status / Advanced** screen showing the link, battery and last sync.
 - Pairing a 5.0 / MG needs the strap freed from the official WHOOP app first; see [docs/IOS.md](docs/IOS.md).
 
+</td>
+<td width="250" valign="top">
+
+<img src="docs/media/strap.gif" alt="Devices and adding a WHOOP" width="230">
+
+</td>
+</tr>
+</table>
+
 ### Widgets, Live Activities and shortcuts
+
+<table>
+<tr>
+<td valign="top">
 
 - **Widgets**: Score, Rings, Vital sign, Heart rate, Stress, Anya, Steps and **Steps this week**. Every figure opens its own detail.
 - **Live Activities**: workout, lift session and strap sync, on the Lock Screen and in the Dynamic Island.
 - **Shortcuts and Siri**: mark a moment, buzz the strap, ask Anya, sync the strap. **Home Screen quick actions** open the main places directly.
+
+</td>
+<td width="250" valign="top">
+
+<img src="docs/media/live-activity.png" alt="The Banner Live Activity design" width="230">
+
+</td>
+</tr>
+</table>
 
 ### Connections
 
@@ -312,14 +351,17 @@ The **More** tab is the settings hub: grouped, with a profile on top, and every 
 
 </td>
 </tr>
+<tr>
+<td colspan="2" align="center">
+
+<sub>Experience switches the app between the original NOOP look and Nuna; Appearance picks a style (Default, WHP or Flow) and a theme (Light, Dark or Automatic).</sub>
+
+<img src="docs/media/experience.gif" alt="Switching the experience between Default and Nuna" width="210">
+<img src="docs/media/appearance.gif" alt="Style and theme in Appearance" width="210">
+
+</td>
+</tr>
 </table>
-
-**Experience and looks.** The first animation switches the app between the original NOOP look and Nuna; the second picks a style (Default, WHP or Flow) and a theme (Light, Dark or Automatic).
-
-<p align="center">
-  <img src="docs/media/experience.gif" alt="Switching the experience between Default and Nuna" width="230">
-  <img src="docs/media/appearance.gif" alt="Style and theme in Appearance" width="230">
-</p>
 
 ### Data and privacy
 
