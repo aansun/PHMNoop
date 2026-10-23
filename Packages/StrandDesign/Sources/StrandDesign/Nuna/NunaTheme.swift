@@ -65,9 +65,9 @@ public enum NunaPalette {
     public static let restText      = Color(light: "#007C90", dark: "#5CEFFF")
     public static let restLight     = Color(light: "#4FC3D6", dark: "#9BF4FF")   // REM
     public static let restDeep      = Color(light: "#00697A", dark: "#0093A8")   // deep sleep
-    public static var warning: Color { NunaThemePrefs.skin == .flow ? Color(light: "#8A5A00", dark: "#F0C060") : Color(light: "#C98A00", dark: "#FFB020") }
-    public static var alert: Color { NunaThemePrefs.skin == .flow ? Color(light: "#B42318", dark: "#FF8A7A") : Color(light: "#E0003C", dark: "#FF3366") }
-    public static var alertText: Color { NunaThemePrefs.skin == .flow ? Color(light: "#B42318", dark: "#FF8A7A") : Color(light: "#D0103C", dark: "#FF6B8E") }
+    public static var warning: Color { NunaThemePrefs.skin == .flow ? Color(light: "#C2410C", dark: "#FFB27A") : Color(light: "#C98A00", dark: "#FFB020") }
+    public static var alert: Color { NunaThemePrefs.skin == .flow ? Color(light: "#C4182B", dark: "#FF7A8A") : Color(light: "#E0003C", dark: "#FF3366") }
+    public static var alertText: Color { NunaThemePrefs.skin == .flow ? Color(light: "#C4182B", dark: "#FF7A8A") : Color(light: "#D0103C", dark: "#FF6B8E") }
 
     // Charge zones (low, mid, high) and Effort levels (minimal, moderate, all out) from the score guide: red, yellow and green for how ready the
     // body is; dark to light blue for how hard the day was.

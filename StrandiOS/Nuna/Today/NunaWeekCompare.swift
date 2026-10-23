@@ -47,12 +47,13 @@ struct NunaWeekCompare: View {
                         Text("No readings in the last 7 days yet").font(.nuna(size: 14, weight: .semibold))
                             .foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     } else {
-                        averages(days)
                         NunaCapsuleChart(start: days.first?.key ?? Repository.localDayKey(endDay), days: 7,
                                          charge: days.compactMap { s in charge[s.key].map { (s.key, $0) } },
                                          effort: days.compactMap { s in effort[s.key].map { (s.key, $0) } },
                                          effortScale: effortScale, selected: $selected, highlightLast: true)
                         NunaCapsuleLegend()
+                        NunaDivider()
+                        averages(days)
                     }
                 }
             }

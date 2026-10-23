@@ -22,7 +22,7 @@ struct NunaCapsuleChart: View {
     /// Stresses the newest day with a soft backdrop (the week on Today).
     var highlightLast = false
 
-    private let labelBand: CGFloat = 34
+    private let labelBand: CGFloat = 38
     private let axisBand: CGFloat = 24
     /// Room at both ends so the first and last Effort lines are not cut off.
     private let sidePad: CGFloat = 8
@@ -44,7 +44,8 @@ struct NunaCapsuleChart: View {
                 draw(&ctx, size: size, keys: ks, charge: cb, effort: eb, selected: sel)
             }
             .contentShape(Rectangle())
-            .gesture(selection(width: geo.size.width))
+            // Alongside the scroll view, not instead of it: a swipe that starts on the chart still scrolls the page.
+            .simultaneousGesture(selection(width: geo.size.width))
         }
         .frame(height: h)
         .accessibilityElement()
@@ -56,6 +57,8 @@ struct NunaCapsuleChart: View {
     private func selection(width: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 0).onChanged { v in
             guard let selected else { return }
+            // A mostly vertical drag is the page being scrolled, not a day being picked.
+            if abs(v.translation.height) > 10, abs(v.translation.height) > abs(v.translation.width) { return }
             let slot = (width - sidePad * 2) / CGFloat(max(days, 1))
             let i = Int(min(max((v.location.x - sidePad) / max(slot, 1), 0), CGFloat(days - 1)))
             let day = TrendInsights.shift(start, by: i)
@@ -124,14 +127,20 @@ struct NunaCapsuleChart: View {
         axis(&ctx, size: size, keys: keys, slot: slot, base: base)
     }
 
-    /// The two figures of a day: Charge in the text colour, Effort in its blue, stacked above the capsule.
+    /// The two figures of a day, stacked above the capsule. Both are written in the main text colour, so they read on any card; a dot in the
+    /// colour of the score (Charge's zone, Effort's blue) says which is which.
     private func figures(_ ctx: inout GraphicsContext, at cx: CGFloat, width: CGFloat, charge: Double?, effort: Double?) {
-        let x = min(max(cx, 20), width - 20)
         let cText = charge.map { "\(Int($0.rounded()))%" } ?? "–"
         let eText = effort.map { UnitFormatter.effortDisplay($0, scale: effortScale) } ?? "–"
-        ctx.draw(Text(verbatim: cText).font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textPrimary), at: CGPoint(x: x, y: 8), anchor: .center)
-        ctx.draw(Text(verbatim: eText).font(.nuna(size: 11, weight: .bold)).foregroundStyle(effort.map(nunaEffortColor) ?? NunaPalette.textMuted),
-                 at: CGPoint(x: x, y: 22), anchor: .center)
+        let rows: [(String, Color, CGFloat)] = [(cText, charge.map(zoneColor) ?? NunaPalette.textMuted, 9), (eText, effort.map(nunaEffortColor) ?? NunaPalette.textMuted, 25)]
+        for (text, dot, y) in rows {
+            let resolved = ctx.resolve(Text(verbatim: text).font(.nuna(size: 13, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary))
+            let w = resolved.measure(in: CGSize(width: 120, height: 20)).width
+            let total = w + 13
+            let left = min(max(cx - total / 2, 2), width - total - 2)
+            ctx.fill(Path(ellipseIn: CGRect(x: left, y: y - 3.5, width: 7, height: 7)), with: .color(dot))
+            ctx.draw(resolved, at: CGPoint(x: left + 13, y: y), anchor: .leading)
+        }
     }
 
     private func axis(_ ctx: inout GraphicsContext, size: CGSize, keys: [String], slot: CGFloat, base: CGFloat) {
