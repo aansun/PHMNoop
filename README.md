@@ -141,7 +141,7 @@ The Rest screen carries the whole night.
 - The **live screen** has an Effort tab with a target ring and a Heart rate tab with a disc that beats at your pace in the colour of your zone, a zone bar, and sport-specific tiles. The strap **buzzes when
   you drift out of your zone**, and a time or distance target is announced once.
 - It survives the app being away: the workout and its targets are saved as it runs.
-- **Live Activity** on the Lock Screen and in the Dynamic Island.
+- **Live Activity** on the Lock Screen and in the Dynamic Island. The Lock Screen has two designs, **Default** and **Banner** (the clock, the PHMN mark and the heart rate above; the five zones and two figures below, in the typeface of the reference), chosen in Optional features.
 
 </td>
 <td width="250" valign="top">
@@ -164,7 +164,7 @@ The Rest screen carries the whole night.
 - **Review it**: slide to say how it felt, add photos. They stay on the phone.
 - **Treadmill** sessions get a distance estimated from steps and your height, and **Edit activity** lets you correct distance, time and more afterwards.
 - **Auto-detect** offers a workout it found (and names a sport only on evidence), **Add activity** logs one by hand, **History** lists them by week, and **Training load** shows the balance of your last weeks.
-- Export a session as a FIT file or its route as GPX, or send it to Strava.
+- Export a session as a FIT file or its route as GPX, or send it to Strava; a gym session goes up as a strength activity with its sets, calories and heart rate.
 
 </td>
 <td width="250" valign="top">
@@ -186,6 +186,7 @@ A module of its own, in the style of Hevy.
 - **Programs** you can group into folders, built from a library of **876 exercises** with photos and the muscles each one works. Import a program from a spreadsheet, or save any finished session as one.
 - A **full-screen session** with sets, weight, reps, RPE, a rest timer and a tone when rest ends, and a Live Activity.
 - **The strap advances your sets**: double-tap to move on instead of reaching for the phone.
+- **During a session**: preview a program's exercises, replace one (for next time or for this session only), start from any exercise, continue on its own after the rest, add custom exercises, and keep the screen on; a session comes back after the app is closed. **Anya can build a program** from a target and your instructions.
 - **Muscle map**: a body map showing which muscles are recovering and which are ready, and sets per muscle.
 - **The summary**: Activity Effort and the **cardio / muscular split** against your usual sessions, key statistics for lifting (volume, sets, reps, duration, heart rate, calories), an **Exercises** tab where each
   exercise opens to its sets, its record and its demo, and a **Heart rate zones** tab. Personal records are flagged.
@@ -233,6 +234,7 @@ Anya reads your **computed scores, not raw data**, and answers in plain language
 
 ### Breathing and recovery
 
+- **Anya makes custom breathing exercises**, and the audio cue is off, soft tones or Anya's voice; the timer follows the clock, so it stays right with the screen locked.
 - A **breathing advisor** that picks a goal (calm, sleep, focus, energise, recover) and one of 15 templates from your live heart rate, HRV, stress, recovery and the time of day, on the phone, never a forceful technique on its own.
 - A session with haptics and a tone, and a report. **Wind down** for the evening, **smart alarm**, **nap detection**, and **hydration** with a quick-log amount you set.
 
