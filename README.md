@@ -226,11 +226,24 @@ A module of its own, in the style of Hevy.
 
 Anya reads your **computed scores, not raw data**, and answers in plain language. Tap an Anya card anywhere and a sheet opens on *that* figure, with a **Read** tab and an **Ask** tab.
 
+<table>
+<tr>
+<td valign="top">
+
 - **Bring your own provider and key**, run a local model, or use **Apple Intelligence** on the device. With none, Anya still writes her reads from rules on the phone.
 - She builds **the day's session** with the Effort it should earn, reads **weather and air** before an outdoor session, writes a **daily brief**, and keeps **memories** you can edit, pause or delete.
 - She says what a figure **means**, names a cause only as far as your numbers go, and gives no verdict without enough history.
 - **Log by talking**: tell her what you ate, in words or with a **photo**, and she estimates each item; you can change the name, calories, macros and portion before anything is added. Tell her your lab results, or attach a report (PDF, CSV or FHIR), and they
   come back as a card to check before they go into the Lab Book. On Nutrition she speaks up when the day runs over or short of your target, and she can suggest a **plan** from your own data and the WHO references; nothing changes until you apply it.
+
+</td>
+<td width="250" valign="top">
+
+<img src="docs/media/anya.gif" alt="Anya reading the day and the weather, planning a session, drawing a chart, building a gym program and logging a meal" width="230">
+
+</td>
+</tr>
+</table>
 
 ### Breathing and recovery
 

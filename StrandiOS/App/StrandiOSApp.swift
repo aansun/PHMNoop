@@ -823,6 +823,8 @@ enum DemoScreens {
         case "compare":  return AnyView(CompareView())
         case "settings": return AnyView(SettingsView())
         case "chargebreakdown": return AnyView(ChargeBreakdownDemoHost())
+        // Anya's action cards (chart, gym program, food) drawn from fixed replies, so a demo does not depend on a model answering.
+        case "anyareply": return AnyView(NunaAnyaReplyDemo())
         case "devices":  return AnyView(DevicesView())
         case "devicescatalog": return AnyView(DeviceCardCatalog())
         case "fitnessage": return AnyView(FitnessAgeDemoScreen())
@@ -865,5 +867,47 @@ private struct OuraOnboardingDemoHost: View {
         AddDeviceWizard(live: live, onClose: {}, startAt: (.oura, .prep))
     }
 
+}
+#endif
+
+#if DEBUG && os(iOS)
+/// DEBUG-only: `--demo-screen anyareply --demo-reply chart|program|food` shows one question and Anya's reply through the same `NunaAnyaReply` the chat uses.
+/// The chart is still drawn from the readings stored on the phone; only the model's answer is fixed.
+struct NunaAnyaReplyDemo: View {
+    private var kind: String {
+        let a = CommandLine.arguments
+        guard let i = a.firstIndex(of: "--demo-reply"), i + 1 < a.count else { return "chart" }
+        return a[i + 1]
+    }
+    private var script: (question: String, reply: String) {
+        switch kind {
+        case "program":
+            return ("Build me a 3 day gym program for strength.",
+                    "Here is a simple push, pull and legs split for three days a week. Save any day as a program.\n```anya-program\n{\"name\":\"Push, pull, legs\",\"note\":\"3 days a week\",\"days\":[{\"title\":\"Push\",\"items\":[{\"exercise\":\"Bench press\",\"sets\":4,\"repsLow\":6,\"repsHigh\":8,\"restSec\":120},{\"exercise\":\"Overhead press\",\"sets\":3,\"repsLow\":8,\"repsHigh\":10,\"restSec\":90},{\"exercise\":\"Triceps pushdown\",\"sets\":3,\"repsLow\":10,\"repsHigh\":12,\"restSec\":60}]},{\"title\":\"Pull\",\"items\":[{\"exercise\":\"Barbell row\",\"sets\":4,\"repsLow\":6,\"repsHigh\":8,\"restSec\":120},{\"exercise\":\"Lat pulldown\",\"sets\":3,\"repsLow\":8,\"repsHigh\":12,\"restSec\":90},{\"exercise\":\"Biceps curl\",\"sets\":3,\"repsLow\":10,\"repsHigh\":12,\"restSec\":60}]},{\"title\":\"Legs\",\"items\":[{\"exercise\":\"Back squat\",\"sets\":4,\"repsLow\":5,\"repsHigh\":8,\"restSec\":150},{\"exercise\":\"Romanian deadlift\",\"sets\":3,\"repsLow\":8,\"repsHigh\":10,\"restSec\":120},{\"exercise\":\"Calf raise\",\"sets\":3,\"repsLow\":12,\"repsHigh\":15,\"restSec\":60}]}]}\n```")
+        case "food":
+            return ("I had nasi goreng with a fried egg for lunch.",
+                    "Logged as an estimate for lunch: check the portion before you add it.\n```anya-food\n{\"meal\":\"lunch\",\"items\":[{\"name\":\"Nasi goreng\",\"amount\":\"1 plate\",\"kcal\":520,\"proteinG\":14,\"carbsG\":68,\"fatG\":21},{\"name\":\"Fried egg\",\"amount\":\"1\",\"kcal\":90,\"proteinG\":6,\"carbsG\":0,\"fatG\":7}]}\n```")
+        default:
+            return ("Show my Charge and Effort for the last 14 days as a chart.",
+                    "Here are your Charge and Effort over the last two weeks, drawn from your own readings.\n```anya-chart\n{\"title\":\"Charge and Effort, last 14 days\",\"metrics\":[\"recovery\",\"strain\"],\"days\":14}\n```")
+        }
+    }
+    var body: some View {
+        ZStack {
+            NunaPalette.canvas.ignoresSafeArea()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    HStack {
+                        Spacer(minLength: 56)
+                        Text(verbatim: script.question).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.onAccent)
+                            .padding(.horizontal, 16).padding(.vertical, 11).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    NunaAnyaReply(text: script.reply).frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .padding(.horizontal, 20).padding(.top, 70)
+            }
+        }
+        .toolbar(.hidden, for: .navigationBar)
+    }
 }
 #endif
