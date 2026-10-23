@@ -119,3 +119,17 @@ tools/linux-capture/*.db-wal
 tools/linux-capture/*.db-shm
 tools/linux-capture/captures/
 
+
+# ── Local only: AI-assistant instructions, design and planning notes, logo sources ──
+AGENTS.md
+CLAUDE.md
+.claude/
+NOOP_Live_Activity_Audio_Coaching_Blueprint.md
+docs/FLOW_THEME.md
+docs/WHOOP_Typography_Development_Guide.md
+docs/superpowers/
+docs/nuna/
+docs/design/
+# The AltStore source links this one icon by its raw URL, so it stays tracked.
+PHMN-icon/*
+!PHMN-icon/altstore-icon-512.png
