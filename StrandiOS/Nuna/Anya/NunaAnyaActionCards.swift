@@ -66,7 +66,7 @@ private struct NunaAnyaMetricChart: View {
                     if let m = metric, let last = pts.last { Text(verbatim: m.format(last.value)).font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary) }
                 }
                 if pts.count >= 2 {
-                    NunaSegmentedChart(points: pts, color: color, decimals: metric?.decimals ?? 0, band: series.band.map { $0.lo...$0.hi },
+                    NunaSegmentedChart(points: pts, color: color, decimals: metric?.decimals ?? 0, band: series.typicalRange,
                                        higherIsBetter: metric?.higherIsBetter ?? true, directional: metric?.higherIsBetter != nil, height: 190)
                 } else {
                     Text(series.loaded ? "No data in this period" : " ").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)

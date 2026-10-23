@@ -765,6 +765,10 @@ final class NunaSeriesModel: ObservableObject {
         return (m, sd, v.min() ?? m, v.max() ?? m)
     }
 
+    /// The typical range shaded behind a chart: the mean of the last 30 readings plus and minus one spread. It is the line the In range / Above range
+    /// chip is judged by, so a reading outside the shading always carries that chip and one inside it never does.
+    var typicalRange: ClosedRange<Double>? { band.map { ($0.mean - $0.sd)...($0.mean + $0.sd) } }
+
     /// Mean of the last 30 days that have a value, excluding the latest one.
     var baseline: Double? {
         let keys = byDay.keys.sorted().dropLast().suffix(30)

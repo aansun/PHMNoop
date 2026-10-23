@@ -33,7 +33,7 @@ struct NunaRestDetailView: View {
                 caption: "Average", unit: "%",
                 readings: { days, back in series.readings(days, endingDaysAgo: back) },
                 hasOlder: { start in series.byDay.keys.min().map { Repository.localDayKey(start) > $0 } ?? false },
-                loaded: series.loaded, band: series.band.map { $0.lo...$0.hi },
+                loaded: series.loaded, band: series.typicalRange,
                 lineColor: NunaPalette.rest, decimals: 0, directional: true,
                 levelChip: { v in (text: nunaRestWord(v), color: nunaRestTextColor(v)) },
                 sentence: nil, range: $range, page: $page)
