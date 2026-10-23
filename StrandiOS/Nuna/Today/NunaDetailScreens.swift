@@ -65,7 +65,7 @@ struct NunaChargeDetailView: View {
                 caption: "Average", unit: "%",
                 readings: { days, back in series.readings(days, endingDaysAgo: back) },
                 hasOlder: { start in series.byDay.keys.min().map { Repository.localDayKey(start) > $0 } ?? false },
-                loaded: series.loaded, band: series.band.map { $0.lo...$0.hi },
+                loaded: series.loaded, band: series.typicalRange,
                 lineColor: NunaPalette.charge, decimals: 0, directional: true,
                 levelChip: { v in (text: v >= 67 ? "Ready" : (v >= 34 ? "Moderate" : "Low"), color: nunaChargeTextColor(v)) },
                 sentence: nil, range: $range, page: $page)
@@ -941,7 +941,7 @@ struct NunaMetricDetailView: View {
                                              valueText: s.value.map { fmtShort($0) }, highlight: Calendar.current.isDateInToday(s.date))
                         }, color: NunaPalette.restText.opacity(0.85), highlightColor: NunaPalette.textPrimary)
                     } else {
-                        NunaLine2Chart(points: series.readings(range), color: lineColor, decimals: metric.decimals, baseline: series.baseline, band: series.band.map { $0.lo...$0.hi }, higherIsBetter: !["rhr", "resting_hr"].contains(metric.key))
+                        NunaLine2Chart(points: series.readings(range), color: lineColor, decimals: metric.decimals, baseline: series.baseline, band: series.typicalRange, higherIsBetter: !["rhr", "resting_hr"].contains(metric.key))
                     }
                 }
             }

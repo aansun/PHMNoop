@@ -82,7 +82,7 @@ struct NunaTrendDetailCard: View {
         self.readings = { series.readings($0, endingDaysAgo: $1) }
         self.hasOlder = { start in series.byDay.keys.min().map { Repository.localDayKey(start) > $0 } ?? false }
         self.loaded = series.loaded
-        self.band = showsBand ? series.band.map { $0.lo...$0.hi } : nil
+        self.band = showsBand ? series.typicalRange : nil
         self.reference = reference; self.referenceLabel = referenceLabel; self.lineColor = lineColor; self.decimals = decimals
         self.higherIsBetter = higherIsBetter; self.directional = directional
         self._range = range; self._page = page
