@@ -344,7 +344,6 @@ Needs a Mac with Xcode and [XcodeGen](https://github.com/yonaskolb/XcodeGen).
 3. Open `Strand.xcodeproj`, choose the **NOOPiOS** scheme and your iPhone, and run.
 
 To build an IPA yourself, archive without the Watch app, run `Tools/prepare-ios-sideload-app.sh` on the `.app` so the widget keeps its App Group request, and zip it as `Payload/PHMN.app`.
-Design notes for Nuna, the design language, are in [docs/nuna](docs/nuna).
 
 ## Status
 
