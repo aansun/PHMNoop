@@ -234,9 +234,22 @@ Anya reads your **computed scores, not raw data**, and answers in plain language
 
 ### Breathing and recovery
 
+<table>
+<tr>
+<td valign="top">
+
 - **Anya makes custom breathing exercises**, and the audio cue is off, soft tones or Anya's voice; the timer follows the clock, so it stays right with the screen locked.
 - A **breathing advisor** that picks a goal (calm, sleep, focus, energise, recover) and one of 15 templates from your live heart rate, HRV, stress, recovery and the time of day, on the phone, never a forceful technique on its own.
 - A session with haptics and a tone, and a report. **Wind down** for the evening, **smart alarm**, **nap detection**, and **hydration** with a quick-log amount you set.
+
+</td>
+<td width="250" valign="top">
+
+<img src="docs/media/breathing.gif" alt="A breathing session" width="230">
+
+</td>
+</tr>
+</table>
 
 ### Health and body
 
@@ -281,6 +294,7 @@ The **More** tab is the settings hub: grouped, with a profile on top, and every 
 "live activity" and it opens the right switch, and the ones you opened last are listed.
 
 - **Personalize**: **Devices** (the strap, its battery and last sync), **Achievements**, **Anya** (provider, key, memory and the morning brief) and **Appearance**.
+  - *Experience*: switch the whole app between the original NOOP look (**Default**) and **Nuna**, the redesign. Your data, scores and settings stay the same, and the switch reloads the app shell.
   - *Appearance*: three looks (Default, WHP and Flow) with their own typography; Flow is a warm cream-and-berry style with rounded shapes, Fraunces figures and Plus Jakarta Sans text, and follows Light, Dark or Automatic, **units** (metric or imperial, and Effort on 0 to 100 or WHOOP's 0 to 21), and the **language**, English or Indonesian, with Anya's reply language set on its own.
   - Your **persona** (age, height, weight, maximum heart rate), your **heart-rate zones** and your **targets**.
 - **Notifications and automation**
@@ -299,6 +313,13 @@ The **More** tab is the settings hub: grouped, with a profile on top, and every 
 </td>
 </tr>
 </table>
+
+**Experience and looks.** The first animation switches the app between the original NOOP look and Nuna; the second picks a style (Default, WHP or Flow) and a theme (Light, Dark or Automatic).
+
+<p align="center">
+  <img src="docs/media/experience.gif" alt="Switching the experience between Default and Nuna" width="230">
+  <img src="docs/media/appearance.gif" alt="Style and theme in Appearance" width="230">
+</p>
 
 ### Data and privacy
 
