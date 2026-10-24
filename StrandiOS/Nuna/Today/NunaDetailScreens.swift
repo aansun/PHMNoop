@@ -850,6 +850,8 @@ struct NunaMetricDetailView: View {
 
     @EnvironmentObject private var repo: Repository
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
+    /// Read here so the target on the page follows a change made under Targets in Persona.
+    @AppStorage(NunaGoals.steps) private var storedStepGoal = 0
     @StateObject private var series = NunaSeriesModel()
     @State private var range = 7
     @State private var page = 0
@@ -894,7 +896,7 @@ struct NunaMetricDetailView: View {
                 return d == 0 ? String(localized: "Same as yesterday")
                     : (d > 0 ? String(localized: "Up \(fmt(abs(d))) from yesterday") : String(localized: "Down \(fmt(abs(d))) from yesterday"))
             } },
-            series: series, reference: (metric.key == "steps" || metric.key == "steps_est") ? 10_000 : nil, referenceLabel: "Target",
+            series: series, reference: (metric.key == "steps" || metric.key == "steps_est") ? Double(NunaGoals.stepTarget(storedStepGoal)) : nil, referenceLabel: "Target",
             lineColor: lineColor, decimals: metric.decimals,
             higherIsBetter: metric.higherIsBetter ?? true, bars: isColumns, range: $range, page: $page)
         if coachEnabled, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
@@ -948,7 +950,7 @@ struct NunaMetricDetailView: View {
             if let avg = average(present) {
                 HStack(spacing: 12) {
                     if metric.key == "steps" || metric.key == "steps_est" {
-                        stat("Target", "10,000".replacingOccurrences(of: ",", with: AppLanguage.activeLocale.groupingSeparator ?? ","))
+                        stat("Target", NunaTrendsFormat.num(Double(NunaGoals.stepTarget(storedStepGoal))))
                         stat("Average", fmt(avg)); stat("Best", fmt(present.max() ?? avg))
                     } else {
                         stat("Average", fmt(avg)); stat("Lowest", fmt(present.min() ?? avg)); stat("Highest", fmt(present.max() ?? avg))
