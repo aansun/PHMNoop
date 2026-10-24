@@ -11,37 +11,34 @@ import StrandDesign
 struct SyncLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: SyncActivityAttributes.self) { context in
-            // Lock Screen presentation: glass. The background is left to the system's own material (no solid tint), so the wallpaper shows through and the
-            // card follows light and dark by itself; every colour here is a system one for the same reason. An icon and the status lead, then the two figures of
-            // a sync in tiles of their own.
+            // Lock Screen presentation: glass and small. The background is the system's own material (no solid tint), so the wallpaper shows through and the card
+            // follows light and dark by itself. One row carries all of it: the icon, the status, and the two figures of a sync at the right; the backlog, when the
+            // strap reported one, is a single line under it.
             let st = context.state
             let tint = glyphTint(st.phase)
-            VStack(alignment: .leading, spacing: 14) {
-                HStack(spacing: 12) {
-                    ZStack {
-                        Circle().fill(tint.opacity(0.22))
-                        Image(systemName: glyphName(st.phase)).font(.system(size: 17, weight: .bold)).foregroundStyle(tint)
-                    }
-                    .frame(width: 40, height: 40)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(verbatim: context.attributes.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(1).textCase(.uppercase)
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 10) {
+                    Image(systemName: glyphName(st.phase)).font(.system(size: 14, weight: .bold)).foregroundStyle(tint)
+                        .frame(width: 30, height: 30).background(tint.opacity(0.2), in: Circle())
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(verbatim: context.attributes.title).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.9).textCase(.uppercase)
                             .foregroundStyle(.secondary).lineLimit(1)
-                        Text(verbatim: st.status).font(.nuna(size: 22, weight: .bold, design: NunaType.design))
-                            .foregroundStyle(.primary).lineLimit(1).minimumScaleFactor(0.75)
+                        Text(verbatim: st.status).font(.nuna(size: 17, weight: .bold, design: NunaType.design))
+                            .foregroundStyle(.primary).lineLimit(1).minimumScaleFactor(0.7)
                     }
-                    Spacer(minLength: 0)
+                    Spacer(minLength: 6)
+                    if isActive(st.phase) {
+                        HStack(spacing: 14) {
+                            figure("CHUNKS", Text(verbatim: st.chunks > 0 ? "\(st.chunks)" : "···"), width: 58)
+                            figure("TIME", elapsed(since: st.startedAt), width: 50)
+                        }
+                    }
                 }
                 if let detail = st.detail {
-                    Text(verbatim: detail).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(.secondary).lineLimit(2)
-                }
-                if isActive(st.phase) {
-                    HStack(spacing: 10) {
-                        glassTile("CHUNKS", Text(verbatim: st.chunks > 0 ? "\(st.chunks)" : "···"))
-                        glassTile("TIME", elapsed(since: st.startedAt))
-                    }
+                    Text(verbatim: detail).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(.secondary).lineLimit(1)
                 }
             }
-            .padding(EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16))
+            .padding(EdgeInsets(top: 10, leading: 14, bottom: 10, trailing: 14))
             .activityBackgroundTint(nil)
             .activitySystemActionForegroundColor(Color.primary)
         } dynamicIsland: { context in
@@ -74,17 +71,14 @@ struct SyncLiveActivity: Widget {
     }
 }
 
-/// One figure on a soft glass tile: the label small above, the value large below.
-private func glassTile<V: View>(_ label: LocalizedStringKey, _ value: V) -> some View {
-    VStack(alignment: .leading, spacing: 3) {
-        Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.9).foregroundStyle(.secondary)
-        value.font(.nuna(size: 26, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(.primary)
+/// One figure: the label small above, the value below, in a fixed width so a ticking clock does not push the row about.
+private func figure<V: View>(_ label: LocalizedStringKey, _ value: V, width: CGFloat) -> some View {
+    VStack(alignment: .trailing, spacing: 0) {
+        Text(label).font(.nuna(size: 9.5, weight: .heavy)).tracking(0.6).foregroundStyle(.secondary).lineLimit(1).minimumScaleFactor(0.8)
+        value.font(.nuna(size: 19, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(.primary)
             .lineLimit(1).minimumScaleFactor(0.7)
     }
-    .frame(maxWidth: .infinity, alignment: .leading)
-    .padding(.horizontal, 14).padding(.vertical, 10)
-    .background(Color.primary.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Color.primary.opacity(0.10), lineWidth: 1))
+    .frame(width: width, alignment: .trailing)
 }
 
 private func isActive(_ phase: SyncActivityAttributes.Phase) -> Bool {
