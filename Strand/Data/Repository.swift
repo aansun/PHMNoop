@@ -2882,6 +2882,9 @@ final class Repository: ObservableObject {
         // #961: capture the injected profile ONCE (a Sendable scalar pair) so each child task can compute a
         // backfill strain off the main actor. nil ⇒ no fill, and the strain slot always comes back nil.
         let strainProfile = self.strainProfile
+        // The resting HR a backfilled Effort is scored against: the newest one the app has (the nightly mean on iOS), as the saved workouts and the day are,
+        // and not the scorer's default of 60.
+        let fillRestingHR = days.last(where: { $0.restingHr != nil })?.restingHr.map(Double.init) ?? StrainScorer.defaultRestingHR
         var reduced: [Int: (avg: Int, peak: Int, strain: Double?)] = [:]
         for chunkStart in stride(from: 0, to: eligibleIndices.count, by: readChunk) {
             let chunk = eligibleIndices[chunkStart..<min(chunkStart + readChunk, eligibleIndices.count)]
@@ -2925,7 +2928,7 @@ final class Repository: ObservableObject {
                             let samples = (try? await store.hrSamples(deviceId: hrIds[0],
                                                                       from: startTs, to: endTs,
                                                                       limit: 8000)) ?? []
-                            strain = StrainScorer.strain(samples, maxHR: p.hrMax,
+                            strain = StrainScorer.strain(samples, maxHR: p.hrMax, restingHR: fillRestingHR,
                                                 method: PuffinExperiment.effortMethod, sex: p.sex)
                         } else {
                             strain = nil
