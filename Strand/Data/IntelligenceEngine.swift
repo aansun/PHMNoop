@@ -595,7 +595,7 @@ final class IntelligenceEngine: ObservableObject {
     }
 
     /// The iPhone app scores a day against the mean resting HR of the main sleep; other platforms keep the floor.
-    static var usesSessionMeanRestingHR: Bool {
+    nonisolated static var usesSessionMeanRestingHR: Bool {
         #if os(iOS)
         return true
         #else
