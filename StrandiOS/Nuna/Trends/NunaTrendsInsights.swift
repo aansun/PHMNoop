@@ -1,5 +1,6 @@
 #if os(iOS)
 import SwiftUI
+import Charts
 import StrandDesign
 import StrandAnalytics
 import WhoopStore
@@ -242,10 +243,132 @@ final class NunaSignalStore: ObservableObject {
     }
 }
 
+/// The lines of Compare, each on its own 0 to 100 scale, with room for the axes and a touch that reads the real figure of every line for that day.
+struct NunaCompareChart: View {
+    struct Point { let day: String; let date: Date; let level: Double; let raw: Double }
+    struct Line: Identifiable {
+        let id: String; let title: String; let color: Color; let points: [Point]
+        let text: (Double) -> String
+        var faint = false
+    }
+    let lines: [Line]
+    let start: String
+    let days: Int
+    @Binding var selected: String?
+
+    private static func formatter(_ template: String) -> DateFormatter {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.timeZone = TimeZone(identifier: "UTC")
+        f.setLocalizedDateFormatFromTemplate(template); return f
+    }
+    private static let axisFormat = formatter("d MMM")
+    private static let readFormat = formatter("EEE d MMM")
+
+    private var startDate: Date { NunaDayFormat.parse(start) ?? Date() }
+    private var endDate: Date { startDate.addingTimeInterval(Double(max(days - 1, 1)) * 86_400) }
+    private var solid: [Line] { lines.filter { !$0.faint } }
+    private var selectedDate: Date? { selected.flatMap(NunaDayFormat.parse) }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            readout
+            chart
+        }
+    }
+
+    /// The day touched and each metric's figure for it; a hint until something is touched.
+    private var readout: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            if let d = selectedDate {
+                Text(verbatim: Self.readFormat.string(from: d)).font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.textSecondary)
+                ForEach(solid) { line in
+                    HStack(spacing: 8) {
+                        Circle().fill(line.color).frame(width: 10, height: 10)
+                        Text(verbatim: line.title).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                        Spacer()
+                        Text(verbatim: line.points.first { $0.day == selected }.map { line.text($0.raw) } ?? "–")
+                            .font(.nuna(size: 16, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
+                    }
+                }
+            } else {
+                Text("Touch the chart to read the figures").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: CGFloat(20 + 24 * max(solid.count, 1)), alignment: .topLeading)
+    }
+
+    private var chart: some View {
+        Chart {
+            ForEach(lines) { line in
+                ForEach(line.points, id: \.day) { p in
+                    LineMark(x: .value("Day", p.date), y: .value("Level", p.level * 100), series: .value("Metric", line.id))
+                        .foregroundStyle(line.color.opacity(line.faint ? 0.4 : 1))
+                        .lineStyle(StrokeStyle(lineWidth: line.faint ? 2 : 2.8, lineCap: .round, lineJoin: .round))
+                    if days <= 31, !line.faint {
+                        PointMark(x: .value("Day", p.date), y: .value("Level", p.level * 100)).symbolSize(16).foregroundStyle(line.color)
+                    }
+                }
+            }
+            if let d = selectedDate {
+                RuleMark(x: .value("Day", d)).foregroundStyle(NunaPalette.ink.opacity(0.35)).lineStyle(StrokeStyle(lineWidth: 1.5))
+                ForEach(solid) { line in
+                    if let p = line.points.first(where: { $0.day == selected }) {
+                        PointMark(x: .value("Day", p.date), y: .value("Level", p.level * 100)).symbolSize(90).foregroundStyle(line.color)
+                        PointMark(x: .value("Day", p.date), y: .value("Level", p.level * 100)).symbolSize(26).foregroundStyle(NunaPalette.card)
+                    }
+                }
+            }
+        }
+        // A little air above 100 and below 0, so the first and last points and the date labels never sit on the lines.
+        .chartYScale(domain: -8...108)
+        .chartXScale(domain: startDate...endDate)
+        .chartYAxis {
+            AxisMarks(position: .leading, values: [0, 25, 50, 75, 100]) { _ in
+                AxisGridLine().foregroundStyle(NunaPalette.ink.opacity(0.10))
+                AxisValueLabel().font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            }
+        }
+        .chartXAxis {
+            AxisMarks(values: .automatic(desiredCount: 5)) { value in
+                AxisGridLine().foregroundStyle(NunaPalette.ink.opacity(0.06))
+                AxisTick().foregroundStyle(NunaPalette.ink.opacity(0.25))
+                AxisValueLabel(anchor: .top) {
+                    if let d = value.as(Date.self) {
+                        Text(verbatim: Self.axisFormat.string(from: d)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize().padding(.top, 6)
+                    }
+                }
+            }
+        }
+        .chartPlotStyle { $0.padding(.horizontal, 8).padding(.top, 6).padding(.bottom, 4) }
+        .chartOverlay { proxy in
+            GeometryReader { geo in
+                Rectangle().fill(.clear).contentShape(Rectangle())
+                    // A tap picks a day and a sideways drag moves across them; a vertical swipe is left to the page.
+                    .simultaneousGesture(SpatialTapGesture().onEnded { pick(x: $0.location.x, proxy: proxy, geo: geo) })
+                    .simultaneousGesture(DragGesture(minimumDistance: 10).onChanged { v in
+                        guard abs(v.translation.width) > abs(v.translation.height) else { return }
+                        pick(x: v.location.x, proxy: proxy, geo: geo)
+                    })
+            }
+        }
+        .frame(height: 270)
+        .accessibilityLabel(Text("Compared"))
+    }
+
+    private func pick(x: CGFloat, proxy: ChartProxy, geo: GeometryProxy) {
+        guard let frame = proxy.plotFrame, let date: Date = proxy.value(atX: x - geo[frame].origin.x) else { return }
+        let i = Int(((date.timeIntervalSince(startDate)) / 86_400).rounded())
+        let day = TrendInsights.shift(start, by: min(max(i, 0), max(days - 1, 0)))
+        if selected != day { selected = day }
+    }
+}
+
 struct NunaCompareView: View {
     @EnvironmentObject private var repo: Repository
     @StateObject private var store = NunaSignalStore()
     @State private var picked: [String] = ["recovery", "sleep_performance"]
+    @State private var selectedDay: String?
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
     @State private var range = 30
     @State private var shiftBack = false
     @State private var saved: [SavedComparison] = SavedComparison.load()
@@ -280,40 +403,88 @@ struct NunaCompareView: View {
             savedSection
         }
         .task { for id in picked { if let s = NunaSignals.find(id) { await store.ensure(s, repo: repo) } } }
+        .onChange(of: range) { _, _ in selectedDay = nil }
     }
 
     private var pickerCard: some View {
         NunaCard {
             VStack(alignment: .leading, spacing: 12) {
                 HStack { nunaTrendsCap("Pick 2 to 4 metrics"); Spacer(); Text(verbatim: String(localized: "\(picked.count) picked")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
-                NunaFlowChips(items: NunaSignals.all.map(\.id)) { id in
-                    let on = picked.contains(id)
-                    Button {
-                        if on { if picked.count > 2 { picked.removeAll { $0 == id } } }
-                        else if picked.count < 4 { picked.append(id); if let s = NunaSignals.find(id) { Task { await store.ensure(s, repo: repo) } } }
-                    } label: {
-                        Text(verbatim: NunaSignals.find(id)?.title ?? id).font(.nuna(size: 13.5, weight: .bold))
-                            .foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 38)
-                            .background(on ? NunaPalette.accent : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: on ? 0 : 1))
-                    }.buttonStyle(.plain)
+                // Only what is being compared is shown; the rest of the catalogue is behind the menu.
+                NunaFlowChips(items: picked + (picked.count < 4 ? ["__add"] : [])) { id in
+                    if id == "__add" { addMenu } else { pickedChip(id) }
                 }
             }
         }
     }
 
+    private func pickedChip(_ id: String) -> some View {
+        let i = picked.firstIndex(of: id) ?? 0
+        return HStack(spacing: 8) {
+            Circle().fill(colors[i % colors.count]).frame(width: 10, height: 10)
+            Text(verbatim: NunaSignals.find(id)?.title ?? id).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            if picked.count > 2 {
+                Button { picked.removeAll { $0 == id }; selectedDay = nil } label: {
+                    Image(systemName: "xmark").font(.nuna(size: 11, weight: .heavy)).foregroundStyle(NunaPalette.textSecondary).frame(width: 22, height: 22)
+                }.buttonStyle(.plain).accessibilityLabel(Text("Remove"))
+            }
+        }
+        .padding(.leading, 14).padding(.trailing, picked.count > 2 ? 8 : 14).frame(height: 38)
+        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+    }
+
+    /// The metrics not yet picked, grouped as in Explore.
+    private var addMenu: some View {
+        let rest = NunaSignals.all.filter { !picked.contains($0.id) }
+        var groups: [String] = []
+        for sig in rest where !groups.contains(sig.group) { groups.append(sig.group) }
+        return Menu {
+            ForEach(groups, id: \.self) { g in
+                Section(LocalizedStringKey(g)) {
+                    ForEach(rest.filter { $0.group == g }) { sig in
+                        Button(sig.title) {
+                            picked.append(sig.id)
+                            Task { await store.ensure(sig, repo: repo) }
+                        }
+                    }
+                }
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Image(systemName: "plus").font(.nuna(size: 12, weight: .heavy))
+                Text("Add metric").font(.nuna(size: 13.5, weight: .bold))
+            }
+            .foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 14).frame(height: 38)
+            .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+        }
+    }
+
+    private var effortScale: EffortScale { EffortScale(rawValue: effortScaleRaw) ?? .hundred }
+
+    private func rawText(_ id: String, _ v: Double) -> String {
+        guard let sig = NunaSignals.find(id) else { return NunaTrendsFormat.num(v, 1) }
+        if id == "strain" { return UnitFormatter.effortDisplay(v, scale: effortScale) }
+        let n = NunaTrendsFormat.num(v, sig.digits)
+        return sig.unit.isEmpty ? n : (sig.unit == "%" ? n + "%" : n + " " + sig.unit)
+    }
+
     private var chartCard: some View {
-        // Each line is scaled to its own range in the window, so different units can share one box.
-        var lines: [NunaMultiLineChart.Line] = []
+        // Each line is scaled to its own range in the window, so different units can share one box; a touch reads the real figures.
+        var lines: [NunaCompareChart.Line] = []
         for (i, id) in picked.enumerated() {
             let w = window(id)
-            guard let lo = w.map(\.value).min(), let hi = w.map(\.value).max() else { continue }
+            guard let lo = w.map(\.value).min(), let hi = w.map(\.value).max(), let sig = NunaSignals.find(id) else { continue }
             let span = max(hi - lo, 0.0001)
-            lines.append(.init(series: w.map { ($0.day, ($0.value - lo) / span) }, max: 1, color: colors[i % colors.count]))
+            let pts: [NunaCompareChart.Point] = w.compactMap { r in NunaDayFormat.parse(r.day).map { .init(day: r.day, date: $0, level: (r.value - lo) / span, raw: r.value) } }
+            lines.append(.init(id: id, title: sig.title, color: colors[i % colors.count], points: pts, text: { rawText(id, $0) }))
             if shiftBack, i == 0 {
                 let p = window(id, back: range)
-                let shifted: NunaDaySeries = p.compactMap { r in TrendInsights.shift(r.day, by: range).map { ($0, (r.value - lo) / span) } }
-                lines.append(.init(series: shifted, max: 1, color: colors[0].opacity(0.35)))
+                let shifted: [NunaCompareChart.Point] = p.compactMap { r in
+                    guard let day = TrendInsights.shift(r.day, by: range), let d = NunaDayFormat.parse(day) else { return nil }
+                    return .init(day: day, date: d, level: (r.value - lo) / span, raw: r.value)
+                }
+                lines.append(.init(id: id + ".prev", title: sig.title, color: colors[0], points: shifted, text: { rawText(id, $0) }, faint: true))
             }
         }
         return NunaCard {
@@ -322,13 +493,7 @@ struct NunaCompareView: View {
                 if lines.isEmpty {
                     ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 140)
                 } else {
-                    NunaMultiLineChart(start: start, days: range, lines: lines, height: 160)
-                }
-                HStack(spacing: 14) {
-                    ForEach(Array(picked.enumerated()), id: \.offset) { i, id in
-                        HStack(spacing: 6) { RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(colors[i % colors.count]).frame(width: 14, height: 8)
-                            Text(verbatim: NunaSignals.find(id)?.title ?? id).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
-                    }
+                    NunaCompareChart(lines: lines, start: start, days: range, selected: $selectedDay)
                 }
             }
         }
