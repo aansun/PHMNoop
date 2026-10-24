@@ -59,6 +59,12 @@ enum NunaGoals {
     static let waterLitres = "nuna.goal.waterL"
     static let targetWeightKg = "nuna.goal.targetWeightKg"
 
+    /// The daily step target: the one set under Targets in Persona, or 10,000 until one is set. Every reader (the Steps pages, the widgets) goes through here,
+    /// so the line on a chart, the figure beside it and the widget's ring cannot name different targets.
+    static let defaultSteps = 10_000
+    static func stepTarget(_ stored: Int) -> Int { stored > 0 ? stored : defaultSteps }
+    static var stepTarget: Int { stepTarget(UserDefaults.standard.integer(forKey: steps)) }
+
     /// Health once kept its own weight target ("nuna.weightTarget"). Carry it into the shared one when that is still empty, then drop it.
     static func migrateWeightTarget() {
         let d = UserDefaults.standard

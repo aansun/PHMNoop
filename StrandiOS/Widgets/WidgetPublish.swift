@@ -234,10 +234,7 @@ extension WidgetSnapshot {
     }
 
     /// The daily step target the wearer set in Me, or 10,000 when none is set.
-    static var configuredStepGoal: Int {
-        let v = UserDefaults.standard.integer(forKey: "nuna.goal.steps")
-        return v > 0 ? v : 10_000
-    }
+    static var configuredStepGoal: Int { NunaGoals.stepTarget }
 
     /// Rest resolution shared in behavior with TodayView: today's value wins, otherwise the latest
     /// scored night is carried only while it is still fresh. The widget always represents today.
