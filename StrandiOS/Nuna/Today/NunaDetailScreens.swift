@@ -167,8 +167,15 @@ struct NunaEffortDetailView: View {
     @State private var range = 7
     @State private var page = 0
     @State private var showCoach = false
-    /// Today's heart-rate readings: what the Effort above was scored from, split by band in the card below it.
-    @State private var hrToday: [HRSample] = []
+    /// The day the rows under the ring describe: today until a bar of the chart is touched, then that day.
+    @State private var pickedDay: Date?
+    /// That day's heart-rate readings and the day before's (up to the same time of day while the day is today), for the time in each zone and its change.
+    @State private var hrDay: [HRSample] = []
+    @State private var hrBefore: [HRSample] = []
+    @State private var strengthDay: Double?
+    @State private var strengthBefore: Double?
+    @State private var restingDay: Double?
+    @State private var restingBefore: Double?
     @State private var todayWorkouts: [WorkoutRow] = []
 
     private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
@@ -200,6 +207,7 @@ struct NunaEffortDetailView: View {
                     return (text: stored < 33 ? "Light" : (stored < 66 ? "Moderate" : "High"), color: nunaEffortTextColor(stored))
                 }, sentence: nil, range: $range, page: $page)
                 .columns(color: { v in nunaEffortColor(scale == .whoop ? v / 21 * 100 : v) }, legend: AnyView(effortKey))
+                .selectingDay { pickedDay = $0 }
             NunaTodayActivities(workouts: todayWorkouts, effortScale: scale,
                                 dayStart: Calendar.current.startOfDay(for: Date()), sleepMinutes: nil,
                                 includesSleep: false)
@@ -211,81 +219,82 @@ struct NunaEffortDetailView: View {
             await day.load(repo: repo, profile: profile)
             await loadZones()
         }
+        .onChange(of: pickedDay) { _, _ in Task { await loadZones() } }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "Effort") }
     }
 
-    /// Today's readings, from midnight to now: the window the live Effort is scored over.
+    /// The readings, workouts and resting heart rate of the day on show and of the day before it. For today the day before is cut at the same time of day,
+    /// so the change compares like with like; for a past day it is the whole day before.
     private func loadZones() async {
         let cal = Calendar.current
         let now = Date()
-        let start = Int(cal.startOfDay(for: now).timeIntervalSince1970)
-        let nowTs = Int(now.timeIntervalSince1970)
-        hrToday = await repo.hrSamples(from: start, to: nowTs, limit: 200_000)
+        let dayStart = cal.startOfDay(for: pickedDay ?? now)
+        let isToday = cal.isDateInToday(dayStart)
+        let start = Int(dayStart.timeIntervalSince1970)
+        let end = isToday ? Int(now.timeIntervalSince1970) : Int((cal.date(byAdding: .day, value: 1, to: dayStart) ?? dayStart).timeIntervalSince1970)
+        let beforeStartDate = cal.date(byAdding: .day, value: -1, to: dayStart) ?? dayStart
+        let beforeStart = Int(beforeStartDate.timeIntervalSince1970)
+        let beforeEnd = beforeStart + (end - start)
+        hrDay = await repo.hrSamples(from: start, to: end, limit: 200_000)
+        hrBefore = await repo.hrSamples(from: beforeStart, to: beforeEnd, limit: 200_000)
         let rows = await repo.workoutRows()
-        todayWorkouts = rows.filter { $0.startTs >= start && $0.startTs <= nowTs }
+        if isToday { todayWorkouts = rows.filter { $0.startTs >= start && $0.startTs <= end } }
+        func strength(_ from: Int, _ to: Int) -> Double? {
+            let hit = rows.filter { $0.startTs >= from && $0.startTs < to && NunaWorkoutKind.isStrength($0) }
+            return hit.isEmpty ? nil : hit.reduce(0) { $0 + ($1.durationS ?? Double($1.endTs - $1.startTs)) } / 60
+        }
+        strengthDay = strength(start, end)
+        strengthBefore = strength(beforeStart, beforeStart + (end - start))
+        func resting(_ d: Date) -> Double? { repo.days.first { $0.day == Repository.localDayKey(d) }?.restingHr.map(Double.init) }
+        restingDay = resting(dayStart) ?? (isToday ? day.restingHr : nil)
+        restingBefore = resting(beforeStartDate)
     }
 
-    /// What the Effort is made of, in the terms it is scored in: the minutes spent in each band of the heart-rate reserve and the share of the
-    /// load each band added. The same inputs and arithmetic as the score (`StrainScorer.loadBreakdown`), so the rows explain the ring.
+    /// Time in the easy zones (1 to 3, 50–80% of the heart-rate reserve) and the hard ones (4 and 5, 80–100%), the same bands the Effort is scored in.
+    private func zoneMinutes(_ hr: [HRSample], resting: Double?) -> (easy: Double, hard: Double)? {
+        guard !hr.isEmpty else { return nil }
+        let maxHR = profile.age > 0 ? StrainScorer.tanakaHRmax(age: Double(profile.age)) : Double(StrainScorer.defaultMaxHR())
+        let t = HRZones.timeInZone(hr, zoneSet: .reserveBands(maxHR: maxHR, restingHR: resting ?? StrainScorer.defaultRestingHR))
+        return ((t.seconds[0] + t.seconds[1] + t.seconds[2]) / 60, (t.seconds[3] + t.seconds[4]) / 60)
+    }
+
+    /// What the day's heart-rate load is made of, as plain rows, each with the change against the day before. Touch a bar of the chart below and
+    /// the rows describe that day.
     @ViewBuilder private var zonesCard: some View {
-        let maxHR = profile.age > 0 ? StrainScorer.tanakaHRmax(age: Double(profile.age)) : nil
-        let resting = day.restingHr ?? StrainScorer.defaultRestingHR
-        if let b = StrainScorer.loadBreakdown(hrToday, maxHR: maxHR, restingHR: resting, method: PuffinExperiment.effortMethod, sex: profile.sex),
-           b.totalLoad > 0 {
-            let total = b.totalLoad
-            let shades: [Double] = [0.30, 0.45, 0.62, 0.80, 1.0]
-            NunaCard {
-                VStack(alignment: .leading, spacing: 14) {
-                    Text("What builds your Effort")
-                        .font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                    NunaProportionBar(parts: b.bands.indices.map { (b.bands[$0].load, NunaPalette.effortModerate.opacity(shades[$0])) }, height: 12)
-                    ForEach(b.bands.indices.reversed(), id: \.self) { k in
-                        let band = b.bands[k]
-                        HStack(spacing: 10) {
-                            RoundedRectangle(cornerRadius: 3).fill(NunaPalette.effortModerate.opacity(shades[k])).frame(width: 10, height: 10)
-                            VStack(alignment: .leading, spacing: 0) {
-                                Text(verbatim: "\(band.lowPct)–\(band.highPct)%").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                                Text(verbatim: "\(band.lowBPM)–\(band.highBPM) bpm").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                            }
-                            Spacer(minLength: 8)
-                            Text(verbatim: Self.hm(band.minutes)).font(.nuna(size: 15, weight: .bold, design: NunaType.design)).monospacedDigit()
-                                .foregroundStyle(NunaPalette.textPrimary).frame(minWidth: 44, alignment: .trailing)
-                            Text(verbatim: "\(Int((band.load / total * 100).rounded()))%").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).monospacedDigit()
-                                .foregroundStyle(NunaPalette.textSecondary).frame(minWidth: 44, alignment: .trailing)
-                        }
-                    }
-                    NunaDivider()
-                    HStack(alignment: .top, spacing: 0) {
-                        effortStat("Resting", "\(Int(b.restingHR.rounded()))")
-                        effortStat("Max", "\(Int(b.maxHR.rounded()))")
-                        effortStat("Peak", b.peakBPM.map(String.init) ?? "–")
-                        effortStat("Above 80%", Self.hm(b.minutesHard))
-                    }
-                    Text("Each minute counts 1 to 5 by band, and the sum is mapped on a logarithmic scale. Resting and max set the bands.")
-                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        .fixedSize(horizontal: false, vertical: true)
-                    if let ring = day.effort, abs(b.effort(sex: profile.sex) - ring) >= 2 {
-                        Text("The ring also includes Effort already counted earlier today.")
-                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-                    }
-                }
+        let cal = Calendar.current
+        let now = zoneMinutes(hrDay, resting: restingDay)
+        let before = zoneMinutes(hrBefore, resting: restingBefore)
+        VStack(alignment: .leading, spacing: 4) {
+            if let picked = pickedDay, !cal.isDateInToday(picked) {
+                Text(verbatim: Self.dayTitle(picked)).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.textSecondary).padding(.horizontal, 4)
             }
-        } else {
-            NunaCard(small: true) {
-                Text(hrToday.isEmpty ? "No heart-rate readings yet today." : "Not enough heart-rate readings yet to split the load.")
-                    .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    .frame(maxWidth: .infinity, alignment: .leading)
+            NunaPlainList {
+                NavigationLink { NunaEffortActivityDetailView(kind: .lowZones) } label: {
+                    zoneRow("Heart rate zones 1–3", "heart.circle", now.map { Self.hm($0.easy) }, (now != nil && before != nil) ? now!.easy - before!.easy : nil, downIsGood: false)
+                }.buttonStyle(.plain)
+                NunaDivider()
+                NavigationLink { NunaEffortActivityDetailView(kind: .highZones) } label: {
+                    zoneRow("Heart rate zones 4–5", "bolt.heart", now.map { Self.hm($0.hard) }, (now != nil && before != nil) ? now!.hard - before!.hard : nil, downIsGood: false)
+                }.buttonStyle(.plain)
+                NunaDivider()
+                NavigationLink { NunaEffortActivityDetailView(kind: .strength) } label: {
+                    zoneRow("Strength training time", "dumbbell", strengthDay.map(Self.hm), (strengthDay != nil && strengthBefore != nil) ? strengthDay! - strengthBefore! : nil, downIsGood: false)
+                }.buttonStyle(.plain)
+                NunaDivider()
+                zoneRow("Resting heart rate", "heart", restingDay.map { String(format: "%.0f", $0) },
+                        (restingDay != nil && restingBefore != nil) ? restingDay! - restingBefore! : nil, downIsGood: true)
             }
         }
     }
 
-    private func effortStat(_ label: LocalizedStringKey, _ value: String) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            Text(label).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                .lineLimit(1).minimumScaleFactor(0.7)
-            Text(verbatim: value).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
+    private func zoneRow(_ title: LocalizedStringKey, _ icon: String, _ value: String?, _ delta: Double?, downIsGood: Bool?) -> some View {
+        NunaContributorRow(title: title, icon: icon, value: value, delta: delta, downIsGood: downIsGood)
+    }
+
+    private static func dayTitle(_ d: Date) -> String {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEEE d MMM")
+        return f.string(from: d)
     }
 
     /// Minutes as h:mm.
@@ -786,7 +795,11 @@ struct NunaEffortActivityDetailView: View {
     private func zoneMinutes(for days: [Date]) async -> [Date: [Double]] {
         let cal = Calendar.current
         let now = Int(Date().timeIntervalSince1970)
-        let zoneSet = profile.hrZoneSet
+        // The zones are the bands the Effort is scored in (50–60 … 90–100% of the heart-rate reserve), each day against its own resting heart rate,
+        // so the time here agrees with the rows on the Effort page.
+        let maxHR = profile.age > 0 ? StrainScorer.tanakaHRmax(age: Double(profile.age)) : Double(StrainScorer.defaultMaxHR())
+        let restingByDay = Dictionary(repo.days.compactMap { d in d.restingHr.map { (d.day, Double($0)) } }, uniquingKeysWith: { _, l in l })
+        let latestResting = repo.days.last(where: { $0.restingHr != nil })?.restingHr.map(Double.init) ?? StrainScorer.defaultRestingHR
         var out: [Date: [Double]] = [:]
         await withTaskGroup(of: (Date, [Double]).self) { group in
             var running = 0
@@ -795,9 +808,10 @@ struct NunaEffortActivityDetailView: View {
                 let from = Int(day.timeIntervalSince1970)
                 let nextDay = Int((cal.date(byAdding: .day, value: 1, to: day) ?? day).timeIntervalSince1970)
                 guard from < now else { out[day] = [Double](repeating: 0, count: 5); continue }
+                let resting = restingByDay[Repository.localDayKey(day)] ?? latestResting
                 group.addTask { [repo] in
                     let samples = await repo.hrSamples(from: from, to: min(nextDay - 1, now), limit: 200_000)
-                    let minutes = HRZones.timeInZone(samples, zoneSet: zoneSet).seconds.map { $0 / 60 }
+                    let minutes = HRZones.timeInZone(samples, zoneSet: .reserveBands(maxHR: maxHR, restingHR: resting)).seconds.map { $0 / 60 }
                     return (day, minutes)
                 }
                 running += 1

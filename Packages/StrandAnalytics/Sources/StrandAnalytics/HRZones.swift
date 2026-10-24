@@ -57,6 +57,18 @@ public struct HRZoneSet: Equatable, Sendable {
         self.source = source
     }
 
+    /// The five zones as the Effort scores them: Zone 1 to 5 are 50–60, 60–70, 70–80, 80–90 and 90–100% of the heart-rate RESERVE
+    /// (maximum minus resting), so a minute in Zone n is a minute of weight n in the Effort. `lowerPct`/`upperPct` are fractions of the reserve.
+    /// Unlike the %HRmax zones above, these move with the resting heart rate. `source` is "reserve".
+    public static func reserveBands(maxHR: Double, restingHR: Double) -> HRZoneSet {
+        let reserve = max(maxHR - restingHR, 1)
+        let zones = (0..<5).map { k -> HRZone in
+            let lo = 0.5 + 0.1 * Double(k), hi = lo + 0.1
+            return HRZone(number: k + 1, lower: restingHR + reserve * lo, upper: restingHR + reserve * hi, lowerPct: lo, upperPct: hi)
+        }
+        return HRZoneSet(zones: zones, maxHR: maxHR, source: "reserve")
+    }
+
     /// Return the zone number (1...5) for a bpm value, or 0 when below Zone 1.
     public func zoneNumber(forBPM bpm: Double) -> Int {
         for z in zones {

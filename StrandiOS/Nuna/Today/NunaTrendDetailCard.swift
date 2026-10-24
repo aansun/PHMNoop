@@ -63,6 +63,11 @@ struct NunaTrendDetailCard: View {
 
     func footer(_ view: AnyView) -> Self { var c = self; c.chartFooter = view; return c }
 
+    /// Makes the week's columns touchable: a tap picks that day (a second tap on it lets go) and `f` hears which, or nil. A change of period lets go too.
+    func selectingDay(_ f: @escaping (Date?) -> Void) -> Self { var c = self; c.onSelectDay = f; return c }
+    var onSelectDay: ((Date?) -> Void)?
+    @State private var pickedDay: Date?
+
     private var showsDay: Bool { dayView != nil && range == 1 }
 
     /// Draws the week as labelled columns instead of the line.
@@ -120,6 +125,18 @@ struct NunaTrendDetailCard: View {
         let vals = pts.map(\.value)
         let avg = average(vals)
         let prev = average(readings(range, (page + 1) * range).map(\.value))
+        card(pts: pts, vals: vals, avg: avg, prev: prev)
+            .onChange(of: range) { _, _ in letGoOfDay() }
+            .onChange(of: page) { _, _ in letGoOfDay() }
+    }
+
+    private func letGoOfDay() {
+        guard pickedDay != nil else { return }
+        pickedDay = nil
+        onSelectDay?(nil)
+    }
+
+    @ViewBuilder private func card(pts: [(date: Date, value: Double)], vals: [Double], avg: Double?, prev: Double?) -> some View {
         NunaCard {
             VStack(alignment: .leading, spacing: 14) {
                 header(avg: avg, prev: prev)
@@ -187,9 +204,15 @@ struct NunaTrendDetailCard: View {
             NunaColumns(items: days.map { d in
                 let v = byDay[d]
                 return NunaColumns.Item(weekday: Self.weekday(d), date: d, fraction: v.map { $0 / top },
-                                        valueText: v.map { Self.shortValue($0, decimals: decimals) }, highlight: cal.isDateInToday(d),
+                                        valueText: v.map { Self.shortValue($0, decimals: decimals) },
+                                        highlight: pickedDay.map { cal.isDate($0, inSameDayAs: d) } ?? cal.isDateInToday(d),
                                         color: v.flatMap { columnColor?($0) })
-            }, color: lineColor.opacity(0.85), highlightColor: NunaPalette.textPrimary, target: reference.map { $0 / top })
+            }, color: lineColor.opacity(0.85), highlightColor: NunaPalette.textPrimary, target: reference.map { $0 / top },
+               onSelect: onSelectDay == nil ? nil : { d in
+                   let same = pickedDay.map { cal.isDate($0, inSameDayAs: d) } ?? false
+                   pickedDay = same ? nil : d
+                   onSelectDay?(same ? nil : d)
+               })
         } else {
             Chart {
                 ForEach(Array(pts.enumerated()), id: \.offset) { _, p in
