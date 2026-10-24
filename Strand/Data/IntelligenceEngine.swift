@@ -594,6 +594,15 @@ final class IntelligenceEngine: ObservableObject {
         if !computing { UserDefaults.standard.set(true, forKey: Self.effortRescoreFlagKey) }
     }
 
+    /// The iPhone app scores a day against the mean resting HR of the main sleep; other platforms keep the floor.
+    static var usesSessionMeanRestingHR: Bool {
+        #if os(iOS)
+        return true
+        #else
+        return false
+        #endif
+    }
+
     /// Rebuild today's measured WHOOP step total directly from the active strap's counter samples.
     ///
     /// WHOOP 5/MG exposes steps as a cumulative counter stream, not as an imported daily metric. A
@@ -1479,7 +1488,9 @@ final class IntelligenceEngine: ObservableObject {
                                                      // ring buffer isn't flooded; every night keeps the summary.
                                                      hrvWindowDetail: dayStart == nowLocalMidnight,
                                                      deepHrvWindow: deepHrvWindow,
-                                                     effortMethod: effortMethodGlobal)
+                                                     effortMethod: effortMethodGlobal,
+                                                     // iPhone: the day is scored against the mean resting HR of the main sleep, the same figure the app shows.
+                                                     useSessionMeanRestingHR: Self.usesSessionMeanRestingHR)
                 dayScoreSeconds += Date().timeIntervalSince(tScore0)
                 // #195: whole-night HRV cleaning-pipeline summary for the always-on strap log, so a "reads ~2x
                 // too high" report is triageable without the HRV test mode: RMSSD vs SDNN (rmssd >> sdnn =
@@ -1884,15 +1895,8 @@ final class IntelligenceEngine: ObservableObject {
                                  detectionFunnel: res.detectionFunnel))
         }
 
-        // iOS headline RHR uses the validated primary-session mean. Keep this override in the app
-        // layer so the shared analytics core and the Android implementation remain unchanged.
-        #if os(iOS)
-        for day in primarySessionRHRByDay.keys {
-            if let value = primarySessionRHRByDay[day] {
-                nightlyRhrByDay[day] = value
-            }
-        }
-        #endif
+        // On iOS the core already returns the primary-session mean as `daily.restingHr` (`useSessionMeanRestingHR`), so `nightlyRhrByDay`
+        // above, the baseline seeded from it and the day's Effort all use the same figure; nothing is swapped in afterwards.
 
         markPostLoopPhase("dayReplay")
         // ── Seed the baseline from the UNION of imported nightly history + the values just computed.
@@ -2136,11 +2140,6 @@ final class IntelligenceEngine: ObservableObject {
             let editsByStart = Dictionary(dayEditedRows.map { ($0.startTs, $0) }, uniquingKeysWith: { a, _ in a })
             var daily = sleepEditedDaily(night.daily, detected: night.cachedSleep, editsByStart: editsByStart,
                                          habitualMidsleepSec: habitualMidsleepSec)
-            #if os(iOS)
-            if let primaryMean = primarySessionRHRByDay[daily.day] {
-                daily = daily.with(restingHr: Int(primaryMean.rounded()))
-            }
-            #endif
             daily = DayCycleIntelligenceIntegration.applying(physiologicalSteps, to: daily)
             daily = Self.recomputeRecoveryDaily(daily, nightlySkinTempC: night.nightlySkin,
                                                baselines: baselines2)

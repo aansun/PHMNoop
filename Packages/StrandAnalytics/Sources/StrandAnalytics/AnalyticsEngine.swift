@@ -476,7 +476,12 @@ public enum AnalyticsEngine {
                                   // %HRR with no floor. Threaded rather than read from a global so this
                                   // stays a pure function, and defaulted so every existing caller and
                                   // test is byte-identical.
-                                  effortMethod: StrainScorer.Method = .edwards) -> DayResult {
+                                  effortMethod: StrainScorer.Method = .edwards,
+                                  // true: the day's resting HR is the MEAN of the primary sleep session (see `primarySessionRestingHR`) instead of the
+                                  // lowest session floor, and everything that reads it follows: the day's Effort, its calories, the workout detector, the
+                                  // Charge recompute and `daily.restingHr`. false (the default) is the floor, byte-identical to before; the iPhone app is the only caller that
+                                  // sets it. When no session clears the mean's coverage gate the floor is used, so a night is never left without one.
+                                  useSessionMeanRestingHR: Bool = false) -> DayResult {
 
         // Precompute the day's UTC bounds ONCE (#996). `dayString(ts, offsetSec:)` formats the UTC
         // calendar day of (ts + offset) with a FIXED offset, so "== day" is exactly membership in
@@ -704,7 +709,10 @@ public enum AnalyticsEngine {
         // call site" a scattered filter invites.
         let physiologyOnly = matched.filter { !$0.hrOnly }
         let physiologySessions = physiologyOnly.isEmpty ? matched : physiologyOnly
-        let restingHRDaily = physiologySessions.compactMap { $0.restingHR }.min()
+        let restingHRFloor = physiologySessions.compactMap { $0.restingHR }.min()
+        let restingHRDaily: Int? = useSessionMeanRestingHR
+            ? (primarySessionRestingHR(sessions: matched, hr: hr).map { Int($0.rounded()) } ?? restingHRFloor)
+            : restingHRFloor
         // Daily avg HRV = in-bed-weighted mean of per-session avg HRV.
         let avgHRVDaily: Double? = {
             if deepHrvWindow {
