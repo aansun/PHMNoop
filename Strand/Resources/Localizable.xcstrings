@@ -6254,6 +6254,9 @@
         "Banner: the clock, the PHMN mark and the heart rate on top; the five zones and two figures below.": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Banner: jam, logo PHMN, dan detak jantung di atas; lima zona dan dua angka di bawah."}}
         } },
+        "Touch the chart to read the figures": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sentuh grafik untuk membaca angkanya"}}
+        } },
         "Charge and Rest": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Charge dan Rest"}}
         } },
@@ -36712,6 +36715,12 @@
     },
     "Add metric": {
       "localizations": {
+        "id": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tambah metrik"
+          }
+        },
         "de": {
           "stringUnit": {
             "state": "translated",
