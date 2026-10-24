@@ -355,30 +355,31 @@ struct NunaTrendsView: View {
     private var sinceCard: some View {
         let c = m.means(m.charge, days: range, back: back), e = m.means(m.effort, days: range, back: back), r = m.means(m.rest, days: range, back: back)
         return NunaCard {
-            VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 20) {
                 nunaTrendsCap("Against the previous period")
-                since("Charge", c, NunaScoreStyle.chargeSeries, { NunaTrendsFormat.num($0, 1) + "%" }, 100)
-                since("Effort", e, NunaScoreStyle.effortSeries, { $0.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–" }, 100)
-                since("Rest", r, NunaScoreStyle.restSeries, { NunaTrendsFormat.num($0, 1) + "%" }, 100)
-                HStack(spacing: 16) {
-                    HStack(spacing: 6) { RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.ink).frame(width: 14, height: 8); Text("This period") }
-                    HStack(spacing: 6) { RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.ink.opacity(0.3)).frame(width: 14, height: 5); Text("Previous period") }
-                }
-                .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                since("Charge", .charge, c, { NunaTrendsFormat.num($0, 1) + "%" })
+                since("Effort", .effort, e, { $0.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–" })
+                since("Rest", .rest, r, { NunaTrendsFormat.num($0, 1) + "%" })
             }
         }
     }
 
-    private func since(_ title: LocalizedStringKey, _ v: (now: Double?, before: Double?), _ color: Color, _ fmt: (Double?) -> String, _ top: Double) -> some View {
-        VStack(spacing: 8) {
-            HStack {
-                Text(title).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+    /// One score: its name and this period's figure over a thick bar, then the earlier period's figure over a thinner, softer one. Every bar is painted the way
+    /// the ring of that score is on Today. Charge and Rest are percentages and Effort is on the stored 0 to 100 axis, so one bar scale fits all three.
+    private func since(_ title: LocalizedStringKey, _ kind: NunaTrendsMetricKind, _ v: (now: Double?, before: Double?), _ fmt: @escaping (Double?) -> String) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(title).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 Spacer()
-                Text(verbatim: fmt(v.now)).font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                Text(verbatim: "vs " + fmt(v.before).replacingOccurrences(of: "%", with: "")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                Text(verbatim: fmt(v.now)).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
             }
-            NunaProgressBar(fraction: (v.now ?? 0) / top, color: color)
-            NunaProgressBar(fraction: (v.before ?? 0) / top, color: NunaPalette.ink.opacity(0.3)).frame(height: 5)
+            NunaPeriodBar(fraction: (v.now ?? 0) / 100, colors: nunaPeriodColors(kind, v.now))
+            HStack(alignment: .firstTextBaseline) {
+                Text("Previous period").font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                Spacer()
+                Text(verbatim: fmt(v.before)).font(.nuna(size: 13, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textSecondary)
+            }
+            NunaPeriodBar(fraction: (v.before ?? 0) / 100, colors: nunaPeriodColors(kind, v.before), soft: true, height: 12)
         }
     }
 

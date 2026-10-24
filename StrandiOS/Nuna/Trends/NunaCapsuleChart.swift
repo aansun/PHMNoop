@@ -44,8 +44,12 @@ struct NunaCapsuleChart: View {
                 draw(&ctx, size: size, keys: ks, charge: cb, effort: eb, selected: sel)
             }
             .contentShape(Rectangle())
-            // Alongside the scroll view, not instead of it: a swipe that starts on the chart still scrolls the page.
-            .simultaneousGesture(selection(width: geo.size.width))
+            // A tap picks a day, a sideways drag moves across them, and a vertical swipe is left to the page, which keeps scrolling when it starts on the chart.
+            .simultaneousGesture(SpatialTapGesture().onEnded { pick(x: $0.location.x, width: geo.size.width) })
+            .simultaneousGesture(DragGesture(minimumDistance: 10).onChanged { v in
+                guard abs(v.translation.width) > abs(v.translation.height) else { return }
+                pick(x: v.location.x, width: geo.size.width)
+            })
         }
         .frame(height: h)
         .accessibilityElement()
@@ -54,16 +58,12 @@ struct NunaCapsuleChart: View {
 
     // MARK: Touch
 
-    private func selection(width: CGFloat) -> some Gesture {
-        DragGesture(minimumDistance: 0).onChanged { v in
-            guard let selected else { return }
-            // A mostly vertical drag is the page being scrolled, not a day being picked.
-            if abs(v.translation.height) > 10, abs(v.translation.height) > abs(v.translation.width) { return }
-            let slot = (width - sidePad * 2) / CGFloat(max(days, 1))
-            let i = Int(min(max((v.location.x - sidePad) / max(slot, 1), 0), CGFloat(days - 1)))
-            let day = TrendInsights.shift(start, by: i)
-            if selected.wrappedValue != day { selected.wrappedValue = day }
-        }
+    private func pick(x: CGFloat, width: CGFloat) {
+        guard let selected else { return }
+        let slot = (width - sidePad * 2) / CGFloat(max(days, 1))
+        let i = Int(min(max((x - sidePad) / max(slot, 1), 0), CGFloat(days - 1)))
+        let day = TrendInsights.shift(start, by: i)
+        if selected.wrappedValue != day { selected.wrappedValue = day }
     }
 
     // MARK: Drawing

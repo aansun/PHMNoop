@@ -292,4 +292,35 @@ func nunaRuledHeader(_ title: LocalizedStringKey, count: Int? = nil) -> some Vie
 
 /// Charge zone colour (green 67+, yellow 34 to 66, red below).
 func nunaZoneColor(_ v: Double) -> Color { nunaChargeColor(v) }
+
+/// The colours a score has on its ring in Today, for a bar that shows the same value: Charge by its zone, Effort from dark to light blue up to its level
+/// (`value` on the stored 0 to 100 axis), Rest by how well the night went.
+func nunaPeriodColors(_ kind: NunaTrendsMetricKind, _ value: Double?) -> [Color] {
+    guard let value else { return [NunaPalette.ink.opacity(0.2)] }
+    switch kind {
+    case .charge: let c = nunaChargeColor(value); return [c.opacity(0.55), c]
+    case .effort: return nunaEffortRingColors(value)
+    case .rest: let c = nunaRestColor(value); return [c.opacity(0.55), c]
+    }
+}
+
+/// A thick capsule bar on a faint track, filled with a gradient. `soft` dims it, for the earlier of two periods.
+struct NunaPeriodBar: View {
+    let fraction: Double
+    let colors: [Color]
+    var soft = false
+    var height: CGFloat = 24
+    var body: some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(NunaPalette.ink.opacity(0.09))
+                Capsule().fill(LinearGradient(colors: colors.count > 1 ? colors : colors + colors, startPoint: .leading, endPoint: .trailing))
+                    .frame(width: max(height * 0.6, geo.size.width * CGFloat(min(max(fraction, 0), 1))))
+                    .opacity(soft ? 0.6 : 1)
+            }
+        }
+        .frame(height: height)
+        .accessibilityHidden(true)
+    }
+}
 #endif
