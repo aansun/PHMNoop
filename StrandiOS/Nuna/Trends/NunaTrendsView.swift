@@ -264,8 +264,8 @@ struct NunaTrendsView: View {
                         }
                         .contentShape(Rectangle())
                     }.buttonStyle(.plain)
-                    NunaMultiLineChart(start: windowStart, days: range, lines: [.init(series: rs, max: 100, color: NunaScoreStyle.restSeries, pointColor: nunaRestColor, dashed: true, title: String(localized: "Rest"), text: { "\(Int($0.rounded()))%" }), .init(series: ch, max: 100, color: NunaScoreStyle.chargeSeries, pointColor: nunaChargeColor, title: String(localized: "Charge"), text: { "\(Int($0.rounded()))%" })], height: 110)
-                    HStack(spacing: 14) { NunaLegendItem(color: NunaScoreStyle.chargeSeries, text: "Charge"); NunaLegendItem(color: NunaScoreStyle.restSeries, text: "Rest", dashed: true) }
+                    NunaMultiLineChart(start: windowStart, days: range, lines: [.init(series: rs, max: 100, color: NunaScoreStyle.pairBlue, dashed: true, title: String(localized: "Rest"), text: { "\(Int($0.rounded()))%" }), .init(series: ch, max: 100, color: NunaScoreStyle.pairGrey, title: String(localized: "Charge"), text: { "\(Int($0.rounded()))%" })], height: 110)
+                    HStack(spacing: 14) { NunaLegendItem(color: NunaScoreStyle.pairGrey, text: "Charge"); NunaLegendItem(color: NunaScoreStyle.pairBlue, text: "Rest", dashed: true) }
                     if let hi = b[2].meanOutcome, let lo = b[0].meanOutcome {
                         insightRow("moon", Text("Nights with Rest above 86% are followed by Charge \(Int(hi.rounded()))%, versus \(Int(lo.rounded()))% when Rest is below 78%."))
                     }

@@ -385,7 +385,7 @@ struct NunaCompareView: View {
         static func store(_ v: [SavedComparison]) { if let d = try? JSONEncoder().encode(v) { UserDefaults.standard.set(d, forKey: key) } }
     }
 
-    private var colors: [Color] { [NunaScoreStyle.chargeSeries, NunaPalette.restLight, NunaScoreStyle.effortSeries, NunaPalette.warning] }
+    private var colors: [Color] { [NunaScoreStyle.pairGrey, NunaScoreStyle.pairBlue, NunaPalette.warning, NunaPalette.alertText] }
     private var start: String { TrendInsights.shift(today, by: -(range - 1)) ?? today }
 
     private func window(_ id: String, back: Int = 0) -> NunaDaySeries {
