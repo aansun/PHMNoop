@@ -24,6 +24,13 @@ struct NunaRestDetailView: View {
 
     private var rest: Double? { model.value("sleep_performance") ?? series.latest?.value }
 
+    /// How many days before today the night on show ended, so the trend card below ends on that morning.
+    private var nightDaysAgo: Int {
+        guard let n = model.night else { return router.todayDayOffset }
+        let cal = Calendar.current
+        return max(0, cal.dateComponents([.day], from: cal.startOfDay(for: n.wakeDate), to: cal.startOfDay(for: Date())).day ?? 0)
+    }
+
     var body: some View {
         NunaDetailScreen(title, trailing: AnyView(settingsButton)) {
             if model.loaded, model.nights.count > 1 { NunaNightPicker(model: model) }
@@ -39,6 +46,7 @@ struct NunaRestDetailView: View {
                 levelChip: { v in (text: nunaRestWord(v), color: nunaRestTextColor(v)) },
                 sentence: nil, range: $range, page: $page)
                 .columns(color: nunaRestColor, top: 100, legend: AnyView(restKey))
+                .endingOn(daysAgo: nightDaysAgo)
             if let night = model.night {
                 NunaSleepNightSections(model: model, night: night, showsNeed: false)
                 // After the Body clock card, which closes the night sections.

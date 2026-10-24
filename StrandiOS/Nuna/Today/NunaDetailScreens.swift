@@ -75,6 +75,7 @@ struct NunaChargeDetailView: View {
                 levelChip: { v in (text: v >= 67 ? "Ready" : (v >= 34 ? "Moderate" : "Low"), color: nunaChargeTextColor(v)) },
                 sentence: nil, range: $range, page: $page)
                 .columns(color: nunaChargeColor, top: 100, legend: AnyView(zoneKey))
+                .endingOn(daysAgo: router.todayDayOffset)
             NunaExpandRow(title: "How it's calculated", subtitle: "Three signals, against your own baseline",
                           text: "Charge compares last night's heart rate variability, resting heart rate and sleep with your own baseline from the last 30 days. It is an estimate computed on this phone from your strap's data.")
         }
@@ -215,6 +216,7 @@ struct NunaEffortDetailView: View {
                 }, sentence: nil, range: $range, page: $page)
                 .columns(color: { v in nunaEffortColor(scale == .whoop ? v / 21 * 100 : v) }, legend: AnyView(effortKey))
                 .selectingDay { pickedDay = $0 }
+                .endingOn(daysAgo: router.todayDayOffset)
             NunaTodayActivities(workouts: todayWorkouts, effortScale: scale,
                                 dayStart: NunaSelectedDay.date(offset: router.todayDayOffset), sleepMinutes: nil,
                                 isToday: router.todayDayOffset == 0, includesSleep: false)
