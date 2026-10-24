@@ -106,7 +106,8 @@ struct NunaTrendChart: View {
                 }
             }
             .chartXScale(domain: window)
-            .chartYScale(domain: 0...100)
+            // A little air above 100 and below 0: a line that touches the top of the scale, or a dot on it, is drawn whole and not cut at the edge.
+            .chartYScale(domain: -3...106)
             .chartPlotStyle { $0.clipped() }
             .chartXAxis {
                 AxisMarks(values: tickDates) { value in
@@ -203,26 +204,30 @@ struct NunaMultiLineChart: View {
         .onChange(of: days) { _, _ in selected = nil }
     }
 
+    /// The day touched and, on one row, each line's figure for it ("Rest 90%   Charge 45%"); a hint until something is touched.
     private var readout: some View {
         VStack(alignment: .leading, spacing: 4) {
             if let day = selected, let d = NunaDayFormat.parse(day) {
                 Text(verbatim: Self.readFormat.string(from: d)).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textSecondary)
-                ForEach(Array(readable.enumerated()), id: \.offset) { _, line in
-                    let value = line.series.first { $0.day == day }?.value
-                    HStack(spacing: 8) {
-                        Circle().fill(value.flatMap { line.pointColor?($0) } ?? line.color).frame(width: 10, height: 10)
-                        Text(verbatim: line.title ?? "").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        Spacer()
-                        Text(verbatim: value.flatMap { line.text?($0) } ?? "–").font(.nuna(size: 16, weight: .bold, design: NunaType.design)).monospacedDigit()
-                            .foregroundStyle(NunaPalette.textPrimary)
+                HStack(spacing: 18) {
+                    ForEach(Array(readable.enumerated()), id: \.offset) { _, line in
+                        let value = line.series.first { $0.day == day }?.value
+                        HStack(spacing: 6) {
+                            Circle().fill(line.color).frame(width: 10, height: 10)
+                            Text(verbatim: line.title ?? "").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: value.flatMap { line.text?($0) } ?? "–").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).monospacedDigit()
+                                .foregroundStyle(NunaPalette.textPrimary)
+                        }
+                        .lineLimit(1).minimumScaleFactor(0.8)
                     }
+                    Spacer(minLength: 0)
                 }
             } else {
                 Text("Touch the chart to read the figures").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
             }
         }
-        .frame(maxWidth: .infinity, minHeight: CGFloat(18 + 22 * readable.count), alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: 42, alignment: .topLeading)
     }
 }
 

@@ -192,8 +192,8 @@ struct NunaChargeRestView: View {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack { nunaTrendsCap(LocalizedStringKey(String(localized: "\(range) days"))); Spacer(); Text("Two lines moving together").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
-                    NunaMultiLineChart(start: start, days: range, lines: [.init(series: rs, max: 100, color: NunaScoreStyle.pairBlue, dashed: true, title: String(localized: "Rest"), text: { "\(Int($0.rounded()))%" }), .init(series: ch, max: 100, color: NunaScoreStyle.pairGrey, title: String(localized: "Charge"), text: { "\(Int($0.rounded()))%" })], height: 150)
-                    HStack(spacing: 14) { NunaLegendItem(color: NunaScoreStyle.pairGrey, text: "Charge"); NunaLegendItem(color: NunaScoreStyle.pairBlue, text: "Rest", dashed: true) }
+                    NunaMultiLineChart(start: start, days: range, lines: [.init(series: rs, max: 100, color: NunaScoreStyle.pairBlue, title: String(localized: "Rest"), text: { "\(Int($0.rounded()))%" }), .init(series: ch, max: 100, color: NunaScoreStyle.pairGrey, title: String(localized: "Charge"), text: { "\(Int($0.rounded()))%" })], height: 150)
+                    HStack(spacing: 14) { NunaLegendItem(color: NunaScoreStyle.pairGrey, text: "Charge"); NunaLegendItem(color: NunaScoreStyle.pairBlue, text: "Rest") }
                 }
             }
             NunaTitleRow(title: "Charge, by last night's Rest") { EmptyView() }
