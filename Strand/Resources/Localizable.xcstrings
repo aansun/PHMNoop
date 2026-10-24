@@ -6257,6 +6257,9 @@
         "Touch the chart to read the figures": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Sentuh grafik untuk membaca angkanya"}}
         } },
+        "Last signal %@": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Sinyal terakhir %@"}}
+        } },
         "Charge and Rest": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Charge dan Rest"}}
         } },

@@ -7,35 +7,47 @@ import WhoopStore
 
 // MARK: - Live heart rate card (same data as "Beats per minute" on the Default Today screen)
 
-/// The live heart-rate card. While the strap streams it shows the rolling beat-by-beat trace; otherwise
-/// today's banked 5-minute averages since midnight, with gaps left as gaps. Tapping opens the deep timeline.
+/// The live heart-rate card, drawn like a bedside monitor: a dark screen with faint graph paper, the reading in green at the right and the beat-by-beat trace
+/// beside it, with a dot that pulses at the pace of the heart. While the strap streams the trace is live. When it does not, the card keeps the last trace
+/// it has (the newest readings stored on the phone) and says when that signal was, until a new one arrives. Tapping opens the deep timeline.
 struct NunaLiveHRCard: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var live: LiveState
     @EnvironmentObject private var profile: ProfileStore
+    /// Today's banked 5-minute averages: the last resort when no recent beat-by-beat readings are stored.
     @State private var banked: [(ts: Int, bpm: Double)] = []
+    /// The newest stored readings, oldest first, kept on show while nothing live arrives.
+    @State private var recent: [(ts: Int, bpm: Double)] = []
     @State private var samples: [Double] = []
     private let maxSamples = 90
 
-    private var isLive: Bool { live.connected && samples.count >= 2 }
+    private var isLive: Bool { live.connected && (live.heartRate ?? 0) > 0 && samples.count >= 2 }
 
-    /// The clock time of the first, middle and last banked reading, so the labels match what the line shows.
-    private var dayLabels: [String] {
-        guard banked.count >= 2 else { return [] }
-        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("HH:mm")
-        func t(_ i: Int) -> String { f.string(from: Date(timeIntervalSince1970: TimeInterval(banked[i].ts))) }
-        return [t(0), t(banked.count / 2), t(banked.count - 1)]
+    /// What the trace draws: the live samples, else the last stored readings, else today's averages.
+    private var trace: [Double] {
+        if isLive { return samples }
+        if recent.count >= 2 { return recent.map(\.bpm) }
+        return banked.suffix(36).map(\.bpm)
+    }
+
+    /// When the trace on show last got a reading, for the line "Last signal 14:32".
+    private var lastSignal: Date? {
+        if let t = recent.last?.ts ?? banked.last?.ts { return Date(timeIntervalSince1970: TimeInterval(t)) }
+        return nil
     }
 
     private var bigBpm: Int? {
         if let hr = live.heartRate, hr > 0, live.connected { return hr }
-        return banked.last.map { Int($0.bpm.rounded()) }
+        return trace.last.map { Int($0.rounded()) }
     }
 
-    private var subtitle: LocalizedStringKey {
-        if isLive { return "Live · beat by beat" }
-        if banked.count >= 2 { return "5-minute average · since midnight" }
-        return live.connected ? "Waiting for the strap" : "Strap not connected"
+    private var statusText: String {
+        if isLive { return String(localized: "Live") }
+        if let t = lastSignal {
+            let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate(Calendar.current.isDateInToday(t) ? "HH:mm" : "d MMM HH:mm")
+            return String(localized: "Last signal \(f.string(from: t))")
+        }
+        return live.connected ? String(localized: "Strap connected") : String(localized: "Not connected")
     }
 
     private var zoneText: String? {
@@ -43,63 +55,140 @@ struct NunaLiveHRCard: View {
         return String(localized: "Zone \(profile.hrZoneSet.zoneNumber(forBPM: Double(hr)))")
     }
 
-    /// No card: the title, then the reading on the left and its line on the right, like a quiet strip of the page.
     var body: some View {
         NavigationLink(value: NunaTodayRoute.deepTimeline) {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     HStack(spacing: 6) {
                         Text("Beats per minute").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                            .foregroundStyle(NunaPalette.textSecondary)
-                        Image(systemName: "chevron.right").font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                            .foregroundStyle(NunaPalette.mapOverlayText.opacity(0.7))
+                        Image(systemName: "chevron.right").font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.mapOverlayText.opacity(0.45))
                     }
                     Spacer()
-                    Text(isLive ? "Live" : (live.connected ? "Strap connected" : "Not connected")).font(.nuna(size: 12, weight: .heavy))
-                        .tracking(nunaTrackingLabel).textCase(.uppercase)
-                        .foregroundStyle(isLive ? NunaPalette.charge : (live.connected ? NunaPalette.textSecondary : NunaPalette.warning))
+                    Text(verbatim: statusText).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        .foregroundStyle(isLive ? NunaPalette.charge : (lastSignal != nil || live.connected ? NunaPalette.mapOverlayText.opacity(0.6) : NunaPalette.warning))
                 }
-                HStack(alignment: .center, spacing: 14) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Image(systemName: "heart.fill").font(.nuna(size: 18)).foregroundStyle(NunaPalette.alert)
+                HStack(alignment: .center, spacing: 10) {
+                    NunaMonitorTrace(values: trace, live: isLive, bpm: bigBpm, hint: live.connected ? "Waiting for a live heartbeat…" : "Connect your strap to see live heart rate")
+                        .frame(height: 104)
+                    VStack(alignment: .trailing, spacing: 0) {
                         Text(verbatim: bigBpm.map(String.init) ?? "–")
-                            .font(.nuna(size: 44, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(44)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("bpm").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                        if let zoneText { Text(verbatim: zoneText).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).padding(.top, 4) }
+                            .font(.nuna(size: 46, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(46)).monospacedDigit()
+                            .foregroundStyle(NunaPalette.charge).opacity(isLive || bigBpm == nil ? 1 : 0.75)
+                        Text("bpm").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.mapOverlayText.opacity(0.6))
+                        if let zoneText { Text(verbatim: zoneText).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.mapOverlayText.opacity(0.7)).textCase(nil).padding(.top, 4) }
                     }
-                    .frame(width: 96, alignment: .leading)
-                    if isLive || banked.count >= 2 {
-                        NunaHRTrace(values: isLive ? samples : banked.map(\.bpm),
-                                    segments: isLive ? nil : hrGapSegments(bucketTs: banked.map(\.ts), bucketSeconds: 300),
-                                    compact: true)
-                            .frame(height: 96)
-                    } else {
-                        Text(live.connected ? "Waiting for a live heartbeat…" : "Connect your strap to see live heart rate")
-                            .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                    }
+                    .frame(width: 84, alignment: .trailing)
                 }
             }
-            .padding(.vertical, 4)
+            .padding(.horizontal, 16).padding(.vertical, 14)
+            .background(NunaPalette.shade, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous).strokeBorder(NunaPalette.charge.opacity(0.18), lineWidth: 1))
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("Beats per minute"))
+        .accessibilityValue(Text(verbatim: bigBpm.map { "\($0) bpm" } ?? "–"))
         .task(id: repo.refreshSeq) {
-            let from = Int(Calendar.current.startOfDay(for: Date()).timeIntervalSince1970)
-            banked = await repo.hrBuckets(from: from, to: Int(Date().timeIntervalSince1970), bucketSeconds: 300).map { ($0.ts, $0.bpm) }
+            let now = Int(Date().timeIntervalSince1970)
+            banked = await repo.hrBuckets(from: Int(Calendar.current.startOfDay(for: Date()).timeIntervalSince1970), to: now, bucketSeconds: 300).map { ($0.ts, $0.bpm) }
+            // The newest beat-by-beat readings: look back 3 minutes, then 30, then 3 hours, and keep the last 90 of the first window that has any.
+            for window in [180, 1_800, 10_800] {
+                let rows = await repo.hrSamples(from: now - window, to: now, limit: 12_000).filter { $0.bpm > 0 }
+                if rows.count >= 2 { recent = rows.suffix(maxSamples).map { ($0.ts, Double($0.bpm)) }; return }
+            }
+            #if DEBUG
+            if CommandLine.arguments.contains("--demo-hr") { return }
+            #endif
+            recent = []
         }
-        .onAppear { if samples.isEmpty, let hr = live.heartRate, hr > 0 { samples = [Double(hr)] } }
+        .onAppear {
+            if samples.isEmpty, let hr = live.heartRate, hr > 0 { samples = [Double(hr)] }
+            #if DEBUG
+            // `--demo-hr`: a made-up last trace from half an hour ago, to see the card as it looks between two signals.
+            if CommandLine.arguments.contains("--demo-hr"), recent.isEmpty {
+                let end = Int(Date().timeIntervalSince1970) - 1_800
+                recent = (0..<90).map { i in
+                    let beat = sin(Double(i) / 3.1) * 7 + sin(Double(i) / 1.3) * 3
+                    return (end - (89 - i) * 2, 76 + beat)
+                }
+            }
+            #endif
+        }
         .onChange(of: live.heartRate) { _, hr in
             guard let hr, hr > 0 else { return }
             samples.append(Double(hr))
             if samples.count > maxSamples { samples.removeFirst(samples.count - maxSamples) }
         }
     }
+}
 
-    private func stat(_ label: LocalizedStringKey, _ v: Double?) -> some View {
-        HStack(spacing: 5) {
-            Text(label).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            Text(verbatim: v.map { String(Int($0.rounded())) } ?? "–").font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+/// The monitor screen: graph paper, the trace with a soft glow, and, while live, a dot at the newest reading that pulses at the pace of the heart.
+struct NunaMonitorTrace: View {
+    let values: [Double]
+    let live: Bool
+    let bpm: Int?
+    let hint: LocalizedStringKey
+
+    private let green = NunaPalette.charge
+
+    private func points(in size: CGSize) -> [CGPoint] {
+        guard values.count >= 2, let lo = values.min(), let hi = values.max() else { return [] }
+        // At least 24 bpm of range, so a steady heart reads as a gently moving line and not as noise stretched to the screen.
+        let mid = (lo + hi) / 2, half = max((hi - lo) / 2 * 1.25, 12)
+        let top = mid + half, span = half * 2
+        let pad: CGFloat = 8
+        let slots = CGFloat(max(values.count - 1, 29))
+        return values.enumerated().map { i, v in
+            CGPoint(x: pad + (size.width - pad * 2) * CGFloat(i) / slots, y: pad + (size.height - pad * 2) * CGFloat((top - v) / span))
         }
+    }
+
+    var body: some View {
+        GeometryReader { geo in
+            let pts = points(in: geo.size)
+            ZStack {
+                Canvas { ctx, size in
+                    // Graph paper: a fine line every 12 pt, a stronger one every fifth.
+                    let step: CGFloat = 12
+                    var x: CGFloat = 0, n = 0
+                    while x <= size.width {
+                        var p = Path(); p.move(to: CGPoint(x: x, y: 0)); p.addLine(to: CGPoint(x: x, y: size.height))
+                        ctx.stroke(p, with: .color(green.opacity(n % 5 == 0 ? 0.14 : 0.06)), lineWidth: 0.7); x += step; n += 1
+                    }
+                    var y: CGFloat = 0; n = 0
+                    while y <= size.height {
+                        var p = Path(); p.move(to: CGPoint(x: 0, y: y)); p.addLine(to: CGPoint(x: size.width, y: y))
+                        ctx.stroke(p, with: .color(green.opacity(n % 5 == 0 ? 0.14 : 0.06)), lineWidth: 0.7); y += step; n += 1
+                    }
+                    guard pts.count >= 2 else {
+                        var base = Path(); base.move(to: CGPoint(x: 0, y: size.height / 2)); base.addLine(to: CGPoint(x: size.width, y: size.height / 2))
+                        ctx.stroke(base, with: .color(green.opacity(0.35)), style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                        return
+                    }
+                    var path = Path(); path.move(to: pts[0])
+                    for q in pts.dropFirst() { path.addLine(to: q) }
+                    let alpha = live ? 1.0 : 0.55
+                    ctx.stroke(path, with: .color(green.opacity(0.22 * alpha)), style: StrokeStyle(lineWidth: 8, lineCap: .round, lineJoin: .round))
+                    ctx.stroke(path, with: .color(green.opacity(alpha)), style: StrokeStyle(lineWidth: 2.4, lineCap: .round, lineJoin: .round))
+                }
+                if pts.count < 2 {
+                    Text(hint).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.mapOverlayText.opacity(0.7)).textCase(nil)
+                        .multilineTextAlignment(.leading).padding(.horizontal, 12).frame(maxWidth: .infinity, alignment: .leading).offset(y: 30)
+                } else if let last = pts.last {
+                    Circle().fill(NunaPalette.mapOverlayText).frame(width: 8, height: 8).opacity(live ? 1 : 0.6).position(last)
+                    if live {
+                        // One ring a beat: the period is 60 / bpm seconds.
+                        Circle().strokeBorder(green, lineWidth: 2).frame(width: 10, height: 10).position(last)
+                            .phaseAnimator([false, true]) { c, grown in c.scaleEffect(grown ? 2.6 : 1).opacity(grown ? 0 : 0.9) }
+                                animation: { _ in .easeOut(duration: 60 / Double(max(bpm ?? 60, 30))) }
+                    }
+                }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        }
+        .accessibilityHidden(true)
     }
 }
 
