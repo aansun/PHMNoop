@@ -204,13 +204,11 @@ struct NunaMultiLineChart: View {
         .onChange(of: days) { _, _ in selected = nil }
     }
 
-    /// The day touched and, on one row, each line's figure for it ("Rest 90%   Charge 45%"); a hint until something is touched.
+    /// On one row: each line's figure for the day touched at the left ("Rest 90%   Charge 45%") and the day itself at the right; a hint until something is touched.
     private var readout: some View {
-        VStack(alignment: .leading, spacing: 4) {
+        Group {
             if let day = selected, let d = NunaDayFormat.parse(day) {
-                Text(verbatim: Self.readFormat.string(from: d)).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                    .foregroundStyle(NunaPalette.textSecondary)
-                HStack(spacing: 18) {
+                HStack(spacing: 14) {
                     ForEach(Array(readable.enumerated()), id: \.offset) { _, line in
                         let value = line.series.first { $0.day == day }?.value
                         HStack(spacing: 6) {
@@ -219,15 +217,17 @@ struct NunaMultiLineChart: View {
                             Text(verbatim: value.flatMap { line.text?($0) } ?? "–").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).monospacedDigit()
                                 .foregroundStyle(NunaPalette.textPrimary)
                         }
-                        .lineLimit(1).minimumScaleFactor(0.8)
+                        .lineLimit(1).minimumScaleFactor(0.7)
                     }
-                    Spacer(minLength: 0)
+                    Spacer(minLength: 8)
+                    Text(verbatim: Self.readFormat.string(from: d)).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        .foregroundStyle(NunaPalette.textSecondary).lineLimit(1).fixedSize()
                 }
             } else {
                 Text("Touch the chart to read the figures").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
             }
         }
-        .frame(maxWidth: .infinity, minHeight: 42, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: 26, alignment: .leading)
     }
 }
 
