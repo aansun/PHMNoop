@@ -2259,11 +2259,6 @@ final class IntelligenceEngine: ObservableObject {
             if let v = primarySessionRHRByDay[daily.day] {
                 restPoints.append(MetricPoint(day: daily.day, key: "rhr_primary_session", value: v))
             }
-            // The resting HR the day's stored Effort was scored with: the engine's own floor, before the iOS mean replaced `daily.restingHr`.
-            // Today and the widgets read it back (`Repository.effortRestingHR`) so a live Effort is scored with the same reference.
-            if let floor = night.daily.restingHr {
-                restPoints.append(MetricPoint(day: daily.day, key: "rhr_floor", value: Double(floor)))
-            }
             // #1169: its coverage inputs beside the mean — valid-sample count + primary-session duration (s)
             // — so a thin-coverage night can be down-weighted in the later holdout. Raw inputs, not a fraction.
             if let cov = primarySessionRHRCoverageByDay[daily.day] {
