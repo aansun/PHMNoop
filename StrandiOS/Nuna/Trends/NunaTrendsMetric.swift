@@ -264,32 +264,10 @@ struct NunaTrendsMetricView: View {
                 Text(verbatim: NunaTrendsFormat.num(value, 1) + unit).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).monospacedDigit()
                     .foregroundStyle(NunaPalette.textPrimary)
             }
-            periodBar(fraction: (value ?? 0) / top, colors: ringColors(value, top: top), soft: soft)
+            NunaPeriodBar(fraction: (value ?? 0) / top, colors: nunaPeriodColors(kind, kind == .effort ? value.map { $0 * 100 / top } : value), soft: soft)
         }
     }
 
-    /// The colours of the Today ring for a value: Charge's zone, Effort's blues up to its level, Rest's level.
-    private func ringColors(_ v: Double?, top: Double) -> [Color] {
-        guard let v else { return [NunaPalette.ink.opacity(0.2)] }
-        switch kind {
-        case .charge: let c = nunaChargeColor(v); return [c.opacity(0.55), c]
-        case .effort: return nunaEffortRingColors(v * 100 / top)
-        case .rest: let c = nunaRestColor(v); return [c.opacity(0.55), c]
-        }
-    }
-
-    private func periodBar(fraction: Double, colors: [Color], soft: Bool) -> some View {
-        GeometryReader { geo in
-            ZStack(alignment: .leading) {
-                Capsule().fill(NunaPalette.ink.opacity(0.09))
-                Capsule().fill(LinearGradient(colors: colors, startPoint: .leading, endPoint: .trailing))
-                    .frame(width: max(14, geo.size.width * CGFloat(min(max(fraction, 0), 1))))
-                    .opacity(soft ? 0.6 : 1)
-            }
-        }
-        .frame(height: 24)
-        .accessibilityHidden(true)
-    }
 
     // Charge only: what sits behind the average.
     private var drivers: some View {
