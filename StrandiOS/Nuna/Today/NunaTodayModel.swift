@@ -120,7 +120,7 @@ final class NunaTodayModel: ObservableObject {
         if today {
             let hr = await repo.hrSamples(from: from, to: to, limit: 200_000)
             let maxHR = profile.age > 0 ? StrainScorer.tanakaHRmax(age: Double(profile.age)) : nil
-            let restHR = await repo.effortRestingHR(day: row?.day, fallback: row?.restingHr)
+            let restHR = row?.restingHr.map(Double.init) ?? StrainScorer.defaultRestingHR
             live = StrainScorer.strain(hr, maxHR: maxHR, restingHR: restHR, method: PuffinExperiment.effortMethod, sex: profile.sex)
         }
         effort = StrainScorer.effectiveEffort(live: live, stored: row?.strain)

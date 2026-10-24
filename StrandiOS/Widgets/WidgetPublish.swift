@@ -344,7 +344,7 @@ extension WidgetSnapshot {
         }
         let maxHR = model.profile.age > 0
             ? StrainScorer.tanakaHRmax(age: Double(model.profile.age)) : nil
-        let restingHR = await model.repo.effortRestingHR(day: model.repo.today?.day, fallback: model.repo.today?.restingHr)
+        let restingHR = model.repo.today?.restingHr.map(Double.init) ?? StrainScorer.defaultRestingHR
         return StrainScorer.strain(
             samples,
             maxHR: maxHR,

@@ -1219,17 +1219,6 @@ final class Repository: ObservableObject {
         return byTs.values.sorted { $0.ts < $1.ts }
     }
 
-    /// The resting HR a day's stored Effort was scored with. The daily `restingHr` shown on iOS is the nightly mean, but the Effort the engine
-    /// stores is scored against the floor (`rhr_floor`), so a live Effort for today uses the floor too and agrees with the stored one. Falls back to
-    /// the daily value, then the default, for a day analysed before the floor was kept.
-    func effortRestingHR(day: String?, fallback: Int?) async -> Double {
-        if let day,
-           let v = await exploreSeries(key: "rhr_floor", source: "my-whoop", days: 14).last(where: { $0.day == day })?.value {
-            return v
-        }
-        return fallback.map(Double.init) ?? StrainScorer.defaultRestingHR
-    }
-
     func hrSamples(from: Int, to: Int, limit: Int = 8000) async -> [HRSample] {
         guard let store = await ensureStore() else { return [] }
         // UNION the active strap + canonical so the HR trend renders whether the landed day's raw sits under
