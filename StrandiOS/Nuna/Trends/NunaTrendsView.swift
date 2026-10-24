@@ -252,22 +252,25 @@ struct NunaTrendsView: View {
         let pairs = TrendInsights.pairs(driver: rs, outcome: m.charge, lag: 0)
         let corr = CorrelationEngine.pearson(pairs.map { ($0.x, $0.y) })
         let b = TrendInsights.buckets(driver: rs, outcome: m.charge, edges: [78, 86], lag: 0)
-        return NavigationLink(value: NunaTrendsRoute.chargeRest) {
-            NunaCard {
+        return NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        nunaTrendsCap("Charge and Rest")
-                        Spacer()
-                        if let corr { NunaChip(verbatim: NunaTrendsFormat.relationChip(corr.r)) }
-                    }
-                    NunaMultiLineChart(start: windowStart, days: range, lines: [.init(series: rs, max: 100, color: NunaScoreStyle.restSeries, pointColor: nunaRestColor, dashed: true), .init(series: ch, max: 100, color: NunaScoreStyle.chargeSeries, pointColor: nunaChargeColor)], height: 110)
+                    // The chart is touchable, so only the title row and the line under the chart open the page.
+                    NavigationLink(value: NunaTrendsRoute.chargeRest) {
+                        HStack {
+                            nunaTrendsCap("Charge and Rest")
+                            Spacer()
+                            if let corr { NunaChip(verbatim: NunaTrendsFormat.relationChip(corr.r)) }
+                            Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .heavy)).foregroundStyle(NunaPalette.textSecondary)
+                        }
+                        .contentShape(Rectangle())
+                    }.buttonStyle(.plain)
+                    NunaMultiLineChart(start: windowStart, days: range, lines: [.init(series: rs, max: 100, color: NunaScoreStyle.restSeries, pointColor: nunaRestColor, dashed: true, title: String(localized: "Rest"), text: { "\(Int($0.rounded()))%" }), .init(series: ch, max: 100, color: NunaScoreStyle.chargeSeries, pointColor: nunaChargeColor, title: String(localized: "Charge"), text: { "\(Int($0.rounded()))%" })], height: 110)
                     HStack(spacing: 14) { NunaLegendItem(color: NunaScoreStyle.chargeSeries, text: "Charge"); NunaLegendItem(color: NunaScoreStyle.restSeries, text: "Rest", dashed: true) }
                     if let hi = b[2].meanOutcome, let lo = b[0].meanOutcome {
                         insightRow("moon", Text("Nights with Rest above 86% are followed by Charge \(Int(hi.rounded()))%, versus \(Int(lo.rounded()))% when Rest is below 78%."))
                     }
                 }
             }
-        }.buttonStyle(.plain)
     }
 
     private func insightRow(_ icon: String, _ text: Text) -> some View {

@@ -192,7 +192,7 @@ struct NunaChargeRestView: View {
             NunaCard {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack { nunaTrendsCap(LocalizedStringKey(String(localized: "\(range) days"))); Spacer(); Text("Two lines moving together").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
-                    NunaMultiLineChart(start: start, days: range, lines: [.init(series: rs, max: 100, color: NunaScoreStyle.restSeries, pointColor: nunaRestColor, dashed: true), .init(series: ch, max: 100, color: NunaScoreStyle.chargeSeries, pointColor: nunaChargeColor)], height: 150)
+                    NunaMultiLineChart(start: start, days: range, lines: [.init(series: rs, max: 100, color: NunaScoreStyle.restSeries, pointColor: nunaRestColor, dashed: true, title: String(localized: "Rest"), text: { "\(Int($0.rounded()))%" }), .init(series: ch, max: 100, color: NunaScoreStyle.chargeSeries, pointColor: nunaChargeColor, title: String(localized: "Charge"), text: { "\(Int($0.rounded()))%" })], height: 150)
                     HStack(spacing: 14) { NunaLegendItem(color: NunaScoreStyle.chargeSeries, text: "Charge"); NunaLegendItem(color: NunaScoreStyle.restSeries, text: "Rest", dashed: true) }
                 }
             }

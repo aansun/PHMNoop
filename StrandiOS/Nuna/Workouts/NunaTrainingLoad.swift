@@ -224,8 +224,10 @@ struct NunaTrainingLoadView: View {
                         let all = shown.flatMap { [$0.ctl, $0.atl] }
                         let lo = all.min() ?? 0, span = max((all.max() ?? 1) - lo, 0.0001)
                         NunaMultiLineChart(start: shown.first!.day, days: shown.count,
-                                           lines: [.init(series: shown.map { ($0.day, ($0.ctl - lo) / span) }, max: 1, color: ctlColor),
-                                                   .init(series: shown.map { ($0.day, ($0.atl - lo) / span) }, max: 1, color: NunaPalette.effort)], height: 120)
+                                           lines: [.init(series: shown.map { ($0.day, ($0.ctl - lo) / span) }, max: 1, color: ctlColor,
+                                                         title: String(localized: "Fitness"), text: { NunaTrendsFormat.num($0 * span + lo, 1) }),
+                                                   .init(series: shown.map { ($0.day, ($0.atl - lo) / span) }, max: 1, color: NunaPalette.effort,
+                                                         title: String(localized: "Fatigue"), text: { NunaTrendsFormat.num($0 * span + lo, 1) })], height: 120)
                         HStack {
                             Text(verbatim: nunaAxisDate(NunaDayFormat.parse(shown.first!.day) ?? Date())); Spacer(); Text("Today")
                         }.font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
