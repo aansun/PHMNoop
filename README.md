@@ -33,8 +33,8 @@ PHMN is a fork of [NOOP](https://github.com/ryanbr/noop), the open-source app th
 build a product. I use a WHOOP, I wanted the iPhone app to behave the way **I** check my day, and so I changed it until it did. Everything here follows my own habits and needs; it may
 not fit yours, and I make no promise that it will.
 
-The strap protocol, storage, sleep staging and base scores underneath are NOOP's. What I changed is what sits on top: a new design, a coach that reads your day, a workout module with a
-gym of its own, and the explanations behind every number.
+The strap protocol, storage and base scores underneath are NOOP's. What I changed is what sits on top: a new design, a coach that reads your day, a workout module with a
+gym of its own, and the explanations behind every number. A few calculations differ too (steps, sleep and resting heart rate), and they are listed under [Things to know before using this fork](#things-to-know-before-using-this-fork).
 
 **What stays true**
 
@@ -50,7 +50,7 @@ PHMN is a fork, and a few things differ from the main project on purpose. These 
 
 - **Steps.** Step counting is switched back on in this fork for the WHOOP 5, and the step detection method differs from the main project.
 - **Apple Health.** The sync to Apple Health has been adjusted: data is sent in parts rather than all at once. If you choose Apple Health as the source of your steps, or use both the strap and Apple Health, the app takes whichever step count is higher.
-- **Sleep.** After several nights of testing sleep on three devices (a Fitbit Air, a WHOOP 5 and a Garmin Forerunner 255), the results varied quite a bit. I adjusted the sleep calculation in this fork to land closer to two of them, and that includes how movement during sleep is read. If a night is detected wrongly, you can still edit the times, and you can cancel a wrong entry within 10 seconds.
+- **Sleep.** After several nights of testing sleep on three devices (a Fitbit Air, a WHOOP 5 and a Garmin Forerunner 255), the results varied quite a bit. I adjusted the sleep calculation in this fork to land closer to the Fitbit Air, and that includes how movement during sleep is read. If a night is detected wrongly, you can still edit its times. If you delete a night, you have 10 seconds to restore it with Undo.
 - **Resting heart rate.** The number shown for resting heart rate is now an average, no longer the lowest value as in the main project.
 - **Strava.** If you decide to connect Strava, I suggest uploading manually at first. That lets you check exactly what is sent to Strava and decide whether you are comfortable with it.
 
