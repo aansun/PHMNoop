@@ -108,7 +108,11 @@ struct NunaTrendDetailCard: View {
 
     private func fmt(_ v: Double) -> String { String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, v) }
 
-    private var windowEnd: Date { Calendar.current.date(byAdding: .day, value: -page * range, to: Date()) ?? Date() }
+    /// How many days before today the newest period ends: 0 for today, or the day picked on Today, so the card's weeks and months end on that day.
+    var anchorDays = 0
+    func endingOn(daysAgo n: Int) -> Self { var c = self; c.anchorDays = max(n, 0); return c }
+
+    private var windowEnd: Date { Calendar.current.date(byAdding: .day, value: -(page * range + anchorDays), to: Date()) ?? Date() }
     private var windowStart: Date { Calendar.current.date(byAdding: .day, value: -(range - 1), to: windowEnd) ?? windowEnd }
     private var canGoBack: Bool { hasOlder(windowStart) }
 
@@ -121,10 +125,10 @@ struct NunaTrendDetailCard: View {
     private func average(_ v: [Double]) -> Double? { v.isEmpty ? nil : v.reduce(0, +) / Double(v.count) }
 
     var body: some View {
-        let pts = showsDay ? [] : readings(range, page * range)
+        let pts = showsDay ? [] : readings(range, page * range + anchorDays)
         let vals = pts.map(\.value)
         let avg = average(vals)
-        let prev = average(readings(range, (page + 1) * range).map(\.value))
+        let prev = average(readings(range, (page + 1) * range + anchorDays).map(\.value))
         card(pts: pts, vals: vals, avg: avg, prev: prev)
             .onChange(of: range) { _, _ in letGoOfDay() }
             .onChange(of: page) { _, _ in letGoOfDay() }
@@ -205,7 +209,8 @@ struct NunaTrendDetailCard: View {
                 let v = byDay[d]
                 return NunaColumns.Item(weekday: Self.weekday(d), date: d, fraction: v.map { $0 / top },
                                         valueText: v.map { Self.shortValue($0, decimals: decimals) },
-                                        highlight: pickedDay.map { cal.isDate($0, inSameDayAs: d) } ?? cal.isDateInToday(d),
+                                        highlight: pickedDay.map { cal.isDate($0, inSameDayAs: d) }
+                                            ?? cal.isDate(d, inSameDayAs: cal.date(byAdding: .day, value: -anchorDays, to: Date()) ?? Date()),
                                         color: v.flatMap { columnColor?($0) })
             }, color: lineColor.opacity(0.85), highlightColor: NunaPalette.textPrimary, target: reference.map { $0 / top },
                onSelect: onSelectDay == nil ? nil : { d in
