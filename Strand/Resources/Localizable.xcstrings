@@ -6263,6 +6263,9 @@
         "Average heart rate": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Rata-rata detak jantung"}}
         } },
+        "Everyday movement": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Gerak sehari-hari"}}
+        } },
         "Charge and Rest": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Charge dan Rest"}}
         } },

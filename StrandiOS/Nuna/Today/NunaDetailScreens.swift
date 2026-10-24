@@ -172,8 +172,9 @@ struct NunaEffortDetailView: View {
     /// That day's heart-rate readings and the day before's (up to the same time of day while the day is today), for the time in each zone and its change.
     @State private var hrDay: [HRSample] = []
     @State private var hrBefore: [HRSample] = []
-    @State private var strengthDay: Double?
-    @State private var strengthBefore: Double?
+    /// Effort points of the day that no workout explains (everyday movement), for the day on show and the day before.
+    @State private var everydayDay: Double?
+    @State private var everydayBefore: Double?
     @State private var restingDay: Double?
     @State private var restingBefore: Double?
     @State private var todayWorkouts: [WorkoutRow] = []
@@ -239,12 +240,18 @@ struct NunaEffortDetailView: View {
         hrBefore = await repo.hrSamples(from: beforeStart, to: beforeEnd, limit: 200_000)
         let rows = await repo.workoutRows()
         if isToday { todayWorkouts = rows.filter { $0.startTs >= start && $0.startTs <= end } }
-        func strength(_ from: Int, _ to: Int) -> Double? {
-            let hit = rows.filter { $0.startTs >= from && $0.startTs < to && NunaWorkoutKind.isStrength($0) }
-            return hit.isEmpty ? nil : hit.reduce(0) { $0 + ($1.durationS ?? Double($1.endTs - $1.startTs)) } / 60
+        // Everyday movement: the part of a finished day's Effort that none of its workouts explains. Effort is a logarithm of heart-rate load, so the split is
+        // made on the load (`EffortAttribution`), not by subtracting points. Only for a past day: today's Effort is still moving and yesterday's is a whole day.
+        func everyday(_ d: Date) -> Double? {
+            let from = Int(d.timeIntervalSince1970)
+            let to = Int((cal.date(byAdding: .day, value: 1, to: d) ?? d).timeIntervalSince1970)
+            guard let stored = repo.days.first(where: { $0.day == Repository.localDayKey(d) })?.strain, stored > 0 else { return nil }
+            let efforts = rows.filter { $0.startTs >= from && $0.startTs < to }.map(\.strain)
+            let denominator = StrainScorer.logMapDenominator(method: PuffinExperiment.effortMethod, sex: profile.sex)
+            return EffortAttribution.split(dayEffort: stored, workoutEfforts: efforts, logDenominator: denominator).dailyPoints
         }
-        strengthDay = strength(start, end)
-        strengthBefore = strength(beforeStart, beforeStart + (end - start))
+        everydayDay = isToday ? nil : everyday(dayStart)
+        everydayBefore = isToday ? nil : everyday(beforeStartDate)
         func resting(_ d: Date) -> Double? { repo.days.first { $0.day == Repository.localDayKey(d) }?.restingHr.map(Double.init) }
         restingDay = resting(dayStart) ?? (isToday ? day.restingHr : nil)
         restingBefore = resting(beforeStartDate)
@@ -265,10 +272,6 @@ struct NunaEffortDetailView: View {
         let now = zoneMinutes(hrDay, resting: restingDay)
         let before = zoneMinutes(hrBefore, resting: restingBefore)
         VStack(alignment: .leading, spacing: 4) {
-            if let picked = pickedDay, !cal.isDateInToday(picked) {
-                Text(verbatim: Self.dayTitle(picked)).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                    .foregroundStyle(NunaPalette.textSecondary).padding(.horizontal, 4)
-            }
             NunaPlainList {
                 NavigationLink { NunaEffortActivityDetailView(kind: .lowZones) } label: {
                     zoneRow("Heart rate zones 1–3", "heart.circle", now.map { Self.hm($0.easy) }, (now != nil && before != nil) ? now!.easy - before!.easy : nil, downIsGood: false)
@@ -278,9 +281,8 @@ struct NunaEffortDetailView: View {
                     zoneRow("Heart rate zones 4–5", "bolt.heart", now.map { Self.hm($0.hard) }, (now != nil && before != nil) ? now!.hard - before!.hard : nil, downIsGood: false)
                 }.buttonStyle(.plain)
                 NunaDivider()
-                NavigationLink { NunaEffortActivityDetailView(kind: .strength) } label: {
-                    zoneRow("Strength training time", "dumbbell", strengthDay.map(Self.hm), (strengthDay != nil && strengthBefore != nil) ? strengthDay! - strengthBefore! : nil, downIsGood: false)
-                }.buttonStyle(.plain)
+                zoneRow("Everyday movement", "figure.walk", everydayDay.map { UnitFormatter.effortDisplay($0, scale: scale) },
+                        (everydayDay != nil && everydayBefore != nil) ? UnitFormatter.effortValue(everydayDay! - everydayBefore!, scale: scale) : nil, downIsGood: nil)
                 NunaDivider()
                 zoneRow("Resting heart rate", "heart", restingDay.map { String(format: "%.0f", $0) },
                         (restingDay != nil && restingBefore != nil) ? restingDay! - restingBefore! : nil, downIsGood: true)
@@ -290,11 +292,6 @@ struct NunaEffortDetailView: View {
 
     private func zoneRow(_ title: LocalizedStringKey, _ icon: String, _ value: String?, _ delta: Double?, downIsGood: Bool?) -> some View {
         NunaContributorRow(title: title, icon: icon, value: value, delta: delta, downIsGood: downIsGood)
-    }
-
-    private static func dayTitle(_ d: Date) -> String {
-        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEEE d MMM")
-        return f.string(from: d)
     }
 
     /// Minutes as h:mm.
