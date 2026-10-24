@@ -288,6 +288,78 @@ public enum StrainScorer {
         return acc
     }
 
+    // MARK: - What a day's load is made of
+
+    /// One band of the heart-rate reserve (for example 70–80%): the minutes spent in it and the load those minutes added.
+    public struct BandLoad: Equatable, Sendable {
+        public let lowPct: Int, highPct: Int
+        public let lowBPM: Int, highBPM: Int
+        public let minutes: Double
+        public let load: Double
+    }
+
+    /// A day's load split by band, with the same inputs and the same arithmetic `strain` uses, so the parts add up to the load the Effort was
+    /// mapped from. Display only: it does not score anything.
+    public struct LoadBreakdown: Equatable, Sendable {
+        /// Five bands, 50–60% up to 90–100% of the reserve, lowest first.
+        public let bands: [BandLoad]
+        /// Load from readings under 50% of the reserve. Zero for Edwards (those weigh nothing); a little for Banister, which scores them.
+        public let belowLoad: Double
+        public let restingHR: Double
+        public let maxHR: Double
+        public let method: Method
+        public let peakBPM: Int?
+        public var totalLoad: Double { bands.reduce(belowLoad) { $0 + $1.load } }
+        /// Minutes in the two top bands (80% of the reserve and above).
+        public var minutesHard: Double { bands.suffix(2).reduce(0) { $0 + $1.minutes } }
+        /// The Effort this load maps to, on 0–100.
+        public func effort(sex: String) -> Double {
+            trimpToStrain(totalLoad, denominator: logMapDenominator(method: method, sex: sex))
+        }
+    }
+
+    /// nil for an empty window or a reserve that is not positive.
+    public static func loadBreakdown(_ hr: [HRSample], maxHR: Double? = nil, restingHR: Double = defaultRestingHR,
+                                     method: Method = .edwards, sex: String = "male") -> LoadBreakdown? {
+        let effMax = maxHR ?? Double(defaultMaxHR())
+        guard !hr.isEmpty, effMax > restingHR else { return nil }
+        let reserve = effMax - restingHR
+        let durations = sampleDurationsMinutes(hr)
+        let cuts: [Double] = [50, 60, 70, 80, 90, 100]
+        var minutes = [Double](repeating: 0, count: 5)
+        var load = [Double](repeating: 0, count: 5)
+        var below = 0.0
+        let b = sex.lowercased().hasPrefix("f") ? banisterBWomen : banisterBMen
+        let floorRate = banisterBaselineRatePerMinute(b: b)
+        for i in hr.indices {
+            let bpm = Double(hr[i].bpm)
+            let pct = (bpm - restingHR) / reserve * 100.0
+            var amount = 0.0
+            switch method {
+            case .edwards:
+                amount = Double(zoneWeight(bpm, restingHR: restingHR, hrReserve: reserve)) * durations[i]
+            case .banister:
+                let x = pctHRR(bpm, restingHR: restingHR, hrReserve: reserve) / 100.0
+                if x > 0 { amount = durations[i] * max(x * banisterScale * exp(b * x) - floorRate, 0.0) }
+            }
+            if pct >= cuts[0] {
+                let band = min(max(Int((pct - 50) / 10), 0), 4)
+                minutes[band] += durations[i]
+                load[band] += amount
+            } else {
+                below += amount
+            }
+        }
+        let bands = (0..<5).map { k in
+            BandLoad(lowPct: Int(cuts[k]), highPct: Int(cuts[k + 1]),
+                     lowBPM: Int((restingHR + reserve * cuts[k] / 100).rounded()),
+                     highBPM: Int((restingHR + reserve * cuts[k + 1] / 100).rounded()),
+                     minutes: minutes[k], load: load[k])
+        }
+        return LoadBreakdown(bands: bands, belowLoad: below, restingHR: restingHR, maxHR: effMax, method: method,
+                             peakBPM: hr.map(\.bpm).max())
+    }
+
     // MARK: - Logarithmic map
 
     /// Map accumulated TRIMP onto [0, 100] via 100 × ln(TRIMP+1) / ln(D), 2 dp.
