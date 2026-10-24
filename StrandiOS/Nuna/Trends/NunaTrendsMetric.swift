@@ -243,21 +243,52 @@ struct NunaTrendsMetricView: View {
                      caption: r.flatMap { m.date($0.day) }.map { LocalizedStringKey(NunaTrendsFormat.withWeekday($0)) })
     }
 
+    /// This period against the one before it: two rows, each with its name and figure above a thick bar. A bar is painted the way the ring on Today is
+    /// painted for that value (Charge by its zone, Effort from dark to light blue, Rest by how well the night went); the earlier period is a shade softer.
     private func previousCard(_ now: Double?, _ before: Double?) -> some View {
         let top: Double = kind == .effort ? (scale == .whoop ? 21 : 100) : 100
         return NunaCard {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 14) {
                 nunaTrendsCap("Against the previous period")
-                HStack {
-                    Text(title).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    Spacer()
-                    Text(verbatim: NunaTrendsFormat.num(now, kind == .effort ? 1 : 1) + unit).font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    Text(verbatim: "vs " + NunaTrendsFormat.num(before, 1)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                }
-                NunaProgressBar(fraction: (now ?? 0) / top, color: bar)
-                NunaProgressBar(fraction: (before ?? 0) / top, color: NunaPalette.ink.opacity(0.3)).frame(height: 5)
+                periodRow("This period", now, top: top, soft: false)
+                periodRow("Previous period", before, top: top, soft: true)
             }
         }
+    }
+
+    private func periodRow(_ label: LocalizedStringKey, _ value: Double?, top: Double, soft: Bool) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(label).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Spacer()
+                Text(verbatim: NunaTrendsFormat.num(value, 1) + unit).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).monospacedDigit()
+                    .foregroundStyle(NunaPalette.textPrimary)
+            }
+            periodBar(fraction: (value ?? 0) / top, colors: ringColors(value, top: top), soft: soft)
+        }
+    }
+
+    /// The colours of the Today ring for a value: Charge's zone, Effort's blues up to its level, Rest's level.
+    private func ringColors(_ v: Double?, top: Double) -> [Color] {
+        guard let v else { return [NunaPalette.ink.opacity(0.2)] }
+        switch kind {
+        case .charge: let c = nunaChargeColor(v); return [c.opacity(0.55), c]
+        case .effort: return nunaEffortRingColors(v * 100 / top)
+        case .rest: let c = nunaRestColor(v); return [c.opacity(0.55), c]
+        }
+    }
+
+    private func periodBar(fraction: Double, colors: [Color], soft: Bool) -> some View {
+        GeometryReader { geo in
+            ZStack(alignment: .leading) {
+                Capsule().fill(NunaPalette.ink.opacity(0.09))
+                Capsule().fill(LinearGradient(colors: colors, startPoint: .leading, endPoint: .trailing))
+                    .frame(width: max(14, geo.size.width * CGFloat(min(max(fraction, 0), 1))))
+                    .opacity(soft ? 0.6 : 1)
+            }
+        }
+        .frame(height: 24)
+        .accessibilityHidden(true)
     }
 
     // Charge only: what sits behind the average.
