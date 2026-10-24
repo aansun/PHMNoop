@@ -38,6 +38,8 @@ private struct NunaStepsWeekView: View {
         if !finished.isEmpty { return finished.reduce(0, +) / finished.count }
         return days[todayIndex]
     }
+    /// Today's steps so far: the snapshot's own count, which is the newest, else today's bar.
+    private var today: Int? { snapshot.steps ?? days[todayIndex] }
     private var top: Double { max(Double(days.compactMap { $0 }.max() ?? 0), Double(goal), Double(average ?? 0)) * 1.08 }
 
     var body: some View {
@@ -49,16 +51,24 @@ private struct NunaStepsWeekView: View {
                 bars.padding(.top, 8)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            if let average {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Avg").font(.nuna(size: 11, weight: .heavy)).foregroundStyle(NunaPalette.textSecondary)
-                    Text(verbatim: NunaW.number(Double(average))).font(.nuna(size: 17, weight: .bold, design: NunaType.design))
-                        .foregroundStyle(NunaPalette.restText).minimumScaleFactor(0.6).lineLimit(1)
+            if average != nil || today != nil {
+                VStack(alignment: .leading, spacing: 8) {
+                    if let average { sideFigure("Avg", average) }
+                    if let today { sideFigure("Today", today) }
                 }
                 .padding(.top, 34)
             }
         }
         .padding(.horizontal, 16).padding(.vertical, 14)
+    }
+
+    /// A label over a figure, in the column at the right.
+    private func sideFigure(_ label: LocalizedStringKey, _ value: Int) -> some View {
+        VStack(alignment: .leading, spacing: 1) {
+            Text(label).font(.nuna(size: 11, weight: .heavy)).foregroundStyle(NunaPalette.textSecondary)
+            Text(verbatim: NunaW.number(Double(value))).font(.nuna(size: 17, weight: .bold, design: NunaType.design))
+                .foregroundStyle(NunaPalette.restText).minimumScaleFactor(0.6).lineLimit(1)
+        }
     }
 
     private var bars: some View {
