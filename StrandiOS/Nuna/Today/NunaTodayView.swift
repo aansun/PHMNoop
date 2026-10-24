@@ -271,6 +271,8 @@ struct NunaTodayView: View {
             await sparks.load(repo: repo, metrics: chosen, days: max(keyMetricsWindowDays, 2))
         }
         .background(NunaSavedSessionsWatcher(count: $savedSessions))
+        .onChange(of: model.dayOffset) { _, v in router.todayDayOffset = v }
+        .onAppear { router.todayDayOffset = model.dayOffset }
         .task(id: "\(repo.refreshSeq)-\(model.dayOffset)-\(savedSessions)") {
             await model.load(repo: repo, profile: profile)
             dayPlan = model.isToday ? await NunaDayPlanResult.load(repo: repo, profile: profile) : nil

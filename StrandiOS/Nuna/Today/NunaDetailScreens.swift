@@ -18,6 +18,7 @@ private func signedWhole(_ d: Double) -> String { (d >= 0 ? "+" : "−") + Strin
 struct NunaChargeDetailView: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
+    @EnvironmentObject private var router: NavRouter
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @StateObject private var series = NunaSeriesModel()
     @StateObject private var day = NunaTodayModel()
@@ -28,10 +29,13 @@ struct NunaChargeDetailView: View {
     @State private var page = 0
     @State private var showCoach = false
 
+    /// The day picked on Today: nil for today; else the day key the readings below are cut at, so a past day shows its own figures.
+    private var cutoff: String? { router.todayDayOffset == 0 ? nil : NunaSelectedDay.key(offset: router.todayDayOffset) }
+
     var body: some View {
-        let latest = series.latest
+        let latest = series.latest(asOf: cutoff)
         NunaDetailScreen("Charge") {
-            NunaScoreHero(caption: "Today",
+            NunaScoreHero(caption: NunaSelectedDay.caption(offset: router.todayDayOffset, today: "Today"),
                           fraction: (day.charge.pct ?? latest?.value ?? 0) / 100,
                           number: (day.charge.pct ?? latest?.value).map { String(format: "%.0f", $0) } ?? "–",
                           unit: "%", name: chargeWord ?? "Charge", nameColor: (day.charge.pct ?? latest?.value).map(nunaChargeTextColor), color: (day.charge.pct ?? latest?.value).map(nunaChargeColor) ?? NunaPalette.charge,
@@ -54,13 +58,14 @@ struct NunaChargeDetailView: View {
                 NunaDivider()
                 NavigationLink(value: NunaTodayRoute.metric(restMetric)) {
                     NunaContributorRow(title: "Sleep performance", icon: "moon",
-                                       value: (day.rest ?? restSeries.latest?.value).map { String(format: "%.0f", $0) },
-                                       delta: lastChange(restSeries), downIsGood: false)
+                                       value: (day.rest ?? restSeries.latest(asOf: cutoff)?.value).map { String(format: "%.0f", $0) },
+                                       delta: restSeries.change(asOf: cutoff), downIsGood: false)
                 }.buttonStyle(.plain)
                 NunaDivider()
-                contributor("Skin temperature", "thermometer", skinSeries.latest.map { nunaSigned($0.value) }, "", lastChange(skinSeries), nil, decimals: 1, key: "skin_temp")
+                contributor("Skin temperature", "thermometer", skinSeries.latest(asOf: cutoff).map { nunaSigned($0.value) }, "", skinSeries.change(asOf: cutoff), nil, decimals: 1, key: "skin_temp")
             }
-            if coachEnabled, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
+            // Anya's line speaks of today (what to do with the day), so it is shown on today only.
+            if coachEnabled, router.todayDayOffset == 0, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
             NunaTrendDetailCard(
                 caption: "Average", unit: "%",
                 readings: { days, back in series.readings(days, endingDaysAgo: back) },
@@ -73,7 +78,8 @@ struct NunaChargeDetailView: View {
             NunaExpandRow(title: "How it's calculated", subtitle: "Three signals, against your own baseline",
                           text: "Charge compares last night's heart rate variability, resting heart rate and sleep with your own baseline from the last 30 days. It is an estimate computed on this phone from your strap's data.")
         }
-        .task(id: repo.refreshSeq) {
+        .task(id: "\(repo.refreshSeq)-\(router.todayDayOffset)") {
+            day.dayOffset = router.todayDayOffset
             await series.load(repo: repo, key: "recovery", source: "my-whoop")
             await restSeries.load(repo: repo, key: "sleep_performance", source: "my-whoop")
             await skinSeries.load(repo: repo, key: "skin_temp", source: "my-whoop")
@@ -89,16 +95,16 @@ struct NunaChargeDetailView: View {
 
     /// Anya's line about today's Charge: what lifts it, what holds it back and what that means for the day, not the figure the ring shows.
     private var anyaLine: String? {
-        guard let v = day.charge.pct ?? series.latest?.value else { return nil }
+        guard let v = day.charge.pct ?? series.latest(asOf: cutoff)?.value else { return nil }
         let rows = repo.days.suffix(31).dropLast()
         let efforts = rows.compactMap(\.strain).filter { $0 > 0 }.sorted()
         let usual = efforts.isEmpty ? nil : efforts[efforts.count / 2]
         let hrvBase = day.hrv.flatMap { h in day.hrvDelta.map { h - $0 } }
         let hrvPct = day.hrvDelta.flatMap { d in hrvBase.map { $0 > 0 ? d / $0 * 100 : 0 } }
         let prior = repo.days.dropLast().last?.strain
-        let read = ChargeRead.analyze(hrvDeltaPct: hrvPct, rhrDeltaBpm: day.restingHrDelta, sleepPct: day.rest ?? restSeries.latest?.value,
+        let read = ChargeRead.analyze(hrvDeltaPct: hrvPct, rhrDeltaBpm: day.restingHrDelta, sleepPct: day.rest ?? restSeries.latest(asOf: cutoff)?.value,
                                       priorEffort: prior, usualEffort: usual, respDeltaBpm: day.respiratoryDelta,
-                                      skinTempDevC: skinSeries.latest?.value)
+                                      skinTempDevC: skinSeries.latest(asOf: cutoff)?.value)
         return NunaInsightText.charge(read, chargePct: v)
     }
 
@@ -132,7 +138,7 @@ struct NunaChargeDetailView: View {
 
     /// The word for today's Charge, which sits in the ring in place of the name.
     private var chargeWord: LocalizedStringKey? {
-        (day.charge.pct ?? series.latest?.value).map { $0 >= 67 ? "Ready" : ($0 >= 34 ? "Moderate" : "Low") }
+        (day.charge.pct ?? series.latest(asOf: cutoff)?.value).map { $0 >= 67 ? "Ready" : ($0 >= 34 ? "Moderate" : "Low") }
     }
 
     private var chip: (String, Bool)? {
@@ -183,17 +189,17 @@ struct NunaEffortDetailView: View {
 
     var body: some View {
         NunaDetailScreen("Effort") {
-            NunaScoreHero(caption: "Today",
+            NunaScoreHero(caption: NunaSelectedDay.caption(offset: router.todayDayOffset, today: "Today"),
                           fraction: (day.effort ?? 0) / 100,
                           number: day.effort.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–",
                           suffix: String(localized: "of \(UnitFormatter.effortScaleMax(scale))"),
                           name: level?.0 ?? "Effort", nameColor: level?.1, gradient: day.effort.map(nunaEffortRingColors), target: nunaEffortTargetFractions(charge: day.charge.pct),
                           color: day.effort.map(nunaEffortColor) ?? NunaPalette.effortModerate) {
-                Text(verbatim: targetNote ?? String(localized: "Cardio load so far today")).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                Text(verbatim: router.todayDayOffset > 0 ? String(localized: "Cardio load for the day") : (targetNote ?? String(localized: "Cardio load so far today"))).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     .fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
             zonesCard
-            if coachEnabled, let e = day.effort {
+            if coachEnabled, router.todayDayOffset == 0, let e = day.effort {
                 NunaAnyaCard(verbatim: NunaInsightText.effort(effort: e, chargePct: day.charge.pct)
                              ?? String(localized: "Your Effort is \(UnitFormatter.effortDisplay(e, scale: scale)) of \(UnitFormatter.effortScaleMax(scale)) so far today.")) { showCoach = true }
             }
@@ -210,12 +216,14 @@ struct NunaEffortDetailView: View {
                 .columns(color: { v in nunaEffortColor(scale == .whoop ? v / 21 * 100 : v) }, legend: AnyView(effortKey))
                 .selectingDay { pickedDay = $0 }
             NunaTodayActivities(workouts: todayWorkouts, effortScale: scale,
-                                dayStart: Calendar.current.startOfDay(for: Date()), sleepMinutes: nil,
-                                includesSleep: false)
+                                dayStart: NunaSelectedDay.date(offset: router.todayDayOffset), sleepMinutes: nil,
+                                isToday: router.todayDayOffset == 0, includesSleep: false)
             NunaExpandRow(title: "How it's calculated", subtitle: "Cardio load across the day",
                           text: "Effort adds up how hard your heart worked during the day, weighted by heart rate zone. Workouts and everyday movement both count. It is shown on the scale you chose in Settings.")
         }
-        .task(id: repo.refreshSeq) {
+        .task(id: "\(repo.refreshSeq)-\(router.todayDayOffset)") {
+            day.dayOffset = router.todayDayOffset
+            pickedDay = nil
             await series.load(repo: repo, key: "strain", source: "my-whoop")
             await day.load(repo: repo, profile: profile)
             await loadZones()
@@ -229,7 +237,7 @@ struct NunaEffortDetailView: View {
     private func loadZones() async {
         let cal = Calendar.current
         let now = Date()
-        let dayStart = cal.startOfDay(for: pickedDay ?? now)
+        let dayStart = cal.startOfDay(for: pickedDay ?? NunaSelectedDay.date(offset: router.todayDayOffset))
         let isToday = cal.isDateInToday(dayStart)
         let start = Int(dayStart.timeIntervalSince1970)
         let end = isToday ? Int(now.timeIntervalSince1970) : Int((cal.date(byAdding: .day, value: 1, to: dayStart) ?? dayStart).timeIntervalSince1970)
@@ -239,7 +247,11 @@ struct NunaEffortDetailView: View {
         hrDay = await repo.hrSamples(from: start, to: end, limit: 200_000)
         hrBefore = await repo.hrSamples(from: beforeStart, to: beforeEnd, limit: 200_000)
         let rows = await repo.workoutRows()
-        if isToday { todayWorkouts = rows.filter { $0.startTs >= start && $0.startTs <= end } }
+        // The activities card follows the day the page was opened on, not a bar touched afterwards.
+        let pageDay = NunaSelectedDay.date(offset: router.todayDayOffset)
+        let pageStart = Int(pageDay.timeIntervalSince1970)
+        let pageEnd = Int((cal.date(byAdding: .day, value: 1, to: pageDay) ?? pageDay).timeIntervalSince1970)
+        todayWorkouts = rows.filter { $0.startTs >= pageStart && $0.startTs < pageEnd }
         // Everyday movement: the part of a finished day's Effort that none of its workouts explains. Effort is a logarithm of heart-rate load, so the split is
         // made on the load (`EffortAttribution`), not by subtracting points. Only for a past day: today's Effort is still moving and yesterday's is a whole day.
         func everyday(_ d: Date) -> Double? {
@@ -284,8 +296,16 @@ struct NunaEffortDetailView: View {
                 zoneRow("Everyday movement", "figure.walk", everydayDay.map { UnitFormatter.effortDisplay($0, scale: scale) },
                         (everydayDay != nil && everydayBefore != nil) ? UnitFormatter.effortValue(everydayDay! - everydayBefore!, scale: scale) : nil, downIsGood: nil)
                 NunaDivider()
-                zoneRow("Resting heart rate", "heart", restingDay.map { String(format: "%.0f", $0) },
-                        (restingDay != nil && restingBefore != nil) ? restingDay! - restingBefore! : nil, downIsGood: true)
+                // Touch it for the resting-heart-rate page: the night's figure against the days before it.
+                if let m = MetricCatalog.metric(key: "rhr", source: "my-whoop") {
+                    NavigationLink(value: NunaTodayRoute.metric(m)) {
+                        zoneRow("Resting heart rate", "heart", restingDay.map { String(format: "%.0f", $0) },
+                                (restingDay != nil && restingBefore != nil) ? restingDay! - restingBefore! : nil, downIsGood: true)
+                    }.buttonStyle(.plain)
+                } else {
+                    zoneRow("Resting heart rate", "heart", restingDay.map { String(format: "%.0f", $0) },
+                            (restingDay != nil && restingBefore != nil) ? restingDay! - restingBefore! : nil, downIsGood: true)
+                }
             }
         }
     }

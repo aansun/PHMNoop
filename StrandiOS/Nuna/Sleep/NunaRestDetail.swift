@@ -11,6 +11,7 @@ struct NunaRestDetailView: View {
     /// "Rest" behind the ring, "Sleep" behind the Sleep tile and rows: one screen, one night, whichever way it was opened.
     var title: LocalizedStringKey = "Rest"
     @EnvironmentObject private var repo: Repository
+    @EnvironmentObject private var router: NavRouter
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @StateObject private var series = NunaSeriesModel()
     @StateObject private var model = NunaSleepModel()
@@ -28,7 +29,7 @@ struct NunaRestDetailView: View {
             if model.loaded, model.nights.count > 1 { NunaNightPicker(model: model) }
             hero
             if let night = model.night { components(night) }
-            if coachEnabled, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
+            if coachEnabled, model.index == 0, router.todayDayOffset == 0, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
             NunaTrendDetailCard(
                 caption: "Average", unit: "%",
                 readings: { days, back in series.readings(days, endingDaysAgo: back) },
@@ -51,6 +52,9 @@ struct NunaRestDetailView: View {
             await model.load(repo: repo)
             factors = await NunaSleepFactorContext.load(repo: repo, restByWakeDay: series.byDay)
             if model.loaded, startIndex > 0, startIndex < model.nights.count, model.index == 0 { model.index = startIndex }
+            // Opened from Today on another day: the night that ended that morning.
+            else if model.loaded, startIndex == 0, router.todayDayOffset > 0, model.index == 0,
+                    let i = model.nights.firstIndex(where: { $0.dayKey == NunaSelectedDay.key(offset: router.todayDayOffset) }) { model.index = i }
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "sleep") }
     }
@@ -139,8 +143,18 @@ struct NunaRestDetailView: View {
             : (d > 0 ? String(localized: "\(d) points above your last 14 nights.") : String(localized: "\(-d) points below your last 14 nights."))
     }
 
+    /// "Last night" for the latest night; otherwise the day that night ended on.
+    private var restCaption: LocalizedStringKey {
+        if model.index == 0, router.todayDayOffset == 0 { return "Last night" }
+        if let n = model.night {
+            let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEEE d MMM")
+            return LocalizedStringKey(f.string(from: n.wakeDate))
+        }
+        return "Earlier night"
+    }
+
     private var hero: some View {
-        NunaScoreHero(caption: model.index == 0 ? "Last night" : "Earlier night",
+        NunaScoreHero(caption: restCaption,
                       fraction: (rest ?? 0) / 100, number: rest.map { "\(Int($0.rounded()))" } ?? "–", unit: "%",
                       name: rest.map(nunaRestWord) ?? "Rest", nameColor: rest.map(nunaRestTextColor),
                       color: rest.map(nunaRestColor) ?? NunaPalette.rest, hasNote: againstRecent != nil) {

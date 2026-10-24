@@ -110,6 +110,9 @@ final class NavRouter: ObservableObject {
     /// consumes it on appear and clears it back to nil. nil = open at today (the default).
     @Published var pendingJournalDayOffset: Int?
 
+    /// The day picked on Today (0 = today, 1 = yesterday, ...). The Charge, Effort and Rest pages it opens read this so they show that day.
+    @Published var todayDayOffset = 0
+
     /// Open the journal (hosted in the classic Insights screen). The #627 Today journal widget taps here;
     /// iOS presents InsightsView (the journal quick-action sheet), macOS selects the Insights sidebar row.
     /// `day` (#656): a specific day-offset to open at (nil = today) — a tapped strip bar passes its day.

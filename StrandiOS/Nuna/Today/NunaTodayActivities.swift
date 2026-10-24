@@ -43,12 +43,18 @@ struct NunaTodayActivities: View {
         return out.sorted { $0.start < $1.start }
     }
 
+    /// "Activities · Tue 20 Oct" for a day that is not today.
+    private static func dayTitle(_ d: Date) -> String {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE d MMM")
+        return String(localized: "Activities") + " · " + f.string(from: d)
+    }
+
     var body: some View {
         let rows = items
         return NunaCard(padding: EdgeInsets(top: 10, leading: 12, bottom: 12, trailing: 12)) {
         VStack(alignment: .leading, spacing: 10) {
             // The heading of Key Metrics, in the same place inside its card, with the same chevron.
-            NunaTitleRow(title: "Today's activities") {
+            NunaTitleRow(title: isToday ? "Today's activities" : LocalizedStringKey(Self.dayTitle(dayStart))) {
                 Button { router.requestedDestination = .workouts } label: {
                     Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .heavy))
                         .frame(width: 40, height: 40).contentShape(Rectangle())
