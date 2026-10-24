@@ -158,6 +158,8 @@ enum AppleDemoSeeder {
 
             // --- Apple Health daily aggregate ---
             let steps = Int(gauss(&rng, 8500.0, 2600.0).clamped(1200.0, 19000.0))
+            // The strap's own daily step series too, so the Steps detail page has a week to draw in a demo.
+            series.append(MetricPoint(day: day, key: "steps", value: Double(steps)))
             appleRows.append(AppleDaily(
                 day: day, steps: steps,
                 activeKcal: round1((Double(steps) * 0.045 + Double(nWorkouts) * 220).clamped(120.0, 1400.0)),
