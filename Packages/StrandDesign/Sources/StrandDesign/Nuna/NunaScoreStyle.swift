@@ -9,6 +9,11 @@ public enum NunaScoreStyle {
     public static var effortSeries: Color { NunaPalette.effortModerate }
     public static var restSeries: Color { NunaPalette.charge }
 
+    /// Two lines on one chart (Charge and Rest, or the first two metrics in Compare) have to be told apart at a glance, so they are a grey and a blue
+    /// rather than two greens. Both clear the dark and the light cards.
+    public static var pairGrey: Color { Color(light: "#4C565E", dark: "#B7C0C8") }
+    public static var pairBlue: Color { Color(light: "#1F6FE5", dark: "#4DA3FF") }
+
     /// Charge: green from 67, yellow from 34, red below.
     public static func chargeColor(_ v: Double) -> Color {
         v >= 67 ? NunaPalette.scoreHigh : (v >= 34 ? NunaPalette.scoreMid : NunaPalette.scoreLow)
