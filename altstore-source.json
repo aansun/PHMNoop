@@ -20,6 +20,15 @@
       "screenshotURLs": [],
       "versions": [
         {
+          "version": "2.0.0",
+          "buildVersion": "416",
+          "date": "2026-10-24",
+          "localizedDescription": "Charge, Effort and Rest follow the day you pick, Effort shows what builds it, the resting heart rate is the nightly average everywhere, a monitor-style heart-rate card, a simpler Compare and a glass strap-sync card.",
+          "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v2.0.0/PHMN-v2.0.0-ios-unsigned.ipa",
+          "size": 75438655,
+          "minOSVersion": "17.0"
+        },
+        {
           "version": "1.2.0",
           "buildVersion": "415",
           "date": "2026-10-23",
@@ -96,12 +105,12 @@
           "NSSpeechRecognitionUsageDescription": "PHMN transcribes your question on-device so you can ask the coach out loud instead of typing. Audio never leaves your iPhone."
         }
       },
-      "version": "1.2.0",
-      "buildVersion": "415",
-      "versionDate": "2026-10-23",
-      "versionDescription": "The Flow look, capsule charts for Charge and Effort, a Banner design for the workout Live Activity, a gym session you can change as you go, and gym sessions on Strava with their sets.",
-      "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v1.2.0/PHMN-v1.2.0-ios-unsigned.ipa",
-      "size": 75318307,
+      "version": "2.0.0",
+      "buildVersion": "416",
+      "versionDate": "2026-10-24",
+      "versionDescription": "Charge, Effort and Rest follow the day you pick, Effort shows what builds it, the resting heart rate is the nightly average everywhere, a monitor-style heart-rate card, a simpler Compare and a glass strap-sync card.",
+      "downloadURL": "https://github.com/aansun/PHMNoop/releases/download/v2.0.0/PHMN-v2.0.0-ios-unsigned.ipa",
+      "size": 75438655,
       "minOSVersion": "17.0"
     }
   ],
