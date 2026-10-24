@@ -17,6 +17,7 @@
 
 <p align="center">
   <a href="#a-personal-project">About</a> ·
+  <a href="#things-to-know-before-using-this-fork">Before you use it</a> ·
   <a href="#the-tour">Feature tour</a> ·
   <a href="#how-the-numbers-are-made">Calculations</a> ·
   <a href="#install">Install</a> ·
@@ -40,6 +41,18 @@ gym of its own, and the explanations behind every number.
 - Everything is computed and stored **on the phone**. There is no PHMN server, no account and no telemetry.
 - Anything that can leave the phone (Strava, Apple Health, Hevy, weather and air, an AI provider) is **off until you turn it on**, uses **your own** key, and is listed under Privacy.
 - Every figure is an **estimate, not medical advice**. Where a number needs history to mean anything, the app says what it is waiting for instead of inventing one.
+
+---
+
+## Things to know before using this fork
+
+PHMN is a fork, and a few things differ from the main project on purpose. These are the ones that change what you see on screen, so please read them before you rely on the numbers.
+
+- **Steps.** Step counting is switched back on in this fork for the WHOOP 5, and the step detection method differs from the main project.
+- **Apple Health.** The sync to Apple Health has been adjusted: data is sent in parts rather than all at once. If you choose Apple Health as the source of your steps, or use both the strap and Apple Health, the app takes whichever step count is higher.
+- **Sleep.** After several nights of testing sleep on three devices (a Fitbit Air, a WHOOP 5 and a Garmin Forerunner 255), the results varied quite a bit. I adjusted the sleep calculation in this fork to land closer to two of them, and that includes how movement during sleep is read. If a night is detected wrongly, you can still edit the times, and you can cancel a wrong entry within 10 seconds.
+- **Resting heart rate.** The number shown for resting heart rate is now an average, no longer the lowest value as in the main project.
+- **Strava.** If you decide to connect Strava, I suggest uploading manually at first. That lets you check exactly what is sent to Strava and decide whether you are comfortable with it.
 
 ---
 
