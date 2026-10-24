@@ -74,7 +74,9 @@ struct NunaCapsuleChart: View {
         let n = max(keys.count, 1)
         let slot = (size.width - sidePad * 2) / CGFloat(n)
         let top = topInset, base = top + plotHeight
-        let capW = min(max(slot * (dense ? 0.7 : 0.62), 1.4), 24)
+        // Rounded to a capsule only in Flow; in every other style the bars are boxes with softened corners, a little wider, like the other columns.
+        let flow = NunaThemePrefs.skin == .flow
+        let capW = min(max(slot * (dense ? 0.7 : 0.62), 1.4), flow ? 24 : 30)
         func y(_ v: Double) -> CGFloat { base - plotHeight * CGFloat(min(max(v, 0), 100)) / 100 }
 
         // The zone edges of Charge, so the fill colour has something to be read against.
@@ -99,7 +101,7 @@ struct NunaCapsuleChart: View {
         for (i, key) in keys.enumerated() {
             let cx = sidePad + slot * CGFloat(i) + slot / 2
             let capRect = CGRect(x: cx - capW / 2, y: top, width: capW, height: plotHeight)
-            let radius = dense ? min(capW / 2, 2) : capW / 2
+            let radius = dense ? min(capW / 2, 2) : (flow ? capW / 2 : min(10, capW * 0.3))
             if !dense { ctx.fill(Path(roundedRect: capRect, cornerRadius: radius), with: .color(NunaPalette.ink.opacity(0.08))) }
             let c = charge[key], e = effort[key]
             if let c {
