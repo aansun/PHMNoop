@@ -503,6 +503,8 @@ struct NunaColumns: View {
     var showsDates = true
     /// Where a target sits on the columns, 0 to 1 of their height: a dashed line across them.
     var target: Double?
+    /// Set to make a column touchable: a tap hands back the day of the column.
+    var onSelect: ((Date) -> Void)?
 
     var body: some View {
         HStack(alignment: .bottom, spacing: 4) {
@@ -534,6 +536,8 @@ struct NunaColumns: View {
                     }
                 }
                 .frame(maxWidth: .infinity)
+                .contentShape(Rectangle())
+                .onTapGesture { onSelect?(item.date) }
             }
         }
         .accessibilityHidden(true)
