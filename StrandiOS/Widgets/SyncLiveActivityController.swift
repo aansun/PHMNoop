@@ -47,6 +47,16 @@ final class SyncLiveActivityController {
 
     func attach(to live: LiveState) {
         self.live = live
+        #if DEBUG
+        // `--demo-sync`: shows a sync in progress without a strap, for looking at the Lock Screen and the Island.
+        if CommandLine.arguments.contains("--demo-sync") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3) { [weak self] in
+                guard let self else { return }
+                self.startedAt = Date().addingTimeInterval(-83)
+                self.request(state: .init(phase: .syncing, chunks: 47, startedAt: self.startedAt, status: "Syncing…", detail: "120 pages behind at connect"))
+            }
+        }
+        #endif
         live.$backfilling
             .removeDuplicates()
             .receive(on: DispatchQueue.main)

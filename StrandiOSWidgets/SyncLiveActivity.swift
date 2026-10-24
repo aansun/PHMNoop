@@ -11,35 +11,39 @@ import StrandDesign
 struct SyncLiveActivity: Widget {
     var body: some WidgetConfiguration {
         ActivityConfiguration(for: SyncActivityAttributes.self) { context in
-            // Lock Screen / banner presentation, in the grammar of the workout banner: a title row, the status, then the figures a sync has.
+            // Lock Screen presentation: glass. The background is left to the system's own material (no solid tint), so the wallpaper shows through and the
+            // card follows light and dark by itself; every colour here is a system one for the same reason. An icon and the status lead, then the two figures of
+            // a sync in tiles of their own.
             let st = context.state
             let tint = glyphTint(st.phase)
-            VStack(spacing: 0) {
-                HStack {
-                    HStack(spacing: 10) {
-                        Circle().fill(tint).frame(width: 10, height: 10)
-                        Text(verbatim: context.attributes.title).font(.nuna(size: 15.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle().fill(tint.opacity(0.22))
+                        Image(systemName: glyphName(st.phase)).font(.system(size: 17, weight: .bold)).foregroundStyle(tint)
                     }
-                    Spacer(minLength: 8)
-                    Image(systemName: glyphName(st.phase)).font(.system(size: 15, weight: .bold)).foregroundStyle(tint)
+                    .frame(width: 40, height: 40)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(verbatim: context.attributes.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(1).textCase(.uppercase)
+                            .foregroundStyle(.secondary).lineLimit(1)
+                        Text(verbatim: st.status).font(.nuna(size: 22, weight: .bold, design: NunaType.design))
+                            .foregroundStyle(.primary).lineLimit(1).minimumScaleFactor(0.75)
+                    }
+                    Spacer(minLength: 0)
                 }
-                Text(verbatim: st.status).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 12)
                 if let detail = st.detail {
-                    Text(verbatim: detail).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                        .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 2)
+                    Text(verbatim: detail).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(.secondary).lineLimit(2)
                 }
                 if isActive(st.phase) {
-                    Rectangle().fill(NunaPalette.hairline).frame(height: 1).padding(.vertical, 14)
-                    HStack(spacing: 0) {
-                        NOOPLiveMetric(label: "CHUNKS", text: Text(verbatim: st.chunks > 0 ? "\(st.chunks)" : "···"), size: 30, alignment: .leading)
-                        NOOPLiveMetric(label: "TIME", text: elapsed(since: st.startedAt), size: 30, alignment: .trailing)
+                    HStack(spacing: 10) {
+                        glassTile("CHUNKS", Text(verbatim: st.chunks > 0 ? "\(st.chunks)" : "···"))
+                        glassTile("TIME", elapsed(since: st.startedAt))
                     }
                 }
             }
-            .padding(EdgeInsets(top: 16, leading: 18, bottom: 18, trailing: 18))
-            .activityBackgroundTint(NunaPalette.card)
-            .activitySystemActionForegroundColor(NunaPalette.textPrimary)
+            .padding(EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16))
+            .activityBackgroundTint(nil)
+            .activitySystemActionForegroundColor(Color.primary)
         } dynamicIsland: { context in
             // One line, deliberately: iOS shows the expanded layout for a few seconds whenever an activity starts and offers no way
             // to start compact, so the only lever on that flash is how tall it is. The backlog detail lives on the Lock Screen banner.
@@ -68,6 +72,19 @@ struct SyncLiveActivity: Widget {
             .keylineTint(tint)
         }
     }
+}
+
+/// One figure on a soft glass tile: the label small above, the value large below.
+private func glassTile<V: View>(_ label: LocalizedStringKey, _ value: V) -> some View {
+    VStack(alignment: .leading, spacing: 3) {
+        Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.9).foregroundStyle(.secondary)
+        value.font(.nuna(size: 26, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(.primary)
+            .lineLimit(1).minimumScaleFactor(0.7)
+    }
+    .frame(maxWidth: .infinity, alignment: .leading)
+    .padding(.horizontal, 14).padding(.vertical, 10)
+    .background(Color.primary.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(Color.primary.opacity(0.10), lineWidth: 1))
 }
 
 private func isActive(_ phase: SyncActivityAttributes.Phase) -> Bool {
