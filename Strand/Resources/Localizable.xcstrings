@@ -6260,6 +6260,27 @@
         "Last signal %@": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Sinyal terakhir %@"}}
         } },
+        "What builds your Effort": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Yang membentuk Effort-mu"}}
+        } },
+        "Above 80%": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Di atas 80%"}}
+        } },
+        "Each minute counts 1 to 5 by band, and the sum is mapped on a logarithmic scale. Resting and max set the bands.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Tiap menit dihitung 1 sampai 5 menurut pita, lalu jumlahnya dipetakan pada skala logaritmik. Detak istirahat dan maksimum menentukan pitanya."}}
+        } },
+        "The ring also includes Effort already counted earlier today.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Cincin juga mencakup Effort yang sudah dihitung lebih awal hari ini."}}
+        } },
+        "No heart-rate readings yet today.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Belum ada bacaan detak jantung hari ini."}}
+        } },
+        "Not enough heart-rate readings yet to split the load.": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Bacaan detak jantung belum cukup untuk memecah bebannya."}}
+        } },
+        "Average heart rate": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Rata-rata detak jantung"}}
+        } },
         "Charge and Rest": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Charge dan Rest"}}
         } },
