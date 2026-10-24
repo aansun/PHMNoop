@@ -701,8 +701,8 @@
     "Same as your age": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Sama dengan usiamu"}}}},
     "HR Dynamic Island": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "HR di Dynamic Island"}}}},
     "Broadcast HR": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Siarkan HR"}}}},
-    "Heart rate zones 1–3": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Zona detak jantung 1–3"}}}},
-    "Heart rate zones 4–5": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Zona detak jantung 4–5"}}}},
+    "Heart rate zones 1–3": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Heart Rate Zone 1–3"}}}},
+    "Heart rate zones 4–5": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Heart Rate Zone 4–5"}}}},
     "Not sure what it was. Pick the closest:": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Belum yakin ini apa. Pilih yang paling mendekati:"}}}},
     "Your resting heart rate and HRV are close to your usual. The %@ level comes from your heart rate through the day.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Detak jantung istirahat dan HRV Anda mendekati biasanya. Level %@ berasal dari detak jantung Anda sepanjang hari."}}}},
     "Read from the activity you start. Set it there under Effort target.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Dibaca dari aktivitas yang Anda mulai. Atur di sana pada Target Effort."}}}},
@@ -6265,6 +6265,9 @@
         } },
         "Everyday movement": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Gerak sehari-hari"}}
+        } },
+        "Cardio load for the day": { "localizations": {
+          "id": {"stringUnit": {"state": "translated", "value": "Beban kardio hari itu"}}
         } },
         "Charge and Rest": { "localizations": {
           "id": {"stringUnit": {"state": "translated", "value": "Charge dan Rest"}}
@@ -146192,7 +146195,7 @@
     },
     "Resting heart rate": {
       "localizations": {
-        "id": {"stringUnit": {"state": "translated", "value": "Detak jantung istirahat"}},
+        "id": {"stringUnit": {"state": "translated", "value": "Resting Heart Rate"}},
         "de": {
           "stringUnit": {
             "state": "translated",
