@@ -1348,7 +1348,8 @@ struct NunaLiveWorkoutView: View {
                         } else {
                             activityRing(w, bpm: bpm, zone: zone, color: tone,
                                          size: min(260,
-                                                   max(188, viewport.size.height - NunaSpacing.section * 2)))
+                                                   max(188, viewport.size.height - NunaSpacing.section * 2 - 104)))
+                            effortHeartRate(bpm: bpm, zone: zone, color: tone)
                         }
                         if !liveActivitiesOn { liveActivityOffCard }
                     }
@@ -1442,6 +1443,32 @@ struct NunaLiveWorkoutView: View {
             .buttonStyle(.plain)
             .accessibilityLabel(Text(hideBpm ? "Show bpm" : "Hide bpm"))
         }
+    }
+
+    /// The heart rate under the Effort ring, at the left: the heart, its name and the reading, so the session's effort and the pulse behind it are on one screen.
+    private func effortHeartRate(bpm: Int?, zone: Int, color: Color) -> some View {
+        HStack(alignment: .bottom) {
+            VStack(alignment: .leading, spacing: 6) {
+                Image(systemName: "heart.fill").font(.nuna(size: 22, weight: .semibold))
+                    .foregroundStyle(bpm == nil ? NunaPalette.textMuted : color)
+                Text("Heart rate").font(.nuna(size: NunaTypeSize.caption, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.textSecondary)
+                HStack(alignment: .firstTextBaseline, spacing: 5) {
+                    Text(verbatim: hideBpm ? "•••" : (bpm.map(String.init) ?? "–"))
+                        .font(.nuna(size: NunaTypeSize.numberL, weight: .bold, design: NunaType.design)).monospacedDigit()
+                        .foregroundStyle(NunaPalette.textPrimary)
+                    Text("bpm").font(.nuna(size: NunaTypeSize.caption, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                }
+            }
+            Spacer(minLength: 8)
+            if bpm != nil, !hideBpm, zone > 0 {
+                Text(verbatim: String(localized: "Zone \(zone)")).font(.nuna(size: NunaTypeSize.sub, weight: .bold)).foregroundStyle(color).textCase(nil)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("Heart rate"))
+        .accessibilityValue(Text(verbatim: hideBpm ? "–" : (bpm.map { "\($0) bpm" } ?? "–")))
     }
 
     private func activityRing(_ w: AppModel.ActiveWorkout, bpm: Int?, zone: Int, color: Color, size: CGFloat) -> some View {
