@@ -130,15 +130,21 @@ struct NunaTrendChart: View {
             .chartOverlay { proxy in
                 if selected != nil {
                     GeometryReader { g in
+                        // A tap picks a day and a sideways drag moves across them; a vertical swipe is left to the page, so a chart never traps a scroll.
+                        let pick: (CGFloat) -> Void = { px in
+                            guard let frame = proxy.plotFrame else { return }
+                            let x = px - g[frame].origin.x
+                            guard let d: Date = proxy.value(atX: x) else { return }
+                            let cal = Calendar(identifier: .gregorian)
+                            let i = Int((d.timeIntervalSince(origin) / 86400).rounded())
+                            guard i >= 0, i < days, let day = cal.date(byAdding: .day, value: i, to: origin) else { return }
+                            selected?.wrappedValue = NunaDayFormat.parser.string(from: day)
+                        }
                         Rectangle().fill(.clear).contentShape(Rectangle())
-                            .gesture(DragGesture(minimumDistance: 0).onChanged { v in
-                                guard let frame = proxy.plotFrame else { return }
-                                let x = v.location.x - g[frame].origin.x
-                                guard let d: Date = proxy.value(atX: x) else { return }
-                                let cal = Calendar(identifier: .gregorian)
-                                let i = Int((d.timeIntervalSince(origin) / 86400).rounded())
-                                guard i >= 0, i < days, let day = cal.date(byAdding: .day, value: i, to: origin) else { return }
-                                selected?.wrappedValue = NunaDayFormat.parser.string(from: day)
+                            .simultaneousGesture(SpatialTapGesture().onEnded { pick($0.location.x) })
+                            .simultaneousGesture(DragGesture(minimumDistance: 10).onChanged { v in
+                                guard abs(v.translation.width) > abs(v.translation.height) else { return }
+                                pick(v.location.x)
                             })
                     }
                 }
@@ -163,16 +169,60 @@ struct NunaTrendChart: View {
     }
 }
 
-/// Two or more lines on the same 0 to 100 scale (each by its own maximum), for "two lines moving together".
+/// Two or more lines on the same 0 to 100 scale (each by its own maximum), for "two lines moving together". A line that has a `title` and a `text` can be
+/// read: touching the chart (or dragging along it) selects a day, and that day's figure for every such line is written above it, in the line's own terms.
 struct NunaMultiLineChart: View {
-    struct Line { let series: NunaDaySeries; let max: Double; let color: Color; var pointColor: ((Double) -> Color)? = nil; var dashed = false }
+    struct Line {
+        let series: NunaDaySeries; let max: Double; let color: Color
+        var pointColor: ((Double) -> Color)? = nil
+        var dashed = false
+        /// The name written beside the figure, and how a stored value of this line is written.
+        var title: String? = nil
+        var text: ((Double) -> String)? = nil
+    }
     let start: String
     let days: Int
     let lines: [Line]
     var height: CGFloat = 130
+    @State private var selected: String?
+
+    private var readable: [Line] { lines.filter { $0.title != nil && $0.text != nil } }
+    private static let readFormat: DateFormatter = {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.timeZone = TimeZone(identifier: "UTC")
+        f.setLocalizedDateFormatFromTemplate("EEE d MMM"); return f
+    }()
 
     var body: some View {
-        NunaTrendChart(start: start, days: days, series: lines.map { .init(points: $0.series, max: $0.max, color: $0.color, pointColor: $0.pointColor, dashed: $0.dashed) }, height: height + 24)
+        VStack(alignment: .leading, spacing: 10) {
+            if !readable.isEmpty { readout }
+            NunaTrendChart(start: start, days: days,
+                           series: lines.map { .init(points: $0.series, max: $0.max, color: $0.color, pointColor: $0.pointColor, dashed: $0.dashed) },
+                           height: height + 24, selected: readable.isEmpty ? nil : $selected)
+        }
+        .onChange(of: start) { _, _ in selected = nil }
+        .onChange(of: days) { _, _ in selected = nil }
+    }
+
+    private var readout: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            if let day = selected, let d = NunaDayFormat.parse(day) {
+                Text(verbatim: Self.readFormat.string(from: d)).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.textSecondary)
+                ForEach(Array(readable.enumerated()), id: \.offset) { _, line in
+                    let value = line.series.first { $0.day == day }?.value
+                    HStack(spacing: 8) {
+                        Circle().fill(value.flatMap { line.pointColor?($0) } ?? line.color).frame(width: 10, height: 10)
+                        Text(verbatim: line.title ?? "").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                        Spacer()
+                        Text(verbatim: value.flatMap { line.text?($0) } ?? "–").font(.nuna(size: 16, weight: .bold, design: NunaType.design)).monospacedDigit()
+                            .foregroundStyle(NunaPalette.textPrimary)
+                    }
+                }
+            } else {
+                Text("Touch the chart to read the figures").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: CGFloat(18 + 22 * readable.count), alignment: .topLeading)
     }
 }
 
