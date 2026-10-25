@@ -1349,7 +1349,7 @@ struct NunaLiveWorkoutView: View {
                             activityRing(w, bpm: bpm, zone: zone, color: tone,
                                          size: min(260,
                                                    max(188, viewport.size.height - NunaSpacing.section * 2 - 104)))
-                            effortHeartRate(bpm: bpm, zone: zone, color: tone)
+                            effortHeartRate(bpm: bpm, color: tone)
                         }
                         if !liveActivitiesOn { liveActivityOffCard }
                     }
@@ -1446,7 +1446,7 @@ struct NunaLiveWorkoutView: View {
     }
 
     /// The heart rate under the Effort ring, at the left: the heart, its name and the reading, so the session's effort and the pulse behind it are on one screen.
-    private func effortHeartRate(bpm: Int?, zone: Int, color: Color) -> some View {
+    private func effortHeartRate(bpm: Int?, color: Color) -> some View {
         HStack(alignment: .bottom) {
             VStack(alignment: .leading, spacing: 6) {
                 Image(systemName: "heart.fill").font(.nuna(size: 22, weight: .semibold))
@@ -1459,10 +1459,6 @@ struct NunaLiveWorkoutView: View {
                         .foregroundStyle(NunaPalette.textPrimary)
                     Text("bpm").font(.nuna(size: NunaTypeSize.caption, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
-            }
-            Spacer(minLength: 8)
-            if bpm != nil, !hideBpm, zone > 0 {
-                Text(verbatim: String(localized: "Zone \(zone)")).font(.nuna(size: NunaTypeSize.sub, weight: .bold)).foregroundStyle(color).textCase(nil)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
