@@ -95,7 +95,7 @@ struct NunaTodayCustomizeSheet: View {
         let dh = Set(defaultHidden)
         defaultSections = EditableLayoutDraft(visible: defaultOrder.filter { !dh.contains($0) }, hidden: defaultOrder.filter { dh.contains($0) })
         let m = EditableLayoutDraft(visible: KeyMetricPrefs.decodeEnabled(keyMetricsRaw.wrappedValue), allItems: KeyMetric.defaultOrder)
-        let c = EditableLayoutDraft(visible: DashboardCardPrefs.decodeEnabled(dashboardCardsRaw.wrappedValue), allItems: DashboardCard.canonicalOrder)
+        let c = EditableLayoutDraft(visible: NunaTodayDefaults.yourCardsEnabled(dashboardCardsRaw.wrappedValue), allItems: DashboardCard.canonicalOrder)
         let h = EditableLayoutDraft(visible: HostedCardPrefs.decodeEnabled(hostedCardsRaw.wrappedValue), allItems: HostedCard.canonicalOrder)
         initialSections = s; initialMetrics = m; initialCards = c; initialHosted = h
         initialDetailed = keyMetricsDetailed.wrappedValue; initialWindow = keyMetricsWindowDays.wrappedValue
