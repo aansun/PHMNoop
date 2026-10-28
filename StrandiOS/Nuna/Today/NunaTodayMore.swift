@@ -105,7 +105,7 @@ extension NunaTodayView {
         }
         let steps = MetricCatalog.todayStepsMetric(hasMeasuredSteps: model.steps != nil)
             .map { NunaRowTarget(kind: .nuna(.metric($0))) }
-        return DashboardCardPrefs.decodeEnabled(dashboardCardsRaw).compactMap { card -> NunaLinkRow? in
+        return NunaTodayDefaults.yourCardsEnabled(dashboardCardsRaw).compactMap { card -> NunaLinkRow? in
             let ex = model.extras
             let made: (String?, NunaRowTarget?, String, Color?)
             switch card {

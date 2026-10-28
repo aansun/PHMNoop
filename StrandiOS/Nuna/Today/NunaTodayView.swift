@@ -16,13 +16,19 @@ enum NunaTodayDefaults {
     /// different defaults, so one must not leak into the other.
     static let orderKey = "nuna.today.sectionOrder"
     static let hiddenKey = "nuna.today.hiddenSections"
-    /// Rings and the synthesis chips, Anya, what was done today, key metrics, the stress card, the journal with mood, then the
-    /// add-or-arrange card. Everything else (heart rate, start session, your cards, cycle, added cards) stays out until the person adds it.
+    /// Rings, the Vital signs and Stress monitor pair, Anya, what was done today, the journal with mood, Your cards, Charge and Effort for the
+    /// week, then the add-or-arrange card. The state chips, key metrics, heart rate, start session, cycle and added cards stay out until the
+    /// person adds them.
     static let order: [TodaySection] = [
-        .hero, .stateChips, .synthesis, .workouts, .keyMetrics, .weekCompare, .recoveryVitals, .vitalMonitor, .journal,
-        .heartRate, .liveSession, .yourCards, .menstrualCycle, .addedCards,
+        .hero, .vitalMonitor, .synthesis, .workouts, .journal, .yourCards, .weekCompare, .recoveryVitals,
+        .stateChips, .keyMetrics, .heartRate, .liveSession, .menstrualCycle, .addedCards,
     ]
-    static let hidden: [TodaySection] = [.heartRate, .liveSession, .yourCards, .menstrualCycle, .addedCards, .vitalMonitor]
+    static let hidden: [TodaySection] = [.stateChips, .keyMetrics, .heartRate, .liveSession, .menstrualCycle, .addedCards]
+    /// What Your cards holds until the person chooses their own. The Default looks keep `DashboardCard.defaultSelection` for the same key.
+    static let yourCards: [DashboardCard] = [.steps, .fitnessAge, .vitality, .calories, .weight]
+    static func yourCardsEnabled(_ raw: String) -> [DashboardCard] {
+        raw.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? yourCards : DashboardCardPrefs.decodeEnabled(raw)
+    }
     /// Set once the monitor pair has been hidden on a layout saved before it existed (it would otherwise appear on its own).
     static let monitorHiddenKey = "nuna.today.monitorHidden.v1"
     /// Set once the Activity card has been brought back on a layout saved while it was hidden by default.
@@ -632,7 +638,7 @@ struct NunaTodayView: View {
     // MARK: Add a card
 
     private var hiddenDashboardCards: [DashboardCard] {
-        let on = DashboardCardPrefs.decodeEnabled(dashboardCardsRaw)
+        let on = NunaTodayDefaults.yourCardsEnabled(dashboardCardsRaw)
         return DashboardCard.canonicalOrder.filter { !on.contains($0) }
     }
     private var hiddenHostedCards: [HostedCard] {
@@ -663,7 +669,7 @@ struct NunaTodayView: View {
                         ForEach(Array(hiddenDashboardCards.enumerated()), id: \.element.id) { idx, card in
                             if idx > 0 { NunaDivider() }
                             Button {
-                                dashboardCardsRaw = DashboardCardPrefs.encode(DashboardCardPrefs.decodeEnabled(dashboardCardsRaw) + [card])
+                                dashboardCardsRaw = DashboardCardPrefs.encode(NunaTodayDefaults.yourCardsEnabled(dashboardCardsRaw) + [card])
                                 add(.yourCards, after: addAfter); showAddCard = false
                             } label: { NunaListRow(LocalizedStringKey(card.title), subtitle: LocalizedStringKey(card.subtitle), systemImage: card.icon) { addLabel } }.buttonStyle(.plain)
                         }
