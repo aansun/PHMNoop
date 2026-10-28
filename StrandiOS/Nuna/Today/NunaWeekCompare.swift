@@ -29,11 +29,6 @@ struct NunaWeekCompare: View {
         }
     }
 
-    private func mean(_ s: [String: Double], _ slots: [Slot]) -> Double? {
-        let v = slots.compactMap { s[$0.key] }
-        return v.isEmpty ? nil : v.reduce(0, +) / Double(v.count)
-    }
-
     var body: some View {
         let days = slots
         let hasData = days.contains { charge[$0.key] != nil || effort[$0.key] != nil }
@@ -52,37 +47,12 @@ struct NunaWeekCompare: View {
                                          effort: days.compactMap { s in effort[s.key].map { (s.key, $0) } },
                                          effortScale: effortScale, selected: $selected, highlightLast: true)
                         NunaCapsuleLegend()
-                        NunaDivider()
-                        averages(days)
                     }
                 }
             }
         }
         .buttonStyle(.plain)
         .task(id: "\(repo.refreshSeq)-\(Repository.localDayKey(endDay))") { await load() }
-    }
-
-    private func averages(_ days: [Slot]) -> some View {
-        HStack(alignment: .top, spacing: 12) {
-            average("Charge", mean(charge, days).map { "\(Int($0.rounded()))" }, unit: "%", color: mean(charge, days).map(nunaChargeColor) ?? NunaPalette.textMuted)
-            average("Effort", mean(effort, days).map { UnitFormatter.effortDisplay($0, scale: effortScale) }, unit: "",
-                    color: mean(effort, days).map(nunaEffortColor) ?? NunaPalette.textMuted)
-        }
-    }
-
-    private func average(_ title: LocalizedStringKey, _ value: String?, unit: String, color: Color) -> some View {
-        VStack(alignment: .leading, spacing: 3) {
-            HStack(spacing: 6) {
-                Circle().fill(color).frame(width: 8, height: 8)
-                Text(title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            }
-            HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text(verbatim: value ?? "–").font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                if !unit.isEmpty && value != nil { Text(verbatim: unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
-            }
-            Text("7-day average").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func load() async {
