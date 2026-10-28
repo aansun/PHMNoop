@@ -130,12 +130,15 @@ struct NunaTodayActivities: View {
     /// follows the Effort of the workout (sleep keeps the Rest colour).
     private func rowBody(tint: Color, icon: String, figure: String, name: Text, start: Date, end: Date) -> some View {
         HStack(spacing: 12) {
+            // Icon and figure start at the same place in every row, whatever the figure's width, so the column of figures reads as one line.
             HStack(spacing: 7) {
                 Image(systemName: icon).font(.nuna(size: 15, weight: .semibold)).frame(width: 20)
                 Text(verbatim: figure).font(.nuna(size: 18, weight: .bold, design: NunaType.design)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .padding(.horizontal, 11)
             .foregroundStyle(NunaPalette.textPrimary)
-            .frame(width: 92, height: 40)
+            .frame(width: 96, height: 40, alignment: .leading)
             .background(NunaPalette.ink.opacity(0.12), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
             name.font(.nuna(size: 13, weight: .heavy)).tracking(0.8).foregroundStyle(NunaPalette.textPrimary)
                 .lineLimit(2).minimumScaleFactor(0.85).multilineTextAlignment(.leading)
@@ -180,11 +183,11 @@ struct NunaTodayActivities: View {
         return String(format: "%d:%02d", m / 60, m % 60)
     }
 
-    /// Effort when the workout has one, else its length in minutes.
+    /// Effort when the workout has one, else its length in minutes, as a bare number: no tile carries a unit.
     private func workoutFigure(_ w: WorkoutRow) -> String {
         if let s = w.strain { return UnitFormatter.effortDisplay(s, scale: effortScale) }
         let secs = w.durationS ?? Double(w.endTs - w.startTs)
-        return String(localized: "\(Int((secs / 60).rounded())) min")
+        return String(Int((secs / 60).rounded()))
     }
 
     /// The night that ended on this day: the sessions of at least three hours that woke inside it, from the first onset to the last wake.
