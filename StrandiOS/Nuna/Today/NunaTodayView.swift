@@ -165,7 +165,6 @@ struct NunaTodayView: View {
     @State private var showCoach = false
     @State private var editing = false
     @State private var showManual = false
-    @State private var showMood = false
     /// The saved session the Anya card opens straight to.
     @State private var showBreath = false
     @Environment(\.nunaPushToday) private var pushToday
@@ -320,11 +319,6 @@ struct NunaTodayView: View {
             .nunaSheetChrome(detents: [.large])
         }
         .sheet(isPresented: $showAddCard) { addCardSheet }
-        .sheet(isPresented: $showMood) {
-            NavigationStack { NunaMoodView().toolbar(.hidden, for: .navigationBar) }
-                .environmentObject(repo)
-                .preferredColorScheme(NunaTheme.colorScheme)
-        }
         .sheet(isPresented: $showInbox) { NunaUpdatesInbox(onClose: { showInbox = false }).nunaSheetChrome(detents: [.large]) }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "today") }
         .environment(\.nunaAnyaCardContext, "today")
@@ -569,7 +563,7 @@ struct NunaTodayView: View {
                        "Latest activity").background(inner)
         case .journal:
             HStack(spacing: 8) {
-                miniChip("Journal"); miniChip("Mood"); Spacer(minLength: 0)
+                miniChip("Journal"); Spacer(minLength: 0)
             }
         case .yourCards: previewRow("rectangle.stack", nil, String(localized: "Your cards"), "Cards you chose").background(inner)
         case .menstrualCycle: previewRow("drop", NunaPalette.alertText, String(localized: "Menstrual cycle"), "Cycle awareness").background(inner)
@@ -797,16 +791,7 @@ struct NunaTodayView: View {
                 .buttonStyle(.plain)
             }
         case .journal:
-            VStack(spacing: 12) {
-                NunaJournalWeekCard { router.requestedDestination = .journal }
-                if model.isToday {
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 10) {
-                            NunaQuickChip(title: "Mood", systemImage: "face.smiling") { showMood = true }
-                        }
-                    }
-                }
-            }
+            NunaJournalWeekCard { router.requestedDestination = .journal }
         case .liveSession where model.isToday:
             Button { router.requestedDestination = .liveSession } label: {
                 Label("Start session", systemImage: "play.fill")

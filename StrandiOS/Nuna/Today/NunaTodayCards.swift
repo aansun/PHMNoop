@@ -821,8 +821,6 @@ struct NunaJournalWeekCard: View {
                             let isToday = Calendar.current.isDateInToday(d)
                             VStack(spacing: 6) {
                                 Text(verbatim: Self.weekday(d)).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                                    .foregroundStyle(NunaPalette.textSecondary)
-                                Text(verbatim: String(Calendar.current.component(.day, from: d))).font(.nuna(size: 17, weight: .bold, design: NunaType.design))
                                     .foregroundStyle(isToday ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                                 mark(done: logged.contains(Repository.localDayKey(d)))
                             }
