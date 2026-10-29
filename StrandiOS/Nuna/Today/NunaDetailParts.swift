@@ -531,7 +531,7 @@ struct NunaColorBars: View {
             if values.count <= 7, dates.count == values.count {
                 HStack(spacing: 0) {
                     ForEach(dates.indices, id: \.self) { i in
-                        Text(verbatim: nunaAxisDate(dates[i])).font(.nuna(size: 10, weight: .semibold))
+                        Text(verbatim: nunaAxisDate(dates[i])).font(.nuna(size: 10, weight: .semibold)).textCase(nil)
                             .foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.7).frame(maxWidth: .infinity)
                     }
                 }
@@ -580,9 +580,9 @@ struct NunaColumns: View {
                         }
                     }
                     VStack(spacing: 1) {
-                        Text(verbatim: item.weekday).font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textPrimary.opacity(item.highlight ? 1 : 0.8))
+                        Text(verbatim: item.weekday).font(.nuna(size: 11, weight: .bold)).textCase(nil).foregroundStyle(NunaPalette.textPrimary.opacity(item.highlight ? 1 : 0.8))
                         if showsDates {
-                            Text(verbatim: nunaAxisDate(item.date)).font(.nuna(size: 9.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: nunaAxisDate(item.date)).font(.nuna(size: 9.5, weight: .semibold)).textCase(nil).foregroundStyle(NunaPalette.textSecondary)
                                 .lineLimit(1).minimumScaleFactor(0.7)
                         }
                     }
