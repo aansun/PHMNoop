@@ -736,7 +736,7 @@ struct NunaTodayView: View {
             }
         case .recoveryVitals:
             if model.stress != nil || model.stressCurve != nil {
-                NunaStressCard(score: model.stress, curve: model.stressCurve, baseline: model.stressBaseline, isToday: model.isToday)
+                NunaStressCard(score: model.stress, curve: model.stressCurve, baseline: model.stressBaseline, isToday: model.isToday, workouts: model.workouts)
             }
         case .weekCompare:
             NunaWeekCompare(endDay: model.displayDate, effortScale: effortScale)
