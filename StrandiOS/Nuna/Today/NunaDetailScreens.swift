@@ -76,6 +76,7 @@ struct NunaChargeDetailView: View {
                 sentence: nil, range: $range, page: $page)
                 .columns(color: nunaChargeColor, top: 100, legend: AnyView(zoneKey))
                 .endingOn(daysAgo: router.todayDayOffset)
+            weeklyTrends
             NunaExpandRow(title: "How it's calculated", subtitle: "Three signals, against your own baseline",
                           text: "Charge compares last night's heart rate variability, resting heart rate and sleep with your own baseline from the last 30 days. It is an estimate computed on this phone from your strap's data.")
         }
@@ -107,6 +108,19 @@ struct NunaChargeDetailView: View {
                                       priorEffort: prior, usualEffort: usual, respDeltaBpm: day.respiratoryDelta,
                                       skinTempDevC: skinSeries.latest(asOf: cutoff)?.value)
         return NunaInsightText.charge(read, chargePct: v)
+    }
+
+    /// The week behind the signals Charge is made of, one bare card each; a card opens that signal's own page.
+    private var weeklyTrends: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Weekly trends").font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                .accessibilityAddTraits(.isHeader).padding(.top, 4)
+            NunaWeeklyTrendCard(title: "Heart rate variability", key: "hrv", style: .line, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
+            NunaWeeklyTrendCard(title: "Resting heart rate", key: "rhr", style: .line, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
+            NunaWeeklyTrendCard(title: "Respiratory rate", key: "resp_rate", style: .line, decimals: 1, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
+            NunaWeeklyTrendCard(title: "Sleep performance", key: "sleep_performance", style: .bars, color: NunaPalette.restDeep, labelColor: NunaPalette.restText, endingDaysAgo: router.todayDayOffset)
+            NunaWeeklyTrendCard(title: "Skin temperature", key: "skin_temp", style: .line, decimals: 1, signed: true, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
+        }
     }
 
     /// What the colours of the bars mean: the three Charge zones.
