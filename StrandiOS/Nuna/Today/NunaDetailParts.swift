@@ -13,18 +13,43 @@ struct NunaDetailHeader: View {
     var onAnya: (() -> Void)?
     /// Extra control at the trailing edge (for example a "Today" chip), shown when there is no Anya button.
     var trailing: AnyView?
+    /// The title small and in the middle of the bar, between the way back and the controls, instead of large at the left.
+    var centersTitle = false
     @Environment(\.dismiss) private var dismiss
     /// With the metric dropdown below, it already names the screen, so the title is left out rather than said twice.
     @Environment(\.nunaDetailSwitch) private var switcher
 
+    private var backButton: some View {
+        Button { dismiss() } label: {
+            Image(systemName: "chevron.left").font(.nuna(size: 16, weight: .bold))
+                .foregroundStyle(NunaPalette.textPrimary)
+                .frame(width: 44, height: 44)
+        }
+        .accessibilityLabel(Text("Back"))
+    }
+
     var body: some View {
-        HStack(spacing: 10) {
-            Button { dismiss() } label: {
-                Image(systemName: "chevron.left").font(.nuna(size: 16, weight: .bold))
-                    .foregroundStyle(NunaPalette.textPrimary)
-                    .frame(width: 44, height: 44)
+        if centersTitle {
+            ZStack {
+                HStack(spacing: 10) {
+                    backButton
+                    Spacer(minLength: 8)
+                    if let trailing { trailing }
+                    if let onAnya {
+                        Button(action: onAnya) { AnyaMark(size: 32).frame(width: 44, height: 44) }.accessibilityLabel(Text("Ask Anya"))
+                    }
+                }
+                Text(title).font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.textPrimary).accessibilityAddTraits(.isHeader)
             }
-            .accessibilityLabel(Text("Back"))
+        } else {
+            leadingTitleBar
+        }
+    }
+
+    private var leadingTitleBar: some View {
+        HStack(spacing: 10) {
+            backButton
             if switcher == nil {
                 if let titleSymbol {
                     Image(systemName: titleSymbol).font(.nuna(size: 22, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
@@ -51,14 +76,15 @@ struct NunaDetailScreen<Content: View>: View {
     var titleSymbol: String?
     var onAnya: (() -> Void)?
     var trailing: AnyView?
+    var centersTitle = false
     let content: Content
-    init(_ title: LocalizedStringKey, titleSymbol: String? = nil, onAnya: (() -> Void)? = nil, trailing: AnyView? = nil, @ViewBuilder content: () -> Content) {
-        self.title = title; self.titleSymbol = titleSymbol; self.onAnya = onAnya; self.trailing = trailing; self.content = content()
+    init(_ title: LocalizedStringKey, titleSymbol: String? = nil, onAnya: (() -> Void)? = nil, trailing: AnyView? = nil, centersTitle: Bool = false, @ViewBuilder content: () -> Content) {
+        self.title = title; self.titleSymbol = titleSymbol; self.onAnya = onAnya; self.trailing = trailing; self.centersTitle = centersTitle; self.content = content()
     }
     var body: some View {
         // The header stays at the top while the page scrolls, so the way back is always in reach however long the page is.
         VStack(spacing: 0) {
-            NunaDetailHeader(title: title, titleSymbol: titleSymbol, onAnya: onAnya, trailing: trailing)
+            NunaDetailHeader(title: title, titleSymbol: titleSymbol, onAnya: onAnya, trailing: trailing, centersTitle: centersTitle)
                 .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 4)
                 .background(NunaPalette.canvas)
             ScrollView {
@@ -222,6 +248,10 @@ struct NunaScoreHero<Note: View>: View {
     var hasNote = true
     /// False when the screen puts the day and the info button in its own header: the ring then starts the hero.
     var showsCaptionRow = true
+    /// A word above the figure inside the ring (the score's name), light and spaced; nil leaves the ring as it was.
+    var ringTitle: LocalizedStringKey?
+    /// The ring's diameter (300 by default); the stroke and the figures inside scale with it.
+    var ringSize: CGFloat = 300
     /// The info state, when the screen owns the button; nil keeps the hero's own.
     var externalInfo: Binding<Bool>?
     @State private var ownInfo = false
@@ -229,10 +259,10 @@ struct NunaScoreHero<Note: View>: View {
 
     init(caption: LocalizedStringKey, chip: LocalizedStringKey? = nil, chipColor: Color? = nil, fraction: Double, number: String,
          unit: String = "", suffix: String = "", name: LocalizedStringKey, nameColor: Color? = nil, gradient: [Color]? = nil, target: ClosedRange<Double>? = nil, color: Color, hasNote: Bool = true,
-         showsCaptionRow: Bool = true, info: Binding<Bool>? = nil, @ViewBuilder note: () -> Note) {
+         showsCaptionRow: Bool = true, ringTitle: LocalizedStringKey? = nil, ringSize: CGFloat = 300, info: Binding<Bool>? = nil, @ViewBuilder note: () -> Note) {
         self.caption = caption; self.chip = chip; self.chipColor = chipColor; self.fraction = fraction; self.number = number
         self.unit = unit; self.suffix = suffix; self.name = name; self.nameColor = nameColor; self.gradient = gradient; self.target = target; self.color = color; self.hasNote = hasNote; self.note = note()
-        self.showsCaptionRow = showsCaptionRow; self.externalInfo = info
+        self.showsCaptionRow = showsCaptionRow; self.ringTitle = ringTitle; self.ringSize = ringSize; self.externalInfo = info
     }
 
     var body: some View {
@@ -245,13 +275,16 @@ struct NunaScoreHero<Note: View>: View {
                     if hasNote { NunaInfoButton(isOn: $ownInfo) }
                 }
             }
-            NunaRingGauge(fraction: fraction, color: color, gradient: gradient, target: target, size: 300, lineWidth: 24) {
+            NunaRingGauge(fraction: fraction, color: color, gradient: gradient, target: target, size: ringSize, lineWidth: 24 * ringSize / 300) {
                 VStack(spacing: 6) {
+                    if let ringTitle {
+                        Text(ringTitle).font(.nuna(size: 22 * ringSize / 300, weight: .medium)).tracking(3).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    }
                     HStack(alignment: .firstTextBaseline, spacing: 2) {
-                        Text(verbatim: number).font(.nuna(size: 84, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(84))
+                        Text(verbatim: number).font(.nuna(size: 84 * ringSize / 300, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(84 * ringSize / 300))
                             .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.5).lineLimit(1)
                         if !unit.isEmpty && number != "–" {
-                            Text(verbatim: unit).font(.nuna(size: 34, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            Text(verbatim: unit).font(.nuna(size: 34 * ringSize / 300, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         }
                     }
                     if !suffix.isEmpty { Text(verbatim: suffix).font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
