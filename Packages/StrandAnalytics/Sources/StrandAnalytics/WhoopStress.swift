@@ -250,5 +250,27 @@ public enum WhoopStress {
         return Result(epochs: epochs, total: total, nonActivity: non, sleep: slp, current: current)
     }
 
+    // MARK: - Personal calibration
+
+    /// Sets the two waking constants from the person's own baseline days instead of fixed numbers: `wakeHROffsetBPM` becomes how far their
+    /// typical (median) waking, sedentary heart rate sits above their resting heart rate, and `wakeHRVRatio` how their typical waking RMSSD
+    /// compares with their nightly one. Their usual waking state then scores as neutral (Medium), which is what "neutral, alert" means.
+    ///
+    /// `epochs` are those of an `analyze` over the baseline days (any tuning: the heart rate and the RMSSD they carry do not depend on it).
+    /// Returns `base` unchanged when there are fewer than `minEpochs` waking epochs to take a median from.
+    public static func calibrated(_ base: Tuning, from epochs: [Epoch], baseline: Baseline, minEpochs: Int = 100) -> Tuning {
+        let waking = epochs.filter { $0.kind == .waking && $0.level != nil }
+        guard waking.count >= minEpochs else { return base }
+        func median(_ x: [Double]) -> Double? {
+            guard !x.isEmpty else { return nil }
+            let s = x.sorted(); return s[s.count / 2]
+        }
+        var t = base
+        if let hr = median(waking.compactMap(\.meanHR)) { t.wakeHROffsetBPM = min(max(hr - baseline.restingHR, 5), 40) }
+        let rm = waking.compactMap(\.rmssd)
+        if rm.count >= minEpochs / 2, let r = median(rm) { t.wakeHRVRatio = min(max(r / exp(baseline.hrvLnMean), 0.25), 1.2) }
+        return t
+    }
+
     private static func clamp(_ x: Double, _ m: Double) -> Double { min(max(x, -m), m) }
 }

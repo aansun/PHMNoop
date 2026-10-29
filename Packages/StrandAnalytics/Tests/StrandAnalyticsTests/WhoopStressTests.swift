@@ -109,4 +109,27 @@ final class WhoopStressTests: XCTestCase {
         let last3 = r.epochs.compactMap { $0.level }.suffix(3)
         XCTAssertEqual(r.current ?? -1, last3.reduce(0, +) / 3, accuracy: 1e-12)
     }
+
+    func testCalibrationMakesTheUsualWakingStateNeutral() {
+        let b = baseline
+        // A person whose usual waking heart rate is 30 bpm over resting and whose waking RMSSD is 40% of the nightly one.
+        let s = stream(bpm: Int(b.restingHR.rounded()) + 30, rmssd: exp(b.hrvLnMean) * 0.4, seconds: 3 * 3600, from: t0)
+        let first = WhoopStress.analyze(hr: s.hr, rr: s.rr, baseline: b)
+        let tuned = WhoopStress.calibrated(WhoopStress.Tuning(), from: first.epochs, baseline: b, minEpochs: 20)
+        XCTAssertEqual(tuned.wakeHROffsetBPM, 30, accuracy: 1.0)
+        XCTAssertEqual(tuned.wakeHRVRatio, 0.4, accuracy: 0.05)
+        let again = WhoopStress.analyze(hr: s.hr, rr: s.rr, baseline: b, tuning: tuned)
+        let mean = again.epochs.compactMap { $0.level }.reduce(0, +) / Double(again.epochs.compactMap { $0.level }.count)
+        XCTAssertEqual(mean, 1.5, accuracy: 0.25, "their usual state is neutral after calibration")
+        let before = first.epochs.compactMap { $0.level }.reduce(0, +) / Double(first.epochs.compactMap { $0.level }.count)
+        XCTAssertGreaterThan(before, 2.0, "and read as High before it")
+    }
+
+    func testCalibrationNeedsEnoughEpochs() {
+        let b = baseline
+        let s = stream(bpm: 80, rmssd: 40, seconds: 900, from: t0)
+        let first = WhoopStress.analyze(hr: s.hr, rr: s.rr, baseline: b)
+        let tuned = WhoopStress.calibrated(WhoopStress.Tuning(), from: first.epochs, baseline: b)
+        XCTAssertEqual(tuned, WhoopStress.Tuning())
+    }
 }
