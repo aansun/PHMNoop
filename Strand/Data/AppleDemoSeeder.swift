@@ -134,11 +134,15 @@ enum AppleDemoSeeder {
             let resp = gauss(&rng, ill ? 16.4 : 14.6, 0.9).clamped(11.0, 20.0)
 
             // --- recovery: a function of HRV, sleep quality and resting-HR ---
-            let recovery = (
+            let computedRecovery = (
                 60 + (hrv - 70) * 0.55 + (efficiency - 85) * 0.6 + (totalSleep - 420) * 0.03 -
                     (Double(rhr) - 55) * 1.4 - Double(disturbances) * 0.8 + gauss(&rng, 0.0, 5.0)
                     - (ill ? 12.0 : 0.0) - (lateCaffeine ? 2.0 : 0.0)
             ).clamped(5.0, 99.0)
+            // The last seven days are set by hand so every colour of the Charge scale shows (red under 34, yellow to 66, green from 67), oldest first.
+            let lastWeekCharge: [Double] = [28, 58, 86, 31, 74, 49, 82]
+            let daysBack = DAYS - 1 - i
+            let recovery = daysBack < lastWeekCharge.count ? lastWeekCharge[lastWeekCharge.count - 1 - daysBack] : computedRecovery
 
             // --- strain (Effort): workout-driven, rescaled 0–21 → 0–100 ---
             let strain = (
