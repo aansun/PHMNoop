@@ -152,10 +152,13 @@ struct NunaTodayView: View {
     @AppStorage("today.keyMetricsDetailed") private var keyMetricsDetailed = false
     @AppStorage("today.keyMetricsWindowDays") private var keyMetricsWindowDays = 14
     @AppStorage(DashboardCardPrefs.selectionKey) var dashboardCardsRaw = ""
+    @AppStorage(NunaDashPrefs.key) var myDashboardRaw = ""
     @AppStorage(HostedCardPrefs.selectionKey) var hostedCardsRaw = ""
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
 
     @StateObject var model = NunaTodayModel()
+    /// The year of sleep, charge and effort figures the My Dashboard cards that open a trend page show.
+    @StateObject var history = NunaSleepHistory()
     @StateObject private var sparks = NunaKeySparkModel()
     /// What the customize sheet opens on; set together with presenting it, so the sheet always gets the right page.
     @State private var customize: TodayCustomizationDestination?
@@ -177,6 +180,9 @@ struct NunaTodayView: View {
     /// Today's suggested session, the same one the plan screen shows. Nil until Charge exists.
     @State private var dayPlan: NunaDayPlanResult?
     @State private var addAfter: TodaySection?
+
+    /// The day on show, as the key the stored series use.
+    var dayKeyNow: String { model.dayKey(repo: repo) }
 
     private var effortScale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
 
@@ -275,6 +281,11 @@ struct NunaTodayView: View {
                 ? Self.nunaDefaultMetrics : KeyMetricPrefs.decodeEnabled(keyMetricsRaw)
             await sparks.load(repo: repo, metrics: chosen, days: max(keyMetricsWindowDays, 2))
         }
+        // Only the cards that open a trend page need the long history.
+        .task(id: "\(repo.refreshSeq)-\(myDashboardRaw)") {
+            guard NunaDashPrefs.items(myDashboardRaw, cardsRaw: dashboardCardsRaw).contains(where: { if case .page = $0 { return true } else { return false } }) else { return }
+            await history.load(repo: repo)
+        }
         .background(NunaSavedSessionsWatcher(count: $savedSessions))
         .onChange(of: model.dayOffset) { _, v in router.todayDayOffset = v }
         .onAppear { router.todayDayOffset = model.dayOffset }
@@ -297,7 +308,7 @@ struct NunaTodayView: View {
                 sectionOrderRaw: $sectionOrderRaw, hiddenSectionsRaw: $hiddenSectionsRaw,
                 keyMetricsRaw: $keyMetricsRaw, keyMetricsDetailed: $keyMetricsDetailed,
                 keyMetricsWindowDays: $keyMetricsWindowDays,
-                dashboardCardsRaw: $dashboardCardsRaw, hostedCardsRaw: $hostedCardsRaw)
+                dashboardCardsRaw: $dashboardCardsRaw, myDashboardRaw: $myDashboardRaw, hostedCardsRaw: $hostedCardsRaw)
         }
         .sheet(isPresented: $showQuick) {
             NunaQuickSheet(hydrationEnabled: hydrationEnabled,
@@ -431,7 +442,7 @@ struct NunaTodayView: View {
         case .keyMetrics: return "Key metrics"
         case .workouts: return "Activity"
         case .journal: return "Quick log"
-        case .yourCards: return "Your cards"
+        case .yourCards: return "My Dashboard"
         case .menstrualCycle: return "Menstrual cycle"
         case .heartRate: return "Heart rate"
         case .liveSession: return "Start session"
@@ -478,7 +489,7 @@ struct NunaTodayView: View {
             VStack(spacing: 10) {
                 Button { customize = .today } label: { Label("Card settings", systemImage: "slider.horizontal.3").lineLimit(1).minimumScaleFactor(0.8) }
                     .buttonStyle(.nuna(.ghost, height: 52, fullWidth: true))
-                Button { sectionOrderRaw = ""; hiddenSectionsRaw = ""; keyMetricsRaw = ""; dashboardCardsRaw = ""; hostedCardsRaw = "" } label: { Text("Restore defaults").lineLimit(1).minimumScaleFactor(0.8) }
+                Button { sectionOrderRaw = ""; hiddenSectionsRaw = ""; keyMetricsRaw = ""; dashboardCardsRaw = ""; myDashboardRaw = ""; hostedCardsRaw = "" } label: { Text("Restore defaults").lineLimit(1).minimumScaleFactor(0.8) }
                     .buttonStyle(.nuna(.ghost, height: 52, fullWidth: true))
             }
             .moveDisabled(true).plainRow()
@@ -565,7 +576,7 @@ struct NunaTodayView: View {
             HStack(spacing: 8) {
                 miniChip("Journal"); Spacer(minLength: 0)
             }
-        case .yourCards: previewRow("rectangle.stack", nil, String(localized: "Your cards"), "Cards you chose").background(inner)
+        case .yourCards: previewRow("rectangle.stack", nil, String(localized: "My Dashboard"), "Cards you chose").background(inner)
         case .menstrualCycle: previewRow("drop", NunaPalette.alertText, String(localized: "Menstrual cycle"), "Cycle awareness").background(inner)
         case .heartRate: previewRow("heart", NunaPalette.alertText, String(localized: "Heart rate"), "Live").background(inner)
         case .liveSession: previewRow("play", NunaPalette.charge, String(localized: "Start session"), "Live session").background(inner)
@@ -631,9 +642,9 @@ struct NunaTodayView: View {
 
     // MARK: Add a card
 
-    private var hiddenDashboardCards: [DashboardCard] {
-        let on = NunaTodayDefaults.yourCardsEnabled(dashboardCardsRaw)
-        return DashboardCard.canonicalOrder.filter { !on.contains($0) }
+    private var hiddenDashboardItems: [NunaDashItem] {
+        let on = NunaDashPrefs.items(myDashboardRaw, cardsRaw: dashboardCardsRaw)
+        return NunaDashItem.canonicalOrder.filter { !on.contains($0) }
     }
     private var hiddenHostedCards: [HostedCard] {
         let on = HostedCardPrefs.decodeEnabled(hostedCardsRaw)
@@ -645,7 +656,7 @@ struct NunaTodayView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Add a card").font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).padding(.top, 22)
-                if hiddenSections.isEmpty && hiddenDashboardCards.isEmpty && hiddenHostedCards.isEmpty {
+                if hiddenSections.isEmpty && hiddenDashboardItems.isEmpty && hiddenHostedCards.isEmpty {
                     Text("Every card is already on Today.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 if !hiddenSections.isEmpty {
@@ -658,14 +669,16 @@ struct NunaTodayView: View {
                         }
                     }
                 }
-                if !hiddenDashboardCards.isEmpty {
-                    NunaSettingsGroup("For Your cards") {
-                        ForEach(Array(hiddenDashboardCards.enumerated()), id: \.element.id) { idx, card in
+                if !hiddenDashboardItems.isEmpty {
+                    NunaSettingsGroup("For My Dashboard") {
+                        ForEach(Array(hiddenDashboardItems.enumerated()), id: \.element.id) { idx, item in
                             if idx > 0 { NunaDivider() }
                             Button {
-                                dashboardCardsRaw = DashboardCardPrefs.encode(NunaTodayDefaults.yourCardsEnabled(dashboardCardsRaw) + [card])
+                                let all = NunaDashPrefs.items(myDashboardRaw, cardsRaw: dashboardCardsRaw) + [item]
+                                myDashboardRaw = NunaDashPrefs.encode(all)
+                                dashboardCardsRaw = DashboardCardPrefs.encode(all.compactMap { if case .card(let c) = $0 { return c } else { return nil } })
                                 add(.yourCards, after: addAfter); showAddCard = false
-                            } label: { NunaListRow(LocalizedStringKey(card.title), subtitle: LocalizedStringKey(card.subtitle), systemImage: card.icon) { addLabel } }.buttonStyle(.plain)
+                            } label: { NunaListRow(LocalizedStringKey(item.title), subtitle: LocalizedStringKey(item.subtitle ?? ""), systemImage: item.icon) { addLabel } }.buttonStyle(.plain)
                         }
                     }
                 }
@@ -800,7 +813,7 @@ struct NunaTodayView: View {
         case .yourCards:
             let rows = yourCardRows()
             if !rows.isEmpty {
-                NunaRowsCard(rows: rows, onCoach: { showCoach = true }, title: "Your cards",
+                NunaRowsCard(rows: rows, onCoach: { showCoach = true }, title: "My Dashboard",
                              onEdit: { customize = .yourCards })
             }
         case .addedCards:
