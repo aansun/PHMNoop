@@ -56,6 +56,8 @@ struct NunaSleepNightSections: View {
     var showsTiles = false
     /// The Need and debt card; the Rest screen draws a fuller one of its own.
     var showsNeed = true
+    /// The Body clock card; the Rest screen draws it itself, after its weekly trends.
+    var showsBodyClock = true
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var appModel: AppModel
     @State private var edit: NunaSleepEditTarget?
@@ -68,34 +70,10 @@ struct NunaSleepNightSections: View {
             if !night.naps.isEmpty { napCard(night) }
             if showsTiles { tiles(model, night) }
             if showsNeed { needCard(model, night) }
-            bodyClockCard
+            if showsBodyClock { NunaBodyClockLink() }
         }
         .sheet(item: $edit) { NunaSleepTimeSheet(target: $0) { snap in await repo.refresh(); if let snap { undo = snap } } }
         .nunaSleepUndo($undo) { await repo.refresh() }
-    }
-
-    /// Body clock: the lowest point and whether last night sat in the ideal window.
-    @ViewBuilder private var bodyClockCard: some View {
-        NavigationLink(value: NunaTodayRoute.bodyClock) {
-            NunaCard(small: true) {
-                HStack(spacing: 12) {
-                    NunaIconTile("timer", tint: NunaPalette.restText)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Body clock").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                        if let est = appModel.circadianPhase, est.confidence != .unreadable {
-                            Text(verbatim: String(localized: "Lowest point \(NunaClockHour.text(est.tempMinHour))"))
-                                .font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        } else {
-                            Text("Still learning").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            Text("Needs about a week of heart-rate data").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        }
-                    }
-                    Spacer(minLength: 8)
-                    Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                }
-            }
-        }
-        .buttonStyle(.plain)
     }
 
     private func napCard(_ night: NunaNight) -> some View {
@@ -506,4 +484,32 @@ private struct NunaAddNapSheet: View {
     }
 }
 
+
+/// Body clock: the lowest point and whether last night sat in the ideal window.
+struct NunaBodyClockLink: View {
+    @EnvironmentObject private var appModel: AppModel
+
+    var body: some View {
+        NavigationLink(value: NunaTodayRoute.bodyClock) {
+            NunaCard(small: true) {
+                HStack(spacing: 12) {
+                    NunaIconTile("timer", tint: NunaPalette.restText)
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Body clock").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        if let est = appModel.circadianPhase, est.confidence != .unreadable {
+                            Text(verbatim: String(localized: "Lowest point \(NunaClockHour.text(est.tempMinHour))"))
+                                .font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        } else {
+                            Text("Still learning").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            Text("Needs about a week of heart-rate data").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        }
+                    }
+                    Spacer(minLength: 8)
+                    Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+}
 #endif

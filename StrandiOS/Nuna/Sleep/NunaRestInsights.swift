@@ -25,37 +25,39 @@ private func clockText(_ hour: Double) -> String {
     return String(format: "%02d:%02d", total / 60, total % 60)
 }
 
-/// The card caption, the figure with its move against the usual, and a small line under it.
+/// The card caption, the figure with a small triangle against the usual, and that usual underneath.
 private struct NunaRestFigure: View {
     let title: LocalizedStringKey
     let value: Double?
     let usual: Double?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(verbatim: value.map { "\(Int($0.rounded()))%" } ?? "–")
-                    .font(.nuna(size: 36, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(36)).foregroundStyle(NunaPalette.textPrimary)
-                if let value, let usual, abs(value - usual) >= 0.5 {
-                    Image(systemName: value > usual ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
-                        .font(.nuna(size: 11, weight: .bold)).foregroundStyle(value > usual ? NunaPalette.charge : NunaPalette.warning)
+        let trend = NunaTrend.make(current: value, previous: usual, decimals: 0, upIsGood: true, format: { "\(Int($0.rounded()))%" })
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(alignment: .center, spacing: 8) {
+                    Text(verbatim: value.map { "\(Int($0.rounded()))%" } ?? "–")
+                        .font(.nuna(size: 28, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    if let trend, trend.direction != 0 {
+                        Image(systemName: trend.direction > 0 ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill").font(.system(size: 8, weight: .bold)).foregroundStyle(trend.tint)
+                    }
                 }
-            }
-            if let usual {
-                Text(verbatim: String(localized: "14-night average \(Int(usual.rounded()))%")).font(.nuna(size: 12, weight: .semibold))
-                    .foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                if let trend {
+                    Text(verbatim: trend.previous).font(.nuna(size: 12.5, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
+                }
             }
         }
     }
 }
 
-/// The sentence under a card's figures: what they mean, not a repeat of them.
-private struct NunaRestNote: View {
-    let text: String
-    var body: some View {
-        Text(verbatim: text).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-            .fixedSize(horizontal: false, vertical: true).textCase(nil)
+/// A small notch on the top edge of a panel, pointing up at the bar it explains.
+private struct NunaPanelNotch: Shape {
+    func path(in rect: CGRect) -> Path {
+        var p = Path()
+        p.move(to: CGPoint(x: rect.midX, y: rect.minY)); p.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY)); p.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+        p.closeSubpath()
+        return p
     }
 }
 
@@ -69,73 +71,71 @@ struct NunaHoursVsNeededCard: View {
     let debtMin: Double
     let percent: Double?
     let usual: Double?
-    var note: String? = nil
 
     private var neededMin: Double { healthyMin + strainMin + debtMin }
 
     var body: some View {
         let top = max(asleepMin, neededMin, 1)
         NunaCard {
-            VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 18) {
                 NunaRestFigure(title: "Hours vs. needed", value: percent, usual: usual)
                 VStack(alignment: .leading, spacing: 8) {
-                    line("Hours of sleep", hm(asleepMin))
-                    bar(fraction: asleepMin / top) {
-                        Capsule().fill(LinearGradient(colors: [NunaPalette.rest.opacity(0.25), NunaPalette.rest], startPoint: .leading, endPoint: .trailing))
+                    line("Hours of sleep", NunaRestChart.hm(asleepMin))
+                    GeometryReader { geo in
+                        let w = geo.size.width * CGFloat(min(asleepMin / top, 1))
+                        RoundedRectangle(cornerRadius: 5, style: .continuous)
+                            .fill(LinearGradient(colors: [NunaRestChart.steel.opacity(0.05), NunaRestChart.steel], startPoint: .leading, endPoint: .trailing))
+                            .frame(width: max(8, w)).frame(maxWidth: .infinity, alignment: .leading)
                     }
+                    .frame(height: 20)
                 }
                 VStack(alignment: .leading, spacing: 8) {
-                    line("Sleep needed", hm(neededMin))
                     GeometryReader { geo in
                         let w = geo.size.width * CGFloat(min(neededMin / top, 1))
-                        let parts: [(Double, Color)] = [(healthyMin, NunaPalette.zoneBase), (strainMin, NunaPalette.effortModerate), (debtMin, NunaPalette.textPrimary)]
+                        let parts: [(Double, AnyShapeStyle)] = [
+                            (healthyMin, AnyShapeStyle(LinearGradient(colors: [NunaPalette.zoneBase.opacity(0.35), Color(hex: "#6B727B")], startPoint: .leading, endPoint: .trailing))),
+                            (strainMin, AnyShapeStyle(NunaRestChart.strain)), (debtMin, AnyShapeStyle(NunaRestChart.paleGrey)),
+                        ]
                         let total = max(parts.reduce(0) { $0 + $1.0 }, 1)
-                        HStack(spacing: 2) {
+                        HStack(spacing: 0) {
                             ForEach(parts.indices, id: \.self) { i in
                                 if parts[i].0 > 0 { Rectangle().fill(parts[i].1).frame(width: max(3, w * CGFloat(parts[i].0 / total))) }
                             }
                         }
-                        .clipShape(Capsule())
-                        .frame(width: w, alignment: .leading)
+                        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+                        .frame(width: w, alignment: .leading).frame(maxWidth: .infinity, alignment: .leading)
                     }
-                    .frame(height: 14)
+                    .frame(height: 20)
+                    line("Sleep needed", NunaRestChart.hm(neededMin))
                 }
-                NunaDivider()
-                VStack(spacing: 10) {
-                    legend("Healthy minimum", NunaPalette.zoneBase, hm(healthyMin))
-                    legend("Recent strain", NunaPalette.effortModerate, "+" + hm(strainMin))
-                    legend("Sleep debt", NunaPalette.textPrimary, "+" + hm(debtMin))
+                VStack(spacing: 0) {
+                    HStack { Spacer(); NunaPanelNotch().fill(NunaPalette.field).frame(width: 22, height: 8).padding(.trailing, 24) }
+                    VStack(spacing: 14) {
+                        legend("Healthy minimum", NunaPalette.zoneBase, NunaRestChart.hm(healthyMin))
+                        legend("Recent strain", NunaRestChart.strain, "+" + NunaRestChart.hm(strainMin))
+                        legend("Sleep debt", NunaRestChart.paleGrey, "+" + NunaRestChart.hm(debtMin))
+                    }
+                    .padding(.horizontal, 18).padding(.vertical, 16)
+                    .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
                 }
-                if let note { NunaRestNote(text: note) }
             }
         }
     }
 
     private func line(_ title: LocalizedStringKey, _ value: String) -> some View {
         HStack {
-            Text(title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
             Spacer()
-            Text(verbatim: value).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
+            Text(verbatim: value).font(.nuna(size: 17, weight: .semibold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
         }
-    }
-
-    private func bar<Fill: View>(fraction: Double, @ViewBuilder _ fill: () -> Fill) -> some View {
-        let content = fill()
-        return GeometryReader { geo in
-            ZStack(alignment: .leading) {
-                Capsule().fill(NunaPalette.glassStrong)
-                content.frame(width: max(8, geo.size.width * CGFloat(min(max(fraction, 0), 1))))
-            }
-        }
-        .frame(height: 14)
     }
 
     private func legend(_ title: LocalizedStringKey, _ color: Color, _ value: String) -> some View {
-        HStack(spacing: 10) {
-            RoundedRectangle(cornerRadius: 3, style: .continuous).fill(color).frame(width: 12, height: 12)
-            Text(title).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+        HStack(spacing: 12) {
+            RoundedRectangle(cornerRadius: 3, style: .continuous).fill(color).frame(width: 18, height: 18)
+            Text(title).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
             Spacer()
-            Text(verbatim: value).font(.nuna(size: 15, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
+            Text(verbatim: value).font(.nuna(size: 14, weight: .semibold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
         }
     }
 }
@@ -158,7 +158,6 @@ struct NunaConsistencyCard: View {
     let nights: [Night]
     let percent: Double?
     let usual: Double?
-    var note: String? = nil
 
     /// 21:00 down to 13:00 the next day, widened when a night falls outside it, in whole four-hour steps.
     private var span: (lo: Double, hi: Double) {
@@ -190,7 +189,6 @@ struct NunaConsistencyCard: View {
                 } else {
                     chart(s)
                 }
-                if let note { NunaRestNote(text: note) }
             }
         }
     }
@@ -199,7 +197,7 @@ struct NunaConsistencyCard: View {
         Chart {
             ForEach(nights) { n in
                 BarMark(x: .value("Night", n.id), yStart: .value("Bed", y(n.bed, s)), yEnd: .value("Wake", y(n.wake, s)), width: .fixed(16))
-                    .foregroundStyle(n.selected ? NunaPalette.rest : NunaPalette.textMuted.opacity(0.55)).cornerRadius(3)
+                    .foregroundStyle(n.selected ? NunaRestChart.steel : NunaPalette.textMuted.opacity(0.5)).cornerRadius(3)
                 LineMark(x: .value("Night", n.id), y: .value("Ideal bed", y(n.idealBed, s)), series: .value("Line", "bed"))
                     .foregroundStyle(NunaPalette.textSecondary).lineStyle(StrokeStyle(lineWidth: 1.5, dash: [3, 3])).interpolationMethod(.catmullRom)
                 LineMark(x: .value("Night", n.id), y: .value("Ideal wake", y(n.idealWake, s)), series: .value("Line", "wake"))
@@ -254,9 +252,6 @@ struct NunaEfficiencyCard: View {
     let totalSec: TimeInterval
     let percent: Double?
     let usual: Double?
-    /// Brief awakenings the night logged, shorter than the wake events above and not drawn on the bar.
-    var briefAwakenings: Int? = nil
-    var note: String? = nil
 
     var body: some View {
         NunaCard {
@@ -271,30 +266,21 @@ struct NunaEfficiencyCard: View {
                     line("Awake", hm(awakeMin))
                 }
                 NunaDivider()
-                HStack(spacing: 10) {
-                    RoundedRectangle(cornerRadius: 3, style: .continuous).fill(NunaPalette.textPrimary).frame(width: 12, height: 12)
-                    Text("Wake events").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                HStack(spacing: 12) {
+                    RoundedRectangle(cornerRadius: 3, style: .continuous).fill(NunaRestChart.paleGrey).frame(width: 18, height: 18)
+                    Text("Wake events").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                     Spacer()
-                    Text(verbatim: "\(events.count)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: "\(events.count)").font(.nuna(size: 20, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 }
-                if let briefAwakenings, briefAwakenings > 0 {
-                    HStack(spacing: 10) {
-                        RoundedRectangle(cornerRadius: 3, style: .continuous).fill(NunaPalette.textMuted).frame(width: 12, height: 12)
-                        Text("Brief awakenings").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        Spacer()
-                        Text(verbatim: "\(briefAwakenings)").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    }
-                }
-                if let note { NunaRestNote(text: note) }
             }
         }
     }
 
     private func line(_ title: LocalizedStringKey, _ value: String) -> some View {
         HStack {
-            Text(title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
             Spacer()
-            Text(verbatim: value).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
+            Text(verbatim: value).font(.nuna(size: 17, weight: .semibold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
         }
     }
 
@@ -304,7 +290,7 @@ struct NunaEfficiencyCard: View {
     private var asleepBar: some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
-                Capsule().fill(NunaPalette.rest)
+                Capsule().fill(NunaRestChart.steel)
                 ForEach(events.indices, id: \.self) { i in
                     Rectangle().fill(NunaPalette.card).frame(width: max(2, x(events[i].end - events[i].start, geo.size.width)))
                         .offset(x: x(events[i].start, geo.size.width))
@@ -330,7 +316,7 @@ struct NunaEfficiencyCard: View {
                 }
                 .clipShape(Capsule())
                 ForEach(events.indices, id: \.self) { i in
-                    Rectangle().fill(NunaPalette.textPrimary).frame(width: max(3, x(events[i].end - events[i].start, geo.size.width)), height: 14)
+                    Rectangle().fill(NunaRestChart.paleGrey).frame(width: max(3, x(events[i].end - events[i].start, geo.size.width)), height: 14)
                         .offset(x: x(events[i].start, geo.size.width))
                 }
             }
