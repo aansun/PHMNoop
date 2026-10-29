@@ -69,9 +69,7 @@ private struct NunaSleepWeekShell<Plot: View>: View {
     var body: some View {
         let card = NunaCard {
             VStack(alignment: .leading, spacing: 14) {
-                NunaTitleRow(title: title) {
-                    Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
-                }
+                NunaWeeklyTitle(title: title)
                 if let legend { legend }
                 VStack(spacing: 6) {
                     plot.frame(height: plotHeight)
@@ -98,13 +96,13 @@ private func nunaGrid(_ size: CGSize) -> some View {
 }
 
 private func nunaKey(_ items: [(LocalizedStringKey, Color, Bool)]) -> some View {
-    HStack(spacing: 16) {
+    HStack(spacing: 14) {
         Spacer(minLength: 0)
         ForEach(Array(items.enumerated()), id: \.offset) { _, item in
             HStack(spacing: 6) {
-                if item.2 { Circle().strokeBorder(item.1, lineWidth: 2.5).frame(width: 12, height: 12) }
-                else { RoundedRectangle(cornerRadius: 2, style: .continuous).fill(item.1).frame(width: 12, height: 12) }
-                Text(item.0).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                if item.2 { Circle().strokeBorder(item.1, lineWidth: 2).frame(width: 8, height: 8) }
+                else { RoundedRectangle(cornerRadius: 2, style: .continuous).fill(item.1).frame(width: 9, height: 9) }
+                Text(item.0).font(.nuna(size: 11, weight: .heavy)).tracking(1.1).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
             }
         }
     }
