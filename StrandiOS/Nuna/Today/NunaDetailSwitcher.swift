@@ -83,7 +83,7 @@ struct NunaMetricHost: View {
     }
 
     @ViewBuilder private func screen(for m: MetricDescriptor) -> some View {
-        if m.source == "my-whoop", let trend = NunaTrendPage.forMetric(m.key) {
+        if let trend = NunaTrendPage.forMetric(m.key), m.source == "my-whoop" || trend == .steps {
             NunaTrendHost(initial: trend)
         } else {
             plainScreen(for: m)
