@@ -48,12 +48,12 @@ struct NunaChargeDetailView: View {
         let latest = series.latest(asOf: cutoff)
         // The day sits in the header where the metric dropdown used to be; the info button goes with it.
         NunaDetailScreen(NunaSelectedDay.caption(offset: router.todayDayOffset, today: "Today"),
-                         trailing: hasNote ? AnyView(NunaInfoButton(isOn: $showInfo)) : nil) {
+                         trailing: hasNote ? AnyView(NunaInfoButton(isOn: $showInfo)) : nil, centersTitle: true) {
             NunaScoreHero(caption: "",
                           fraction: (day.charge.pct ?? latest?.value ?? 0) / 100,
                           number: (day.charge.pct ?? latest?.value).map { String(format: "%.0f", $0) } ?? "–",
                           unit: "%", name: chargeWord ?? "Charge", nameColor: (day.charge.pct ?? latest?.value).map(nunaChargeTextColor), color: (day.charge.pct ?? latest?.value).map(nunaChargeColor) ?? NunaPalette.charge,
-                          hasNote: hasNote, showsCaptionRow: false, info: $showInfo) {
+                          hasNote: hasNote, showsCaptionRow: false, ringTitle: "Charge", ringSize: 252, info: $showInfo) {
                 if let v = day.charge.pct ?? latest?.value, let base = series.baseline {
                     let d = Int((v - base).rounded())
                     let readiness = chip.map { $0.0 + ". " } ?? ""
@@ -63,8 +63,8 @@ struct NunaChargeDetailView: View {
                         .fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
-            VStack(spacing: 12) {
-                NunaPlainList {
+            NunaSignalPanel {
+                VStack(spacing: 0) {
                     signal("Heart rate variability", "waveform.path.ecg", key: "hrv", value: day.hrv, average: average30(hrvSeries), good: true)
                     NunaDivider()
                     signal("Resting heart rate", "heart", key: "rhr", value: day.restingHr, average: average30(rhrSeries), good: false)
@@ -78,6 +78,7 @@ struct NunaChargeDetailView: View {
                            average: average30(skinSeries), decimals: 1, signed: true, good: nil)
                 }
                 NunaTrendLegend(text: router.todayDayOffset == 0 ? "Today vs. last 30 days" : "This day vs. the 30 days before")
+                    .padding(.top, 8)
             }
             // Anya's line speaks of today (what to do with the day), so it is shown on today only.
             if coachEnabled, router.todayDayOffset == 0, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
