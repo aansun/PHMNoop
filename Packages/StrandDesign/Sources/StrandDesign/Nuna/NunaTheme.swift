@@ -389,6 +389,13 @@ extension View {
 }
 
 /// Score ring used for Charge / Effort / Rest and the Trends gauges.
+/// How thick the score rings (Charge, Effort, Rest, the nutrition and training rings) are drawn, against the width each call site asks for:
+/// about 5.5% of the diameter on the large rings, the thin stroke WHOOP uses. One place, so the app and the widgets stay alike.
+public enum NunaRingStroke {
+    public static let scale: CGFloat = 0.6
+    public static func width(_ asked: CGFloat) -> CGFloat { max(2.5, asked * scale) }
+}
+
 public struct NunaRingGauge<Center: View>: View {
     private let fraction: Double
     private let color: Color
@@ -402,7 +409,7 @@ public struct NunaRingGauge<Center: View>: View {
     public init(fraction: Double, color: Color, gradient: [Color]? = nil, target: ClosedRange<Double>? = nil, size: CGFloat = 98, lineWidth: CGFloat = 9,
                 @ViewBuilder center: () -> Center) {
         self.fraction = min(max(fraction, 0), 1); self.color = color; self.gradient = gradient; self.target = target
-        self.size = size; self.lineWidth = lineWidth; self.center = center()
+        self.size = size; self.lineWidth = NunaRingStroke.width(lineWidth); self.center = center()
     }
     public var body: some View {
         ZStack {
