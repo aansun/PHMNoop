@@ -134,7 +134,7 @@ struct NunaChargeDetailView: View {
             NunaWeeklyTrendCard(title: "Charge", key: "recovery", style: .bars, color: NunaPalette.charge,
                                 barFill: { v, last in last ? nunaChargeColor(v) : NunaPalette.textSecondary },
                                 labelFill: { v, last in last ? nunaChargeColor(v) : NunaPalette.textPrimary },
-                                destination: { AnyView(NunaChargeTrendView()) }, endingDaysAgo: router.todayDayOffset)
+                                destination: { AnyView(NunaChargeScoreTrendView(endingDaysAgo: router.todayDayOffset)) }, endingDaysAgo: router.todayDayOffset)
             NunaWeeklyTrendCard(title: "Heart rate variability", key: "hrv", style: .line, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
             NunaWeeklyTrendCard(title: "Resting heart rate", key: "rhr", style: .line, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
             NunaWeeklyTrendCard(title: "Respiratory rate", key: "resp_rate", style: .line, decimals: 1, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
