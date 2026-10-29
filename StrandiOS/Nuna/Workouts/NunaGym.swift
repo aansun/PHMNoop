@@ -183,6 +183,38 @@ enum NunaGymStore {
     }
 }
 
+// MARK: - Gym page
+
+/// Gym as a page of its own, apart from the Workouts hub: its own header and scroll, the banner of a running session, and the gym hub below.
+struct NunaGymPage: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var openLive = false
+
+    var body: some View {
+        ScrollView {
+            VStack(spacing: NunaSpacing.section) {
+                HStack(spacing: 10) {
+                    Button { dismiss() } label: {
+                        Image(systemName: "chevron.left").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44)
+                    }.buttonStyle(.plain).accessibilityLabel(Text("Back"))
+                    Text("Gym").font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Spacer()
+                }
+                NunaActiveWorkoutBanner { openLive = true }
+                NunaGymView()
+            }
+            .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 60)
+        }
+        .scrollIndicators(.hidden)
+        .background(NunaPalette.canvas.ignoresSafeArea())
+        .toolbar(.hidden, for: .navigationBar)
+        .nunaWorkoutDestinations()
+        .nunaTodayDestinations()
+        .navigationDestination(isPresented: $openLive) { NunaWorkoutStartView(sport: nil, resume: true) }
+        .environment(\.nunaAnyaCardContext, "workouts")
+    }
+}
+
 // MARK: - Gym hub (WorkoutGym.dc)
 
 /// Gym, the middle tab of Workouts (header and scroll view come from the hub): start an empty session, run or edit a saved program, the sets each muscle group got this week and the latest
@@ -208,6 +240,8 @@ struct NunaGymView: View {
     /// How many weeks back the history shows; 0 is this week.
     @State private var weekOffset = 0
     @State private var picking = false
+    @State private var choosingStart = false
+    @State private var exploring = false
     @State private var buildingWithAnya = false
     @ObservedObject private var groupsModel = NunaProgramGroupsModel.shared
     @State private var groupDialog: GroupDialog?
@@ -258,27 +292,57 @@ struct NunaGymView: View {
 
     // MARK: Start and explore
 
-    /// Two buttons side by side under Anya: an empty session, and the ready-made programs.
+    /// One white button; what to start is chosen in the sheet it opens: a program with Anya, a ready-made program, or an empty session.
     private var topActions: some View {
-        VStack(spacing: 4) {
-            HStack(spacing: 10) {
-                Button { if session.isActive { session.present() } else { picking = true } } label: {
-                    topActionLabel(session.isActive ? "Open session" : "Empty session", session.isActive ? "arrow.up.forward" : "plus")
-                }.buttonStyle(.plain)
-                NavigationLink(value: NunaWorkoutRoute.explore) { topActionLabel("Explore Program", "safari") }.buttonStyle(.plain)
-            }
-            Button { buildingWithAnya = true } label: { topActionLabel("Program with Anya", "sparkles") }.buttonStyle(.plain)
+        Button { if session.isActive { session.present() } else { choosingStart = true } } label: {
+            Text(session.isActive ? "Open session" : "Start workout").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56)
+                .background(NunaPalette.textPrimary, in: Capsule())
         }
+        .buttonStyle(.plain)
+        .sheet(isPresented: $choosingStart) { startSheet }
         .sheet(isPresented: $buildingWithAnya) { NunaAnyaProgramBuilder() }
+        .navigationDestination(isPresented: $exploring) { NunaGymExploreView() }
     }
 
-    /// Plain words and an icon in the text colour, no fill: the two sit side by side as equals.
-    private func topActionLabel(_ title: LocalizedStringKey, _ icon: String) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: icon).font(.nuna(size: 14, weight: .bold))
-            Text(title).font(.nuna(size: 15, weight: .bold)).lineLimit(1).minimumScaleFactor(0.8)
+    private var startSheet: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Start workout").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).padding(.top, 22).padding(.bottom, 8)
+            startOption("Program with Anya", "sparkles", "Describe your goal and Anya builds the program.") {
+                choosingStart = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { buildingWithAnya = true }
+            }
+            startOption("Explore programs", "safari", "Ready-made programs to start from.") {
+                choosingStart = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { exploring = true }
+            }
+            startOption("Empty session", "plus", "Pick exercises as you go.") {
+                choosingStart = false
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { picking = true }
+            }
+            Spacer(minLength: 0)
         }
-        .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 48).contentShape(Rectangle())
+        .padding(.horizontal, NunaSpacing.screenH)
+        .preferredColorScheme(NunaTheme.colorScheme)
+        .nunaSheetChrome(detents: [.height(400)])
+    }
+
+    private func startOption(_ title: LocalizedStringKey, _ icon: String, _ detail: LocalizedStringKey, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                Image(systemName: icon).font(.nuna(size: 18, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 28)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(title).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                    Text(detail).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).multilineTextAlignment(.leading)
+                }
+                Spacer(minLength: 0)
+            }
+            .padding(.horizontal, 18).frame(height: 76)
+            .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     // MARK: Programs
@@ -350,14 +414,16 @@ struct NunaGymView: View {
                     }
                 }
             } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: open == nil ? "tray" : "folder").font(.nuna(size: 16, weight: .semibold))
-                    Text(verbatim: open?.name ?? String(localized: "Ungrouped")).font(.nuna(size: 17, weight: .heavy)).lineLimit(1)
+                HStack(spacing: 12) {
+                    Image(systemName: open == nil ? "tray" : "folder").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text(verbatim: open?.name ?? String(localized: "Ungrouped")).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).lineLimit(1)
                     Text(verbatim: "\(count)").font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
-                    Image(systemName: "chevron.up.chevron.down").font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                     Spacer(minLength: 0)
+                    Image(systemName: "chevron.down").font(.nuna(size: 14, weight: .bold))
                 }
-                .foregroundStyle(NunaPalette.textPrimary).frame(minHeight: 40).contentShape(Rectangle())
+                .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(maxWidth: .infinity).frame(height: 54)
+                .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
+                .contentShape(Rectangle())
             }
             .accessibilityLabel(Text("Group"))
             if let open {
@@ -402,6 +468,11 @@ struct NunaGymView: View {
     /// Move a program into a group, out of one, or into a new one.
     private func programMenu(_ p: LiftProgramRow) -> some View {
         Menu {
+            Button { Task { await NunaGymStore.start(program: p, repo: repo, session: session) } } label: {
+                Label(session.isActive ? "Open session" : "Start", systemImage: session.isActive ? "arrow.up.forward" : "play.fill")
+            }
+            .disabled((itemCounts[p.id]?.exercises ?? 0) == 0)
+            Divider()
             Menu {
                 ForEach(groupsModel.groups) { g in
                     Button { groupsModel.move(p.id, to: g) } label: {
@@ -417,7 +488,7 @@ struct NunaGymView: View {
             NavigationLink(value: NunaWorkoutRoute.programEdit(p.id)) { Label("Edit routine", systemImage: "pencil") }
             Button(role: .destructive) { deletingProgram = p } label: { Label("Delete routine", systemImage: "trash") }
         } label: {
-            Image(systemName: "ellipsis").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 36, height: 32).contentShape(Rectangle())
+            Image(systemName: "ellipsis").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44).contentShape(Rectangle())
         }
         .accessibilityLabel(Text("Program options"))
     }
@@ -434,40 +505,16 @@ struct NunaGymView: View {
         await repo.refresh()
     }
 
-    /// One program as a tile inside the Programs card: the name with its menu at the top right, what it holds, the exercises as a
-    /// muted line, and Start along the bottom. Tapping the card opens the program.
+    /// One program as a plain row inside the Programs card: its name and its menu. Tapping it opens the program; Start is in the menu.
     private func programRow(_ p: LiftProgramRow) -> some View {
-        let c = itemCounts[p.id]
-        let empty = (c?.exercises ?? 0) == 0
-        return VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack(alignment: .top, spacing: 8) {
-                    NavigationLink(value: NunaWorkoutRoute.program(p.id)) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text(verbatim: p.name).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).multilineTextAlignment(.leading)
-                            Text(verbatim: String(localized: "\(c?.exercises ?? 0) exercises") + " · " + String(localized: "\(c?.sets ?? 0) sets") + " · "
-                                 + (lastUsed[p.id].map { String(localized: "Last \(NunaWorkoutFormat.day($0))") } ?? String(localized: "Never run")))
-                                .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
-                            if let names = previews[p.id], !names.isEmpty {
-                                Text(verbatim: names.joined(separator: ", ")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).lineLimit(2)
-                                    .multilineTextAlignment(.leading)
-                            }
-                        }
-                        .frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
-                    }.buttonStyle(.plain)
-                    programMenu(p)
-                }
-                Button { Task { await NunaGymStore.start(program: p, repo: repo, session: session) } } label: {
-                    HStack(spacing: 8) {
-                        Image(systemName: session.isActive ? "arrow.up.forward" : "play.fill").font(.nuna(size: 12, weight: .bold))
-                        Text(session.isActive ? "Open" : "Start").font(.nuna(size: 15, weight: .bold))
-                    }
-                    .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 44)
-                    .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                }.buttonStyle(.plain).disabled(empty).opacity(empty ? 0.4 : 1)
-            }
+        HStack(spacing: 8) {
+            NavigationLink(value: NunaWorkoutRoute.program(p.id)) {
+                Text(verbatim: p.name).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                    .lineLimit(1).frame(maxWidth: .infinity, alignment: .leading).frame(height: 62).contentShape(Rectangle())
+            }.buttonStyle(.plain)
+            programMenu(p)
         }
-        .padding(14).frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.leading, 18).padding(.trailing, 8)
         .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
     }
 

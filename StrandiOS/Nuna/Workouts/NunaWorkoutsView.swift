@@ -17,7 +17,7 @@ extension View {
             case .loadMuscle: NunaTrainingLoadView(tab: 2)
             case .autoDetect: NunaAutoDetectView()
             case .settings: NunaWorkoutSettingsView()
-            case .gym: NunaWorkoutsView(initialTab: 1)
+            case .gym: NunaGymPage()
             case .hub(let tab): NunaWorkoutsView(initialTab: tab)
             case .program(let id): if id == "new" { NunaProgramEditor(programId: id) } else { NunaProgramDetailView(programId: id) }
             case .programEdit(let id): NunaProgramEditor(programId: id)
@@ -67,11 +67,9 @@ struct NunaWorkoutsView: View {
         return ScrollView {
             VStack(spacing: NunaSpacing.section) {
                 header
-                NunaPageTabs([(value: 0, title: "Workout"), (value: 1, title: "Gym"), (value: 2, title: "Insight")], selection: $tab)
+                NunaPageTabs([(value: 0, title: "Workout"), (value: 2, title: "Insight")], selection: $tab)
                 NunaActiveWorkoutBanner { resumeLive = true; openStart = true }
-                if tab == 1 {
-                    NunaGymView()
-                } else if !m.loaded {
+                if !m.loaded {
                     ProgressView().tint(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 160)
                 } else if tab == 0 {
                     workoutDataCard(week)
@@ -122,6 +120,7 @@ struct NunaWorkoutsView: View {
             }.buttonStyle(.plain).accessibilityLabel(Text("Back"))
             Text("Workouts").font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             Spacer()
+            roundLink(.gym, "dumbbell", "Gym")
             roundLink(.settings, "slider.horizontal.3", "Workout settings")
         }
     }
