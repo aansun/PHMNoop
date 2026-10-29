@@ -13,6 +13,7 @@ final class NunaSleepHistory: ObservableObject {
     @Published private(set) var remMin: [String: Double] = [:]
     @Published private(set) var needMin: [String: Double] = [:]
     @Published private(set) var consistency: [String: Double] = [:]
+    @Published private(set) var efficiency: [String: Double] = [:]
     /// When the main night began and ended, by the day it is filed under, in hours from that evening's midnight (a bedtime after midnight is 24 and
     /// more; the wake is always past 24), the way the weekly Time in bed card reads them.
     @Published private(set) var bedHour: [String: Double] = [:]
@@ -32,6 +33,11 @@ final class NunaSleepHistory: ObservableObject {
         let need = await repo.exploreSeries(key: "sleep_need_min", source: "my-whoop", days: 400)
         let cons = await repo.exploreSeries(key: "sleep_consistency", source: "my-whoop", days: 400)
         asleepMin = a; deepMin = d; remMin = r
+        // Efficiency is stored as a fraction on some rows and a percentage on others; the series, when there is one, wins.
+        var eff: [String: Double] = [:]
+        for row in repo.days { if let e = row.efficiency, e > 0 { eff[row.day] = e <= 1 ? e * 100 : e } }
+        for point in await repo.exploreSeries(key: "sleep_efficiency", source: "my-whoop", days: 400) { eff[point.day] = point.value <= 1 ? point.value * 100 : point.value }
+        efficiency = eff
         await loadBedTimes(repo: repo)
         needMin = Dictionary(need.map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l })
         consistency = Dictionary(cons.map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l })
