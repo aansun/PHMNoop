@@ -13,6 +13,10 @@ final class NunaSleepHistory: ObservableObject {
     @Published private(set) var remMin: [String: Double] = [:]
     @Published private(set) var needMin: [String: Double] = [:]
     @Published private(set) var consistency: [String: Double] = [:]
+    /// When the main night began and ended, by the day it is filed under, in hours from that evening's midnight (a bedtime after midnight is 24 and
+    /// more; the wake is always past 24), the way the weekly Time in bed card reads them.
+    @Published private(set) var bedHour: [String: Double] = [:]
+    @Published private(set) var wakeHour: [String: Double] = [:]
     @Published private(set) var loaded = false
 
     /// The need used for a night with no stored one: the same fallback the sleep model uses.
@@ -28,9 +32,31 @@ final class NunaSleepHistory: ObservableObject {
         let need = await repo.exploreSeries(key: "sleep_need_min", source: "my-whoop", days: 400)
         let cons = await repo.exploreSeries(key: "sleep_consistency", source: "my-whoop", days: 400)
         asleepMin = a; deepMin = d; remMin = r
+        await loadBedTimes(repo: repo)
         needMin = Dictionary(need.map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l })
         consistency = Dictionary(cons.map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l })
         loaded = true
+    }
+
+    private func loadBedTimes(repo: Repository) async {
+        let hab = await repo.habitualMidsleepSec()
+        let sessions = await repo.allSleepSessions(days: 400)
+        var bed: [String: Double] = [:], wake: [String: Double] = [:]
+        func hours(_ ts: Int) -> Double {
+            let c = Calendar.current.dateComponents([.hour, .minute], from: Date(timeIntervalSince1970: TimeInterval(ts)))
+            return Double(c.hour ?? 0) + Double(c.minute ?? 0) / 60
+        }
+        for group in SleepModel.navDays(navSessions: sessions) {
+            let main = SleepView.mainNightGroup(group, habitualMidsleepSec: hab)
+            guard let last = main.last else { continue }
+            let onset = SleepModel.nightOnsetTs(main)
+            let key = Repository.localDayKey(Date(timeIntervalSince1970: TimeInterval(last.endTs)))
+            let b = hours(onset) < 12 ? hours(onset) + 24 : hours(onset)
+            var w = hours(last.endTs) + 24
+            if w <= b { w += 24 }
+            bed[key] = b; wake[key] = w
+        }
+        bedHour = bed; wakeHour = wake
     }
 
     func need(_ day: String) -> Double { needMin[day] ?? Self.fallbackNeed }
