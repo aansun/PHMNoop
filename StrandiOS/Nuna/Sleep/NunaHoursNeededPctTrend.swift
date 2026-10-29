@@ -280,16 +280,16 @@ struct NunaConsistencyTrendView: View {
     }
 }
 
-/// "Sleep efficiency": 90% and over optimal, 80 to 89 sufficient, under 80 poor, drawn as a line.
+/// "Sleep efficiency": 85% and over optimal, 70 to 85 sufficient, under 70 poor, drawn as a line.
 struct NunaEfficiencyTrendView: View {
     var endingDaysAgo = 0
     var body: some View {
         NunaPctTrendView(
             name: "Sleep efficiency", icon: "bed.double", noun: "average sleep efficiency",
             bands: [
-                .init(color: NunaRestChart.need, name: "Optimal", range: "90%+") { $0 >= 90 },
-                .init(color: Color(hex: "#8A8D93"), name: "Sufficient", range: "80–89%") { $0 >= 80 && $0 < 90 },
-                .init(color: Color(hex: "#F5A623"), name: "Poor", range: "<80%") { $0 < 80 },
+                .init(color: NunaRestChart.need, name: "Optimal", range: "85%+") { $0 >= 85 },
+                .init(color: Color(hex: "#8A8D93"), name: "Sufficient", range: "70–85%") { $0 >= 70 && $0 < 85 },
+                .init(color: Color(hex: "#F5A623"), name: "Poor", range: "<70%") { $0 < 70 },
             ],
             breakdownTitle: "Sleep efficiency breakdown",
             value: { $0.efficiency[$1] }, line: true, endingDaysAgo: endingDaysAgo)
