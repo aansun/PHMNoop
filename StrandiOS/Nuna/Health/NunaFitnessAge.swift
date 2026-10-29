@@ -97,7 +97,7 @@ struct NunaFitnessAgeView: View {
                             .font(.nuna(size: 64, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(64)).foregroundStyle(NunaPalette.textPrimary)
                         Text("Fitness age").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                         if let diff, diff != 0 {
-                            Text(diff > 0 ? LocalizedStringKey("\(diff) years younger") : LocalizedStringKey("\(-diff) years older"))
+                            Text(nunaYearsGap(diff))
                                 .font(.nuna(size: 15, weight: .bold)).foregroundStyle(tint)
                         } else if diff == 0 {
                             Text("About your age").font(.nuna(size: 15, weight: .bold)).foregroundStyle(tint)
