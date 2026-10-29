@@ -249,6 +249,7 @@ struct NunaRestDetailView: View {
                                 points: points { model.efficiency($0) }, valueText: percent, endingDaysAgo: ending)
             NunaWeeklyTrendCard(title: "Sleep debt", key: "sleep_debt", style: .bars, color: steel,
                                 barFill: { _, _ in steel }, labelFill: { _, _ in steel },
+                                destination: { AnyView(NunaSleepDebtTrendView(endingDaysAgo: ending)) },
                                 points: debtPoints, valueText: NunaRestChart.hm, autoScale: true, endingDaysAgo: ending)
         }
     }

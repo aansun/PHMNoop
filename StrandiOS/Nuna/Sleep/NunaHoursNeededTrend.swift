@@ -71,7 +71,7 @@ struct NunaHoursNeededTrendView: View {
             nameBox
             header(avgNeed, avgSlept)
             if let sentence = sentence(avgNeed, avgSlept) {
-                Text(verbatim: sentence).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: sentence).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                     .fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.horizontal, 2)
             }
             chart(plotted(all), avgNeed, avgSlept).padding(.top, 8)

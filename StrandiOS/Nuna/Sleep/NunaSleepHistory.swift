@@ -3,6 +3,7 @@ import SwiftUI
 import Charts
 import StrandDesign
 import WhoopStore
+import StrandAnalytics
 
 /// The sleep figures of every stored day, for the long trend pages (a week, a month, six months). `NunaSleepModel` holds only the last month of nights
 /// with their stage timelines; these pages need the year, so they read the daily rows and series, which are what the model's own figures come from.
@@ -14,6 +15,8 @@ final class NunaSleepHistory: ObservableObject {
     @Published private(set) var needMin: [String: Double] = [:]
     @Published private(set) var consistency: [String: Double] = [:]
     @Published private(set) var efficiency: [String: Double] = [:]
+    /// The sleep debt as of each night, from the same recurrence the weekly Sleep debt card uses, run over every stored night.
+    @Published private(set) var debtMin: [String: Double] = [:]
     /// When the main night began and ended, by the day it is filed under, in hours from that evening's midnight (a bedtime after midnight is 24 and
     /// more; the wake is always past 24), the way the weekly Time in bed card reads them.
     @Published private(set) var bedHour: [String: Double] = [:]
@@ -38,6 +41,9 @@ final class NunaSleepHistory: ObservableObject {
         for row in repo.days { if let e = row.efficiency, e > 0 { eff[row.day] = e <= 1 ? e * 100 : e } }
         for point in await repo.exploreSeries(key: "sleep_efficiency", source: "my-whoop", days: 400) { eff[point.day] = point.value <= 1 ? point.value * 100 : point.value }
         efficiency = eff
+        let healthy = SleepModel.debtNeedMin(days: repo.days)
+        debtMin = Dictionary(SleepDebt.debtSeries(series: a.keys.sorted().map { ($0, a[$0]) }, needHours: healthy / 60).map { ($0.day, max($0.value, 0)) },
+                             uniquingKeysWith: { _, l in l })
         await loadBedTimes(repo: repo)
         needMin = Dictionary(need.map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l })
         consistency = Dictionary(cons.map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l })
@@ -146,9 +152,12 @@ struct NunaPeriodSegment: Identifiable {
     let delta: Double?
     var id: Date { start }
 
-    var tint: Color {
+    var tint: Color { tint(upIsGood: true) }
+
+    /// Green when it moved the good way, orange the other way, white when it did not move; `upIsGood` false for a figure like debt.
+    func tint(upIsGood: Bool) -> Color {
         guard let delta, abs(delta) >= 0.5 else { return Color.white }
-        return delta > 0 ? Color(hex: "#19D9A0") : Color(hex: "#F5A623")
+        return (delta > 0) == upIsGood ? Color(hex: "#19D9A0") : Color(hex: "#F5A623")
     }
 
     /// Six equal stretches of the window, each the mean of the points inside it; a stretch with none is left out.
@@ -180,13 +189,15 @@ struct NunaSegmentsLayer: View {
     /// A fixed colour for the line and figure (a series that has no good or bad direction); nil colours them by the move.
     var color: Color?
     var showsDelta = true
+    /// Whether a rise is the good direction; false colours a rise orange (sleep debt).
+    var upIsGood = true
     let text: (Double) -> String
 
     var body: some View {
         ZStack {
             ForEach(segments) { s in
                 if let x0 = proxy.position(forX: s.start), let x1 = proxy.position(forX: s.end), let y = proxy.position(forY: s.value) {
-                    let tint = color ?? s.tint
+                    let tint = color ?? s.tint(upIsGood: upIsGood)
                     Rectangle().fill(tint).frame(width: max(x1 - x0 - 8, 4), height: 3)
                         .position(x: frame.minX + (x0 + x1) / 2, y: frame.minY + y)
                     Text(verbatim: text(s.value)).font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).foregroundStyle(color ?? Color.white)
