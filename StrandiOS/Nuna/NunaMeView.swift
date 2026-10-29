@@ -32,6 +32,10 @@ struct NunaMeView: View {
                     .buttonStyle(.plain).accessibilityLabel(Text("Search"))
                 }
                 profileCard
+                // Gym opens straight to its own page, without going through Workouts.
+                NavigationLink { NunaGymPage() } label: {
+                    NunaCard(small: true) { NunaListRow("Gym", subtitle: "Programs, progress and sessions", systemImage: "dumbbell", showsChevron: true) }
+                }.buttonStyle(.plain)
                 group("Personalize", count: 4) {
                     row(.devices, "Devices", LocalizedStringKey(deviceSubtitle), "applewatch")
                     NunaDivider()
