@@ -185,10 +185,11 @@ enum NunaGymStore {
 
 // MARK: - Gym page
 
-/// Gym as a page of its own, apart from the Workouts hub: its own header and scroll, the banner of a running session, and the gym hub below.
+/// Gym as a page of its own, apart from the Workouts hub: three tabs (Progress, My Program, Explore) under its own header, with the banner of a running session.
 struct NunaGymPage: View {
     @Environment(\.dismiss) private var dismiss
     @State private var openLive = false
+    @State private var tab = 1
 
     var body: some View {
         ScrollView {
@@ -200,8 +201,9 @@ struct NunaGymPage: View {
                     Text("Gym").font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     Spacer()
                 }
+                NunaPageTabs([(value: 0, title: "Progress"), (value: 1, title: "My Program"), (value: 2, title: "Explore")], selection: $tab)
                 NunaActiveWorkoutBanner { openLive = true }
-                NunaGymView()
+                NunaGymView(tab: $tab)
             }
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 60)
         }
@@ -220,6 +222,8 @@ struct NunaGymPage: View {
 /// Gym, the middle tab of Workouts (header and scroll view come from the hub): start an empty session, run or edit a saved program, the sets each muscle group got this week and the latest
 /// sessions. Reads and writes the same Lift Log tables as the Default screens, so programs and sessions are shared.
 struct NunaGymView: View {
+    /// The tab of the Gym page this shows: 0 Progress, 1 My Program, 2 Explore.
+    @Binding var tab: Int
     @EnvironmentObject private var appModel: AppModel
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var session: LiftSessionController
@@ -241,7 +245,6 @@ struct NunaGymView: View {
     @State private var weekOffset = 0
     @State private var picking = false
     @State private var choosingStart = false
-    @State private var exploring = false
     @State private var buildingWithAnya = false
     @ObservedObject private var groupsModel = NunaProgramGroupsModel.shared
     @State private var groupDialog: GroupDialog?
@@ -258,12 +261,18 @@ struct NunaGymView: View {
     private static let setsBarSpan = 20.0
 
     @ViewBuilder private var content: some View {
-        NunaGymAnyaCard(model: anyaModel)
-        topActions
-        programsSection
-        NunaMuscleReadinessCard(readings: readiness)
-        weekSection
-        sessionsSection
+        switch tab {
+        case 0:
+            NunaGymAnyaCard(model: anyaModel)
+            NunaMuscleReadinessCard(readings: readiness)
+            weekSection
+            sessionsSection
+        case 1:
+            topActions
+            programsSection
+        default:
+            NunaGymExploreView(embedded: true)
+        }
     }
 
     var body: some View {
@@ -302,7 +311,6 @@ struct NunaGymView: View {
         .buttonStyle(.plain)
         .sheet(isPresented: $choosingStart) { startSheet }
         .sheet(isPresented: $buildingWithAnya) { NunaAnyaProgramBuilder() }
-        .navigationDestination(isPresented: $exploring) { NunaGymExploreView() }
     }
 
     private var startSheet: some View {
@@ -315,7 +323,7 @@ struct NunaGymView: View {
             }
             startOption("Explore programs", "safari", "Ready-made programs to start from.") {
                 choosingStart = false
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { exploring = true }
+                tab = 2
             }
             startOption("Empty session", "plus", "Pick exercises as you go.") {
                 choosingStart = false
@@ -379,24 +387,28 @@ struct NunaGymView: View {
         let inGroup = open.map { groupsModel.programs(in: $0, from: programs) } ?? groupsModel.ungrouped(programs)
         let suggestion = open == nil ? groupsModel.suggestions(for: programs).first : nil
         return VStack(alignment: .leading, spacing: 12) {
-            NunaTitleRow(title: "Programs") { EmptyView() }
-            NunaCard {
-                VStack(alignment: .leading, spacing: 14) {
-                    groupPicker(open, count: inGroup.count)
-                    if let suggestion { suggestionCard(suggestion) }
-                    if inGroup.isEmpty {
-                        Text(loaded && programs.isEmpty ? "No programs yet. A program is a named list of exercises with your targets for each."
-                             : open == nil ? "Every program is in a group. The ones you have not moved are here." : "Empty. Use the menu of a program to move it here.")
-                            .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                    }
-                    ForEach(inGroup, id: \.id) { p in programRow(p) }
-                    HStack(spacing: 10) {
-                        NavigationLink(value: NunaWorkoutRoute.program("new")) { programButton("New program", "plus") }.buttonStyle(.plain)
-                        Button { askForGroup(.new(programId: nil)) } label: { programButton("New group", "folder.badge.plus") }.buttonStyle(.plain)
-                    }
+            NunaTitleRow(title: "My Program") {
+                HStack(spacing: 6) {
+                    NavigationLink(value: NunaWorkoutRoute.program("new")) { programIcon("plus") }.buttonStyle(.plain).accessibilityLabel(Text("New program"))
+                    Button { askForGroup(.new(programId: nil)) } label: { programIcon("folder.badge.plus") }.buttonStyle(.plain).accessibilityLabel(Text("New group"))
                 }
             }
+            VStack(alignment: .leading, spacing: 12) {
+                groupPicker(open, count: inGroup.count)
+                if let suggestion { suggestionCard(suggestion) }
+                if inGroup.isEmpty {
+                    Text(loaded && programs.isEmpty ? "No programs yet. A program is a named list of exercises with your targets for each."
+                         : open == nil ? "Every program is in a group. The ones you have not moved are here." : "Empty. Use the menu of a program to move it here.")
+                        .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                }
+                ForEach(inGroup, id: \.id) { p in programRow(p) }
+            }
         }
+    }
+
+    /// A bare icon at the right end of the My Program title.
+    private func programIcon(_ name: String) -> some View {
+        Image(systemName: name).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 40, height: 36).contentShape(Rectangle())
     }
 
     /// The drop-down that names the group on show, with the options of that group beside it.
@@ -415,14 +427,12 @@ struct NunaGymView: View {
                 }
             } label: {
                 HStack(spacing: 12) {
-                    Image(systemName: open == nil ? "tray" : "folder").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     Text(verbatim: open?.name ?? String(localized: "Ungrouped")).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).lineLimit(1)
                     Text(verbatim: "\(count)").font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
                     Spacer(minLength: 0)
                     Image(systemName: "chevron.down").font(.nuna(size: 14, weight: .bold))
                 }
-                .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 16).frame(maxWidth: .infinity).frame(height: 54)
-                .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
+                .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 4).frame(maxWidth: .infinity).frame(height: 44)
                 .contentShape(Rectangle())
             }
             .accessibilityLabel(Text("Group"))
