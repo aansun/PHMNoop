@@ -220,21 +220,30 @@ struct NunaScoreHero<Note: View>: View {
     var target: ClosedRange<Double>?
     /// Whether there is anything to explain; without it the info button is left out.
     var hasNote = true
-    @State private var showInfo = false
+    /// False when the screen puts the day and the info button in its own header: the ring then starts the hero.
+    var showsCaptionRow = true
+    /// The info state, when the screen owns the button; nil keeps the hero's own.
+    var externalInfo: Binding<Bool>?
+    @State private var ownInfo = false
+    private var showInfo: Bool { externalInfo?.wrappedValue ?? ownInfo }
 
     init(caption: LocalizedStringKey, chip: LocalizedStringKey? = nil, chipColor: Color? = nil, fraction: Double, number: String,
-         unit: String = "", suffix: String = "", name: LocalizedStringKey, nameColor: Color? = nil, gradient: [Color]? = nil, target: ClosedRange<Double>? = nil, color: Color, hasNote: Bool = true, @ViewBuilder note: () -> Note) {
+         unit: String = "", suffix: String = "", name: LocalizedStringKey, nameColor: Color? = nil, gradient: [Color]? = nil, target: ClosedRange<Double>? = nil, color: Color, hasNote: Bool = true,
+         showsCaptionRow: Bool = true, info: Binding<Bool>? = nil, @ViewBuilder note: () -> Note) {
         self.caption = caption; self.chip = chip; self.chipColor = chipColor; self.fraction = fraction; self.number = number
         self.unit = unit; self.suffix = suffix; self.name = name; self.nameColor = nameColor; self.gradient = gradient; self.target = target; self.color = color; self.hasNote = hasNote; self.note = note()
+        self.showsCaptionRow = showsCaptionRow; self.externalInfo = info
     }
 
     var body: some View {
         VStack(spacing: 16) {
-            HStack {
-                Text(caption).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                Spacer()
-                if let chip { NunaChip(chip, color: chipColor) }
-                if hasNote { NunaInfoButton(isOn: $showInfo) }
+            if showsCaptionRow {
+                HStack {
+                    Text(caption).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Spacer()
+                    if let chip { NunaChip(chip, color: chipColor) }
+                    if hasNote { NunaInfoButton(isOn: $ownInfo) }
+                }
             }
             NunaRingGauge(fraction: fraction, color: color, gradient: gradient, target: target, size: 300, lineWidth: 24) {
                 VStack(spacing: 6) {

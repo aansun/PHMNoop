@@ -25,21 +25,35 @@ struct NunaChargeDetailView: View {
     /// Last night's Rest and skin-temperature deviation: two of the signals Charge is made of.
     @StateObject private var restSeries = NunaSeriesModel()
     @StateObject private var skinSeries = NunaSeriesModel()
-    @State private var range = 7
-    @State private var page = 0
+    /// The daily series the 30-day averages under the ring are made from.
+    @StateObject private var hrvSeries = NunaSeriesModel()
+    @StateObject private var rhrSeries = NunaSeriesModel()
+    @StateObject private var respSeries = NunaSeriesModel()
     @State private var showCoach = false
+    @State private var showInfo = false
 
     /// The day picked on Today: nil for today; else the day key the readings below are cut at, so a past day shows its own figures.
     private var cutoff: String? { router.todayDayOffset == 0 ? nil : NunaSelectedDay.key(offset: router.todayDayOffset) }
 
+    /// The mean of the last 30 readings before the day shown (nil with fewer than five), what each figure under the ring is compared with.
+    private func average30(_ m: NunaSeriesModel) -> Double? {
+        let before = cutoff ?? Repository.localDayKey(Date())
+        let recent = m.byDay.filter { $0.key < before }.sorted { $0.key > $1.key }.prefix(30).map(\.value)
+        return recent.count >= 5 ? recent.reduce(0, +) / Double(recent.count) : nil
+    }
+
+    private var hasNote: Bool { (day.charge.pct ?? series.latest(asOf: cutoff)?.value) != nil && series.baseline != nil }
+
     var body: some View {
         let latest = series.latest(asOf: cutoff)
-        NunaDetailScreen("Charge") {
-            NunaScoreHero(caption: NunaSelectedDay.caption(offset: router.todayDayOffset, today: "Today"),
+        // The day sits in the header where the metric dropdown used to be; the info button goes with it.
+        NunaDetailScreen(NunaSelectedDay.caption(offset: router.todayDayOffset, today: "Today"),
+                         trailing: hasNote ? AnyView(NunaInfoButton(isOn: $showInfo)) : nil) {
+            NunaScoreHero(caption: "",
                           fraction: (day.charge.pct ?? latest?.value ?? 0) / 100,
                           number: (day.charge.pct ?? latest?.value).map { String(format: "%.0f", $0) } ?? "–",
                           unit: "%", name: chargeWord ?? "Charge", nameColor: (day.charge.pct ?? latest?.value).map(nunaChargeTextColor), color: (day.charge.pct ?? latest?.value).map(nunaChargeColor) ?? NunaPalette.charge,
-                          hasNote: (day.charge.pct ?? latest?.value) != nil && series.baseline != nil) {
+                          hasNote: hasNote, showsCaptionRow: false, info: $showInfo) {
                 if let v = day.charge.pct ?? latest?.value, let base = series.baseline {
                     let d = Int((v - base).rounded())
                     let readiness = chip.map { $0.0 + ". " } ?? ""
@@ -49,33 +63,24 @@ struct NunaChargeDetailView: View {
                         .fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
-            NunaPlainList {
-                contributor("Heart rate variability", "waveform.path.ecg", day.hrv.map { String(format: "%.0f", $0) }, "", day.hrvDelta, false, key: "hrv")
-                NunaDivider()
-                contributor("Resting heart rate", "heart", day.restingHr.map { String(format: "%.0f", $0) }, "", day.restingHrDelta, true, key: "rhr")
-                NunaDivider()
-                contributor("Respiratory rate", "lungs", day.respiratory.map { String(format: "%.1f", locale: AppLanguage.activeLocale, $0) }, "", day.respiratoryDelta, nil, decimals: 1, key: "resp_rate")
-                NunaDivider()
-                NavigationLink(value: NunaTodayRoute.metric(restMetric)) {
-                    NunaContributorRow(title: "Sleep performance", icon: "moon",
-                                       value: (day.rest ?? restSeries.latest(asOf: cutoff)?.value).map { String(format: "%.0f", $0) },
-                                       delta: restSeries.change(asOf: cutoff), downIsGood: false)
-                }.buttonStyle(.plain)
-                NunaDivider()
-                contributor("Skin temperature", "thermometer", skinSeries.latest(asOf: cutoff).map { nunaSigned($0.value) }, "", skinSeries.change(asOf: cutoff), nil, decimals: 1, key: "skin_temp")
+            VStack(spacing: 12) {
+                NunaPlainList {
+                    signal("Heart rate variability", "waveform.path.ecg", key: "hrv", value: day.hrv, average: average30(hrvSeries), good: true)
+                    NunaDivider()
+                    signal("Resting heart rate", "heart", key: "rhr", value: day.restingHr, average: average30(rhrSeries), good: false)
+                    NunaDivider()
+                    signal("Respiratory rate", "lungs", key: "resp_rate", value: day.respiratory, average: average30(respSeries), decimals: 1, good: nil)
+                    NunaDivider()
+                    signal("Sleep performance", "moon", key: "sleep_performance", value: day.rest ?? restSeries.latest(asOf: cutoff)?.value,
+                           average: average30(restSeries), good: true)
+                    NunaDivider()
+                    signal("Skin temperature", "thermometer", key: "skin_temp", value: skinSeries.latest(asOf: cutoff)?.value,
+                           average: average30(skinSeries), decimals: 1, signed: true, good: nil)
+                }
+                NunaTrendLegend(text: router.todayDayOffset == 0 ? "Today vs. last 30 days" : "This day vs. the 30 days before")
             }
             // Anya's line speaks of today (what to do with the day), so it is shown on today only.
             if coachEnabled, router.todayDayOffset == 0, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
-            NunaTrendDetailCard(
-                caption: "Average", unit: "%",
-                readings: { days, back in series.readings(days, endingDaysAgo: back) },
-                hasOlder: { start in series.byDay.keys.min().map { Repository.localDayKey(start) > $0 } ?? false },
-                loaded: series.loaded, band: series.typicalRange,
-                lineColor: NunaPalette.charge, decimals: 0, directional: true,
-                levelChip: { v in (text: v >= 67 ? "Ready" : (v >= 34 ? "Moderate" : "Low"), color: nunaChargeTextColor(v)) },
-                sentence: nil, range: $range, page: $page)
-                .columns(color: nunaChargeColor, top: 100, legend: AnyView(zoneKey))
-                .endingOn(daysAgo: router.todayDayOffset)
             weeklyTrends
             NunaExpandRow(title: "How it's calculated", subtitle: "Three signals, against your own baseline",
                           text: "Charge compares last night's heart rate variability, resting heart rate and sleep with your own baseline from the last 30 days. It is an estimate computed on this phone from your strap's data.")
@@ -85,9 +90,24 @@ struct NunaChargeDetailView: View {
             await series.load(repo: repo, key: "recovery", source: "my-whoop")
             await restSeries.load(repo: repo, key: "sleep_performance", source: "my-whoop")
             await skinSeries.load(repo: repo, key: "skin_temp", source: "my-whoop")
+            await hrvSeries.load(repo: repo, key: "hrv", source: "my-whoop")
+            await rhrSeries.load(repo: repo, key: "rhr", source: "my-whoop")
+            await respSeries.load(repo: repo, key: "resp_rate", source: "my-whoop")
             await day.load(repo: repo, profile: profile)
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "Charge") }
+        .environment(\.nunaDetailSwitch, nil)
+    }
+
+    /// One signal under the ring: its figure against the 30-day average, opening that metric's own page.
+    @ViewBuilder private func signal(_ title: LocalizedStringKey, _ icon: String, key: String, value: Double?, average: Double?, decimals: Int = 0,
+                                     signed: Bool = false, good: Bool?) -> some View {
+        let text: (Double) -> String = { signed ? nunaSigned($0, decimals) : String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, $0) }
+        let row = NunaSignalRow(title: title, icon: icon, value: value.map(text),
+                                trend: NunaTrend.make(current: value, previous: average, decimals: decimals, upIsGood: good, format: text))
+        if let m = MetricCatalog.metric(key: key, source: "my-whoop") {
+            NavigationLink(value: NunaTodayRoute.metric(m)) { row }.buttonStyle(.plain)
+        } else { row }
     }
 
     private func weekday(_ d: Date) -> String {
@@ -117,29 +137,13 @@ struct NunaChargeDetailView: View {
                 .accessibilityAddTraits(.isHeader).padding(.top, 4)
             NunaWeeklyTrendCard(title: "Charge", key: "recovery", style: .bars, color: NunaPalette.charge,
                                 barFill: { v, last in last ? nunaChargeColor(v) : NunaPalette.textSecondary },
-                                labelFill: { v, last in last ? nunaChargeColor(v) : NunaPalette.textPrimary }, endingDaysAgo: router.todayDayOffset)
+                                labelFill: { v, last in last ? nunaChargeColor(v) : NunaPalette.textPrimary },
+                                destination: { AnyView(NunaChargeTrendView()) }, endingDaysAgo: router.todayDayOffset)
             NunaWeeklyTrendCard(title: "Heart rate variability", key: "hrv", style: .line, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
             NunaWeeklyTrendCard(title: "Resting heart rate", key: "rhr", style: .line, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
             NunaWeeklyTrendCard(title: "Respiratory rate", key: "resp_rate", style: .line, decimals: 1, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
             NunaWeeklyTrendCard(title: "Sleep performance", key: "sleep_performance", style: .bars, color: NunaPalette.restDeep, labelColor: NunaPalette.restText, endingDaysAgo: router.todayDayOffset)
             NunaWeeklyTrendCard(title: "Skin temperature", key: "skin_temp", style: .line, decimals: 1, signed: true, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
-        }
-    }
-
-    /// What the colours of the bars mean: the three Charge zones.
-    private var zoneKey: some View {
-        HStack(spacing: 16) {
-            key(NunaPalette.scoreHigh, "67–100", "Ready")
-            key(NunaPalette.scoreMid, "34–66", "Moderate")
-            key(NunaPalette.scoreLow, "0–33", "Low")
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private func key(_ color: Color, _ range: String, _ label: LocalizedStringKey) -> some View {
-        HStack(spacing: 6) {
-            RoundedRectangle(cornerRadius: 3, style: .continuous).fill(color).frame(width: 10, height: 10)
-            (Text(verbatim: range + " ") + Text(label)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
         }
     }
 
