@@ -15,6 +15,8 @@ final class NunaSleepHistory: ObservableObject {
     @Published private(set) var needMin: [String: Double] = [:]
     @Published private(set) var consistency: [String: Double] = [:]
     @Published private(set) var efficiency: [String: Double] = [:]
+    /// The sleep performance of each day (the Rest score), for the Sleep performance trend page.
+    @Published private(set) var performance: [String: Double] = [:]
     /// The Charge score of each day, for the Charge trend page.
     @Published private(set) var charge: [String: Double] = [:]
     /// The sleep debt as of each night, from the same recurrence the weekly Sleep debt card uses, run over every stored night.
@@ -43,6 +45,7 @@ final class NunaSleepHistory: ObservableObject {
         for row in repo.days { if let e = row.efficiency, e > 0 { eff[row.day] = e <= 1 ? e * 100 : e } }
         for point in await repo.exploreSeries(key: "sleep_efficiency", source: "my-whoop", days: 400) { eff[point.day] = point.value <= 1 ? point.value * 100 : point.value }
         efficiency = eff
+        performance = Dictionary((await repo.exploreSeries(key: "sleep_performance", source: "my-whoop", days: 400)).map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l })
         charge = Dictionary((await repo.exploreSeries(key: "recovery", source: "my-whoop", days: 400)).map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l })
         let healthy = SleepModel.debtNeedMin(days: repo.days)
         debtMin = Dictionary(SleepDebt.debtSeries(series: a.keys.sorted().map { ($0, a[$0]) }, needHours: healthy / 60).map { ($0.day, max($0.value, 0)) },

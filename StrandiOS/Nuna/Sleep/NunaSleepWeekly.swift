@@ -254,40 +254,20 @@ private struct NunaTimeInBedPlot: View {
 
 // MARK: - The page the Sleep performance card opens
 
-/// Rest over a week, a month and six months, with the days per level under it, like the Charge and Effort pages.
+/// Sleep performance over a week, a month and six months, drawn like the other sleep trend pages with the days per level under it.
 struct NunaRestTrendView: View {
-    @EnvironmentObject private var repo: Repository
-    @EnvironmentObject private var router: NavRouter
-    @StateObject private var series = NunaSeriesModel()
-    @State private var range = 7
-    @State private var page = 0
+    var endingDaysAgo = 0
 
     var body: some View {
-        NunaDetailScreen("Rest") {
-            NunaTrendDetailCard(
-                caption: "Average", unit: "%",
-                readings: { days, back in series.readings(days, endingDaysAgo: back) },
-                hasOlder: { start in series.byDay.keys.min().map { Repository.localDayKey(start) > $0 } ?? false },
-                loaded: series.loaded, band: series.typicalRange,
-                lineColor: NunaPalette.rest, decimals: 0, directional: true,
-                levelChip: { v in (text: nunaRestWord(v), color: nunaRestTextColor(v)) },
-                sentence: nil, range: $range, page: $page)
-                .columns(color: nunaRestColor, top: 100)
-                .withoutFigures()
-                .windowFooter { AnyView(breakdown($0)) }
-                .endingOn(daysAgo: router.todayDayOffset)
-        }
-        .environment(\.nunaDetailSwitch, nil)
-        .task(id: repo.refreshSeq) { await series.load(repo: repo, key: "sleep_performance", source: "my-whoop") }
-    }
-
-    private func breakdown(_ values: [Double]) -> NunaDaysBreakdown {
-        NunaDaysBreakdown(title: "Rest breakdown", bands: [
-            .init(color: nunaRestColor(100), name: "Excellent", range: "85–100%") { $0 >= 85 },
-            .init(color: nunaRestColor(75), name: "Good", range: "70–84%") { $0 >= 70 && $0 < 85 },
-            .init(color: nunaRestColor(60), name: "Fair", range: "50–69%") { $0 >= 50 && $0 < 70 },
-            .init(color: nunaRestColor(10), name: "Low", range: "0–49%") { $0 < 50 },
-        ], values: values)
+        NunaPctTrendView(
+            name: "Sleep performance", icon: "moon", noun: "average Sleep Performance",
+            bands: [
+                .init(color: NunaRestChart.need, name: "Optimal", range: ">85%") { $0 > 85 },
+                .init(color: Color(hex: "#8A8D93"), name: "Sufficient", range: "70–85%") { $0 >= 70 && $0 <= 85 },
+                .init(color: Color(hex: "#F5A623"), name: "Poor", range: "<70%") { $0 < 70 },
+            ],
+            breakdownTitle: "Sleep breakdown",
+            value: { $0.performance[$1] }, endingDaysAgo: endingDaysAgo)
     }
 }
 #endif
