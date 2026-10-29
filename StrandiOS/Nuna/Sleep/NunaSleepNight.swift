@@ -168,7 +168,20 @@ struct NunaSleepStageSection: View {
         return (pct(0.25), pct(0.75), v.reduce(0, +) / Double(v.count))
     }
 
+    /// A night (not a nap) is drawn in the layout of the reference: a title outside the card, hours of sleep, the chart, the stages, the restorative sleep.
+    private var isNight: Bool { compareWithNights && rangeText == nil }
+
     var body: some View {
+        Group {
+            if isNight { nightLayout } else { legacyCard }
+        }
+        .task(id: "\(night.dayKey)-\(Int(night.onset.timeIntervalSince1970))-\(temperatureRaw)-\(unitSystemRaw)") {
+            selected = nil
+            await loadSeries()
+        }
+    }
+
+    private var legacyCard: some View {
         NunaCard {
             VStack(alignment: .leading, spacing: 14) {
                 HStack {
@@ -194,14 +207,110 @@ struct NunaSleepStageSection: View {
                     Text("The order of stages is not available for this night. The split comes from the daily totals.")
                         .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 } else {
-                    nightChart
+                    nightChart(.all)
                     stageChart
                 }
             }
         }
-        .task(id: "\(night.dayKey)-\(Int(night.onset.timeIntervalSince1970))-\(temperatureRaw)-\(unitSystemRaw)") {
-            selected = nil
-            await loadSeries()
+    }
+
+    // MARK: The night, as the reference draws it
+
+    @State private var showsHoursInfo = false
+
+    private static func hm(_ minutes: Double) -> String {
+        let m = Int(minutes.rounded())
+        return String(format: "%d:%02d", m / 60, m % 60)
+    }
+
+    /// "Last night's sleep" and the pencil, then what the card compares with, above the card.
+    private var nightTitle: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(model.index == 0 ? "Last night's sleep" : "Sleep").font(.nuna(size: 20, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                    .textCase(nil).accessibilityAddTraits(.isHeader)
+                Spacer(minLength: 8)
+                if let onEdit {
+                    Button(action: onEdit) {
+                        HStack(spacing: 8) {
+                            Text("Edit").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                            Image(systemName: (edited ?? (night.editTarget?.userEdited == true)) ? "pencil.circle.fill" : "pencil").font(.nuna(size: 15, weight: .regular))
+                        }
+                        .foregroundStyle(NunaPalette.textPrimary)
+                    }
+                    .buttonStyle(.plain).accessibilityLabel(Text("Edit sleep times"))
+                }
+            }
+            if !others.isEmpty {
+                Text("Today vs. prior 30 days").font(.nuna(size: 12.5, weight: .medium)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            }
+        }
+        .padding(.horizontal, 4)
+    }
+
+    /// "HOURS OF SLEEP", then the hours asleep with a small triangle against the last 30 nights and that average underneath.
+    private var hoursHeader: some View {
+        let mean = typical { $0.stages.asleep }?.mean
+        let trend = NunaTrend.make(current: night.asleepMin, previous: mean, decimals: 0, upIsGood: true, format: Self.hm)
+        return VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text("Hours of sleep").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                Spacer(minLength: 8)
+                NunaInfoButton(isOn: $showsHoursInfo)
+            }
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(alignment: .center, spacing: 8) {
+                    Text(verbatim: Self.hm(night.asleepMin)).font(.nuna(size: 28, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    if let trend, trend.direction != 0 {
+                        Image(systemName: trend.direction > 0 ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill").font(.system(size: 8, weight: .bold)).foregroundStyle(trend.tint)
+                    }
+                }
+                if let trend {
+                    Text(verbatim: trend.previous).font(.nuna(size: 12.5, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
+                }
+            }
+            if showsHoursInfo {
+                Text("The time you were asleep, against the average of your last 30 nights.").font(.nuna(size: 13.5, weight: .semibold))
+                    .foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+            }
+        }
+    }
+
+    /// Restorative sleep (deep and REM) at the end of the card, against the average of the last 30 nights.
+    private var restorativeRow: some View {
+        let total = night.stages.deep + night.stages.rem
+        let mean = typical { $0.stages.deep + $0.stages.rem }?.mean
+        return HStack(spacing: 12) {
+            RoundedRectangle(cornerRadius: 5, style: .continuous)
+                .fill(LinearGradient(colors: [Self.deepPink, Self.remPurple], startPoint: .bottomLeading, endPoint: .topTrailing)).frame(width: 24, height: 24)
+            Text("Restorative sleep").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                .lineLimit(1).minimumScaleFactor(0.7)
+            Spacer(minLength: 8)
+            NunaTrendFigure(value: Self.hm(total), trend: NunaTrend.make(current: total, previous: mean, decimals: 0, upIsGood: true, format: Self.hm), size: 16)
+        }
+    }
+
+    private var nightLayout: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            nightTitle
+            NunaCard {
+                VStack(alignment: .leading, spacing: 18) {
+                    hoursHeader
+                    if night.intervals.isEmpty {
+                        NunaStageSplitBar(stages: night.stages)
+                        ForEach([SleepStage.awake, .rem, .light, .deep], id: \.self) { simpleRow($0) }
+                        Text("The order of stages is not available for this night. The split comes from the daily totals.")
+                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    } else {
+                        nightChart(.chart)
+                        NunaDivider()
+                        stageChart
+                        NunaDivider()
+                        restorativeRow
+                        motionBlock(strip: NunaSleepChartStyle.resolve(chartStyleRaw) != .fitbit)
+                    }
+                }
+            }
         }
     }
 
@@ -212,19 +321,19 @@ struct NunaSleepStageSection: View {
         switch style {
         case .classic:
             stagesHeader
-            VStack(spacing: 22) {
+            VStack(spacing: 16) {
                 ForEach([SleepStage.awake, .light, .deep, .rem], id: \.self) { stageRow($0) }
             }
             if selected != nil { NunaTimeAxis(start: windowStart, end: windowEnd) }
-            insight
-            motionBlock(strip: true)
+            if selected != nil || !isNight { insight }
+            if !isNight { motionBlock(strip: true) }
         case .fitbit:
             NunaFitbitStageChart(intervals: smoothed, origin: origin, span: span, motion: night.motion, restlessMin: night.restlessMinutes,
                                  minutes: { minutes($0) }, selected: $selected)
                 .padding(.horizontal, 10)
             NunaTimeAxis(start: windowStart, end: windowEnd).padding(.horizontal, 10)
             insight
-            motionBlock(strip: false)
+            if !isNight { motionBlock(strip: false) }
         case .fill, .garmin, .ribbon:
             if let h = style.hypnogram {
                 Hypnogram(intervals: night.intervals, height: 150, showsStageAxis: false, showsHover: true, nightStart: night.onset,
@@ -237,7 +346,7 @@ struct NunaSleepStageSection: View {
                 }
             }
             insight
-            motionBlock(strip: true)
+            if !isNight { motionBlock(strip: true) }
         }
     }
 
@@ -249,19 +358,36 @@ struct NunaSleepStageSection: View {
         }
     }
 
+    static let awakeGrey = Color(hex: "#C9CCD1")
+    static let lightLavender = Color(hex: "#A39EF0")
+    static let deepPink = Color(hex: "#F78CF5")
+    static let remPurple = Color(hex: "#A55AE8")
+
+    /// The colours the reference gives the stages on this card: light grey, lavender, pink and purple.
+    private func cardColor(_ stage: SleepStage) -> Color {
+        switch stage { case .awake: return Self.awakeGrey; case .light: return Self.lightLavender; case .deep: return Self.deepPink; case .rem: return Self.remPurple }
+    }
+
+    private func cardName(_ stage: SleepStage) -> LocalizedStringKey {
+        switch stage { case .awake: return "Awake"; case .light: return "Light"; case .deep: return "SWS (Deep)"; case .rem: return "REM" }
+    }
+
     /// The radio, name, share and time of a stage; a filled radio is the stage picked, which the chart above then lights.
     private func stageLine(_ stage: SleepStage, color: Color, dimmed: Bool, on: Bool) -> some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             ZStack {
                 Circle().strokeBorder(NunaPalette.textPrimary.opacity(dimmed ? 0.45 : 1), lineWidth: 2)
-                if on { Circle().fill(NunaPalette.textPrimary).frame(width: 9, height: 9) }
+                if on { Circle().fill(NunaPalette.textPrimary).frame(width: 10, height: 10) }
             }
-            .frame(width: 22, height: 22)
-            Text(stage.nunaName).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                .foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
-            Text(verbatim: "\(share(stage))%").font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(dimmed ? NunaPalette.textMuted : color)
+            .frame(width: 24, height: 24)
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Text(isNight ? cardName(stage) : stage.nunaName).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
+                Text(verbatim: "\(share(stage))%").font(.nuna(size: 12.5, weight: .semibold, design: NunaType.design)).foregroundStyle(dimmed ? NunaPalette.textMuted : color)
+            }
             Spacer(minLength: 8)
-            Text(verbatim: NunaSleepFormat.duration(minutes(stage))).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+            Text(verbatim: isNight ? Self.hm(minutes(stage)) : NunaSleepFormat.duration(minutes(stage)))
+                .font(.nuna(size: 16, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
         }
     }
 
@@ -356,7 +482,12 @@ struct NunaSleepStageSection: View {
         return out
     }
 
-    @ViewBuilder private var nightChart: some View {
+    private enum ChartPart { case all, chart, extras }
+
+    /// The muted steel blue of the night's heart-rate line on the reference's card.
+    private static let calmBlue = Color(hex: "#7FA6C2")
+
+    @ViewBuilder private func nightChart(_ part: ChartPart) -> some View {
         let list = metrics
         if let m = list.first(where: { $0.id == metric }) ?? list.first {
             let pts = (series[m.id] ?? []).filter { $0.date >= windowStart.addingTimeInterval(-60) && $0.date <= windowEnd.addingTimeInterval(60) }
@@ -364,15 +495,21 @@ struct NunaSleepStageSection: View {
                 smoothed.filter { $0.stage == s }.map { (night.onset.addingTimeInterval($0.start), night.onset.addingTimeInterval($0.end)) }
             } ?? []
             VStack(alignment: .leading, spacing: 8) {
-                Text(m.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                NunaNightLineChart(start: windowStart, end: windowEnd, points: pts,
-                                   color: selected == nil ? m.color : NunaPalette.textMuted.opacity(0.7), decimals: m.decimals,
-                                   height: 124, gap: m.id == "hr" ? 600 : 1800, lineWidth: m.id == "hr" ? 1.6 : 2,
-                                   washes: washes, washColor: selected?.nunaColor ?? m.color)
-                    .padding(.horizontal, 10)
-                NunaHourAxis(start: windowStart, end: windowEnd).padding(.horizontal, 10)
-                if list.count > 1 { picker(list, current: m.id) }
-                nightSummary(pts, m)
+                if part != .extras {
+                    if part == .all {
+                        Text(m.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    }
+                    NunaNightLineChart(start: windowStart, end: windowEnd, points: pts,
+                                       color: selected == nil ? (isNight ? Self.calmBlue : m.color) : NunaPalette.textMuted.opacity(0.7), decimals: m.decimals,
+                                       height: 124, gap: m.id == "hr" ? 600 : 1800, lineWidth: m.id == "hr" ? (isNight ? 1.2 : 1.6) : 2,
+                                       washes: washes, washColor: selected.map { isNight ? cardColor($0) : $0.nunaColor } ?? (isNight ? Self.calmBlue : m.color))
+                        .padding(.horizontal, 10)
+                    NunaHourAxis(start: windowStart, end: windowEnd).padding(.horizontal, 10)
+                }
+                if part != .chart {
+                    if list.count > 1 { picker(list, current: m.id) }
+                    nightSummary(pts, m)
+                }
             }
         } else {
             Text("No heart-rate detail for this night").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
@@ -491,13 +628,13 @@ struct NunaSleepStageSection: View {
                 HStack(spacing: 8) {
                     RoundedRectangle(cornerRadius: 3, style: .continuous).fill(NunaPalette.ink.opacity(0.12)).frame(width: 18, height: 14)
                         .overlay(RoundedRectangle(cornerRadius: 3, style: .continuous).strokeBorder(NunaPalette.textMuted, style: StrokeStyle(lineWidth: 1, dash: [2, 2])))
-                    Text("Typical range").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Typical range").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 }
             }
             Spacer(minLength: 8)
             HStack(alignment: .firstTextBaseline, spacing: 8) {
-                Text("Duration").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                Text(verbatim: NunaSleepFormat.duration(night.stages.total)).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                Text("Duration").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: Self.hm(night.stages.total)).font(.nuna(size: 16, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             }
         }
     }
@@ -513,13 +650,13 @@ struct NunaSleepStageSection: View {
         let usualBand = usual.map { (lo: $0.lo / total, hi: $0.hi / total) }
         let showsTimeline = selected != nil
         // Awake's own colour is near the card's, so it is drawn light, as the reference does.
-        let tint = stage == .awake ? NunaPalette.textPrimary.opacity(0.78) : stage.nunaColor
+        let tint = cardColor(stage)
         let blockColor = on ? tint : NunaPalette.textSecondary.opacity(0.6)
         return VStack(alignment: .leading, spacing: 10) {
             stageLine(stage, color: tint, dimmed: dimmed, on: on)
             Canvas { ctx, size in
                 let r = Path(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: 6)
-                ctx.fill(r, with: .color(NunaPalette.ink.opacity(0.05)))
+                ctx.fill(r, with: .color(NunaPalette.ink.opacity(0.04)))
                 ctx.drawLayer { layer in
                     layer.clip(to: r)
                     var hatch = Path(); var x = -size.height
@@ -538,12 +675,17 @@ struct NunaSleepStageSection: View {
                 }
                 if !showsTimeline, let band = usualBand {
                     let x0 = CGFloat(min(max(band.lo, 0), 1)) * size.width, x1 = CGFloat(min(max(band.hi, 0), 1)) * size.width
-                    let box = CGRect(x: x0, y: -3, width: max(x1 - x0, 3), height: size.height + 6)
-                    ctx.fill(Path(roundedRect: box, cornerRadius: 3), with: .color(NunaPalette.ink.opacity(0.14)))
-                    ctx.stroke(Path(roundedRect: box, cornerRadius: 3), with: .color(NunaPalette.textMuted), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                    // The usual range: a slightly lighter box a little taller than the bar, with dashed edges where it begins and ends.
+                    let box = CGRect(x: x0, y: -4, width: max(x1 - x0, 3), height: size.height + 8)
+                    ctx.fill(Path(box), with: .color(NunaPalette.ink.opacity(0.13)))
+                    var edges = Path()
+                    edges.move(to: CGPoint(x: box.minX, y: box.minY)); edges.addLine(to: CGPoint(x: box.minX, y: box.maxY))
+                    edges.move(to: CGPoint(x: box.maxX, y: box.minY)); edges.addLine(to: CGPoint(x: box.maxX, y: box.maxY))
+                    ctx.stroke(edges, with: .color(NunaPalette.textPrimary.opacity(0.55)), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
                 }
             }
-            .frame(height: 30)
+            .frame(height: 16)
+            .padding(.vertical, 4)
         }
         .contentShape(Rectangle())
         .onTapGesture { withAnimation(.easeInOut(duration: 0.2)) { selected = on ? nil : stage } }
