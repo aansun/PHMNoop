@@ -42,9 +42,7 @@ struct NunaWeeklyTrendCard: View {
     var body: some View {
         let card = NunaCard {
             VStack(alignment: .leading, spacing: 14) {
-                NunaTitleRow(title: title) {
-                    Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
-                }
+                NunaWeeklyTitle(title: title)
                 chart
             }
         }
@@ -225,6 +223,19 @@ private struct NunaWeeklyPlot: View {
     }
 }
 
+/// The title of a weekly card: small, heavy and spaced like the reference, with a slim chevron.
+struct NunaWeeklyTitle: View {
+    let title: LocalizedStringKey
+    var body: some View {
+        HStack {
+            Text(title).font(.nuna(size: 13, weight: .heavy)).tracking(1.3).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                .lineLimit(1).minimumScaleFactor(0.8).accessibilityAddTraits(.isHeader)
+            Spacer(minLength: 8)
+            Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+        }
+    }
+}
+
 /// A weekly card for time in heart-rate zones: each day one bar stacked by zone in the zone's own colour, the total over it as h:mm, and a
 /// key of the zones in the corner. A day with no time in these zones shows 0:00 on the baseline.
 struct NunaZoneWeeklyCard: View {
@@ -257,9 +268,7 @@ struct NunaZoneWeeklyCard: View {
     var body: some View {
         let card = NunaCard {
             VStack(alignment: .leading, spacing: 14) {
-                NunaTitleRow(title: title) {
-                    Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
-                }
+                NunaWeeklyTitle(title: title)
                 legend
                 chart
             }
@@ -274,8 +283,8 @@ struct NunaZoneWeeklyCard: View {
             Spacer(minLength: 0)
             ForEach(zones, id: \.self) { z in
                 HStack(spacing: 6) {
-                    RoundedRectangle(cornerRadius: 2, style: .continuous).fill(NunaZoneWeeklyCard.color(z)).frame(width: 12, height: 12)
-                    Text("Zone \(z + 1)").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    RoundedRectangle(cornerRadius: 2, style: .continuous).fill(NunaZoneWeeklyCard.color(z)).frame(width: 9, height: 9)
+                    Text("Zone \(z + 1)").font(.nuna(size: 11, weight: .heavy)).tracking(1.1).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textPrimary)
                 }
             }
