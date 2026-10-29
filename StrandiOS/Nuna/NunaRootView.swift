@@ -3,7 +3,7 @@ import SwiftUI
 import UIKit
 import StrandDesign
 
-/// The Nuna navigation shell: four tabs (Today, Trends, Anya, Me) in one floating tab bar.
+/// The Nuna navigation shell: five tabs (Today, Health, Trends, Anya, Me) in one floating tab bar.
 ///
 /// Phase 0 of docs/nuna/IMPLEMENTATION_PLAN.md. The tab roots still host the existing screens; later
 /// phases replace them one by one. The shell is only used when `ExperienceMode` is `.nuna`; the default
@@ -33,7 +33,7 @@ struct NunaRootView: View {
         }
     }
 
-    private enum Tab: Int, CaseIterable { case today = 0, trends, anya, me }
+    private enum Tab: Int, CaseIterable { case today = 0, health, trends, anya, me }
 
     @State private var selection = Tab.today.rawValue
     @State private var paths: [NavigationPath] = Array(repeating: NavigationPath(), count: Tab.allCases.count)
@@ -45,10 +45,11 @@ struct NunaRootView: View {
     @AppStorage(NunaTabBarPrefs.autoHideKey) private var autoHide = false
     @State private var barHidden = false
 
-    /// One bar: Today, Trends, Anya (while it is on) and More.
+    /// One bar: Today, Health, Trends, Anya (while it is on) and More.
     private var items: [NunaTabItem] {
         var out = [
             NunaTabItem(id: Tab.today.rawValue, title: "Today", systemImage: "square.grid.2x2.fill"),
+            NunaTabItem(id: Tab.health.rawValue, title: "Health", systemImage: "heart.text.square"),
             NunaTabItem(id: Tab.trends.rawValue, title: "Trends", systemImage: "chart.line.uptrend.xyaxis"),
         ]
         if coachEnabled { out.append(NunaTabItem(id: Tab.anya.rawValue, title: "Anya", systemImage: NunaGlyph.anya)) }
@@ -62,6 +63,7 @@ struct NunaRootView: View {
     var body: some View {
         TabView(selection: $selection) {
             stack(.today) { NunaTodayView() }
+            stack(.health) { NunaHealthTabView() }
             stack(.trends) { NunaTrendsView() }
             if coachEnabled { stack(.anya) { NunaAnyaView() } }
             stack(.me) { NunaMeView() }
