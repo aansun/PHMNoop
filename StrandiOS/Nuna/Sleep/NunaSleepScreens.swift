@@ -65,10 +65,8 @@ struct NunaSleepNightSections: View {
         Group {
             NunaSleepStageSection(model: model, night: night,
                                   onEdit: night.editTarget.map { block in { edit = NunaSleepEditTarget(block, isNap: false) } })
-            NunaStageCompare(model: model, night: night)
             if !night.naps.isEmpty { napCard(night) }
             if showsTiles { tiles(model, night) }
-            NunaOvernightVitals(model: model, night: night)
             if showsNeed { needCard(model, night) }
             bodyClockCard
         }
