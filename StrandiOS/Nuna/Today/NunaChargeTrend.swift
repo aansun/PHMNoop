@@ -170,4 +170,69 @@ struct NunaChargeTrendView: View {
         .task(id: repo.refreshSeq) { await series.load(repo: repo, key: "recovery", source: "my-whoop") }
     }
 }
+
+/// How a part of the night reads: poor, sufficient or optimal, drawn as three short bars with the one that applies lit.
+enum NunaLevel: Int {
+    case poor, sufficient, optimal
+
+    var color: Color {
+        switch self {
+        case .poor: return NunaPalette.warning
+        case .sufficient: return NunaPalette.textSecondary
+        case .optimal: return NunaPalette.charge
+        }
+    }
+
+    /// `edges` are where sufficient and optimal begin, on the part's own 0 to 100 scale.
+    static func of(_ value: Double, sufficientFrom: Double, optimalFrom: Double) -> NunaLevel {
+        value >= optimalFrom ? .optimal : (value >= sufficientFrom ? .sufficient : .poor)
+    }
+}
+
+/// One part of the night under the ring: icon, UPPERCASE name, the three-bar level and the figure.
+struct NunaLevelRow: View {
+    let title: LocalizedStringKey
+    let icon: String
+    let percent: Double?
+    let level: NunaLevel?
+
+    var body: some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon).font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
+            Text(title).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                .lineLimit(1).minimumScaleFactor(0.65)
+            Spacer(minLength: 6)
+            HStack(spacing: 3) {
+                ForEach(0..<3, id: \.self) { i in
+                    Capsule().fill(level.map { $0.rawValue == i ? $0.color : NunaPalette.ink.opacity(0.14) } ?? NunaPalette.ink.opacity(0.14))
+                        .frame(width: 14, height: 4)
+                }
+            }
+            Text(verbatim: percent.map { String(format: "%.0f%%", locale: AppLanguage.activeLocale, $0) } ?? "–")
+                .font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                .frame(minWidth: 56, alignment: .trailing).lineLimit(1).minimumScaleFactor(0.7)
+        }
+        .padding(.vertical, 18)
+        .contentShape(Rectangle())
+    }
+}
+
+/// "Poor · Sufficient · Optimal": what the bars under the ring mean.
+struct NunaLevelLegend: View {
+    var body: some View {
+        HStack(spacing: 14) {
+            item(NunaLevel.poor, "Poor"); item(NunaLevel.sufficient, "Sufficient"); item(NunaLevel.optimal, "Optimal")
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 14).frame(height: 44)
+        .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
+    }
+
+    private func item(_ level: NunaLevel, _ name: LocalizedStringKey) -> some View {
+        HStack(spacing: 6) {
+            Capsule().fill(level.color).frame(width: 16, height: 4)
+            Text(name).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
+        }
+    }
+}
 #endif
