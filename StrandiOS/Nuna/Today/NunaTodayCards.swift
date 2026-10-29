@@ -411,6 +411,8 @@ struct NunaStressCard: View {
     let curve: DaytimeStress.Result?         // the day's curve
     var baseline: Double?                    // the wearer's usual stress, 0-3
     var isToday = true
+    /// The day's activities, drawn as bands over the curve.
+    var workouts: [WorkoutRow] = []
 
     private var scored: Bool { curve?.hours.contains { $0.level != nil } ?? false }
     private var highMin: Int? { scored ? curve.map(StressDayCurve.highMinutes) : nil }
@@ -420,35 +422,39 @@ struct NunaStressCard: View {
     /// read yet is a day figure, and says so.
     private var isLastHour: Bool { isToday && curve.flatMap(StressDayCurve.latestLevel) != nil }
 
+    /// The time of the latest reading: when the card was last brought up to date.
+    private var lastUpdated: String? {
+        guard let ts = curve?.timeline.last(where: { $0.level != nil })?.startTs else { return nil }
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("jmm")
+        return f.string(from: Date(timeIntervalSince1970: TimeInterval(ts)))
+    }
+
+    private var levelWord: LocalizedStringKey? {
+        level.map { $0 < 1 ? "Low" : ($0 < 2 ? "Medium" : "High") }
+    }
+
     var body: some View {
         NavigationLink(value: stressRoute) {
             NunaCard {
-                VStack(alignment: .leading, spacing: 16) {
+                VStack(alignment: .leading, spacing: 14) {
                     HStack {
                         Text("Stress monitor").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel)
-                            .textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                            .textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                         Spacer(minLength: 8)
-                        if let highMin {
-                            Text(verbatim: String(format: String(localized: "High %@ hrs"), StressTrace.clock(minutes: highMin)))
-                                .font(.nuna(size: 12.5, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        }
                         Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
-                    HStack(alignment: .center, spacing: 14) {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(isLastHour ? "Last hour average" : "Day average").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel)
-                                .textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true)
-                            HStack(alignment: .firstTextBaseline, spacing: 5) {
-                                Text(verbatim: level.map(Self.format) ?? "–")
-                                    .font(.nuna(size: NunaTypeSize.numberL, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(NunaTypeSize.numberL))
-                                    .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.7).lineLimit(1)
-                                if level != nil { Text(verbatim: "/ 3").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(verbatim: isToday ? (lastUpdated.map { String(localized: "Last updated \($0)") } ?? "") : String(localized: "Day average"))
+                            .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        Spacer(minLength: 8)
+                        if let level, let levelWord {
+                            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                                Text(levelWord).font(.nuna(size: 13.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(StressRamp.color(level))
+                                Text(verbatim: Self.format(level)).font(.nuna(size: 26, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                             }
-                            comparison
                         }
-                        .frame(width: 160, alignment: .leading)
-                        NunaStressDayChart(points: curve?.timeline ?? [], showsValue: isToday).frame(height: 116)
                     }
+                    NunaStressMonitorChart(points: curve?.timeline ?? [], workouts: workouts, showsNow: isToday).frame(height: 260)
                 }
             }
         }
@@ -536,6 +542,95 @@ struct NunaStressDayChart: View {
             }
         }
         .accessibilityHidden(true)
+    }
+}
+
+/// The day's stress as a line on a 0 to 3 axis, coloured by level (teal calm, green, amber high), with the hours along the bottom and a band with its icon over
+/// every activity of the day. A dashed line and a dot close it at the latest reading.
+struct NunaStressMonitorChart: View {
+    let points: [DaytimeStress.HourPoint]
+    var workouts: [WorkoutRow] = []
+    /// Today ends in the latest reading (a dashed line, a dot and the time in bold); a past day only ends.
+    var showsNow = true
+
+    private func clock(_ ts: Int) -> String {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("jmm")
+        return f.string(from: Date(timeIntervalSince1970: TimeInterval(ts)))
+    }
+
+    var body: some View {
+        GeometryReader { geo in
+            let left: CGFloat = 38, right: CGFloat = 14, top: CGFloat = 54, bottom: CGFloat = 34
+            let w = geo.size.width, h = geo.size.height
+            let plot = CGRect(x: left, y: top, width: w - left - right, height: h - top - bottom)
+            let scored = points.filter { $0.level != nil }
+            let t0 = scored.first?.startTs ?? 0, t1 = max(scored.last?.startTs ?? 0, t0 + 1)
+            let x: (Int) -> CGFloat = { plot.minX + CGFloat($0 - t0) / CGFloat(t1 - t0) * plot.width }
+            let y: (Double) -> CGFloat = { plot.maxY - CGFloat(min(max($0, 0), 3) / 3) * plot.height }
+            ZStack(alignment: .topLeading) {
+                ForEach(0..<4, id: \.self) { i in
+                    Rectangle().fill(NunaPalette.hairline.opacity(0.7)).frame(width: plot.width, height: 1)
+                        .position(x: plot.midX, y: y(Double(i)))
+                    Text(verbatim: String(format: "%.1f", locale: AppLanguage.activeLocale, Double(i))).font(.nuna(size: 12.5, weight: .heavy))
+                        .foregroundStyle(NunaPalette.textMuted).position(x: left / 2 - 2, y: y(Double(i)))
+                }
+                if scored.count >= 2 {
+                    // Every fourth hour that lies well inside the day gets a vertical line and its time.
+                    ForEach(hourMarks(t0, t1, x: x, plotWidth: plot.width), id: \.self) { ts in
+                        Rectangle().fill(NunaPalette.hairline.opacity(0.7)).frame(width: 1, height: plot.height).position(x: x(ts), y: plot.midY)
+                        Text(verbatim: clock(ts)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                            .fixedSize().position(x: x(ts), y: plot.maxY + 22)
+                    }
+                    Text(verbatim: clock(t0)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .fixedSize().position(x: plot.minX + 14, y: plot.maxY + 22)
+                    ForEach(Array(workouts.enumerated()), id: \.offset) { _, wo in
+                        let a = max(wo.startTs, t0), b = min(wo.endTs, t1)
+                        if b > a {
+                            let x0 = x(a), width = max(x(b) - x0, 6)
+                            Rectangle().fill(Color.white.opacity(0.07)).frame(width: width, height: plot.height).position(x: x0 + width / 2, y: plot.midY)
+                            Rectangle().fill(NunaRestChart.steel).frame(width: width, height: 3).position(x: x0 + width / 2, y: plot.minY)
+                            Image(systemName: ActivitySport.symbol(for: wo.sport)).font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
+                                .position(x: x0 + width / 2, y: plot.minY - 22)
+                        }
+                    }
+                    Path { path in
+                        var open = false
+                        for p in points {
+                            guard let level = p.level else { open = false; continue }
+                            let pt = CGPoint(x: x(p.startTs), y: y(level))
+                            if open { path.addLine(to: pt) } else { path.move(to: pt); open = true }
+                        }
+                    }
+                    .stroke(LinearGradient(colors: StressRamp.stops.map(\.color).reversed(), startPoint: .top, endPoint: .bottom),
+                            style: StrokeStyle(lineWidth: 2.4, lineCap: .round, lineJoin: .round))
+                    if showsNow {
+                        Path { p in p.move(to: CGPoint(x: x(t1), y: plot.minY - 8)); p.addLine(to: CGPoint(x: x(t1), y: plot.maxY)) }
+                            .stroke(NunaPalette.textPrimary, style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                        Circle().fill(NunaPalette.textPrimary).frame(width: 7, height: 7).position(x: x(t1), y: plot.maxY)
+                        Text(verbatim: clock(t1)).font(.nuna(size: 13, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+                            .fixedSize().position(x: min(x(t1), w - 24), y: plot.maxY + 22)
+                    }
+                } else {
+                    Text("Not enough data yet").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                        .multilineTextAlignment(.center).position(x: plot.midX, y: plot.midY)
+                }
+            }
+        }
+        .accessibilityHidden(true)
+    }
+
+    /// The whole hours divisible by four that sit at least 34 points from either end of the day.
+    private func hourMarks(_ t0: Int, _ t1: Int, x: (Int) -> CGFloat, plotWidth: CGFloat) -> [Int] {
+        let cal = Calendar.current
+        guard let first = cal.date(bySetting: .minute, value: 0, of: Date(timeIntervalSince1970: TimeInterval(t0))) else { return [] }
+        var out: [Int] = []
+        var d = first
+        while Int(d.timeIntervalSince1970) < t1 {
+            let ts = Int(d.timeIntervalSince1970)
+            if cal.component(.hour, from: d) % 4 == 0, ts > t0, x(ts) - x(t0) > 34, x(t1) - x(ts) > 34 { out.append(ts) }
+            d = cal.date(byAdding: .hour, value: 1, to: d) ?? d.addingTimeInterval(3600)
+        }
+        return out
     }
 }
 
