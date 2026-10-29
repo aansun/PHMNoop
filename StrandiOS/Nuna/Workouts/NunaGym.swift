@@ -1,6 +1,7 @@
 #if os(iOS)
 import SwiftUI
 import MuscleMap
+import Charts
 import StrandDesign
 import StrandAnalytics
 import WhoopStore
@@ -198,7 +199,7 @@ struct NunaGymPage: View {
                     Button { dismiss() } label: {
                         Image(systemName: "chevron.left").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44)
                     }.buttonStyle(.plain).accessibilityLabel(Text("Back"))
-                    Text("Gym").font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text("Gym").font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                     Spacer()
                 }
                 NunaPageTabs([(value: 0, title: "Progress"), (value: 1, title: "My Program"), (value: 2, title: "Explore")], selection: $tab)
@@ -209,6 +210,7 @@ struct NunaGymPage: View {
         }
         .scrollIndicators(.hidden)
         .background(NunaPalette.canvas.ignoresSafeArea())
+        .textCase(nil)
         .toolbar(.hidden, for: .navigationBar)
         .nunaWorkoutDestinations()
         .nunaTodayDestinations()
@@ -240,6 +242,12 @@ struct NunaGymView: View {
     @State private var weekCounts: [LiftMuscle: Double] = [:]
     @State private var readiness: [LiftMuscle: Double] = [:]
     @State private var volumes: [String: Double] = [:]
+    /// Volume load (kg) of each day that had a session, by the start of the day, for the Progress chart.
+    @State private var dayVolumes: [Date: Double] = [:]
+    /// The heaviest set of each exercise with the day it was lifted, newest first.
+    @State private var records: [(exercise: String, kg: Double, ts: Int)] = []
+    @State private var volRange = 30
+    @State private var volPage = 0
     @State private var loaded = false
     /// How many weeks back the history shows; 0 is this week.
     @State private var weekOffset = 0
@@ -263,12 +271,15 @@ struct NunaGymView: View {
     @ViewBuilder private var content: some View {
         switch tab {
         case 0:
-            NunaGymAnyaCard(model: anyaModel)
+            volumeSection
             NunaMuscleReadinessCard(readings: readiness)
             weekSection
+            recordsSection
             sessionsSection
         case 1:
+            NunaGymAnyaCard(model: anyaModel)
             topActions
+            NunaDivider()
             programsSection
         default:
             NunaGymExploreView(embedded: true)
@@ -303,12 +314,17 @@ struct NunaGymView: View {
 
     /// One white button; what to start is chosen in the sheet it opens: a program with Anya, a ready-made program, or an empty session.
     private var topActions: some View {
-        Button { if session.isActive { session.present() } else { choosingStart = true } } label: {
-            Text(session.isActive ? "Open session" : "Start workout").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56)
-                .background(NunaPalette.textPrimary, in: Capsule())
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Start a Workout").font(.nuna(size: 20, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            Text("Jump right into a workout and log exercises as you go.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            Button { if session.isActive { session.present() } else { choosingStart = true } } label: {
+                Text(session.isActive ? "Open session" : "Quick start").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54)
+                    .background(NunaPalette.textPrimary, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .buttonStyle(.plain)
         }
-        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity, alignment: .leading)
         .sheet(isPresented: $choosingStart) { startSheet }
         .sheet(isPresented: $buildingWithAnya) { NunaAnyaProgramBuilder() }
     }
@@ -387,7 +403,7 @@ struct NunaGymView: View {
         let inGroup = open.map { groupsModel.programs(in: $0, from: programs) } ?? groupsModel.ungrouped(programs)
         let suggestion = open == nil ? groupsModel.suggestions(for: programs).first : nil
         return VStack(alignment: .leading, spacing: 12) {
-            NunaTitleRow(title: "My Program") {
+            NunaTitleRow(title: "My Workouts") {
                 HStack(spacing: 6) {
                     NavigationLink(value: NunaWorkoutRoute.program("new")) { programIcon("plus") }.buttonStyle(.plain).accessibilityLabel(Text("New program"))
                     Button { askForGroup(.new(programId: nil)) } label: { programIcon("folder.badge.plus") }.buttonStyle(.plain).accessibilityLabel(Text("New group"))
@@ -572,6 +588,98 @@ struct NunaGymView: View {
         }
     }
 
+    // MARK: Total volume load
+
+    private var volWindow: NunaTrendWindow { NunaTrendWindow(range: volRange, page: volPage, endingDaysAgo: 0) }
+
+    private var volumeSection: some View {
+        let w = volWindow, cal = Calendar.current
+        let days: [(date: Date, kg: Double)] = (0..<volRange).compactMap { i in
+            guard let d = cal.date(byAdding: .day, value: i, to: w.start), let kg = dayVolumes[cal.startOfDay(for: d)], kg > 0 else { return nil }
+            return (w.noon(d), kg)
+        }
+        let average: Double? = days.isEmpty ? nil : days.map(\.kg).reduce(0, +) / Double(days.count)
+        let most = days.map(\.kg).max() ?? 0
+        // Steps of a round size, so the axis never has more than five labels: 0 to 3,000 by 1,000 until a day goes past it.
+        let step = [1000.0, 2000, 2500, 5000, 10000, 20000].first { ceil(max(most, 3000) / $0) <= 4 } ?? 20000
+        let top = step * max(3, ceil(most / step))
+        let ticks = stride(from: 0.0, through: top, by: step).map { $0 }
+        let oldest = dayVolumes.keys.min()
+        return VStack(alignment: .leading, spacing: 14) {
+            Text("Total Volume Load").font(.nuna(size: 20, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Avg. volume load").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(verbatim: average.map { nunaThousands($0) } ?? "–").font(.nuna(size: 40, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        if average != nil { Text("kg").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil) }
+                    }
+                }
+                Spacer(minLength: 0)
+                VStack(alignment: .trailing, spacing: 14) {
+                    NunaRangeSwitch(choices: [(30, "M"), (180, "6M")], range: $volRange) { volPage = 0 }
+                    NunaDateStepper(label: w.label, canGoBack: oldest.map { w.start > cal.startOfDay(for: $0) } ?? false, canGoForward: volPage > 0,
+                                    back: { volPage += 1 }, forward: { volPage = max(0, volPage - 1) })
+                }
+            }
+            Chart {
+                ForEach(days, id: \.date) { d in
+                    BarMark(x: .value("Day", d.date, unit: .day), y: .value("kg", d.kg), width: .fixed(volRange == 30 ? 6 : 3))
+                        .foregroundStyle(NunaPalette.effortModerate).cornerRadius(2)
+                }
+            }
+            .chartYScale(domain: 0...top)
+            .chartXScale(domain: w.domain)
+            .chartYAxis {
+                AxisMarks(position: .leading, values: ticks) { v in
+                    AxisGridLine().foregroundStyle(NunaPalette.hairline.opacity(0.7))
+                    AxisValueLabel { if let d = v.as(Double.self) { Text(verbatim: nunaThousands(d)).font(.nuna(size: 12, weight: .heavy)).foregroundStyle(NunaPalette.textMuted) } }
+                }
+            }
+            .chartXAxis(.hidden)
+            .chartPlotStyle { $0.padding(.bottom, 50) }
+            .chartOverlay { proxy in
+                GeometryReader { geo in
+                    if let frame = proxy.plotFrame.map({ geo[$0] }) {
+                        ForEach(w.axisDates, id: \.self) { d in
+                            if let x = proxy.position(forX: d) { w.axisLabel(d).position(x: frame.minX + x, y: frame.maxY + 26) }
+                        }
+                    }
+                }
+                .allowsHitTesting(false)
+            }
+            .frame(height: 280)
+            .accessibilityLabel(Text("Total Volume Load"))
+        }
+    }
+
+    // MARK: Personal records
+
+    private var recordsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            NunaTitleRow(title: "Personal Records") { EmptyView() }
+            if records.isEmpty {
+                Text("Your heaviest set of each exercise shows here once you log a session.").font(.nuna(size: 13.5, weight: .semibold))
+                    .foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            }
+            ForEach(Array(records.prefix(5).enumerated()), id: \.offset) { _, r in
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(verbatim: r.exercise).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+                        Text(verbatim: NunaWorkoutFormat.day(r.ts)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    }
+                    Spacer(minLength: 8)
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(verbatim: LiftFormat.trim(r.kg)).font(.nuna(size: 26, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("kg").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                    }
+                }
+                .padding(.horizontal, 16).frame(height: 68).frame(maxWidth: .infinity, alignment: .leading)
+                .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
+            }
+        }
+    }
+
     // MARK: Week history
 
     /// Weeks run Monday to Sunday, whatever the region setting says.
@@ -674,7 +782,20 @@ struct NunaGymView: View {
         var last: [String: Int] = [:]
         for s in all { if let id = s.programId, last[id] == nil { last[id] = s.startTs } }
         var vols: [String: Double] = [:]
-        for s in all.prefix(3) { vols[s.id] = LiftMetrics.volumeLoadKg((try? await store.liftSets(sessionId: s.id)) ?? []) }
+        var perDay: [Date: Double] = [:]
+        var best: [String: (kg: Double, ts: Int)] = [:]
+        for s in all {
+            let sets = (try? await store.liftSets(sessionId: s.id)) ?? []
+            let v = LiftMetrics.volumeLoadKg(sets)
+            if all.prefix(3).contains(where: { $0.id == s.id }) { vols[s.id] = v }
+            if let v { perDay[Calendar.current.startOfDay(for: Date(timeIntervalSince1970: TimeInterval(s.startTs))), default: 0] += v }
+            for set in sets where !set.isWarmup {
+                guard let w = set.weightKg, w > 0, let r = set.reps, r > 0 else { continue }
+                if w > (best[set.exercise]?.kg ?? 0) { best[set.exercise] = (w, s.startTs) }
+            }
+        }
+        dayVolumes = perDay
+        records = best.map { (exercise: $0.key, kg: $0.value.kg, ts: $0.value.ts) }.sorted { $0.ts > $1.ts }
         weekCounts = (try? await store.liftSetCounts(deviceId: repo.deviceId, fromTs: now - 7 * 86_400, toTs: now).fractional) ?? [:]
         // The sets of the last days, each with the time of its session, for the muscle map.
         var dated: [(set: LiftSetRow, at: Int)] = []
