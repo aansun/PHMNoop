@@ -24,6 +24,16 @@ struct NunaPctTrendView: View {
     /// A score with colour zones (Charge): light bars, the newest or the touched one in the colour of its zone, and an axis with the zone
     /// edges at 0, 33, 66 and 100 in their colours. A month writes no figure over its last bar.
     var zones: ((Double) -> Color)?
+    /// Own wording for a figure (Effort on the scale the wearer chose); nil writes the percentage or the duration.
+    var format: ((Double) -> String)?
+    /// No unit beside the average at the top (Effort has none).
+    var hidesUnit = false
+    /// The labelled steps of the axis, from zero (Effort: 0, 5, 10, 15, 21); nil lets the page choose.
+    var axisTicks: [Double]?
+    /// The colour of the bars, their figures and the touched figure.
+    var tint = NunaRestChart.steel
+    /// The average leaves today out, a day still in progress, and a line under the chart says so.
+    var excludesToday = false
     var endingDaysAgo = 0
 
     @EnvironmentObject private var repo: Repository
@@ -59,13 +69,15 @@ struct NunaPctTrendView: View {
     var body: some View {
         let all = days
         let values = all.compactMap(\.value)
-        let average: Double? = values.isEmpty ? nil : values.reduce(0, +) / Double(values.count)
+        let counted = excludesToday ? all.filter { !Calendar.current.isDateInToday($0.date) }.compactMap(\.value) : values
+        let average: Double? = counted.isEmpty ? nil : counted.reduce(0, +) / Double(counted.count)
         NunaDetailScreen("Trend view", centersTitle: true) {
             nameBox
             header(average)
             Text(verbatim: sentence(average)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                 .fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.horizontal, 2)
             chart(all, average).padding(.top, 4)
+            if excludesToday, all.contains(where: { Calendar.current.isDateInToday($0.date) }) { todayNote }
             NunaDaysBreakdown(title: breakdownTitle, bands: bands, values: values)
         }
         .environment(\.nunaDetailSwitch, nil)
@@ -87,14 +99,14 @@ struct NunaPctTrendView: View {
     private func header(_ average: Double?) -> some View {
         let pickedValue: Double? = picked.flatMap { d in days.first { Calendar.current.isDate($0.date, inSameDayAs: d) }?.value }
         let shown = pickedValue ?? average
-        let tint = pickedValue == nil ? NunaPalette.textPrimary : (pickedValue.flatMap { zones?($0) } ?? NunaRestChart.steel)
+        let tint = pickedValue == nil ? NunaPalette.textPrimary : (pickedValue.flatMap { zones?($0) } ?? tint)
         return HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(verbatim: pickedValue == nil ? String(localized: "Average") : pickedTitle).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                     .foregroundStyle(pickedValue == nil ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(verbatim: shown.map { duration ? NunaRestChart.hm($0) : "\(Int($0.rounded()))" } ?? "–").font(.nuna(size: 40, weight: .semibold, design: NunaType.design)).foregroundStyle(tint)
-                    if shown != nil {
+                    Text(verbatim: shown.map { format?($0) ?? (duration ? NunaRestChart.hm($0) : "\(Int($0.rounded()))") } ?? "–").font(.nuna(size: 40, weight: .semibold, design: NunaType.design)).foregroundStyle(tint)
+                    if shown != nil, !hidesUnit {
                         if duration { Text("hr").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(tint).textCase(nil) }
                         else { Text("%").font(.nuna(size: 20, weight: .semibold, design: NunaType.design)).foregroundStyle(tint) }
                     }
@@ -119,8 +131,9 @@ struct NunaPctTrendView: View {
 
     /// A figure the way the page writes it: "88%" or "1:16".
     private func fmt(_ v: Double) -> String {
+        if let format { return format(v) }
         // The Charge card rounds the way printf does (56.5 reads 56); a scored page follows it so a day never differs between the two.
-        duration ? NunaRestChart.hm(v) : (zones != nil ? String(format: "%.0f%%", v) : "\(Int(v.rounded()))%")
+        return duration ? NunaRestChart.hm(v) : (zones != nil ? String(format: "%.0f%%", v) : "\(Int(v.rounded()))%")
     }
 
     private func sentence(_ average: Double?) -> String {
@@ -140,13 +153,22 @@ struct NunaPctTrendView: View {
     /// A bar: the zone's colour for the newest or touched one of a scored page, light grey for the others, steel blue on a page without zones.
     private func barColor(_ p: Day, latest: Date?) -> Color {
         let lit = picked != nil ? isPicked(p.date) : p.date == latest
-        guard let zones, let v = p.value else { return isPicked(p.date) || picked == nil ? NunaRestChart.steel : NunaRestChart.steel.opacity(0.28) }
+        guard let zones, let v = p.value else { return isPicked(p.date) || picked == nil ? tint : tint.opacity(0.28) }
         return lit ? zones(v) : Color(hex: "#DCDCDC").opacity(picked == nil ? 1 : 0.4)
     }
 
     private func labelColor(_ p: Day, latest: Date?) -> Color {
-        guard let zones, let v = p.value else { return NunaRestChart.steel }
+        guard let zones, let v = p.value else { return tint }
         return (picked != nil ? isPicked(p.date) : p.date == latest) ? zones(v) : NunaPalette.textPrimary
+    }
+
+    private var todayNote: some View {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("MMM d")
+        return HStack(spacing: 8) {
+            Image(systemName: "info.circle").font(.nuna(size: 14, weight: .semibold))
+            Text(verbatim: String(localized: "Average does not include today (\(f.string(from: Date())))")).font(.nuna(size: 12.5, weight: .semibold)).textCase(nil)
+        }
+        .foregroundStyle(NunaPalette.textSecondary).padding(.horizontal, 2).frame(maxWidth: .infinity, alignment: .leading)
     }
 
     // MARK: Chart
@@ -184,11 +206,11 @@ struct NunaPctTrendView: View {
         let bars = points.filter { $0.value != nil }
         let lowest = bars.compactMap(\.value).min() ?? 100
         let step = duration ? 60.0 : (line ? 6.0 : 25.0)
-        let top = zones != nil ? 100.0 : duration ? max(180, ceil((points.compactMap(\.value).max() ?? 180) / 60) * 60)
-            : (line ? 100.0 : max(100, ceil((points.compactMap(\.value).max() ?? 100) / 25) * 25))
+        let top = axisTicks?.last ?? (zones != nil ? 100.0 : duration ? max(180, ceil((points.compactMap(\.value).max() ?? 180) / 60) * 60)
+            : (line ? 100.0 : max(100, ceil((points.compactMap(\.value).max() ?? 100) / 25) * 25)))
         let bottom = line ? 100 - 6 * max(4, ceil((100 - lowest) / 6)) : 0.0
         let latest = bars.last?.date
-        let tickValues: [Double] = zones != nil ? [0, 33, 66, 100] : stride(from: bottom, through: top, by: step).map { $0 }
+        let tickValues: [Double] = axisTicks ?? (zones != nil ? [0, 33, 66, 100] : stride(from: bottom, through: top, by: step).map { $0 })
         let ringed: [Day] = week ? bars : (picked != nil ? [] : bars.suffix(1).map { $0 })
         let marked = week ? bars : (sixMonths || picked != nil || zones != nil ? [] : bars.suffix(1).map { $0 })
         let segments = sixMonths ? NunaPeriodSegment.make(bars.compactMap { p in p.value.map { (p.date, $0) } }, from: w.start, to: w.end) : []
@@ -219,7 +241,7 @@ struct NunaPctTrendView: View {
             AxisMarks(position: .leading, values: tickValues) { v in
                 AxisGridLine().foregroundStyle(NunaPalette.hairline.opacity(0.7))
                 AxisValueLabel { if let d = v.as(Double.self) {
-                    Text(verbatim: duration ? NunaRestChart.hm(d) : "\(Int(d))%").font(.nuna(size: 12, weight: .heavy))
+                    Text(verbatim: duration ? NunaRestChart.hm(d) : (axisTicks != nil ? "\(Int(d))" : "\(Int(d))%")).font(.nuna(size: 12, weight: .heavy))
                         .foregroundStyle(zones.map { $0(d == 0 ? 1 : d) } ?? NunaPalette.textMuted)
                 } }
             }
@@ -344,6 +366,36 @@ struct NunaChargeScoreTrendView: View {
             bands: NunaDaysBreakdown.chargeBands,
             breakdownTitle: "Charge breakdown",
             value: { $0.charge[$1] }, zones: { nunaChargeColor($0) }, endingDaysAgo: endingDaysAgo)
+    }
+}
+
+/// "Effort": Day Strain on the scale the wearer chose (0 to 21 by default), bars in blue and the days per level under it.
+struct NunaEffortScoreTrendView: View {
+    var endingDaysAgo = 0
+    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.whoop.rawValue
+
+    private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
+
+    var body: some View { page }
+
+    private var page: NunaPctTrendView {
+        // Levels are defined on the 21 scale (light under 10, moderate to 14, strenuous to 18, all out above); the 100 scale carries the same edges.
+        let k = scale == .whoop ? 1.0 : 100.0 / 21.0
+        func edge(_ v: Double) -> String { String(format: "%.1f", v * k) }
+        let blue = NunaPalette.effortModerate
+        return NunaPctTrendView(
+            name: "Effort", icon: "dumbbell", noun: "average Strain",
+            bands: [
+                .init(color: NunaPalette.effortAllOut, name: "All out", range: ">\(edge(18))") { $0 > 18 * k },
+                .init(color: NunaPalette.effortModerate, name: "Strenuous", range: "\(edge(14.1))–\(edge(18))") { $0 > 14 * k && $0 <= 18 * k },
+                .init(color: NunaPalette.effortMinimal, name: "Moderate", range: "\(edge(10.1))–\(edge(14))") { $0 >= 10 * k && $0 <= 14 * k },
+                .init(color: NunaPalette.effortMinimal.opacity(0.6), name: "Light", range: "<\(edge(10))") { $0 < 10 * k },
+            ],
+            breakdownTitle: "Strain breakdown",
+            value: { h, day in h.effort[day].map { UnitFormatter.effortValue($0, scale: scale) } },
+            format: { String(format: "%.1f", $0) }, hidesUnit: true,
+            axisTicks: scale == .whoop ? [0, 5, 10, 15, 21] : [0, 25, 50, 75, 100],
+            tint: blue, excludesToday: true, endingDaysAgo: endingDaysAgo)
     }
 }
 #endif

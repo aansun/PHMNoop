@@ -337,7 +337,7 @@ struct NunaEffortDetailView: View {
             NunaWeeklyTrendCard(title: "Effort", key: "strain", style: .bars, color: NunaPalette.effortModerate,
                                 barFill: { v, last in last ? nunaEffortColor(v) : NunaPalette.textSecondary },
                                 labelFill: { v, last in last ? nunaEffortColor(v) : NunaPalette.textPrimary },
-                                destination: { AnyView(NunaEffortTrendView()) },
+                                destination: { AnyView(NunaEffortScoreTrendView(endingDaysAgo: router.todayDayOffset)) },
                                 valueText: { UnitFormatter.effortDisplay($0, scale: scale) }, endingDaysAgo: router.todayDayOffset)
             NunaWeeklyTrendCard(title: "Calories", key: "energy_kcal", style: .bars, color: NunaPalette.effortModerate,
                                 points: kcalPoints, valueText: { String(format: "%.0f", locale: AppLanguage.activeLocale, $0) }, autoScale: true,
