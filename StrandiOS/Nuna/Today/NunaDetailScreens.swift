@@ -110,11 +110,14 @@ struct NunaChargeDetailView: View {
         return NunaInsightText.charge(read, chargePct: v)
     }
 
-    /// The week behind the signals Charge is made of, one bare card each; a card opens that signal's own page.
+    /// The week as bare cards, one each: Charge itself, then the signals it is made of; a card opens that metric's own page.
     private var weeklyTrends: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Weekly trends").font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 .accessibilityAddTraits(.isHeader).padding(.top, 4)
+            NunaWeeklyTrendCard(title: "Charge", key: "recovery", style: .bars, color: NunaPalette.charge,
+                                barFill: { v, last in last ? nunaChargeColor(v) : NunaPalette.textSecondary },
+                                labelFill: { v, last in last ? nunaChargeColor(v) : NunaPalette.textPrimary }, endingDaysAgo: router.todayDayOffset)
             NunaWeeklyTrendCard(title: "Heart rate variability", key: "hrv", style: .line, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
             NunaWeeklyTrendCard(title: "Resting heart rate", key: "rhr", style: .line, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
             NunaWeeklyTrendCard(title: "Respiratory rate", key: "resp_rate", style: .line, decimals: 1, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
