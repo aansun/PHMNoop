@@ -10,10 +10,12 @@ import WhoopStore
 /// you logged; nothing in them comes from the library.
 struct NunaExerciseDetailView: View {
     let exerciseId: String
+    var opensOnHistory = false
     @EnvironmentObject private var repo: Repository
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
     @StateObject private var history = NunaExerciseHistoryModel()
     @State private var tab = Tab.summary
+    @State private var tabChosen = false
     @State private var metric = Metric.heaviest
     @State private var period = Period.threeMonths
     @State private var selectedDate: Date?
@@ -52,7 +54,10 @@ struct NunaExerciseDetailView: View {
     var body: some View {
         if let e = NunaExerciseLibrary.exercise(id: exerciseId) {
             NunaDetailScreen(LocalizedStringKey(e.name)) { content(e) }
-                .task { await history.load(libraryId: e.id, repo: repo); pinnedNote = NunaExerciseNotes.note(for: e.id) }
+                .task {
+                    if opensOnHistory, !tabChosen { tab = .history; tabChosen = true }
+                    await history.load(libraryId: e.id, repo: repo); pinnedNote = NunaExerciseNotes.note(for: e.id)
+                }
         } else {
             NunaDetailScreen("Exercise") {
                 NunaCard { Text("This exercise is not in the library.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
