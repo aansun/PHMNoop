@@ -9,6 +9,8 @@ import WhoopProtocol
 let args = CommandLine.arguments
 let outDir: String? = args.firstIndex(of: "--out").flatMap { $0 + 1 < args.count ? args[$0 + 1] : nil }
 
+if args.contains("--baseline20") { try runBaseline20(outDir: outDir); exit(0) }
+
 // MARK: Helpers
 
 func band(_ x: Double) -> Int { x < 1 ? 0 : (x < 2 ? 1 : 2) }

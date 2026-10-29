@@ -14,6 +14,16 @@ swift build -c release --scratch-path /tmp/stresssim-build   # outside iCloud Dr
 /tmp/stresssim-build/release/stresssim --out /tmp/stresssim-out   # writes series.json for plotting
 ```
 
+Two modes:
+
+```bash
+/tmp/stresssim-build/release/stresssim --out DIR                 # three invented days (section tables, series.json)
+/tmp/stresssim-build/release/stresssim --baseline20 --out DIR    # 14 baseline days, then days 15-20 as the test (series20.json)
+```
+
+`--baseline20` also compares the app's own opt-in personal daytime-HR baseline mode and a WHOOP-ver whose two waking
+constants are set from the person's own baseline days (`WhoopStress.calibrated`).
+
 ## What to trust
 
 It shows how each method **behaves**: how it handles noisy R-R, exercise, the three categories and a mistuned offset.
@@ -21,5 +31,8 @@ It does **not** show how accurate either is on a person, because the generator i
 `WhoopStress.Tuning` constants (`wakeHROffsetBPM`, `wakeHRVRatio`, `sleepRawShift`) were set in the neighbourhood of that
 model. The calibration sweep in the output shows how much the result depends on them. Calibrate on real nights before
 believing a number.
+
+The absolute level (MAE, bias, band agreement) depends on where the simulator's truth scale sits, which is this tool's own choice.
+The tracking figures (correlation, residual SD, daily-mean correlation) do not, so read those first.
 
 `WhoopStress` is not wired to any screen and has no Kotlin twin. Add one before it is shown to anyone.
