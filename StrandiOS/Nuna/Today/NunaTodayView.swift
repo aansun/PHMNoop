@@ -813,8 +813,7 @@ struct NunaTodayView: View {
         case .yourCards:
             let rows = yourCardRows()
             if !rows.isEmpty {
-                NunaRowsCard(rows: rows, onCoach: { showCoach = true }, title: "My Dashboard",
-                             onEdit: { customize = .yourCards })
+                NunaDashboardCards(rows: rows, onCoach: { showCoach = true }, onEdit: { customize = .yourCards })
             }
         case .addedCards:
             let rows = addedCardRows()
