@@ -141,24 +141,35 @@ struct NunaGymExploreView: View {
     }
     private var anyFilter: Bool { level != nil || goal != nil || equipment != nil }
 
+    /// Inside the Gym page as its Explore tab (no header or scroll of its own) instead of a screen of its own.
+    var embedded = false
+
+    @ViewBuilder private var content: some View {
+        if !embedded { NunaTitleRow(title: "Programs") { EmptyView() } }
+        filterBar
+        if results.isEmpty {
+            NunaCard(small: true) {
+                Text("No program matches these filters.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
+            }
+        }
+        ForEach(results) { p in
+            NavigationLink { NunaStarterProgramView(program: p) } label: { programCard(p) }.buttonStyle(.plain)
+        }
+        NunaTitleRow(title: "Routines") { EmptyView() }
+        categories
+        NavigationLink { NunaProgramImportView() } label: {
+            NunaCard(small: true) { NunaListRow("Import a program", description: "Bring a routine in from a spreadsheet", systemImage: "tablecells", showsChevron: true) }
+        }.buttonStyle(.plain)
+        nunaFootnote("General templates written for PHMN, with exercises from the library. They are a place to start: add one, then change anything in it. Not personal advice.")
+    }
+
     var body: some View {
-        NunaDetailScreen("Explore") {
-            NunaTitleRow(title: "Programs") { EmptyView() }
-            filterBar
-            if results.isEmpty {
-                NunaCard(small: true) {
-                    Text("No program matches these filters.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
-                }
+        Group {
+            if embedded {
+                VStack(spacing: NunaSpacing.section) { content }
+            } else {
+                NunaDetailScreen("Explore") { content }
             }
-            ForEach(results) { p in
-                NavigationLink { NunaStarterProgramView(program: p) } label: { programCard(p) }.buttonStyle(.plain)
-            }
-            NunaTitleRow(title: "Routines") { EmptyView() }
-            categories
-            NavigationLink { NunaProgramImportView() } label: {
-                NunaCard(small: true) { NunaListRow("Import a program", description: "Bring a routine in from a spreadsheet", systemImage: "tablecells", showsChevron: true) }
-            }.buttonStyle(.plain)
-            nunaFootnote("General templates written for PHMN, with exercises from the library. They are a place to start: add one, then change anything in it. Not personal advice.")
         }
         .sheet(isPresented: $filtering) { filterSheet.nunaSheetChrome(detents: [.large]) }
     }
