@@ -17,7 +17,12 @@ extension NunaSeriesModel {
 /// so it is worked out once per session and kept; today is always read again.
 @MainActor
 final class NunaEffortZoneHistory: ObservableObject {
-    struct Minutes { var easy: Double; var hard: Double }
+    /// Minutes in each of the five zones.
+    struct Minutes {
+        var zones: [Double]
+        var easy: Double { zones[0] + zones[1] + zones[2] }
+        var hard: Double { zones[3] + zones[4] }
+    }
 
     @Published private(set) var byDay: [String: Minutes] = [:]
     private static var finished: [String: Minutes?] = [:]
@@ -43,7 +48,7 @@ final class NunaEffortZoneHistory: ObservableObject {
             var minutes: Minutes?
             if hr.count >= 300 {
                 let t = HRZones.timeInZone(hr, zoneSet: .reserveBands(maxHR: maxHR, restingHR: resting))
-                minutes = Minutes(easy: (t.seconds[0] + t.seconds[1] + t.seconds[2]) / 60, hard: (t.seconds[3] + t.seconds[4]) / 60)
+                minutes = Minutes(zones: t.seconds.prefix(5).map { $0 / 60 })
             }
             if key != todayKey { Self.finished[cacheKey] = .some(minutes) }
             if let minutes { out[key] = minutes; byDay = out }
@@ -57,9 +62,8 @@ final class NunaEffortZoneHistory: ObservableObject {
         return v.count >= 3 ? v.reduce(0, +) / Double(v.count) : nil
     }
 
-    func points(easy: Bool) -> [(day: String, value: Double)] {
-        byDay.map { (day: $0.key, value: easy ? $0.value.easy : $0.value.hard) }
-    }
+    /// Minutes per zone for each day, for the weekly stacked bars.
+    var zonesByDay: [String: [Double]] { byDay.mapValues(\.zones) }
 }
 
 /// The page the weekly Effort card opens: the full chart with its week, month and six-month views, and the days per level under it.

@@ -52,6 +52,7 @@ struct NunaWRing<Centre: View>: View {
 
     var body: some View {
         let shown = max(min(fraction, 1), fraction > 0 ? 0.015 : 0)
+        let lineWidth = NunaRingStroke.width(self.lineWidth)
         ZStack {
             Circle().stroke(Color.primary.opacity(0.10), lineWidth: lineWidth)
             if let target {

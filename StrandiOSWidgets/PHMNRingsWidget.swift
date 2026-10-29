@@ -255,6 +255,7 @@ private struct PHMNRing: View {
 
     var body: some View {
         let p = min(max(progress, 0), 1)
+        let lineWidth = NunaRingStroke.width(self.lineWidth)
         ZStack {
             Circle()
                 .stroke(StrandPalette.textTertiary.opacity(0.17), lineWidth: lineWidth)

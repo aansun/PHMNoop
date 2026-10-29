@@ -224,4 +224,135 @@ private struct NunaWeeklyPlot: View {
             .fixedSize().position(x: cx, y: below ? top + 17 : max(9, top - 17))
     }
 }
+
+/// A weekly card for time in heart-rate zones: each day one bar stacked by zone in the zone's own colour, the total over it as h:mm, and a
+/// key of the zones in the corner. A day with no time in these zones shows 0:00 on the baseline.
+struct NunaZoneWeeklyCard: View {
+    let title: LocalizedStringKey
+    /// Which of the five zones this card stacks (0 is Zone 1).
+    let zones: [Int]
+    /// Minutes per zone for each day key.
+    let byDay: [String: [Double]]
+    var endingDaysAgo = 0
+    var destination: (() -> AnyView)?
+
+    private let plotHeight: CGFloat = 148
+    private let labelHeight: CGFloat = 44
+
+    /// Zone 1 to 5, soft: grey-blue, blue, teal, then light and deep orange for the hard zones.
+    fileprivate static func color(_ zone: Int) -> Color {
+        [Color(hex: "#A9BAC6"), Color(hex: "#4A9FC8"), Color(hex: "#5BB89A"), Color(hex: "#F5A860"), Color(hex: "#F26B2D")][min(max(zone, 0), 4)]
+    }
+
+    private var slots: [(date: Date, minutes: [Double]?)] {
+        let cal = Calendar.current
+        let today = Date()
+        return (0..<7).reversed().map { i in
+            let d = cal.date(byAdding: .day, value: -(i + endingDaysAgo), to: today) ?? today
+            let all = byDay[Repository.localDayKey(d)]
+            return (d, all.map { m in zones.map { m[$0] } })
+        }
+    }
+
+    var body: some View {
+        let card = NunaCard {
+            VStack(alignment: .leading, spacing: 14) {
+                NunaTitleRow(title: title) {
+                    Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+                }
+                legend
+                chart
+            }
+        }
+        if let destination {
+            NavigationLink { destination() } label: { card }.buttonStyle(.plain)
+        } else { card }
+    }
+
+    private var legend: some View {
+        HStack(spacing: 14) {
+            Spacer(minLength: 0)
+            ForEach(zones, id: \.self) { z in
+                HStack(spacing: 6) {
+                    RoundedRectangle(cornerRadius: 2, style: .continuous).fill(NunaZoneWeeklyCard.color(z)).frame(width: 12, height: 12)
+                    Text("Zone \(z + 1)").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        .foregroundStyle(NunaPalette.textPrimary)
+                }
+            }
+        }
+    }
+
+    private var chart: some View {
+        let s = slots
+        return VStack(spacing: 6) {
+            NunaZonePlot(days: s.map(\.minutes), zones: zones).frame(height: plotHeight)
+            HStack(spacing: 0) {
+                ForEach(Array(s.enumerated()), id: \.offset) { i, slot in label(slot.date, last: i == s.count - 1) }
+            }
+            .frame(height: labelHeight)
+        }
+        .background(GeometryReader { g in
+            RoundedRectangle(cornerRadius: 12, style: .continuous).fill(NunaPalette.glassStrong.opacity(0.55))
+                .frame(width: g.size.width / 7 - 4, height: g.size.height).offset(x: g.size.width * 6 / 7 + 2)
+        })
+    }
+
+    private func label(_ date: Date, last: Bool) -> some View {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE")
+        return VStack(spacing: 2) {
+            Text(verbatim: f.string(from: date)).font(.nuna(size: 13, weight: last ? .heavy : .semibold))
+            Text(verbatim: String(Calendar.current.component(.day, from: date))).font(.nuna(size: 13, weight: last ? .heavy : .semibold))
+        }
+        .foregroundStyle(last ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+        .frame(maxWidth: .infinity)
+    }
+}
+
+private struct NunaZonePlot: View {
+    /// Minutes in each of the card's zones for each of the seven days; nil where nothing was recorded.
+    let days: [[Double]?]
+    let zones: [Int]
+
+    private func hm(_ minutes: Double) -> String {
+        let m = Int(minutes.rounded())
+        return String(format: "%d:%02d", m / 60, m % 60)
+    }
+
+    var body: some View {
+        GeometryReader { g in
+            let size = g.size
+            let totals = days.map { $0?.reduce(0, +) ?? 0 }
+            let top = max((totals.max() ?? 0) * 1.15, 30)
+            ZStack(alignment: .topLeading) {
+                ForEach(0..<4, id: \.self) { i in
+                    let atBottom = i == 3
+                    Rectangle().fill(NunaPalette.hairline.opacity(atBottom ? 1 : 0.55)).frame(height: 1)
+                        .position(x: size.width / 2, y: atBottom ? size.height - 0.5 : size.height * CGFloat(i) / 3 + 0.5)
+                }
+                ForEach(Array(days.enumerated()), id: \.offset) { i, minutes in
+                    if let minutes { column(i, minutes, total: totals[i], top: top, size: size) }
+                }
+            }
+        }
+    }
+
+    @ViewBuilder private func column(_ i: Int, _ minutes: [Double], total: Double, top: Double, size: CGSize) -> some View {
+        let cx = size.width / 7 * (CGFloat(i) + 0.5)
+        let usable = size.height * 0.84
+        let barHeight = usable * CGFloat(total / top)
+        let width = size.width / 7 * 0.36
+        VStack(spacing: 1) {
+            ForEach(Array(zones.enumerated().reversed()), id: \.offset) { k, z in
+                if minutes[k] > 0 {
+                    Rectangle().fill(NunaZoneWeeklyCard.color(z)).frame(height: max(1.5, usable * CGFloat(minutes[k] / top)))
+                }
+            }
+        }
+        .frame(width: width, height: barHeight, alignment: .bottom)
+        .clipShape(UnevenRoundedRectangle(topLeadingRadius: 3, bottomLeadingRadius: 0, bottomTrailingRadius: 0, topTrailingRadius: 3, style: .continuous))
+        .position(x: cx, y: size.height - barHeight / 2)
+        Text(verbatim: hm(total)).font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+            .fixedSize().position(x: cx, y: max(9, size.height - barHeight - 14))
+    }
+}
 #endif

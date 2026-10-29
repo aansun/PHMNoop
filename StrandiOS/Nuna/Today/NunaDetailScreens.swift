@@ -199,6 +199,8 @@ struct NunaEffortDetailView: View {
     @State private var everydayDay: Double?
     @State private var restingDay: Double?
     @State private var todayWorkouts: [WorkoutRow] = []
+    /// Calories burned day by day: the on-device estimate, with Apple Health's active energy for the days that have none.
+    @State private var kcalPoints: [(day: String, value: Double)] = []
     /// Everyday movement is worked out but kept out of the panel for now.
     private let showsEverydayMovement = false
 
@@ -236,12 +238,20 @@ struct NunaEffortDetailView: View {
             await rhrSeries.load(repo: repo, key: "rhr", source: "my-whoop")
             await day.load(repo: repo, profile: profile)
             await loadDay()
+            await loadCalories()
         }
         .task(id: "zones-\(repo.refreshSeq)-\(router.todayDayOffset)") {
             await zones.load(repo: repo, profile: profile, endingOffset: router.todayDayOffset)
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "Effort") }
         .environment(\.nunaDetailSwitch, nil)
+    }
+
+    private func loadCalories() async {
+        var byDay: [String: Double] = [:]
+        for r in await repo.appleDailyRows() { if let k = r.activeKcal, k > 0 { byDay[r.day] = k } }
+        for p in await repo.exploreSeries(key: "energy_kcal", source: "my-whoop", days: 60) where p.value > 0 { byDay[p.day] = p.value }
+        kcalPoints = byDay.map { (day: $0.key, value: $0.value) }
     }
 
     /// The readings, workouts and resting heart rate of the day on show.
@@ -313,7 +323,7 @@ struct NunaEffortDetailView: View {
         } else { row }
     }
 
-    /// The week as bare cards, one each: Effort itself, the time in each zone group, then resting heart rate.
+    /// The week as bare cards, one each: Effort itself, calories, the time in each zone group, then resting heart rate.
     private var weeklyTrends: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Weekly trends").font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
@@ -323,12 +333,13 @@ struct NunaEffortDetailView: View {
                                 labelFill: { v, last in last ? nunaEffortColor(v) : NunaPalette.textPrimary },
                                 destination: { AnyView(NunaEffortTrendView()) },
                                 valueText: { UnitFormatter.effortDisplay($0, scale: scale) }, endingDaysAgo: router.todayDayOffset)
-            NunaWeeklyTrendCard(title: "Heart rate zones 1–3", key: "zones_low", style: .bars, color: NunaPalette.restDeep, labelColor: NunaPalette.restText,
-                                destination: { AnyView(NunaEffortActivityDetailView(kind: .lowZones)) },
-                                points: zones.points(easy: true), valueText: Self.hm, autoScale: true, endingDaysAgo: router.todayDayOffset)
-            NunaWeeklyTrendCard(title: "Heart rate zones 4–5", key: "zones_high", style: .bars, color: NunaPalette.alert, labelColor: NunaPalette.alertText,
-                                destination: { AnyView(NunaEffortActivityDetailView(kind: .highZones)) },
-                                points: zones.points(easy: false), valueText: Self.hm, autoScale: true, endingDaysAgo: router.todayDayOffset)
+            NunaWeeklyTrendCard(title: "Calories", key: "energy_kcal", style: .bars, color: NunaPalette.effort, labelColor: NunaPalette.effortText,
+                                points: kcalPoints, valueText: { String(format: "%.0f", locale: AppLanguage.activeLocale, $0) }, autoScale: true,
+                                endingDaysAgo: router.todayDayOffset)
+            NunaZoneWeeklyCard(title: "HR zones 1–3", zones: [0, 1, 2], byDay: zones.zonesByDay, endingDaysAgo: router.todayDayOffset,
+                               destination: { AnyView(NunaEffortActivityDetailView(kind: .lowZones)) })
+            NunaZoneWeeklyCard(title: "HR zones 4–5", zones: [3, 4], byDay: zones.zonesByDay, endingDaysAgo: router.todayDayOffset,
+                               destination: { AnyView(NunaEffortActivityDetailView(kind: .highZones)) })
             NunaWeeklyTrendCard(title: "Resting heart rate", key: "rhr", style: .line, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
         }
     }
