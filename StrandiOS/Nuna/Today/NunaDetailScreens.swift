@@ -460,74 +460,140 @@ struct NunaEffortActivityDetailView: View {
         }
     }
 
-    var body: some View {
-        NunaDetailScreen("Effort") {
-            NunaCard {
-                VStack(alignment: .leading, spacing: 14) {
-                    HStack(alignment: .top, spacing: 12) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(rangeName).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                                Text(verbatim: Self.hm(headlineValue)).font(.nuna(size: 44, weight: .bold, design: NunaType.design))
-                                    .tracking(nunaTrackingNumber(44)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
-                                Text(verbatim: unitCopy).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                            }
-                        }
-                        Spacer(minLength: 0)
-                        VStack(alignment: .trailing, spacing: 12) {
-                            NunaRangeSwitch(range: $range)
-                            NunaDateStepper(label: dateRange, canGoBack: pageOffset < Self.maxPages, canGoForward: pageOffset > 0,
-                                            back: { pageOffset += 1 }, forward: { pageOffset = max(0, pageOffset - 1) })
-                        }
-                    }
-                    if let change = comparison {
-                        HStack(spacing: 0) {
-                            NunaChip(verbatim: change.text, color: change.color)
-                            Spacer(minLength: 0)
-                        }
-                    }
-                    Text(verbatim: summary).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                    if buckets.isEmpty {
-                        Text(loaded ? "No activity data in this period" : " ").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, minHeight: 180, alignment: .leading).textCase(nil)
-                    } else {
-                        chart
-                    }
-                    HStack(spacing: 8) {
-                        Image(systemName: "info.circle").font(.nuna(size: 13, weight: .semibold))
-                        Text(kind == .strength ? "Strength activity time is derived from logged strength activities." : "Zone time is derived from heart-rate samples recorded on this device.")
-                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+    /// The bar touched on a week (a day) or a month (a week): its zone times replace the total at the top and the other bars step back.
+    @State private var picked: Date?
+    @State private var touchBeganOnPicked: Bool?
+
+    private var windowEnd: Date {
+        let cal = Calendar.current
+        return cal.date(byAdding: .day, value: -pageOffset * range, to: cal.startOfDay(for: Date())) ?? Date()
+    }
+
+    private var colors: [Color] { (0..<5).map { NunaZoneWeeklyCard.color($0) } }
+
+    /// What a bar is made of, bottom to top: the zones of the page, or one block for strength time.
+    private func pieces(_ zones: [Double], total: Double) -> [(color: Color, minutes: Double)] {
+        kind == .strength ? [(kind.color, total)] : kind.zoneIndexes.map { (colors[$0], zones[$0]) }
+    }
+
+    /// "Weekly total" for a week, "Avg. weekly total" for longer stretches.
+    private var headerLabel: String { range == 7 ? String(localized: "Weekly total") : String(localized: "Avg. weekly total") }
+
+    private var nameBox: some View {
+        HStack(spacing: 14) {
+            Image(systemName: kind.icon).font(.nuna(size: 20, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
+            Text(verbatim: kind.title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 18).frame(height: 60)
+        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+    }
+
+    /// The zones (or the strength time) of the touched bar, top zone first, each a figure over its name.
+    private func pickedBlock(_ title: String, _ parts: [(color: Color, minutes: Double)], names: [String]) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(verbatim: title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            ForEach(Array(parts.enumerated()).reversed(), id: \.offset) { i, part in
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(verbatim: Self.hm(part.minutes)).font(.nuna(size: 24, weight: .semibold, design: NunaType.design)).foregroundStyle(part.color)
+                    Text("hr").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(part.color).textCase(nil)
+                    Text(verbatim: names[i]).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                }
+            }
+        }
+    }
+
+    private var zoneNames: [String] { kind == .strength ? [String(localized: "Strength")] : kind.zoneIndexes.map { String(localized: "Zone \($0 + 1)") } }
+
+    private var header: some View {
+        HStack(alignment: .top, spacing: 12) {
+            if let picked, let sel = pickedParts {
+                pickedBlock(pickedTitle(picked), sel, names: zoneNames)
+            } else {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(verbatim: headerLabel).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(verbatim: Self.hm(headlineValue)).font(.nuna(size: 40, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("hr").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                     }
                 }
             }
-
-            breakdown
+            Spacer(minLength: 0)
+            VStack(alignment: .trailing, spacing: 14) {
+                NunaRangeSwitch(range: $range) { pageOffset = 0; picked = nil }
+                NunaDateStepper(label: dateRange, canGoBack: pageOffset < Self.maxPages, canGoForward: pageOffset > 0,
+                                back: { pageOffset += 1; picked = nil }, forward: { pageOffset = max(0, pageOffset - 1); picked = nil })
+            }
         }
-        // The header's dropdown names the screen and moves between the three readings, like the other detail screens.
-        .environment(\.nunaDetailSwitch, NunaDetailSwitch(
-            current: kind.switchKey,
-            items: Kind.allCases.map { .init(key: $0.switchKey, title: $0.title, icon: $0.icon) }) { key in
-                if let next = Kind.allCases.first(where: { $0.switchKey == key }) { kind = next; pageOffset = 0 }
-            })
-        .task(id: "\(repo.refreshSeq)-\(range)-\(pageOffset)-\(kind.icon)") { await load() }
-        .onChange(of: range) { pageOffset = 0 }
+        .padding(.horizontal, 2)
     }
 
-    /// Change against the window immediately before the visible one; omitted until that window carries readings.
-    private var comparison: (text: String, color: Color)? {
-        guard previousValue > 0, currentValue > 0 else { return nil }
-        let change = ((currentValue - previousValue) / previousValue) * 100
-        let arrow = change >= 0 ? "↑" : "↓"
-        return ("\(arrow) \(Int(abs(change).rounded()))% " + String(localized: "vs. prior period"), change >= 0 ? kind.color : NunaPalette.warning)
+    private func pickedTitle(_ date: Date) -> String {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale
+        if range == 7 { f.setLocalizedDateFormatFromTemplate("EEE, MMM d"); return f.string(from: date) }
+        f.setLocalizedDateFormatFromTemplate("MMM d")
+        let end = Calendar.current.date(byAdding: .day, value: 6, to: date) ?? date
+        return "\(f.string(from: date)) – \(f.string(from: end))"
+    }
+
+    /// The bar under the finger as pieces, for the top of the page.
+    private var pickedParts: [(color: Color, minutes: Double)]? {
+        guard let picked else { return nil }
+        if range == 7 {
+            guard let b = buckets.first(where: { Calendar.current.isDate($0.start, inSameDayAs: picked) }) else { return nil }
+            return pieces(b.zones, total: b.value)
+        }
+        guard let w = weeks.first(where: { $0.start == picked }) else { return nil }
+        return pieces(w.zones, total: w.total)
+    }
+
+    var body: some View {
+        NunaDetailScreen("Trend view", centersTitle: true) {
+            nameBox
+            header
+            Text(verbatim: summary).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                .fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.horizontal, 2)
+            if buckets.isEmpty {
+                Text(loaded ? "No activity data in this period" : " ").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .frame(maxWidth: .infinity, minHeight: 240, alignment: .leading).textCase(nil)
+            } else {
+                chart.padding(.top, 4)
+            }
+            HStack(spacing: 8) {
+                Image(systemName: "info.circle").font(.nuna(size: 14, weight: .semibold))
+                Text(kind == .strength ? "Strength activity time is derived from logged strength activities." : "Zone time is derived from heart-rate samples recorded on this device.")
+                    .font(.nuna(size: 12, weight: .semibold)).fixedSize(horizontal: false, vertical: true).textCase(nil)
+            }
+            .foregroundStyle(NunaPalette.textSecondary).padding(.horizontal, 2).frame(maxWidth: .infinity, alignment: .leading)
+            breakdown
+        }
+        .environment(\.nunaDetailSwitch, nil)
+        .task(id: "\(repo.refreshSeq)-\(range)-\(pageOffset)-\(kind.icon)") { await load() }
+        .onChange(of: range) { pageOffset = 0; picked = nil }
     }
 
     @ViewBuilder private var chart: some View {
-        let top = max((buckets.map(\.value).max() ?? 0) * 1.15, averageValue * 1.15, 15)
         if range == 7 {
-            weekChart(top: top)
+            weekChart
         } else if range == 180 {
             monthlyChart
         } else {
-            dailyChart(top: top)
+            monthWeeksChart
+        }
+    }
+
+    /// Five labelled steps from zero, the step growing (0:15, 0:30, 1:00, 2:00) so the tallest bar always fits in four of them.
+    private func axisScale(_ most: Double) -> (top: Double, ticks: [Double]) {
+        let step = [15.0, 30, 60, 120, 240, 480].first { ceil(most / $0) <= 4 } ?? 480
+        return (step * 4, (0...4).map { Double($0) * step })
+    }
+
+    @AxisContentBuilder private func minutesAxis(_ ticks: [Double]) -> some AxisContent {
+        AxisMarks(position: .leading, values: ticks) { value in
+            AxisGridLine().foregroundStyle(NunaPalette.hairline.opacity(0.7))
+            AxisValueLabel {
+                if let minutes = value.as(Double.self) { Text(verbatim: Self.hm(minutes)).font(.nuna(size: 12, weight: .heavy)).foregroundStyle(NunaPalette.textMuted) }
+            }
         }
     }
 
@@ -595,7 +661,7 @@ struct NunaEffortActivityDetailView: View {
         let months = self.months
         if let first = weeks.first?.start, let end = months.last?.end {
             let day: TimeInterval = 86_400
-            let top = max(weeks.map(\.total).max() ?? 0, months.map(\.average).max() ?? 0, 5) * 1.35
+            let scale = axisScale(max(weeks.map(\.total).max() ?? 0, months.map(\.average).max() ?? 0) * 1.25)
             Chart {
                 ForEach(weeks) { week in
                     let from = week.start.addingTimeInterval(day * 0.5)
@@ -609,173 +675,197 @@ struct NunaEffortActivityDetailView: View {
                             let below = kind.zoneIndexes.prefix(position).reduce(0) { $0 + week.zones[$1] }
                             RectangleMark(xStart: .value("Week", from), xEnd: .value("Week end", to),
                                           yStart: .value("From", below), yEnd: .value("Minutes", below + week.zones[index]))
-                                .foregroundStyle(nunaHRZoneColors[index].opacity(0.55)).cornerRadius(2)
+                                .foregroundStyle(colors[index].opacity(0.4)).cornerRadius(2)
                         }
                     }
                 }
-                ForEach(months) { month in
+                ForEach(months.filter { $0.average > 0 }) { month in
                     let tint = (month.delta ?? 0) < 0 ? NunaPalette.warning : NunaPalette.textPrimary
                     RuleMark(xStart: .value("Month start", month.first), xEnd: .value("Month end", month.end), y: .value("Average", month.average))
                         .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round))
                         .foregroundStyle(tint)
                         .annotation(position: .top, alignment: .center, spacing: 2) {
-                            Text(verbatim: Self.hm(month.average)).font(.nuna(size: 11.5, weight: .bold, design: NunaType.design))
+                            Text(verbatim: Self.hm(month.average)).font(.nuna(size: 13, weight: .heavy, design: NunaType.design))
                                 .foregroundStyle(NunaPalette.textPrimary).fixedSize()
                         }
                         .annotation(position: .bottom, alignment: .center, spacing: 2) {
                             if let delta = month.delta {
                                 Text(verbatim: delta.rounded() == 0 ? "0%" : String(format: "%+.0f%%", locale: AppLanguage.activeLocale, delta))
-                                    .font(.nuna(size: 11.5, weight: .bold, design: NunaType.design)).foregroundStyle(tint).fixedSize()
+                                    .font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).foregroundStyle(tint).fixedSize()
                             }
                         }
                 }
             }
-            .chartYScale(domain: 0...top)
+            .chartYScale(domain: 0...scale.top)
             .chartXScale(domain: first...end)
             .chartXAxis {
-                AxisMarks(values: months.map(\.center)) { _ in
-                    AxisValueLabel(format: .dateTime.month(.abbreviated)).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+                AxisMarks(values: months.map(\.center)) { value in
+                    AxisValueLabel {
+                        if let d = value.as(Date.self) {
+                            Text(verbatim: datePart(d, template: "MMM")).font(.nuna(size: 12.5, weight: .semibold)).textCase(nil).foregroundStyle(NunaPalette.textSecondary)
+                        }
+                    }
                 }
             }
-            .chartYAxis { minutesAxis }
-            .frame(height: 270)
+            .chartYAxis { minutesAxis(scale.ticks) }
+            .frame(height: 285)
             .accessibilityLabel(Text("Activity time chart"))
         }
     }
 
-    private var averageRule: some ChartContent {
-        RuleMark(y: .value("Average", averageValue))
-            .lineStyle(StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [5, 4]))
-            .foregroundStyle(NunaPalette.textPrimary.opacity(0.75))
-            .annotation(position: .trailing, alignment: .center, overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
-                Text("AVG.").font(.nuna(size: 10, weight: .heavy)).foregroundStyle(NunaPalette.canvas).padding(.horizontal, 6).padding(.vertical, 3)
-                    .background(NunaPalette.textPrimary, in: Capsule())
-            }
+    private func nearest(_ x: CGFloat, _ proxy: ChartProxy, _ frame: CGRect, among starts: [Date], centre: (Date) -> Date) -> Date? {
+        guard let touched: Date = proxy.value(atX: x - frame.minX) else { return nil }
+        return starts.min { abs(centre($0).timeIntervalSince(touched)) < abs(centre($1).timeIntervalSince(touched)) }
     }
 
-    @AxisContentBuilder private var minutesAxis: some AxisContent {
-        AxisMarks(position: .leading, values: .automatic(desiredCount: 4)) { value in
-            AxisGridLine().foregroundStyle(NunaPalette.hairline.opacity(0.5))
-            AxisValueLabel {
-                if let minutes = value.as(Double.self) { Text(verbatim: Self.hm(minutes)).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) }
-            }
-        }
-    }
-
-    /// A week: one column per day, labelled with the weekday and date. Buckets are plotted as categories so each bar and
-    /// its label share one centre.
-    private func weekChart(top: Double) -> some View {
-        Chart {
-            ForEach(buckets) { bucket in
-                switch kind {
-                case .lowZones, .highZones:
-                    zoneBar(bucket, indexes: kind.zoneIndexes)
-                case .strength:
-                    BarMark(x: .value("Period", Self.key(bucket.start)), y: .value("Minutes", bucket.value), width: .ratio(0.62))
-                        .foregroundStyle(kind.color).cornerRadius(4)
-                }
-            }
-            if averageValue > 0 { averageRule }
-        }
-        .chartYScale(domain: 0...top)
-        .chartXAxis {
-            AxisMarks(values: buckets.map { Self.key($0.start) }) { value in
-                AxisGridLine().foregroundStyle(.clear)
-                AxisValueLabel {
-                    if let key = value.as(String.self), let date = buckets.first(where: { Self.key($0.start) == key })?.start {
-                        axisDateLabel(date)
-                    }
-                }
-            }
-        }
-        .chartYAxis { minutesAxis }
-        .frame(height: 240)
-        .accessibilityLabel(Text("Activity time chart"))
-    }
-
-    /// A month or six months: one thin bar per day on a time axis, drawn as the other trend cards draw theirs.
-    private func dailyChart(top: Double) -> some View {
+    /// A week: one stacked bar per day with its total over it and "Fri 23" under it; touching a day shows its zones at the top.
+    private var weekChart: some View {
         let cal = Calendar.current
-        let first = buckets.first?.start ?? Date()
-        let end = cal.date(byAdding: .day, value: 1, to: buckets.last?.start ?? first) ?? first
+        let end = windowEnd
+        let start = cal.date(byAdding: .day, value: -6, to: end) ?? end
+        let domain = start...(cal.date(byAdding: .day, value: 1, to: end) ?? end)
+        let noon: (Date) -> Date = { cal.date(byAdding: .hour, value: 12, to: cal.startOfDay(for: $0)) ?? $0 }
+        let days = buckets.map { (date: noon($0.start), b: $0) }
+        let scale = axisScale(buckets.map(\.value).max() ?? 0)
+        let lit: (Date) -> Double = { d in picked == nil || cal.isDate(picked!, inSameDayAs: d) ? 1 : 0.3 }
         return Chart {
-            ForEach(buckets) { bucket in
-                switch kind {
-                case .lowZones, .highZones:
-                    ForEach(kind.zoneIndexes, id: \.self) { index in
-                        BarMark(x: .value("Day", bucket.start, unit: .day), y: .value("Minutes", bucket.zones[index]), width: .automatic)
-                            .foregroundStyle(nunaHRZoneColors[index]).cornerRadius(1.5)
-                    }
-                case .strength:
-                    BarMark(x: .value("Day", bucket.start, unit: .day), y: .value("Minutes", bucket.value), width: .automatic)
-                        .foregroundStyle(kind.color).cornerRadius(1.5)
+            ForEach(days, id: \.date) { day in
+                ForEach(Array(pieces(day.b.zones, total: day.b.value).enumerated()), id: \.offset) { _, piece in
+                    BarMark(x: .value("Day", day.date, unit: .day), y: .value("Minutes", piece.minutes), width: .fixed(18))
+                        .foregroundStyle(piece.color).opacity(lit(day.date))
                 }
             }
-            if averageValue > 0 { averageRule }
+            if let picked { RuleMark(x: .value("Picked", noon(picked))).foregroundStyle(Color.white.opacity(0.85)).lineStyle(StrokeStyle(lineWidth: 1, dash: [2, 3])) }
         }
-        .chartYScale(domain: 0...top)
-        .chartXScale(domain: first...end)
-        .chartXAxis {
-            AxisMarks(values: .automatic(desiredCount: 5)) { _ in
-                AxisGridLine().foregroundStyle(NunaPalette.hairline.opacity(0.5))
-                AxisValueLabel(format: .dateTime.day().month(.abbreviated)).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+        .chartYScale(domain: 0...scale.top)
+        .chartXScale(domain: domain)
+        .chartYAxis { minutesAxis(scale.ticks) }
+        .chartXAxis(.hidden)
+        .chartPlotStyle { $0.padding(.bottom, 50) }
+        .chartOverlay { proxy in
+            GeometryReader { geo in
+                if let frame = proxy.plotFrame.map({ geo[$0] }) {
+                    ZStack {
+                        ZStack {
+                            ForEach(days, id: \.date) { day in
+                                if let x = proxy.position(forX: day.date), let y = proxy.position(forY: day.b.value) {
+                                    Text(verbatim: Self.hm(day.b.value)).font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                                        .opacity(lit(day.date)).fixedSize().position(x: frame.minX + x, y: frame.minY + y - 14)
+                                }
+                                if let x = proxy.position(forX: day.date) { axisDateLabel(day.date).position(x: frame.minX + x, y: frame.maxY + 26) }
+                            }
+                        }
+                        .allowsHitTesting(false)
+                        touchLayer(proxy, frame, starts: days.map(\.date), centre: { $0 }, pick: { d in days.first { $0.date == d }!.b.start })
+                    }
+                }
             }
         }
-        .chartYAxis { minutesAxis }
-        .frame(height: 240)
+        .frame(height: 285)
         .accessibilityLabel(Text("Activity time chart"))
     }
 
-    /// Buckets are plotted as categories so each bar and its label share one centre.
-    private static func key(_ date: Date) -> String { String(Int(date.timeIntervalSince1970)) }
-
-    @ChartContentBuilder private func zoneBar(_ bucket: Bucket, indexes: [Int]) -> some ChartContent {
-        ForEach(indexes, id: \.self) { index in
-            BarMark(x: .value("Period", Self.key(bucket.start)), y: .value("Minutes", bucket.zones[index]), width: .ratio(0.62))
-                .foregroundStyle(nunaHRZoneColors[index]).cornerRadius(3)
-        }
+    /// The touch layer of a week or a month: the nearest bar is picked, and touching the one already picked lets it go.
+    private func touchLayer(_ proxy: ChartProxy, _ frame: CGRect, starts: [Date], centre: @escaping (Date) -> Date, pick: @escaping (Date) -> Date) -> some View {
+        Rectangle().fill(Color.clear).contentShape(Rectangle()).frame(width: frame.width, height: frame.height)
+            .position(x: frame.midX, y: frame.midY)
+            .gesture(DragGesture(minimumDistance: 0)
+                .onChanged { g in
+                    let hit = nearest(g.location.x, proxy, frame, among: starts, centre: centre).map(pick)
+                    if touchBeganOnPicked == nil { touchBeganOnPicked = picked != nil && hit.map { Calendar.current.isDate($0, inSameDayAs: picked!) } == true }
+                    if let hit { picked = hit }
+                }
+                .onEnded { g in
+                    if touchBeganOnPicked == true, abs(g.translation.width) < 6 { picked = nil }
+                    touchBeganOnPicked = nil
+                })
     }
 
-    @ViewBuilder private var breakdown: some View {
-        NunaCard {
-            VStack(alignment: .leading, spacing: 14) {
-                Text(kind == .strength ? "Strength activity breakdown" : "Heart-rate zones breakdown")
-                    .font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                if kind == .strength {
-                    let sessions = strengthEntries
-                    if sessions.isEmpty {
-                        Text("No strength activities in this period").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    } else {
-                        NunaProportionBar(parts: sessions.map { ($0.minutes, NunaPalette.effort) }, height: 12)
-                        ForEach(sessions.prefix(5)) { entry in
-                            HStack(spacing: 10) {
-                                RoundedRectangle(cornerRadius: 3).fill(NunaPalette.effort).frame(width: 10, height: 10)
-                                Text(verbatim: entry.title).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                                Spacer(minLength: 8)
-                                Text(verbatim: Self.hm(entry.minutes)).font(.nuna(size: 15, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
+    /// A month: the weeks, one stacked bar each, with the dates of the week under it. Touching a week shows its zones at the top.
+    private var monthWeeksChart: some View {
+        let cal = Calendar.current
+        let weeks = self.weeks
+        let day: TimeInterval = 86_400
+        let scale = axisScale(weeks.map(\.total).max() ?? 0)
+        let first = weeks.first?.start ?? windowEnd
+        let end = cal.date(byAdding: .day, value: 7, to: weeks.last?.start ?? first) ?? first
+        func centre(_ d: Date) -> Date { d.addingTimeInterval(day * 3.5) }
+        func label(_ w: Date) -> String {
+            let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("MMM d")
+            let e = cal.date(byAdding: .day, value: 6, to: w) ?? w
+            let sameMonth = cal.component(.month, from: w) == cal.component(.month, from: e)
+            let g = DateFormatter(); g.locale = AppLanguage.activeLocale; g.setLocalizedDateFormatFromTemplate("d")
+            return "\(f.string(from: w)) – \(sameMonth ? g.string(from: e) : f.string(from: e))"
+        }
+        return Chart {
+            ForEach(weeks) { week in
+                let from = week.start.addingTimeInterval(day * 0.8), to = week.start.addingTimeInterval(day * 6.2)
+                let dim = picked == nil || picked == week.start ? 1.0 : 0.3
+                ForEach(Array(pieces(week.zones, total: week.total).enumerated()), id: \.offset) { position, piece in
+                    let below = pieces(week.zones, total: week.total).prefix(position).reduce(0) { $0 + $1.minutes }
+                    RectangleMark(xStart: .value("Week", from), xEnd: .value("Week end", to), yStart: .value("From", below), yEnd: .value("To", below + piece.minutes))
+                        .foregroundStyle(piece.color).opacity(dim)
+                }
+            }
+            if let picked { RuleMark(x: .value("Picked", centre(picked))).foregroundStyle(Color.white.opacity(0.85)).lineStyle(StrokeStyle(lineWidth: 1, dash: [2, 3])) }
+        }
+        .chartYScale(domain: 0...scale.top)
+        .chartXScale(domain: first...end)
+        .chartYAxis { minutesAxis(scale.ticks) }
+        .chartXAxis(.hidden)
+        .chartPlotStyle { $0.padding(.bottom, 50) }
+        .chartOverlay { proxy in
+            GeometryReader { geo in
+                if let frame = proxy.plotFrame.map({ geo[$0] }) {
+                    ZStack {
+                        ZStack {
+                            ForEach(weeks) { week in
+                                if let x = proxy.position(forX: centre(week.start)) {
+                                    Text(verbatim: label(week.start)).font(.nuna(size: 12, weight: .semibold)).textCase(nil).foregroundStyle(NunaPalette.textSecondary)
+                                        .fixedSize().position(x: frame.minX + x, y: frame.maxY + 26)
+                                }
                             }
                         }
-                    }
-                } else {
-                    let indexes = kind.zoneIndexes
-                    let colors = nunaHRZoneColors
-                    let selected = indexes.map { (totalZones[$0], colors[$0]) }
-                    if selected.map(\.0).reduce(0, +) > 0 {
-                        NunaProportionBar(parts: selected.map { (weight: $0.0, color: $0.1) }, height: 12)
-                        ForEach(indexes, id: \.self) { index in
-                            HStack(spacing: 10) {
-                                RoundedRectangle(cornerRadius: 3).fill(colors[index]).frame(width: 10, height: 10)
-                                Text(verbatim: String(localized: "Zone \(index + 1)")).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                                Spacer(minLength: 8)
-                                Text(verbatim: Self.hm(totalZones[index])).font(.nuna(size: 15, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
-                            }
-                        }
-                    } else {
-                        Text("No heart-rate samples in this period").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        .allowsHitTesting(false)
+                        touchLayer(proxy, frame, starts: weeks.map(\.start), centre: centre, pick: { $0 })
                     }
                 }
             }
         }
+        .frame(height: 285)
+        .accessibilityLabel(Text("Activity time chart"))
+    }
+
+    /// Time in each zone over the window (a week's total, or the weekly average of a longer stretch), as a bar split by zone and a line each.
+    @ViewBuilder private var breakdown: some View {
+        let divisor = range == 7 ? 1.0 : max(Double(range) / 7, 1)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 6) {
+                Text(kind == .strength ? "Strength activity breakdown" : "HR zones breakdown").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                Text(range == 7 ? "(weekly total)" : "(avg. weekly total)").font(.nuna(size: 11, weight: .semibold)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            }
+            let parts: [(color: Color, minutes: Double)] = kind == .strength
+                ? [(kind.color, currentValue / divisor)]
+                : kind.zoneIndexes.map { (colors[$0], totalZones[$0] / divisor) }
+            let names = zoneNames
+            if parts.map(\.minutes).reduce(0, +) > 0 {
+                NunaProportionBar(parts: parts.map { (weight: $0.minutes, color: $0.color) }, height: 14)
+                VStack(alignment: .leading, spacing: 9) {
+                    ForEach(Array(parts.enumerated()), id: \.offset) { i, part in
+                        HStack(spacing: 12) {
+                            RoundedRectangle(cornerRadius: 3, style: .continuous).fill(part.color).frame(width: 10, height: 10)
+                            Text(verbatim: Self.hm(part.minutes)).font(.nuna(size: 14.5, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 40, alignment: .leading)
+                            Text(verbatim: names[i]).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                            Spacer(minLength: 0)
+                        }
+                    }
+                }
+            } else {
+                Text(kind == .strength ? "No strength activities in this period" : "No heart-rate samples in this period")
+                    .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            }
+        }
+        .padding(.top, 6).frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private func load() async {
@@ -888,9 +978,9 @@ struct NunaEffortActivityDetailView: View {
                 Text(verbatim: datePart(date, template: "EEE"))
                 Text(verbatim: datePart(date, template: "d"))
             }
-            .font(.nuna(size: 10.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+            .font(.nuna(size: 12.5, weight: .semibold)).textCase(nil).foregroundStyle(NunaPalette.textSecondary)
         } else {
-            Text(verbatim: datePart(date, template: "d MMM")).font(.nuna(size: 10.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+            Text(verbatim: datePart(date, template: "d MMM")).font(.nuna(size: 12.5, weight: .semibold)).textCase(nil).foregroundStyle(NunaPalette.textSecondary)
         }
     }
 
