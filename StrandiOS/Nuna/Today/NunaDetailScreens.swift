@@ -102,7 +102,9 @@ struct NunaChargeDetailView: View {
         let text: (Double) -> String = { signed ? nunaSigned($0, decimals) : String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, $0) }
         let row = NunaSignalRow(title: title, icon: icon, value: value.map(text),
                                 trend: NunaTrend.make(current: value, previous: average, decimals: decimals, upIsGood: good, format: text))
-        if let m = MetricCatalog.metric(key: key, source: "my-whoop") {
+        if let page = NunaLineTrendView.forMetric(key, endingDaysAgo: router.todayDayOffset) {
+            NavigationLink { page } label: { row }.buttonStyle(.plain)
+        } else if let m = MetricCatalog.metric(key: key, source: "my-whoop") {
             NavigationLink(value: NunaTodayRoute.metric(m)) { row }.buttonStyle(.plain)
         } else { row }
     }
@@ -135,9 +137,12 @@ struct NunaChargeDetailView: View {
                                 barFill: { v, last in last ? nunaChargeColor(v) : NunaPalette.textSecondary },
                                 labelFill: { v, last in last ? nunaChargeColor(v) : NunaPalette.textPrimary },
                                 destination: { AnyView(NunaChargeScoreTrendView(endingDaysAgo: router.todayDayOffset)) }, endingDaysAgo: router.todayDayOffset)
-            NunaWeeklyTrendCard(title: "Heart rate variability", key: "hrv", style: .line, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
-            NunaWeeklyTrendCard(title: "Resting heart rate", key: "rhr", style: .line, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
-            NunaWeeklyTrendCard(title: "Respiratory rate", key: "resp_rate", style: .line, decimals: 1, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
+            NunaWeeklyTrendCard(title: "Heart rate variability", key: "hrv", style: .line, color: NunaPalette.effortModerate,
+                                destination: { AnyView(NunaLineTrendView.forMetric("hrv", endingDaysAgo: router.todayDayOffset)!) }, endingDaysAgo: router.todayDayOffset)
+            NunaWeeklyTrendCard(title: "Resting heart rate", key: "rhr", style: .line, color: NunaPalette.effortModerate,
+                                destination: { AnyView(NunaLineTrendView.forMetric("rhr", endingDaysAgo: router.todayDayOffset)!) }, endingDaysAgo: router.todayDayOffset)
+            NunaWeeklyTrendCard(title: "Respiratory rate", key: "resp_rate", style: .line, decimals: 1, color: NunaPalette.effortModerate,
+                                destination: { AnyView(NunaLineTrendView.forMetric("resp_rate", endingDaysAgo: router.todayDayOffset)!) }, endingDaysAgo: router.todayDayOffset)
             NunaWeeklyTrendCard(title: "Sleep performance", key: "sleep_performance", style: .bars, color: NunaPalette.restDeep, labelColor: NunaPalette.restText, endingDaysAgo: router.todayDayOffset)
             NunaWeeklyTrendCard(title: "Skin temperature", key: "skin_temp", style: .line, decimals: 1, signed: true, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
         }
