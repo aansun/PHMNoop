@@ -224,8 +224,7 @@ struct NunaRestDetailView: View {
         let beds = bedTimes
         let stages = stageMinutes
         return VStack(alignment: .leading, spacing: 12) {
-            Text("Weekly trends").font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                .accessibilityAddTraits(.isHeader).padding(.top, 4)
+            NunaWeeklyHeading()
             NunaWeeklyTrendCard(title: "Sleep performance", key: "sleep_performance", style: .bars, color: steel,
                                 barFill: { _, _ in steel }, labelFill: { _, _ in steel },
                                 destination: { AnyView(NunaRestTrendView()) }, valueText: percent, endingDaysAgo: ending)

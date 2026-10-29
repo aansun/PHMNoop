@@ -223,12 +223,20 @@ private struct NunaWeeklyPlot: View {
     }
 }
 
-/// The title of a weekly card: small, heavy and spaced like the reference, with a slim chevron.
+/// The heading over a run of weekly cards, in the same type as the card titles under it, with room above and below.
+struct NunaWeeklyHeading: View {
+    var body: some View {
+        Text("Weekly trends").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+            .accessibilityAddTraits(.isHeader).padding(.top, 20).padding(.bottom, 4).padding(.horizontal, 4)
+    }
+}
+
+/// The title of a weekly card: the same type as the figure titles on the cards above it, with a slim chevron.
 struct NunaWeeklyTitle: View {
     let title: LocalizedStringKey
     var body: some View {
         HStack {
-            Text(title).font(.nuna(size: 13, weight: .heavy)).tracking(1.3).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+            Text(title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 .lineLimit(1).minimumScaleFactor(0.8).accessibilityAddTraits(.isHeader)
             Spacer(minLength: 8)
             Image(systemName: "chevron.right").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
