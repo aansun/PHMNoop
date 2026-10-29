@@ -104,6 +104,8 @@ struct NunaChargeDetailView: View {
                                 trend: NunaTrend.make(current: value, previous: average, decimals: decimals, upIsGood: good, format: text))
         if let page = NunaLineTrendView.forMetric(key, endingDaysAgo: router.todayDayOffset) {
             NavigationLink { page } label: { row }.buttonStyle(.plain)
+        } else if key == "sleep_performance" {
+            NavigationLink { NunaRestTrendView() } label: { row }.buttonStyle(.plain)
         } else if let m = MetricCatalog.metric(key: key, source: "my-whoop") {
             NavigationLink(value: NunaTodayRoute.metric(m)) { row }.buttonStyle(.plain)
         } else { row }
@@ -143,7 +145,8 @@ struct NunaChargeDetailView: View {
                                 destination: { AnyView(NunaLineTrendView.forMetric("rhr", endingDaysAgo: router.todayDayOffset)!) }, endingDaysAgo: router.todayDayOffset)
             NunaWeeklyTrendCard(title: "Respiratory rate", key: "resp_rate", style: .line, decimals: 1, color: NunaPalette.effortModerate,
                                 destination: { AnyView(NunaLineTrendView.forMetric("resp_rate", endingDaysAgo: router.todayDayOffset)!) }, endingDaysAgo: router.todayDayOffset)
-            NunaWeeklyTrendCard(title: "Sleep performance", key: "sleep_performance", style: .bars, color: NunaPalette.restDeep, labelColor: NunaPalette.restText, endingDaysAgo: router.todayDayOffset)
+            NunaWeeklyTrendCard(title: "Sleep performance", key: "sleep_performance", style: .bars, color: NunaPalette.restDeep, labelColor: NunaPalette.restText,
+                                destination: { AnyView(NunaRestTrendView()) }, endingDaysAgo: router.todayDayOffset)
             NunaWeeklyTrendCard(title: "Skin temperature", key: "skin_temp", style: .line, decimals: 1, signed: true, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
         }
     }
