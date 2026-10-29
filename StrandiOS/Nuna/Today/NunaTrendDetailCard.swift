@@ -48,6 +48,10 @@ struct NunaTrendDetailCard: View {
     var dayNote: LocalizedStringKey = "By time of day"
     /// Under the chart at every range (a colour key).
     var chartFooter: AnyView?
+    /// Whether the average, lowest and highest are written under the chart.
+    var showsFigures = true
+    /// Drawn under the chart in place of those figures, told the readings of the window on show (Charge's days per zone).
+    var windowFooter: (([Double]) -> AnyView)?
     @Binding var range: Int
     @Binding var page: Int
 
@@ -62,6 +66,12 @@ struct NunaTrendDetailCard: View {
     }
 
     func footer(_ view: AnyView) -> Self { var c = self; c.chartFooter = view; return c }
+
+    /// Leaves out the average, lowest and highest under the chart.
+    func withoutFigures() -> Self { var c = self; c.showsFigures = false; return c }
+
+    /// Draws `build(readings)` under the chart for the window on show.
+    func windowFooter(_ build: @escaping ([Double]) -> AnyView) -> Self { var c = self; c.windowFooter = build; return c }
 
     /// Makes the week's columns touchable: a tap picks that day (a second tap on it lets go) and `f` hears which, or nil. A change of period lets go too.
     func selectingDay(_ f: @escaping (Date?) -> Void) -> Self { var c = self; c.onSelectDay = f; return c }
@@ -166,7 +176,8 @@ struct NunaTrendDetailCard: View {
                         }
                         if let chartFooter { chartFooter }
                     }
-                    if let avg, let lo = vals.min(), let hi = vals.max() {
+                    if let windowFooter, !vals.isEmpty { windowFooter(vals) }
+                    if showsFigures, let avg, let lo = vals.min(), let hi = vals.max() {
                         NunaDivider()
                         HStack(alignment: .top, spacing: 0) {
                             stat("Average", fmt(avg)); stat("Lowest", fmt(lo)); stat("Highest", fmt(hi))

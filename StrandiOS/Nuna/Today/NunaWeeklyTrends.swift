@@ -22,6 +22,8 @@ struct NunaWeeklyTrendCard: View {
     /// Per reading (and whether it is the last day): the fill of a bar and the colour of its figure, for a score whose colour follows its value.
     var barFill: ((Double, Bool) -> Color)?
     var labelFill: ((Double, Bool) -> Color)?
+    /// Opens this screen instead of the metric's own page.
+    var destination: (() -> AnyView)?
     /// 0 for the week that ends today; the day picked on Today moves it.
     var endingDaysAgo = 0
 
@@ -41,7 +43,9 @@ struct NunaWeeklyTrendCard: View {
             }
         }
         Group {
-            if let metric = MetricCatalog.metric(key: key, source: source) {
+            if let destination {
+                NavigationLink { destination() } label: { card }.buttonStyle(.plain)
+            } else if let metric = MetricCatalog.metric(key: key, source: source) {
                 NavigationLink(value: NunaTodayRoute.metric(metric)) { card }.buttonStyle(.plain)
             } else {
                 card
