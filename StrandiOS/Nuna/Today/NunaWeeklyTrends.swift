@@ -285,7 +285,7 @@ struct NunaZoneWeeklyCard: View {
     private var chart: some View {
         let s = slots
         return VStack(spacing: 6) {
-            NunaZonePlot(days: s.map(\.minutes), zones: zones).frame(height: plotHeight)
+            NunaZonePlot(days: s.map(\.minutes), colors: zones.map { Self.color($0) }).frame(height: plotHeight)
             HStack(spacing: 0) {
                 ForEach(Array(s.enumerated()), id: \.offset) { i, slot in label(slot.date, last: i == s.count - 1) }
             }
@@ -308,10 +308,11 @@ struct NunaZoneWeeklyCard: View {
     }
 }
 
-private struct NunaZonePlot: View {
-    /// Minutes in each of the card's zones for each of the seven days; nil where nothing was recorded.
+struct NunaZonePlot: View {
+    /// Minutes in each stacked part for each of the seven days; nil where nothing was recorded.
     let days: [[Double]?]
-    let zones: [Int]
+    /// The colour of each part, the first at the bottom of a bar.
+    let colors: [Color]
 
     private func hm(_ minutes: Double) -> String {
         let m = Int(minutes.rounded())
@@ -342,9 +343,9 @@ private struct NunaZonePlot: View {
         let barHeight = usable * CGFloat(total / top)
         let width = size.width / 7 * 0.36
         VStack(spacing: 1) {
-            ForEach(Array(zones.enumerated().reversed()), id: \.offset) { k, z in
-                if minutes[k] > 0 {
-                    Rectangle().fill(NunaZoneWeeklyCard.color(z)).frame(height: max(1.5, usable * CGFloat(minutes[k] / top)))
+            ForEach(Array(colors.enumerated().reversed()), id: \.offset) { k, color in
+                if k < minutes.count, minutes[k] > 0 {
+                    Rectangle().fill(color).frame(height: max(1.5, usable * CGFloat(minutes[k] / top)))
                 }
             }
         }

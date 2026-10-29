@@ -15,8 +15,6 @@ struct NunaRestDetailView: View {
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @StateObject private var series = NunaSeriesModel()
     @StateObject private var model = NunaSleepModel()
-    @State private var range = 7
-    @State private var page = 0
     @State private var showCoach = false
     @State private var showInfo = false
     @AppStorage(NunaNapPrefs.autoDetectKey) private var autoNaps = true
@@ -41,20 +39,11 @@ struct NunaRestDetailView: View {
             hero
             if let night = model.night { components(night) }
             if coachEnabled, model.index == 0, router.todayDayOffset == 0, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
-            NunaTrendDetailCard(
-                caption: "Average", unit: "%",
-                readings: { days, back in series.readings(days, endingDaysAgo: back) },
-                hasOlder: { start in series.byDay.keys.min().map { Repository.localDayKey(start) > $0 } ?? false },
-                loaded: series.loaded, band: series.typicalRange,
-                lineColor: NunaPalette.rest, decimals: 0, directional: true,
-                levelChip: { v in (text: nunaRestWord(v), color: nunaRestTextColor(v)) },
-                sentence: nil, range: $range, page: $page)
-                .columns(color: nunaRestColor, top: 100, legend: AnyView(restKey))
-                .endingOn(daysAgo: nightDaysAgo)
             if let night = model.night {
-                NunaSleepNightSections(model: model, night: night, showsNeed: false)
-                // After the Body clock card, which closes the night sections.
+                NunaSleepNightSections(model: model, night: night, showsNeed: false, showsBodyClock: false)
                 insights(night)
+                weeklyTrends
+                NunaBodyClockLink()
             }
             NunaExpandRow(title: "How it's calculated", subtitle: "Four parts of the night",
                           text: "Rest adds up how long you slept against what you need (half of the score), how much of your time in bed you were asleep, the share of deep and REM sleep, and how regular your bedtime is. It is an estimate computed on this phone from your strap's data.")
@@ -104,18 +93,13 @@ struct NunaRestDetailView: View {
         let debt = stored ? min(ledgerDebt, total - healthy) : ledgerDebt
         let strain = max(total - healthy - debt, 0)
 
-        let facts = model.sleepFacts(night, debtMin: debt)
         NunaHoursVsNeededCard(asleepMin: asleep, healthyMin: healthy, strainMin: strain, debtMin: debt,
-                              percent: model.hoursVsNeeded(night), usual: model.usual { model.hoursVsNeeded($0) },
-                              note: NunaInsightText.hoursNote(asleepMin: asleep, needMin: total - debt, debtMin: debt))
-        NunaConsistencyCard(nights: consistencyNights(night), percent: model.consistency(night), usual: model.usual { model.consistency($0) },
-                            note: NunaInsightText.consistencyNote(shiftMin: facts.bedShiftMin))
+                              percent: model.hoursVsNeeded(night), usual: model.usual { model.hoursVsNeeded($0) })
+        NunaConsistencyCard(nights: consistencyNights(night), percent: model.consistency(night), usual: model.usual { model.consistency($0) })
         let total2 = max(night.wake.timeIntervalSince(night.onset), 1)
         let events = night.intervals.filter { $0.stage == .awake && $0.end - $0.start >= 60 }.map { (start: $0.start, end: $0.end) }
         NunaEfficiencyCard(asleepMin: night.asleepMin, awakeMin: night.stages.awake, events: events, totalSec: total2,
-                           percent: model.efficiency(night), usual: model.usual { model.efficiency($0) },
-                           briefAwakenings: night.daily?.disturbances,
-                           note: NunaInsightText.efficiencyNote(events: events, totalSec: total2))
+                           percent: model.efficiency(night), usual: model.usual { model.efficiency($0) })
     }
 
     /// Hours from the evening the night began: a bedtime after midnight is 24 and more, so a night is one unbroken stretch.
@@ -198,11 +182,70 @@ struct NunaRestDetailView: View {
         return String(localized: "Your Rest is \(Int(rest.rounded()))%, \(note).")
     }
 
-    private var restKey: some View {
-        NunaZoneKey(zones: [
-            (nunaRestColor(100), "85–100", "Excellent"), (nunaRestColor(75), "70–84", "Good"),
-            (nunaRestColor(60), "50–69", "Fair"), (nunaRestColor(10), "0–49", "Low"),
-        ])
+    // MARK: Weekly trends
+
+    /// A per-night figure for every stored night, by the day the night ended.
+    private func points(_ f: (NunaNight) -> Double?) -> [(day: String, value: Double)] {
+        model.nights.compactMap { n in f(n).map { (n.dayKey, $0) } }
+    }
+
+    private func byDay(_ f: (NunaNight) -> Double?) -> [String: Double] {
+        Dictionary(points(f).map { ($0.day, $0.value) }, uniquingKeysWith: { a, _ in a })
+    }
+
+    /// The sleep debt as of each night, from the recurrence the ledger uses.
+    private var debtPoints: [(day: String, value: Double)] {
+        let healthy = SleepModel.debtNeedMin(days: repo.days)
+        return SleepDebt.debtSeries(series: model.nights.reversed().map { ($0.dayKey, $0.daily?.totalSleepMin ?? $0.asleepMin) }, needHours: healthy / 60)
+            .map { (day: $0.day, value: max($0.value, 0)) }
+    }
+
+    /// The week as bare cards, in the order of the reference: the score, hours against need, the restorative stages, consistency, time in bed,
+    /// efficiency and debt. A card opens the page that explains its figure.
+    private static func percent(_ v: Double) -> String { "\(Int(v.rounded()))%" }
+
+    private var bedTimes: [String: (bed: Double, wake: Double)] {
+        Dictionary(model.nights.map { n -> (String, (bed: Double, wake: Double)) in
+            let bed = hours(n.onset, evening: true)
+            var wake = hours(n.wake, evening: false)
+            if wake <= bed { wake += 24 }
+            return (n.dayKey, (bed, wake))
+        }, uniquingKeysWith: { a, _ in a })
+    }
+
+    private var stageMinutes: [String: [Double]] {
+        Dictionary(model.nights.map { ($0.dayKey, [$0.stages.rem, $0.stages.deep]) }, uniquingKeysWith: { a, _ in a })
+    }
+
+    private var weeklyTrends: some View {
+        let steel = NunaRestChart.steel
+        let ending = nightDaysAgo
+        let percent = Self.percent
+        let beds = bedTimes
+        let stages = stageMinutes
+        return VStack(alignment: .leading, spacing: 12) {
+            Text("Weekly trends").font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                .accessibilityAddTraits(.isHeader).padding(.top, 4)
+            NunaWeeklyTrendCard(title: "Sleep performance", key: "sleep_performance", style: .bars, color: steel,
+                                barFill: { _, _ in steel }, labelFill: { _, _ in steel },
+                                destination: { AnyView(NunaRestTrendView()) }, valueText: percent, endingDaysAgo: ending)
+            NunaTwoLineWeeklyCard(title: "Hours vs. needed (hours)", slept: byDay { $0.daily?.totalSleepMin ?? $0.asleepMin },
+                                  needed: byDay { model.need($0) }, endingDaysAgo: ending)
+            NunaWeeklyTrendCard(title: "Hours vs. needed (%)", key: "hours_vs_needed", style: .bars, color: steel,
+                                barFill: { _, _ in steel }, labelFill: { _, _ in steel },
+                                points: points { model.hoursVsNeeded($0) }, valueText: percent, endingDaysAgo: ending)
+            NunaStackedWeeklyCard(title: "Restorative sleep (hours)", legend: [("Deep sleep", NunaRestChart.deep), ("REM sleep", NunaRestChart.rem)],
+                                  colors: [NunaRestChart.rem, NunaRestChart.deep], byDay: stages, endingDaysAgo: ending)
+            NunaWeeklyTrendCard(title: "Sleep consistency", key: "sleep_consistency", style: .bars, color: steel,
+                                barFill: { _, _ in steel }, labelFill: { _, _ in steel },
+                                points: points { model.consistency($0) }, valueText: percent, endingDaysAgo: ending)
+            NunaTimeInBedWeeklyCard(title: "Time in bed", nights: beds, endingDaysAgo: ending)
+            NunaWeeklyTrendCard(title: "Sleep efficiency", key: "sleep_efficiency", style: .line, color: steel,
+                                points: points { model.efficiency($0) }, valueText: percent, endingDaysAgo: ending)
+            NunaWeeklyTrendCard(title: "Sleep debt", key: "sleep_debt", style: .bars, color: steel,
+                                barFill: { _, _ in steel }, labelFill: { _, _ in steel },
+                                points: debtPoints, valueText: NunaRestChart.hm, autoScale: true, endingDaysAgo: ending)
+        }
     }
 
     // MARK: What it is made of
