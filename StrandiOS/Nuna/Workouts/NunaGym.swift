@@ -696,19 +696,23 @@ struct NunaGymView: View {
                     .foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             ForEach(Array(records.prefix(5).enumerated()), id: \.offset) { _, r in
-                HStack(spacing: 12) {
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(verbatim: r.exercise).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
-                        Text(verbatim: NunaWorkoutFormat.day(r.ts)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    }
+                let match = NunaExerciseLibrary.match(r.exercise)
+                let row = HStack(spacing: 14) {
+                    NunaExerciseThumb(match, width: 82, height: 58).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    Text(verbatim: r.exercise).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).textCase(nil)
                     Spacer(minLength: 8)
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
                         Text(verbatim: LiftFormat.trim(r.kg)).font(.nuna(size: 26, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("kg").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                        Text("kg").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                     }
+                    if match != nil { Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary) }
                 }
-                .padding(.horizontal, 16).frame(height: 68).frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.horizontal, 8).padding(.trailing, 6).frame(height: 74).frame(maxWidth: .infinity, alignment: .leading)
                 .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
+                .contentShape(Rectangle())
+                if let match {
+                    NavigationLink { NunaExerciseDetailView(exerciseId: match.id, opensOnHistory: true) } label: { row }.buttonStyle(.plain)
+                } else { row }
             }
         }
     }
@@ -828,7 +832,7 @@ struct NunaGymView: View {
             }
         }
         dayVolumes = perDay
-        records = best.map { (exercise: $0.key, kg: $0.value.kg, ts: $0.value.ts) }.sorted { $0.ts > $1.ts }
+        records = best.map { (exercise: $0.key, kg: $0.value.kg, ts: $0.value.ts) }.sorted { $0.ts != $1.ts ? $0.ts > $1.ts : $0.exercise < $1.exercise }
         weekCounts = (try? await store.liftSetCounts(deviceId: repo.deviceId, fromTs: now - 7 * 86_400, toTs: now).fractional) ?? [:]
         // The sets of the last days, each with the time of its session, for the muscle map.
         var dated: [(set: LiftSetRow, at: Int)] = []
