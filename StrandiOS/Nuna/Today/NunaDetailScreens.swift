@@ -130,8 +130,7 @@ struct NunaChargeDetailView: View {
     /// The week as bare cards, one each: Charge itself, then the signals it is made of; a card opens that metric's own page.
     private var weeklyTrends: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Weekly trends").font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                .accessibilityAddTraits(.isHeader).padding(.top, 4)
+            NunaWeeklyHeading()
             NunaWeeklyTrendCard(title: "Charge", key: "recovery", style: .bars, color: NunaPalette.charge,
                                 barFill: { v, last in last ? nunaChargeColor(v) : NunaPalette.textSecondary },
                                 labelFill: { v, last in last ? nunaChargeColor(v) : NunaPalette.textPrimary },
@@ -326,8 +325,7 @@ struct NunaEffortDetailView: View {
     /// The week as bare cards, one each: Effort itself, calories, the time in each zone group, then resting heart rate.
     private var weeklyTrends: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Weekly trends").font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                .accessibilityAddTraits(.isHeader).padding(.top, 4)
+            NunaWeeklyHeading()
             NunaWeeklyTrendCard(title: "Effort", key: "strain", style: .bars, color: NunaPalette.effortModerate,
                                 barFill: { v, last in last ? nunaEffortColor(v) : NunaPalette.textSecondary },
                                 labelFill: { v, last in last ? nunaEffortColor(v) : NunaPalette.textPrimary },
