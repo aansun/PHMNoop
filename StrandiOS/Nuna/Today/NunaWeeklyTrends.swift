@@ -259,7 +259,7 @@ struct NunaZoneWeeklyCard: View {
     private let labelHeight: CGFloat = 44
 
     /// Zone 1 to 5, soft: grey-blue, blue, teal, then light and deep orange for the hard zones.
-    fileprivate static func color(_ zone: Int) -> Color {
+    static func color(_ zone: Int) -> Color {
         [Color(hex: "#A9BAC6"), Color(hex: "#4A9FC8"), Color(hex: "#5BB89A"), Color(hex: "#F5A860"), Color(hex: "#F26B2D")][min(max(zone, 0), 4)]
     }
 
