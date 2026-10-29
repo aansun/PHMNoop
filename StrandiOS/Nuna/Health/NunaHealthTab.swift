@@ -54,6 +54,13 @@ struct NunaFitnessAgeSummary: View {
         series.compactMap { r in Self.dayParser.date(from: r.day).map { PaceOfAging.Reading(time: $0.timeIntervalSince1970, fitnessAge: r.value) } }
     }
 
+    /// Calibrating for the first 90 days of readings, and while the pace is still firming up.
+    private var isCalibrating: Bool {
+        let all = readings
+        guard let first = all.first?.time, let last = all.last?.time else { return false }
+        return (last - first) / 86_400 < 90 || (PaceOfAging.compute(all)?.confidence ?? .early) != .solid
+    }
+
     private var tint: Color {
         guard let latest = series.last, profile.age > 0 else { return NunaPalette.textSecondary }
         let diff = Int((Double(profile.age) - latest.value).rounded())
@@ -64,7 +71,7 @@ struct NunaFitnessAgeSummary: View {
         VStack(spacing: 14) {
             if let latest = series.last {
                 orb(latest)
-                if (PaceOfAging.compute(readings)?.confidence ?? .early) != .solid, !calibratingHidden { calibrating }
+                if isCalibrating, !calibratingHidden { calibrating }
                 pace
             } else {
                 empty
@@ -120,7 +127,7 @@ struct NunaFitnessAgeSummary: View {
         let blue = NunaPalette.effortModerate
         return HStack(alignment: .top, spacing: 14) {
             Image(systemName: "hourglass").font(.nuna(size: 16, weight: .regular)).foregroundStyle(blue).padding(.top, 2)
-            Text("Your fitness age is calibrating, so fluctuations are normal. As more weeks of readings come in, it will stabilize.")
+            Text("Your fitness age is calibrating for its first 90 days, so fluctuations are normal. As more weeks of readings come in, it will stabilize.")
                 .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(blue).textCase(nil).fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
             Button { withAnimation(.easeOut(duration: 0.2)) { calibratingHidden = true } } label: {

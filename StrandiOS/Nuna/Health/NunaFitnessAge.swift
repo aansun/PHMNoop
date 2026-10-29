@@ -45,6 +45,8 @@ struct NunaFitnessAgeView: View {
             if let latest = series.last {
                 hero(latest)
                 paceCard
+                NunaExpandRow(title: "What the pace means", subtitle: "The scale from -1.0x to 3.0x", systemImage: "gauge.with.dots.needle.50percent",
+                              text: "-1.0x or lower: your fitness age is likely falling, a clear improvement.\n0.0x: it stays the same, even as your calendar age goes up.\n1.0x: it rises at the same speed as time, which is expected ageing.\n2.0x or higher: it rises faster than time.\nThe pace is read from your weekly fitness age over the last six months, so it moves slowly and firms up as weeks add up. It is a fitness comparison, not a medical assessment.")
                 trendCard
                 components
                 dataCard
