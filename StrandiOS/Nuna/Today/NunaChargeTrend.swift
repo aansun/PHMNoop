@@ -23,7 +23,8 @@ struct NunaSignalRow: View {
     }
 }
 
-/// The card under the ring: a soft gradient, lighter at the top, with a small notch at the top pointing up to the ring it explains.
+/// The card under the ring: a soft gradient, lighter at the top and melting into the page toward the bottom, with a small notch at the top
+/// pointing up to the ring it explains.
 struct NunaSignalPanel<Content: View>: View {
     @ViewBuilder let content: Content
 
@@ -32,9 +33,11 @@ struct NunaSignalPanel<Content: View>: View {
             NunaNotch().fill(NunaPalette.cardHighlight).frame(width: 24, height: 9)
             VStack(spacing: 0) { content }
                 .padding(.horizontal, 18).padding(.top, 4).padding(.bottom, 16)
-                .background(LinearGradient(colors: [NunaPalette.cardHighlight, NunaPalette.card], startPoint: .top, endPoint: .bottom),
+                // Lighter at the top, and by the bottom the same as the screen behind it: no edge down there, the card fades into the page.
+                .background(LinearGradient(colors: [NunaPalette.cardHighlight, NunaPalette.canvas], startPoint: .top, endPoint: .bottom),
                             in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
-                .overlay(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous).strokeBorder(NunaPalette.hairline.opacity(0.5), lineWidth: 1))
+                .overlay(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous)
+                    .strokeBorder(LinearGradient(colors: [NunaPalette.hairline.opacity(0.6), .clear], startPoint: .top, endPoint: .bottom), lineWidth: 1))
         }
     }
 }
