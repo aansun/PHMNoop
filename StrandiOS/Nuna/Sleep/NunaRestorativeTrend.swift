@@ -5,15 +5,17 @@ import StrandDesign
 
 /// The page the "Restorative sleep (hours)" card opens: the average of the window in hours and minutes, the week / month / six-month switch and
 /// date stepper, a sentence, a key (deep and REM) and the nights as bars stacked by stage on a 0 to 6 hour axis. A week writes each total over its
-/// bar; a month and six months mark the average with a dashed line and a white Avg. tag and write the last total; six months run week by week.
+/// bar; a month marks the average with a dashed line and a white Avg. tag; six months are the average of each sixth over a faint daily line with the
+/// change against the one before. Touching a bar of a week or a month shows its day and total at the top and steps the other bars back.
 struct NunaRestorativeTrendView: View {
-    /// How many days before today the page opens on: the night the Rest screen was showing.
     var endingDaysAgo = 0
 
     @EnvironmentObject private var repo: Repository
-    @StateObject private var model = NunaSleepModel()
+    @StateObject private var history = NunaSleepHistory()
     @State private var range = 7
     @State private var page = 0
+    @State private var picked: Date?
+    @State private var touchBeganOnPicked: Bool?
 
     private struct Day: Identifiable {
         let date: Date
@@ -30,43 +32,30 @@ struct NunaRestorativeTrendView: View {
         var id: String { "\(date.timeIntervalSince1970)-\(stage)" }
     }
 
-    private var cal: Calendar { Calendar.current }
-    private var windowEnd: Date { cal.date(byAdding: .day, value: -(page * range + endingDaysAgo), to: cal.startOfDay(for: Date())) ?? Date() }
-    private var windowStart: Date { cal.date(byAdding: .day, value: -(range - 1), to: windowEnd) ?? windowEnd }
+    private var win: NunaTrendWindow { NunaTrendWindow(range: range, page: page, endingDaysAgo: endingDaysAgo) }
 
     private var days: [Day] {
-        var byKey: [String: (Double, Double)] = [:]
-        for n in model.nights where n.stages.rem + n.stages.deep > 0 { byKey[n.dayKey] = (n.stages.rem / 60, n.stages.deep / 60) }
+        let w = win, cal = Calendar.current
         return (0..<range).compactMap { i in
-            guard let d = cal.date(byAdding: .day, value: i, to: windowStart), let noon = cal.date(byAdding: .hour, value: 12, to: d) else { return nil }
-            let v = byKey[Repository.localDayKey(d)]
-            return Day(date: noon, rem: v?.0, deep: v?.1)
+            guard let d = cal.date(byAdding: .day, value: i, to: w.start) else { return nil }
+            let key = Repository.localDayKey(d)
+            return Day(date: w.noon(d), rem: history.remMin[key].map { $0 / 60 }, deep: history.deepMin[key].map { $0 / 60 })
         }
-    }
-
-    private func plotted(_ all: [Day]) -> [Day] {
-        guard range > 30 else { return all }
-        var out: [Day] = []
-        for chunk in stride(from: 0, to: all.count, by: 7) {
-            let part = Array(all[chunk..<min(chunk + 7, all.count)])
-            let r = part.compactMap(\.rem), d = part.compactMap(\.deep)
-            guard !r.isEmpty, !d.isEmpty else { continue }
-            out.append(Day(date: part[part.count / 2].date, rem: r.reduce(0, +) / Double(r.count), deep: d.reduce(0, +) / Double(d.count)))
-        }
-        return out
     }
 
     private func hm(_ hours: Double) -> String { NunaRestChart.hm(hours * 60) }
 
-    private var dateLabel: String {
-        let a = DateFormatter(); a.locale = AppLanguage.activeLocale; a.setLocalizedDateFormatFromTemplate("MMM d")
-        let b = DateFormatter(); b.locale = AppLanguage.activeLocale; b.setLocalizedDateFormatFromTemplate("MMM d, yy")
-        return "\(a.string(from: windowStart)) – \(b.string(from: windowEnd))"
+    private var canGoBack: Bool {
+        guard let oldest = history.oldest else { return false }
+        return win.start > Calendar.current.startOfDay(for: oldest)
     }
 
-    private var canGoBack: Bool {
-        guard let oldest = model.nights.map(\.wakeDate).min() else { return false }
-        return windowStart > cal.startOfDay(for: oldest)
+    private func isPicked(_ date: Date) -> Bool { picked.map { Calendar.current.isDate($0, inSameDayAs: date) } ?? false }
+
+    private var pickedTitle: String {
+        guard let picked else { return "" }
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE, MMM d")
+        return f.string(from: picked)
     }
 
     var body: some View {
@@ -75,14 +64,16 @@ struct NunaRestorativeTrendView: View {
         let average: Double? = totals.isEmpty ? nil : totals.reduce(0, +) / Double(totals.count)
         NunaDetailScreen("Trend view", centersTitle: true) {
             nameBox
-            header(average)
+            header(all, average)
             Text(verbatim: sentence(average)).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                 .fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.horizontal, 2)
             key
-            chart(plotted(all), average)
+            chart(all, average)
         }
         .environment(\.nunaDetailSwitch, nil)
-        .task(id: repo.refreshSeq) { await model.load(repo: repo) }
+        .task(id: repo.refreshSeq) { await history.load(repo: repo) }
+        .onChange(of: range) { _, _ in picked = nil }
+        .onChange(of: page) { _, _ in picked = nil }
     }
 
     private var nameBox: some View {
@@ -95,19 +86,23 @@ struct NunaRestorativeTrendView: View {
         .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
     }
 
-    private func header(_ average: Double?) -> some View {
-        HStack(alignment: .top, spacing: 12) {
+    private func header(_ all: [Day], _ average: Double?) -> some View {
+        let pickedTotal: Double? = picked.flatMap { d in all.first { Calendar.current.isDate($0.date, inSameDayAs: d) }?.total }
+        let shown = pickedTotal ?? average
+        let tint = pickedTotal == nil ? NunaPalette.textPrimary : NunaRestChart.rem
+        return HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                Text("Average").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: pickedTotal == nil ? String(localized: "Average") : pickedTitle).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    .foregroundStyle(pickedTotal == nil ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(verbatim: average.map(hm) ?? "–").font(.nuna(size: 40, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                    if average != nil { Text("hr").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil) }
+                    Text(verbatim: shown.map(hm) ?? "–").font(.nuna(size: 40, weight: .semibold, design: NunaType.design)).foregroundStyle(tint)
+                    if shown != nil { Text("hr").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(tint).textCase(nil) }
                 }
             }
             Spacer(minLength: 0)
             VStack(alignment: .trailing, spacing: 14) {
                 NunaRangeSwitch(range: $range) { page = 0 }
-                NunaDateStepper(label: dateLabel, canGoBack: canGoBack, canGoForward: page > 0,
+                NunaDateStepper(label: win.label, canGoBack: canGoBack, canGoForward: page > 0,
                                 back: { page += 1 }, forward: { page = max(0, page - 1) })
             }
         }
@@ -135,27 +130,45 @@ struct NunaRestorativeTrendView: View {
 
     // MARK: Chart
 
+    private func nearest(_ x: CGFloat, _ proxy: ChartProxy, _ frame: CGRect, among bars: [Day]) -> Date? {
+        guard let touched: Date = proxy.value(atX: x - frame.minX) else { return nil }
+        return bars.filter { $0.total != nil }.min { abs($0.date.timeIntervalSince(touched)) < abs($1.date.timeIntervalSince(touched)) }?.date
+    }
+
     private func chart(_ points: [Day], _ average: Double?) -> some View {
-        let week = range == 7
-        let top = max(6, ceil(((points.compactMap(\.total).max() ?? 6) + 0.01) / 2) * 2)
+        let w = win
+        let week = range == 7, sixMonths = range > 30
+        let top = max(6, ceil((points.compactMap(\.total).max() ?? 6) / 2) * 2)
         let bars = points.filter { $0.total != nil }
-        let marked = week ? bars : bars.suffix(1).map { $0 }
+        let marked = week ? bars : (sixMonths || picked != nil ? [] : bars.suffix(1).map { $0 })
+        let segments = sixMonths ? NunaPeriodSegment.make(bars.compactMap { p in p.total.map { (p.date, $0) } }, from: w.start, to: w.end) : []
         let pieces: [Piece] = bars.flatMap { p -> [Piece] in
             [Piece(date: p.date, stage: "REM", hours: p.rem ?? 0), Piece(date: p.date, stage: "Deep", hours: p.deep ?? 0)]
         }
         return Chart {
-            ForEach(pieces) { piece in
-                BarMark(x: .value("Day", piece.date, unit: .day), y: .value("Hours", piece.hours), width: .fixed(week ? 18 : (range == 30 ? 8 : 6)))
-                    .foregroundStyle(by: .value("Stage", piece.stage))
-            }
-            if !week, let average {
-                RuleMark(y: .value("Average", average)).foregroundStyle(Color.white.opacity(0.9)).lineStyle(StrokeStyle(lineWidth: 1.2, dash: [4, 4]))
+            if sixMonths {
+                ForEach(bars) { p in
+                    LineMark(x: .value("Day", p.date), y: .value("Hours", p.total ?? 0)).foregroundStyle(Color.white.opacity(0.18))
+                        .lineStyle(StrokeStyle(lineWidth: 1.2, lineJoin: .round))
+                }
+            } else {
+                ForEach(pieces) { piece in
+                    BarMark(x: .value("Day", piece.date, unit: .day), y: .value("Hours", piece.hours), width: .fixed(week ? 18 : 8))
+                        .foregroundStyle(by: .value("Stage", piece.stage))
+                        .opacity(picked == nil || isPicked(piece.date) ? 1 : 0.3)
+                }
+                if !week, let average {
+                    RuleMark(y: .value("Average", average)).foregroundStyle(Color.white.opacity(0.9)).lineStyle(StrokeStyle(lineWidth: 1.2, dash: [4, 4]))
+                }
+                if let picked {
+                    RuleMark(x: .value("Picked", picked)).foregroundStyle(Color.white.opacity(0.85)).lineStyle(StrokeStyle(lineWidth: 1, dash: [2, 3]))
+                }
             }
         }
         .chartForegroundStyleScale(["REM": NunaRestChart.rem, "Deep": NunaRestChart.deep])
         .chartLegend(.hidden)
         .chartYScale(domain: 0...top)
-        .chartXScale(domain: windowStart...(cal.date(byAdding: .day, value: 1, to: windowEnd) ?? windowEnd))
+        .chartXScale(domain: w.domain)
         .chartYAxis {
             AxisMarks(position: .leading, values: stride(from: 0.0, through: top, by: 2.0).map { $0 }) { v in
                 AxisGridLine().foregroundStyle(NunaPalette.hairline.opacity(0.7))
@@ -168,20 +181,37 @@ struct NunaRestorativeTrendView: View {
             GeometryReader { geo in
                 if let frame = proxy.plotFrame.map({ geo[$0] }) {
                     ZStack {
-                        ForEach(marked) { p in
-                            if let t = p.total, let x = proxy.position(forX: p.date), let y = proxy.position(forY: t) {
-                                Text(verbatim: hm(t)).font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                                    .fixedSize().offset(x: !week && x > frame.width - 30 ? -16 : 0)
-                                    .position(x: frame.minX + x, y: frame.minY + y - 14)
+                        ZStack {
+                            ForEach(marked) { p in
+                                if let t = p.total, let x = proxy.position(forX: p.date), let y = proxy.position(forY: t) {
+                                    Text(verbatim: hm(t)).font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                                        .fixedSize().offset(x: !week && x > frame.width - 30 ? -16 : 0)
+                                        .position(x: frame.minX + x, y: frame.minY + y - 14)
+                                }
+                            }
+                            if sixMonths { NunaSegmentsLayer(segments: segments, proxy: proxy, frame: frame, text: { hm($0) }) }
+                            if !week, !sixMonths, let average, let y = proxy.position(forY: average) {
+                                Text("Avg.").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(Color.black)
+                                    .padding(.horizontal, 8).frame(height: 22).background(Color.white, in: RoundedRectangle(cornerRadius: 5, style: .continuous))
+                                    .position(x: frame.minX + 24, y: frame.minY + y)
+                            }
+                            ForEach(w.axisDates, id: \.self) { d in
+                                if let x = proxy.position(forX: d) { w.axisLabel(d).position(x: frame.minX + x, y: frame.maxY + 26) }
                             }
                         }
-                        if !week, let average, let y = proxy.position(forY: average) {
-                            Text("Avg.").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(Color.black)
-                                .padding(.horizontal, 8).frame(height: 22).background(Color.white, in: RoundedRectangle(cornerRadius: 5, style: .continuous))
-                                .position(x: frame.minX + 24, y: frame.minY + y)
-                        }
-                        ForEach(axisDates, id: \.self) { d in
-                            if let x = proxy.position(forX: d) { axisLabel(d).position(x: frame.minX + x, y: frame.maxY + 26) }
+                        .allowsHitTesting(false)
+                        if !sixMonths {
+                            Rectangle().fill(Color.clear).contentShape(Rectangle()).frame(width: frame.width, height: frame.height)
+                                .position(x: frame.midX, y: frame.midY)
+                                .gesture(DragGesture(minimumDistance: 0)
+                                    .onChanged { g in
+                                        if touchBeganOnPicked == nil { touchBeganOnPicked = picked.map { nearest(g.location.x, proxy, frame, among: points) == $0 } ?? false }
+                                        if let d = nearest(g.location.x, proxy, frame, among: points) { picked = d }
+                                    }
+                                    .onEnded { g in
+                                        if touchBeganOnPicked == true, abs(g.translation.width) < 6 { picked = nil }
+                                        touchBeganOnPicked = nil
+                                    })
                         }
                     }
                 }
@@ -189,42 +219,6 @@ struct NunaRestorativeTrendView: View {
         }
         .frame(height: 360)
         .accessibilityLabel(Text("Restorative sleep in hours"))
-    }
-
-    private var noons: [Date] {
-        (0..<range).compactMap { i in
-            guard let d = cal.date(byAdding: .day, value: i, to: windowStart) else { return nil }
-            return cal.date(byAdding: .hour, value: 12, to: d)
-        }
-    }
-
-    private var monthMiddles: [Date] {
-        var out: [Date] = []
-        var cursor = cal.date(from: cal.dateComponents([.year, .month], from: windowStart)) ?? windowStart
-        while cursor <= windowEnd {
-            if let mid = cal.date(byAdding: .day, value: 14, to: cursor), mid >= windowStart, mid <= windowEnd { out.append(mid) }
-            cursor = cal.date(byAdding: .month, value: 1, to: cursor) ?? windowEnd.addingTimeInterval(86_400)
-        }
-        return out
-    }
-
-    private var axisDates: [Date] {
-        switch range {
-        case 7: return noons
-        case 30: return noons.enumerated().filter { $0.offset % 7 == 0 }.map(\.element)
-        default: return monthMiddles
-        }
-    }
-
-    private func axisLabel(_ d: Date) -> some View {
-        let templates: [String] = range == 7 ? ["EEE", "d"] : (range == 30 ? ["MMM", "d"] : ["MMM"])
-        return VStack(spacing: 2) {
-            ForEach(templates, id: \.self) { t in
-                let f = DateFormatter()
-                Text(verbatim: { f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate(t); return f.string(from: d) }())
-                    .font(.nuna(size: 12.5, weight: .semibold)).textCase(nil).foregroundStyle(NunaPalette.textSecondary)
-            }
-        }
     }
 }
 #endif
