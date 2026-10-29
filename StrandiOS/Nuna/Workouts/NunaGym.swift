@@ -248,6 +248,9 @@ struct NunaGymView: View {
     @State private var records: [(exercise: String, kg: Double, ts: Int)] = []
     @State private var volRange = 30
     @State private var volPage = 0
+    /// The day whose bar is touched: its figure replaces the average at the top and the other bars step back.
+    @State private var volPicked: Date?
+    @State private var volTouchBeganOnPicked: Bool?
     @State private var loaded = false
     /// How many weeks back the history shows; 0 is this week.
     @State private var weekOffset = 0
@@ -605,50 +608,80 @@ struct NunaGymView: View {
         let top = step * max(3, ceil(most / step))
         let ticks = stride(from: 0.0, through: top, by: step).map { $0 }
         let oldest = dayVolumes.keys.min()
+        let pickedKg: Double? = volPicked.flatMap { p in days.first { cal.isDate($0.date, inSameDayAs: p) }?.kg }
+        let shown = pickedKg ?? average
+        let pickedTitle: String = {
+            guard let p = volPicked else { return "" }
+            let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE, MMM d")
+            return f.string(from: p)
+        }()
+        func nearest(_ x: CGFloat, _ proxy: ChartProxy, _ frame: CGRect) -> Date? {
+            guard let touched: Date = proxy.value(atX: x - frame.minX) else { return nil }
+            return days.min { abs($0.date.timeIntervalSince(touched)) < abs($1.date.timeIntervalSince(touched)) }?.date
+        }
+        func lit(_ d: Date) -> Bool { volPicked == nil || cal.isDate(d, inSameDayAs: volPicked!) }
         return VStack(alignment: .leading, spacing: 14) {
             Text("Total Volume Load").font(.nuna(size: 20, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Avg. volume load").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: pickedKg == nil ? String(localized: "Avg. volume load") : pickedTitle).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        .foregroundStyle(pickedKg == nil ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(verbatim: average.map { nunaThousands($0) } ?? "–").font(.nuna(size: 40, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        if average != nil { Text("kg").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil) }
+                        Text(verbatim: shown.map { nunaThousands($0) } ?? "–").font(.nuna(size: 32, weight: .semibold, design: NunaType.design))
+                            .foregroundStyle(pickedKg == nil ? NunaPalette.textPrimary : NunaPalette.effortModerate)
+                        if shown != nil { Text("kg").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(pickedKg == nil ? NunaPalette.textPrimary : NunaPalette.effortModerate).textCase(nil) }
                     }
                 }
                 Spacer(minLength: 0)
                 VStack(alignment: .trailing, spacing: 14) {
-                    NunaRangeSwitch(choices: [(30, "M"), (180, "6M")], range: $volRange) { volPage = 0 }
+                    NunaRangeSwitch(choices: [(30, "M"), (180, "6M")], range: $volRange) { volPage = 0; volPicked = nil }
                     NunaDateStepper(label: w.label, canGoBack: oldest.map { w.start > cal.startOfDay(for: $0) } ?? false, canGoForward: volPage > 0,
-                                    back: { volPage += 1 }, forward: { volPage = max(0, volPage - 1) })
+                                    back: { volPage += 1; volPicked = nil }, forward: { volPage = max(0, volPage - 1); volPicked = nil })
                 }
             }
             Chart {
                 ForEach(days, id: \.date) { d in
-                    BarMark(x: .value("Day", d.date, unit: .day), y: .value("kg", d.kg), width: .fixed(volRange == 30 ? 6 : 3))
-                        .foregroundStyle(NunaPalette.effortModerate).cornerRadius(2)
+                    BarMark(x: .value("Day", d.date, unit: .day), y: .value("kg", d.kg), width: .fixed(volRange == 30 ? 8 : 3))
+                        .foregroundStyle(NunaPalette.effortModerate).cornerRadius(1.5).opacity(lit(d.date) ? 1 : 0.3)
+                }
+                if let p = volPicked, days.contains(where: { cal.isDate($0.date, inSameDayAs: p) }) {
+                    RuleMark(x: .value("Picked", w.noon(p))).foregroundStyle(Color.white.opacity(0.85)).lineStyle(StrokeStyle(lineWidth: 1, dash: [2, 3]))
                 }
             }
             .chartYScale(domain: 0...top)
             .chartXScale(domain: w.domain)
             .chartYAxis {
                 AxisMarks(position: .leading, values: ticks) { v in
-                    AxisGridLine().foregroundStyle(NunaPalette.hairline.opacity(0.7))
-                    AxisValueLabel { if let d = v.as(Double.self) { Text(verbatim: nunaThousands(d)).font(.nuna(size: 12, weight: .heavy)).foregroundStyle(NunaPalette.textMuted) } }
+                    AxisGridLine(stroke: StrokeStyle(lineWidth: 1)).foregroundStyle(Color.white.opacity(0.09))
+                    AxisValueLabel { if let d = v.as(Double.self) { Text(verbatim: nunaThousands(d)).font(.nuna(size: 11.5, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textMuted) } }
                 }
             }
             .chartXAxis(.hidden)
-            .chartPlotStyle { $0.padding(.bottom, 50) }
+            .chartPlotStyle { $0.padding(.bottom, 46) }
             .chartOverlay { proxy in
                 GeometryReader { geo in
                     if let frame = proxy.plotFrame.map({ geo[$0] }) {
-                        ForEach(w.axisDates, id: \.self) { d in
-                            if let x = proxy.position(forX: d) { w.axisLabel(d).position(x: frame.minX + x, y: frame.maxY + 26) }
+                        ZStack {
+                            ForEach(w.axisDates, id: \.self) { d in
+                                if let x = proxy.position(forX: d) { w.axisLabel(d).position(x: frame.minX + x, y: frame.maxY + 25).allowsHitTesting(false) }
+                            }
+                            Rectangle().fill(Color.clear).contentShape(Rectangle()).frame(width: frame.width, height: frame.height)
+                                .position(x: frame.midX, y: frame.midY)
+                                .gesture(DragGesture(minimumDistance: 0)
+                                    .onChanged { g in
+                                        let hit = nearest(g.location.x, proxy, frame)
+                                        if volTouchBeganOnPicked == nil { volTouchBeganOnPicked = volPicked != nil && hit.map { cal.isDate($0, inSameDayAs: volPicked!) } == true }
+                                        if let hit { volPicked = hit }
+                                    }
+                                    .onEnded { g in
+                                        if volTouchBeganOnPicked == true, abs(g.translation.width) < 6 { volPicked = nil }
+                                        volTouchBeganOnPicked = nil
+                                    })
                         }
                     }
                 }
-                .allowsHitTesting(false)
             }
-            .frame(height: 280)
+            .frame(height: 260)
             .accessibilityLabel(Text("Total Volume Load"))
         }
     }

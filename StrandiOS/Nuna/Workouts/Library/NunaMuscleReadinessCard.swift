@@ -22,9 +22,7 @@ struct NunaMuscleReadinessCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            NunaTitleRow(title: "Muscle map") {
-                NavigationLink(value: NunaWorkoutRoute.loadMuscle) { NunaLinkLabel(text: "More details", chevron: true) }.buttonStyle(.plain)
-            }
+            NunaTitleRow(title: "Muscle map") { EmptyView() }
             NunaCard {
                 VStack(alignment: .leading, spacing: 14) {
                     if readings.isEmpty {
