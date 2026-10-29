@@ -1193,13 +1193,13 @@ struct NunaStressDetailView: View {
     @StateObject private var day = NunaTodayModel()
     @StateObject private var history = NunaStressHistory()
     @State private var sleepSpan: OverviewHRChart.SleepSpan?
-    @State private var workoutSpans: [OverviewHRChart.WorkoutSpan] = []
-    @State private var zoomDomain: ClosedRange<Date>?
+    @State private var zoomed = false
     @State private var showBreathing = false
     @State private var showCoach = false
     @State private var showInfo = false
+    @State private var showSettings = false
 
-    private func color(_ v: Double) -> Color { NunaStressBars.color(v) }
+    private func color(_ v: Double) -> Color { NunaStressBand.color(for: v) }
 
     /// Clock time of the latest reading on the curve, for today only.
     private var gaugeTime: String? {
@@ -1236,10 +1236,9 @@ struct NunaStressDetailView: View {
     var body: some View {
         let score = gaugeValue
         let tint: Color = score.map(color) ?? NunaPalette.textPrimary
-        NunaDetailScreen("Stress monitor") {
+        NunaDetailScreen("Stress monitor", trailing: AnyView(settingsButton), centersTitle: true) {
+            dayStepper
             VStack(spacing: 10) {
-                Text(day.isToday ? "Right now" : "Day average").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                    .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading)
                 NunaStressGauge(value: score, level: score.map { $0 < 1 ? "Low" : ($0 < 2 ? "Medium" : "High") },
                                 levelColor: tint, time: gaugeTime, onInfo: { withAnimation { showInfo.toggle() } })
                 if showInfo {
@@ -1247,10 +1246,14 @@ struct NunaStressDetailView: View {
                         .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
-            recoveryTiles
-            // The reading in words, then the day's curve, then Anya, then the peaks.
+            stressChart
+            ForEach(NunaStressCategory.allCases, id: \.self) { category in
+                NunaStressCategoryCard(category: category, today: reader.zones(category, selectedKey),
+                                       typical: typical(category), dateName: dateName)
+            }
+            // The reading in words, the two signals behind it, Anya, then the peaks.
             if let score { levelExplanation(score) }
-            stressChartCard
+            recoveryTiles
             if coachEnabled, let line = anyaLine(score) { NunaAnyaCard(verbatim: line) { showCoach = true } }
             if day.isToday, let curve = day.stressCurve {
                 let peaks = topPeaks(curve)
@@ -1275,10 +1278,6 @@ struct NunaStressDetailView: View {
                     }
                 }
             }
-            ForEach(NunaStressCategory.allCases, id: \.self) { category in
-                NunaStressCategoryCard(category: category, today: reader.zones(category, todayKey),
-                                       typical: typical(category), weekdayName: weekdayName, dateName: dateName)
-            }
             NunaCard(small: true, highlight: true, padding: EdgeInsets(top: 16, leading: 18, bottom: 16, trailing: 18)) {
                 HStack(spacing: 14) {
                     NunaIconTile("wind", tint: NunaPalette.charge)
@@ -1290,16 +1289,11 @@ struct NunaStressDetailView: View {
                     Button("Start") { showBreathing = true }.buttonStyle(.nuna(.primary, height: 40)).fixedSize()
                 }
             }
-            NunaCard(small: true, padding: EdgeInsets(top: 6, leading: 18, bottom: 6, trailing: 18)) {
-                NunaToggleRow("Stress monitor", subtitle: "Shown as a card on Today", isOn: cardShown)
-            }
-            NunaExpandRow(title: "How it's calculated", subtitle: "Scale 0 to 3, against your own baseline",
-                          text: "Stress compares your heart rate and heart rate variability with your own calm reference, point by point through the day. Times when you were moving are left out so exercise is not read as stress.")
         }
-        .task(id: repo.refreshSeq) {
+        .task(id: "\(repo.refreshSeq)-\(day.dayOffset)") {
             await series.load(repo: repo, key: "stress", source: "my-whoop")
             await day.load(repo: repo, profile: profile)
-            await history.ensure(days: typicalDays, repo: repo)
+            await history.ensure(days: [selectedDate] + previousDays, repo: repo)
             await loadAnnotations()
         }
         // Follows the day: the gauge and the line are re-read every minute while this screen is up.
@@ -1315,7 +1309,65 @@ struct NunaStressDetailView: View {
         .sheet(isPresented: $showCoach) {
             NunaAnyaSheet(context: "stress", metric: NunaAnyaMetric(key: "stress", source: "my-whoop", title: String(localized: "Stress"), unit: "", decimals: 1, higherIsBetter: false))
         }
+        .sheet(isPresented: $showSettings) { settingsSheet }
     }
+
+    // MARK: Header pieces
+
+    private var settingsButton: some View {
+        Button { showSettings = true } label: {
+            Image(systemName: "gearshape").font(.nuna(size: 22, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44)
+        }
+        .accessibilityLabel(Text("Settings"))
+    }
+
+    private var settingsSheet: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Stress monitor").font(.nuna(size: NunaTypeSize.h2, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).padding(.top, 22)
+            NunaCard(small: true, padding: EdgeInsets(top: 6, leading: 18, bottom: 6, trailing: 18)) {
+                NunaToggleRow("Stress monitor", subtitle: "Shown as a card on Today", isOn: cardShown)
+            }
+            NunaExpandRow(title: "How it's calculated", subtitle: "Scale 0 to 3, against your own baseline",
+                          text: "Stress compares your heart rate and heart rate variability with your own calm reference, point by point through the day. Times when you were moving are left out so exercise is not read as stress.")
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, NunaSpacing.screenH)
+        .background(NunaPalette.card.ignoresSafeArea())
+        .preferredColorScheme(NunaTheme.colorScheme)
+        .nunaSheetChrome(detents: [.medium])
+    }
+
+    /// "‹ TODAY ›": the day on show, one day back or forward.
+    private var dayStepper: some View {
+        let oldest = repo.days.first?.day ?? ""
+        let canBack = oldest < selectedKey
+        let label: String = {
+            if day.dayOffset == 0 { return String(localized: "Today") }
+            if day.dayOffset == 1 { return String(localized: "Yesterday") }
+            let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE, MMM d")
+            return f.string(from: selectedDate)
+        }()
+        return HStack(spacing: 22) {
+            Button { step(1) } label: {
+                Image(systemName: "chevron.left").font(.nuna(size: 18, weight: .heavy)).frame(width: 44, height: 40).contentShape(Rectangle())
+            }
+            .disabled(!canBack).opacity(canBack ? 1 : 0.3).accessibilityLabel(Text("Previous day"))
+            Text(verbatim: label).font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).frame(minWidth: 90)
+            Button { step(-1) } label: {
+                Image(systemName: "chevron.right").font(.nuna(size: 18, weight: .heavy)).frame(width: 44, height: 40).contentShape(Rectangle())
+            }
+            .disabled(day.dayOffset == 0).opacity(day.dayOffset == 0 ? 0.3 : 1).accessibilityLabel(Text("Next day"))
+        }
+        .buttonStyle(.plain).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity)
+    }
+
+    private func step(_ delta: Int) {
+        day.dayOffset = max(0, day.dayOffset + delta)
+        zoomed = false
+    }
+
+    private var selectedDate: Date { day.displayDate }
+    private var selectedKey: String { Repository.localDayKey(selectedDate) }
 
     // MARK: Day breakdown
 
@@ -1324,28 +1376,23 @@ struct NunaStressDetailView: View {
     private var reader: NunaStressDayReader {
         NunaStressDayReader(history: history.entries, nightly: NunaNightlyStress.merged(stored: series.byDay, days: repo.days),
                             rows: repo.days, todayKey: todayKey,
-                            today: day.stressCurve.map { NunaStressZones(hours: $0.hours) })
+                            today: day.isToday ? day.stressCurve.map { NunaStressZones(hours: $0.hours) } : nil)
     }
 
-    /// The same weekday over the four weeks before.
-    private var typicalDays: [Date] {
-        let cal = Calendar.current, start = cal.startOfDay(for: Date())
-        return (1...4).compactMap { cal.date(byAdding: .day, value: -7 * $0, to: start) }
+    /// The seven days before the one on show.
+    private var previousDays: [Date] {
+        let cal = Calendar.current, start = cal.startOfDay(for: selectedDate)
+        return (1...7).compactMap { cal.date(byAdding: .day, value: -$0, to: start) }
     }
 
     private func typical(_ category: NunaStressCategory) -> NunaStressZones? {
         let reader = self.reader
-        return NunaStressZones.mean(typicalDays.compactMap { reader.zones(category, Repository.localDayKey($0)) })
-    }
-
-    private var weekdayName: String {
-        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEEE")
-        return f.string(from: Date())
+        return NunaStressZones.mean(previousDays.compactMap { reader.zones(category, Repository.localDayKey($0)) })
     }
 
     private var dateName: String {
-        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE, d MMM")
-        return f.string(from: Date())
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE, MMM d")
+        return f.string(from: selectedDate)
     }
 
     /// "Medium stress" and why: the resting heart rate and HRV against the wearer's last month.
@@ -1393,53 +1440,26 @@ struct NunaStressDetailView: View {
         return level + " · " + vs
     }
 
-    /// The day's stress as a line from 0 to 3, in the colours of the level (cyan calm, green, then yellow), with the night marked on top and
-    /// a glyph where a workout was. Pinch to zoom and hold to read, as on the heart rate page.
-    @ViewBuilder private var stressChartCard: some View {
-        let dayStart = Repository.logicalDayStart(Date())
-        let all: [TrendPoint] = (day.stressCurve.flatMap { chartPoints($0) } ?? []).compactMap { p in
-            p.level.map { TrendPoint(date: Date(timeIntervalSince1970: TimeInterval(p.startTs)), value: min(max($0, 0), 3)) }
-        }
-        NunaCard(padding: EdgeInsets(top: 16, leading: 12, bottom: 14, trailing: 12)) {
-            VStack(alignment: .leading, spacing: 10) {
-                if all.count >= 2, let first = all.first?.date, let last = all.last?.date {
-                    OverviewHRChart(points: all, sleep: sleepSpan, workouts: workoutSpans,
-                                    gradient: Gradient(stops: [.init(color: NunaPalette.rest, location: 0), .init(color: NunaPalette.charge, location: 0.45),
-                                                               .init(color: NunaPalette.warning, location: 0.9)]),
-                                    valueRange: 0...3, xRange: first...max(last, first.addingTimeInterval(60)), height: 230, touchScrub: true,
-                                    zoomDomain: $zoomDomain, zoomBounds: dayStart...dayStart.addingTimeInterval(86_400),
-                                    valueFormat: { String(format: "%.1f", locale: AppLanguage.activeLocale, $0) },
-                                    dateFormat: { NunaSleepFormat.clock($0) })
-                    HStack(spacing: 8) {
-                        Image(systemName: zoomDomain == nil ? "arrow.up.left.and.arrow.down.right" : "arrow.down.right.and.arrow.up.left")
-                        Text(zoomDomain == nil ? "Pinch to zoom · hold to read" : "Zoomed in. Drag to pan · hold to read")
-                        Spacer()
-                        if zoomDomain != nil { Button("Reset") { zoomDomain = nil }.foregroundStyle(NunaPalette.textPrimary) }
-                    }
-                    .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                } else {
-                    Text("Calibrating").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        .frame(maxWidth: .infinity, minHeight: 160)
-                }
-            }
-        }
+    /// The day's stress as a line from 0 to 3 straight on the page, with the night marked on top and a glyph where a workout was. Hold to read,
+    /// and the magnifier narrows it to the last six hours.
+    private var stressChart: some View {
+        NunaStressMonitorChart(points: day.stressCurve.flatMap { chartPoints($0) } ?? [], workouts: day.workouts, showsNow: day.isToday,
+                               sleep: sleepSpan.map { Int($0.start.timeIntervalSince1970)...Int($0.end.timeIntervalSince1970) },
+                               zoomed: zoomed, onZoom: { withAnimation(.easeInOut(duration: 0.2)) { zoomed.toggle() } }, reads: true)
+            .frame(height: 290)
     }
 
-    /// The night and the workouts of the day on show, for the marks above the line.
+    /// The night of the day on show, for the moon and the band above the line.
     private func loadAnnotations() async {
-        let start = Repository.logicalDayStart(Date())
+        let start = Calendar.current.startOfDay(for: day.displayDate)
         let bounds = start...start.addingTimeInterval(86_400)
-        let sleeps: [OverviewHRChart.SleepSpan] = await repo.allSleepSessions(days: 3).map { s in
+        let sleeps: [OverviewHRChart.SleepSpan] = await repo.allSleepSessions(days: day.dayOffset + 3).map { s in
             let secs = max(0, s.endTs - s.effectiveStartTs)
             return .init(start: Date(timeIntervalSince1970: TimeInterval(s.effectiveStartTs)), end: Date(timeIntervalSince1970: TimeInterval(s.endTs)),
                          label: "\(secs / 3600):" + String(format: "%02d", (secs % 3600) / 60))
         }
-        let works: [OverviewHRChart.WorkoutSpan] = await repo.workoutRows(days: 3).map { w in
-            .init(start: Date(timeIntervalSince1970: TimeInterval(w.startTs)), end: Date(timeIntervalSince1970: TimeInterval(w.endTs)), symbol: sportSymbol(w.sport))
-        }
         guard !Task.isCancelled else { return }
         sleepSpan = OverviewHRChart.mainSleep(sleeps, overlapping: bounds)
-        workoutSpans = OverviewHRChart.workouts(works, overlapping: bounds)
     }
 
     /// HRV and resting heart rate, the two signals the stress read leans on: the same plain rows as the signals under Charge, with the

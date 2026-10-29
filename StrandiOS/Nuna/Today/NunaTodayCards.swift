@@ -547,11 +547,24 @@ struct NunaStressDayChart: View {
 
 /// The day's stress as a line on a 0 to 3 axis, coloured by level (teal calm, green, amber high), with the hours along the bottom and a band with its icon over
 /// every activity of the day. A dashed line and a dot close it at the latest reading.
+///
+/// On the Stress monitor page it also marks the night (a moon and a band over the hours asleep), can be held to read a value, and has a zoom
+/// button that narrows it to the last six hours.
 struct NunaStressMonitorChart: View {
     let points: [DaytimeStress.HourPoint]
     var workouts: [WorkoutRow] = []
     /// Today ends in the latest reading (a dashed line, a dot and the time in bold); a past day only ends.
     var showsNow = true
+    /// The hours asleep, as timestamps.
+    var sleep: ClosedRange<Int>?
+    /// Narrowed to the last six hours of the line.
+    var zoomed = false
+    /// Shows the zoom button and what it does.
+    var onZoom: (() -> Void)?
+    /// Hold and drag to read the value at a time.
+    var reads = false
+
+    @State private var scrubX: CGFloat?
 
     private func clock(_ ts: Int) -> String {
         let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("jmm")
@@ -563,8 +576,11 @@ struct NunaStressMonitorChart: View {
             let left: CGFloat = 38, right: CGFloat = 14, top: CGFloat = 54, bottom: CGFloat = 34
             let w = geo.size.width, h = geo.size.height
             let plot = CGRect(x: left, y: top, width: w - left - right, height: h - top - bottom)
-            let scored = points.filter { $0.level != nil }
-            let t0 = scored.first?.startTs ?? 0, t1 = max(scored.last?.startTs ?? 0, t0 + 1)
+            let allScored = points.filter { $0.level != nil }
+            let end = allScored.last?.startTs ?? 0
+            let t0 = zoomed ? max(allScored.first?.startTs ?? 0, end - 6 * 3600) : (allScored.first?.startTs ?? 0)
+            let t1 = max(end, t0 + 1)
+            let scored = allScored.filter { $0.startTs >= t0 }
             let x: (Int) -> CGFloat = { plot.minX + CGFloat($0 - t0) / CGFloat(t1 - t0) * plot.width }
             let y: (Double) -> CGFloat = { plot.maxY - CGFloat(min(max($0, 0), 3) / 3) * plot.height }
             ZStack(alignment: .topLeading) {
@@ -583,6 +599,16 @@ struct NunaStressMonitorChart: View {
                     }
                     Text(verbatim: clock(t0)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         .fixedSize().position(x: plot.minX + 14, y: plot.maxY + 22)
+                    if let sleep {
+                        let a = max(sleep.lowerBound, t0), b = min(sleep.upperBound, t1)
+                        if b > a {
+                            let x0 = x(a), width = max(x(b) - x0, 6)
+                            Rectangle().fill(Color.white.opacity(0.05)).frame(width: width, height: plot.height).position(x: x0 + width / 2, y: plot.midY)
+                            Rectangle().fill(NunaRestChart.steel).frame(width: width, height: 3).position(x: x0 + width / 2, y: plot.minY)
+                            Image(systemName: "moon.fill").font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
+                                .position(x: x0 + width / 2, y: plot.minY - 22)
+                        }
+                    }
                     ForEach(Array(workouts.enumerated()), id: \.offset) { _, wo in
                         let a = max(wo.startTs, t0), b = min(wo.endTs, t1)
                         if b > a {
@@ -595,7 +621,7 @@ struct NunaStressMonitorChart: View {
                     }
                     Path { path in
                         var open = false
-                        for p in points {
+                        for p in points where p.startTs >= t0 {
                             guard let level = p.level else { open = false; continue }
                             let pt = CGPoint(x: x(p.startTs), y: y(level))
                             if open { path.addLine(to: pt) } else { path.move(to: pt); open = true }
@@ -610,16 +636,44 @@ struct NunaStressMonitorChart: View {
                         Text(verbatim: clock(t1)).font(.nuna(size: 13, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
                             .fixedSize().position(x: min(x(t1), w - 24), y: plot.maxY + 22)
                     }
+                    if let scrubX, let p = nearest(scored, to: scrubX, x: x), let level = p.level {
+                        let px = x(p.startTs), py = y(level)
+                        Rectangle().fill(NunaPalette.textPrimary.opacity(0.6)).frame(width: 1, height: plot.height).position(x: px, y: plot.midY)
+                        Circle().fill(NunaPalette.textPrimary).frame(width: 10, height: 10).position(x: px, y: py)
+                        Text(verbatim: String(format: "%.1f", locale: AppLanguage.activeLocale, level) + "  " + clock(p.startTs))
+                            .font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                            .padding(.horizontal, 10).frame(height: 26)
+                            .background(NunaPalette.card.opacity(0.95), in: Capsule())
+                            .overlay(Capsule().strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                            .position(x: min(max(px, plot.minX + 50), plot.maxX - 50), y: plot.minY - 30)
+                    }
+                    if let onZoom {
+                        Button(action: onZoom) {
+                            Image(systemName: zoomed ? "minus.magnifyingglass" : "plus.magnifyingglass").font(.nuna(size: 20, weight: .regular))
+                                .foregroundStyle(NunaPalette.textPrimary).frame(width: 46, height: 46)
+                                .background(Color.black.opacity(0.85), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        }
+                        .buttonStyle(.plain).accessibilityLabel(Text(zoomed ? "Show the whole day" : "Zoom in"))
+                        .position(x: plot.maxX - 34, y: plot.maxY - 40)
+                    }
                 } else {
                     Text("Not enough data yet").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                         .multilineTextAlignment(.center).position(x: plot.midX, y: plot.midY)
                 }
             }
+            .contentShape(Rectangle())
+            .gesture(reads ? LongPressGesture(minimumDuration: 0.2).sequenced(before: DragGesture(minimumDistance: 0))
+                .onChanged { value in if case .second(true, let drag?) = value { scrubX = drag.location.x } }
+                .onEnded { _ in scrubX = nil } : nil)
         }
         .accessibilityHidden(true)
     }
 
-    /// The whole hours divisible by four that sit at least 34 points from either end of the day.
+    private func nearest(_ pts: [DaytimeStress.HourPoint], to px: CGFloat, x: (Int) -> CGFloat) -> DaytimeStress.HourPoint? {
+        pts.min { abs(x($0.startTs) - px) < abs(x($1.startTs) - px) }
+    }
+
+    /// The whole hours divisible by four that sit well inside the day: clear of the first time (a wider berth, it is a label) and of the last.
     private func hourMarks(_ t0: Int, _ t1: Int, x: (Int) -> CGFloat, plotWidth: CGFloat) -> [Int] {
         let cal = Calendar.current
         guard let first = cal.date(bySetting: .minute, value: 0, of: Date(timeIntervalSince1970: TimeInterval(t0))) else { return [] }
@@ -627,7 +681,7 @@ struct NunaStressMonitorChart: View {
         var d = first
         while Int(d.timeIntervalSince1970) < t1 {
             let ts = Int(d.timeIntervalSince1970)
-            if cal.component(.hour, from: d) % 4 == 0, ts > t0, x(ts) - x(t0) > 34, x(t1) - x(ts) > 34 { out.append(ts) }
+            if cal.component(.hour, from: d) % 4 == 0, ts > t0, x(ts) - x(t0) > 62, x(t1) - x(ts) > 34 { out.append(ts) }
             d = cal.date(byAdding: .hour, value: 1, to: d) ?? d.addingTimeInterval(3600)
         }
         return out
