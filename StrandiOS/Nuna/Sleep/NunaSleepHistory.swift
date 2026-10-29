@@ -15,6 +15,8 @@ final class NunaSleepHistory: ObservableObject {
     @Published private(set) var needMin: [String: Double] = [:]
     @Published private(set) var consistency: [String: Double] = [:]
     @Published private(set) var efficiency: [String: Double] = [:]
+    /// Steps each day: the strap's count, with the combined and estimated series filling the days it has none.
+    @Published private(set) var steps: [String: Double] = [:]
     /// Calories burned each day: the on-device estimate, with Apple Health's active energy for the days that have none.
     @Published private(set) var calories: [String: Double] = [:]
     /// The stored Effort (0 to 100) of each day, for the Effort trend page.
@@ -53,6 +55,12 @@ final class NunaSleepHistory: ObservableObject {
         for r in await repo.appleDailyRows() { if let k = r.activeKcal, k > 0 { kcal[r.day] = k } }
         for p in await repo.exploreSeries(key: "energy_kcal", source: "my-whoop", days: 400) where p.value > 0 { kcal[p.day] = p.value }
         calories = kcal
+        var st: [String: Double] = [:]
+        for source in ["my-whoop", MetricCatalog.combinedStepsSource] {
+            for p in await repo.exploreSeries(key: "steps", source: source, days: 400) where p.value > 0 { st[p.day] = p.value }
+        }
+        for p in await repo.exploreSeries(key: "steps_est", source: "my-whoop", days: 400) where p.value > 0 && st[p.day] == nil { st[p.day] = p.value }
+        steps = st
         effort = Dictionary((await repo.exploreSeries(key: "strain", source: "my-whoop", days: 400)).map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l })
         performance = Dictionary((await repo.exploreSeries(key: "sleep_performance", source: "my-whoop", days: 400)).map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l })
         charge = Dictionary((await repo.exploreSeries(key: "recovery", source: "my-whoop", days: 400)).map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l })

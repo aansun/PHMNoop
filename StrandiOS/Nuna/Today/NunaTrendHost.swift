@@ -4,7 +4,7 @@ import StrandDesign
 
 /// Every trend page of the app, in the order the dropdown at the top of a trend page lists them: Effort, Charge and Rest, each with the readings it is made of.
 enum NunaTrendPage: String, CaseIterable, Identifiable {
-    case effort, calories, hrZonesLow, hrZonesHigh
+    case effort, steps, hrZonesLow, hrZonesHigh, calories
     case charge, hrv, rhr, respiratory
     case restPerformance, timeInBed, hoursNeededHours, hoursNeededPct, consistency, restorative, efficiency, debt
 
@@ -21,7 +21,7 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
 
     var section: Section {
         switch self {
-        case .effort, .calories, .hrZonesLow, .hrZonesHigh: return .effort
+        case .effort, .steps, .calories, .hrZonesLow, .hrZonesHigh: return .effort
         case .charge, .hrv, .rhr, .respiratory: return .charge
         default: return .rest
         }
@@ -31,6 +31,7 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         switch self {
         case .effort: return "Effort"
         case .calories: return "Calories"
+        case .steps: return "Steps"
         case .hrZonesLow: return "Heart rate zones 1–3"
         case .hrZonesHigh: return "Heart rate zones 4–5"
         case .charge: return "Charge"
@@ -52,6 +53,7 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         switch self {
         case .effort: return "dumbbell"
         case .calories: return "flame"
+        case .steps: return "figure.walk"
         case .hrZonesLow: return "heart.circle"
         case .hrZonesHigh: return "bolt.heart"
         case .charge: return "figure.mind.and.body"
@@ -74,6 +76,7 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case "rhr": return .rhr
         case "resp_rate": return .respiratory
         case "energy_kcal": return .calories
+        case "steps", "steps_est": return .steps
         case "sleep_consistency": return .consistency
         case "sleep_efficiency": return .efficiency
         case "sleep_debt", "sleep_debt_min": return .debt
@@ -86,6 +89,7 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         switch self {
         case .effort: NunaEffortScoreTrendView(endingDaysAgo: endingDaysAgo)
         case .calories: NunaCaloriesTrendView(endingDaysAgo: endingDaysAgo)
+        case .steps: NunaStepsTrendView(endingDaysAgo: endingDaysAgo)
         case .hrZonesLow: NunaEffortActivityDetailView(kind: .lowZones)
         case .hrZonesHigh: NunaEffortActivityDetailView(kind: .highZones)
         case .charge: NunaChargeScoreTrendView(endingDaysAgo: endingDaysAgo)

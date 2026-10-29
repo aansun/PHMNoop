@@ -415,10 +415,7 @@ struct NunaCaloriesTrendView: View {
 
     var body: some View { page }
 
-    private static func thousands(_ v: Double) -> String {
-        let f = NumberFormatter(); f.locale = AppLanguage.activeLocale; f.numberStyle = .decimal; f.maximumFractionDigits = 0
-        return f.string(from: NSNumber(value: v.rounded())) ?? "\(Int(v.rounded()))"
-    }
+    private static func thousands(_ v: Double) -> String { nunaThousands(v) }
 
     private var page: NunaPctTrendView {
         NunaPctTrendView(
@@ -434,6 +431,34 @@ struct NunaCaloriesTrendView: View {
                 case 30: return String(localized: "You have burned an average of \(n) calories this month. Wear your strap consistently to see how this changes over time.")
                 default: return String(localized: "During this 6-month period, you have burned an average of \(n) calories. Wear your strap consistently to see how this changes over time.")
                 }
+            },
+            showsBreakdown: false, labelsNewestInMonth: false, endingDaysAgo: endingDaysAgo)
+    }
+}
+
+/// A whole number with the grouping of the app's language ("1,785" or "1.785").
+func nunaThousands(_ v: Double) -> String {
+    let f = NumberFormatter(); f.locale = AppLanguage.activeLocale; f.numberStyle = .decimal; f.maximumFractionDigits = 0
+    return f.string(from: NSNumber(value: v.rounded())) ?? "\(Int(v.rounded()))"
+}
+
+/// "Steps": steps each day, bars in blue on a 0 to 15,000 axis (up in fives of thousands when a day goes over), the average without today.
+struct NunaStepsTrendView: View {
+    var endingDaysAgo = 0
+
+    var body: some View { page }
+
+    private var page: NunaPctTrendView {
+        NunaPctTrendView(
+            name: "Steps", icon: "figure.walk", noun: "steps", bands: [], breakdownTitle: "",
+            value: { $0.steps[$1] },
+            format: { nunaThousands($0) }, hidesUnit: true,
+            axisTicks: [0, 5000, 10000, 15000],
+            tint: NunaPalette.effortModerate, excludesToday: true,
+            customSentence: { average, range in
+                let n = nunaThousands(average)
+                let span = range == 7 ? String(localized: "the last 7 days") : (range == 30 ? String(localized: "the last 30 days") : String(localized: "the last 6 months"))
+                return String(localized: "Your average steps for \(span) is \(n). Wear your strap all day to unlock personalized insights.")
             },
             showsBreakdown: false, labelsNewestInMonth: false, endingDaysAgo: endingDaysAgo)
     }
