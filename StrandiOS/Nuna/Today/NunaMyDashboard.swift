@@ -225,4 +225,55 @@ struct NunaDashboardEditor: View {
         }
     }
 }
+
+/// My Dashboard on Today: the heading and "Customize" on the canvas, then one card per entry (icon, name, the figure with its comparison).
+struct NunaDashboardCards: View {
+    let rows: [NunaLinkRow]
+    let onCoach: () -> Void
+    let onEdit: () -> Void
+
+    var body: some View {
+        VStack(spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("My Dashboard").font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                Spacer(minLength: 8)
+                Button(action: onEdit) {
+                    HStack(spacing: 8) {
+                        Text("Customize").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        Image(systemName: "pencil").font(.nuna(size: 15, weight: .regular))
+                    }
+                    .foregroundStyle(NunaPalette.textPrimary).frame(height: 36).contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 4).padding(.bottom, 2)
+            ForEach(rows) { row in link(row) }
+        }
+    }
+
+    private func card(_ row: NunaLinkRow) -> some View {
+        NunaCard(small: true, padding: EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 18)) {
+            HStack(spacing: 14) {
+                Image(systemName: row.icon).font(.nuna(size: 20, weight: .regular)).foregroundStyle(row.tint ?? NunaPalette.textSecondary).frame(width: 30)
+                Text(verbatim: row.title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
+                Spacer(minLength: 8)
+                if let v = row.value {
+                    NunaTrendFigure(value: v, trend: row.trend, size: 20)
+                } else {
+                    Image(systemName: "chevron.right").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                }
+            }
+            .frame(height: 56)
+        }
+    }
+
+    @ViewBuilder private func link(_ row: NunaLinkRow) -> some View {
+        switch row.target.kind {
+        case .tab(let r): NavigationLink(value: r) { card(row) }.buttonStyle(.plain)
+        case .nuna(let r): NavigationLink(value: r) { card(row) }.buttonStyle(.plain)
+        case .coach: Button(action: onCoach) { card(row) }.buttonStyle(.plain)
+        }
+    }
+}
 #endif
