@@ -15,8 +15,12 @@ struct NunaHealthTabView: View {
                 NunaFitnessAgeSummary()
                 NunaHealthMonitorCard(hrv: day.hrv, restingHr: day.restingHr, spo2: day.spo2, respiratory: day.respiratory, skinTemp: day.extras["skin_temp"])
                 if day.stress != nil || day.stressCurve != nil {
-                    NunaStressCard(score: day.stress, curve: day.stressCurve, baseline: day.stressBaseline, isToday: day.isToday, workouts: day.workouts)
+                    NunaStressSummaryCard(curve: day.stressCurve, typicalMin: day.stressTypicalMin, isToday: day.isToday)
                 }
+                Text("Fitness age, the health monitor and the stress monitor are not medical devices and cannot diagnose or manage medical conditions. They do not give medical advice. Always consult your doctor about health concerns, and never delay or change medical care because of what they show.")
+                    .font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 12).frame(maxWidth: .infinity, alignment: .leading)
+                    .overlay(alignment: .top) { Rectangle().fill(NunaPalette.hairline).frame(height: 1) }
             }
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 120)
         }
@@ -330,6 +334,72 @@ struct NunaHealthMonitorCard: View {
         }
         .padding(.horizontal, 10).frame(height: 44)
         .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+
+/// The stress monitor of the Health tab: the time spent in high stress today with how it compares to a typical day of this weekday, and the day's
+/// curve beside it, ending in a dot on the latest reading.
+struct NunaStressSummaryCard: View {
+    let curve: DaytimeStress.Result?
+    /// High-stress minutes of a typical day of this weekday; nil until there are earlier days to average.
+    let typicalMin: Int?
+    var isToday = true
+
+    private var scored: Bool { curve?.hours.contains { $0.level != nil } ?? false }
+    private var highMin: Int? { scored ? curve.map(StressDayCurve.highMinutes) : nil }
+
+    private var weekday: String {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE")
+        return f.string(from: Date())
+    }
+
+    private var stressRoute: NunaTodayRoute {
+        MetricCatalog.metric(key: "stress", source: "my-whoop").map { .metric($0) } ?? .allMetrics
+    }
+
+    var body: some View {
+        NavigationLink(value: stressRoute) {
+            NunaCard(small: true) {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Text("Stress monitor").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                        Spacer(minLength: 8)
+                        Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                    }
+                    HStack(alignment: .center, spacing: 14) {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(isToday ? "Today's high stress" : "High stress")
+                                .font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                                .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                                Text(verbatim: highMin.map { String(format: "%d:%02d", $0 / 60, $0 % 60) } ?? "–")
+                                    .font(.nuna(size: 40, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(40)).foregroundStyle(NunaPalette.textPrimary)
+                                Text("hrs").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                            }
+                            comparison
+                        }
+                        .frame(width: 150, alignment: .leading)
+                        NunaStressDayChart(points: curve?.timeline ?? []).frame(height: 120)
+                    }
+                }
+            }
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// The pill under the figure: green with a down arrow when today is below a typical day of this weekday, amber with an up arrow above it.
+    @ViewBuilder private var comparison: some View {
+        if isToday, let highMin, let typicalMin {
+            let diff = highMin - typicalMin
+            let flat = abs(diff) < 5
+            let tint: Color = flat ? NunaPalette.textSecondary : (diff < 0 ? NunaPalette.charge : NunaPalette.warning)
+            HStack(spacing: 5) {
+                Image(systemName: flat ? "equal" : (diff < 0 ? "arrowtriangle.down.fill" : "arrowtriangle.up.fill")).font(.nuna(size: 9, weight: .bold))
+                Text(verbatim: String(format: String(localized: "vs. typical %@"), weekday)).font(.nuna(size: 13, weight: .bold)).lineLimit(1).minimumScaleFactor(0.7).textCase(nil)
+            }
+            .foregroundStyle(tint).padding(.horizontal, 10).frame(height: 28)
+            .background(tint.opacity(0.16), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+        }
     }
 }
 #endif
