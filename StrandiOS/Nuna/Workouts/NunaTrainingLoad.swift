@@ -217,7 +217,7 @@ struct NunaTrainingLoadView: View {
                 }
             }
             if !shown.isEmpty {
-                NunaSegmented([(value: 4, title: "4 wk"), (value: 5, title: "5 wk"), (value: 12, title: "3 mo")], selection: $weeks)
+                NunaSegmented([(value: 4, title: "4 wk"), (value: 5, title: "5 wk"), (value: 12, title: "3 mo")], selection: $weeks, onBlack: true)
                 NunaCard {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack { nunaTrendsCap("Fitness and fatigue"); Spacer(); Text("Effort scale").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }

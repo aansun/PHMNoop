@@ -45,8 +45,8 @@ private struct NunaWeekLabels: View {
                 let f = DateFormatter()
                 VStack(spacing: 2) {
                     Text(verbatim: { f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE"); return f.string(from: date) }())
-                        .font(.nuna(size: 13, weight: last ? .heavy : .semibold))
-                    Text(verbatim: String(Calendar.current.component(.day, from: date))).font(.nuna(size: 13, weight: last ? .heavy : .semibold))
+                        .font(.nuna(size: 13, weight: last ? .semibold : .regular)).textCase(nil)
+                    Text(verbatim: String(Calendar.current.component(.day, from: date))).font(.nuna(size: 13, weight: last ? .heavy : .semibold)).textCase(nil)
                 }
                 .foregroundStyle(last ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                 .frame(maxWidth: .infinity)
