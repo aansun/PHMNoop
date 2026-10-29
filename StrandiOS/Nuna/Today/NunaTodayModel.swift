@@ -40,6 +40,11 @@ final class NunaTodayModel: ObservableObject {
     @Published private(set) var stressTypicalMin: Int?
     /// The wearer's usual stress, 0 to 3, for the Stress card's arrow.
     @Published private(set) var stressBaseline: Double?
+    /// Whether the stress reading is ready or still learning the person (it needs 14 nights). While it is not ready every stress field here is
+    /// nil: nothing about stress is shown until the baseline is complete.
+    @Published private(set) var stressStatus: StressStatus = .calibrating(nights: 0)
+    /// The WHOOP-reference reading of the day on show, with its three categories (Total day, Non-activity, Sleep).
+    @Published private(set) var stressWhoop: WhoopStress.Result?
     /// Change against the previous day that has a value: HRV in ms, resting HR in bpm.
     @Published private(set) var hrvDelta: Double?
     @Published private(set) var restingHrDelta: Double?
@@ -56,8 +61,26 @@ final class NunaTodayModel: ObservableObject {
     /// Re-reads today's stress curve on its own, so the Stress card and screen follow the day without a full reload. Cheap when no new
     /// heart rate has arrived: the curve is memoised on a fingerprint of today's samples.
     func refreshStress(repo: Repository) async {
-        guard isToday, let r = await StressDayCurve.today(repo: repo, now: Date())?.result else { return }
-        if r != stressCurve { stressCurve = r }
+        guard isToday else { return }
+        let status = await StressEngine.shared.status(repo: repo)
+        let whoop = status.isReady ? await StressDayCurve.whoopToday(repo: repo, now: Date()) : nil
+        if whoop != stressWhoop || status != stressStatus { applyStress(whoop, status: status, today: true) }
+    }
+
+    /// Takes a reading (or none, while calibrating) and sets every stress field from it.
+    private func applyStress(_ w: WhoopStress.Result?, status: StressStatus, today: Bool) {
+        stressStatus = status
+        stressWhoop = w
+        guard let w else { stressCurve = nil; stress = nil; stressBaseline = nil; return }
+        stressCurve = WhoopStress.daytimeResult(w, tzOffsetSeconds: TimeZone.current.secondsFromGMT())
+        if today {
+            stress = w.current.map { min(max($0, 0), 3) }
+        } else {
+            let waking = w.epochs.filter { $0.kind == .waking }.compactMap(\.level)
+            stress = waking.isEmpty ? nil : waking.reduce(0, +) / Double(waking.count)
+        }
+        // After calibration the person's usual waking state sits at neutral, 1.5: that is what the baseline is set from.
+        stressBaseline = 1.5
     }
 
     private var selectedLogicalDay: Date {
@@ -131,7 +154,6 @@ final class NunaTodayModel: ObservableObject {
         effort = StrainScorer.effectiveEffort(live: live, stored: row?.strain)
 
         async let restA = repo.exploreSeries(key: "sleep_performance", source: "my-whoop")
-        async let stressA = repo.series(key: "stress", source: "my-whoop")
         async let stepsA = repo.exploreSeries(key: "steps_est", source: "my-whoop")
         async let appleA = repo.appleDailyRows()
         async let workoutsA = repo.workoutRows()
@@ -141,13 +163,6 @@ final class NunaTodayModel: ObservableObject {
         rest = TodayView.freshRestScore(todayValue: restByDay[key], lastDay: restSeries.last?.day,
                                         lastValue: restSeries.last?.value, isTodaySelected: today, todayKey: key)
 
-        let stored = await stressA
-        let daysSnapshot = repo.days
-        let scored = await Task.detached(priority: .utility) {
-            (StressModel(days: daysSnapshot, stored: stored)?.score, StressDayCurve.baseline(days: daysSnapshot, stored: stored))
-        }.value
-        stress = scored.0
-        stressBaseline = scored.1
 
         // Steps and calories: measured on the strap first, then Apple Health, then the on-device estimate.
         let stepsSeries = await stepsA
@@ -180,11 +195,12 @@ final class NunaTodayModel: ObservableObject {
         }
         if let c = apple.filter({ $0.day == prevKey }).compactMap({ $0.activeKcal }).max() ?? prevDay?.activeKcalEst { prev["calories"] = c }
         if let m = repo.days.last(where: { $0.day < key && $0.totalSleepMin != nil })?.totalSleepMin { prev["sleep"] = m }
-        if let s = stored.last(where: { $0.day < key })?.value { prev["stress"] = s }
         previous = prev
         // The curve is scored as of "now" for today and as of the end of the day for a past day.
         let curveNow = today ? Date() : (cal.date(byAdding: .second, value: -1, to: cal.date(byAdding: .day, value: 1, to: dayStart) ?? dayStart) ?? dayStart)
-        stressCurve = await StressDayCurve.today(repo: repo, now: curveNow)?.result
+        let stressState = await StressEngine.shared.status(repo: repo)
+        let whoop = stressState.isReady ? await StressDayCurve.whoopToday(repo: repo, now: curveNow) : nil
+        applyStress(whoop, status: stressState, today: today)
 
         workouts = (await workoutsA).filter { $0.startTs >= from && $0.startTs < to }
         loaded = true

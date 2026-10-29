@@ -43,4 +43,5 @@ believing a number.
 The absolute level (MAE, bias, band agreement) depends on where the simulator's truth scale sits, which is this tool's own choice.
 The tracking figures (correlation, residual SD, daily-mean correlation) do not, so read those first.
 
-`WhoopStress` is not wired to any screen and has no Kotlin twin. Add one before it is shown to anyone.
+`WhoopStress` is what the iOS app now shows (through `StressEngine`, only after 14 nights of calibration). It has no Kotlin twin yet, so Android still
+uses the previous formula.

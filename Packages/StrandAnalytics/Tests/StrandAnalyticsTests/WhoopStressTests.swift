@@ -132,4 +132,35 @@ final class WhoopStressTests: XCTestCase {
         let tuned = WhoopStress.calibrated(WhoopStress.Tuning(), from: first.epochs, baseline: b)
         XCTAssertEqual(tuned, WhoopStress.Tuning())
     }
+
+    func testCalibrationRecordRoundTripsAndKeepsTheTwoConstants() throws {
+        var t = WhoopStress.Tuning(); t.wakeHROffsetBPM = 17.5; t.wakeHRVRatio = 0.8
+        let c = WhoopStress.Calibration(baseline: baseline, tuning: t, newestNight: "2026-10-08")
+        let back = try JSONDecoder().decode(WhoopStress.Calibration.self, from: JSONEncoder().encode(c))
+        XCTAssertEqual(back, c)
+        XCTAssertEqual(back.tuning.wakeHROffsetBPM, 17.5)
+        XCTAssertEqual(back.tuning.wakeHRVRatio, 0.8)
+        XCTAssertEqual(back.tuning.hrWeight, WhoopStress.Tuning().hrWeight, "everything else stays stock")
+    }
+
+    func testNightFiguresReadRestingHeartRateAndRMSSD() {
+        let s = stream(bpm: 54, rmssd: 80, seconds: 2 * 3600, from: t0)
+        let f = WhoopStress.nightFigures(hr: s.hr, rr: s.rr, from: t0, to: t0 + 2 * 3600)
+        XCTAssertNotNil(f)
+        XCTAssertEqual(f!.rhr, 54, accuracy: 0.5)
+        XCTAssertEqual(f!.rmssd, 80, accuracy: 4)
+        XCTAssertNil(WhoopStress.nightFigures(hr: [], rr: [], from: t0, to: t0 + 7200))
+    }
+
+    func testDaytimeResultCarriesTheHighMinutesAndAnHourlyAndHalfHourlyRead() {
+        let b = baseline
+        let s = stream(bpm: Int(b.restingHR) + 38, rmssd: exp(b.hrvLnMean) * 0.3, seconds: 3 * 3600, from: t0)
+        let r = WhoopStress.analyze(hr: s.hr, rr: s.rr, baseline: b)
+        let d = WhoopStress.daytimeResult(r)
+        XCTAssertGreaterThan(d.hours.count, 1)
+        XCTAssertGreaterThan(d.timeline.count, d.hours.count, "the half-hourly read has more points")
+        XCTAssertEqual(d.highStressMinutes, r.epochs.filter { ($0.level ?? 0) >= 2 }.count * 5)
+        XCTAssertTrue(d.sustainedHigh, "three hours of High in a row")
+        XCTAssertNotNil(d.dayMean)
+    }
 }

@@ -209,9 +209,9 @@ struct NunaMoodView: View {
             let d = cal.date(byAdding: .day, value: -i, to: Date()) ?? Date()
             return (d, byDay[Repository.localDayKey(d)])
         }
-        let stored = await repo.series(key: "stress", source: "my-whoop")
         let days = repo.days
-        stress = await Task.detached(priority: .utility) { StressModel(days: days, stored: stored)?.score }.value
+        // Today's stress from the WHOOP-reference reading; nothing until it is calibrated.
+        stress = await StressDayCurve.whoopToday(repo: repo)?.current
 
         func body(_ pick: (DailyMetric) -> Double?) -> [(day: String, value: Double)] {
             days.compactMap { d in pick(d).map { (day: d.day, value: $0) } }

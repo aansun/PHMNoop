@@ -45,9 +45,35 @@ enum StressDayCurve {
     /// read it: the iOS widget, which maps it into its own `StressPoint`, and the Today host card,
     /// which hands `timeline` straight to `DaytimeLoadLine`. Keeping the widget's type here would have
     /// kept this file iOS-only, and the Today card is shared with macOS.
+    /// Today's stress in the shape every surface reads, from the WHOOP-reference reading (`WhoopStress`) against the person's own 14-night
+    /// baseline. Nil while that baseline is still being built: nothing about stress is shown until then (see `StressEngine`), and a caller
+    /// that persists the answer must clear what it holds rather than carry an older figure forward.
+    ///
+    /// The previous formula is kept, untouched, as `todayLegacy`.
     @MainActor
     static func today(repo: Repository, now: Date = Date(),
                       calendar: Calendar = .current) async -> (result: DaytimeStress.Result, day: Int)? {
+        guard let whoop = await whoopToday(repo: repo, now: now, calendar: calendar) else { return nil }
+        let tz = calendar.timeZone.secondsFromGMT(for: now)
+        return (WhoopStress.daytimeResult(whoop, tzOffsetSeconds: tz), localDayNumber(now, calendar: calendar))
+    }
+
+    /// The full WHOOP-reference reading of the calendar day `now` falls in, up to `now`: every epoch, with the three categories. Nil while
+    /// calibrating.
+    @MainActor
+    static func whoopToday(repo: Repository, now: Date = Date(), calendar: Calendar = .current) async -> WhoopStress.Result? {
+        let start = calendar.startOfDay(for: now)
+        return await StressEngine.shared.day(repo: repo, from: Int(start.timeIntervalSince1970), to: Int(now.timeIntervalSince1970))
+    }
+
+    /// Whether the stress reading is ready, or how many of the 14 nights it has.
+    @MainActor
+    static func status(repo: Repository) async -> StressStatus { await StressEngine.shared.status(repo: repo) }
+
+    /// The PREVIOUS formula (the day's own calm reference, hours 06:00 to 22:00), kept as it was. Not used by any screen now.
+    @MainActor
+    static func todayLegacy(repo: Repository, now: Date = Date(),
+                            calendar: Calendar = .current) async -> (result: DaytimeStress.Result, day: Int)? {
         let startOfDay = calendar.startOfDay(for: now)
         let from = Int(startOfDay.timeIntervalSince1970)
         let to = Int(now.timeIntervalSince1970)

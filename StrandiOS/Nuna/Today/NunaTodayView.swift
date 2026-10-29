@@ -748,14 +748,18 @@ struct NunaTodayView: View {
                                   sleepMinutes: model.sleepMinutes)
             }
         case .recoveryVitals:
-            if model.stress != nil || model.stressCurve != nil {
+            if !model.stressStatus.isReady {
+                // Still learning the person: no stress figure, only how far along it is.
+                if model.loaded { NunaStressCalibrationCard(nights: model.stressStatus.nights) }
+            } else if model.stress != nil || model.stressCurve != nil {
                 NunaStressCard(score: model.stress, curve: model.stressCurve, baseline: model.stressBaseline, isToday: model.isToday, workouts: model.workouts)
             }
         case .weekCompare:
             NunaWeekCompare(endDay: model.displayDate, effortScale: effortScale)
         case .vitalMonitor:
             NunaMonitorPackCard(hrv: model.hrv, restingHr: model.restingHr, spo2: model.spo2, respiratory: model.respiratory,
-                                skinTemp: model.extras["skin_temp"], stress: model.stress, stressCurve: model.stressCurve)
+                                skinTemp: model.extras["skin_temp"], stress: model.stress, stressCurve: model.stressCurve,
+                                stressNights: model.stressStatus.isReady || !model.loaded ? nil : model.stressStatus.nights)
         case .keyMetrics:
             let tiles = metricTiles
             if !tiles.isEmpty {

@@ -14,7 +14,10 @@ struct NunaHealthTabView: View {
             VStack(spacing: NunaSpacing.section) {
                 NunaFitnessAgeSummary()
                 NunaHealthMonitorCard(hrv: day.hrv, restingHr: day.restingHr, spo2: day.spo2, respiratory: day.respiratory, skinTemp: day.extras["skin_temp"])
-                if day.stress != nil || day.stressCurve != nil {
+                if !day.stressStatus.isReady {
+                    // Still learning the person: no stress figure, only how far along it is.
+                    if day.loaded { NunaStressCalibrationCard(nights: day.stressStatus.nights) }
+                } else if day.stress != nil || day.stressCurve != nil {
                     NunaStressSummaryCard(curve: day.stressCurve, typicalMin: day.stressTypicalMin, isToday: day.isToday)
                 }
                 Text("Fitness age, the health monitor and the stress monitor are not medical devices and cannot diagnose or manage medical conditions. They do not give medical advice. Always consult your doctor about health concerns, and never delay or change medical care because of what they show.")

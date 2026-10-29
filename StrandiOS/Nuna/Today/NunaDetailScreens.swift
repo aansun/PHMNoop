@@ -1189,7 +1189,6 @@ struct NunaStressDetailView: View {
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @AppStorage(NunaTodayDefaults.orderKey) private var orderRaw = ""
     @AppStorage(NunaTodayDefaults.hiddenKey) private var hiddenRaw = ""
-    @StateObject private var series = NunaSeriesModel()
     @StateObject private var day = NunaTodayModel()
     @StateObject private var history = NunaStressHistory()
     @State private var sleepSpan: OverviewHRChart.SleepSpan?
@@ -1237,12 +1236,21 @@ struct NunaStressDetailView: View {
         let score = gaugeValue
         let tint: Color = score.map(color) ?? NunaPalette.textPrimary
         NunaDetailScreen("Stress monitor", trailing: AnyView(settingsButton), centersTitle: true) {
+            if !day.stressStatus.isReady {
+                // Still learning the person: nothing about stress is shown, only how far along it is.
+                if day.loaded {
+                    NunaStressCalibrationBody(nights: day.stressStatus.nights)
+                    NunaCard(small: true, padding: EdgeInsets(top: 6, leading: 18, bottom: 6, trailing: 18)) {
+                        NunaToggleRow("Stress monitor", subtitle: "Shown as a card on Today", isOn: cardShown)
+                    }
+                }
+            } else {
             dayStepper
             VStack(spacing: 10) {
                 NunaStressGauge(value: score, level: score.map { $0 < 1 ? "Low" : ($0 < 2 ? "Medium" : "High") },
                                 levelColor: tint, time: gaugeTime, onInfo: { withAnimation { showInfo.toggle() } })
                 if showInfo {
-                    Text("0 to 3 against your own calm reference. Under 1 is low, 1 to 2 medium, above 2 high. Moments when you were moving are left out.")
+                    Text("0 to 3 against your own baseline from your last 14 nights. Under 1 is low, 1 to 2 medium, above 2 high. Exercise counts toward Total day but is eased toward neutral, and stays out of Non-activity.")
                         .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
@@ -1290,8 +1298,8 @@ struct NunaStressDetailView: View {
                 }
             }
         }
+        }
         .task(id: "\(repo.refreshSeq)-\(day.dayOffset)") {
-            await series.load(repo: repo, key: "stress", source: "my-whoop")
             await day.load(repo: repo, profile: profile)
             await history.ensure(days: [selectedDate] + previousDays, repo: repo)
             await loadAnnotations()
@@ -1328,7 +1336,7 @@ struct NunaStressDetailView: View {
                 NunaToggleRow("Stress monitor", subtitle: "Shown as a card on Today", isOn: cardShown)
             }
             NunaExpandRow(title: "How it's calculated", subtitle: "Scale 0 to 3, against your own baseline",
-                          text: "Stress compares your heart rate and heart rate variability with your own calm reference, point by point through the day. Times when you were moving are left out so exercise is not read as stress.")
+                          text: "Stress compares your heart rate and heart rate variability, every five minutes, with your own baseline from your last 14 nights. Exercise counts toward Total day but is eased toward neutral, and stays out of Non-activity, so being active is not read as being stressed. Until 14 nights are in, stress is not shown.")
             Spacer(minLength: 0)
         }
         .padding(.horizontal, NunaSpacing.screenH)
@@ -1374,9 +1382,7 @@ struct NunaStressDetailView: View {
     private var todayKey: String { Repository.localDayKey(Calendar.current.startOfDay(for: Date())) }
 
     private var reader: NunaStressDayReader {
-        NunaStressDayReader(history: history.entries, nightly: NunaNightlyStress.merged(stored: series.byDay, days: repo.days),
-                            rows: repo.days, todayKey: todayKey,
-                            today: day.isToday ? day.stressCurve.map { NunaStressZones(hours: $0.hours) } : nil)
+        NunaStressDayReader(history: history.entries, todayKey: todayKey, today: day.isToday ? day.stressWhoop : nil)
     }
 
     /// The seven days before the one on show.
@@ -1432,7 +1438,7 @@ struct NunaStressDetailView: View {
             }
             if let read = StressRead.analyze(levels: levels) { return NunaInsightText.stress(read) }
         }
-        guard let score, let base = series.baseline else { return nil }
+        guard let score, let base = day.stressBaseline else { return nil }
         let b = String(format: "%.1f", locale: AppLanguage.activeLocale, base)
         let level = score < 1 ? String(localized: "Low") : (score < 2 ? String(localized: "Medium") : String(localized: "High"))
         let vs = score < base - 0.05 ? String(localized: "Calmer than your baseline (\(b))")
