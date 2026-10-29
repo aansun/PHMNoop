@@ -340,6 +340,7 @@ struct NunaEffortDetailView: View {
                                 destination: { AnyView(NunaEffortScoreTrendView(endingDaysAgo: router.todayDayOffset)) },
                                 valueText: { UnitFormatter.effortDisplay($0, scale: scale) }, endingDaysAgo: router.todayDayOffset)
             NunaWeeklyTrendCard(title: "Calories", key: "energy_kcal", style: .bars, color: NunaPalette.effortModerate,
+                                destination: { AnyView(NunaCaloriesTrendView(endingDaysAgo: router.todayDayOffset)) },
                                 points: kcalPoints, valueText: { String(format: "%.0f", locale: AppLanguage.activeLocale, $0) }, autoScale: true,
                                 endingDaysAgo: router.todayDayOffset)
             NunaZoneWeeklyCard(title: "HR zones 1–3", zones: [0, 1, 2], byDay: zones.zonesByDay, endingDaysAgo: router.todayDayOffset,

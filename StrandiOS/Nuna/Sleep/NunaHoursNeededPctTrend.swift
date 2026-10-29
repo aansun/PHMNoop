@@ -34,6 +34,14 @@ struct NunaPctTrendView: View {
     var tint = NunaRestChart.steel
     /// The average leaves today out, a day still in progress, and a line under the chart says so.
     var excludesToday = false
+    /// The unit beside the average at the top, for a figure with its own ("Cals"); empty uses "%" or "hr".
+    var unitText = ""
+    /// The axis written out for the page (Calories: 0 to 3,000 in thousands); the sentence is its own too.
+    var customSentence: ((Double, Int) -> String)?
+    /// Hides the breakdown under the chart (a figure with no levels).
+    var showsBreakdown = true
+    /// A month writes the figure of its newest day over its bar; false leaves the bars bare (Effort, Calories).
+    var labelsNewestInMonth = true
     var endingDaysAgo = 0
 
     @EnvironmentObject private var repo: Repository
@@ -78,7 +86,7 @@ struct NunaPctTrendView: View {
                 .fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.horizontal, 2)
             chart(all, average).padding(.top, 4)
             if excludesToday, all.contains(where: { Calendar.current.isDateInToday($0.date) }) { todayNote }
-            NunaDaysBreakdown(title: breakdownTitle, bands: bands, values: values)
+            if showsBreakdown { NunaDaysBreakdown(title: breakdownTitle, bands: bands, values: values) }
         }
         .environment(\.nunaDetailSwitch, nil)
         .task(id: repo.refreshSeq) { await history.load(repo: repo) }
@@ -107,7 +115,8 @@ struct NunaPctTrendView: View {
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(verbatim: shown.map { format?($0) ?? (duration ? NunaRestChart.hm($0) : "\(Int($0.rounded()))") } ?? "–").font(.nuna(size: 40, weight: .semibold, design: NunaType.design)).foregroundStyle(tint)
                     if shown != nil, !hidesUnit {
-                        if duration { Text("hr").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(tint).textCase(nil) }
+                        if !unitText.isEmpty { Text(verbatim: unitText).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(tint).textCase(nil) }
+                        else if duration { Text("hr").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(tint).textCase(nil) }
                         else { Text("%").font(.nuna(size: 20, weight: .semibold, design: NunaType.design)).foregroundStyle(tint) }
                     }
                 }
@@ -138,6 +147,7 @@ struct NunaPctTrendView: View {
 
     private func sentence(_ average: Double?) -> String {
         guard let average else { return String(localized: "Wear your strap to bed each night to track this over time.") }
+        if let customSentence { return customSentence(average, range) }
         let span = range == 7 ? String(localized: "this week was") : (range == 30 ? String(localized: "this month was") : String(localized: "over these six months has been"))
         return String(localized: "Your \(noun) \(span) \(fmt(average)). Wear your strap to bed each night to track how this changes over time.")
     }
@@ -205,14 +215,20 @@ struct NunaPctTrendView: View {
         let week = range == 7, sixMonths = range > 30
         let bars = points.filter { $0.value != nil }
         let lowest = bars.compactMap(\.value).min() ?? 100
+        // A fixed axis grows by its own step when a day goes past the top of it.
+        var scale = axisTicks ?? []
+        if scale.count > 1, let peak = points.compactMap(\.value).max() {
+            let gap = scale[1] - scale[0]
+            while let last = scale.last, peak > last { scale.append(last + gap) }
+        }
         let step = duration ? 60.0 : (line ? 6.0 : 25.0)
-        let top = axisTicks?.last ?? (zones != nil ? 100.0 : duration ? max(180, ceil((points.compactMap(\.value).max() ?? 180) / 60) * 60)
+        let top = scale.last ?? (zones != nil ? 100.0 : duration ? max(180, ceil((points.compactMap(\.value).max() ?? 180) / 60) * 60)
             : (line ? 100.0 : max(100, ceil((points.compactMap(\.value).max() ?? 100) / 25) * 25)))
         let bottom = line ? 100 - 6 * max(4, ceil((100 - lowest) / 6)) : 0.0
         let latest = bars.last?.date
-        let tickValues: [Double] = axisTicks ?? (zones != nil ? [0, 33, 66, 100] : stride(from: bottom, through: top, by: step).map { $0 })
+        let tickValues: [Double] = axisTicks != nil ? scale : (zones != nil ? [0, 33, 66, 100] : stride(from: bottom, through: top, by: step).map { $0 })
         let ringed: [Day] = week ? bars : (picked != nil ? [] : bars.suffix(1).map { $0 })
-        let marked = week ? bars : (sixMonths || picked != nil || zones != nil ? [] : bars.suffix(1).map { $0 })
+        let marked = week ? bars : (sixMonths || picked != nil || zones != nil || !labelsNewestInMonth ? [] : bars.suffix(1).map { $0 })
         let segments = sixMonths ? NunaPeriodSegment.make(bars.compactMap { p in p.value.map { (p.date, $0) } }, from: w.start, to: w.end) : []
         return Chart {
             if line && !sixMonths {
@@ -241,7 +257,7 @@ struct NunaPctTrendView: View {
             AxisMarks(position: .leading, values: tickValues) { v in
                 AxisGridLine().foregroundStyle(NunaPalette.hairline.opacity(0.7))
                 AxisValueLabel { if let d = v.as(Double.self) {
-                    Text(verbatim: duration ? NunaRestChart.hm(d) : (axisTicks != nil ? "\(Int(d))" : "\(Int(d))%")).font(.nuna(size: 12, weight: .heavy))
+                    Text(verbatim: duration ? NunaRestChart.hm(d) : (axisTicks != nil ? (format?(d) ?? "\(Int(d))") : "\(Int(d))%")).font(.nuna(size: 12, weight: .heavy))
                         .foregroundStyle(zones.map { $0(d == 0 ? 1 : d) } ?? NunaPalette.textMuted)
                 } }
             }
@@ -395,7 +411,37 @@ struct NunaEffortScoreTrendView: View {
             value: { h, day in h.effort[day].map { UnitFormatter.effortValue($0, scale: scale) } },
             format: { String(format: "%.1f", $0) }, hidesUnit: true,
             axisTicks: scale == .whoop ? [0, 5, 10, 15, 21] : [0, 25, 50, 75, 100],
-            tint: blue, excludesToday: true, endingDaysAgo: endingDaysAgo)
+            tint: blue, excludesToday: true, labelsNewestInMonth: false, endingDaysAgo: endingDaysAgo)
+    }
+}
+
+/// "Calories": calories burned each day, bars in blue on a 0 to 3,000 axis (up in thousands when a day goes over), the average without today.
+struct NunaCaloriesTrendView: View {
+    var endingDaysAgo = 0
+
+    var body: some View { page }
+
+    private static func thousands(_ v: Double) -> String {
+        let f = NumberFormatter(); f.locale = AppLanguage.activeLocale; f.numberStyle = .decimal; f.maximumFractionDigits = 0
+        return f.string(from: NSNumber(value: v.rounded())) ?? "\(Int(v.rounded()))"
+    }
+
+    private var page: NunaPctTrendView {
+        NunaPctTrendView(
+            name: "Calories", icon: "flame", noun: "calories", bands: [], breakdownTitle: "",
+            value: { $0.calories[$1] },
+            format: { Self.thousands($0) }, hidesUnit: false,
+            axisTicks: [0, 1000, 2000, 3000],
+            tint: NunaPalette.effortModerate, excludesToday: true, unitText: "Cals",
+            customSentence: { average, range in
+                let n = Self.thousands(average)
+                switch range {
+                case 7: return String(localized: "Your average calories burned this week was \(n). Wear your strap consistently to see how this changes over time.")
+                case 30: return String(localized: "You have burned an average of \(n) calories this month. Wear your strap consistently to see how this changes over time.")
+                default: return String(localized: "During this 6-month period, you have burned an average of \(n) calories. Wear your strap consistently to see how this changes over time.")
+                }
+            },
+            showsBreakdown: false, labelsNewestInMonth: false, endingDaysAgo: endingDaysAgo)
     }
 }
 #endif
