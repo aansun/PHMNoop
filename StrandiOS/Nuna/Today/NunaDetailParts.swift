@@ -250,6 +250,8 @@ struct NunaScoreHero<Note: View>: View {
     var showsCaptionRow = true
     /// A word above the figure inside the ring (the score's name), light and spaced; nil leaves the ring as it was.
     var ringTitle: LocalizedStringKey?
+    /// Three short bars under the name inside the ring, the one that applies lit (poor, sufficient, optimal); nil leaves them out.
+    var ringLevel: NunaLevel?
     /// The ring's diameter (300 by default); the stroke and the figures inside scale with it.
     var ringSize: CGFloat = 300
     /// The info state, when the screen owns the button; nil keeps the hero's own.
@@ -259,10 +261,10 @@ struct NunaScoreHero<Note: View>: View {
 
     init(caption: LocalizedStringKey, chip: LocalizedStringKey? = nil, chipColor: Color? = nil, fraction: Double, number: String,
          unit: String = "", suffix: String = "", name: LocalizedStringKey, nameColor: Color? = nil, gradient: [Color]? = nil, target: ClosedRange<Double>? = nil, color: Color, hasNote: Bool = true,
-         showsCaptionRow: Bool = true, ringTitle: LocalizedStringKey? = nil, ringSize: CGFloat = 300, info: Binding<Bool>? = nil, @ViewBuilder note: () -> Note) {
+         showsCaptionRow: Bool = true, ringTitle: LocalizedStringKey? = nil, ringLevel: NunaLevel? = nil, ringSize: CGFloat = 300, info: Binding<Bool>? = nil, @ViewBuilder note: () -> Note) {
         self.caption = caption; self.chip = chip; self.chipColor = chipColor; self.fraction = fraction; self.number = number
         self.unit = unit; self.suffix = suffix; self.name = name; self.nameColor = nameColor; self.gradient = gradient; self.target = target; self.color = color; self.hasNote = hasNote; self.note = note()
-        self.showsCaptionRow = showsCaptionRow; self.ringTitle = ringTitle; self.ringSize = ringSize; self.externalInfo = info
+        self.showsCaptionRow = showsCaptionRow; self.ringTitle = ringTitle; self.ringLevel = ringLevel; self.ringSize = ringSize; self.externalInfo = info
     }
 
     var body: some View {
@@ -289,6 +291,14 @@ struct NunaScoreHero<Note: View>: View {
                     }
                     if !suffix.isEmpty { Text(verbatim: suffix).font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
                     Text(name).font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(nameColor ?? NunaPalette.textPrimary)
+                    if let ringLevel {
+                        HStack(spacing: 4) {
+                            ForEach(0..<3, id: \.self) { i in
+                                Capsule().fill(ringLevel.rawValue == i ? ringLevel.color : NunaPalette.ink.opacity(0.14)).frame(width: 22, height: 4)
+                            }
+                        }
+                        .padding(.top, 8)
+                    }
                 }
             }
             .frame(maxWidth: .infinity)
