@@ -242,7 +242,8 @@ struct NunaRestDetailView: View {
                                 barFill: { _, _ in steel }, labelFill: { _, _ in steel },
                                 destination: { AnyView(NunaConsistencyTrendView(endingDaysAgo: ending)) },
                                 points: points { model.consistency($0) }, valueText: percent, endingDaysAgo: ending)
-            NunaTimeInBedWeeklyCard(title: "Time in bed", nights: beds, endingDaysAgo: ending)
+            NunaTimeInBedWeeklyCard(title: "Time in bed", nights: beds, endingDaysAgo: ending,
+                                    destination: { AnyView(NunaTimeInBedTrendView(endingDaysAgo: ending)) })
             NunaWeeklyTrendCard(title: "Sleep efficiency", key: "sleep_efficiency", style: .line, color: steel,
                                 points: points { model.efficiency($0) }, valueText: percent, endingDaysAgo: ending)
             NunaWeeklyTrendCard(title: "Sleep debt", key: "sleep_debt", style: .bars, color: steel,
