@@ -263,55 +263,6 @@ struct NunaSleepVitalsView: View {
     }
 }
 
-// MARK: - Performance, need and debt
-
-struct NunaSleepPerformanceView: View {
-    var startIndex = 0
-    var body: some View {
-        // Performance is about the last two weeks: the night picker stops there, and so do the charts.
-        NunaSleepHost(title: "Sleep performance", startIndex: startIndex, maxNights: 14) { model in
-            if let night = model.night {
-                NunaNightPicker(model: model)
-                let hvn = model.hoursVsNeeded(night)
-                let need: Double? = model.need(night)
-                let debt = model.debtMin
-                NunaCard {
-                    HStack(spacing: 18) {
-                        NunaRingGauge(fraction: (hvn ?? 0) / 100, color: NunaPalette.rest, size: 112, lineWidth: 10) {
-                            Text(verbatim: hvn.map { "\(Int($0.rounded()))%" } ?? "–")
-                                .font(.nuna(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        }
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("Hours vs needed").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                                .foregroundStyle(NunaPalette.textSecondary)
-                            Text(verbatim: "\(NunaSleepFormat.duration(night.asleepMin)) / \(need.map { NunaSleepFormat.duration($0) } ?? "–")")
-                                .font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            if let debt, debt > 0 { NunaChip(verbatim: String(localized: "Debt \(Int(debt.rounded())) min"), color: NunaPalette.warning) }
-                        }
-                        Spacer(minLength: 0)
-                    }
-                }
-                trend("Hours vs needed, last 14 nights", model.recentPoints { model.hoursVsNeeded($0) })
-                trend("Efficiency, last 14 nights", model.recentPoints { model.efficiency($0) })
-                trend("Restorative sleep, last 14 nights", model.recentPoints { model.restorative($0) })
-                trend("Consistency, last 14 nights", model.recentPoints { model.consistency($0) })
-            }
-        }
-    }
-
-    @ViewBuilder private func trend(_ title: LocalizedStringKey, _ points: [(date: Date, value: Double)]) -> some View {
-        if !points.isEmpty {
-            NunaCard {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text(title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                        .foregroundStyle(NunaPalette.textSecondary)
-                    NunaLine2Chart(points: points, color: NunaPalette.rest, decimals: 0, height: 170)
-                }
-            }
-        }
-    }
-}
-
 // MARK: - Naps
 
 struct NunaNapView: View {

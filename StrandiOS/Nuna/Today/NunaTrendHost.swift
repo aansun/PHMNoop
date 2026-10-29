@@ -1,0 +1,207 @@
+#if os(iOS)
+import SwiftUI
+import StrandDesign
+
+/// Every trend page of the app, in the order the dropdown at the top of a trend page lists them: Effort, Charge and Rest, each with the readings it is made of.
+enum NunaTrendPage: String, CaseIterable, Identifiable {
+    case effort, calories, hrZonesLow, hrZonesHigh
+    case charge, hrv, rhr, respiratory
+    case restPerformance, timeInBed, hoursNeededHours, hoursNeededPct, consistency, restorative, efficiency, debt
+
+    var id: String { rawValue }
+
+    enum Section: CaseIterable {
+        case effort, charge, rest
+
+        var title: LocalizedStringKey {
+            switch self { case .effort: return "Effort"; case .charge: return "Charge"; case .rest: return "Rest" }
+        }
+        var pages: [NunaTrendPage] { NunaTrendPage.allCases.filter { $0.section == self } }
+    }
+
+    var section: Section {
+        switch self {
+        case .effort, .calories, .hrZonesLow, .hrZonesHigh: return .effort
+        case .charge, .hrv, .rhr, .respiratory: return .charge
+        default: return .rest
+        }
+    }
+
+    var title: LocalizedStringKey {
+        switch self {
+        case .effort: return "Effort"
+        case .calories: return "Calories"
+        case .hrZonesLow: return "Heart rate zones 1–3"
+        case .hrZonesHigh: return "Heart rate zones 4–5"
+        case .charge: return "Charge"
+        case .hrv: return "Heart rate variability"
+        case .rhr: return "Resting heart rate"
+        case .respiratory: return "Respiratory rate"
+        case .restPerformance: return "Sleep performance"
+        case .timeInBed: return "Time in bed"
+        case .hoursNeededHours: return "Hours vs. needed (hours)"
+        case .hoursNeededPct: return "Hours vs. needed (%)"
+        case .consistency: return "Sleep consistency"
+        case .restorative: return "Restorative sleep (hours)"
+        case .efficiency: return "Sleep efficiency"
+        case .debt: return "Sleep debt"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .effort: return "dumbbell"
+        case .calories: return "flame"
+        case .hrZonesLow: return "heart.circle"
+        case .hrZonesHigh: return "bolt.heart"
+        case .charge: return "figure.mind.and.body"
+        case .hrv: return "waveform.path.ecg"
+        case .rhr: return "heart"
+        case .respiratory: return "lungs"
+        case .restPerformance: return "moon"
+        case .timeInBed: return "stopwatch"
+        case .hoursNeededHours, .hoursNeededPct: return "moon"
+        case .consistency: return "calendar"
+        case .restorative, .debt: return "moon.zzz"
+        case .efficiency: return "bed.double"
+        }
+    }
+
+    /// The page a stored metric opens, when it has one of these (nil leaves the metric to its own screen).
+    static func forMetric(_ key: String) -> NunaTrendPage? {
+        switch key {
+        case "hrv": return .hrv
+        case "rhr": return .rhr
+        case "resp_rate": return .respiratory
+        case "energy_kcal": return .calories
+        case "sleep_consistency": return .consistency
+        case "sleep_efficiency": return .efficiency
+        case "sleep_debt", "sleep_debt_min": return .debt
+        case "hours_vs_needed": return .hoursNeededPct
+        default: return nil
+        }
+    }
+
+    @ViewBuilder func view(endingDaysAgo: Int) -> some View {
+        switch self {
+        case .effort: NunaEffortScoreTrendView(endingDaysAgo: endingDaysAgo)
+        case .calories: NunaCaloriesTrendView(endingDaysAgo: endingDaysAgo)
+        case .hrZonesLow: NunaEffortActivityDetailView(kind: .lowZones)
+        case .hrZonesHigh: NunaEffortActivityDetailView(kind: .highZones)
+        case .charge: NunaChargeScoreTrendView(endingDaysAgo: endingDaysAgo)
+        case .hrv: NunaLineTrendView.forMetric("hrv", endingDaysAgo: endingDaysAgo)
+        case .rhr: NunaLineTrendView.forMetric("rhr", endingDaysAgo: endingDaysAgo)
+        case .respiratory: NunaLineTrendView.forMetric("resp_rate", endingDaysAgo: endingDaysAgo)
+        case .restPerformance: NunaRestTrendView(endingDaysAgo: endingDaysAgo)
+        case .timeInBed: NunaTimeInBedTrendView(endingDaysAgo: endingDaysAgo)
+        case .hoursNeededHours: NunaHoursNeededTrendView(endingDaysAgo: endingDaysAgo)
+        case .hoursNeededPct: NunaHoursNeededPctTrendView(endingDaysAgo: endingDaysAgo)
+        case .consistency: NunaConsistencyTrendView(endingDaysAgo: endingDaysAgo)
+        case .restorative: NunaRestorativeTrendView(endingDaysAgo: endingDaysAgo)
+        case .efficiency: NunaEfficiencyTrendView(endingDaysAgo: endingDaysAgo)
+        case .debt: NunaSleepDebtTrendView(endingDaysAgo: endingDaysAgo)
+        }
+    }
+}
+
+/// What a trend page needs to draw the dropdown: the page on show, whether the list is open, and what choosing a row does.
+struct NunaTrendMenu {
+    let current: NunaTrendPage
+    @Binding var isOpen: Bool
+    let select: (NunaTrendPage) -> Void
+}
+
+private struct NunaTrendMenuKey: EnvironmentKey { static let defaultValue: NunaTrendMenu? = nil }
+
+extension EnvironmentValues {
+    var nunaTrendMenu: NunaTrendMenu? {
+        get { self[NunaTrendMenuKey.self] }
+        set { self[NunaTrendMenuKey.self] = newValue }
+    }
+}
+
+/// Holds the trend page on show. Choosing another one in the dropdown swaps it in place, so the navigation stack stays one level deep.
+struct NunaTrendHost: View {
+    @State private var page: NunaTrendPage
+    @State private var isOpen = false
+    var endingDaysAgo = 0
+
+    init(initial: NunaTrendPage, endingDaysAgo: Int = 0) {
+        _page = State(initialValue: initial)
+        self.endingDaysAgo = endingDaysAgo
+    }
+
+    var body: some View {
+        page.view(endingDaysAgo: endingDaysAgo)
+            .id(page)
+            .environment(\.nunaTrendMenu, NunaTrendMenu(current: page, isOpen: $isOpen) { next in
+                isOpen = false
+                page = next
+            })
+    }
+}
+
+/// The box that names the reading at the top of a trend page. Inside a `NunaTrendHost` it is a button with a chevron that opens the list of every
+/// trend page, grouped as Effort, Charge and Rest, the page on show lit; on its own it is only the name.
+struct NunaTrendNameBox: View {
+    let icon: String
+    let title: LocalizedStringKey
+    @Environment(\.nunaTrendMenu) private var menu
+
+    var body: some View {
+        VStack(spacing: 10) {
+            if let menu {
+                Button { withAnimation(.easeOut(duration: 0.2)) { menu.isOpen.toggle() } } label: { box(open: menu.isOpen, chevron: true) }
+                    .buttonStyle(.plain)
+                if menu.isOpen { list(menu) }
+            } else {
+                box(open: false, chevron: false)
+            }
+        }
+    }
+
+    private func box(open: Bool, chevron: Bool) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon).font(.nuna(size: 20, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
+            Text(title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+            Spacer(minLength: 0)
+            if chevron { Image(systemName: open ? "chevron.up" : "chevron.down").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary) }
+        }
+        .padding(.horizontal, 18).frame(height: 60)
+        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+        .contentShape(Rectangle())
+    }
+
+    private func list(_ menu: NunaTrendMenu) -> some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(NunaTrendPage.Section.allCases, id: \.self) { section in
+                    HStack(spacing: 14) {
+                        Text(section.title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Rectangle().fill(NunaPalette.hairline).frame(height: 1)
+                    }
+                    .padding(.horizontal, 12).padding(.top, 14).padding(.bottom, 4)
+                    ForEach(section.pages) { page in
+                        Button { menu.select(page) } label: {
+                            HStack(spacing: 14) {
+                                Image(systemName: page.icon).font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
+                                Text(page.title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                                    .lineLimit(1).minimumScaleFactor(0.8)
+                                Spacer(minLength: 0)
+                            }
+                            .padding(.horizontal, 12).frame(height: 52)
+                            .background(page == menu.current ? Color.white.opacity(0.1) : Color.clear, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            .padding(10)
+        }
+        .scrollIndicators(.hidden)
+        .frame(height: 440)
+        .background(Color.black, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+    }
+}
+#endif

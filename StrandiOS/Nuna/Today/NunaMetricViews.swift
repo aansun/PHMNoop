@@ -55,7 +55,7 @@ extension View {
             case .sleep(let i): NunaRestDetailView(startIndex: i, title: "Sleep")
             case .sleepStages(let i): NunaSleepStagesView(startIndex: i)
             case .sleepVitals(let i): NunaSleepVitalsView(startIndex: i)
-            case .sleepPerformance(let i): NunaSleepPerformanceView(startIndex: i)
+            case .sleepPerformance(let i): NunaTrendHost(initial: .restPerformance, endingDaysAgo: i)
             case .sleepNaps(let i): NunaNapView(startIndex: i)
             case .nap(let day, let start): NunaNapView(dayKey: day, napStart: start)
             case .fitnessAge: NunaFitnessAgeView()

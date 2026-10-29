@@ -102,10 +102,8 @@ struct NunaChargeDetailView: View {
         let text: (Double) -> String = { signed ? nunaSigned($0, decimals) : String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, $0) }
         let row = NunaSignalRow(title: title, icon: icon, value: value.map(text),
                                 trend: NunaTrend.make(current: value, previous: average, decimals: decimals, upIsGood: good, format: text))
-        if let page = NunaLineTrendView.forMetric(key, endingDaysAgo: router.todayDayOffset) {
-            NavigationLink { page } label: { row }.buttonStyle(.plain)
-        } else if key == "sleep_performance" {
-            NavigationLink { NunaRestTrendView(endingDaysAgo: router.todayDayOffset) } label: { row }.buttonStyle(.plain)
+        if let tp = NunaTrendPage.forMetric(key) ?? (key == "sleep_performance" ? NunaTrendPage.restPerformance : nil) {
+            NavigationLink { NunaTrendHost(initial: tp, endingDaysAgo: router.todayDayOffset) } label: { row }.buttonStyle(.plain)
         } else if let m = MetricCatalog.metric(key: key, source: "my-whoop") {
             NavigationLink(value: NunaTodayRoute.metric(m)) { row }.buttonStyle(.plain)
         } else { row }
@@ -138,15 +136,15 @@ struct NunaChargeDetailView: View {
             NunaWeeklyTrendCard(title: "Charge", key: "recovery", style: .bars, color: NunaPalette.charge,
                                 barFill: { v, last in last ? nunaChargeColor(v) : NunaPalette.textSecondary },
                                 labelFill: { v, last in last ? nunaChargeColor(v) : NunaPalette.textPrimary },
-                                destination: { AnyView(NunaChargeScoreTrendView(endingDaysAgo: router.todayDayOffset)) }, endingDaysAgo: router.todayDayOffset)
+                                destination: { AnyView(NunaTrendHost(initial: .charge, endingDaysAgo: router.todayDayOffset)) }, endingDaysAgo: router.todayDayOffset)
             NunaWeeklyTrendCard(title: "Heart rate variability", key: "hrv", style: .line, color: NunaPalette.effortModerate,
-                                destination: { AnyView(NunaLineTrendView.forMetric("hrv", endingDaysAgo: router.todayDayOffset)!) }, endingDaysAgo: router.todayDayOffset)
+                                destination: { AnyView(NunaTrendHost(initial: .hrv, endingDaysAgo: router.todayDayOffset)) }, endingDaysAgo: router.todayDayOffset)
             NunaWeeklyTrendCard(title: "Resting heart rate", key: "rhr", style: .line, color: NunaPalette.effortModerate,
-                                destination: { AnyView(NunaLineTrendView.forMetric("rhr", endingDaysAgo: router.todayDayOffset)!) }, endingDaysAgo: router.todayDayOffset)
+                                destination: { AnyView(NunaTrendHost(initial: .rhr, endingDaysAgo: router.todayDayOffset)) }, endingDaysAgo: router.todayDayOffset)
             NunaWeeklyTrendCard(title: "Respiratory rate", key: "resp_rate", style: .line, decimals: 1, color: NunaPalette.effortModerate,
-                                destination: { AnyView(NunaLineTrendView.forMetric("resp_rate", endingDaysAgo: router.todayDayOffset)!) }, endingDaysAgo: router.todayDayOffset)
+                                destination: { AnyView(NunaTrendHost(initial: .respiratory, endingDaysAgo: router.todayDayOffset)) }, endingDaysAgo: router.todayDayOffset)
             NunaWeeklyTrendCard(title: "Sleep performance", key: "sleep_performance", style: .bars, color: NunaPalette.restDeep, labelColor: NunaPalette.restText,
-                                destination: { AnyView(NunaRestTrendView(endingDaysAgo: router.todayDayOffset)) }, endingDaysAgo: router.todayDayOffset)
+                                destination: { AnyView(NunaTrendHost(initial: .restPerformance, endingDaysAgo: router.todayDayOffset)) }, endingDaysAgo: router.todayDayOffset)
             NunaWeeklyTrendCard(title: "Skin temperature", key: "skin_temp", style: .line, decimals: 1, signed: true, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
         }
     }
@@ -300,12 +298,12 @@ struct NunaEffortDetailView: View {
         }
         return NunaSignalPanel {
             VStack(spacing: 0) {
-                NavigationLink { NunaEffortActivityDetailView(kind: .lowZones) } label: {
+                NavigationLink { NunaTrendHost(initial: .hrZonesLow) } label: {
                     NunaSignalRow(title: "Heart rate zones 1–3", icon: "heart.circle", value: now.map { Self.hm($0.easy) },
                                   trend: trend(now?.easy, zones.average(easy: true, before: dayKey), good: true, format: Self.hm))
                 }.buttonStyle(.plain)
                 NunaDivider()
-                NavigationLink { NunaEffortActivityDetailView(kind: .highZones) } label: {
+                NavigationLink { NunaTrendHost(initial: .hrZonesHigh) } label: {
                     NunaSignalRow(title: "Heart rate zones 4–5", icon: "bolt.heart", value: now.map { Self.hm($0.hard) },
                                   trend: trend(now?.hard, zones.average(easy: false, before: dayKey), good: true, format: Self.hm))
                 }.buttonStyle(.plain)
@@ -337,16 +335,16 @@ struct NunaEffortDetailView: View {
             NunaWeeklyTrendCard(title: "Effort", key: "strain", style: .bars, color: NunaPalette.effortModerate,
                                 barFill: { v, last in last ? nunaEffortColor(v) : NunaPalette.textSecondary },
                                 labelFill: { v, last in last ? nunaEffortColor(v) : NunaPalette.textPrimary },
-                                destination: { AnyView(NunaEffortScoreTrendView(endingDaysAgo: router.todayDayOffset)) },
+                                destination: { AnyView(NunaTrendHost(initial: .effort, endingDaysAgo: router.todayDayOffset)) },
                                 valueText: { UnitFormatter.effortDisplay($0, scale: scale) }, endingDaysAgo: router.todayDayOffset)
             NunaWeeklyTrendCard(title: "Calories", key: "energy_kcal", style: .bars, color: NunaPalette.effortModerate,
-                                destination: { AnyView(NunaCaloriesTrendView(endingDaysAgo: router.todayDayOffset)) },
+                                destination: { AnyView(NunaTrendHost(initial: .calories, endingDaysAgo: router.todayDayOffset)) },
                                 points: kcalPoints, valueText: { String(format: "%.0f", locale: AppLanguage.activeLocale, $0) }, autoScale: true,
                                 endingDaysAgo: router.todayDayOffset)
             NunaZoneWeeklyCard(title: "HR zones 1–3", zones: [0, 1, 2], byDay: zones.zonesByDay, endingDaysAgo: router.todayDayOffset,
-                               destination: { AnyView(NunaEffortActivityDetailView(kind: .lowZones)) })
+                               destination: { AnyView(NunaTrendHost(initial: .hrZonesLow)) })
             NunaZoneWeeklyCard(title: "HR zones 4–5", zones: [3, 4], byDay: zones.zonesByDay, endingDaysAgo: router.todayDayOffset,
-                               destination: { AnyView(NunaEffortActivityDetailView(kind: .highZones)) })
+                               destination: { AnyView(NunaTrendHost(initial: .hrZonesHigh)) })
             NunaWeeklyTrendCard(title: "Resting heart rate", key: "rhr", style: .line, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
         }
     }
@@ -480,13 +478,7 @@ struct NunaEffortActivityDetailView: View {
     private var headerLabel: String { range == 7 ? String(localized: "Weekly total") : String(localized: "Avg. weekly total") }
 
     private var nameBox: some View {
-        HStack(spacing: 14) {
-            Image(systemName: kind.icon).font(.nuna(size: 20, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
-            Text(verbatim: kind.title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, 18).frame(height: 60)
-        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+        NunaTrendNameBox(icon: kind.icon, title: LocalizedStringKey(kind.title))
     }
 
     /// The zones (or the strength time) of the touched bar, top zone first, each a figure over its name.

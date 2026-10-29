@@ -95,13 +95,7 @@ struct NunaPctTrendView: View {
     }
 
     private var nameBox: some View {
-        HStack(spacing: 14) {
-            Image(systemName: icon).font(.nuna(size: 20, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
-            Text(name).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, 18).frame(height: 60)
-        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+        NunaTrendNameBox(icon: icon, title: name)
     }
 
     private func header(_ average: Double?) -> some View {

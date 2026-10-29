@@ -227,29 +227,29 @@ struct NunaRestDetailView: View {
             NunaWeeklyHeading()
             NunaWeeklyTrendCard(title: "Sleep performance", key: "sleep_performance", style: .bars, color: steel,
                                 barFill: { _, _ in steel }, labelFill: { _, _ in steel },
-                                destination: { AnyView(NunaRestTrendView(endingDaysAgo: ending)) }, valueText: percent, endingDaysAgo: ending)
+                                destination: { AnyView(NunaTrendHost(initial: .restPerformance, endingDaysAgo: ending)) }, valueText: percent, endingDaysAgo: ending)
             NunaTwoLineWeeklyCard(title: "Hours vs. needed (hours)", slept: byDay { $0.daily?.totalSleepMin ?? $0.asleepMin },
                                   needed: byDay { model.need($0) }, endingDaysAgo: ending,
-                                  destination: { AnyView(NunaHoursNeededTrendView(endingDaysAgo: ending)) })
+                                  destination: { AnyView(NunaTrendHost(initial: .hoursNeededHours, endingDaysAgo: ending)) })
             NunaWeeklyTrendCard(title: "Hours vs. needed (%)", key: "hours_vs_needed", style: .bars, color: steel,
                                 barFill: { _, _ in steel }, labelFill: { _, _ in steel },
-                                destination: { AnyView(NunaHoursNeededPctTrendView(endingDaysAgo: ending)) },
+                                destination: { AnyView(NunaTrendHost(initial: .hoursNeededPct, endingDaysAgo: ending)) },
                                 points: points { model.hoursVsNeeded($0) }, valueText: percent, endingDaysAgo: ending)
             NunaStackedWeeklyCard(title: "Restorative sleep (hours)", legend: [("Deep sleep", NunaRestChart.deep), ("REM sleep", NunaRestChart.rem)],
                                   colors: [NunaRestChart.rem, NunaRestChart.deep], byDay: stages, endingDaysAgo: ending,
-                                  destination: { AnyView(NunaRestorativeTrendView(endingDaysAgo: ending)) })
+                                  destination: { AnyView(NunaTrendHost(initial: .restorative, endingDaysAgo: ending)) })
             NunaWeeklyTrendCard(title: "Sleep consistency", key: "sleep_consistency", style: .bars, color: steel,
                                 barFill: { _, _ in steel }, labelFill: { _, _ in steel },
-                                destination: { AnyView(NunaConsistencyTrendView(endingDaysAgo: ending)) },
+                                destination: { AnyView(NunaTrendHost(initial: .consistency, endingDaysAgo: ending)) },
                                 points: points { model.consistency($0) }, valueText: percent, endingDaysAgo: ending)
             NunaTimeInBedWeeklyCard(title: "Time in bed", nights: beds, endingDaysAgo: ending,
-                                    destination: { AnyView(NunaTimeInBedTrendView(endingDaysAgo: ending)) })
+                                    destination: { AnyView(NunaTrendHost(initial: .timeInBed, endingDaysAgo: ending)) })
             NunaWeeklyTrendCard(title: "Sleep efficiency", key: "sleep_efficiency", style: .line, color: steel,
-                                destination: { AnyView(NunaEfficiencyTrendView(endingDaysAgo: ending)) },
+                                destination: { AnyView(NunaTrendHost(initial: .efficiency, endingDaysAgo: ending)) },
                                 points: points { model.efficiency($0) }, valueText: percent, endingDaysAgo: ending)
             NunaWeeklyTrendCard(title: "Sleep debt", key: "sleep_debt", style: .bars, color: steel,
                                 barFill: { _, _ in steel }, labelFill: { _, _ in steel },
-                                destination: { AnyView(NunaSleepDebtTrendView(endingDaysAgo: ending)) },
+                                destination: { AnyView(NunaTrendHost(initial: .debt, endingDaysAgo: ending)) },
                                 points: debtPoints, valueText: NunaRestChart.hm, autoScale: true, endingDaysAgo: ending)
         }
     }
@@ -258,20 +258,20 @@ struct NunaRestDetailView: View {
 
     private func components(_ night: NunaNight) -> some View {
         // The four parts of the night, each with how it reads (poor, sufficient or optimal) and its figure, on the card under the ring.
-        func row(_ title: LocalizedStringKey, _ icon: String, _ v: Double?, sufficientFrom: Double, optimalFrom: Double) -> some View {
-            NavigationLink(value: NunaTodayRoute.sleepPerformance(model.index)) {
+        func row(_ title: LocalizedStringKey, _ icon: String, _ v: Double?, sufficientFrom: Double, optimalFrom: Double, page: NunaTrendPage) -> some View {
+            NavigationLink { NunaTrendHost(initial: page, endingDaysAgo: nightDaysAgo) } label: {
                 NunaLevelRow(title: title, icon: icon, percent: v, level: v.map { NunaLevel.of($0, sufficientFrom: sufficientFrom, optimalFrom: optimalFrom) })
             }.buttonStyle(.plain)
         }
         return NunaSignalPanel {
             VStack(spacing: 0) {
-                row("Hours vs. needed", "bed.double", model.hoursVsNeeded(night), sufficientFrom: 70, optimalFrom: 85)
+                row("Hours vs. needed", "bed.double", model.hoursVsNeeded(night), sufficientFrom: 70, optimalFrom: 85, page: .hoursNeededPct)
                 NunaDivider()
-                row("Sleep consistency", "calendar", model.consistency(night), sufficientFrom: 70, optimalFrom: 80)
+                row("Sleep consistency", "calendar", model.consistency(night), sufficientFrom: 70, optimalFrom: 80, page: .consistency)
                 NunaDivider()
-                row("Sleep efficiency", "gauge.with.dots.needle.67percent", model.efficiency(night), sufficientFrom: 70, optimalFrom: 85)
+                row("Sleep efficiency", "gauge.with.dots.needle.67percent", model.efficiency(night), sufficientFrom: 70, optimalFrom: 85, page: .efficiency)
                 NunaDivider()
-                row("Restorative sleep", "moon.zzz", model.restorative(night), sufficientFrom: 50, optimalFrom: 75)
+                row("Restorative sleep", "moon.zzz", model.restorative(night), sufficientFrom: 50, optimalFrom: 75, page: .restorative)
             }
             NunaLevelLegend().padding(.top, 8)
         }
