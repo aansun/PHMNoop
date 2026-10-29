@@ -23,6 +23,9 @@ struct NunaRestDetailView: View {
     /// The journal's evening habits against this wearer's own Rest, for the night's line.
     @State private var factors: NunaSleepFactorContext?
 
+    /// The Rest ring is always this steel blue, whatever the score; the bars inside it say how the night reads.
+    private static let ringBlue = Color(hex: "#7BA4C4")
+
     private var rest: Double? { model.value("sleep_performance") ?? series.latest?.value }
 
     /// How many days before today the night on show ended, so the trend card below ends on that morning.
@@ -35,7 +38,6 @@ struct NunaRestDetailView: View {
     var body: some View {
         // The night sits in the header, as the day does on the Charge page, with the info and settings buttons at the right.
         NunaDetailScreen(restCaption, trailing: AnyView(headerButtons), centersTitle: true) {
-            if model.loaded, model.nights.count > 1 { NunaNightPicker(model: model, showsCaption: false) }
             hero
             if let night = model.night { components(night) }
             if coachEnabled, model.index == 0, router.todayDayOffset == 0, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
@@ -174,9 +176,10 @@ struct NunaRestDetailView: View {
     private var hero: some View {
         NunaScoreHero(caption: "",
                       fraction: (rest ?? 0) / 100, number: rest.map { "\(Int($0.rounded()))" } ?? "–", unit: "%",
-                      name: rest.map(nunaRestWord) ?? "Rest", nameColor: rest.map(nunaRestTextColor),
-                      color: rest.map(nunaRestColor) ?? NunaPalette.rest, hasNote: againstRecent != nil,
-                      showsCaptionRow: false, ringTitle: "Rest", ringSize: 252, info: $showInfo) {
+                      name: rest.map(nunaRestWord) ?? "Rest", nameColor: Self.ringBlue,
+                      color: Self.ringBlue, hasNote: againstRecent != nil,
+                      showsCaptionRow: false, ringTitle: "Rest", ringLevel: rest.map { NunaLevel.of($0, sufficientFrom: 70, optimalFrom: 85) },
+                      ringSize: 252, info: $showInfo) {
             if let d = againstRecent {
                 Text(verbatim: comparison(d)).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     .fixedSize(horizontal: false, vertical: true).textCase(nil)
