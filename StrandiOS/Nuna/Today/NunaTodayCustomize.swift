@@ -16,7 +16,7 @@ extension TodaySection {
         case .keyMetrics: return String(localized: "Key metrics")
         case .workouts: return String(localized: "Activity")
         case .journal: return String(localized: "Quick log")
-        case .yourCards: return String(localized: "Your cards")
+        case .yourCards: return String(localized: "My Dashboard")
         case .menstrualCycle: return String(localized: "Menstrual cycle")
         case .heartRate: return String(localized: "Heart rate")
         case .liveSession: return String(localized: "Start session")
@@ -53,7 +53,7 @@ struct NunaTodayCustomizeSheet: View {
 
     private let initialSections: EditableLayoutDraft<TodaySection>
     private let initialMetrics: EditableLayoutDraft<KeyMetric>
-    private let initialCards: EditableLayoutDraft<DashboardCard>
+    private let initialCards: EditableLayoutDraft<NunaDashItem>
     private let initialHosted: EditableLayoutDraft<HostedCard>
     private let initialDetailed: Bool
     private let initialWindow: Int
@@ -65,12 +65,13 @@ struct NunaTodayCustomizeSheet: View {
     @Binding private var keyMetricsDetailed: Bool
     @Binding private var keyMetricsWindowDays: Int
     @Binding private var dashboardCardsRaw: String
+    @Binding private var myDashboardRaw: String
     @Binding private var hostedCardsRaw: String
 
     @State private var path: [Route]
     @State private var sections: EditableLayoutDraft<TodaySection>
     @State private var metrics: EditableLayoutDraft<KeyMetric>
-    @State private var cards: EditableLayoutDraft<DashboardCard>
+    @State private var cards: EditableLayoutDraft<NunaDashItem>
     @State private var hosted: EditableLayoutDraft<HostedCard>
     @State private var detailed: Bool
     @State private var windowDays: Int
@@ -85,17 +86,17 @@ struct NunaTodayCustomizeSheet: View {
          order: [TodaySection], hidden: [TodaySection], defaultHidden: [TodaySection], defaultOrder: [TodaySection],
          sectionOrderRaw: Binding<String>, hiddenSectionsRaw: Binding<String>,
          keyMetricsRaw: Binding<String>, keyMetricsDetailed: Binding<Bool>, keyMetricsWindowDays: Binding<Int>,
-         dashboardCardsRaw: Binding<String>, hostedCardsRaw: Binding<String>) {
+         dashboardCardsRaw: Binding<String>, myDashboardRaw: Binding<String>, hostedCardsRaw: Binding<String>) {
         _sectionOrderRaw = sectionOrderRaw; _hiddenSectionsRaw = hiddenSectionsRaw
         _keyMetricsRaw = keyMetricsRaw; _keyMetricsDetailed = keyMetricsDetailed; _keyMetricsWindowDays = keyMetricsWindowDays
-        _dashboardCardsRaw = dashboardCardsRaw; _hostedCardsRaw = hostedCardsRaw
+        _dashboardCardsRaw = dashboardCardsRaw; _myDashboardRaw = myDashboardRaw; _hostedCardsRaw = hostedCardsRaw
 
         let hiddenSet = Set(hidden)
         let s = EditableLayoutDraft(visible: order.filter { !hiddenSet.contains($0) }, hidden: order.filter { hiddenSet.contains($0) })
         let dh = Set(defaultHidden)
         defaultSections = EditableLayoutDraft(visible: defaultOrder.filter { !dh.contains($0) }, hidden: defaultOrder.filter { dh.contains($0) })
         let m = EditableLayoutDraft(visible: KeyMetricPrefs.decodeEnabled(keyMetricsRaw.wrappedValue), allItems: KeyMetric.defaultOrder)
-        let c = EditableLayoutDraft(visible: NunaTodayDefaults.yourCardsEnabled(dashboardCardsRaw.wrappedValue), allItems: DashboardCard.canonicalOrder)
+        let c = EditableLayoutDraft(visible: NunaDashPrefs.items(myDashboardRaw.wrappedValue, cardsRaw: dashboardCardsRaw.wrappedValue), allItems: NunaDashItem.canonicalOrder)
         let h = EditableLayoutDraft(visible: HostedCardPrefs.decodeEnabled(hostedCardsRaw.wrappedValue), allItems: HostedCard.canonicalOrder)
         initialSections = s; initialMetrics = m; initialCards = c; initialHosted = h
         initialDetailed = keyMetricsDetailed.wrappedValue; initialWindow = keyMetricsWindowDays.wrappedValue
@@ -128,7 +129,7 @@ struct NunaTodayCustomizeSheet: View {
                     Group {
                         switch route {
                         case .keyMetrics: page(title: "Key metrics", back: leave) { metricsPage }
-                        case .yourCards: page(title: "Your cards", back: leave) { cardsPage }
+                        case .yourCards: page(title: "My Dashboard", back: leave) { cardsPage }
                         case .addedCards: page(title: "Added cards", back: leave) { hostedPage }
                         }
                     }
@@ -152,7 +153,7 @@ struct NunaTodayCustomizeSheet: View {
     @ViewBuilder private var root: some View {
         switch startRoute {
         case .keyMetrics: page(title: "Key metrics", back: leave) { metricsPage }
-        case .yourCards: page(title: "Your cards", back: leave) { cardsPage }
+        case .yourCards: page(title: "My Dashboard", back: leave) { cardsPage }
         case .addedCards: page(title: "Added cards", back: leave) { hostedPage }
         case nil: page(title: "Customize Today", back: nil) { sectionsPage }
         }
@@ -195,7 +196,8 @@ struct NunaTodayCustomizeSheet: View {
         keyMetricsRaw = KeyMetricPrefs.encode(metrics.visible)
         keyMetricsDetailed = detailed
         keyMetricsWindowDays = windowDays
-        dashboardCardsRaw = DashboardCardPrefs.encode(cards.visible)
+        myDashboardRaw = NunaDashPrefs.encode(cards.visible)
+        dashboardCardsRaw = DashboardCardPrefs.encode(cards.visible.compactMap { if case .card(let c) = $0 { return c } else { return nil } })
         hostedCardsRaw = HostedCardPrefs.encode(hosted.visible)
         dismiss()
     }
@@ -219,9 +221,7 @@ struct NunaTodayCustomizeSheet: View {
         switch s {
         case .keyMetrics: return String(localized: "\(metrics.visible.count) metrics shown")
         case .yourCards:
-            return cards.visible.contains(.stress)
-                ? String(localized: "\(cards.visible.count) cards shown · Stress included")
-                : String(localized: "\(cards.visible.count) cards shown · Stress available in Edit")
+            return String(localized: "\(cards.visible.count) cards shown")
         case .addedCards: return hosted.visible.isEmpty ? String(localized: "None added yet") : String(localized: "\(hosted.visible.count) added")
         default: return s.nunaNote
         }
@@ -247,13 +247,8 @@ struct NunaTodayCustomizeSheet: View {
     }
 
     private var cardsPage: some View {
-        NunaLayoutList(
-            draft: $cards, intro: "Pick the cards in Your cards and set their order.",
-            shownTitle: "Shown", hiddenTitle: "Available",
-            title: { $0.title }, subtitle: { $0.subtitle }, icon: { $0.icon },
-            configure: { _ in false }, onConfigure: { _ in },
-            onReset: { cards = EditableLayoutDraft(visible: DashboardCard.defaultSelection, allItems: DashboardCard.canonicalOrder) }
-        ) { EmptyView() }
+        NunaDashboardEditor(draft: $cards,
+                            onReset: { cards = EditableLayoutDraft(visible: DashboardCard.defaultSelection.map(NunaDashItem.card), allItems: NunaDashItem.canonicalOrder) })
     }
 
     private var hostedPage: some View {

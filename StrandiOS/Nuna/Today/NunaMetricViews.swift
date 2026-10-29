@@ -41,6 +41,8 @@ enum NunaTodayRoute: Hashable {
     case sleepOverview
     /// How Charge and Effort move together: the page the Last 7 days card opens.
     case chargeEffort
+    /// A trend page chosen for My Dashboard on Today.
+    case trend(NunaTrendPage)
 }
 
 extension View {
@@ -55,6 +57,7 @@ extension View {
             case .sleep(let i): NunaRestDetailView(startIndex: i, title: "Sleep")
             case .sleepStages(let i): NunaSleepStagesView(startIndex: i)
             case .sleepVitals(let i): NunaSleepVitalsView(startIndex: i)
+            case .trend(let page): NunaTrendHost(initial: page)
             case .sleepPerformance(let i): NunaTrendHost(initial: .restPerformance, endingDaysAgo: i)
             case .sleepNaps(let i): NunaNapView(startIndex: i)
             case .nap(let day, let start): NunaNapView(dayKey: day, napStart: start)
