@@ -46,7 +46,7 @@ struct NunaRestDetailView: View {
                 NunaBodyClockLink()
             }
             NunaExpandRow(title: "How it's calculated", subtitle: "Four parts of the night",
-                          text: "Rest adds up how long you slept against what you need (half of the score), how much of your time in bed you were asleep, the share of deep and REM sleep, and how regular your bedtime is. It is an estimate computed on this phone from your strap's data.")
+                          text: "Rest adds up how long you slept against what you need (half of the score), how much of your time in bed you were asleep, the share of deep and REM sleep, and how regular your bedtime is. It is an estimate computed on this phone from your strap's data.\n\nEach part has a range for Poor, Sufficient and Optimal.\n\nHours vs. needed: Optimal 85%+, Sufficient 70–85%, Poor under 70%.\nSleep consistency: Optimal 80%+, Sufficient 70–80%, Poor under 70%.\nSleep efficiency: Optimal 85%+, Sufficient 70–85%, Poor under 70%.")
         }
         .task(id: "\(repo.refreshSeq)-\(autoNaps)") {
             await series.load(repo: repo, key: "sleep_performance", source: "my-whoop")
@@ -267,9 +267,9 @@ struct NunaRestDetailView: View {
             VStack(spacing: 0) {
                 row("Hours vs. needed", "bed.double", model.hoursVsNeeded(night), sufficientFrom: 70, optimalFrom: 85)
                 NunaDivider()
-                row("Sleep consistency", "calendar", model.consistency(night), sufficientFrom: 60, optimalFrom: 80)
+                row("Sleep consistency", "calendar", model.consistency(night), sufficientFrom: 70, optimalFrom: 80)
                 NunaDivider()
-                row("Sleep efficiency", "gauge.with.dots.needle.67percent", model.efficiency(night), sufficientFrom: 75, optimalFrom: 90)
+                row("Sleep efficiency", "gauge.with.dots.needle.67percent", model.efficiency(night), sufficientFrom: 70, optimalFrom: 85)
                 NunaDivider()
                 row("Restorative sleep", "moon.zzz", model.restorative(night), sufficientFrom: 50, optimalFrom: 75)
             }
