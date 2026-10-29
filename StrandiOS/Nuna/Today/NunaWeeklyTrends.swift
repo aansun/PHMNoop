@@ -19,6 +19,9 @@ struct NunaWeeklyTrendCard: View {
     let color: Color
     /// The colour of the figures over the readings, when it should differ from the drawing's own.
     var labelColor: Color?
+    /// Per reading (and whether it is the last day): the fill of a bar and the colour of its figure, for a score whose colour follows its value.
+    var barFill: ((Double, Bool) -> Color)?
+    var labelFill: ((Double, Bool) -> Color)?
     /// 0 for the week that ends today; the day picked on Today moves it.
     var endingDaysAgo = 0
 
@@ -90,7 +93,8 @@ struct NunaWeeklyTrendCard: View {
     }
 
     private func plot(_ s: [(date: Date, value: Double?)]) -> some View {
-        NunaWeeklyPlot(values: s.map(\.value), style: style, color: color, labelColor: labelColor ?? color, label: text)
+        NunaWeeklyPlot(values: s.map(\.value), style: style, fill: barFill ?? { _, _ in color }, labelColor: labelFill ?? { _, _ in labelColor ?? color },
+                       lineColor: color, label: text)
     }
 }
 
@@ -98,8 +102,9 @@ struct NunaWeeklyTrendCard: View {
 private struct NunaWeeklyPlot: View {
     let values: [Double?]
     let style: NunaWeeklyTrendCard.Style
-    let color: Color
-    let labelColor: Color
+    let fill: (Double, Bool) -> Color
+    let labelColor: (Double, Bool) -> Color
+    let lineColor: Color
     let label: (Double) -> String
 
     private var present: [Double] { values.compactMap { $0 } }
@@ -110,8 +115,8 @@ private struct NunaWeeklyPlot: View {
             ZStack(alignment: .topLeading) {
                 grid(size)
                 if style == .line {
-                    areaShape(size).fill(LinearGradient(colors: [color.opacity(0.22), color.opacity(0.02)], startPoint: .top, endPoint: .bottom))
-                    lineShape(size).stroke(color.opacity(0.9), style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+                    areaShape(size).fill(LinearGradient(colors: [lineColor.opacity(0.22), lineColor.opacity(0.02)], startPoint: .top, endPoint: .bottom))
+                    lineShape(size).stroke(lineColor.opacity(0.9), style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
                 }
                 marks(size)
             }
@@ -189,16 +194,17 @@ private struct NunaWeeklyPlot: View {
     @ViewBuilder private func mark(_ i: Int, _ v: Double, _ size: CGSize) -> some View {
         let top = y(v, size)
         let cx = x(i, size)
+        let isLast = i == values.count - 1
         if style == .bars {
             let barHeight = max(2, size.height - top)
             UnevenRoundedRectangle(topLeadingRadius: 3, bottomLeadingRadius: 0, bottomTrailingRadius: 0, topTrailingRadius: 3, style: .continuous)
-                .fill(color).frame(width: size.width / 7 * 0.36, height: barHeight).position(x: cx, y: top + barHeight / 2)
+                .fill(fill(v, isLast)).frame(width: size.width / 7 * 0.36, height: barHeight).position(x: cx, y: top + barHeight / 2)
         } else {
-            Circle().fill(NunaPalette.canvas).overlay(Circle().strokeBorder(color, lineWidth: 2.5)).frame(width: 11, height: 11).position(x: cx, y: top)
+            Circle().fill(NunaPalette.canvas).overlay(Circle().strokeBorder(lineColor, lineWidth: 2.5)).frame(width: 11, height: 11).position(x: cx, y: top)
         }
         // The figure sits above its point, and under it at a low point, where the line comes in from both sides.
         let below = style == .line && isLow(i, v) && top + 19 < size.height - 6
-        Text(verbatim: label(v)).font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).foregroundStyle(labelColor)
+        Text(verbatim: label(v)).font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).foregroundStyle(labelColor(v, isLast))
             .fixedSize().position(x: cx, y: below ? top + 17 : max(9, top - 17))
     }
 }
