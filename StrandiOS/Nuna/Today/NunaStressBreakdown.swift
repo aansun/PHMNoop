@@ -240,9 +240,13 @@ struct NunaStressDayReader {
 // MARK: - Shared drawing
 
 enum NunaStressBand {
-    static let low = NunaPalette.charge
-    static let medium = NunaPalette.warning
-    static let high = NunaPalette.alert
+    /// Blue, green and amber, the same three the gauge runs through, so the gauge, its level word and these bars read as one scale.
+    static let low = NunaPalette.effortModerate
+    static let medium = NunaPalette.charge
+    static let high = NunaPalette.warning
+
+    /// The band a 0 to 3 reading is in.
+    static func color(for level: Double) -> Color { level < 1 ? low : (level < 2 ? medium : high) }
 
     static func hm(_ minutes: Double) -> String {
         let rounded = max(0, Int(minutes.rounded()))
@@ -276,7 +280,6 @@ struct NunaStressCategoryCard: View {
     let category: NunaStressCategory
     let today: NunaStressZones?
     let typical: NunaStressZones?
-    let weekdayName: String
     let dateName: String
 
     private struct Band: Identifiable {
@@ -299,20 +302,20 @@ struct NunaStressCategoryCard: View {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 10) {
                     Image(systemName: category.icon).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                    Text(category.title).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    Text(category.title).font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textPrimary)
                     Spacer(minLength: 0)
                 }
                 if let today, today.total > 0 {
                     (Text(verbatim: dateName + " ") + Text("stress").foregroundColor(NunaPalette.textPrimary)
-                        + Text(verbatim: " ") + Text("vs. typical \(weekdayName)").foregroundColor(NunaPalette.textSecondary))
-                        .font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        + Text(verbatim: " ") + Text("vs. previous 7 days").foregroundColor(NunaPalette.textSecondary))
+                        .font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textPrimary).lineLimit(2).minimumScaleFactor(0.8)
-                    VStack(spacing: 6) {
-                        NunaProportionBar(parts: [(today.low, NunaStressBand.low), (today.medium, NunaStressBand.medium), (today.high, NunaStressBand.high)], height: 14)
+                    VStack(alignment: .leading, spacing: 8) {
+                        NunaProportionBar(parts: [(today.low, NunaStressBand.low), (today.medium, NunaStressBand.medium), (today.high, NunaStressBand.high)], height: 13, corner: 3, gap: 2)
                         if let typical, typical.total > 0 {
-                            NunaProportionBar(parts: [(typical.low, NunaStressBand.low.opacity(0.45)), (typical.medium, NunaStressBand.medium.opacity(0.45)),
-                                                      (typical.high, NunaStressBand.high.opacity(0.45))], height: 14)
+                            NunaProportionBar(parts: [(typical.low, NunaStressBand.low.opacity(0.5)), (typical.medium, NunaStressBand.medium.opacity(0.5)),
+                                                      (typical.high, NunaStressBand.high.opacity(0.5))], height: 9, corner: 3, gap: 2)
                         }
                     }
                     HStack(alignment: .top, spacing: 0) {
@@ -321,7 +324,7 @@ struct NunaStressCategoryCard: View {
                 } else {
                     Text("No data yet").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
-                Text(category.note).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                Text(category.note).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     .fixedSize(horizontal: false, vertical: true).textCase(nil)
                 NavigationLink {
                     NunaStressTrendView(category: category)
@@ -355,12 +358,12 @@ struct NunaStressCategoryCard: View {
 
     private func column(_ band: Band) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(verbatim: NunaStressBand.hm(band.minutes)).font(.nuna(size: 22, weight: .bold, design: NunaType.design))
+            Text(verbatim: NunaStressBand.hm(band.minutes)).font(.nuna(size: 19, weight: .semibold, design: NunaType.design))
                 .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
             changeBox(band)
             HStack(spacing: 6) {
                 RoundedRectangle(cornerRadius: 3, style: .continuous).fill(band.color).frame(width: 10, height: 10)
-                Text(band.title).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                Text(band.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textSecondary)
             }
         }
