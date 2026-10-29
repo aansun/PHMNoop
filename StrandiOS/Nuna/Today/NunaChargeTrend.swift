@@ -72,27 +72,31 @@ struct NunaTrendLegend: View {
     }
 }
 
-/// Under the Charge chart: how many of the days in the window fell in each zone, as one bar split by days and a line for each zone.
-struct NunaChargeBreakdown: View {
+/// Under a score's chart: how many of the days in the window fell in each band, as one bar split by days and a line for each band.
+struct NunaDaysBreakdown: View {
+    struct Band {
+        let color: Color
+        let name: LocalizedStringKey
+        let range: String
+        let contains: (Double) -> Bool
+    }
+
+    let title: LocalizedStringKey
+    let bands: [Band]
     let values: [Double]
 
-    private var ready: Int { values.filter { $0 >= 67 }.count }
-    private var moderate: Int { values.filter { $0 >= 34 && $0 < 67 }.count }
-    private var low: Int { values.filter { $0 < 34 }.count }
+    private func days(_ band: Band) -> Int { values.filter(band.contains).count }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(spacing: 6) {
-                Text("Charge breakdown").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                    .foregroundStyle(NunaPalette.textPrimary)
+                Text(title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 Text("(days)").font(.nuna(size: 12, weight: .semibold)).tracking(nunaTrackingLabel).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textSecondary)
             }
             bar
             VStack(alignment: .leading, spacing: 12) {
-                line(NunaPalette.scoreHigh, ready, "Ready", "67–100%")
-                line(NunaPalette.scoreMid, moderate, "Moderate", "34–66%")
-                line(NunaPalette.scoreLow, low, "Low", "0–33%")
+                ForEach(Array(bands.enumerated()), id: \.offset) { _, band in line(band) }
             }
         }
         .padding(.top, 6)
@@ -101,9 +105,10 @@ struct NunaChargeBreakdown: View {
     /// One bar, split in the proportion of the days; the track alone when there are none.
     private var bar: some View {
         GeometryReader { g in
-            let total = max(1, ready + moderate + low)
+            let counts = bands.map { ($0.color, days($0)) }
+            let total = max(1, counts.reduce(0) { $0 + $1.1 })
+            let parts = counts.filter { $0.1 > 0 }
             let gap: CGFloat = 2
-            let parts = [(NunaPalette.scoreHigh, ready), (NunaPalette.scoreMid, moderate), (NunaPalette.scoreLow, low)].filter { $0.1 > 0 }
             let room = g.size.width - gap * CGFloat(max(parts.count - 1, 0))
             HStack(spacing: gap) {
                 ForEach(Array(parts.enumerated()), id: \.offset) { _, part in
@@ -116,14 +121,25 @@ struct NunaChargeBreakdown: View {
         .frame(height: 16)
     }
 
-    private func line(_ color: Color, _ days: Int, _ name: LocalizedStringKey, _ range: String) -> some View {
+    private func line(_ band: Band) -> some View {
         HStack(spacing: 12) {
-            RoundedRectangle(cornerRadius: 3, style: .continuous).fill(color).frame(width: 12, height: 12)
-            Text(verbatim: "\(days)×").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+            RoundedRectangle(cornerRadius: 3, style: .continuous).fill(band.color).frame(width: 12, height: 12)
+            Text(verbatim: "\(days(band))×").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 .frame(width: 34, alignment: .leading)
-            (Text(name) + Text(verbatim: " (\(range))")).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            (Text(band.name) + Text(verbatim: " (\(band.range))")).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             Spacer(minLength: 0)
         }
+    }
+}
+
+extension NunaDaysBreakdown {
+    /// Charge's three zones.
+    static func charge(_ values: [Double]) -> NunaDaysBreakdown {
+        NunaDaysBreakdown(title: "Charge breakdown", bands: [
+            Band(color: NunaPalette.scoreHigh, name: "Ready", range: "67–100%") { $0 >= 67 },
+            Band(color: NunaPalette.scoreMid, name: "Moderate", range: "34–66%") { $0 >= 34 && $0 < 67 },
+            Band(color: NunaPalette.scoreLow, name: "Low", range: "0–33%") { $0 < 34 },
+        ], values: values)
     }
 }
 
@@ -147,7 +163,7 @@ struct NunaChargeTrendView: View {
                 sentence: nil, range: $range, page: $page)
                 .columns(color: nunaChargeColor, top: 100)
                 .withoutFigures()
-                .windowFooter { AnyView(NunaChargeBreakdown(values: $0)) }
+                .windowFooter { AnyView(NunaDaysBreakdown.charge($0)) }
                 .endingOn(daysAgo: router.todayDayOffset)
         }
         .environment(\.nunaDetailSwitch, nil)
