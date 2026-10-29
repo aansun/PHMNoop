@@ -66,48 +66,4 @@ final class NunaEffortZoneHistory: ObservableObject {
     var zonesByDay: [String: [Double]] { byDay.mapValues(\.zones) }
 }
 
-/// The page the weekly Effort card opens: the full chart with its week, month and six-month views, and the days per level under it.
-struct NunaEffortTrendView: View {
-    @EnvironmentObject private var repo: Repository
-    @EnvironmentObject private var router: NavRouter
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
-    @StateObject private var series = NunaSeriesModel()
-    @State private var range = 7
-    @State private var page = 0
-
-    private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
-    private func stored(_ v: Double) -> Double { scale == .whoop ? v / 21 * 100 : v }
-
-    var body: some View {
-        NunaDetailScreen("Effort") {
-            NunaTrendDetailCard(
-                caption: "Average", unit: "",
-                readings: { days, back in series.readings(days, endingDaysAgo: back).map { ($0.date, UnitFormatter.effortValue($0.value, scale: scale)) } },
-                hasOlder: { start in series.byDay.keys.min().map { Repository.localDayKey(start) > $0 } ?? false },
-                loaded: series.loaded,
-                lineColor: NunaPalette.effortModerate, decimals: 1, directional: false,
-                levelChip: { v in
-                    let s = stored(v)
-                    return (text: s < 33 ? "Light" : (s < 66 ? "Moderate" : "High"), color: nunaEffortTextColor(s))
-                }, sentence: nil, range: $range, page: $page)
-                .columns(color: { nunaEffortColor(stored($0)) })
-                .withoutFigures()
-                .windowFooter { AnyView(breakdown($0)) }
-                .endingOn(daysAgo: router.todayDayOffset)
-        }
-        .environment(\.nunaDetailSwitch, nil)
-        .task(id: repo.refreshSeq) { await series.load(repo: repo, key: "strain", source: "my-whoop") }
-    }
-
-    /// Days per level, the bands written on the scale the wearer chose.
-    private func breakdown(_ values: [Double]) -> NunaDaysBreakdown {
-        func edge(_ s: Double) -> Int { Int(UnitFormatter.effortValue(s, scale: scale).rounded()) }
-        let top = UnitFormatter.effortScaleMax(scale)
-        return NunaDaysBreakdown(title: "Effort breakdown", bands: [
-            .init(color: NunaPalette.effortMinimal, name: "Light", range: "0–\(edge(33))") { stored($0) < 33 },
-            .init(color: NunaPalette.effortModerate, name: "Moderate", range: "\(edge(33) + 1)–\(edge(66))") { stored($0) >= 33 && stored($0) < 66 },
-            .init(color: NunaPalette.effortAllOut, name: "High", range: "\(edge(66) + 1)–\(top)") { stored($0) >= 66 },
-        ], values: values)
-    }
-}
 #endif

@@ -25,6 +25,14 @@ struct NunaRootView: View {
     @AppStorage(NunaThemePrefs.densityKey) private var densityRaw = NunaThemePrefs.Density.standard.rawValue
     @AppStorage(NunaThemePrefs.skinKey) private var skinRaw = NunaThemePrefs.Skin.standard.rawValue
 
+    init(homeScreenQuickActionsEnabled: Bool) {
+        self.homeScreenQuickActionsEnabled = homeScreenQuickActionsEnabled
+        // Nuna reads Effort on WHOOP's 0 to 21 scale unless the wearer picked another one; a choice already made is never touched.
+        if UserDefaults.standard.object(forKey: UnitPrefs.effortScaleKey) == nil {
+            UserDefaults.standard.set(EffortScale.whoop.rawValue, forKey: UnitPrefs.effortScaleKey)
+        }
+    }
+
     private enum Tab: Int, CaseIterable { case today = 0, trends, anya, me }
 
     @State private var selection = Tab.today.rawValue
