@@ -236,7 +236,8 @@ struct NunaRestDetailView: View {
                                 destination: { AnyView(NunaHoursNeededPctTrendView(endingDaysAgo: ending)) },
                                 points: points { model.hoursVsNeeded($0) }, valueText: percent, endingDaysAgo: ending)
             NunaStackedWeeklyCard(title: "Restorative sleep (hours)", legend: [("Deep sleep", NunaRestChart.deep), ("REM sleep", NunaRestChart.rem)],
-                                  colors: [NunaRestChart.rem, NunaRestChart.deep], byDay: stages, endingDaysAgo: ending)
+                                  colors: [NunaRestChart.rem, NunaRestChart.deep], byDay: stages, endingDaysAgo: ending,
+                                  destination: { AnyView(NunaRestorativeTrendView(endingDaysAgo: ending)) })
             NunaWeeklyTrendCard(title: "Sleep consistency", key: "sleep_consistency", style: .bars, color: steel,
                                 barFill: { _, _ in steel }, labelFill: { _, _ in steel },
                                 points: points { model.consistency($0) }, valueText: percent, endingDaysAgo: ending)
