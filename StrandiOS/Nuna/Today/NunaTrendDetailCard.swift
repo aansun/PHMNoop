@@ -474,18 +474,19 @@ struct NunaRangeSwitch: View {
                 let on = range == r.value
                 Button { range = r.value; onSelect() } label: {
                     Text(verbatim: r.title).font(.nuna(size: 13, weight: .bold)).lineLimit(1).fixedSize(horizontal: true, vertical: false)
-                        .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+                        .foregroundStyle(on ? Color.white : Color.white.opacity(0.62))
                         .padding(.horizontal, 10).frame(minWidth: 48, minHeight: 34)
-                        .background(on ? NunaPalette.ink.opacity(0.14) : Color.clear, in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
+                        .background(on ? Color.white.opacity(0.16) : Color.clear, in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
                 }.buttonStyle(.plain)
             }
         }
         .padding(3)
-        .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+        // A black track, as in the reference, whatever the look: the pill that is on is a lighter grey on it.
+        .background(Color.black.opacity(0.78), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
     }
 }
 
-/// "‹ 7 OCT – 13 OCT 26 ›": the date window with its back and forward arrows, shared by the trend cards.
+/// The date between two arrows that moves a period back and forth.
 struct NunaDateStepper: View {
     let label: String
     var canGoBack = true

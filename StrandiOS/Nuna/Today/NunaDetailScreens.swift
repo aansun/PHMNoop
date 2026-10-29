@@ -986,7 +986,7 @@ struct NunaMetricDetailView: View {
                     Text(verbatim: blurb).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
-            NunaSegmented(rangeOptions(), selection: $range)
+            NunaSegmented(rangeOptions(), selection: $range, onBlack: true)
             NunaCard {
                 VStack(alignment: .leading, spacing: 10) {
                     if present.isEmpty {

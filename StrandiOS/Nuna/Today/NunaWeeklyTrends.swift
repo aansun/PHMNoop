@@ -95,8 +95,8 @@ struct NunaWeeklyTrendCard: View {
     private func dayLabel(_ date: Date, last: Bool) -> some View {
         let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE")
         return VStack(spacing: 2) {
-            Text(verbatim: f.string(from: date)).font(.nuna(size: 13, weight: last ? .heavy : .semibold))
-            Text(verbatim: String(Calendar.current.component(.day, from: date))).font(.nuna(size: 13, weight: last ? .heavy : .semibold))
+            Text(verbatim: f.string(from: date)).font(.nuna(size: 13, weight: last ? .semibold : .regular)).textCase(nil)
+            Text(verbatim: String(Calendar.current.component(.day, from: date))).font(.nuna(size: 13, weight: last ? .heavy : .semibold)).textCase(nil)
         }
         .foregroundStyle(last ? NunaPalette.textPrimary : NunaPalette.textSecondary)
         .frame(maxWidth: .infinity)
@@ -317,8 +317,8 @@ struct NunaZoneWeeklyCard: View {
     private func label(_ date: Date, last: Bool) -> some View {
         let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE")
         return VStack(spacing: 2) {
-            Text(verbatim: f.string(from: date)).font(.nuna(size: 13, weight: last ? .heavy : .semibold))
-            Text(verbatim: String(Calendar.current.component(.day, from: date))).font(.nuna(size: 13, weight: last ? .heavy : .semibold))
+            Text(verbatim: f.string(from: date)).font(.nuna(size: 13, weight: last ? .semibold : .regular)).textCase(nil)
+            Text(verbatim: String(Calendar.current.component(.day, from: date))).font(.nuna(size: 13, weight: last ? .heavy : .semibold)).textCase(nil)
         }
         .foregroundStyle(last ? NunaPalette.textPrimary : NunaPalette.textSecondary)
         .frame(maxWidth: .infinity)

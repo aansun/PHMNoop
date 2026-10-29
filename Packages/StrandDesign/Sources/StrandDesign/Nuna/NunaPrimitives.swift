@@ -278,10 +278,12 @@ public struct NunaSegmented<Value: Hashable>: View {
     private let options: [(value: Value, title: LocalizedStringKey)]
     @Binding private var selection: Value
     private let compact: Bool
+    private let onBlack: Bool
 
     /// `compact`: a small control for a page header, each segment as wide as its label needs instead of sharing the full width.
-    public init(_ options: [(value: Value, title: LocalizedStringKey)], selection: Binding<Value>, compact: Bool = false) {
-        self.options = options; self._selection = selection; self.compact = compact
+    /// `onBlack`: a black track with a lighter grey pill and light text, whatever the look: the period switches (W, M, 6M) are drawn this way.
+    public init(_ options: [(value: Value, title: LocalizedStringKey)], selection: Binding<Value>, compact: Bool = false, onBlack: Bool = false) {
+        self.options = options; self._selection = selection; self.compact = compact; self.onBlack = onBlack
     }
 
     public var body: some View {
@@ -292,18 +294,18 @@ public struct NunaSegmented<Value: Hashable>: View {
                 Button { selection = option.value } label: {
                     Text(option.title)
                         .font(.nuna(size: compact ? 12 : 13, weight: .bold))
-                        .foregroundStyle(selected ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+                        .foregroundStyle(onBlack ? (selected ? Color.white : Color.white.opacity(0.62)) : (selected ? NunaPalette.textPrimary : NunaPalette.textSecondary))
                         .padding(.horizontal, compact ? 11 : 0)
                         .frame(maxWidth: compact ? nil : .infinity)
                         .frame(height: compact ? 28 : 36)
-                        .background(selected ? NunaPalette.ink.opacity(0.14) : .clear, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                        .background(selected ? (onBlack ? Color.white.opacity(0.16) : NunaPalette.ink.opacity(0.14)) : .clear, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .accessibilityAddTraits(selected ? .isSelected : [])
             }
         }
         .padding(compact ? 3 : 4)
-        .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+        .background(onBlack ? AnyShapeStyle(Color.black.opacity(0.78)) : AnyShapeStyle(NunaPalette.tile), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
     }
 }
 
