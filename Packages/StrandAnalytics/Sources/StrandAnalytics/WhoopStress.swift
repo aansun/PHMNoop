@@ -22,7 +22,8 @@ import WhoopProtocol
 //     the ones to calibrate on real data;
 //   • exercise is not removed from Total day but pulled toward neutral in proportion to how much of the epoch was motion.
 //
-// Pure and deterministic. Experimental: not wired to any screen yet, so no Kotlin twin exists (add one before it is shown to anyone).
+// Pure and deterministic. It is the reading the iOS app shows (through `StressEngine`), and only once `Calibration.requiredNights` nights are in.
+// `DaytimeStress` stays beside it as the previous formula. There is no Kotlin twin yet: the Android app still uses the previous formula.
 
 public enum WhoopStress {
 
@@ -71,7 +72,7 @@ public enum WhoopStress {
     // MARK: - Baseline
 
     /// What the score is measured against: the last 14 nights.
-    public struct Baseline: Equatable, Sendable {
+    public struct Baseline: Equatable, Sendable, Codable {
         /// Mean and spread of the natural log of the nightly RMSSD (ms).
         public let hrvLnMean: Double
         public let hrvLnSD: Double
@@ -270,6 +271,95 @@ public enum WhoopStress {
         let rm = waking.compactMap(\.rmssd)
         if rm.count >= minEpochs / 2, let r = median(rm) { t.wakeHRVRatio = min(max(r / exp(baseline.hrvLnMean), 0.25), 1.2) }
         return t
+    }
+
+    // MARK: - Calibration record
+
+    /// Everything the reading needs about one person, kept between runs: the 14-night baseline and the two waking constants set from the
+    /// same days. It exists only once `requiredNights` nights are in; before that the reading is calibrating and shows nothing.
+    public struct Calibration: Equatable, Sendable, Codable {
+        /// Bumped when the method changes, so an older record is rebuilt rather than trusted.
+        public static let version = 1
+        public static let requiredNights = 14
+
+        public var version: Int
+        public var baseline: Baseline
+        public var wakeHROffsetBPM: Double
+        public var wakeHRVRatio: Double
+        /// Day key (yyyy-MM-dd) of the newest night in the baseline, so a new night triggers a rebuild.
+        public var newestNight: String
+
+        public init(baseline: Baseline, tuning: Tuning, newestNight: String) {
+            self.version = Calibration.version
+            self.baseline = baseline
+            self.wakeHROffsetBPM = tuning.wakeHROffsetBPM
+            self.wakeHRVRatio = tuning.wakeHRVRatio
+            self.newestNight = newestNight
+        }
+
+        /// The stock tuning with this person's two waking constants.
+        public var tuning: Tuning {
+            var t = Tuning()
+            t.wakeHROffsetBPM = wakeHROffsetBPM
+            t.wakeHRVRatio = wakeHRVRatio
+            return t
+        }
+    }
+
+    // MARK: - The figures of one night
+
+    /// The resting heart rate and RMSSD of a night, the way the baseline reads them: the resting heart rate is the mean of the lowest tenth
+    /// of the 5-minute mean heart rates, the RMSSD the mean of the 5-minute RMSSDs (each from cleaned R-R). nil when the night has too
+    /// little of either to read.
+    public static func nightFigures(hr: [HRSample], rr: [RRInterval], from: Int, to: Int) -> (rhr: Double, rmssd: Double)? {
+        var means: [Double] = [], rmssds: [Double] = []
+        let hrs = hr.sorted { $0.ts < $1.ts }, rrs = rr.sorted { $0.ts < $1.ts }
+        var hi = 0, ri = 0
+        var t = from
+        while t + 300 <= to {
+            var sum = 0, n = 0
+            while hi < hrs.count, hrs[hi].ts < t + 300 { if hrs[hi].ts >= t { sum += hrs[hi].bpm; n += 1 }; hi += 1 }
+            var raw: [Double] = []
+            while ri < rrs.count, rrs[ri].ts < t + 300 { if rrs[ri].ts >= t { raw.append(Double(rrs[ri].rrMs)) }; ri += 1 }
+            if n > 100 { means.append(Double(sum) / Double(n)) }
+            if raw.count >= 60, let v = HRVAnalyzer.analyze(rawRR: raw).rmssd, v > 0 { rmssds.append(v) }
+            t += 300
+        }
+        guard !means.isEmpty, !rmssds.isEmpty else { return nil }
+        let low = means.sorted().prefix(max(1, means.count / 10))
+        return (low.reduce(0, +) / Double(low.count), rmssds.reduce(0, +) / Double(rmssds.count))
+    }
+
+    // MARK: - The shape the existing screens read
+
+    /// A reading in the shape the existing stress surfaces already draw (`DaytimeStress.Result`): hourly and half-hourly points, the
+    /// minutes in the High band, the day's mean and peak. Every epoch counts, asleep and in motion included, which is the Total day reading;
+    /// the three categories stay on the `Result` itself. A point needs a few scored epochs, so a bucket with almost nothing is left out.
+    public static func daytimeResult(_ r: Result, tzOffsetSeconds: Int = 0) -> DaytimeStress.Result {
+        func floorDiv(_ a: Int, _ b: Int) -> Int { let q = a / b, m = a % b; return (m != 0 && (m < 0) != (b < 0)) ? q - 1 : q }
+        func points(_ width: Int, minimum: Int) -> [DaytimeStress.HourPoint] {
+            var buckets: [Int: [Epoch]] = [:]
+            for e in r.epochs where e.level != nil { buckets[floorDiv(e.ts + tzOffsetSeconds, width), default: []].append(e) }
+            return buckets.keys.sorted().compactMap { k -> DaytimeStress.HourPoint? in
+                let es = buckets[k]!
+                guard es.count >= minimum else { return nil }
+                let levels = es.compactMap(\.level), hrs = es.compactMap(\.meanHR)
+                let start = k * width - tzOffsetSeconds
+                let hour = floorDiv(k * width, 3600) % 24
+                return DaytimeStress.HourPoint(hour: (hour + 24) % 24, startTs: start, level: levels.reduce(0, +) / Double(levels.count),
+                                               meanHR: hrs.isEmpty ? nil : hrs.reduce(0, +) / Double(hrs.count), rmssd: nil)
+            }
+        }
+        let hours = points(3_600, minimum: 3)
+        let timeline = points(1_800, minimum: 2)
+        let scored = hours.compactMap { h in h.level.map { (h, $0) } }
+        var run = 0
+        for (_, l) in scored.reversed() { if l >= DaytimeStress.highBandFloor { run += 1 } else { break } }
+        let high = r.epochs.filter { ($0.level ?? 0) >= DaytimeStress.highBandFloor }.count * (r.epochs.isEmpty ? 0 : 5)
+        return DaytimeStress.Result(hours: hours, sustainedHigh: run >= DaytimeStress.sustainedHours, sustainedRun: run >= DaytimeStress.sustainedHours ? run : 0,
+                                    dayMean: scored.isEmpty ? nil : scored.map(\.1).reduce(0, +) / Double(scored.count),
+                                    peak: scored.max { $0.1 < $1.1 }?.0, activityMaskedHours: 0, highStressMinutes: high,
+                                    hrOnlyFallback: false, timeline: timeline)
     }
 
     private static func clamp(_ x: Double, _ m: Double) -> Double { min(max(x, -m), m) }

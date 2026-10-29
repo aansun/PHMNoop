@@ -115,6 +115,8 @@ extension WidgetSnapshot {
         // changed nothing costs one indexed COUNT and no rows. Only the FULL path scores it; the live
         // fast path below reuses the previous snapshot and so carries the curve forward untouched.
         let stress = await StressDayCurve.today(repo: model.repo)
+        // While the stress reading is still calibrating nothing about stress is shown anywhere, so a figure from before must not be carried forward either.
+        let stressCalibrating = !(await StressDayCurve.status(repo: model.repo).isReady)
         // The widget's own point type is built HERE, at the one place that needs it: `StressPoint`
         // lives in the iOS/widget shared sources, and the producer is now also read by the Today card,
         // which is compiled for macOS too.
@@ -128,7 +130,7 @@ extension WidgetSnapshot {
         // Loaded ONCE for the carry-forward below. Reaching for `load()` in each of the two arguments
         // would decode the App Group blob twice on any publish that could not score, and this file
         // already went to the trouble of removing one such decode from the live path.
-        let storedStress: WidgetSnapshot? = stress == nil ? load() : nil
+        let storedStress: WidgetSnapshot? = (stress == nil && !stressCalibrating) ? load() : nil
         let recoveryValue = day?.recovery.map { Int($0.rounded()) }
         let bpmValue = model.bpm ?? model.live.heartRate
         let batteryValue = activeBatteryPct(from: model)
@@ -158,7 +160,7 @@ extension WidgetSnapshot {
             // Finished numbers for the Stress widget: today's minutes in the high band (from the same scoring as the curve) and the typical
             // figure for this weekday, which Today works out once a day. Either carries the stored value forward when it cannot be had now.
             stressHighMin: stress.flatMap { $0.result.hours.contains { $0.level != nil } ? StressDayCurve.highMinutes($0.result) : nil } ?? storedStress?.stressHighMin,
-            stressTypicalMin: StressTypical.cached() ?? storedStress?.stressTypicalMin,
+            stressTypicalMin: stressCalibrating ? nil : (StressTypical.cached() ?? storedStress?.stressTypicalMin),
             steps: steps,
             caloriesKcal: caloriesKcal,
             workoutsToday: todayRow?.exerciseCount ?? day?.exerciseCount,

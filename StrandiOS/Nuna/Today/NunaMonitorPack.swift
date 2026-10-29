@@ -14,6 +14,8 @@ struct NunaMonitorPackCard: View {
     let skinTemp: Double?
     let stress: Double?
     let stressCurve: DaytimeStress.Result?
+    /// Nights read so far while the stress reading is still calibrating; nil once it is ready. Then the stress tile says so instead of a figure.
+    var stressNights: Int?
 
     @EnvironmentObject private var repo: Repository
     @StateObject private var hrvS = NunaSeriesModel()
@@ -102,11 +104,25 @@ struct NunaMonitorPackCard: View {
         }
     }
 
-    private var stressTile: some View {
+    private var stressTile: AnyView {
+        if let nights = stressNights {
+            return AnyView(shell("Stress monitor") {
+                HStack(spacing: 10) {
+                    tile(tint: NunaPalette.effortModerate) {
+                        Image(systemName: "hourglass").font(.nuna(size: 16, weight: .heavy)).foregroundStyle(NunaPalette.effortModerate)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Calibrating").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.effortModerate)
+                        Text(verbatim: "\(nights)/\(StressEngine.requiredNights)").font(.nuna(size: 12.5, weight: .semibold))
+                            .foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    }
+                }
+            })
+        }
         let r = reading
         let tint: Color = r.map { NunaStressBars.color($0.value) } ?? NunaPalette.textMuted
         let word: LocalizedStringKey = r.map { $0.value < 1 ? "Low" : ($0.value < 2 ? "Medium" : "High") } ?? "No data"
-        return shell("Stress monitor") {
+        return AnyView(shell("Stress monitor") {
             HStack(spacing: 10) {
                 tile(tint: tint) {
                     Text(verbatim: r.map { String(format: "%.1f", locale: AppLanguage.activeLocale, $0.value) } ?? "–")
@@ -119,7 +135,7 @@ struct NunaMonitorPackCard: View {
                     }
                 }
             }
-        }
+        })
     }
 
     /// The small rounded square that carries the icon or the number, tinted by status.

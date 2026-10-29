@@ -31,14 +31,20 @@ final class NunaTrendsModel: ObservableObject {
         async let t = repo.exploreSeries(key: "steps_est", source: "my-whoop", days: 400)
         charge = Self.clean(await c); effort = Self.clean(await e); rest = Self.clean(await r)
         hrv = Self.clean(await h); rhr = Self.clean(await k)
-        // Stress is not a stored daily column on every install; the Stress screen derives it from resting heart rate and HRV against
-        // your own baseline, so Trends reads the same daily history the same way.
-        let storedStress = Self.clean(await s)
-        let daysSnapshot = repo.days
-        let derived: Series = await Task.detached(priority: .utility) {
-            StressModel(days: daysSnapshot, stored: storedStress)?.fullTrend.map { (day: Self.utcDay($0.date), value: $0.value) } ?? []
-        }.value
-        stress = derived.isEmpty ? storedStress : Self.clean(derived)
+        _ = await s
+        // Stress comes from the WHOOP-reference reading and only once it is calibrated: the mean waking level of each of the last 30 days,
+        // from the same stored daily history the Stress monitor's trend view reads. Before that, Trends has no stress to show.
+        stress = []
+        if await StressEngine.shared.status(repo: repo).isReady {
+            let cal = Calendar.current
+            let days = (1...30).compactMap { cal.date(byAdding: .day, value: -$0, to: cal.startOfDay(for: Date())) }
+            let history = NunaStressHistory()
+            await history.ensure(days: days, repo: repo)
+            stress = days.sorted().compactMap { d in
+                let key = Repository.localDayKey(d)
+                return history.entries[key]?.mean.map { (day: key, value: $0) }
+            }
+        }
         var st = Self.clean(await t)
         if st.isEmpty { st = Self.clean(await repo.exploreSeries(key: "steps", source: "my-whoop", days: 400)) }
         steps = st

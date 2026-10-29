@@ -114,27 +114,63 @@ enum NunaStressCategory: CaseIterable, Hashable {
 
 // MARK: - History
 
-/// Time in the stress bands for earlier days, read from each day's own heart rate once and kept.
-///
-/// Scoring a day reads its heart rate, R-R and motion, so a past day is scored the first time it is wanted and its
-/// answer is stored with a count of the heart-rate rows it was scored from: more rows arriving later (a backfill)
-/// re-scores that one day. Today is never stored; the caller scores it live.
+extension WhoopStress.Zones {
+    var nuna: NunaStressZones { NunaStressZones(low: low, medium: medium, high: high) }
+
+}
+
+extension WhoopStress.Result {
+    /// The minutes in each band for one category, or nil when the category has none (nothing scored in it).
+    func zones(_ category: NunaStressCategory) -> NunaStressZones? {
+        let z: WhoopStress.Zones
+        switch category {
+        case .total: z = total
+        case .nonActivity: z = nonActivity
+        case .sleep: z = sleep
+        }
+        return z.total > 0 ? z.nuna : nil
+    }
+}
+
+/// Time in the stress bands for earlier days, for each of the three categories, read once from each day by the WHOOP-reference reading and
+/// kept. A day is scored the first time it is wanted and its answer is stored with a count of the heart-rate rows it was scored from: more
+/// rows arriving later (a backfill) re-score that one day. Today is never stored; the caller reads it live. Nothing is scored, and nothing
+/// older is shown, until the stress calibration is complete.
 @MainActor
 final class NunaStressHistory: ObservableObject {
     struct Entry: Codable, Equatable {
-        var low: Double
-        var medium: Double
-        var high: Double
+        /// Low, medium and high minutes of each category.
+        var non: [Double]
+        var sleep: [Double]
+        var total: [Double]
         var samples: Int
+        /// The mean level of the waking, sedentary epochs (0 to 3), for the Trends tab; nil when there were none.
+        var mean: Double?
 
-        var zones: NunaStressZones { NunaStressZones(low: low, medium: medium, high: high) }
-        var hasData: Bool { low + medium + high > 0 }
+        func zones(_ category: NunaStressCategory) -> NunaStressZones? {
+            let z: [Double]
+            switch category { case .total: z = total; case .nonActivity: z = non; case .sleep: z = sleep }
+            guard z.count == 3, z.reduce(0, +) > 0 else { return nil }
+            return NunaStressZones(low: z[0], medium: z[1], high: z[2])
+        }
+
+        init(_ r: WhoopStress.Result, samples: Int) {
+            non = [r.nonActivity.low, r.nonActivity.medium, r.nonActivity.high]
+            sleep = [r.sleep.low, r.sleep.medium, r.sleep.high]
+            total = [r.total.low, r.total.medium, r.total.high]
+            self.samples = samples
+            let waking = r.epochs.filter { $0.kind == .waking }.compactMap(\.level)
+            mean = waking.isEmpty ? nil : waking.reduce(0, +) / Double(waking.count)
+        }
+
+        init(empty samples: Int) { non = [0, 0, 0]; sleep = [0, 0, 0]; total = [0, 0, 0]; self.samples = samples; mean = nil }
     }
 
     @Published private(set) var entries: [String: Entry] = [:]
     @Published private(set) var loading = false
 
-    private static let storeKey = "stress.zones.v1"
+    /// A new key: the zones stored by the previous formula must never be read as these.
+    private static let storeKey = "stress.zones.v2"
 
     init() {
         if let data = UserDefaults.standard.data(forKey: Self.storeKey),
@@ -143,8 +179,9 @@ final class NunaStressHistory: ObservableObject {
         }
     }
 
-    /// Scores any of `days` (earlier than today) that are not yet stored, newest first.
+    /// Scores any of `days` (earlier than today) that are not yet stored, newest first. Does nothing while calibrating.
     func ensure(days: [Date], repo: Repository) async {
+        guard await StressEngine.shared.status(repo: repo).isReady else { return }
         let cal = Calendar.current
         let today = cal.startOfDay(for: Date())
         let wanted = Set(days.map { cal.startOfDay(for: $0) }).filter { $0 < today }.sorted(by: >)
@@ -159,17 +196,14 @@ final class NunaStressHistory: ObservableObject {
             let key = Repository.localDayKey(day)
             guard let fingerprint = await repo.hrFingerprint(from: Int(day.timeIntervalSince1970), to: Int(end.timeIntervalSince1970)) else { continue }
             if let stored = entries[key], stored.samples == fingerprint.count { continue }
-            var entry = Entry(low: 0, medium: 0, high: 0, samples: fingerprint.count)
-            if fingerprint.count > 0, let scored = await StressDayCurve.today(repo: repo, now: end)?.result {
-                let zones = NunaStressZones(hours: scored.hours)
-                entry = Entry(low: zones.low, medium: zones.medium, high: zones.high, samples: fingerprint.count)
+            var entry = Entry(empty: fingerprint.count)
+            if fingerprint.count > 0, let r = await StressEngine.shared.day(repo: repo, from: Int(day.timeIntervalSince1970), to: Int(end.timeIntervalSince1970)) {
+                entry = Entry(r, samples: fingerprint.count)
             }
             entries[key] = entry
             changed = true
         }
-        // Scoring an earlier day replaces the curve's one-slot memo; put today's back so the next reader does not pay for it.
-        if changed { _ = await StressDayCurve.today(repo: repo, now: Date()) }
-        persist()
+        if changed { persist() }
     }
 
     private func persist() {
@@ -181,59 +215,16 @@ final class NunaStressHistory: ObservableObject {
     }
 }
 
-/// The night's stress per day (0 to 3). The stored series only exists for an imported export, so on a strap-only install it is
-/// empty and the sleep category had nothing to show; every day with a resting heart rate or HRV is scored the way the Day Stress
-/// score is (against the 30 nights before it) and a stored value still wins for its day.
-enum NunaNightlyStress {
-    private static let keyFormatter: DateFormatter = {
-        let f = DateFormatter()
-        f.locale = Locale(identifier: "en_US_POSIX"); f.timeZone = TimeZone(identifier: "UTC"); f.dateFormat = "yyyy-MM-dd"
-        return f
-    }()
-
-    static func merged(stored: [String: Double], days: [DailyMetric]) -> [String: Double] {
-        var out = stored
-        guard let model = StressModel(days: days, stored: stored.map { (day: $0.key, value: $0.value) }) else { return out }
-        for point in model.fullTrend {
-            let key = keyFormatter.string(from: point.date)
-            if out[key] == nil { out[key] = point.value }
-        }
-        return out
-    }
-}
-
-/// Reads one day's zones for a category: the stored daytime read, the night, or both.
+/// Reads one day's zones for a category: today live from the reading, an earlier day from the stored history.
 struct NunaStressDayReader {
     let history: [String: NunaStressHistory.Entry]
-    /// The daily stress series (0 to 3, from the night's vitals) and the daily rows that carry the time asleep.
-    let nightly: [String: Double]
-    let rows: [DailyMetric]
-    /// Today, scored live; today is not in `history`.
+    /// Today, read live; today is not in `history`.
     let todayKey: String
-    let today: NunaStressZones?
-
-    func nonActivity(_ key: String) -> NunaStressZones? {
-        if key == todayKey { return today.flatMap { $0.total > 0 ? $0 : nil } }
-        return history[key].flatMap { $0.hasData ? $0.zones : nil }
-    }
-
-    func sleep(_ key: String) -> NunaStressZones? {
-        guard let level = nightly[key], let minutes = rows.last(where: { $0.day == key })?.totalSleepMin, minutes > 0 else { return nil }
-        return NunaStressZones(level: min(max(level, 0), 3), minutes: minutes)
-    }
+    let today: WhoopStress.Result?
 
     func zones(_ category: NunaStressCategory, _ key: String) -> NunaStressZones? {
-        switch category {
-        case .nonActivity: return nonActivity(key)
-        case .sleep: return sleep(key)
-        case .total:
-            switch (nonActivity(key), sleep(key)) {
-            case let (a?, b?): return a + b
-            case let (a?, nil): return a
-            case let (nil, b?): return b
-            default: return nil
-            }
-        }
+        if key == todayKey { return today?.zones(category) }
+        return history[key]?.zones(category)
     }
 }
 
@@ -378,10 +369,9 @@ struct NunaStressTrendView: View {
     @State private var category: NunaStressCategory
     @EnvironmentObject private var repo: Repository
     @StateObject private var history = NunaStressHistory()
-    @StateObject private var nightly = NunaSeriesModel()
     @State private var range = 7
     @State private var pageOffset = 0
-    @State private var todayZones: NunaStressZones?
+    @State private var todayResult: WhoopStress.Result?
     private static let maxPages = 52
 
     init(category: NunaStressCategory) { _category = State(initialValue: category) }
@@ -403,8 +393,7 @@ struct NunaStressTrendView: View {
     }
 
     private var reader: NunaStressDayReader {
-        NunaStressDayReader(history: history.entries, nightly: NunaNightlyStress.merged(stored: nightly.byDay, days: repo.days), rows: repo.days,
-                            todayKey: Repository.localDayKey(todayStart), today: todayZones)
+        NunaStressDayReader(history: history.entries, todayKey: Repository.localDayKey(todayStart), today: todayResult)
     }
 
     private var bars: [Bar] {
@@ -493,11 +482,8 @@ struct NunaStressTrendView: View {
                 if let next = NunaStressCategory.allCases.first(where: { $0.key == key }) { category = next }
             })
         .task(id: "\(repo.refreshSeq)-\(range)-\(pageOffset)") {
-            await nightly.load(repo: repo, key: "stress", source: "my-whoop")
-            if let live = await StressDayCurve.today(repo: repo, now: Date())?.result {
-                let zones = NunaStressZones(hours: live.hours)
-                if zones != todayZones { todayZones = zones }
-            }
+            let live = await StressDayCurve.whoopToday(repo: repo, now: Date())
+            if live != todayResult { todayResult = live }
             await history.ensure(days: windowDays + (range <= 30 ? priorDays : []), repo: repo)
         }
     }
