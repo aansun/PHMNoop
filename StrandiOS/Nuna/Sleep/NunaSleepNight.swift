@@ -211,8 +211,11 @@ struct NunaSleepStageSection: View {
         let style = NunaSleepChartStyle.resolve(chartStyleRaw)
         switch style {
         case .classic:
-            ForEach([SleepStage.awake, .rem, .light, .deep], id: \.self) { timelineRow($0) }
-            NunaTimeAxis(start: windowStart, end: windowEnd).padding(.horizontal, 10)
+            stagesHeader
+            VStack(spacing: 22) {
+                ForEach([SleepStage.awake, .light, .deep, .rem], id: \.self) { stageRow($0) }
+            }
+            if selected != nil { NunaTimeAxis(start: windowStart, end: windowEnd) }
             insight
             motionBlock(strip: true)
         case .fitbit:
@@ -228,7 +231,10 @@ struct NunaSleepStageSection: View {
                           showsTimeAxis: false, highlightedStage: selected, filled: h.filled, stagePalette: h.palette)
                     .padding(.horizontal, 10)
                 NunaTimeAxis(start: windowStart, end: windowEnd).padding(.horizontal, 10)
-                ForEach([SleepStage.awake, .rem, .light, .deep], id: \.self) { breakdownRow($0, palette: h.palette) }
+                stagesHeader
+                VStack(spacing: 14) {
+                    ForEach([SleepStage.awake, .rem, .light, .deep], id: \.self) { breakdownRow($0, palette: h.palette) }
+                }
             }
             insight
             motionBlock(strip: true)
@@ -243,26 +249,32 @@ struct NunaSleepStageSection: View {
         }
     }
 
+    /// The radio, name, share and time of a stage; a filled radio is the stage picked, which the chart above then lights.
+    private func stageLine(_ stage: SleepStage, color: Color, dimmed: Bool, on: Bool) -> some View {
+        HStack(spacing: 10) {
+            ZStack {
+                Circle().strokeBorder(NunaPalette.textPrimary.opacity(dimmed ? 0.45 : 1), lineWidth: 2)
+                if on { Circle().fill(NunaPalette.textPrimary).frame(width: 9, height: 9) }
+            }
+            .frame(width: 22, height: 22)
+            Text(stage.nunaName).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                .foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+            Text(verbatim: "\(share(stage))%").font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(dimmed ? NunaPalette.textMuted : color)
+            Spacer(minLength: 8)
+            Text(verbatim: NunaSleepFormat.duration(minutes(stage))).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+        }
+    }
+
     /// A stage row under a stepped chart: its colour from the chart's ramp, the share and the time. Tapping selects the stage.
     private func breakdownRow(_ stage: SleepStage, palette: SleepStagePalette) -> some View {
         let on = selected == stage
         let dimmed = selected != nil && !on
-        let color = dimmed ? NunaPalette.textMuted.opacity(0.55) : StrandPalette.sleepStageColor(stage, palette: palette)
-        return HStack(spacing: 10) {
-            RoundedRectangle(cornerRadius: 3, style: .continuous).fill(color).frame(width: 12, height: 12)
-            Text(stage.nunaName).font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-            Text(verbatim: "\(share(stage))%").font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(dimmed ? NunaPalette.textMuted : color)
-            Spacer()
-            Text(verbatim: NunaSleepFormat.duration(minutes(stage))).font(.nuna(size: 13.5, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-        }
-        .padding(.vertical, 9).padding(.horizontal, 10)
-        .background(NunaPalette.ink.opacity(on ? 0.09 : 0.045), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(on ? NunaPalette.textMuted : .clear, lineWidth: 1.5))
-        .contentShape(Rectangle())
-        .onTapGesture { withAnimation(.easeInOut(duration: 0.2)) { selected = on ? nil : stage } }
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(verbatim: "\(minutes(stage).rounded()) min, \(share(stage))%"))
-        .accessibilityAddTraits(.isButton)
+        return stageLine(stage, color: StrandPalette.sleepStageColor(stage, palette: palette), dimmed: dimmed, on: on)
+            .contentShape(Rectangle())
+            .onTapGesture { withAnimation(.easeInOut(duration: 0.2)) { selected = on ? nil : stage } }
+            .accessibilityElement(children: .ignore)
+            .accessibilityLabel(Text(verbatim: "\(stage.nunaName), \(minutes(stage).rounded()) min, \(share(stage))%"))
+            .accessibilityAddTraits(on ? [.isButton, .isSelected] : .isButton)
     }
 
     // MARK: Parts
@@ -472,40 +484,72 @@ struct NunaSleepStageSection: View {
         }
     }
 
-    private func timelineRow(_ stage: SleepStage) -> some View {
-        let on = selected == stage
-        let dimmed = selected != nil && !on
-        let color = dimmed ? NunaPalette.textMuted.opacity(0.55) : stage.nunaColor
-        return VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 8) {
-                Text(stage.nunaName).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-                Text(verbatim: "\(share(stage))%").font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(dimmed ? NunaPalette.textMuted : stage.nunaColor)
-                Spacer()
-                Text(verbatim: NunaSleepFormat.duration(minutes(stage))).font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-            }
-            Canvas { ctx, size in
-                let r = Path(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: 5)
-                ctx.fill(r, with: .color(NunaPalette.ink.opacity(0.05)))
-                ctx.clip(to: r)
-                var hatch = Path(); var x = -size.height
-                while x < size.width { hatch.move(to: CGPoint(x: x, y: size.height)); hatch.addLine(to: CGPoint(x: x + size.height, y: 0)); x += 5 }
-                ctx.stroke(hatch, with: .color(NunaPalette.textMuted.opacity(0.18)), lineWidth: 1)
-                for iv in smoothed where iv.stage == stage {
-                    let x0 = CGFloat((iv.start - origin) / span) * size.width
-                    let w = max(2, CGFloat((iv.end - iv.start) / span) * size.width)
-                    ctx.fill(Path(roundedRect: CGRect(x: x0, y: 0, width: w, height: size.height), cornerRadius: 1.5), with: .color(color))
+    /// "Typical range" on the left and the night's length on the right, over the rows.
+    @ViewBuilder private var stagesHeader: some View {
+        HStack {
+            if others.count >= 5 {
+                HStack(spacing: 8) {
+                    RoundedRectangle(cornerRadius: 3, style: .continuous).fill(NunaPalette.ink.opacity(0.12)).frame(width: 18, height: 14)
+                        .overlay(RoundedRectangle(cornerRadius: 3, style: .continuous).strokeBorder(NunaPalette.textMuted, style: StrokeStyle(lineWidth: 1, dash: [2, 2])))
+                    Text("Typical range").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 }
             }
-            .frame(height: 22)
+            Spacer(minLength: 8)
+            HStack(alignment: .firstTextBaseline, spacing: 8) {
+                Text("Duration").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: NunaSleepFormat.duration(night.stages.total)).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+            }
         }
-        .padding(.vertical, 9).padding(.horizontal, 10)
-        .background(NunaPalette.ink.opacity(on ? 0.09 : 0.045), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(on ? NunaPalette.textMuted : .clear, lineWidth: 1.5))
+    }
+
+    /// One stage: its radio, share and time, and under it a bar. With nothing picked the bar is the stage's share of the night on a hatched track
+    /// with the usual range marked; with a stage picked every bar shows when in the night that stage happened, the picked one in its colour.
+    private func stageRow(_ stage: SleepStage) -> some View {
+        let on = selected == stage
+        let dimmed = selected != nil && !on
+        let usual = typical { n in switch stage { case .awake: return n.stages.awake; case .light: return n.stages.light; case .deep: return n.stages.deep; case .rem: return n.stages.rem } }
+        let total = max(night.stages.total, 1)
+        let fraction = minutes(stage) / total
+        let usualBand = usual.map { (lo: $0.lo / total, hi: $0.hi / total) }
+        let showsTimeline = selected != nil
+        // Awake's own colour is near the card's, so it is drawn light, as the reference does.
+        let tint = stage == .awake ? NunaPalette.textPrimary.opacity(0.78) : stage.nunaColor
+        let blockColor = on ? tint : NunaPalette.textSecondary.opacity(0.6)
+        return VStack(alignment: .leading, spacing: 10) {
+            stageLine(stage, color: tint, dimmed: dimmed, on: on)
+            Canvas { ctx, size in
+                let r = Path(roundedRect: CGRect(origin: .zero, size: size), cornerRadius: 6)
+                ctx.fill(r, with: .color(NunaPalette.ink.opacity(0.05)))
+                ctx.drawLayer { layer in
+                    layer.clip(to: r)
+                    var hatch = Path(); var x = -size.height
+                    while x < size.width { hatch.move(to: CGPoint(x: x, y: size.height)); hatch.addLine(to: CGPoint(x: x + size.height, y: 0)); x += 6 }
+                    layer.stroke(hatch, with: .color(NunaPalette.textMuted.opacity(0.22)), lineWidth: 1.5)
+                    if showsTimeline {
+                        for iv in smoothed where iv.stage == stage {
+                            let x0 = CGFloat((iv.start - origin) / span) * size.width
+                            let w = max(2, CGFloat((iv.end - iv.start) / span) * size.width)
+                            layer.fill(Path(roundedRect: CGRect(x: x0, y: 0, width: w, height: size.height), cornerRadius: 2), with: .color(blockColor))
+                        }
+                    } else {
+                        let w = max(6, CGFloat(min(fraction, 1)) * size.width)
+                        layer.fill(Path(roundedRect: CGRect(x: 0, y: 0, width: w, height: size.height), cornerRadius: 6), with: .color(tint))
+                    }
+                }
+                if !showsTimeline, let band = usualBand {
+                    let x0 = CGFloat(min(max(band.lo, 0), 1)) * size.width, x1 = CGFloat(min(max(band.hi, 0), 1)) * size.width
+                    let box = CGRect(x: x0, y: -3, width: max(x1 - x0, 3), height: size.height + 6)
+                    ctx.fill(Path(roundedRect: box, cornerRadius: 3), with: .color(NunaPalette.ink.opacity(0.14)))
+                    ctx.stroke(Path(roundedRect: box, cornerRadius: 3), with: .color(NunaPalette.textMuted), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                }
+            }
+            .frame(height: 30)
+        }
         .contentShape(Rectangle())
         .onTapGesture { withAnimation(.easeInOut(duration: 0.2)) { selected = on ? nil : stage } }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text(verbatim: "\(minutes(stage).rounded()) min, \(share(stage))%"))
-        .accessibilityAddTraits(.isButton)
+        .accessibilityLabel(Text(verbatim: "\(stage.nunaName), \(minutes(stage).rounded()) min, \(share(stage))%"))
+        .accessibilityAddTraits(on ? [.isButton, .isSelected] : .isButton)
     }
 
     /// Row without a timeline (the split comes from the daily totals).
