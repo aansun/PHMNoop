@@ -21,6 +21,14 @@ Two modes:
 /tmp/stresssim-build/release/stresssim --baseline20 --out DIR    # 14 baseline days, then days 15-20 as the test (series20.json)
 ```
 
+```bash
+/tmp/stresssim-build/release/stresssim --real PATH/noop-backup.sqlite --out DIR   # a real backup (unzip the .noopbak first), read-only
+```
+
+`--real` takes the first 14 readable main nights as the baseline and treats every later day as a test day. There is no ground truth
+there: it compares the methods with each other, with the person's workouts and nights, and weakly with the daily mood they logged.
+It prints aggregates only; `real.json` holds daily means, never raw samples.
+
 `--baseline20` also compares the app's own opt-in personal daytime-HR baseline mode and a WHOOP-ver whose two waking
 constants are set from the person's own baseline days (`WhoopStress.calibrated`).
 
