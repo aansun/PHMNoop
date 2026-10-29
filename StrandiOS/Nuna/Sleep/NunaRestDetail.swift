@@ -227,7 +227,7 @@ struct NunaRestDetailView: View {
             NunaWeeklyHeading()
             NunaWeeklyTrendCard(title: "Sleep performance", key: "sleep_performance", style: .bars, color: steel,
                                 barFill: { _, _ in steel }, labelFill: { _, _ in steel },
-                                destination: { AnyView(NunaRestTrendView()) }, valueText: percent, endingDaysAgo: ending)
+                                destination: { AnyView(NunaRestTrendView(endingDaysAgo: ending)) }, valueText: percent, endingDaysAgo: ending)
             NunaTwoLineWeeklyCard(title: "Hours vs. needed (hours)", slept: byDay { $0.daily?.totalSleepMin ?? $0.asleepMin },
                                   needed: byDay { model.need($0) }, endingDaysAgo: ending,
                                   destination: { AnyView(NunaHoursNeededTrendView(endingDaysAgo: ending)) })
