@@ -18,11 +18,9 @@ struct NunaLinkRow: Identifiable {
     let icon: String
     let tint: Color?
     let target: NunaRowTarget
-    /// The change against yesterday (HRV, resting heart rate, respiratory rate, blood oxygen), shown as a small triangle with the value
-    /// before it under the figure, as in Key Metrics. `upIsGood` colours it; nil leaves it neutral.
-    var delta: Double? = nil
-    var upIsGood: Bool? = nil
-    var decimals = 0
+    /// The comparison with the figure before it, drawn beside and under the figure, as in Key Metrics: a triangle when it moved, a dot when it
+    /// did not or there is nothing earlier.
+    var trend: NunaTrend? = nil
 }
 
 struct NunaRowsCard: View {
@@ -55,30 +53,8 @@ struct NunaRowsCard: View {
         }
     }
 
-    /// The figure with its change as a triangle, and the value before underneath. The triangle's slot is always there, so the figures of
-    /// every row end on the same line.
     private func figure(_ value: String, _ row: NunaLinkRow) -> some View {
-        let step = row.decimals == 0 ? 1.0 : 0.1
-        let moved = row.delta.flatMap { abs($0) >= step - 0.0001 ? $0 : nil }
-        let tint: Color = row.upIsGood == nil ? NunaPalette.textSecondary : (((moved ?? 0) > 0) == row.upIsGood! ? NunaPalette.charge : NunaPalette.warning)
-        let now = Double(value.replacingOccurrences(of: ",", with: "."))
-        return VStack(alignment: .trailing, spacing: 2) {
-            HStack(alignment: .center, spacing: 5) {
-                Text(verbatim: value).font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                Group {
-                    if let moved {
-                        Image(systemName: moved > 0 ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
-                            .font(.system(size: 8, weight: .bold)).foregroundStyle(tint)
-                    } else { Color.clear }
-                }
-                .frame(width: 10, height: 10)
-            }
-            if let moved, let now {
-                Text(verbatim: String(format: "%.\(row.decimals)f", locale: AppLanguage.activeLocale, now - moved))
-                    .font(.nuna(size: 12, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
-                    .monospacedDigit().padding(.trailing, 15)
-            }
-        }
+        NunaTrendFigure(value: value, trend: row.trend)
     }
 
     @ViewBuilder private func link(_ row: NunaLinkRow) -> some View {
@@ -135,16 +111,31 @@ extension NunaTodayView {
                 made = (nil, NunaRowTarget(kind: .coach), NunaGlyph.anya, nil)
             }
             guard let target = made.1 else { return nil }
-            var change: (Double?, Bool?, Int) = (nil, nil, 0)
+            // Every figure with a value is compared with the one before it; a card with no value (hydration, Anya) has nothing to compare.
+            func cmp(_ current: Double?, _ previous: Double?, _ decimals: Int = 0, good: Bool?, format: ((Double) -> String)? = nil) -> NunaTrend? {
+                NunaTrend.make(current: current, previous: previous, decimals: decimals, upIsGood: good, format: format)
+            }
+            func before(_ value: Double?, _ delta: Double?) -> Double? { value.flatMap { v in delta.map { v - $0 } } }
+            let trend: NunaTrend?
             switch card {
-            case .hrv: change = (model.hrvDelta, true, 0)
-            case .restingHr: change = (model.restingHrDelta, false, 0)
-            case .respiratory: change = (model.respiratoryDelta, nil, 1)
-            case .bloodOxygen: change = (model.spo2Delta, true, 0)
-            default: break
+            case .hrv: trend = cmp(model.hrv, before(model.hrv, model.hrvDelta), good: true)
+            case .restingHr: trend = cmp(model.restingHr, before(model.restingHr, model.restingHrDelta), good: false)
+            case .respiratory: trend = cmp(model.respiratory, before(model.respiratory, model.respiratoryDelta), 1, good: nil)
+            case .bloodOxygen: trend = cmp(model.spo2, before(model.spo2, model.spo2Delta), good: true)
+            case .steps: trend = cmp(model.steps, model.previous["steps"], good: true)
+            case .stress: trend = cmp(model.stress, model.previous["stress"], 1, good: false)
+            case .fitnessAge: trend = cmp(ex["fitness_age"], model.previous["fitness_age"], good: false)
+            case .vo2max: trend = cmp(ex["vo2max_est"], model.previous["vo2max_est"], 1, good: true)
+            case .vitality: trend = cmp(ex["vitality"], model.previous["vitality"], good: true)
+            case .skinTemp: trend = cmp(ex["skin_temp"], model.previous["skin_temp"], 1, good: nil)
+            case .calories: trend = cmp(model.calories, model.previous["calories"], good: nil)
+            case .sleep:
+                trend = cmp(model.sleepMinutes, model.previous["sleep"], good: true, format: { "\(Int($0) / 60)h \(Int($0) % 60)m" })
+            case .weight: trend = cmp(ex["weight"] ?? (profile.weightKg > 0 ? profile.weightKg : nil), ex["weight"] == nil ? nil : model.previous["weight"], 1, good: nil)
+            case .stepsAverage30, .hydration, .coupled, .coach: trend = nil
             }
             return NunaLinkRow(id: card.rawValue, title: card.title, subtitle: card.subtitle, value: made.0,
-                               icon: made.2, tint: made.3, target: target, delta: change.0, upIsGood: change.1, decimals: change.2)
+                               icon: made.2, tint: made.3, target: target, trend: trend)
         }
     }
 

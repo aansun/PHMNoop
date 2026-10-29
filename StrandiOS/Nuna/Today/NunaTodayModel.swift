@@ -45,6 +45,11 @@ final class NunaTodayModel: ObservableObject {
     @Published private(set) var restingHrDelta: Double?
     @Published private(set) var respiratoryDelta: Double?
     @Published private(set) var spo2Delta: Double?
+    /// The reading before the one shown, for the figures that compare with it (steps, calories, sleep, stress, weight, skin temperature and the
+    /// weekly Fitness Age, VO2max and Vitality), keyed `steps`, `calories`, `sleep`, `stress`, `weight`, `skin_temp`, `fitness_age`,
+    /// `vo2max_est`, `vitality`. A key is missing when there is no earlier reading. HRV, resting heart rate, respiratory rate and blood oxygen
+    /// keep their deltas above.
+    @Published private(set) var previous: [String: Double] = [:]
 
     var isToday: Bool { dayOffset == 0 }
 
@@ -156,11 +161,27 @@ final class NunaTodayModel: ObservableObject {
         calories = appleKcal ?? row?.activeKcalEst
 
         var ex: [String: Double] = [:]
+        var prev: [String: Double] = [:]
         for k in ["fitness_age", "vitality", "vo2max_est", "skin_temp"] {
-            if let v = await repo.exploreSeries(key: k, source: "my-whoop", days: 60).last?.value { ex[k] = v }
+            let points = await repo.exploreSeries(key: k, source: "my-whoop", days: 60)
+            if let v = points.last?.value { ex[k] = v }
+            if points.count >= 2 { prev[k] = points[points.count - 2].value }
         }
-        if let w = await repo.exploreSeries(key: "weight", source: "apple-health", days: 90).last?.value { ex["weight"] = w }
+        let weights = await repo.exploreSeries(key: "weight", source: "apple-health", days: 90)
+        if let w = weights.last?.value { ex["weight"] = w }
+        if weights.count >= 2 { prev["weight"] = weights[weights.count - 2].value }
         extras = ex
+
+        // The day before the one shown, for the figures that are a day's total.
+        let prevKey = Repository.localDayKey(cal.date(byAdding: .day, value: -1, to: selectedLogicalDay) ?? selectedLogicalDay)
+        let prevDay = repo.days.first(where: { $0.day == prevKey })
+        if let s = prevDay?.steps.map(Double.init) ?? apple.filter({ $0.day == prevKey }).compactMap({ $0.steps }).max().map(Double.init) ?? stepsByDay[prevKey] {
+            prev["steps"] = s
+        }
+        if let c = apple.filter({ $0.day == prevKey }).compactMap({ $0.activeKcal }).max() ?? prevDay?.activeKcalEst { prev["calories"] = c }
+        if let m = repo.days.last(where: { $0.day < key && $0.totalSleepMin != nil })?.totalSleepMin { prev["sleep"] = m }
+        if let s = stored.last(where: { $0.day < key })?.value { prev["stress"] = s }
+        previous = prev
         // The curve is scored as of "now" for today and as of the end of the day for a past day.
         let curveNow = today ? Date() : (cal.date(byAdding: .second, value: -1, to: cal.date(byAdding: .day, value: 1, to: dayStart) ?? dayStart) ?? dayStart)
         stressCurve = await StressDayCurve.today(repo: repo, now: curveNow)?.result
