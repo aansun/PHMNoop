@@ -88,14 +88,14 @@ struct NunaDaysBreakdown: View {
     private func days(_ band: Band) -> Int { values.filter(band.contains).count }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 6) {
-                Text(title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-                Text("(days)").font(.nuna(size: 12, weight: .semibold)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                Text(title).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                Text("(days)").font(.nuna(size: 11, weight: .semibold)).tracking(nunaTrackingLabel).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textSecondary)
             }
             bar
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 9) {
                 ForEach(Array(bands.enumerated()), id: \.offset) { _, band in line(band) }
             }
         }
@@ -118,15 +118,15 @@ struct NunaDaysBreakdown: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(RoundedRectangle(cornerRadius: 4, style: .continuous).fill(NunaPalette.zoneBase.opacity(parts.isEmpty ? 1 : 0)))
         }
-        .frame(height: 16)
+        .frame(height: 14)
     }
 
     private func line(_ band: Band) -> some View {
         HStack(spacing: 12) {
-            RoundedRectangle(cornerRadius: 3, style: .continuous).fill(band.color).frame(width: 12, height: 12)
-            Text(verbatim: "\(days(band))×").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                .frame(width: 34, alignment: .leading)
-            (Text(band.name) + Text(verbatim: " (\(band.range))")).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            RoundedRectangle(cornerRadius: 3, style: .continuous).fill(band.color).frame(width: 10, height: 10)
+            Text(verbatim: "\(days(band))×").font(.nuna(size: 14.5, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                .frame(width: 32, alignment: .leading)
+            (Text(band.name) + Text(verbatim: " (\(band.range))")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             Spacer(minLength: 0)
         }
     }

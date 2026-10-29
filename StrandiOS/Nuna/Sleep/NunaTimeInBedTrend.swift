@@ -60,7 +60,7 @@ struct NunaTimeInBedTrendView: View {
         NunaDetailScreen("Trend view", centersTitle: true) {
             nameBox
             header(all, average)
-            Text(verbatim: sentence(average, beds: beds)).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+            Text(verbatim: sentence(average, beds: beds)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                 .fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.horizontal, 2)
             chart(all, averageBed: averageBed, averageWake: averageWake)
         }
