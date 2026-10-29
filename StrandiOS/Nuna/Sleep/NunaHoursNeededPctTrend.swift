@@ -16,6 +16,9 @@ struct NunaPctTrendView: View {
     let breakdownTitle: LocalizedStringKey
     /// The figure of a day (its key), nil when the night has none.
     let value: (NunaSleepHistory, String) -> Double?
+    /// Draws a week and a month as a line with a ring on each point (and a tight axis in steps of six), the way a figure that moves a little
+    /// around a high level reads best; false draws bars from zero.
+    var line = false
     var endingDaysAgo = 0
 
     @EnvironmentObject private var repo: Repository
@@ -122,21 +125,56 @@ struct NunaPctTrendView: View {
 
     // MARK: Chart
 
+    /// The line look of a week or a month: a soft area under a thin line, and a ring (dark centre, steel edge) on the points that carry a figure;
+    /// the one touched is filled.
+    @ChartContentBuilder
+    private func lineMarks(_ bars: [Day], bottom: Double, ringed: [Day]) -> some ChartContent {
+        ForEach(bars) { p in
+            AreaMark(x: .value("Day", p.date), yStart: .value("Base", bottom), yEnd: .value("Value", p.value ?? 0))
+                .foregroundStyle(LinearGradient(colors: [NunaRestChart.steel.opacity(0.28), NunaRestChart.steel.opacity(0)], startPoint: .top, endPoint: .bottom))
+            LineMark(x: .value("Day", p.date), y: .value("Value", p.value ?? 0))
+                .foregroundStyle(NunaRestChart.steel).lineStyle(StrokeStyle(lineWidth: 2.2, lineJoin: .round))
+        }
+        ForEach(ringed) { p in
+            PointMark(x: .value("Day", p.date), y: .value("Value", p.value ?? 0))
+                .symbol { Circle().fill(NunaPalette.canvas).overlay(Circle().stroke(NunaRestChart.steel, lineWidth: 2.5)).frame(width: 11, height: 11) }
+        }
+        if let p = bars.first(where: { isPicked($0.date) }) {
+            PointMark(x: .value("Day", p.date), y: .value("Value", p.value ?? 0))
+                .symbol { Circle().fill(NunaRestChart.steel).overlay(Circle().stroke(Color.white, lineWidth: 2)).frame(width: 12, height: 12) }
+        }
+    }
+
+    /// Where a figure sits against its point: above, and below a point lower than the ones either side of it so the line does not run through it.
+    private func labelShift(_ p: Day, in bars: [Day]) -> CGFloat {
+        guard line, range <= 30, let i = bars.firstIndex(where: { $0.id == p.id }), let v = p.value else { return -14 }
+        let neighbours = [i - 1, i + 1].filter { bars.indices.contains($0) }.compactMap { bars[$0].value }
+        return !neighbours.isEmpty && neighbours.allSatisfy({ $0 > v }) ? 20 : -18
+    }
+
     private func chart(_ points: [Day], _ average: Double?) -> some View {
         let w = win
         let week = range == 7, sixMonths = range > 30
-        let top = max(100, ceil((points.compactMap(\.value).max() ?? 100) / 25) * 25)
         let bars = points.filter { $0.value != nil }
+        let lowest = bars.compactMap(\.value).min() ?? 100
+        let step = line ? 6.0 : 25.0
+        let top = line ? 100.0 : max(100, ceil((points.compactMap(\.value).max() ?? 100) / 25) * 25)
+        let bottom = line ? 100 - 6 * max(4, ceil((100 - lowest) / 6)) : 0.0
+        let ringed: [Day] = week ? bars : (picked != nil ? [] : bars.suffix(1).map { $0 })
         let marked = week ? bars : (sixMonths || picked != nil ? [] : bars.suffix(1).map { $0 })
         let segments = sixMonths ? NunaPeriodSegment.make(bars.compactMap { p in p.value.map { (p.date, $0) } }, from: w.start, to: w.end) : []
         return Chart {
-            ForEach(bars) { p in
-                if sixMonths {
-                    LineMark(x: .value("Day", p.date), y: .value("Value", p.value ?? 0)).foregroundStyle(Color.white.opacity(0.18))
-                        .lineStyle(StrokeStyle(lineWidth: 1.2, lineJoin: .round))
-                } else {
-                    BarMark(x: .value("Day", p.date, unit: .day), y: .value("Value", p.value ?? 0), width: .fixed(week ? 18 : 8))
-                        .foregroundStyle(isPicked(p.date) || picked == nil ? NunaRestChart.steel : NunaRestChart.steel.opacity(0.28)).cornerRadius(3)
+            if line && !sixMonths {
+                lineMarks(bars, bottom: bottom, ringed: ringed)
+            } else {
+                ForEach(bars) { p in
+                    if sixMonths {
+                        LineMark(x: .value("Day", p.date), y: .value("Value", p.value ?? 0)).foregroundStyle(Color.white.opacity(0.18))
+                            .lineStyle(StrokeStyle(lineWidth: 1.2, lineJoin: .round))
+                    } else {
+                        BarMark(x: .value("Day", p.date, unit: .day), y: .value("Value", p.value ?? 0), width: .fixed(week ? 18 : 8))
+                            .foregroundStyle(isPicked(p.date) || picked == nil ? NunaRestChart.steel : NunaRestChart.steel.opacity(0.28)).cornerRadius(3)
+                    }
                 }
             }
             if let picked, !sixMonths {
@@ -146,10 +184,10 @@ struct NunaPctTrendView: View {
                 RuleMark(y: .value("Average", average)).foregroundStyle(Color.white.opacity(0.9)).lineStyle(StrokeStyle(lineWidth: 1.2, dash: [4, 4]))
             }
         }
-        .chartYScale(domain: 0...top)
+        .chartYScale(domain: bottom...top)
         .chartXScale(domain: w.domain)
         .chartYAxis {
-            AxisMarks(position: .leading, values: stride(from: 0.0, through: top, by: 25.0).map { $0 }) { v in
+            AxisMarks(position: .leading, values: stride(from: bottom, through: top, by: step).map { $0 }) { v in
                 AxisGridLine().foregroundStyle(NunaPalette.hairline.opacity(0.7))
                 AxisValueLabel { if let d = v.as(Double.self) { Text(verbatim: "\(Int(d))%").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) } }
             }
@@ -165,7 +203,7 @@ struct NunaPctTrendView: View {
                             if let v = p.value, let x = proxy.position(forX: p.date), let y = proxy.position(forY: v) {
                                 Text(verbatim: "\(Int(v.rounded()))%").font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaRestChart.steel)
                                     .fixedSize().offset(x: !week && x > frame.width - 30 ? -16 : 0)
-                                    .position(x: frame.minX + x, y: frame.minY + y - 14)
+                                    .position(x: frame.minX + x, y: frame.minY + y + labelShift(p, in: bars))
                             }
                         }
                         if sixMonths { NunaSegmentsLayer(segments: segments, proxy: proxy, frame: frame, text: { "\(Int($0.rounded()))%" }) }
@@ -230,6 +268,22 @@ struct NunaConsistencyTrendView: View {
             ],
             breakdownTitle: "Sleep consistency breakdown",
             value: { $0.consistency[$1] }, endingDaysAgo: endingDaysAgo)
+    }
+}
+
+/// "Sleep efficiency": 90% and over optimal, 80 to 89 sufficient, under 80 poor, drawn as a line.
+struct NunaEfficiencyTrendView: View {
+    var endingDaysAgo = 0
+    var body: some View {
+        NunaPctTrendView(
+            name: "Sleep efficiency", icon: "bed.double", noun: "average sleep efficiency",
+            bands: [
+                .init(color: NunaRestChart.need, name: "Optimal", range: "90%+") { $0 >= 90 },
+                .init(color: Color(hex: "#8A8D93"), name: "Sufficient", range: "80–89%") { $0 >= 80 && $0 < 90 },
+                .init(color: Color(hex: "#F5A623"), name: "Poor", range: "<80%") { $0 < 80 },
+            ],
+            breakdownTitle: "Sleep efficiency breakdown",
+            value: { $0.efficiency[$1] }, line: true, endingDaysAgo: endingDaysAgo)
     }
 }
 #endif
