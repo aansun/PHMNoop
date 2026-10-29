@@ -24,6 +24,12 @@ struct NunaWeeklyTrendCard: View {
     var labelFill: ((Double, Bool) -> Color)?
     /// Opens this screen instead of the metric's own page.
     var destination: (() -> AnyView)?
+    /// Daily values the caller already has (the minutes in a heart-rate zone, which is not a stored series); nil reads the stored series `key`.
+    var points: [(day: String, value: Double)]?
+    /// How a reading is written over its point or bar, when not with `decimals`.
+    var valueText: ((Double) -> String)?
+    /// Bars scaled to the tallest in view instead of 0 to 100 (minutes, not a score).
+    var autoScale = false
     /// 0 for the week that ends today; the day picked on Today moves it.
     var endingDaysAgo = 0
 
@@ -51,13 +57,15 @@ struct NunaWeeklyTrendCard: View {
                 card
             }
         }
-        .task(id: repo.refreshSeq) { await model.load(repo: repo, key: key, source: source, days: 60) }
+        .task(id: "\(repo.refreshSeq)-\(points.map { $0.reduce(0) { $0 + $1.value } } ?? -1)") {
+            if let points { model.set(points) } else { await model.load(repo: repo, key: key, source: source, days: 60) }
+        }
     }
 
     private var slots: [(date: Date, value: Double?)] { model.window(7, endingDaysAgo: endingDaysAgo) }
 
     private func text(_ v: Double) -> String {
-        signed ? nunaSigned(v, decimals) : String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, v)
+        valueText?(v) ?? (signed ? nunaSigned(v, decimals) : String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, v))
     }
 
     @ViewBuilder private var chart: some View {
@@ -97,7 +105,7 @@ struct NunaWeeklyTrendCard: View {
     }
 
     private func plot(_ s: [(date: Date, value: Double?)]) -> some View {
-        NunaWeeklyPlot(values: s.map(\.value), style: style, fill: barFill ?? { _, _ in color }, labelColor: labelFill ?? { _, _ in labelColor ?? color },
+        NunaWeeklyPlot(values: s.map(\.value), style: style, autoScale: autoScale, fill: barFill ?? { _, _ in color }, labelColor: labelFill ?? { _, _ in labelColor ?? color },
                        lineColor: color, label: text)
     }
 }
@@ -106,6 +114,7 @@ struct NunaWeeklyTrendCard: View {
 private struct NunaWeeklyPlot: View {
     let values: [Double?]
     let style: NunaWeeklyTrendCard.Style
+    let autoScale: Bool
     let fill: (Double, Bool) -> Color
     let labelColor: (Double, Bool) -> Color
     let lineColor: Color
@@ -132,7 +141,10 @@ private struct NunaWeeklyPlot: View {
     /// A line keeps its points between the labels' room and the baseline; bars stand on a 0 to 100 scale.
     private func y(_ v: Double, _ size: CGSize) -> CGFloat {
         let h = size.height
-        if style == .bars { return h - h * 0.84 * CGFloat(min(max(v, 0), 100) / 100) }
+        if style == .bars {
+            let top = autoScale ? max(present.max() ?? 1, 1) : 100
+            return h - h * 0.84 * CGFloat(min(max(v, 0), top) / top)
+        }
         let lo = present.min() ?? 0, hi = present.max() ?? 1
         let t: Double = hi - lo < 0.0001 ? 0.5 : (v - lo) / (hi - lo)
         return h * (0.76 - 0.50 * CGFloat(t))
