@@ -254,14 +254,18 @@ struct NunaNightPicker: View {
     @ObservedObject var model: NunaSleepModel
     var caption: LocalizedStringKey?
     var date: Date?
+    /// False when the screen's header already says which night this is.
+    var showsCaption = true
     var body: some View {
         HStack {
             step("chevron.left", enabled: model.hasOlder) { model.index += 1 }
             Spacer()
             VStack(spacing: 2) {
-                Text(caption ?? (model.index == 0 ? "Last night" : "Earlier night"))
-                    .font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                    .foregroundStyle(NunaPalette.textSecondary)
+                if showsCaption {
+                    Text(caption ?? (model.index == 0 ? "Last night" : "Earlier night"))
+                        .font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        .foregroundStyle(NunaPalette.textSecondary)
+                }
                 Text(verbatim: (date ?? model.night?.wakeDate).map { NunaSleepFormat.nightTitle($0) } ?? "–")
                     .font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
             }

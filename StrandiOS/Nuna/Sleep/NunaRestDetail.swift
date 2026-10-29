@@ -18,6 +18,7 @@ struct NunaRestDetailView: View {
     @State private var range = 7
     @State private var page = 0
     @State private var showCoach = false
+    @State private var showInfo = false
     @AppStorage(NunaNapPrefs.autoDetectKey) private var autoNaps = true
     /// The journal's evening habits against this wearer's own Rest, for the night's line.
     @State private var factors: NunaSleepFactorContext?
@@ -32,8 +33,9 @@ struct NunaRestDetailView: View {
     }
 
     var body: some View {
-        NunaDetailScreen(title, trailing: AnyView(settingsButton)) {
-            if model.loaded, model.nights.count > 1 { NunaNightPicker(model: model) }
+        // The night sits in the header, as the day does on the Charge page, with the info and settings buttons at the right.
+        NunaDetailScreen(restCaption, trailing: AnyView(headerButtons), centersTitle: true) {
+            if model.loaded, model.nights.count > 1 { NunaNightPicker(model: model, showsCaption: false) }
             hero
             if let night = model.night { components(night) }
             if coachEnabled, model.index == 0, router.todayDayOffset == 0, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
@@ -65,6 +67,14 @@ struct NunaRestDetailView: View {
                     let i = model.nights.firstIndex(where: { $0.dayKey == NunaSelectedDay.key(offset: router.todayDayOffset) }) { model.index = i }
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "sleep") }
+        .environment(\.nunaDetailSwitch, nil)
+    }
+
+    private var headerButtons: some View {
+        HStack(spacing: 0) {
+            if againstRecent != nil { NunaInfoButton(isOn: $showInfo) }
+            settingsButton
+        }
     }
 
     private var settingsButton: some View {
@@ -162,10 +172,11 @@ struct NunaRestDetailView: View {
     }
 
     private var hero: some View {
-        NunaScoreHero(caption: restCaption,
+        NunaScoreHero(caption: "",
                       fraction: (rest ?? 0) / 100, number: rest.map { "\(Int($0.rounded()))" } ?? "–", unit: "%",
                       name: rest.map(nunaRestWord) ?? "Rest", nameColor: rest.map(nunaRestTextColor),
-                      color: rest.map(nunaRestColor) ?? NunaPalette.rest, hasNote: againstRecent != nil) {
+                      color: rest.map(nunaRestColor) ?? NunaPalette.rest, hasNote: againstRecent != nil,
+                      showsCaptionRow: false, ringTitle: "Rest", ringSize: 252, info: $showInfo) {
             if let d = againstRecent {
                 Text(verbatim: comparison(d)).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     .fixedSize(horizontal: false, vertical: true).textCase(nil)
@@ -194,27 +205,24 @@ struct NunaRestDetailView: View {
     // MARK: What it is made of
 
     private func components(_ night: NunaNight) -> some View {
-        let previous: NunaNight? = model.nights.indices.contains(model.index + 1) ? model.nights[model.index + 1] : nil
-        func delta(_ f: (NunaNight) -> Double?) -> Double? {
-            guard let a = f(night), let p = previous, let b = f(p) else { return nil }
-            return a - b
+        // The four parts of the night, each with how it reads (poor, sufficient or optimal) and its figure, on the card under the ring.
+        func row(_ title: LocalizedStringKey, _ icon: String, _ v: Double?, sufficientFrom: Double, optimalFrom: Double) -> some View {
+            NavigationLink(value: NunaTodayRoute.sleepPerformance(model.index)) {
+                NunaLevelRow(title: title, icon: icon, percent: v, level: v.map { NunaLevel.of($0, sufficientFrom: sufficientFrom, optimalFrom: optimalFrom) })
+            }.buttonStyle(.plain)
         }
-        func whole(_ v: Double?) -> String? { v.map { String(format: "%.0f", locale: AppLanguage.activeLocale, $0) } }
-        return NunaPlainList {
-            row("Performance", "bed.double", whole(model.hoursVsNeeded(night)), delta { model.hoursVsNeeded($0) })
-            NunaDivider()
-            row("Efficiency", "gauge.with.dots.needle.67percent", whole(model.efficiency(night)), delta { model.efficiency($0) })
-            NunaDivider()
-            row("Restorative", "moon.zzz", whole(model.restorative(night)), delta { model.restorative($0) })
-            NunaDivider()
-            row("Consistency", "calendar", whole(model.consistency(night)), delta { model.consistency($0) })
+        return NunaSignalPanel {
+            VStack(spacing: 0) {
+                row("Hours vs. needed", "bed.double", model.hoursVsNeeded(night), sufficientFrom: 70, optimalFrom: 85)
+                NunaDivider()
+                row("Sleep consistency", "calendar", model.consistency(night), sufficientFrom: 60, optimalFrom: 80)
+                NunaDivider()
+                row("Sleep efficiency", "gauge.with.dots.needle.67percent", model.efficiency(night), sufficientFrom: 75, optimalFrom: 90)
+                NunaDivider()
+                row("Restorative sleep", "moon.zzz", model.restorative(night), sufficientFrom: 50, optimalFrom: 75)
+            }
+            NunaLevelLegend().padding(.top, 8)
         }
-    }
-
-    private func row(_ title: LocalizedStringKey, _ icon: String, _ value: String?, _ delta: Double?) -> some View {
-        NavigationLink(value: NunaTodayRoute.sleepPerformance(model.index)) {
-            NunaContributorRow(title: title, icon: icon, value: value, delta: delta, downIsGood: false)
-        }.buttonStyle(.plain)
     }
 }
 #endif
