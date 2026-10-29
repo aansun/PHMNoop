@@ -27,6 +27,16 @@ struct NunaHealthTabView: View {
     }
 }
 
+/// "5 years younger", "1 year older": the gap between fitness age and calendar age, in the singular for one year. Positive is younger.
+func nunaYearsGap(_ diff: Int) -> LocalizedStringKey {
+    switch diff {
+    case 1: return "1 year younger"
+    case -1: return "1 year older"
+    case let d where d > 0: return "\(d) years younger"
+    default: return "\(-diff) years older"
+    }
+}
+
 /// Fitness age as the orb, with the pace of aging under it and the way into the full page. The card has no edge at the top: its tint fades into the
 /// page, and it is darkest at the bottom.
 struct NunaFitnessAgeSummary: View {
@@ -96,7 +106,7 @@ struct NunaFitnessAgeSummary: View {
                     .font(.nuna(size: 60, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(60)).foregroundStyle(NunaPalette.textPrimary)
                 Text("Fitness age").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 if let diff, diff != 0 {
-                    Text(diff > 0 ? LocalizedStringKey("\(diff) years younger") : LocalizedStringKey("\(-diff) years older"))
+                    Text(nunaYearsGap(diff))
                         .font(.nuna(size: 15, weight: .bold)).foregroundStyle(tint)
                 } else if diff == 0 {
                     Text("About your age").font(.nuna(size: 15, weight: .bold)).foregroundStyle(tint)

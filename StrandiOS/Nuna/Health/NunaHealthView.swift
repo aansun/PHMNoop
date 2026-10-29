@@ -298,7 +298,7 @@ struct NunaHealthView: View {
                     Spacer(minLength: 8)
                     if let diff {
                         Text(diff == 0 ? LocalizedStringKey("Same as your age")
-                             : (diff > 0 ? LocalizedStringKey("\(diff) years younger") : LocalizedStringKey("\(-diff) years older")))
+                             : (nunaYearsGap(diff)))
                             .font(.nuna(size: 13, weight: .heavy)).textCase(nil)
                             .foregroundStyle(diff > 0 ? NunaPalette.charge : (diff == 0 ? NunaPalette.textSecondary : NunaPalette.warning))
                     }
