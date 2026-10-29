@@ -134,40 +134,16 @@ struct NunaDaysBreakdown: View {
 
 extension NunaDaysBreakdown {
     /// Charge's three zones.
-    static func charge(_ values: [Double]) -> NunaDaysBreakdown {
-        NunaDaysBreakdown(title: "Charge breakdown", bands: [
+    static var chargeBands: [Band] {
+        [
             Band(color: NunaPalette.scoreHigh, name: "Ready", range: "67–100%") { $0 >= 67 },
             Band(color: NunaPalette.scoreMid, name: "Moderate", range: "34–66%") { $0 >= 34 && $0 < 67 },
             Band(color: NunaPalette.scoreLow, name: "Low", range: "0–33%") { $0 < 34 },
-        ], values: values)
+        ]
     }
-}
 
-/// The page the weekly Charge card opens: the full chart with its week, month and six-month views, and the days per zone under it.
-struct NunaChargeTrendView: View {
-    @EnvironmentObject private var repo: Repository
-    @EnvironmentObject private var router: NavRouter
-    @StateObject private var series = NunaSeriesModel()
-    @State private var range = 7
-    @State private var page = 0
-
-    var body: some View {
-        NunaDetailScreen("Charge") {
-            NunaTrendDetailCard(
-                caption: "Average", unit: "%",
-                readings: { days, back in series.readings(days, endingDaysAgo: back) },
-                hasOlder: { start in series.byDay.keys.min().map { Repository.localDayKey(start) > $0 } ?? false },
-                loaded: series.loaded, band: series.typicalRange,
-                lineColor: NunaPalette.charge, decimals: 0, directional: true,
-                levelChip: { v in (text: v >= 67 ? "Ready" : (v >= 34 ? "Moderate" : "Low"), color: nunaChargeTextColor(v)) },
-                sentence: nil, range: $range, page: $page)
-                .columns(color: nunaChargeColor, top: 100)
-                .withoutFigures()
-                .windowFooter { AnyView(NunaDaysBreakdown.charge($0)) }
-                .endingOn(daysAgo: router.todayDayOffset)
-        }
-        .environment(\.nunaDetailSwitch, nil)
-        .task(id: repo.refreshSeq) { await series.load(repo: repo, key: "recovery", source: "my-whoop") }
+    static func charge(_ values: [Double]) -> NunaDaysBreakdown {
+        NunaDaysBreakdown(title: "Charge breakdown", bands: chargeBands, values: values)
     }
 }
 

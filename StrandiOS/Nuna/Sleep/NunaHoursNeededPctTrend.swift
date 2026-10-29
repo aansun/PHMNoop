@@ -21,6 +21,9 @@ struct NunaPctTrendView: View {
     var line = false
     /// The figure is minutes shown as hours and minutes (sleep debt) instead of a percentage; bars on a 0 to 3 hour axis (and up in whole hours).
     var duration = false
+    /// A score with colour zones (Charge): light bars, the newest or the touched one in the colour of its zone, and an axis with the zone
+    /// edges at 0, 33, 66 and 100 in their colours. A month writes no figure over its last bar.
+    var zones: ((Double) -> Color)?
     var endingDaysAgo = 0
 
     @EnvironmentObject private var repo: Repository
@@ -84,7 +87,7 @@ struct NunaPctTrendView: View {
     private func header(_ average: Double?) -> some View {
         let pickedValue: Double? = picked.flatMap { d in days.first { Calendar.current.isDate($0.date, inSameDayAs: d) }?.value }
         let shown = pickedValue ?? average
-        let tint = pickedValue == nil ? NunaPalette.textPrimary : NunaRestChart.steel
+        let tint = pickedValue == nil ? NunaPalette.textPrimary : (pickedValue.flatMap { zones?($0) } ?? NunaRestChart.steel)
         return HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(verbatim: pickedValue == nil ? String(localized: "Average") : pickedTitle).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
@@ -115,7 +118,10 @@ struct NunaPctTrendView: View {
     }
 
     /// A figure the way the page writes it: "88%" or "1:16".
-    private func fmt(_ v: Double) -> String { duration ? NunaRestChart.hm(v) : "\(Int(v.rounded()))%" }
+    private func fmt(_ v: Double) -> String {
+        // The Charge card rounds the way printf does (56.5 reads 56); a scored page follows it so a day never differs between the two.
+        duration ? NunaRestChart.hm(v) : (zones != nil ? String(format: "%.0f%%", v) : "\(Int(v.rounded()))%")
+    }
 
     private func sentence(_ average: Double?) -> String {
         guard let average else { return String(localized: "Wear your strap to bed each night to track this over time.") }
@@ -129,6 +135,18 @@ struct NunaPctTrendView: View {
     private func nearest(_ x: CGFloat, _ proxy: ChartProxy, _ frame: CGRect, among bars: [Day]) -> Date? {
         guard let touched: Date = proxy.value(atX: x - frame.minX) else { return nil }
         return bars.filter { $0.value != nil }.min { abs($0.date.timeIntervalSince(touched)) < abs($1.date.timeIntervalSince(touched)) }?.date
+    }
+
+    /// A bar: the zone's colour for the newest or touched one of a scored page, light grey for the others, steel blue on a page without zones.
+    private func barColor(_ p: Day, latest: Date?) -> Color {
+        let lit = picked != nil ? isPicked(p.date) : p.date == latest
+        guard let zones, let v = p.value else { return isPicked(p.date) || picked == nil ? NunaRestChart.steel : NunaRestChart.steel.opacity(0.28) }
+        return lit ? zones(v) : Color(hex: "#DCDCDC").opacity(picked == nil ? 1 : 0.4)
+    }
+
+    private func labelColor(_ p: Day, latest: Date?) -> Color {
+        guard let zones, let v = p.value else { return NunaRestChart.steel }
+        return (picked != nil ? isPicked(p.date) : p.date == latest) ? zones(v) : NunaPalette.textPrimary
     }
 
     // MARK: Chart
@@ -166,11 +184,13 @@ struct NunaPctTrendView: View {
         let bars = points.filter { $0.value != nil }
         let lowest = bars.compactMap(\.value).min() ?? 100
         let step = duration ? 60.0 : (line ? 6.0 : 25.0)
-        let top = duration ? max(180, ceil((points.compactMap(\.value).max() ?? 180) / 60) * 60)
+        let top = zones != nil ? 100.0 : duration ? max(180, ceil((points.compactMap(\.value).max() ?? 180) / 60) * 60)
             : (line ? 100.0 : max(100, ceil((points.compactMap(\.value).max() ?? 100) / 25) * 25))
         let bottom = line ? 100 - 6 * max(4, ceil((100 - lowest) / 6)) : 0.0
+        let latest = bars.last?.date
+        let tickValues: [Double] = zones != nil ? [0, 33, 66, 100] : stride(from: bottom, through: top, by: step).map { $0 }
         let ringed: [Day] = week ? bars : (picked != nil ? [] : bars.suffix(1).map { $0 })
-        let marked = week ? bars : (sixMonths || picked != nil ? [] : bars.suffix(1).map { $0 })
+        let marked = week ? bars : (sixMonths || picked != nil || zones != nil ? [] : bars.suffix(1).map { $0 })
         let segments = sixMonths ? NunaPeriodSegment.make(bars.compactMap { p in p.value.map { (p.date, $0) } }, from: w.start, to: w.end) : []
         return Chart {
             if line && !sixMonths {
@@ -182,7 +202,7 @@ struct NunaPctTrendView: View {
                             .lineStyle(StrokeStyle(lineWidth: 1.2, lineJoin: .round))
                     } else {
                         BarMark(x: .value("Day", p.date, unit: .day), y: .value("Value", p.value ?? 0), width: .fixed(week ? 18 : 8))
-                            .foregroundStyle(isPicked(p.date) || picked == nil ? NunaRestChart.steel : NunaRestChart.steel.opacity(0.28)).cornerRadius(3)
+                            .foregroundStyle(barColor(p, latest: latest)).cornerRadius(3)
                     }
                 }
             }
@@ -196,9 +216,12 @@ struct NunaPctTrendView: View {
         .chartYScale(domain: bottom...top)
         .chartXScale(domain: w.domain)
         .chartYAxis {
-            AxisMarks(position: .leading, values: stride(from: bottom, through: top, by: step).map { $0 }) { v in
+            AxisMarks(position: .leading, values: tickValues) { v in
                 AxisGridLine().foregroundStyle(NunaPalette.hairline.opacity(0.7))
-                AxisValueLabel { if let d = v.as(Double.self) { Text(verbatim: duration ? NunaRestChart.hm(d) : "\(Int(d))%").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) } }
+                AxisValueLabel { if let d = v.as(Double.self) {
+                    Text(verbatim: duration ? NunaRestChart.hm(d) : "\(Int(d))%").font(.nuna(size: 12, weight: .heavy))
+                        .foregroundStyle(zones.map { $0(d == 0 ? 1 : d) } ?? NunaPalette.textMuted)
+                } }
             }
         }
         .chartXAxis(.hidden)
@@ -210,7 +233,7 @@ struct NunaPctTrendView: View {
                         ZStack {
                         ForEach(marked) { p in
                             if let v = p.value, let x = proxy.position(forX: p.date), let y = proxy.position(forY: v) {
-                                Text(verbatim: fmt(v)).font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaRestChart.steel)
+                                Text(verbatim: fmt(v)).font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).foregroundStyle(labelColor(p, latest: latest))
                                     .fixedSize().offset(x: !week && x > frame.width - 30 ? -16 : 0)
                                     .position(x: frame.minX + x, y: frame.minY + y + labelShift(p, in: bars))
                             }
@@ -309,6 +332,18 @@ struct NunaSleepDebtTrendView: View {
             ],
             breakdownTitle: "Sleep debt breakdown",
             value: { $0.debtMin[$1] }, duration: true, endingDaysAgo: endingDaysAgo)
+    }
+}
+
+/// "Charge": the 0 to 100 score with its three zones, the way the Recovery trend view draws it.
+struct NunaChargeScoreTrendView: View {
+    var endingDaysAgo = 0
+    var body: some View {
+        NunaPctTrendView(
+            name: "Charge", icon: "figure.mind.and.body", noun: "average Charge",
+            bands: NunaDaysBreakdown.chargeBands,
+            breakdownTitle: "Charge breakdown",
+            value: { $0.charge[$1] }, zones: { nunaChargeColor($0) }, endingDaysAgo: endingDaysAgo)
     }
 }
 #endif
