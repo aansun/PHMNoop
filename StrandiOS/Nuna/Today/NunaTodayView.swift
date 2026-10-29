@@ -917,37 +917,41 @@ struct NunaTodayView: View {
         func route(_ key: String, _ source: String = "my-whoop") -> NunaTodayRoute? {
             MetricCatalog.metric(key: key, source: source).map { .metric($0) }
         }
-        /// "▲ 4" against the previous day; `downIsGood` for resting heart rate.
-        func delta(_ d: Double?, downIsGood: Bool = false, decimals: Int = 0) -> (String, Bool)? {
-            guard let d else { return nil }
-            let step = decimals == 0 ? 1.0 : 0.1
-            guard abs(d) >= step - 0.0001 else { return nil }
-            let shown = String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, abs(d))
-            return ((d > 0 ? "▲ " : "▼ ") + shown, downIsGood ? d < 0 : d > 0)
+        /// Every figure is compared with the one before it: a triangle when it moved, a dot when it did not or there is nothing earlier.
+        func cmp(_ current: Double?, _ previous: Double?, _ decimals: Int = 0, good: Bool?, format: ((Double) -> String)? = nil) -> NunaTrend? {
+            NunaTrend.make(current: current, previous: previous, decimals: decimals, upIsGood: good, format: format)
         }
+        func before(_ value: Double?, _ delta: Double?) -> Double? { value.flatMap { v in delta.map { v - $0 } } }
         let stepsRoute = MetricCatalog.todayStepsMetric(hasMeasuredSteps: model.steps != nil).map { NunaTodayRoute.metric($0) }
         func tile(_ m: KeyMetric, _ label: LocalizedStringKey, _ value: String, _ unit: String, _ route: NunaTodayRoute?,
-                  _ icon: String, _ tint: Color?, delta d: (String, Bool)? = nil) -> NunaMetricTile {
+                  _ icon: String, _ tint: Color?, trend: NunaTrend?) -> NunaMetricTile {
             NunaMetricTile(id: m.rawValue, label: label, value: value, unit: unit, route: route,
-                           delta: d?.0, deltaGood: d?.1, icon: icon, tint: tint,
+                           trend: trend, icon: icon, tint: tint,
                            spark: keyMetricsDetailed ? sparks.values[m.rawValue] : nil)
         }
         return enabled.map { m in
             switch m {
             case .hrv:
-                return tile(m, "HRV", fmt(model.hrv), "ms", route("hrv"), "waveform.path.ecg", NunaPalette.charge, delta: delta(model.hrvDelta))
+                return tile(m, "HRV", fmt(model.hrv), "ms", route("hrv"), "waveform.path.ecg", NunaPalette.charge, trend: cmp(model.hrv, before(model.hrv, model.hrvDelta), good: true))
             case .restingHr:
-                return tile(m, "Resting HR", fmt(model.restingHr), "bpm", route("rhr"), "heart", NunaPalette.alertText, delta: delta(model.restingHrDelta, downIsGood: true))
+                return tile(m, "Resting HR", fmt(model.restingHr), "bpm", route("rhr"), "heart", NunaPalette.alertText, trend: cmp(model.restingHr, before(model.restingHr, model.restingHrDelta), good: false))
             case .bloodOxygen:
-                return tile(m, "Blood Oxygen", fmt(model.spo2), "%", route("spo2"), "drop", NunaPalette.effortText, delta: delta(model.spo2Delta))
+                return tile(m, "Blood Oxygen", fmt(model.spo2), "%", route("spo2"), "drop", NunaPalette.effortText, trend: cmp(model.spo2, before(model.spo2, model.spo2Delta), good: true))
             case .respiratory:
-                return tile(m, "Respiratory", fmt(model.respiratory, 1), "/min", route("resp_rate"), "wind", NunaPalette.effortText, delta: delta(model.respiratoryDelta, decimals: 1))
-            case .steps:       return tile(m, "Steps", fmt(model.steps), "", stepsRoute, "figure.walk", NunaPalette.charge)
-            case .calories:    return tile(m, "Calories", fmt(model.calories), "kcal", route("energy_kcal"), "flame", NunaPalette.effortText)
-            case .weight:      return tile(m, "Weight", fmt(model.extras["weight"], 1), "kg", route("weight", "apple-health"), "scalemass", NunaPalette.effortText)
-            case .skinTemp:    return tile(m, "Skin Temp", fmt(model.extras["skin_temp"], 1), "°C", route("skin_temp"), "thermometer", NunaPalette.alertText)
+                return tile(m, "Respiratory", fmt(model.respiratory, 1), "/min", route("resp_rate"), "wind", NunaPalette.effortText, trend: cmp(model.respiratory, before(model.respiratory, model.respiratoryDelta), 1, good: nil))
+            case .steps:
+                return tile(m, "Steps", fmt(model.steps), "", stepsRoute, "figure.walk", NunaPalette.charge, trend: cmp(model.steps, model.previous["steps"], good: true))
+            case .calories:
+                return tile(m, "Calories", fmt(model.calories), "kcal", route("energy_kcal"), "flame", NunaPalette.effortText, trend: cmp(model.calories, model.previous["calories"], good: nil))
+            case .weight:
+                return tile(m, "Weight", fmt(model.extras["weight"], 1), "kg", route("weight", "apple-health"), "scalemass", NunaPalette.effortText,
+                            trend: cmp(model.extras["weight"], model.previous["weight"], 1, good: nil))
+            case .skinTemp:
+                return tile(m, "Skin Temp", fmt(model.extras["skin_temp"], 1), "°C", route("skin_temp"), "thermometer", NunaPalette.alertText,
+                            trend: cmp(model.extras["skin_temp"], model.previous["skin_temp"], 1, good: nil))
             case .rest:
-                return tile(m, "Sleep", model.sleepMinutes.map { NunaSleepFormat.duration($0) } ?? "–", "", .sleep(0), "moon", NunaPalette.restText)
+                return tile(m, "Sleep", model.sleepMinutes.map { NunaSleepFormat.duration($0) } ?? "–", "", .sleep(0), "moon", NunaPalette.restText,
+                            trend: cmp(model.sleepMinutes, model.previous["sleep"], good: true, format: { NunaSleepFormat.duration($0) }))
             case .charge, .effort: return NunaMetricTile(id: m.rawValue, label: "", value: "", unit: "", route: nil)
             }
         }

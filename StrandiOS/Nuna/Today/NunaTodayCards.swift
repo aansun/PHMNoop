@@ -547,9 +547,9 @@ struct NunaMetricTile: Identifiable {
     let value: String
     let unit: String
     let route: NunaTodayRoute?
-    /// "▲ 4" style change against the previous day, and whether the change is good (nil = neutral).
-    var delta: String?
-    var deltaGood: Bool?
+    /// The comparison with the figure before it: a triangle when it moved, a dot when it did not or there is nothing earlier, and the earlier
+    /// figure underneath (the chip of the card layout carries "▲ 4" or "● 0").
+    var trend: NunaTrend?
     var icon = "circle"
     var tint: Color?
     /// Small line under the label in the long layout, e.g. what the change is measured against.
@@ -596,56 +596,12 @@ struct NunaMetricsGrid: View {
             if let spark = tile.spark, spark.count >= 2 {
                 NunaSpark(values: spark, color: tile.tint ?? NunaPalette.charge).frame(width: 52, height: 30)
             }
-            // The figure on the right with its change as a small triangle (no unit), and what it was before underneath. The triangle's slot
-            // is always there, so the figures of every row end on the same line.
-            let trend = Self.trend(tile)
-            VStack(alignment: .trailing, spacing: 2) {
-                HStack(alignment: .center, spacing: 5) {
-                    Text(verbatim: tile.value).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        .lineLimit(1).minimumScaleFactor(0.7)
-                    Group {
-                        if let trend {
-                            Image(systemName: trend.up ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill")
-                                .font(.system(size: 8, weight: .bold)).foregroundStyle(trend.tint)
-                        } else { Color.clear }
-                    }
-                    .frame(width: 10, height: 10)
-                }
-                if let before = trend?.previous {
-                    Text(verbatim: before).font(.nuna(size: 12, weight: .semibold, design: NunaType.design))
-                        .foregroundStyle(NunaPalette.textSecondary).monospacedDigit().padding(.trailing, 15)
-                }
-            }
+            // The figure on the right with its comparison: a triangle when it moved, a dot when it did not, and what it was before underneath.
+            NunaTrendFigure(value: tile.value, trend: tile.trend, size: 20, minimumScale: 0.7)
             Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
         }
         .frame(minHeight: 58)
         .contentShape(Rectangle())
-    }
-
-    /// Reads the "▲ 3" change: which way it went, its colour, and the value before it (this value minus the change). nil without a change.
-    private static func trend(_ tile: NunaMetricTile) -> (up: Bool, tint: Color, previous: String?)? {
-        guard let delta = tile.delta, let first = delta.first, first == "▲" || first == "▼" else { return nil }
-        let up = first == "▲"
-        let tint: Color = tile.deltaGood == nil ? NunaPalette.textSecondary : (tile.deltaGood! ? NunaPalette.charge : NunaPalette.warning)
-        func number(_ t: String) -> Double? {
-            Double(t.trimmingCharacters(in: .whitespaces).replacingOccurrences(of: ",", with: ".").filter { "0123456789.-".contains($0) })
-        }
-        var previous: String?
-        if let now = number(tile.value), let change = number(String(delta.dropFirst())) {
-            let before = up ? now - change : now + change
-            let decimals = tile.value.contains(",") || tile.value.contains(".") ? 1 : 0
-            previous = String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, before)
-        }
-        return (up, tint, previous)
-    }
-
-    private func deltaChip(_ text: String, good: Bool?) -> some View {
-        let tint: Color = good == nil ? NunaPalette.textSecondary : (good! ? NunaPalette.charge : NunaPalette.warning)
-        return Text(verbatim: text)
-            .font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(tint)
-            .padding(.horizontal, 8).frame(height: 24)
-            .background(NunaPalette.tint(tint), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(tint.opacity(0.35), lineWidth: 1))
     }
 
     private var grid: some View {
@@ -690,7 +646,7 @@ struct NunaMetricsGrid: View {
     /// The same tile as the vital signs: the icon and the label, the value, then the change as a chip under it. With trend lines on, every tile
     /// keeps the room of the chip and of the line, so a tile with no history yet is as tall as the rest.
     private func tileBody(_ tile: NunaMetricTile) -> some View {
-        let anyDelta = tiles.contains { $0.delta != nil }
+        let anyTrend = tiles.contains { $0.trend != nil }
         let anySpark = tiles.contains { ($0.spark?.count ?? 0) >= 2 }
         return VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
@@ -709,15 +665,13 @@ struct NunaMetricsGrid: View {
                     Text(verbatim: tile.unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
             }
-            if let delta = tile.delta {
-                let tint: Color = tile.deltaGood == nil ? NunaPalette.textSecondary
-                    : (tile.deltaGood! ? NunaPalette.charge : NunaPalette.warning)
-                Text(verbatim: delta)
-                    .font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(tint)
+            if let trend = tile.trend {
+                Text(verbatim: trend.chipText)
+                    .font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(trend.tint)
                     .padding(.horizontal, 9).frame(height: 24)
-                    .background(NunaPalette.tint(tint), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(tint.opacity(0.35), lineWidth: 1))
-            } else if anyDelta {
+                    .background(NunaPalette.tint(trend.tint), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(trend.tint.opacity(0.35), lineWidth: 1))
+            } else if anyTrend {
                 Color.clear.frame(height: 24)
             }
             if let spark = tile.spark, spark.count >= 2 {

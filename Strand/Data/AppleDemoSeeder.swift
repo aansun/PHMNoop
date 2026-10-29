@@ -76,6 +76,7 @@ enum AppleDemoSeeder {
         var sleeps: [CachedSleepSession] = []
         var series: [MetricPoint] = []
         var appleRows: [AppleDaily] = []
+        var appleSeries: [MetricPoint] = []
         var workouts: [WorkoutRow] = []
         var journal: [JournalEntry] = []
         var stepHours: [(ts: Int, steps: Int)] = []
@@ -191,6 +192,8 @@ enum AppleDemoSeeder {
             let steps = isToday ? Int(Double(stepsFullDay) * hourShape[0...hourNow].reduce(0, +)) : stepsFullDay
             // The strap's own daily step series too, so the Steps detail page has a week to draw in a demo.
             series.append(MetricPoint(day: day, key: "steps", value: Double(steps)))
+            // The weight a health-store sync leaves as its own daily series (the Weight card and page read it, with the one before).
+            appleSeries.append(MetricPoint(day: day, key: "weight", value: round2(weight)))
             appleRows.append(AppleDaily(
                 day: day, steps: steps,
                 activeKcal: round1((Double(steps) * 0.045 + Double(nWorkouts) * 220).clamped(120.0, 1400.0)),
@@ -284,6 +287,7 @@ enum AppleDemoSeeder {
         _ = try await store.upsertSleepSessions(sleeps, deviceId: whoop)
         _ = try await store.upsertMetricSeries(series, deviceId: whoop)
         _ = try await store.upsertAppleDaily(appleRows, deviceId: apple)
+        _ = try await store.upsertMetricSeries(appleSeries, deviceId: apple)
         if !workouts.isEmpty { _ = try await store.upsertWorkouts(workouts, deviceId: whoop) }
         if !journal.isEmpty { _ = try await store.upsertJournal(journal, deviceId: "noop-journal") }
         if !stepHours.isEmpty { _ = try await store.upsertAppleStepHours(stepHours, deviceId: apple) }
