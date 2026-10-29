@@ -1,0 +1,272 @@
+#if os(iOS)
+import SwiftUI
+import Charts
+import StrandDesign
+
+/// The page a vital's weekly card opens (heart rate variability, resting heart rate, respiratory rate): the average of the window with its unit,
+/// the week / month / six-month switch and date stepper, a sentence, and the nights as a line on a five-step axis with the typical range shaded
+/// behind it. A week writes each figure by its ring; a month rings the newest; six months are the average of each sixth over a faint daily line
+/// with the change against the one before. Touching a point of a week or a month shows its day and figure at the top.
+struct NunaLineTrendView: View {
+    let name: LocalizedStringKey
+    let icon: String
+    /// "average HRV", "average resting heart rate": the words the sentence says the figure with.
+    let noun: String
+    let key: String
+    let unit: String
+    var decimals = 0
+    /// Whether a rise is good (HRV), bad (resting heart rate) or neither (respiratory rate): the colour of the change in the six-month view.
+    var upIsGood: Bool?
+    var endingDaysAgo = 0
+
+    @EnvironmentObject private var repo: Repository
+    @StateObject private var series = NunaSeriesModel()
+    @State private var range = 7
+    @State private var page = 0
+    @State private var picked: Date?
+    @State private var touchBeganOnPicked: Bool?
+
+    private let color = NunaPalette.effortModerate
+
+    private struct Day: Identifiable {
+        let date: Date
+        let value: Double?
+        var id: Date { date }
+    }
+
+    /// The pages for the three vitals the Charge page lists; nil for any other key.
+    static func forMetric(_ key: String, endingDaysAgo: Int) -> NunaLineTrendView? {
+        switch key {
+        case "hrv":
+            return NunaLineTrendView(name: "Heart rate variability", icon: "waveform.path.ecg", noun: "average HRV", key: key, unit: "ms", upIsGood: true, endingDaysAgo: endingDaysAgo)
+        case "rhr":
+            return NunaLineTrendView(name: "Resting heart rate", icon: "heart", noun: "average resting heart rate", key: key, unit: "bpm", upIsGood: false, endingDaysAgo: endingDaysAgo)
+        case "resp_rate":
+            return NunaLineTrendView(name: "Respiratory rate", icon: "lungs", noun: "average respiratory rate", key: key, unit: "rpm", decimals: 1, endingDaysAgo: endingDaysAgo)
+        default:
+            return nil
+        }
+    }
+
+    private var win: NunaTrendWindow { NunaTrendWindow(range: range, page: page, endingDaysAgo: endingDaysAgo) }
+
+    private var days: [Day] {
+        let w = win, cal = Calendar.current
+        return (0..<range).compactMap { i in
+            guard let d = cal.date(byAdding: .day, value: i, to: w.start) else { return nil }
+            return Day(date: w.noon(d), value: series.byDay[Repository.localDayKey(d)])
+        }
+    }
+
+    private var canGoBack: Bool {
+        series.byDay.keys.min().map { Repository.localDayKey(win.start) > $0 } ?? false
+    }
+
+    private func fmt(_ v: Double) -> String { String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, v) }
+
+    private func isPicked(_ date: Date) -> Bool { picked.map { Calendar.current.isDate($0, inSameDayAs: date) } ?? false }
+
+    private var pickedTitle: String {
+        guard let picked else { return "" }
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE, MMM d")
+        return f.string(from: picked)
+    }
+
+    var body: some View {
+        let all = days
+        let values = all.compactMap(\.value)
+        let average: Double? = values.isEmpty ? nil : values.reduce(0, +) / Double(values.count)
+        NunaDetailScreen("Trend view", centersTitle: true) {
+            nameBox
+            header(all, average)
+            Text(verbatim: sentence(average)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                .fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.horizontal, 2)
+            if range <= 30 { legend }
+            chart(all, average)
+        }
+        .environment(\.nunaDetailSwitch, nil)
+        .task(id: repo.refreshSeq) { await series.load(repo: repo, key: key, source: "my-whoop", days: 400) }
+        .onChange(of: range) { _, _ in picked = nil }
+        .onChange(of: page) { _, _ in picked = nil }
+    }
+
+    private var nameBox: some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon).font(.nuna(size: 20, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
+            Text(name).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 18).frame(height: 60)
+        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+    }
+
+    private func header(_ all: [Day], _ average: Double?) -> some View {
+        let pickedValue: Double? = picked.flatMap { d in all.first { Calendar.current.isDate($0.date, inSameDayAs: d) }?.value }
+        let shown = pickedValue ?? average
+        let tint = pickedValue == nil ? NunaPalette.textPrimary : color
+        return HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(verbatim: pickedValue == nil ? String(localized: "Average") : pickedTitle).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    .foregroundStyle(pickedValue == nil ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(verbatim: shown.map(fmt) ?? "–").font(.nuna(size: 40, weight: .semibold, design: NunaType.design)).foregroundStyle(tint)
+                    if shown != nil { Text(verbatim: unit).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(tint).textCase(nil) }
+                }
+            }
+            Spacer(minLength: 0)
+            VStack(alignment: .trailing, spacing: 14) {
+                NunaRangeSwitch(range: $range) { page = 0 }
+                NunaDateStepper(label: win.label, canGoBack: canGoBack, canGoForward: page > 0,
+                                back: { page += 1 }, forward: { page = max(0, page - 1) })
+            }
+        }
+        .padding(.horizontal, 2)
+    }
+
+    private func sentence(_ average: Double?) -> String {
+        guard let average else { return String(localized: "Wear your strap to bed each night to track this over time.") }
+        let span = range == 7 ? String(localized: "this week was") : (range == 30 ? String(localized: "this month was") : String(localized: "over these six months has been"))
+        return String(localized: "Your \(noun) \(span) \(fmt(average)). Wear your strap to bed each night to track how this changes over time.")
+    }
+
+    private var legend: some View {
+        HStack(spacing: 8) {
+            Spacer(minLength: 0)
+            RoundedRectangle(cornerRadius: 2, style: .continuous).fill(Color.white.opacity(0.14)).frame(width: 12, height: 12)
+            Text("Typical range").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+        }
+        .padding(.horizontal, 2).padding(.top, 4)
+    }
+
+    // MARK: Chart
+
+    private func nearest(_ x: CGFloat, _ proxy: ChartProxy, _ frame: CGRect, among bars: [Day]) -> Date? {
+        guard let touched: Date = proxy.value(atX: x - frame.minX) else { return nil }
+        return bars.filter { $0.value != nil }.min { abs($0.date.timeIntervalSince(touched)) < abs($1.date.timeIntervalSince(touched)) }?.date
+    }
+
+    /// Where a figure sits against its point so the line does not run through it: above a peak, below a dip, and to the side away from the line on a
+    /// slope (up and left while it climbs, up and right while it falls).
+    private func labelOffset(_ p: Day, in bars: [Day]) -> CGSize {
+        guard let i = bars.firstIndex(where: { $0.id == p.id }), let v = p.value else { return CGSize(width: 0, height: -18) }
+        let before = i > 0 ? bars[i - 1].value : nil, after = i + 1 < bars.count ? bars[i + 1].value : nil
+        switch (before, after) {
+        case let (b?, a?):
+            if b < v && a < v { return CGSize(width: 0, height: -18) }
+            if b > v && a > v { return CGSize(width: 0, height: 20) }
+            return b < v ? CGSize(width: -14, height: -16) : CGSize(width: 14, height: -16)
+        case let (n?, nil), let (nil, n?):
+            return n > v ? CGSize(width: 0, height: 20) : CGSize(width: 0, height: -18)
+        default:
+            return CGSize(width: 0, height: -18)
+        }
+    }
+
+    /// Five evenly spaced labels that cover the readings and the typical range.
+    private func axis(_ readings: [Double], band: ClosedRange<Double>?) -> (low: Double, high: Double, ticks: [Double]) {
+        let all = readings + (band.map { [$0.lowerBound, $0.upperBound] } ?? [])
+        let lo = all.min() ?? 0, hi = all.max() ?? 1
+        let pad = max((hi - lo) * 0.12, decimals > 0 ? 0.3 : 2)
+        var step = (hi - lo + 2 * pad) / 4
+        step = decimals > 0 ? max(0.2, (step * 10).rounded(.up) / 10) : max(1, step.rounded(.up))
+        let low = decimals > 0 ? ((lo - pad) * 10).rounded(.down) / 10 : (lo - pad).rounded(.down)
+        return (low, low + 4 * step, (0...4).map { low + Double($0) * step })
+    }
+
+    @ChartContentBuilder
+    private func lineMarks(_ bars: [Day], low: Double, ringed: [Day]) -> some ChartContent {
+        ForEach(bars) { p in
+            AreaMark(x: .value("Day", p.date), yStart: .value("Base", low), yEnd: .value("Value", p.value ?? 0))
+                .foregroundStyle(LinearGradient(colors: [color.opacity(0.28), color.opacity(0)], startPoint: .top, endPoint: .bottom))
+            LineMark(x: .value("Day", p.date), y: .value("Value", p.value ?? 0))
+                .foregroundStyle(color).lineStyle(StrokeStyle(lineWidth: 2.2, lineJoin: .round))
+        }
+        ForEach(ringed) { p in
+            PointMark(x: .value("Day", p.date), y: .value("Value", p.value ?? 0))
+                .symbol { Circle().fill(NunaPalette.canvas).overlay(Circle().stroke(color, lineWidth: 2.5)).frame(width: 11, height: 11) }
+        }
+        if let p = bars.first(where: { isPicked($0.date) }) {
+            PointMark(x: .value("Day", p.date), y: .value("Value", p.value ?? 0))
+                .symbol { Circle().fill(color).overlay(Circle().stroke(Color.white, lineWidth: 2)).frame(width: 12, height: 12) }
+        }
+    }
+
+    private func chart(_ points: [Day], _ average: Double?) -> some View {
+        let w = win
+        let week = range == 7, sixMonths = range > 30
+        let bars = points.filter { $0.value != nil }
+        let band = sixMonths ? nil : series.typicalRange
+        let (low, high, ticks) = axis(bars.compactMap(\.value), band: band)
+        let ringed: [Day] = week ? bars : (picked != nil ? [] : bars.suffix(1).map { $0 })
+        let marked = week ? bars : (sixMonths || picked != nil ? [] : bars.suffix(1).map { $0 })
+        let segments = sixMonths ? NunaPeriodSegment.make(bars.compactMap { p in p.value.map { (p.date, $0) } }, from: w.start, to: w.end) : []
+        return Chart {
+            if let band {
+                RectangleMark(xStart: .value("Start", w.start), xEnd: .value("End", w.domain.upperBound), yStart: .value("Low", band.lowerBound), yEnd: .value("High", band.upperBound))
+                    .foregroundStyle(Color.white.opacity(0.08))
+            }
+            if sixMonths {
+                ForEach(bars) { p in
+                    LineMark(x: .value("Day", p.date), y: .value("Value", p.value ?? 0)).foregroundStyle(Color.white.opacity(0.18))
+                        .lineStyle(StrokeStyle(lineWidth: 1.2, lineJoin: .round))
+                }
+            } else {
+                lineMarks(bars, low: low, ringed: ringed)
+                if let picked {
+                    RuleMark(x: .value("Picked", picked)).foregroundStyle(Color.white.opacity(0.85)).lineStyle(StrokeStyle(lineWidth: 1, dash: [2, 3]))
+                }
+            }
+        }
+        .chartYScale(domain: low...high)
+        .chartXScale(domain: w.domain)
+        .chartYAxis {
+            AxisMarks(position: .leading, values: ticks) { v in
+                AxisGridLine().foregroundStyle(NunaPalette.hairline.opacity(0.7))
+                AxisValueLabel { if let d = v.as(Double.self) { Text(verbatim: fmt(d)).font(.nuna(size: 12, weight: .heavy)).foregroundStyle(NunaPalette.textMuted) } }
+            }
+        }
+        .chartXAxis(.hidden)
+        .chartPlotStyle { $0.padding(.bottom, 50) }
+        .chartOverlay { proxy in
+            GeometryReader { geo in
+                if let frame = proxy.plotFrame.map({ geo[$0] }) {
+                    ZStack {
+                        ZStack {
+                            ForEach(marked) { p in
+                                if let v = p.value, let x = proxy.position(forX: p.date), let y = proxy.position(forY: v) {
+                                    Text(verbatim: fmt(v)).font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).foregroundStyle(color)
+                                        .fixedSize().offset(x: !week && x > frame.width - 30 ? -16 : 0)
+                                        .position(x: frame.minX + x + labelOffset(p, in: bars).width, y: frame.minY + y + labelOffset(p, in: bars).height)
+                                }
+                            }
+                            if sixMonths {
+                                NunaSegmentsLayer(segments: segments, proxy: proxy, frame: frame, color: upIsGood == nil ? .white : nil,
+                                                  upIsGood: upIsGood ?? true, text: fmt)
+                            }
+                            ForEach(w.axisDates, id: \.self) { d in
+                                if let x = proxy.position(forX: d) { w.axisLabel(d).position(x: frame.minX + x, y: frame.maxY + 26) }
+                            }
+                        }
+                        .allowsHitTesting(false)
+                        if !sixMonths {
+                            Rectangle().fill(Color.clear).contentShape(Rectangle()).frame(width: frame.width, height: frame.height)
+                                .position(x: frame.midX, y: frame.midY)
+                                .gesture(DragGesture(minimumDistance: 0)
+                                    .onChanged { g in
+                                        if touchBeganOnPicked == nil { touchBeganOnPicked = picked.map { nearest(g.location.x, proxy, frame, among: points) == $0 } ?? false }
+                                        if let d = nearest(g.location.x, proxy, frame, among: points) { picked = d }
+                                    }
+                                    .onEnded { g in
+                                        if touchBeganOnPicked == true, abs(g.translation.width) < 6 { picked = nil }
+                                        touchBeganOnPicked = nil
+                                    })
+                        }
+                    }
+                }
+            }
+        }
+        .frame(height: 340)
+        .accessibilityLabel(Text(name))
+    }
+}
+#endif
