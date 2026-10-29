@@ -61,56 +61,88 @@ struct NunaSleepTimeSheet: View {
                                          now: Int(Date().timeIntervalSince1970))
     }
 
-    private var currentRange: String {
-        "\(NunaSleepFormat.clock(Date(timeIntervalSince1970: TimeInterval(target.bedTs)))) – \(NunaSleepFormat.clock(Date(timeIntervalSince1970: TimeInterval(target.wakeTs))))"
+    private enum Field { case bed, wake }
+    @State private var editing: Field?
+
+    /// "28 Oct at 9:32 PM", in the viewer's language and clock.
+    private func chipText(_ d: Date) -> String {
+        let day = DateFormatter(); day.locale = AppLanguage.activeLocale; day.setLocalizedDateFormatFromTemplate("d MMM")
+        let time = DateFormatter(); time.locale = AppLanguage.activeLocale; time.setLocalizedDateFormatFromTemplate("jmm")
+        return String(localized: "\(day.string(from: d)) at \(time.string(from: d))")
+    }
+
+    private func sectionHeader(_ title: LocalizedStringKey) -> some View {
+        HStack(spacing: 14) {
+            Text(title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Rectangle().fill(NunaPalette.hairline).frame(height: 1)
+        }
+    }
+
+    /// A label on the left and the time as a chip on the right; touching the chip opens its wheel underneath.
+    private func timeRow(_ label: LocalizedStringKey, _ field: Field, _ value: Binding<Date>) -> some View {
+        VStack(spacing: 10) {
+            HStack {
+                Text(label).font(.nuna(size: 14.5, weight: .medium)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                Spacer(minLength: 8)
+                Button { withAnimation(.easeOut(duration: 0.2)) { editing = editing == field ? nil : field } } label: {
+                    Text(verbatim: chipText(value.wrappedValue)).font(.nuna(size: 15.5, weight: .semibold, design: NunaType.design)).textCase(nil)
+                        .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 12).frame(height: 36)
+                        .background(editing == field ? NunaPalette.ink.opacity(0.22) : NunaPalette.ink.opacity(0.12),
+                                    in: RoundedRectangle(cornerRadius: 7, style: .continuous))
+                }
+                .buttonStyle(.plain)
+            }
+            if editing == field {
+                DatePicker("", selection: value, in: ...Date(), displayedComponents: [.date, .hourAndMinute])
+                    .datePickerStyle(.wheel).labelsHidden().tint(NunaPalette.textPrimary)
+                    .frame(maxWidth: .infinity).transition(.opacity)
+            }
+        }
     }
 
     var body: some View {
-        ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                HStack(alignment: .firstTextBaseline) {
-                    Text(target.isNap ? "Edit nap times" : "Edit sleep times")
-                        .font(.nuna(size: 18, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-                    Spacer()
-                    Text(verbatim: NunaSleepFormat.duration(Double(target.wakeTs - target.bedTs) / 60))
-                        .font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
-                }
-                .padding(.top, 24)
-                // What is recorded now, as plain text beside the pickers that change it.
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(target.isNap ? "Current nap" : "Current sleep")
-                        .font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                    Text(verbatim: currentRange)
-                        .font(.nuna(size: 26, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(26)).foregroundStyle(NunaPalette.textPrimary)
-                }
-                NunaCard(small: true, padding: EdgeInsets(top: 2, leading: 16, bottom: 2, trailing: 16)) {
-                    VStack(spacing: 0) {
-                        DatePicker(target.isNap ? "Nap started" : "Asleep", selection: $bed, in: ...Date(),
-                                   displayedComponents: [.date, .hourAndMinute])
-                            .font(.nuna(size: 15, weight: .bold)).tint(NunaPalette.textPrimary).foregroundStyle(NunaPalette.textPrimary).frame(minHeight: 50)
-                        NunaDivider()
-                        DatePicker(target.isNap ? "Nap ended" : "Woke", selection: $wake, in: ...Date(),
-                                   displayedComponents: [.date, .hourAndMinute])
-                            .font(.nuna(size: 15, weight: .bold)).tint(NunaPalette.textPrimary).foregroundStyle(NunaPalette.textPrimary).frame(minHeight: 50)
+        VStack(alignment: .leading, spacing: 0) {
+            ZStack {
+                Text(target.isNap ? "Edit nap" : "Edit time in bed")
+                    .font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                HStack {
+                    Button { dismiss() } label: {
+                        Image(systemName: "xmark").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44)
                     }
+                    .buttonStyle(.plain)
+                    Spacer()
                 }
-                Text("Stages are re-derived from your data. The edit is kept through the next strap sync.")
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.top, 14).padding(.bottom, 14)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 16) {
+                    sectionHeader("Time")
+                    timeRow(target.isNap ? "Nap Start" : "Bed Time", .bed, $bed)
+                    timeRow(target.isNap ? "Nap End" : "Wake Time", .wake, $wake)
+                    Text("Stages are re-derived from your data. The edit is kept through the next strap sync.")
+                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                        .fixedSize(horizontal: false, vertical: true).padding(.top, 4)
+                }
+                .padding(.top, 6)
+            }
+            .scrollIndicators(.hidden)
+            Spacer(minLength: 12)
+            VStack(spacing: 14) {
                 Button { save() } label: { Text(saving ? "Saving…" : "Save") }
                     .buttonStyle(.nuna(.primary, fullWidth: true))
                     .disabled(saving || window == nil)
                 Button { confirmDelete = true } label: {
-                    Text(target.isNap ? "Delete this nap" : "Delete this sleep").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                        .foregroundStyle(NunaPalette.alertText).frame(maxWidth: .infinity, minHeight: 44)
+                    Text(target.isNap ? "Delete" : "Delete").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity, minHeight: 56)
+                        .overlay(Capsule().strokeBorder(NunaPalette.ink.opacity(0.28), lineWidth: 2))
                 }
                 .buttonStyle(.plain).disabled(saving)
             }
-            .padding(.horizontal, NunaSpacing.screenH).padding(.bottom, 20)
+            .padding(.bottom, 12)
         }
-        .scrollIndicators(.hidden)
+        .padding(.horizontal, NunaSpacing.screenH)
         .preferredColorScheme(NunaTheme.colorScheme)
-        .nunaSheetChrome(detents: [.height(470), .large])
+        .nunaSheetChrome(detents: [.large])
         // A time-only roll that lands the bed in the future or after the wake means the previous evening.
         .onChange(of: bed) { _, newBed in
             let corrected = SleepEditGuard.autoCorrectedBed(
