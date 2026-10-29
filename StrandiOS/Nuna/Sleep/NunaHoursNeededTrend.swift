@@ -247,7 +247,7 @@ struct NunaHoursNeededTrendView: View {
             ForEach(templates, id: \.self) { t in
                 let f = DateFormatter()
                 Text(verbatim: { f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate(t); return f.string(from: date) }())
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .font(.nuna(size: 12.5, weight: .semibold)).textCase(nil).foregroundStyle(NunaPalette.textSecondary)
             }
         }
     }
