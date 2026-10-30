@@ -67,11 +67,16 @@ struct NunaAgeSlider: View {
 struct NunaMiniChip: View {
     let text: LocalizedStringKey
     var color: Color = NunaPalette.charge
+    /// A small dot before the text: the mark of a reading that has no verdict yet.
+    var dot = false
     var body: some View {
-        Text(text).font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(color)
-            .padding(.horizontal, 9).frame(height: 24)
-            .background(NunaPalette.tint(color), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(color.opacity(0.35), lineWidth: 1))
+        HStack(spacing: 6) {
+            if dot { Circle().fill(color).frame(width: 7, height: 7) }
+            Text(text).font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(color).textCase(dot ? nil : .uppercase).lineLimit(1)
+        }
+        .padding(.horizontal, 9).frame(height: 24)
+        .background(NunaPalette.tint(color), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).strokeBorder(color.opacity(0.35), lineWidth: 1))
     }
 }
 
@@ -83,6 +88,7 @@ struct NunaVitalTile: View {
     var unit: String = ""
     var chip: LocalizedStringKey?
     var chipColor: Color = NunaPalette.charge
+    var chipDot = false
     var note: String?
 
     var body: some View {
@@ -100,7 +106,7 @@ struct NunaVitalTile: View {
                         Text(verbatim: unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                 }
-                if let chip { NunaMiniChip(text: chip, color: chipColor) }
+                if let chip { NunaMiniChip(text: chip, color: chipColor, dot: chipDot) }
                 else if let note { Text(verbatim: note).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).frame(height: 24, alignment: .leading) }
                 else { Color.clear.frame(height: 24) }
             }

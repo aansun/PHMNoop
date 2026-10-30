@@ -39,17 +39,20 @@ struct NunaStressCalibrationCard: View {
     }
 }
 
-/// The three bands where the figures will be, each an empty tile: the same locked look the other monitors take before their first night.
-private struct NunaStressLockedBands: View {
-    private let bands: [(icon: String, name: String)] = [("leaf", "Low"), ("waveform.path", "Medium"), ("bolt", "High")]
+/// The columns of a monitor card that has not unlocked yet: an icon, a label and an empty tile each, with a rule between them. The same locked
+/// look for the stress bands and for the five vital signs.
+struct NunaLockedColumns: View {
+    let items: [(icon: String, name: LocalizedStringKey)]
+    var accessibility: LocalizedStringKey = "Locked"
 
     var body: some View {
         HStack(spacing: 0) {
-            ForEach(Array(bands.enumerated()), id: \.offset) { i, b in
+            ForEach(Array(items.enumerated()), id: \.offset) { i, b in
                 if i > 0 { Rectangle().fill(NunaPalette.hairline).frame(width: 1, height: 74) }
                 VStack(spacing: 10) {
                     Image(systemName: b.icon).font(.nuna(size: 22, weight: .regular)).foregroundStyle(NunaPalette.textMuted).frame(height: 26)
                     Text(b.name).font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                        .lineLimit(1).minimumScaleFactor(0.7)
                     RoundedRectangle(cornerRadius: 6, style: .continuous).fill(NunaPalette.tile).frame(width: 30, height: 30)
                         .overlay(Circle().fill(NunaPalette.textMuted).frame(width: 10, height: 10))
                 }
@@ -57,33 +60,78 @@ private struct NunaStressLockedBands: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(Text("Low, Medium and High stress are locked"))
+        .accessibilityLabel(Text(accessibility))
     }
 }
 
-/// The message and the 14 segments, in the dark panel at the foot of the card.
-struct NunaStressCalibrationBody: View {
+/// The three bands of the stress monitor, locked.
+private struct NunaStressLockedBands: View {
+    var body: some View {
+        NunaLockedColumns(items: [("leaf", "Low"), ("waveform.path", "Medium"), ("bolt", "High")], accessibility: "Low, Medium and High stress are locked")
+    }
+}
+
+/// A message over one segment a night, in the dark panel at the foot of a locked card: filled for the nights already in.
+struct NunaNightsPanel: View {
+    let message: LocalizedStringKey
     let nights: Int
-    /// The fill of the nights already in.
-    private static let filled = Color(red: 0.74, green: 0.35, blue: 0.80)
-    private var needed: Int { StressEngine.requiredNights }
-    private var left: Int { max(needed - nights, 0) }
+    let needed: Int
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Text(left == 1 ? "Wear your strap to sleep for 1 more night to unlock."
-                 : "Wear your strap to sleep for \(left) more nights to unlock.")
-                .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).fixedSize(horizontal: false, vertical: true)
-            HStack(spacing: 4) {
-                ForEach(0..<needed, id: \.self) { i in
-                    Capsule().fill(i < nights ? Self.filled : NunaPalette.hairline).frame(height: 5)
-                }
-            }
-            .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Text("\(min(nights, needed)) of \(needed) nights"))
+            Text(message).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                .fixedSize(horizontal: false, vertical: true)
+            NunaNightSegments(nights: nights, needed: needed)
         }
         .padding(16).frame(maxWidth: .infinity, alignment: .leading)
         .background(NunaPalette.shade.opacity(0.35), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+}
+
+/// One capsule a night, purple for the nights in and grey for those to come.
+struct NunaNightSegments: View {
+    let nights: Int
+    let needed: Int
+    /// The fill of the nights already in.
+    static let filled = Color(red: 0.74, green: 0.35, blue: 0.80)
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(0..<needed, id: \.self) { i in
+                Capsule().fill(i < nights ? Self.filled : NunaPalette.hairline).frame(height: 5)
+            }
+        }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text("\(min(nights, needed)) of \(needed) nights"))
+    }
+}
+
+/// The message and the 14 segments of the stress monitor.
+struct NunaStressCalibrationBody: View {
+    let nights: Int
+    private var left: Int { max(StressEngine.requiredNights - nights, 0) }
+
+    var body: some View {
+        NunaNightsPanel(message: left == 1 ? "Wear your strap to sleep for 1 more night to unlock."
+                        : "Wear your strap to sleep for \(left) more nights to unlock.",
+                        nights: nights, needed: StressEngine.requiredNights)
+    }
+}
+
+/// The purple band across the top of a page whose figures are still calibrating (the Vital signs page): a line, and a segment a night.
+struct NunaCalibrationBanner: View {
+    let message: LocalizedStringKey
+    let nights: Int
+    let needed: Int
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text(message).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                .fixedSize(horizontal: false, vertical: true)
+            NunaNightSegments(nights: nights, needed: needed)
+        }
+        .padding(.horizontal, 18).padding(.vertical, 18).frame(maxWidth: .infinity, alignment: .leading)
+        .background(NunaNightSegments.filled.opacity(0.16), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 }
 #endif

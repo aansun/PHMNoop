@@ -93,6 +93,7 @@ struct NunaHealthView: View {
         VStack(spacing: NunaSpacing.section) {
             liveCard
             if coachEnabled { NunaAnyaCard(title: "Are my vitals normal today?") { showCoach = true } }
+            rangeBanner
             vitalBento
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
@@ -103,7 +104,6 @@ struct NunaHealthView: View {
                     }.buttonStyle(.plain)
                 }
             }
-            earlyWarningCard
         }
     }
 
@@ -124,35 +124,60 @@ struct NunaHealthView: View {
         NavigationLink(value: metricRoute(key)) { tile }.buttonStyle(.plain)
     }
 
-    /// Respiratory, blood oxygen, resting heart rate, HRV and skin temperature, each with its status chip. Each opens its own chart.
+    /// Nights with a sleep reading, which the range and its stages go by.
+    private var rangePhase: VitalRange.Phase { VitalRange.phase(nights: max(hrvS.nights, rhrS.nights)) }
+
+    /// The purple band over the tiles while the range is still being built: calibrating (no range yet, seven nights), then learning (a range
+    /// that is still wide, fourteen nights). Gone once the range is final.
+    @ViewBuilder private var rangeBanner: some View {
+        switch rangePhase {
+        case .calibrating(let n):
+            let left = VitalRange.calibrationNights - n
+            NunaCalibrationBanner(message: left == 1 ? "Wear your strap to sleep for 1 more night to calibrate."
+                                  : "Wear your strap to sleep for \(left) more nights to calibrate.",
+                                  nights: n, needed: VitalRange.calibrationNights)
+        case .learning(let n):
+            let left = VitalRange.trustedNights - n
+            NunaCalibrationBanner(message: left == 1 ? "Your range is still sharpening: 1 more night to finish it."
+                                  : "Your range is still sharpening: \(left) more nights to finish it.",
+                                  nights: n, needed: VitalRange.trustedNights)
+        case .trusted:
+            EmptyView()
+        }
+    }
+
+    /// Respiratory, blood oxygen, resting heart rate, HRV and skin temperature, each with its status chip. Each opens its own chart. While the
+    /// range is calibrating the readings show with a grey "Calibrating range" and no verdict.
     private var vitalBento: some View {
+        let hasRange = rangePhase.hasRange
+        typealias Chip = (text: LocalizedStringKey, color: Color)
+        let calibrating: Chip = ("Calibrating range", NunaPalette.textSecondary)
+
+        var respChip: Chip? = hasRange ? nil : calibrating
+        if hasRange, let v = day.respiratory, let verdict = respS.verdict(v, floor: 0.3) {
+            respChip = verdict == .inRange ? ("Normal", NunaPalette.charge) : (verdict == .above ? ("Above range", NunaPalette.warning) : ("Below range", NunaPalette.warning))
+        }
         let spo2 = day.spo2
-        let spo2Chip: (LocalizedStringKey, Color)? = spo2.map { $0 >= 95 ? ("Normal", NunaPalette.charge) : ("Low", NunaPalette.warning) }
-        var respChip: (LocalizedStringKey, Color)?
-        if let v = day.respiratory, let b = respS.band {
-            let tol = max(b.sd, 0.3)
-            respChip = abs(v - b.mean) <= tol ? ("Normal", NunaPalette.charge) : (v > b.mean ? ("Above range", NunaPalette.warning) : ("Below range", NunaPalette.warning))
-        }
+        let spo2Chip: Chip? = hasRange ? spo2.map { $0 >= 95 ? ("Normal", NunaPalette.charge) : ("Low", NunaPalette.warning) } : calibrating
         let skin = day.extras["skin_temp"]
-        let skinChip: (LocalizedStringKey, Color)? = skin.map { abs($0) < 0.5 ? ("Small deviation", NunaPalette.charge) : ("Larger deviation", NunaPalette.warning) }
+        let skinChip: Chip? = hasRange ? skin.map { abs($0) < 0.5 ? ("Small deviation", NunaPalette.charge) : ("Larger deviation", NunaPalette.warning) } : calibrating
         let skinText = skin.map { (($0 >= 0 ? "+" : "−") + String(format: "%.1f", locale: AppLanguage.activeLocale, abs($0))) } ?? "–"
-        let hrvB = hrvS.band
-        var hrvChip: (LocalizedStringKey, Color)?
-        if let v = day.hrv, let b = hrvB {
-            let inRange = abs(v - b.mean) <= max(b.sd, 1)
-            hrvChip = (inRange ? "In range" : (v > b.mean ? "Above range" : "Below range"), inRange ? NunaPalette.charge : NunaPalette.warning)
+        var hrvChip: Chip? = hasRange ? nil : calibrating
+        if hasRange, let v = day.hrv, let verdict = hrvS.verdict(v, floor: 1) {
+            hrvChip = verdict == .inRange ? ("In range", NunaPalette.charge) : (verdict == .above ? ("Above range", NunaPalette.warning) : ("Below range", NunaPalette.warning))
         }
-        var rhrChip: (LocalizedStringKey, Color)?
-        if let v = day.restingHr, let b = rhrS.band {
-            let tol = max(b.sd, 1)
-            rhrChip = abs(v - b.mean) <= tol ? ("In range", NunaPalette.charge) : (v > b.mean ? ("Above range", NunaPalette.warning) : ("Below range", NunaPalette.charge))
+        var rhrChip: Chip? = hasRange ? nil : calibrating
+        if hasRange, let v = day.restingHr, let verdict = rhrS.verdict(v, floor: 1) {
+            // A resting heart rate below the usual is good news, so only a rise is marked.
+            rhrChip = verdict == .inRange ? ("In range", NunaPalette.charge) : (verdict == .above ? ("Above range", NunaPalette.warning) : ("Below range", NunaPalette.charge))
         }
+        let dot = !hasRange
         return LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-            linked("resp_rate", NunaVitalTile(icon: "lungs", label: "Respiratory", value: fmt(day.respiratory, 1), unit: "/min", chip: respChip?.0, chipColor: respChip?.1 ?? NunaPalette.charge))
-            linked("spo2", NunaVitalTile(icon: "drop", label: "Blood Oxygen", value: fmt(spo2), unit: "%", chip: spo2Chip?.0, chipColor: spo2Chip?.1 ?? NunaPalette.charge))
-            linked("rhr", NunaVitalTile(icon: "heart", label: "Resting HR", value: fmt(day.restingHr), unit: "bpm", chip: rhrChip?.0, chipColor: rhrChip?.1 ?? NunaPalette.charge))
-            linked("hrv", NunaVitalTile(icon: "waveform.path.ecg", label: "HRV", value: fmt(day.hrv), unit: "ms", chip: hrvChip?.0, chipColor: hrvChip?.1 ?? NunaPalette.charge))
-            linked("skin_temp", NunaVitalTile(icon: "thermometer.medium", label: "Skin Temp", value: skinText, unit: "°C", chip: skinChip?.0, chipColor: skinChip?.1 ?? NunaPalette.charge))
+            linked("resp_rate", NunaVitalTile(icon: "lungs", label: "Respiratory", value: fmt(day.respiratory, 1), unit: "/min", chip: respChip?.text, chipColor: respChip?.color ?? NunaPalette.charge, chipDot: dot))
+            linked("spo2", NunaVitalTile(icon: "drop", label: "Blood Oxygen", value: fmt(spo2), unit: "%", chip: spo2Chip?.text, chipColor: spo2Chip?.color ?? NunaPalette.charge, chipDot: dot))
+            linked("rhr", NunaVitalTile(icon: "heart", label: "Resting HR", value: fmt(day.restingHr), unit: "bpm", chip: rhrChip?.text, chipColor: rhrChip?.color ?? NunaPalette.charge, chipDot: dot))
+            linked("hrv", NunaVitalTile(icon: "waveform.path.ecg", label: "HRV", value: fmt(day.hrv), unit: "ms", chip: hrvChip?.text, chipColor: hrvChip?.color ?? NunaPalette.charge, chipDot: dot))
+            linked("skin_temp", NunaVitalTile(icon: "thermometer.medium", label: "Skin Temp", value: skinText, unit: "°C", chip: skinChip?.text, chipColor: skinChip?.color ?? NunaPalette.charge, chipDot: dot))
         }
     }
 
@@ -228,45 +253,6 @@ struct NunaHealthView: View {
                 }
             }
         }
-    }
-
-    private var earlyWarningCard: some View { NunaWithApp { earlyWarningBody($0) } }
-
-    private func earlyWarningBody(_ appModel: AppModel) -> some View {
-        let raised = appModel.illnessSignal.map { $0.level != .quiet } ?? false
-        let fired = (appModel.illnessSignal?.firedSignals ?? []).map { $0.lowercased() }
-        func hit(_ keys: [String]) -> Bool { fired.contains { f in keys.contains { f.contains($0) } } }
-        let signals: [(LocalizedStringKey, Bool)] = [
-            ("Resting HR", hit(["rhr", "resting"])), ("HRV", hit(["hrv"])),
-            ("Skin Temp", hit(["skin"])), ("Respiratory", hit(["respirat"])),
-        ]
-        return NavigationLink(value: NunaTodayRoute.earlyWarning) {
-            NunaCard {
-                VStack(alignment: .leading, spacing: 12) {
-                    HStack(spacing: 10) {
-                        Image(systemName: raised ? "exclamationmark.triangle" : "checkmark.shield").font(.nuna(size: 18, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        cardTitle("Early warning")
-                        Spacer()
-                        NunaChip(raised ? "Signals are up" : "Safe", color: raised ? NunaPalette.warning : NunaPalette.charge)
-                    }
-                    Text(raised ? "Some signals are away from your range. Take it easy and watch how you feel."
-                                : "No vital-sign warning. It takes two signals away from your range to raise a warning.")
-                        .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                    LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
-                        ForEach(0..<signals.count, id: \.self) { i in
-                            HStack(spacing: 8) {
-                                Image(systemName: signals[i].1 ? "exclamationmark.circle.fill" : "checkmark.circle.fill")
-                                    .font(.nuna(size: 15)).foregroundStyle(signals[i].1 ? NunaPalette.warning : NunaPalette.textSecondary)
-                                Text(signals[i].0).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
-                                Spacer(minLength: 0)
-                            }
-                            .padding(.horizontal, 12).frame(height: 40)
-                            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                        }
-                    }
-                }
-            }
-        }.buttonStyle(.plain)
     }
 
     private var liveCard: some View { NunaLiveHRCard() }
