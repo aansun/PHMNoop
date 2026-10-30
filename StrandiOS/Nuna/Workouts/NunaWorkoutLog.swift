@@ -238,10 +238,26 @@ struct NunaWorkoutLogZones: View {
     var buckets: [HRBucket] = []
     var start = 0
     var end = 0
+    /// The usual share of each zone (see `typical(for:in:)`), drawn as a dashed box on the bar while nothing is picked.
+    var typical: [ClosedRange<Double>]? = nil
     @EnvironmentObject private var profile: ProfileStore
 
     /// Lowest zone to highest: pale steel, blue, green, amber, red.
-    static let colors: [Color] = [Color(hex: "#B7C8D6"), Color(hex: "#3E9BD5"), Color(hex: "#62C99F"), NunaPalette.warning, NunaPalette.alert]
+    static let colors: [Color] = [Color(hex: "#A9BAC8"), Color(hex: "#4F97C2"), Color(hex: "#6BB894"), Color(hex: "#D4A55A"), Color(hex: "#CF6068")]
+
+    /// The usual share of a session spent in each zone (index 0 = zone 1), as the middle half (25th to 75th percentile) of the wearer's other
+    /// sessions of the same sport over the last 30 days. nil under three of them with zones: a range of one or two is not usual yet.
+    static func typical(for row: WorkoutRow, in rows: [WorkoutRow]) -> [ClosedRange<Double>]? {
+        let from = row.startTs - 30 * 86_400
+        let shares = rows.filter { $0.sport == row.sport && $0.startTs != row.startTs && $0.startTs >= from && $0.startTs < row.startTs }
+            .compactMap { WorkoutZones.percents($0.zonesJSON) }.filter { $0.count >= 5 }.map { $0.map { $0 / 100 } }
+        guard shares.count >= 3 else { return nil }
+        func pct(_ v: [Double], _ q: Double) -> Double {
+            let s = v.sorted(); let pos = q * Double(s.count - 1); let i = Int(pos.rounded(.down)), j = min(i + 1, s.count - 1)
+            return s[i] + (s[j] - s[i]) * (pos - Double(i))
+        }
+        return (0..<5).map { z in let col = shares.map { $0[z] }; return pct(col, 0.25)...pct(col, 0.75) }
+    }
 
     /// Where the heart rate was in a zone, as fractions (0...1) of the session: each reading holds until the next (at most twice the usual
     /// spacing), and neighbouring readings in the zone join into one stretch.
@@ -268,6 +284,15 @@ struct NunaWorkoutLogZones: View {
         VStack(alignment: .leading, spacing: 10) {
             if let mins = minutes, mins.count >= 5, mins.contains(where: { $0 > 0 }) {
                 let total = max(mins.reduce(0, +), 0.0001)
+                if typical != nil, selection == nil {
+                    HStack(spacing: 8) {
+                        RoundedRectangle(cornerRadius: 2, style: .continuous).stroke(NunaPalette.textSecondary, style: StrokeStyle(lineWidth: 1, dash: [3, 2]))
+                            .frame(width: 14, height: 18)
+                        Text("Typical range").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 4)
+                }
                 ForEach((0..<5).reversed(), id: \.self) { i in
                     let on = mins[i] * 60 >= 1
                     let share = mins[i] / total
@@ -286,7 +311,7 @@ struct NunaWorkoutLogZones: View {
                             time(mins[i] * 60, on: on)
                         }
                         if on {
-                            bar(zone: i + 1, share: share, color: colors[i])
+                            bar(zone: i + 1, share: share, color: colors[i], usual: typical.flatMap { $0.indices.contains(i) ? $0[i] : nil })
                         }
                     }
                     .padding(.horizontal, 16).padding(.vertical, on ? 12 : 11)
@@ -305,7 +330,7 @@ struct NunaWorkoutLogZones: View {
     }
 
     /// The hatched bar: the zone's share while nothing is picked, its stretches through the session once a zone is.
-    private func bar(zone: Int, share: Double, color: Color) -> some View {
+    private func bar(zone: Int, share: Double, color: Color, usual: ClosedRange<Double>?) -> some View {
         GeometryReader { geo in
             ZStack(alignment: .leading) {
                 NunaHatchedTrack()
@@ -318,6 +343,12 @@ struct NunaWorkoutLogZones: View {
                     }
                 } else {
                     RoundedRectangle(cornerRadius: 5, style: .continuous).fill(color).frame(width: max(geo.size.width * CGFloat(share), 10))
+                    if let usual {
+                        let x = geo.size.width * CGFloat(usual.lowerBound), w = max(geo.size.width * CGFloat(usual.upperBound - usual.lowerBound), 8)
+                        RoundedRectangle(cornerRadius: 3, style: .continuous).fill(NunaPalette.textPrimary.opacity(0.07))
+                            .overlay(RoundedRectangle(cornerRadius: 3, style: .continuous).stroke(NunaPalette.textPrimary.opacity(0.6), style: StrokeStyle(lineWidth: 1, dash: [3, 3])))
+                            .frame(width: w, height: 26).offset(x: min(x, geo.size.width - w))
+                    }
                 }
             }
         }

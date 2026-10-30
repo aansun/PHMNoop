@@ -111,11 +111,10 @@ struct NunaGymSessionView: View {
         case .exercises: exercisesTab
         case .heartRate: heartRateTab
         }
-        // Anya's line sits under the exercises and the heart rate, above the photos, as on every other saved workout.
+        // Anya's line sits under the exercises and the heart rate, as on every other saved workout.
         if !records.isEmpty {
             NunaAnyaCard(verbatim: String(localized: "Personal record on \(records.joined(separator: ", ")). Give the trained muscles two days to recover before the next session.")) { showCoach = true }
         } else if let line = volumeLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
-        NunaWorkoutReviewSection(startTs: s.startTs, sport: s.sport)
     }
 
     private func sendToStrava(_ w: WorkoutRow) async {
@@ -264,7 +263,7 @@ struct NunaGymSessionView: View {
         if let w = workout, data.hr.count >= 2 {
             NunaWorkoutHRArea(buckets: data.hr, start: w.startTs, end: w.endTs, highlightZone: zonePick, zoneSet: profile.hrZoneSet)
             if let mins = NunaWorkoutZoneMath.minutes(w, measured: data.zoneMin), mins.contains(where: { $0 > 0 }) {
-                NunaWorkoutLogZones(minutes: mins, selection: $zonePick, buckets: data.hr, start: w.startTs, end: w.endTs)
+                NunaWorkoutLogZones(minutes: mins, selection: $zonePick, buckets: data.hr, start: w.startTs, end: w.endTs, typical: NunaWorkoutLogZones.typical(for: w, in: history.rows))
             }
         } else {
             NunaCard(small: true) {

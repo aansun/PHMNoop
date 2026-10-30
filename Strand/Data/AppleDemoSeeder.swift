@@ -41,10 +41,11 @@ enum AppleDemoSeeder {
         guard requested else { return }
         seedDemoDeviceIfNeeded(into: store)
         let existing = (try? await store.dailyMetrics(deviceId: whoop, from: "0000-00-00", to: "9999-99-99")) ?? []
-        guard existing.isEmpty else { await seedLabBookIfNeeded(into: store); return }
+        guard existing.isEmpty else { await seedLabBookIfNeeded(into: store); await seedSportExtrasIfNeeded(into: store); return }
         do { try await seed(into: store) }
         catch { NSLog("AppleDemoSeeder: seed failed — \(error)") }
         await seedLabBookIfNeeded(into: store)
+        await seedSportExtrasIfNeeded(into: store)
     }
 
     /// DEBUG/demo-only: so the Devices screen renders with content under `--demo-seed`, pair a second
@@ -534,6 +535,116 @@ enum AppleDemoSeeder {
         }
         for from in stride(from: 0, to: gravity.count, by: chunk) {
             _ = try await store.insert(Streams(gravity: Array(gravity[from..<Swift.min(from + chunk, gravity.count)])), deviceId: whoop)
+        }
+    }
+
+    // MARK: - Sessions with a map and a gym session
+
+    /// Sessions to look at the map and the gym screens under `--demo-seed`: a run, a ride and a walk each with a GPS route (a few earlier ones of
+    /// the same sport and some HIIT, so the 30-day averages and the typical zone ranges have something to stand on), and a strength session
+    /// today with its sets and a heart rate. Added once, kept apart from the year so an install seeded before this still gets them.
+    private static func seedSportExtrasIfNeeded(into store: WhoopStore) async {
+        let now = Int(Date().timeIntervalSince1970)
+        let recent = (try? await store.workouts(deviceId: whoop, from: now - 40 * 86_400, to: now + 86_400, limit: 2_000)) ?? []
+        guard !recent.contains(where: { $0.notes == "demo-extras" }) else { return }
+        var rng = SplitMix64(seed: 0xD0E5)
+        // sport, hours ago it started, minutes, kilometres (0 = no route), average and highest heart rate, zone shares (%)
+        typealias Plan = (sport: String, ago: Double, min: Double, km: Double, avg: Int, max: Int, zones: [Double])
+        let plans: [Plan] = [
+            ("Running", 4.6, 38, 6.1, 156, 178, [4, 12, 30, 40, 14]),
+            ("Running", 5 * 24 + 2, 41, 6.4, 151, 174, [6, 16, 34, 36, 8]),
+            ("Running", 12 * 24 + 3, 35, 5.6, 158, 181, [3, 10, 28, 42, 17]),
+            ("Running", 19 * 24 + 1, 44, 7.0, 149, 172, [8, 20, 36, 30, 6]),
+            ("Running", 26 * 24 + 2, 39, 6.2, 154, 176, [5, 14, 32, 38, 11]),
+            ("Cycling", 26, 62, 24.6, 138, 164, [10, 28, 38, 20, 4]),
+            ("Cycling", 6 * 24 + 4, 55, 21.3, 134, 160, [12, 32, 36, 16, 4]),
+            ("Cycling", 13 * 24 + 5, 70, 28.1, 140, 167, [9, 26, 38, 21, 6]),
+            ("Cycling", 20 * 24 + 3, 58, 22.8, 136, 162, [11, 30, 36, 18, 5]),
+            ("Walking", 50, 43, 3.6, 108, 142, [30, 46, 20, 4, 0]),
+            ("Walking", 4 * 24 + 1, 36, 3.0, 104, 138, [34, 44, 18, 4, 0]),
+            ("Walking", 8 * 24 + 2, 48, 4.1, 110, 144, [28, 46, 21, 5, 0]),
+            ("Walking", 15 * 24 + 1, 40, 3.4, 106, 140, [32, 45, 19, 4, 0]),
+            ("HIIT", 4 * 24 + 6, 36, 0, 158, 184, [3, 9, 22, 46, 20]),
+            ("HIIT", 9 * 24 + 7, 40, 0, 154, 181, [4, 11, 26, 44, 15]),
+            ("HIIT", 16 * 24 + 6, 33, 0, 160, 186, [2, 8, 20, 48, 22]),
+            ("HIIT", 23 * 24 + 7, 38, 0, 152, 180, [5, 12, 28, 42, 13]),
+        ]
+        var rows: [WorkoutRow] = []
+        var routes: [(route: WorkoutRoute, startTs: Int, sport: String)] = []
+        var hr: [HRSample] = []
+        func addHeartRate(start: Int, end: Int, avg: Int, peak: Int) {
+            var t = start - 300
+            while t <= end + 120 {
+                let up = Swift.min(1.0, Swift.max(0.0, Double(t - start) / 240.0 + 0.2))
+                let down = Swift.min(1.0, Swift.max(0.0, Double(end + 120 - t) / 180.0))
+                let level = 66.0 + (Double(avg) - 66.0) * up * down
+                let bpm = level * (1.0 + 0.06 * Foundation.sin(2.0 * Double.pi * Double(t) / 420.0)) + gauss(&rng, 0.0, 2.0)
+                hr.append(HRSample(ts: t, bpm: Int(bpm.clamped(50.0, Double(peak)))))
+                t += 5
+            }
+        }
+        for (i, p) in plans.enumerated() {
+            let start = now - Int(p.ago * 3600), end = start + Int(p.min * 60)
+            var distance: Double?
+            if p.km > 0 {
+                let pts = loopRoute(km: p.km, seed: i, rng: &rng)
+                let meters = RouteMath.totalMeters(pts)
+                distance = round1(meters)
+                routes.append((WorkoutRoute(polyline: RouteMath.encode(pts), distanceM: meters, elevationGainM: round1(8 + p.km * 3.5)), start, p.sport))
+            }
+            let z = p.zones
+            let zonesJSON = "{\"zone1\":\(z[0]),\"zone2\":\(z[1]),\"zone3\":\(z[2]),\"zone4\":\(z[3]),\"zone5\":\(z[4])}"
+            rows.append(WorkoutRow(
+                startTs: start, endTs: end, sport: p.sport, source: whoop, durationS: p.min * 60, energyKcal: round1(p.min * (p.sport == "Walking" ? 5.2 : 10.8)),
+                avgHr: p.avg, maxHr: p.max, strain: round1(Double(p.avg - 60) * p.min / 60 * 0.62 * (p.sport == "Walking" ? 0.5 : 1.0) + 8),
+                distanceM: distance, zonesJSON: zonesJSON, notes: i == 0 ? "demo-extras" : nil,
+                steps: p.sport == "Running" ? Int(p.min * 164) : (p.sport == "Walking" ? Int(p.min * 128) : nil)))
+            if p.ago < 30 * 24 { addHeartRate(start: start, end: end, avg: p.avg, peak: p.max) }
+        }
+        // A strength session today, a couple of hours before the run.
+        let gymStart = now - Int(2.2 * 3600), gymEnd = gymStart + 58 * 60
+        rows.append(WorkoutRow(startTs: gymStart, endTs: gymEnd, sport: "Strength Training", source: "manual", durationS: Double(gymEnd - gymStart), energyKcal: 362,
+                               avgHr: 121, maxHr: 158, strain: 36.4, distanceM: nil, zonesJSON: nil, notes: "Upper push/pull", steps: nil))
+        addHeartRate(start: gymStart, end: gymEnd, avg: 124, peak: 158)
+        do {
+            _ = try await store.upsertWorkouts(rows, deviceId: whoop)
+            for from in stride(from: 0, to: hr.count, by: 50_000) {
+                _ = try await store.insert(Streams(hr: Array(hr[from..<Swift.min(from + 50_000, hr.count)])), deviceId: whoop)
+            }
+            RouteStore.storeAll(routes)
+            let sessionId = "demo-gym-today"
+            _ = try await store.upsertLiftSessions([LiftSessionRow(id: sessionId, deviceId: whoop, startTs: gymStart, endTs: gymEnd, sport: "Strength Training",
+                                                                   programId: "demo-prog-1", programName: "Upper push/pull", sessionRpe: nil, note: nil)])
+            let plan: [(String, LiftMuscle, [LiftMuscle], [(Double, Int)])] = [
+                ("Bench Press", .chest, [.triceps, .frontDelts], [(45, 10), (65, 8), (65, 8), (67.5, 6)]),
+                ("Barbell Row", .lats, [.upperBack], [(55, 10), (65, 8), (65, 8)]),
+                ("Overhead Press", .frontDelts, [.triceps], [(32.5, 10), (37.5, 8), (37.5, 7)]),
+                ("Lat Pulldown", .lats, [.biceps], [(50, 12), (55, 10), (55, 10)]),
+            ]
+            var ord = 0
+            var sets: [LiftSetRow] = []
+            for (name, primary, secondary, work) in plan {
+                for (i, w) in work.enumerated() {
+                    sets.append(LiftSetRow(id: "\(sessionId)-\(ord)", deviceId: whoop, sessionId: sessionId, ord: ord, exercise: name, primaryMuscle: primary,
+                                           secondaryMuscles: secondary, setIndex: i + 1, weightKg: w.0, reps: w.1, rpe: nil, isWarmup: false,
+                                           startTs: gymStart + 300 + ord * 240, endTs: gymStart + 300 + ord * 240 + 60, restSec: 90, note: nil))
+                    ord += 1
+                }
+            }
+            _ = try await store.upsertLiftSets(sets)
+        } catch { NSLog("AppleDemoSeeder: sport extras failed — \(error)") }
+    }
+
+    /// A closed loop of about `km` kilometres around a park in Jakarta, wobbled so no two look alike, one point every few seconds.
+    private static func loopRoute(km: Double, seed: Int, rng: inout SplitMix64) -> [RouteMath.LatLng] {
+        let radiusDeg = km / (2 * Double.pi) / 111.0
+        let centre = (lat: -6.2185 + Double(seed % 5) * 0.004, lon: 106.8020 + Double(seed % 3) * 0.005)
+        let phase = Double(seed) * 0.9
+        let n = Swift.max(120, Int(km * 38))
+        return (0...n).map { i in
+            let a = 2 * Double.pi * Double(i) / Double(n)
+            let r = radiusDeg * (1 + 0.14 * Foundation.sin(3 * a + phase) + 0.07 * Foundation.sin(5 * a + 1 + phase))
+            return RouteMath.LatLng(centre.lat + r * Foundation.sin(a) + gauss(&rng, 0.0, 0.000008), centre.lon + r * 1.05 * Foundation.cos(a) + gauss(&rng, 0.0, 0.000008))
         }
     }
 
