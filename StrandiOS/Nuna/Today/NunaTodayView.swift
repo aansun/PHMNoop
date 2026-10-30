@@ -284,7 +284,7 @@ struct NunaTodayView: View {
                     ScrollView {
                         VStack(spacing: NunaSpacing.section) {
                             // Space for the pinned header; it scrolls away exactly as fast as the header shrinks.
-                            Color.clear.frame(height: pinnedHeight(collapse: 0))
+                            Color.clear.frame(height: pinnedHeight(collapse: 0) - 34)
                             if !model.isToday { pastDayBanner }
                             ForEach(sections) { section in
                                 sectionView(section)
@@ -430,7 +430,7 @@ struct NunaTodayView: View {
     private var showsRings: Bool { sections.contains(.hero) }
 
     /// The wordmark over the rings, and the room between it and the day: both go as the page scrolls.
-    private static let brandHeight: CGFloat = 34
+    private static let brandHeight: CGFloat = 58
 
     private func pinnedHeight(collapse t: CGFloat) -> CGFloat {
         let bar: CGFloat = 52
@@ -489,16 +489,16 @@ struct NunaTodayView: View {
     private var dayNav: some View {
         HStack(spacing: 0) {
             Button { model.dayOffset += 1 } label: {
-                Image(systemName: "chevron.left").font(.system(size: 15, weight: .heavy)).frame(width: 38, height: 40).contentShape(Rectangle())
+                Image(systemName: "chevron.left").font(.system(size: 12, weight: .heavy)).frame(width: 30, height: 28).contentShape(Rectangle())
             }
             .foregroundStyle(NunaPalette.textPrimary)
             Button { showDate = true } label: {
-                Text(verbatim: dateTitle).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 1.2).textCase(.uppercase)
-                    .foregroundStyle(NunaPalette.textPrimary).frame(minWidth: 88).padding(.horizontal, 8).frame(height: 40)
+                Text(verbatim: dateTitle).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel + 0.8).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.textPrimary).frame(minWidth: 84).padding(.horizontal, 6).frame(height: 28)
                     .background(NunaPalette.textPrimary.opacity(0.14), in: Capsule())
             }
             Button { if model.dayOffset > 0 { model.dayOffset -= 1 } } label: {
-                Image(systemName: "chevron.right").font(.system(size: 15, weight: .heavy)).frame(width: 38, height: 40).contentShape(Rectangle())
+                Image(systemName: "chevron.right").font(.system(size: 12, weight: .heavy)).frame(width: 30, height: 28).contentShape(Rectangle())
                     .foregroundStyle(NunaPalette.textPrimary.opacity(model.dayOffset > 0 ? 1 : 0.38))
             }
             .disabled(model.dayOffset == 0)
@@ -508,8 +508,6 @@ struct NunaTodayView: View {
     }
 
     private var dateTitle: String {
-        if model.dayOffset == 0 { return String(localized: "Today") }
-        if model.dayOffset == 1 { return String(localized: "Yesterday") }
         let f = DateFormatter()
         f.locale = AppLanguage.activeLocale
         f.setLocalizedDateFormatFromTemplate("EEE d MMM")
