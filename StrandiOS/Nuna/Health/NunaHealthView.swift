@@ -35,7 +35,6 @@ struct NunaHealthView: View {
     @State private var legacy: Legacy?
     @State private var showCoach = false
     @State private var showSleepCoach = false
-    @State private var fitSeries: [(day: String, value: Double)] = []
 
     private enum Legacy: String, Identifiable { case appleHealth, live, mood, cycle, breathing; var id: String { rawValue } }
 
@@ -51,7 +50,6 @@ struct NunaHealthView: View {
                 await spo2S.load(repo: repo, key: "spo2", source: "my-whoop")
                 await respS.load(repo: repo, key: "resp_rate", source: "my-whoop")
                 await skinS.load(repo: repo, key: "skin_temp", source: "my-whoop")
-                fitSeries = await repo.exploreSeries(key: "fitness_age", source: "my-whoop", days: 120)
             } else {
                 await sleep.load(repo: repo)
             }
@@ -89,51 +87,6 @@ struct NunaHealthView: View {
     }
 
     // MARK: Tabs
-    /// "Your normal range": HRV and resting heart rate against the last 30 days, with the position on a bar.
-    private var rangeCard: some View {
-        let statusText: String = {
-            guard let hb = hrvS.band, let rb = rhrS.band, let h = day.hrv, let r = day.restingHr else {
-                return String(localized: "Still learning your range")
-            }
-            let inH = abs(h - hb.mean) <= max(hb.sd, 1), inR = abs(r - rb.mean) <= max(rb.sd, 1)
-            return inH && inR ? String(localized: "All within your range") : String(localized: "Some signals are up")
-        }()
-        return NunaCard {
-            VStack(alignment: .leading, spacing: 16) {
-                HStack {
-                    Text("Your normal range").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                        .foregroundStyle(NunaPalette.textSecondary)
-                    Spacer()
-                    NunaChip(verbatim: statusText, color: statusText == String(localized: "All within your range") ? NunaPalette.charge : nil)
-                }
-                rangeRow("HRV", day.hrv, "ms", hrvS.band)
-                Rectangle().fill(NunaPalette.hairline).frame(height: 1)
-                rangeRow("Resting HR", day.restingHr, "bpm", rhrS.band)
-            }
-        }
-    }
-
-    private func rangeRow(_ label: LocalizedStringKey, _ value: Double?, _ unit: String,
-                          _ band: (mean: Double, sd: Double, lo: Double, hi: Double)?) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .firstTextBaseline) {
-                Text(label).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                Spacer()
-                Text(verbatim: fmt(value)).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                Text(verbatim: unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-            }
-            if let band {
-                NunaRangeBar(value: value, lo: band.lo, hi: band.hi, mean: band.mean)
-                HStack {
-                    Text(verbatim: fmt(band.lo)); Spacer()
-                    Text(verbatim: String(localized: "30-day average: \(fmt(band.mean))")); Spacer()
-                    Text(verbatim: fmt(band.hi))
-                }
-                .font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            }
-        }
-    }
-
     // MARK: Vital
 
     private var vitalTab: some View {
@@ -141,8 +94,6 @@ struct NunaHealthView: View {
             liveCard
             if coachEnabled { NunaAnyaCard(title: "Are my vitals normal today?") { showCoach = true } }
             vitalBento
-            rangeCard
-            fitnessCard
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
                     NavigationLink(value: NunaTodayRoute.rhythm) {
@@ -277,52 +228,6 @@ struct NunaHealthView: View {
                 }
             }
         }
-    }
-
-    /// Fitness age as one quiet row: the age on the left, how it compares with the real age on the right.
-    private var fitnessCard: some View {
-        let fit = day.extras["fitness_age"]
-        let age = profile.age
-        let diff: Int? = (fit != nil && age > 0) ? Int((Double(age) - fit!).rounded()) : nil
-        return NavigationLink(value: NunaTodayRoute.fitnessAge) {
-            NunaCard(small: true) {
-                HStack(alignment: .center, spacing: 12) {
-                    Image(systemName: "figure.run").font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
-                    VStack(alignment: .leading, spacing: 2) {
-                        cardTitle("Fitness age")
-                        HStack(alignment: .firstTextBaseline, spacing: 5) {
-                            Text(verbatim: fmt(fit)).font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                            Text("years").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                        }
-                    }
-                    Spacer(minLength: 8)
-                    if let diff {
-                        Text(diff == 0 ? LocalizedStringKey("Same as your age")
-                             : (nunaYearsGap(diff)))
-                            .font(.nuna(size: 13, weight: .heavy)).textCase(nil)
-                            .foregroundStyle(diff > 0 ? NunaPalette.charge : (diff == 0 ? NunaPalette.textSecondary : NunaPalette.warning))
-                    }
-                    Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                }
-            }
-        }.buttonStyle(.plain)
-    }
-
-    /// "Updated Saturday · 4-week trend ▼ 1 yr", from the stored weekly series.
-    private var fitnessFooter: String? {
-        guard let last = fitSeries.last else { return nil }
-        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; f.locale = Locale(identifier: "en_US_POSIX")
-        var text = ""
-        if let d = f.date(from: last.day) {
-            let w = DateFormatter(); w.locale = AppLanguage.activeLocale; w.setLocalizedDateFormatFromTemplate("EEEE")
-            text = String(localized: "Updated \(w.string(from: d))")
-        }
-        if fitSeries.count >= 5 {
-            let delta = last.value - fitSeries[fitSeries.count - 5].value
-            let n = Int(abs(delta).rounded())
-            if n >= 1 { text += (text.isEmpty ? "" : " · ") + String(localized: "4-week trend") + (delta < 0 ? " ▼ " : " ▲ ") + String(localized: "\(n) yr") }
-        }
-        return text.isEmpty ? nil : text
     }
 
     private var earlyWarningCard: some View { NunaWithApp { earlyWarningBody($0) } }
