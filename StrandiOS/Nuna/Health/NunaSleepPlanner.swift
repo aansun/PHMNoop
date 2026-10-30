@@ -133,9 +133,9 @@ struct NunaSmartAlarmView: View {
 
     /// The line under the mark: what the strap will do, and the bedtime that leaves room for it.
     private var message: some View {
-        VStack(spacing: 22) {
+        VStack(spacing: 18) {
             AnyaMark(size: 40).frame(width: 52, height: 52).overlay(Circle().strokeBorder(Color.white, lineWidth: 2).padding(-12)).padding(.top, 12)
-            Text(verbatim: messageText).font(.nuna(size: 22, weight: .medium)).foregroundStyle(Color.white).textCase(nil)
+            Text(verbatim: messageText).font(.nuna(size: 20, weight: .medium)).foregroundStyle(Color.white).textCase(nil)
                 .multilineTextAlignment(.center).lineSpacing(5).fixedSize(horizontal: false, vertical: true).padding(.horizontal, 30)
             if let warn = armWarning {
                 Text(verbatim: warn).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.warning).textCase(nil)
