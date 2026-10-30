@@ -59,6 +59,8 @@ struct NunaSmartAlarmView: View {
     @EnvironmentObject private var behavior: BehaviorStore
     @AppStorage("alarm.rejectStreak") private var rejectStreak = 0
     @AppStorage(NunaGoals.sleepMinutes) private var sleepGoal = 0
+    /// Wrist alerts, the master switch of every strap buzz: the alarm buzzes only while it is on.
+    @AppStorage(AppModel.wristAlertsMasterKey) private var wristAlerts = false
     @State private var overrides = WindDownNudge.perDayWakeOverrides
     @State private var step: Step = .summary
     @State private var showHelp = false
@@ -103,6 +105,7 @@ struct NunaSmartAlarmView: View {
         .onChange(of: behavior.smartAlarmEnabled) { _, _ in model.applySmartAlarm() }
         .onChange(of: behavior.smartAlarmMinutes) { _, _ in model.applySmartAlarm() }
         .onChange(of: behavior.smartAlarmWeekdays) { _, _ in model.applySmartAlarm() }
+        .onChange(of: wristAlerts) { _, _ in model.applySmartAlarm() }
         .onAppear { overrides = WindDownNudge.perDayWakeOverrides }
         .sheet(isPresented: $showHelp) { helpSheet }
         .sheet(isPresented: $showRepeat) { repeatSheet }
@@ -166,6 +169,17 @@ struct NunaSmartAlarmView: View {
             AnyaMark(size: 23).frame(width: 36, height: 36).overlay(Circle().strokeBorder(Color.white, lineWidth: 1.8))
             Text(verbatim: messageText).font(.nuna(size: 18, weight: .regular)).foregroundStyle(Color.white).textCase(nil)
                 .multilineTextAlignment(.center).lineSpacing(5.5).fixedSize(horizontal: false, vertical: true).padding(.horizontal, 50)
+            if behavior.smartAlarmEnabled && willArm && !wristAlerts {
+                // The alarm is on but the strap will not buzz: say so, and give the way out.
+                Button { wristAlerts = true } label: {
+                    Text("Turn on wrist alerts").font(.nuna(size: 12.5, weight: .heavy)).tracking(1.2).textCase(.uppercase).foregroundStyle(Color.white)
+                        .padding(.horizontal, 18).frame(height: 36).overlay(Capsule().strokeBorder(Color.white.opacity(0.7), lineWidth: 1.4))
+                }
+                .buttonStyle(.plain)
+            } else if behavior.smartAlarmEnabled && willArm {
+                Text("Double-tap your strap to turn the alarm off.").font(.nuna(size: 13, weight: .regular)).foregroundStyle(Color.white.opacity(0.6)).textCase(nil)
+                    .multilineTextAlignment(.center).padding(.horizontal, 40)
+            }
             if let warn = armWarning {
                 Text(verbatim: warn).font(.nuna(size: 13, weight: .regular)).foregroundStyle(NunaPalette.warning).textCase(nil)
                     .multilineTextAlignment(.center).padding(.horizontal, 40)
@@ -176,6 +190,9 @@ struct NunaSmartAlarmView: View {
 
     private var messageText: String {
         guard behavior.smartAlarmEnabled else { return String(localized: "Your alarm is off. Turn it on below to buzz your wrist at your wake time.") }
+        if willArm && !wristAlerts {
+            return String(localized: "Wrist alerts are off, so your strap will not buzz. Your phone will notify you at \(NunaAlarmFormat.clock(behavior.smartAlarmMinutes)).")
+        }
         let wake = NunaAlarmFormat.clock(behavior.smartAlarmMinutes), bed = NunaAlarmFormat.clock(plan.bedtimeMinutes)
         switch mode {
         case .exact: return String(localized: "Your strap will buzz at \(wake).")
@@ -466,6 +483,7 @@ struct NunaSmartAlarmView: View {
                 Text("Sleep planner").font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                 note("The strap buzzes at your wake time. In Sleep goal and In the green the goal decides the bedtime to aim for, the time in bed it leaves, and the Tonight's sleep card on Today: NOOP cannot see your sleep as it happens, so the buzz is never earlier than the time you set.")
                 note("Optimal is the window your sleep need itself asks for, ending at your wake time. The suggested bedtime starts a little earlier, to leave time to fall asleep.")
+                note("The buzz is the same one as your other wrist alerts, so it follows the Wrist alerts switch in Strap automations: with it off the strap stays silent and only the phone notification wakes you. To turn the alarm off, double-tap your strap while it buzzes.")
                 note("The buzz is silent, from the strap's own firmware, so it works even if your phone is asleep or NOOP is closed. A backup notification is scheduled too, but Focus or silent mode can mute it. Keep your phone's Clock alarm as your real backup.")
                 if model.whoop5Detected && !PuffinExperiment.isEnabled {
                     note("Your WHOOP 5/MG won't arm this until Experimental mode is on (Settings, Experimental). Right now your wake time is saved but the strap is NOT armed.", warn: true)

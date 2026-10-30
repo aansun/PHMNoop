@@ -23,8 +23,9 @@ struct NunaAutomationsView: View {
         NunaDetailScreen("Strap automations") {
             Text("Let the strap act: a tap does something, a vibration coaches you, and it tells you things without opening the phone.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             NunaCard(highlight: wrist) {
-                NunaToggleRow("Wrist alerts", subtitle: "The master switch for all vibrations. Off means the strap stays silent", systemImage: "bell.badge", isOn: $wrist).padding(.vertical, 8)
+                NunaToggleRow("Wrist alerts", subtitle: "The master switch for all vibrations, the wake alarm included. Off means the strap stays silent", systemImage: "bell.badge", isOn: $wrist).padding(.vertical, 8)
             }
+            .onChange(of: wrist) { _, _ in model.applySmartAlarm() }
             NunaSettingsGroup("Gestures and presence") {
                 NavigationLink(value: NunaMeRoute.doubleTap) { NunaListRow("Double tap", subtitle: LocalizedStringKey(behavior.doubleTapAction.label), systemImage: "hand.tap", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
