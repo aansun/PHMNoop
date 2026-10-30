@@ -326,8 +326,11 @@ struct NunaStressGauge: View {
     let levelColor: Color
     let time: String?
     var onInfo: (() -> Void)?
+    /// The height of the dial; the number inside follows it.
+    var height: CGFloat = 250
 
     private let start = 140.0, span = 260.0
+    private var numberSize: CGFloat { height < 220 ? 54 : 64 }
     /// Blue, green, yellow and amber along the arc. An angular gradient runs round the whole circle from 3 o'clock, so the colours are
     /// placed by the angle the arc covers (it starts low on the left and ends low on the right, past 12 o'clock).
     private var stops: Gradient {
@@ -366,7 +369,7 @@ struct NunaStressGauge: View {
                             }
                             VStack(spacing: 6) {
                                 Text(verbatim: value.map { String(format: "%.1f", locale: AppLanguage.activeLocale, $0) } ?? "–")
-                                    .font(.nuna(size: 64, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(64)).foregroundStyle(NunaPalette.textPrimary)
+                                    .font(.nuna(size: numberSize, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(numberSize)).foregroundStyle(NunaPalette.textPrimary)
                                 if let level { Text(level).font(.nuna(size: 17, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(levelColor) }
                                 if let time { Text(verbatim: time).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                             }
@@ -379,7 +382,7 @@ struct NunaStressGauge: View {
                         }
                     }
                 }
-                .frame(height: 250)
+                .frame(height: height)
             }
             if let onInfo {
                 Button(action: onInfo) {
