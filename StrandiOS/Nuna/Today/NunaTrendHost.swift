@@ -4,25 +4,27 @@ import StrandDesign
 
 /// Every trend page of the app, in the order the dropdown at the top of a trend page lists them: Effort, Charge and Rest, each with the readings it is made of.
 enum NunaTrendPage: String, CaseIterable, Identifiable {
-    case effort, steps, hrZonesLow, hrZonesHigh, calories
-    case charge, hrv, rhr, respiratory
+    case effort, steps, hrZonesLow, hrZonesHigh, calories, vo2max
+    case charge, hrv, rhr, respiratory, skinTemp
     case restPerformance, timeInBed, hoursNeededHours, hoursNeededPct, consistency, restorative, efficiency, debt
+    case weight, vitality, spo2, stressTotal, stressNonActivity, stressSleep
 
     var id: String { rawValue }
 
     enum Section: CaseIterable {
-        case effort, charge, rest
+        case effort, charge, rest, other
 
         var title: LocalizedStringKey {
-            switch self { case .effort: return "Effort"; case .charge: return "Charge"; case .rest: return "Rest" }
+            switch self { case .effort: return "Effort"; case .charge: return "Charge"; case .rest: return "Rest"; case .other: return "Other" }
         }
         var pages: [NunaTrendPage] { NunaTrendPage.allCases.filter { $0.section == self } }
     }
 
     var section: Section {
         switch self {
-        case .effort, .steps, .calories, .hrZonesLow, .hrZonesHigh: return .effort
-        case .charge, .hrv, .rhr, .respiratory: return .charge
+        case .effort, .steps, .calories, .hrZonesLow, .hrZonesHigh, .vo2max: return .effort
+        case .charge, .hrv, .rhr, .respiratory, .skinTemp: return .charge
+        case .weight, .vitality, .spo2, .stressTotal, .stressNonActivity, .stressSleep: return .other
         default: return .rest
         }
     }
@@ -46,6 +48,14 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case .restorative: return "Restorative sleep (hours)"
         case .efficiency: return "Sleep efficiency"
         case .debt: return "Sleep debt"
+        case .vo2max: return "VO₂ max"
+        case .skinTemp: return "Skin temperature"
+        case .weight: return "Weight"
+        case .vitality: return "Vitality"
+        case .spo2: return "Blood oxygen"
+        case .stressTotal: return "Total day stress"
+        case .stressNonActivity: return "Non activity stress"
+        case .stressSleep: return "Sleep stress"
         }
     }
 
@@ -66,6 +76,14 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case .consistency: return "calendar"
         case .restorative, .debt: return "moon.zzz"
         case .efficiency: return "bed.double"
+        case .vo2max: return "lungs"
+        case .skinTemp: return "thermometer.medium"
+        case .weight: return "scalemass"
+        case .vitality: return "sparkles"
+        case .spo2: return "drop"
+        case .stressTotal: return NunaStressCategory.total.icon
+        case .stressNonActivity: return NunaStressCategory.nonActivity.icon
+        case .stressSleep: return NunaStressCategory.sleep.icon
         }
     }
 
@@ -81,6 +99,11 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case "sleep_efficiency": return .efficiency
         case "sleep_debt", "sleep_debt_min": return .debt
         case "hours_vs_needed": return .hoursNeededPct
+        case "spo2": return .spo2
+        case "skin_temp": return .skinTemp
+        case "vo2max_est": return .vo2max
+        case "vitality": return .vitality
+        case "weight": return .weight
         default: return nil
         }
     }
@@ -104,6 +127,14 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case .restorative: NunaRestorativeTrendView(endingDaysAgo: endingDaysAgo)
         case .efficiency: NunaEfficiencyTrendView(endingDaysAgo: endingDaysAgo)
         case .debt: NunaSleepDebtTrendView(endingDaysAgo: endingDaysAgo)
+        case .vo2max: NunaLineTrendView.forMetric("vo2max_est", endingDaysAgo: endingDaysAgo)
+        case .skinTemp: NunaLineTrendView.forMetric("skin_temp", endingDaysAgo: endingDaysAgo)
+        case .weight: NunaLineTrendView.forMetric("weight", endingDaysAgo: endingDaysAgo)
+        case .vitality: NunaLineTrendView.forMetric("vitality", endingDaysAgo: endingDaysAgo)
+        case .spo2: NunaLineTrendView.forMetric("spo2", endingDaysAgo: endingDaysAgo)
+        case .stressTotal: NunaStressTrendView(category: .total)
+        case .stressNonActivity: NunaStressTrendView(category: .nonActivity)
+        case .stressSleep: NunaStressTrendView(category: .sleep)
         }
     }
 }
@@ -146,7 +177,7 @@ struct NunaTrendHost: View {
 }
 
 /// The box that names the reading at the top of a trend page. Inside a `NunaTrendHost` it is a button with a chevron that opens the list of every
-/// trend page, grouped as Effort, Charge and Rest, the page on show lit; on its own it is only the name.
+/// trend page, grouped as Effort, Charge, Rest and Other, the page on show lit; on its own it is only the name.
 struct NunaTrendNameBox: View {
     let icon: String
     let title: LocalizedStringKey
@@ -204,7 +235,7 @@ struct NunaTrendNameBox: View {
             .padding(10)
         }
         .scrollIndicators(.hidden)
-        .frame(height: 440)
+        .frame(height: 480)
         .background(Color.black, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
     }
 }

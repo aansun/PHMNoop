@@ -103,6 +103,11 @@ enum NunaStressCategory: CaseIterable, Hashable {
     }
 
     /// The closing sentence of the trend view's summary.
+    /// The trend page of this category in the list every trend page shares.
+    var trendPage: NunaTrendPage {
+        switch self { case .total: return .stressTotal; case .nonActivity: return .stressNonActivity; case .sleep: return .stressSleep }
+    }
+
     var trendNote: String {
         switch self {
         case .total: return String(localized: "This includes time asleep and leaves out workouts.")
@@ -323,7 +328,7 @@ struct NunaStressCategoryCard: View {
                 Text(category.note).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                     .fixedSize(horizontal: false, vertical: true).textCase(nil)
                 NavigationLink {
-                    NunaStressTrendView(category: category)
+                    NunaTrendHost(initial: category.trendPage)
                 } label: {
                     HStack(spacing: 8) {
                         Text("See trends").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
@@ -371,15 +376,13 @@ struct NunaStressCategoryCard: View {
 
 /// The three bands as a share of each day, over a week, a month or six months, for one category.
 struct NunaStressTrendView: View {
-    @State private var category: NunaStressCategory
+    let category: NunaStressCategory
     @EnvironmentObject private var repo: Repository
     @StateObject private var history = NunaStressHistory()
     @State private var range = 7
     @State private var pageOffset = 0
     @State private var todayResult: WhoopStress.Result?
     private static let maxPages = 52
-
-    init(category: NunaStressCategory) { _category = State(initialValue: category) }
 
     private struct Bar: Identifiable {
         let date: Date
@@ -423,69 +426,67 @@ struct NunaStressTrendView: View {
         range == 7 ? String(localized: "week") : (range == 30 ? String(localized: "month") : String(localized: "six months"))
     }
 
+    /// The page as the heart-rate zone pages draw it: the name of the reading in a box that opens the list of every trend page, then the average
+    /// with the range switch, a sentence, the chart and a note, straight on the page.
     var body: some View {
         let average = averageHigh(windowDays)
         let prior = range <= 30 ? averageHigh(priorDays) : nil
-        NunaDetailScreen("Trend view") {
-            NunaCard {
-                VStack(alignment: .leading, spacing: 14) {
-                    HStack(alignment: .top, spacing: 12) {
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text("Avg. high stress").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                                .foregroundStyle(NunaPalette.textSecondary)
-                            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                                Text(verbatim: average.map(NunaStressBand.hm) ?? "–").font(.nuna(size: 44, weight: .bold, design: NunaType.design))
-                                    .tracking(nunaTrackingNumber(44)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
-                                if average != nil {
-                                    Text("hr").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                                }
-                            }
+        NunaDetailScreen("Trend view", centersTitle: true) {
+            NunaTrendNameBox(icon: category.icon, title: category.trendTitle)
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Avg. high stress").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        .foregroundStyle(NunaPalette.textPrimary)
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(verbatim: average.map(NunaStressBand.hm) ?? "–").font(.nuna(size: 40, weight: .semibold, design: NunaType.design))
+                            .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+                        if average != nil {
+                            Text("hr").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                         }
-                        Spacer(minLength: 0)
-                        VStack(alignment: .trailing, spacing: 12) {
-                            NunaRangeSwitch(range: $range) { pageOffset = 0 }
-                            NunaDateStepper(label: dateRange, canGoBack: pageOffset < Self.maxPages, canGoForward: pageOffset > 0,
-                                            back: { pageOffset += 1 }, forward: { pageOffset = max(0, pageOffset - 1) })
-                        }
-                    }
-                    if let average, let prior, prior > 0 {
-                        let change = (average - prior) / prior * 100
-                        HStack(spacing: 0) {
-                            NunaChip(verbatim: (change >= 0 ? "▲ " : "▼ ") + "\(Int(abs(change).rounded()))% " + String(localized: "vs. prior period"),
-                                     color: change > 0 ? NunaPalette.warning : NunaPalette.charge)
-                            Spacer(minLength: 0)
-                        }
-                    }
-                    Text(verbatim: summary(average: average, prior: prior)).font(.nuna(size: 14.5, weight: .semibold))
-                        .foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                    HStack { Spacer(minLength: 0); NunaStressLegend() }
-                    if bars.isEmpty {
-                        Text(history.loading ? "Working out your days…" : "No stress data in this period")
-                            .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                            .frame(maxWidth: .infinity, minHeight: 200, alignment: .center).textCase(nil)
-                    } else {
-                        chart(bars)
-                        if history.loading {
-                            HStack(spacing: 8) {
-                                ProgressView().controlSize(.small)
-                                Text("Working out your days…").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                            }
-                        }
-                    }
-                    HStack(spacing: 8) {
-                        Image(systemName: "info.circle").font(.nuna(size: 13, weight: .semibold))
-                        Text("Average does not include today (\(todayLabel)).")
-                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }
                 }
+                Spacer(minLength: 0)
+                VStack(alignment: .trailing, spacing: 14) {
+                    NunaRangeSwitch(range: $range) { pageOffset = 0 }
+                    NunaDateStepper(label: dateRange, canGoBack: pageOffset < Self.maxPages, canGoForward: pageOffset > 0,
+                                    back: { pageOffset += 1 }, forward: { pageOffset = max(0, pageOffset - 1) })
+                }
             }
+            .padding(.horizontal, 2)
+            if let average, let prior, prior > 0 {
+                let change = (average - prior) / prior * 100
+                HStack(spacing: 0) {
+                    NunaChip(verbatim: (change >= 0 ? "▲ " : "▼ ") + "\(Int(abs(change).rounded()))% " + String(localized: "vs. prior period"),
+                             color: change > 0 ? NunaPalette.warning : NunaPalette.charge)
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 2)
+            }
+            Text(verbatim: summary(average: average, prior: prior)).font(.nuna(size: 13.5, weight: .semibold))
+                .foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.horizontal, 2)
+            HStack { Spacer(minLength: 0); NunaStressLegend() }.padding(.horizontal, 2)
+            if bars.isEmpty {
+                Text(history.loading ? "Working out your days…" : "No stress data in this period")
+                    .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    .frame(maxWidth: .infinity, minHeight: 240, alignment: .center).textCase(nil)
+            } else {
+                chart(bars).padding(.top, 4)
+                if history.loading {
+                    HStack(spacing: 8) {
+                        ProgressView().controlSize(.small)
+                        Text("Working out your days…").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    }
+                    .padding(.horizontal, 2)
+                }
+            }
+            HStack(spacing: 8) {
+                Image(systemName: "info.circle").font(.nuna(size: 14, weight: .semibold))
+                Text("Average does not include today (\(todayLabel)).")
+                    .font(.nuna(size: 12, weight: .semibold)).fixedSize(horizontal: false, vertical: true).textCase(nil)
+            }
+            .foregroundStyle(NunaPalette.textSecondary).padding(.horizontal, 2).frame(maxWidth: .infinity, alignment: .leading)
         }
-        // The header's dropdown names the screen and moves between the three readings, like the other detail screens.
-        .environment(\.nunaDetailSwitch, NunaDetailSwitch(
-            current: category.key,
-            items: NunaStressCategory.allCases.map { .init(key: $0.key, title: $0.trendName, icon: $0.icon) }) { key in
-                if let next = NunaStressCategory.allCases.first(where: { $0.key == key }) { category = next }
-            })
+        .environment(\.nunaDetailSwitch, nil)
         .task(id: "\(repo.refreshSeq)-\(range)-\(pageOffset)") {
             let live = await StressDayCurve.whoopToday(repo: repo, now: Date())
             if live != todayResult { todayResult = live }
@@ -529,7 +530,7 @@ struct NunaStressTrendView: View {
         AxisMarks(position: .leading, values: [0, 25, 50, 75, 100]) { value in
             AxisGridLine().foregroundStyle(NunaPalette.hairline.opacity(0.5))
             AxisValueLabel {
-                if let v = value.as(Double.self) { Text(verbatim: "\(Int(v))%").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) }
+                if let v = value.as(Double.self) { Text(verbatim: "\(Int(v))%").font(.nuna(size: 12, weight: .heavy)).foregroundStyle(NunaPalette.textMuted) }
             }
         }
     }
@@ -570,7 +571,7 @@ struct NunaStressTrendView: View {
             Text(verbatim: { f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE"); return f.string(from: date) }())
             Text(verbatim: { f.setLocalizedDateFormatFromTemplate("d"); return f.string(from: date) }())
         }
-        .font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
+        .font(.nuna(size: 12, weight: .heavy)).foregroundStyle(NunaPalette.textMuted)
     }
 
     // MARK: Six months: each month's average split, drawn as a line per band over the faint days

@@ -17,6 +17,12 @@ struct NunaLineTrendView: View {
     var decimals = 0
     /// Whether a rise is good (HRV), bad (resting heart rate) or neither (respiratory rate): the colour of the change in the six-month view.
     var upIsGood: Bool?
+    /// Where the readings are kept: the strap's own series, unless the page is about a reading that comes from elsewhere (weight).
+    var source = "my-whoop"
+    /// A second source merged on top (a weight typed in by hand wins over the imported one for that day).
+    var also: String?
+    /// What the sentence ends with, when it is not about wearing the strap to bed.
+    var closing: String?
     var endingDaysAgo = 0
 
     @EnvironmentObject private var repo: Repository
@@ -43,6 +49,20 @@ struct NunaLineTrendView: View {
             return NunaLineTrendView(name: "Resting heart rate", icon: "heart", noun: "average resting heart rate", key: key, unit: "bpm", upIsGood: false, endingDaysAgo: endingDaysAgo)
         case "resp_rate":
             return NunaLineTrendView(name: "Respiratory rate", icon: "lungs", noun: "average respiratory rate", key: key, unit: "rpm", decimals: 1, endingDaysAgo: endingDaysAgo)
+        case "spo2":
+            return NunaLineTrendView(name: "Blood oxygen", icon: "drop", noun: "average blood oxygen", key: key, unit: "%", upIsGood: true, endingDaysAgo: endingDaysAgo)
+        case "skin_temp":
+            return NunaLineTrendView(name: "Skin temperature", icon: "thermometer.medium", noun: "average skin temperature (against your usual)", key: key, unit: "°C", decimals: 1,
+                                     endingDaysAgo: endingDaysAgo)
+        case "vo2max_est":
+            return NunaLineTrendView(name: "VO₂ max", icon: "lungs", noun: "average estimated VO₂ max", key: key, unit: "ml/kg/min", decimals: 1, upIsGood: true,
+                                     closing: String(localized: "It is worked out once a week from your resting heart rate and your profile."), endingDaysAgo: endingDaysAgo)
+        case "vitality":
+            return NunaLineTrendView(name: "Vitality", icon: "sparkles", noun: "average Vitality", key: key, unit: "", upIsGood: true,
+                                     closing: String(localized: "It is worked out once a week from your sleep, activity and recovery."), endingDaysAgo: endingDaysAgo)
+        case "weight":
+            return NunaLineTrendView(name: "Weight", icon: "scalemass", noun: "average weight", key: key, unit: "kg", decimals: 1, source: "apple-health", also: nunaManualSource,
+                                     closing: String(localized: "Log it from Quick actions or connect Apple Health to track how it changes over time."), endingDaysAgo: endingDaysAgo)
         default:
             return nil
         }
@@ -85,7 +105,7 @@ struct NunaLineTrendView: View {
             chart(all, average)
         }
         .environment(\.nunaDetailSwitch, nil)
-        .task(id: repo.refreshSeq) { await series.load(repo: repo, key: key, source: "my-whoop", days: 400) }
+        .task(id: repo.refreshSeq) { await series.load(repo: repo, key: key, source: source, days: 400, also: also) }
         .onChange(of: range) { _, _ in picked = nil }
         .onChange(of: page) { _, _ in picked = nil }
     }
@@ -118,9 +138,14 @@ struct NunaLineTrendView: View {
     }
 
     private func sentence(_ average: Double?) -> String {
-        guard let average else { return String(localized: "Wear your strap to bed each night to track this over time.") }
+        guard let average else {
+            return closing == nil ? String(localized: "Wear your strap to bed each night to track this over time.") : String(localized: "Nothing recorded in this period yet.")
+        }
         let span = range == 7 ? String(localized: "this week was") : (range == 30 ? String(localized: "this month was") : String(localized: "over these six months has been"))
-        return String(localized: "Your \(noun) \(span) \(fmt(average)). Wear your strap to bed each night to track how this changes over time.")
+        guard let closing else {
+            return String(localized: "Your \(noun) \(span) \(fmt(average)). Wear your strap to bed each night to track how this changes over time.")
+        }
+        return String(localized: "Your \(noun) \(span) \(fmt(average)).") + " " + closing
     }
 
     private var legend: some View {
