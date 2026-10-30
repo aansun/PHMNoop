@@ -224,6 +224,8 @@ struct NunaWorkoutHRArea: View {
             .font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(height: 16)
         }
         .padding(.top, 10)
+        // Edge to edge: the scale sits at the screen's own edge and the two marks are the same distance from either side.
+        .padding(.horizontal, -NunaSpacing.screenH)
         .accessibilityHidden(true)
         .animation(.easeInOut(duration: 0.2), value: highlightZone)
     }
