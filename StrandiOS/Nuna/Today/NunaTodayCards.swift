@@ -78,7 +78,7 @@ struct NunaScoreRings: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: 0) {
-            item(.charge); item(.effort); item(.rest)
+            item(.rest); item(.charge); item(.effort)
         }
         .frame(height: lerp(Self.fullHeight, Self.compactHeight), alignment: .top)
         .clipped()
@@ -92,8 +92,12 @@ struct NunaScoreRings: View {
                 if collapse < 0.55 {
                     VStack(spacing: 12) {
                         ringView(v, size: size)
-                        Text(verbatim: englishName(kind)).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                            .foregroundStyle(NunaPalette.textPrimary)
+                        // The name with a chevron after it: the ring opens its page.
+                        HStack(spacing: 4) {
+                            Text(verbatim: englishName(kind)).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                            Image(systemName: "chevron.right").font(.nuna(size: 9.5, weight: .heavy))
+                        }
+                        .foregroundStyle(NunaPalette.textPrimary)
                     }
                 } else {
                     HStack(spacing: 8) {
@@ -113,7 +117,7 @@ struct NunaScoreRings: View {
     }
 
     /// The figure keeps the size it had in the larger ring (30 pt) while the ring itself is smaller.
-    private func numberSize(_ ringSize: CGFloat) -> CGFloat { max(ringSize * 0.27, 30 * min(ringSize / 92, 1)) }
+    private func numberSize(_ ringSize: CGFloat) -> CGFloat { max(ringSize * 0.27, 31 * min(ringSize / 92, 1)) }
 
     private func ringView(_ v: RingValues, size: CGFloat) -> some View {
         NunaRingGauge(fraction: v.fraction, color: v.color, gradient: v.gradient, target: v.target, size: size, lineWidth: max(3.5, size * 0.09)) {
@@ -122,7 +126,7 @@ struct NunaScoreRings: View {
                     Text(verbatim: v.number).font(.nuna(size: numberSize(size), weight: .bold, design: NunaType.design))
                         .tracking(nunaTrackingNumber(numberSize(size))).foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
                     if !v.unit.isEmpty && v.number != "–" {
-                        Text(verbatim: v.unit).font(.nuna(size: numberSize(size) * 0.48, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: v.unit).font(.nuna(size: numberSize(size) * 0.68, weight: .bold)).foregroundStyle(NunaPalette.textPrimary.opacity(0.85))
                     }
                 }
             }
@@ -181,6 +185,16 @@ struct NunaScoreRings: View {
 private struct NunaAnyaCardContextKey: EnvironmentKey { static let defaultValue: String? = nil }
 
 private struct NunaAnyaBorderedKey: EnvironmentKey { static let defaultValue = true }
+
+private struct NunaAnyaRowKey: EnvironmentKey { static let defaultValue = false }
+
+extension EnvironmentValues {
+    /// Draws Anya's suggestion as one slim row: her mark in a ring, the line, a chevron. Today turns it on.
+    var nunaAnyaRow: Bool {
+        get { self[NunaAnyaRowKey.self] }
+        set { self[NunaAnyaRowKey.self] = newValue }
+    }
+}
 
 extension EnvironmentValues {
     /// On by default everywhere. Draws Anya's suggestion as a bordered note (a gradient outline in the wing colours, no icon, no fill) instead of the plain row.
@@ -249,6 +263,7 @@ struct NunaAnyaCard: View {
     private var line: String?
     @Environment(\.nunaAnyaCardContext) private var sheetContext
     @Environment(\.nunaAnyaBordered) private var bordered
+    @Environment(\.nunaAnyaRow) private var rowStyle
     @State private var showSheet = false
 
     init(title: LocalizedStringKey, highlight: Bool = true, buttonTitle: LocalizedStringKey? = nil, onButton: (() -> Void)? = nil,
@@ -294,9 +309,30 @@ struct NunaAnyaCard: View {
     }
 
     @ViewBuilder private var content: some View {
-        if bordered { borderedNote }
+        if rowStyle { slimRow }
+        else if bordered { borderedNote }
         else if compact { inline(compact: true) }
         else if let buttonTitle, let onButton { stacked(buttonTitle, onButton) } else { inline(compact: false) }
+    }
+
+    /// One slim row on a card: Anya's mark in a thin ring, her line (two lines at most) and a chevron. The detail and the buttons are in the sheet it opens.
+    private var slimRow: some View {
+        Button(action: tapped) {
+            NunaCard(small: true, padding: EdgeInsets(top: 12, leading: 14, bottom: 12, trailing: 16)) {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle().strokeBorder(LinearGradient(colors: Self.wing, startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1.5)
+                        AnyaMark(size: 19)
+                    }
+                    .frame(width: 34, height: 34).accessibilityHidden(true)
+                    title.font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                        .multilineTextAlignment(.leading).lineLimit(2).minimumScaleFactor(0.9)
+                    Spacer(minLength: 4)
+                    Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                }
+            }
+        }
+        .buttonStyle(.plain)
     }
 
     /// The wing colours, light to deep, for the outline and the link.
