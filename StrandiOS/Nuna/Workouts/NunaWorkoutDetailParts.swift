@@ -139,24 +139,28 @@ struct NunaCardioMuscularCard: View {
                     caption("Muscular")
                 }
                 if let split {
+                    // Cardio is the dark stretch at the left, muscular the bright one, a white mark between them.
                     GeometryReader { geo in
                         let x = geo.size.width * CGFloat(split.cardioPct) / 100
                         ZStack(alignment: .leading) {
-                            Capsule().fill(NunaPalette.effortAllOut.opacity(0.55))
-                            Capsule().fill(NunaPalette.effortModerate).frame(width: max(x, 0))
-                            // The mark where the cardio share ends.
-                            Rectangle().fill(Color.white).frame(width: 2.5, height: 18).offset(x: min(max(x - 1.25, 0), geo.size.width - 2.5))
+                            RoundedRectangle(cornerRadius: 6, style: .continuous).fill(NunaPalette.effortModerate)
+                            Rectangle().fill(Color(hex: "#0B5C9E")).frame(width: max(x, 0))
+                            Rectangle().fill(Color.white).frame(width: 3, height: 26).offset(x: min(max(x - 1.5, 0), geo.size.width - 3))
                         }
+                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(Color(hex: "#0B5C9E"), lineWidth: 1.5))
                     }
-                    .frame(height: 14)
+                    .frame(height: 22)
                     HStack {
-                        Text(verbatim: "\(split.cardioPct)%").font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: "\(split.cardioPct)%").font(.nuna(size: 18, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
                         Spacer()
-                        Text(verbatim: "\(split.muscularPct)%").font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: "\(split.muscularPct)%").font(.nuna(size: 18, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
                     }
-                    Text(compact ? "Against your last \(split.sessions) sessions" : "Against your last \(split.sessions) sessions. An estimate; it does not change Effort.")
-                        .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-                        .fixedSize(horizontal: false, vertical: true)
+                    if !compact {
+                        Text("Against your last \(split.sessions) sessions. An estimate; it does not change Effort.")
+                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 } else {
                     Text(compact ? "Appears after three earlier sessions with sets." : "Appears once you have three earlier sessions with logged sets and an Effort.")
                         .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)

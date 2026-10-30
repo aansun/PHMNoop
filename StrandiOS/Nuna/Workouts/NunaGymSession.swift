@@ -33,7 +33,7 @@ struct NunaGymSessionView: View {
     @State private var stravaMessage: String?
     @StateObject private var strava = StravaSettingsModel()
 
-    private enum Tab: Hashable { case exercises, heartRate }
+    fileprivate enum Tab: Hashable { case exercises, heartRate }
 
     private var system: UnitSystem { UnitSystem(rawValue: unitSystemRaw) ?? .metric }
 
@@ -99,14 +99,14 @@ struct NunaGymSessionView: View {
         let secs = max(0, (s.endTs ?? s.startTs) - s.startTs)
         let averages = workout.flatMap { NunaWorkoutAverages(for: $0, in: history.rows) }
         if let program = s.programName, !program.isEmpty {
-            Text(verbatim: program).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 10).frame(height: 28)
-                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+            Text(verbatim: program).font(.nuna(size: 14, weight: .semibold)).textCase(nil)
+                .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 34)
+                .overlay(Capsule().strokeBorder(NunaPalette.textSecondary.opacity(0.55), lineWidth: 1.5))
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         effortAndSplit(s, averages: averages)
         keyStatistics(secs, averages: averages)
-        NunaPageTabs([(value: Tab.exercises, title: "Exercises"), (value: Tab.heartRate, title: "Heart rate zones")], selection: $tab)
+        NunaGymTabs(selection: $tab)
         switch tab {
         case .exercises: exercisesTab
         case .heartRate: heartRateTab
@@ -142,6 +142,7 @@ struct NunaGymSessionView: View {
                 Text("Activity Effort").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            Rectangle().fill(NunaPalette.textPrimary.opacity(0.1)).frame(width: 1, height: 84)
             NunaCardioMuscularCard(split: loadSplit(s), compact: true)
                 .frame(maxWidth: .infinity)
         }
@@ -215,9 +216,13 @@ struct NunaGymSessionView: View {
                 Spacer()
                 if averages != nil { Text("vs. 30 day average").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textMuted) }
             }
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
-                ForEach(tiles) { statTile($0, reservePill: tiles.contains { $0.pill != nil }) }
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 10) {
+                    ForEach(tiles) { statTile($0, reservePill: tiles.contains { $0.pill != nil }).frame(width: 168) }
+                }
+                .padding(.horizontal, NunaSpacing.screenH)
             }
+            .padding(.horizontal, -NunaSpacing.screenH)
         }
     }
 
@@ -469,6 +474,35 @@ struct NunaSaveProgramView: View {
         NunaProgramGroupsModel.shared.placeNew(pid)
         await repo.refresh()
         dismiss()
+    }
+}
+
+/// The two tabs of a gym session as a dark capsule with the chosen one raised in it.
+private struct NunaGymTabs: View {
+    @Binding var selection: NunaGymSessionView.Tab
+    @Namespace private var raised
+
+    var body: some View {
+        HStack(spacing: 0) {
+            tab(.exercises, "Exercises")
+            tab(.heartRate, "HR zones")
+        }
+        .padding(4)
+        .background(Color.black.opacity(0.3), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(NunaPalette.textPrimary.opacity(0.06), lineWidth: 1))
+    }
+
+    private func tab(_ value: NunaGymSessionView.Tab, _ title: LocalizedStringKey) -> some View {
+        let on = selection == value
+        return Button { withAnimation(.easeInOut(duration: 0.2)) { selection = value } } label: {
+            Text(title).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 0.8).textCase(.uppercase)
+                .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+                .frame(maxWidth: .infinity).frame(height: 44)
+                .background { if on { RoundedRectangle(cornerRadius: 14, style: .continuous).fill(NunaPalette.tile).matchedGeometryEffect(id: "raised", in: raised) } }
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(on ? .isSelected : [])
     }
 }
 #endif
