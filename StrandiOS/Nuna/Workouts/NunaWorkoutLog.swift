@@ -69,6 +69,8 @@ struct NunaWorkoutLogHeader: View {
 struct NunaWorkoutLogFigures: View {
     let row: WorkoutRow
     let averages: NunaWorkoutAverages?
+    /// With the steps known they take the second place (the duration then moves to the head of the zones, see `NunaWorkoutLogZones`).
+    var steps: Int? = nil
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
     private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
 
@@ -80,8 +82,13 @@ struct NunaWorkoutLogFigures: View {
                    color: row.strain.map(nunaEffortColor) ?? NunaPalette.textPrimary,
                    pill: row.strain.flatMap { s in averages?.effort.map { avg in
                        NunaAveragePill(value: s, average: avg, text: UnitFormatter.effortDisplay(avg, scale: scale)) } })
-            figure(label: "Duration", value: Self.clock(secs), color: NunaPalette.textPrimary,
-                   pill: averages?.durationS.map { avg in NunaAveragePill(value: secs, average: avg, text: Self.clock(avg)) })
+            if let steps {
+                figure(label: "Activity Steps", value: NunaTrendsFormat.num(Double(steps)), color: NunaPalette.textPrimary,
+                       pill: averages?.steps.map { avg in NunaAveragePill(value: Double(steps), average: avg, text: NunaTrendsFormat.num(avg)) })
+            } else {
+                figure(label: "Duration", value: Self.clock(secs), color: NunaPalette.textPrimary,
+                       pill: averages?.durationS.map { avg in NunaAveragePill(value: secs, average: avg, text: Self.clock(avg)) })
+            }
         }
     }
 
@@ -230,11 +237,11 @@ private struct NunaHatchedTrack: View {
         Canvas { ctx, size in
             var p = Path(); var x: CGFloat = -size.height
             while x < size.width {
-                p.move(to: CGPoint(x: x, y: size.height)); p.addLine(to: CGPoint(x: x + size.height, y: 0)); x += 6
+                p.move(to: CGPoint(x: x, y: size.height)); p.addLine(to: CGPoint(x: x + size.height, y: 0)); x += 5
             }
-            ctx.stroke(p, with: .color(NunaPalette.ink.opacity(0.22)), lineWidth: 1.5)
+            ctx.stroke(p, with: .color(NunaPalette.ink.opacity(0.16)), lineWidth: 1.2)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 5, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
     }
 }
 
@@ -251,6 +258,8 @@ struct NunaWorkoutLogZones: View {
     var end = 0
     /// The usual share of each zone (see `typical(for:in:)`), drawn as a dashed box on the bar while nothing is picked.
     var typical: [ClosedRange<Double>]? = nil
+    /// The session's length, said at the right of the head of the list (when the figures at the top do not say it).
+    var durationS: Double? = nil
     @EnvironmentObject private var profile: ProfileStore
 
     /// Lowest zone to highest: pale steel, blue, green, amber, red.
@@ -292,15 +301,26 @@ struct NunaWorkoutLogZones: View {
     var body: some View {
         let colors = Self.colors
         let bands = profile.hrZoneSet.zones
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 8) {
             if let mins = minutes, mins.count >= 5, mins.contains(where: { $0 > 0 }) {
                 let total = max(mins.reduce(0, +), 0.0001)
-                if typical != nil, selection == nil {
+                if (typical != nil && selection == nil) || durationS != nil {
                     HStack(spacing: 8) {
-                        RoundedRectangle(cornerRadius: 2, style: .continuous).stroke(NunaPalette.textSecondary, style: StrokeStyle(lineWidth: 1, dash: [3, 2]))
+                        if typical != nil, selection == nil {
+                            ZStack {
+                                Rectangle().fill(NunaPalette.textPrimary.opacity(0.12))
+                                HStack { Rectangle().fill(NunaPalette.textSecondary).frame(width: 1); Spacer(); Rectangle().fill(NunaPalette.textSecondary).frame(width: 1) }
+                            }
                             .frame(width: 14, height: 18)
-                        Text("Typical range").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                            Text("Typical range").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        }
                         Spacer()
+                        if let durationS {
+                            let t = Int(durationS.rounded())
+                            Text("Duration").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                            Text(verbatim: String(format: "%d:%02d:%02d", t / 3600, (t % 3600) / 60, t % 60)).font(.nuna(size: 14, weight: .heavy, design: NunaType.design))
+                                .foregroundStyle(NunaPalette.textPrimary)
+                        }
                     }
                     .padding(.horizontal, 4)
                 }
@@ -308,16 +328,16 @@ struct NunaWorkoutLogZones: View {
                     let on = mins[i] * 60 >= 1
                     let share = mins[i] / total
                     let picked = selection == i + 1
-                    VStack(alignment: .leading, spacing: 10) {
-                        HStack(alignment: .firstTextBaseline, spacing: 10) {
-                            Text(verbatim: String(localized: "Zone \(i + 1)")).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 0.6).textCase(.uppercase)
+                    VStack(alignment: .leading, spacing: 9) {
+                        HStack(alignment: .firstTextBaseline, spacing: 9) {
+                            Text(verbatim: String(localized: "Zone \(i + 1)")).font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel + 0.4).textCase(.uppercase)
                                 .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textMuted)
                             if i < bands.count {
-                                Text(verbatim: "\(Int(bands[i].lower.rounded()))–\(Int(bands[i].upper.rounded())) BPM").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel)
+                                Text(verbatim: "\(Int(bands[i].lower.rounded()))–\(Int(bands[i].upper.rounded())) BPM").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel)
                                     .foregroundStyle(NunaPalette.textMuted).textCase(nil)
                             }
-                            Text(verbatim: "\(Int((share * 100).rounded()))%").font(.nuna(size: 13, weight: .heavy))
-                                .foregroundStyle(on ? colors[i] : colors[i].opacity(0.4))
+                            Text(verbatim: "\(Int((share * 100).rounded()))%").font(.nuna(size: 12.5, weight: .heavy))
+                                .foregroundStyle(on ? colors[i] : colors[i].opacity(0.45))
                             Spacer(minLength: 8)
                             time(mins[i] * 60, on: on)
                         }
@@ -325,10 +345,10 @@ struct NunaWorkoutLogZones: View {
                             bar(zone: i + 1, share: share, color: colors[i], usual: typical.flatMap { $0.indices.contains(i) ? $0[i] : nil })
                         }
                     }
-                    .padding(.horizontal, 16).padding(.vertical, on ? 12 : 11)
-                    .background(picked ? Color.clear : NunaPalette.tile, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).stroke(NunaPalette.textPrimary.opacity(picked ? 0.9 : 0), lineWidth: 1))
-                    .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .padding(.horizontal, 14).padding(.vertical, on ? 11 : 9)
+                    .background(picked ? Color.clear : NunaPalette.tile, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(NunaPalette.textPrimary.opacity(picked ? 0.9 : 0), lineWidth: 1))
+                    .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                     .onTapGesture { if on { selection = picked ? nil : i + 1 } }
                     .accessibilityElement(children: .combine)
                     .accessibilityAddTraits(on ? .isButton : [])
@@ -349,30 +369,37 @@ struct NunaWorkoutLogZones: View {
                     let tint = pick == zone ? color : NunaPalette.textSecondary.opacity(0.7)
                     ForEach(Array(stretches(zone: zone).enumerated()), id: \.offset) { _, r in
                         let x = geo.size.width * CGFloat(r.lowerBound)
-                        RoundedRectangle(cornerRadius: 2, style: .continuous).fill(tint)
+                        RoundedRectangle(cornerRadius: 1.5, style: .continuous).fill(tint)
                             .frame(width: max(geo.size.width * CGFloat(r.upperBound - r.lowerBound), 3)).offset(x: min(x, geo.size.width - 3))
                     }
                 } else {
-                    RoundedRectangle(cornerRadius: 5, style: .continuous).fill(color).frame(width: max(geo.size.width * CGFloat(share), 10))
+                    RoundedRectangle(cornerRadius: 4, style: .continuous).fill(color).frame(width: max(geo.size.width * CGFloat(share), 10))
                     if let usual {
                         let x = geo.size.width * CGFloat(usual.lowerBound), w = max(geo.size.width * CGFloat(usual.upperBound - usual.lowerBound), 8)
-                        RoundedRectangle(cornerRadius: 3, style: .continuous).fill(NunaPalette.textPrimary.opacity(0.07))
-                            .overlay(RoundedRectangle(cornerRadius: 3, style: .continuous).stroke(NunaPalette.textPrimary.opacity(0.6), style: StrokeStyle(lineWidth: 1, dash: [3, 3])))
-                            .frame(width: w, height: 26).offset(x: min(x, geo.size.width - w))
+                        ZStack {
+                            Rectangle().fill(NunaPalette.textPrimary.opacity(0.1))
+                            HStack(spacing: 0) {
+                                Rectangle().fill(NunaPalette.textPrimary.opacity(0.7)).frame(width: 1)
+                                Spacer(minLength: 0)
+                                Rectangle().fill(NunaPalette.textPrimary.opacity(0.7)).frame(width: 1)
+                            }
+                            .mask(VStack(spacing: 2) { ForEach(0..<9, id: \.self) { _ in Rectangle().frame(height: 3) } })
+                        }
+                        .frame(width: w, height: 22).offset(x: min(x, geo.size.width - w))
                     }
                 }
             }
         }
-        .frame(height: 18)
+        .frame(height: 12)
     }
 
     /// "0:02:50", the seconds smaller and in a lighter tone.
     private func time(_ seconds: Double, on: Bool) -> some View {
         let t = Int(seconds.rounded())
         return HStack(alignment: .firstTextBaseline, spacing: 0) {
-            Text(verbatim: String(format: "%d:%02d", t / 3600, (t % 3600) / 60)).font(.nuna(size: 21, weight: .bold, design: NunaType.design))
+            Text(verbatim: String(format: "%d:%02d", t / 3600, (t % 3600) / 60)).font(.nuna(size: 18, weight: .bold, design: NunaType.design))
                 .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textMuted)
-            Text(verbatim: String(format: ":%02d", t % 60)).font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textMuted)
+            Text(verbatim: String(format: ":%02d", t % 60)).font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textMuted)
         }
     }
 }
@@ -389,6 +416,8 @@ struct NunaWorkoutLogStats: View {
     var distanceEstimated = false
     /// The route card above already says distance, pace and climb: those tiles are left out here, and the rest scroll sideways.
     var routeShown = false
+    /// The steps are already one of the two figures at the top.
+    var stepsAtTop = false
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
     @AppStorage(UnitPrefs.distanceSystemKey) private var distanceRaw = ""
 
@@ -461,7 +490,8 @@ struct NunaWorkoutLogStats: View {
     }
 
     var body: some View {
-        let list = routeShown ? tiles.filter { !["dist", "pace", "speed"].contains($0.id) } : tiles
+        let hidden = Set((routeShown ? ["dist", "pace", "speed"] : []) + (stepsAtTop ? ["steps"] : []))
+        let list = tiles.filter { !hidden.contains($0.id) }
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 nunaTrendsCap("Key statistics")
