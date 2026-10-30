@@ -33,6 +33,8 @@ enum NunaTodayRoute: Hashable {
     case smartAlarm
     case windDown
     case hydration
+    /// What the journal's behaviors do to Charge, and each behavior's logging history.
+    case behaviorInsights
     /// The vital signs page: the live heart rate, the five vitals against their range, fitness age and the early warning.
     case vitalSigns
     /// What the Rest screen's top-right button opens: smart alarm, bedtime reminder, nap detection.
@@ -73,6 +75,7 @@ extension View {
             case .rhythm: NunaRhythmView()
             case .smartAlarm: NunaSmartAlarmView()
             case .windDown: NunaWindDownView()
+            case .behaviorInsights: NunaBehaviorInsightsView()
             case .hydration: NunaHydrationView()
             case .vitalSigns: NunaHealthView(vitalsOnly: true)
             case .sleepSettings: NunaSleepSettingsView()
