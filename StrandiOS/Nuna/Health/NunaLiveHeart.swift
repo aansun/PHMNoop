@@ -9,7 +9,8 @@ import WhoopStore
 
 /// The live heart-rate card, drawn like a bedside monitor: a dark screen with faint graph paper, the reading in green at the right and the beat-by-beat trace
 /// beside it, with a dot that pulses at the pace of the heart. While the strap streams the trace is live. When it does not, the card keeps the last trace
-/// it has (the newest readings stored on the phone) and says when that signal was, until a new one arrives. Tapping opens the deep timeline.
+/// it has (the newest readings stored on the phone) and says when that signal was, until a new one arrives. Tapping opens the day's heart rate across
+/// the whole screen.
 struct NunaLiveHRCard: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var live: LiveState
@@ -19,6 +20,7 @@ struct NunaLiveHRCard: View {
     /// The newest stored readings, oldest first, kept on show while nothing live arrives.
     @State private var recent: [(ts: Int, bpm: Double)] = []
     @State private var samples: [Double] = []
+    @State private var showFull = false
     private let maxSamples = 90
 
     private var isLive: Bool { live.connected && (live.heartRate ?? 0) > 0 && samples.count >= 2 }
@@ -56,7 +58,7 @@ struct NunaLiveHRCard: View {
     }
 
     var body: some View {
-        NavigationLink(value: NunaTodayRoute.deepTimeline) {
+        Button { showFull = true } label: {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     HStack(spacing: 6) {
@@ -87,6 +89,7 @@ struct NunaLiveHRCard: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
+        .fullScreenCover(isPresented: $showFull) { NunaHRFullScreen { showFull = false } }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text("Beats per minute"))
         .accessibilityValue(Text(verbatim: bigBpm.map { "\($0) bpm" } ?? "–"))
