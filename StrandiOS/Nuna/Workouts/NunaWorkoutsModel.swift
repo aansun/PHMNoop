@@ -142,6 +142,14 @@ enum NunaWorkoutFormat {
         f.setLocalizedDateFormatFromTemplate(cal.isDate(d, equalTo: Date(), toGranularity: .year) ? "EEE d MMM" : "d MMM yyyy"); return f.string(from: d)
     }
 
+    /// "28 Oct 05:40 to 06:23": the date (with the year for an older one) and the span of a session, for the title of its screen.
+    static func span(_ start: Int, _ end: Int) -> String {
+        let d = Date(timeIntervalSince1970: TimeInterval(start))
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale
+        f.setLocalizedDateFormatFromTemplate(Calendar.current.isDate(d, equalTo: Date(), toGranularity: .year) ? "d MMM" : "d MMM yyyy")
+        return String(localized: "\(f.string(from: d)) \(clock(start)) to \(clock(end))")
+    }
+
     static func clock(_ ts: Int) -> String {
         let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("jj:mm")
         return f.string(from: Date(timeIntervalSince1970: TimeInterval(ts)))
