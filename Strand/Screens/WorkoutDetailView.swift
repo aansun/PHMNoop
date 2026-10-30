@@ -661,12 +661,15 @@ struct WorkoutRouteMap: RouteMapRepresentable {
     #else
     var stroke: NSColor? = nil
     #endif
+    /// Start and finish drawn as round flags (a dot, and a chequered disc), the line a little thicker, and the route framed with room above and
+    /// under for the labels laid over the map (the Nuna route card). Off for the plain map.
+    var flags = false
 
     private var coordinates: [CLLocationCoordinate2D] {
         points.map { CLLocationCoordinate2D(latitude: $0.lat, longitude: $0.lon) }
     }
 
-    func makeCoordinator() -> Coordinator { Coordinator(stroke: stroke) }
+    func makeCoordinator() -> Coordinator { Coordinator(stroke: stroke, flags: flags) }
 
     private func makeMap(context: Context) -> MKMapView {
         let map = MKMapView()
@@ -694,17 +697,23 @@ struct WorkoutRouteMap: RouteMapRepresentable {
 
         // Frame the whole route with a little padding so the line isn't flush to the edges.
         let rect = line.boundingMapRect
+        #if canImport(UIKit)
+        let inset = flags ? UIEdgeInsets(top: 64, left: 34, bottom: 124, right: 34) : UIEdgeInsetsLikePadding
+        #else
         let inset = UIEdgeInsetsLikePadding
+        #endif
         map.setVisibleMapRect(rect, edgePadding: inset, animated: false)
     }
 
     final class Coordinator: NSObject, MKMapViewDelegate {
         #if canImport(UIKit)
         let stroke: UIColor?
-        init(stroke: UIColor?) { self.stroke = stroke }
+        let flags: Bool
+        init(stroke: UIColor?, flags: Bool = false) { self.stroke = stroke; self.flags = flags }
         #else
         let stroke: NSColor?
-        init(stroke: NSColor?) { self.stroke = stroke }
+        let flags: Bool
+        init(stroke: NSColor?, flags: Bool = false) { self.stroke = stroke; self.flags = flags }
         #endif
         func mapView(_ mapView: MKMapView, rendererFor overlay: MKOverlay) -> MKOverlayRenderer {
             guard let line = overlay as? MKPolyline else { return MKOverlayRenderer(overlay: overlay) }
@@ -712,11 +721,25 @@ struct WorkoutRouteMap: RouteMapRepresentable {
             // Effort-amber world, matching the rest of the workout detail. A platform colour (the
             // renderer needs a UIColor/NSColor, not a SwiftUI Color); kept close to the Effort accent.
             r.strokeColor = stroke ?? RoutePlatformColor.effort
-            r.lineWidth = 4
+            r.lineWidth = flags ? 5 : 4
             r.lineJoin = .round
             r.lineCap = .round
             return r
         }
+
+        #if canImport(UIKit)
+        func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+            guard flags, annotation is MKPointAnnotation else { return nil }
+            let finish = annotation.title == String(localized: "Finish")
+            let id = finish ? "routeFinish" : "routeStart"
+            let view = mapView.dequeueReusableAnnotationView(withIdentifier: id) ?? MKAnnotationView(annotation: annotation, reuseIdentifier: id)
+            view.annotation = annotation
+            view.canShowCallout = false
+            view.image = RouteFlagImage.make(finish: finish)
+            view.zPriority = finish ? .max : .defaultUnselected
+            return view
+        }
+        #endif
     }
 
     #if canImport(UIKit)
@@ -729,6 +752,35 @@ struct WorkoutRouteMap: RouteMapRepresentable {
     func updateNSView(_ map: MKMapView, context: Context) { configure(map) }
     #endif
 }
+
+#if canImport(UIKit)
+/// The two flags of the route card: a white disc with a small dark dot for the start and a chequered one for the finish.
+private enum RouteFlagImage {
+    static func make(finish: Bool) -> UIImage {
+        let size = CGSize(width: 38, height: 38)
+        return UIGraphicsImageRenderer(size: size).image { ctx in
+            let c = ctx.cgContext
+            let disc = CGRect(x: 3, y: 3, width: 32, height: 32)
+            c.setShadow(offset: CGSize(width: 0, height: 1), blur: 3, color: UIColor.black.withAlphaComponent(0.3).cgColor)
+            UIColor.white.setFill(); c.fillEllipse(in: disc)
+            c.setShadow(offset: .zero, blur: 0, color: nil)
+            if finish {
+                let inner = disc.insetBy(dx: 5, dy: 5)
+                c.saveGState(); c.addEllipse(in: inner); c.clip()
+                let n = 4, cell = inner.width / CGFloat(n)
+                for row in 0..<n { for col in 0..<n {
+                    ((row + col) % 2 == 0 ? UIColor.black : UIColor.white).setFill()
+                    c.fill(CGRect(x: inner.minX + CGFloat(col) * cell, y: inner.minY + CGFloat(row) * cell, width: cell, height: cell))
+                } }
+                c.restoreGState()
+            } else {
+                UIColor(red: 0.1, green: 0.1, blue: 0.12, alpha: 1).setFill()
+                c.fillEllipse(in: disc.insetBy(dx: 10, dy: 10))
+            }
+        }
+    }
+}
+#endif
 
 /// The route stroke colour as a platform colour (MapKit's renderer can't take a SwiftUI `Color`). A fixed
 /// Effort-amber so it reads in the same colour world as the rest of the screen on both platforms.

@@ -89,8 +89,8 @@ struct NunaWorkoutSummaryView: View {
         let averages = NunaWorkoutAverages(for: r, in: m.rows)
         let shown = NunaTreadmillEstimate.filled(r, steps: data.steps)
         NunaWorkoutLogFigures(row: r, averages: averages)
-        if data.route.count >= 2 { NunaWorkoutRouteCard(points: data.route) }
-        NunaWorkoutLogStats(row: shown.row, steps: data.steps, averages: averages, distanceEstimated: shown.estimated)
+        if data.route.count >= 2 { NunaWorkoutRouteCard(points: data.route, row: shown.row, elevationGainM: data.elevationGainM, onShare: { Task { await exportFile(r, gpx: true) } }) }
+        NunaWorkoutLogStats(row: shown.row, steps: data.steps, averages: averages, distanceEstimated: shown.estimated, routeShown: data.route.count >= 2)
         if data.hr.count >= 2 { NunaWorkoutHRArea(buckets: data.hr, start: r.startTs, end: r.endTs, around: data.hrAround, highlightZone: zonePick, zoneSet: profile.hrZoneSet) }
         if mins?.contains(where: { $0 > 0 }) ?? false { NunaWorkoutLogZones(minutes: mins, selection: $zonePick, buckets: data.hr, start: r.startTs, end: r.endTs, typical: NunaWorkoutLogZones.typical(for: r, in: m.rows)) }
         if let line = anyaLine(shown.row, mins: mins, averages: averages) { NunaAnyaCard(verbatim: line.headline, detail: line.detail) { showCoach = true } }

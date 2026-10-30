@@ -387,6 +387,8 @@ struct NunaWorkoutLogStats: View {
     let averages: NunaWorkoutAverages?
     /// The distance (and so the pace) was worked out from steps and height, not measured.
     var distanceEstimated = false
+    /// The route card above already says distance, pace and climb: those tiles are left out here, and the rest scroll sideways.
+    var routeShown = false
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
     @AppStorage(UnitPrefs.distanceSystemKey) private var distanceRaw = ""
 
@@ -459,15 +461,23 @@ struct NunaWorkoutLogStats: View {
     }
 
     var body: some View {
-        let list = tiles
+        let list = routeShown ? tiles.filter { !["dist", "pace", "speed"].contains($0.id) } : tiles
         VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
                 nunaTrendsCap("Key statistics")
                 Spacer()
                 if averages != nil { Text("vs. 30 day average").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textMuted) }
             }
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
-                ForEach(list) { tile($0) }
+            if routeShown {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) { ForEach(list) { tile($0).frame(width: 168) } }
+                        .padding(.horizontal, NunaSpacing.screenH)
+                }
+                .padding(.horizontal, -NunaSpacing.screenH)
+            } else {
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 3), spacing: 10) {
+                    ForEach(list) { tile($0) }
+                }
             }
         }
     }
