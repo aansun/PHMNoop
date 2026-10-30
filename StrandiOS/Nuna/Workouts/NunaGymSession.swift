@@ -38,7 +38,7 @@ struct NunaGymSessionView: View {
     private var system: UnitSystem { UnitSystem(rawValue: unitSystemRaw) ?? .metric }
 
     var body: some View {
-        NunaDetailScreen("Gym session", titleSymbol: session.map { ActivitySport.symbol(for: $0.sport) } ?? "dumbbell", trailing: session == nil ? nil : AnyView(actionsMenu)) {
+        NunaDetailScreen("Gym session", titleSymbol: session.map { ActivitySport.symbol(for: $0.sport) } ?? "dumbbell", subtitle: session.map { NunaWorkoutFormat.span($0.startTs, $0.endTs ?? $0.startTs) }, trailing: session == nil ? nil : AnyView(actionsMenu)) {
             if let session { content(session) }
             else if loaded { NunaCard { Text("This session is no longer saved.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) } }
         }
@@ -98,11 +98,6 @@ struct NunaGymSessionView: View {
     @ViewBuilder private func content(_ s: LiftSessionRow) -> some View {
         let secs = max(0, (s.endTs ?? s.startTs) - s.startTs)
         let averages = workout.flatMap { NunaWorkoutAverages(for: $0, in: history.rows) }
-        HStack(spacing: 10) {
-            Text(verbatim: NunaWorkoutFormat.day(s.startTs) + " · " + NunaWorkoutFormat.clock(s.startTs) + " – " + NunaWorkoutFormat.clock(s.endTs ?? s.startTs))
-                .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
-            Spacer(minLength: 8)
-        }
         if let program = s.programName, !program.isEmpty {
             Text(verbatim: program).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                 .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 10).frame(height: 28)
@@ -267,9 +262,9 @@ struct NunaGymSessionView: View {
 
     @ViewBuilder private var heartRateTab: some View {
         if let w = workout, data.hr.count >= 2 {
-            NunaCard(small: true) { NunaWorkoutHRArea(buckets: data.hr, start: w.startTs, end: w.endTs, highlightZone: zonePick, zoneSet: profile.hrZoneSet) }
+            NunaWorkoutHRArea(buckets: data.hr, start: w.startTs, end: w.endTs, highlightZone: zonePick, zoneSet: profile.hrZoneSet)
             if let mins = NunaWorkoutZoneMath.minutes(w, measured: data.zoneMin), mins.contains(where: { $0 > 0 }) {
-                NunaWorkoutLogZones(minutes: mins, selection: $zonePick)
+                NunaWorkoutLogZones(minutes: mins, selection: $zonePick, buckets: data.hr, start: w.startTs, end: w.endTs)
             }
         } else {
             NunaCard(small: true) {

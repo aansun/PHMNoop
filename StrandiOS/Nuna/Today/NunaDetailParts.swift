@@ -10,6 +10,8 @@ struct NunaDetailHeader: View {
     let title: LocalizedStringKey
     /// An SF Symbol drawn at the left of the title (the sport of a workout).
     var titleSymbol: String?
+    /// A line under the title (the date and the time of a workout); with it the title is set small and in capitals, beside a larger symbol.
+    var subtitle: String?
     var onAnya: (() -> Void)?
     /// Extra control at the trailing edge (for example a "Today" chip), shown when there is no Anya button.
     var trailing: AnyView?
@@ -51,10 +53,22 @@ struct NunaDetailHeader: View {
         HStack(spacing: 10) {
             backButton
             if switcher == nil {
-                if let titleSymbol {
-                    Image(systemName: titleSymbol).font(.nuna(size: 22, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
+                if let subtitle {
+                    if let titleSymbol {
+                        Image(systemName: titleSymbol).font(.nuna(size: 28, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).frame(width: 36)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(title).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel + 0.6).textCase(.uppercase)
+                            .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).accessibilityAddTraits(.isHeader)
+                        Text(verbatim: subtitle).font(.nuna(size: 13, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                            .lineLimit(1).minimumScaleFactor(0.8)
+                    }
+                } else {
+                    if let titleSymbol {
+                        Image(systemName: titleSymbol).font(.nuna(size: 22, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
+                    }
+                    Text(title).font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 }
-                Text(title).font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 Spacer(minLength: 8)
             } else {
                 NunaDetailSwitcher(inHeader: true)
@@ -74,17 +88,18 @@ struct NunaDetailHeader: View {
 struct NunaDetailScreen<Content: View>: View {
     let title: LocalizedStringKey
     var titleSymbol: String?
+    var subtitle: String?
     var onAnya: (() -> Void)?
     var trailing: AnyView?
     var centersTitle = false
     let content: Content
-    init(_ title: LocalizedStringKey, titleSymbol: String? = nil, onAnya: (() -> Void)? = nil, trailing: AnyView? = nil, centersTitle: Bool = false, @ViewBuilder content: () -> Content) {
-        self.title = title; self.titleSymbol = titleSymbol; self.onAnya = onAnya; self.trailing = trailing; self.centersTitle = centersTitle; self.content = content()
+    init(_ title: LocalizedStringKey, titleSymbol: String? = nil, subtitle: String? = nil, onAnya: (() -> Void)? = nil, trailing: AnyView? = nil, centersTitle: Bool = false, @ViewBuilder content: () -> Content) {
+        self.title = title; self.titleSymbol = titleSymbol; self.subtitle = subtitle; self.onAnya = onAnya; self.trailing = trailing; self.centersTitle = centersTitle; self.content = content()
     }
     var body: some View {
         // The header stays at the top while the page scrolls, so the way back is always in reach however long the page is.
         VStack(spacing: 0) {
-            NunaDetailHeader(title: title, titleSymbol: titleSymbol, onAnya: onAnya, trailing: trailing, centersTitle: centersTitle)
+            NunaDetailHeader(title: title, titleSymbol: titleSymbol, subtitle: subtitle, onAnya: onAnya, trailing: trailing, centersTitle: centersTitle)
                 .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 4)
                 .background(NunaPalette.canvas)
             ScrollView {
