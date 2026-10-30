@@ -960,15 +960,18 @@ struct NunaJournalWeekCard: View {
     }
 
     var body: some View {
-        Button(action: onOpen) {
-            NunaCard(small: true) {
+        NunaCard(small: true) {
                 VStack(alignment: .leading, spacing: 14) {
-                    HStack {
-                        Text("My journal").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                            .foregroundStyle(NunaPalette.textPrimary)
-                        Spacer()
-                        Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    Button(action: onOpen) {
+                        HStack {
+                            Text("My journal").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                                .foregroundStyle(NunaPalette.textPrimary)
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                        }
+                        .contentShape(Rectangle())
                     }
+                    .buttonStyle(.plain)
                     HStack(spacing: 4) {
                         ForEach(days, id: \.self) { d in
                             let isToday = Calendar.current.isDateInToday(d)
@@ -982,10 +985,18 @@ struct NunaJournalWeekCard: View {
                             .overlay(Capsule().strokeBorder(isToday ? NunaPalette.hairline : .clear, lineWidth: 1))
                         }
                     }
+                    .padding(.top, 8)
+                    NavigationLink(value: NunaTodayRoute.behaviorInsights) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "lightbulb").font(.nuna(size: 14, weight: .regular))
+                            Text("Behavior insights").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        }
+                        .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 46)
+                        .background(NunaPalette.ink.opacity(0.1), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
                 }
-            }
         }
-        .buttonStyle(.plain)
         .task(id: repo.refreshSeq) {
             guard let first = days.first, let last = days.last else { return }
             logged = await repo.nativeJournalDays(from: Repository.localDayKey(first), to: Repository.localDayKey(last))

@@ -860,6 +860,7 @@ struct NunaTodayView: View {
                                 dayStart: Calendar.current.startOfDay(for: model.displayDate), sleepMinutes: model.sleepMinutes, isToday: model.isToday,
                                 onAdd: { showManual = true },
                                 onStart: { router.requestedDestination = .activeWorkout })
+            if model.isToday { NunaTonightSleep() }
         case .heartRate:
             NunaLiveHR(isToday: model.isToday) { hr in
                 NavigationLink(value: NunaTodayRoute.deepTimeline) {
