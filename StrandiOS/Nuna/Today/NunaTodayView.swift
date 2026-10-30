@@ -11,6 +11,11 @@ import WhoopStore
 /// user's arrangement. Sections without a Nuna card yet (Your Cards, Menstrual Cycle, Added Cards) are
 /// skipped here and stay available in the Default Experience.
 /// The order and visibility the Nuna Today screen uses until the person arranges their own.
+#if DEBUG
+/// Whether this launch has already opened the planner for `--open-planner`.
+enum NunaTodayDebug { @MainActor static var openedPlanner = false }
+#endif
+
 enum NunaTodayDefaults {
     /// Nuna keeps its own arrangement: the Default look saves its order and hidden set under other keys, and the two looks start from
     /// different defaults, so one must not leak into the other.
@@ -352,9 +357,11 @@ struct NunaTodayView: View {
         }
         .background(NunaSavedSessionsWatcher(count: $savedSessions))
         #if DEBUG
-        // `--open-planner`: a debug build opens the Sleep planner straight away, to look at it without scrolling Today.
+        // `--open-planner`: a debug build opens the Sleep planner once, at launch, to look at it without scrolling Today. Once only: a `.task` runs
+        // again every time Today comes back on screen, which would push the planner again each time the person went back.
         .task {
-            guard CommandLine.arguments.contains("--open-planner") else { return }
+            guard CommandLine.arguments.contains("--open-planner"), !NunaTodayDebug.openedPlanner else { return }
+            NunaTodayDebug.openedPlanner = true
             try? await Task.sleep(nanoseconds: 1_200_000_000)
             pushToday(.smartAlarm)
         }
