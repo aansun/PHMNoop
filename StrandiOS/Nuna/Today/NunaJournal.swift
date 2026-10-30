@@ -34,17 +34,34 @@ struct NunaJournalView: View {
     private var collapsed: Set<String> { Set(collapsedRaw.split(separator: ",").map(String.init)) }
 
     var body: some View {
-        NunaDetailScreen("Journal", trailing: AnyView(editButton)) {
-            dayNav
-            daySelector
-            heading
-            moodLink
-            ForEach(JournalGroup.displayOrder, id: \.self) { group($0) }
-            addCard
-            nunaFootnote(dayOffset == -1
-                ? "Logging ahead for tomorrow: today's activities inform tomorrow's recovery. Tomorrow's answers line up with tomorrow's morning."
-                : "Answers are about the night and day leading into this morning, the same attribution a WHOOP export uses, so logged and imported days line up.")
+        VStack(spacing: 0) {
+            header
+            ScrollView {
+                VStack(spacing: 14) {
+                    dayNav
+                    daySelector
+                    heading
+                    moodLink
+                    ForEach(JournalGroup.displayOrder, id: \.self) { group($0) }
+                    addCard
+                    nunaFootnote(dayOffset == -1
+                        ? "Logging ahead for tomorrow: today's activities inform tomorrow's recovery. Tomorrow's answers line up with tomorrow's morning."
+                        : "Answers are about the night and day leading into this morning, the same attribution a WHOOP export uses, so logged and imported days line up.")
+                }
+                .padding(.horizontal, NunaSpacing.screenH).padding(.top, 6).padding(.bottom, 130)
+            }
+            .scrollIndicators(.hidden).scrollDismissesKeyboard(.interactively)
         }
+        // A soft warm light at the top of the page that fades into the canvas well before the list starts.
+        .background(alignment: .top) {
+            ZStack {
+                NunaPalette.canvas
+                LinearGradient(colors: [Color(red: 0.80, green: 0.69, blue: 0.55).opacity(0.62), Color(red: 0.55, green: 0.60, blue: 0.66).opacity(0.28), .clear],
+                               startPoint: .top, endPoint: UnitPoint(x: 0.5, y: 0.5))
+            }
+            .ignoresSafeArea()
+        }
+        .toolbar(.hidden, for: .navigationBar)
         .overlay(alignment: .bottom) { if !editing { saveBar } }
         .task(id: "\(repo.refreshSeq)-\(dayOffset)") { await load() }
         .onAppear {
@@ -57,17 +74,34 @@ struct NunaJournalView: View {
         } message: { Text("History stays under the original question so WHOOP imports still line up.") }
     }
 
+    /// The cross to leave, the name of the page in the middle and the pencil that edits the list.
+    private var header: some View {
+        ZStack {
+            Text("Journal").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 1.4).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+            HStack {
+                Button { dismiss() } label: {
+                    Image(systemName: "xmark").font(.nuna(size: 19, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        .frame(width: 44, height: 44).contentShape(Rectangle())
+                }
+                .buttonStyle(.plain).accessibilityLabel(Text("Close"))
+                Spacer()
+                editButton
+            }
+        }
+        .padding(.horizontal, NunaSpacing.screenH - 6).padding(.top, 8).padding(.bottom, 2)
+    }
+
     /// Every answer is written the moment it is tapped, so this only closes the journal; it is there so finishing reads as a step.
     private var saveBar: some View {
         Button { dismiss() } label: {
-            Text("Save journal").font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+            Text("Done").font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel + 1.2).textCase(.uppercase)
                 .foregroundStyle(NunaPalette.onAccent)
-                .frame(maxWidth: .infinity).frame(height: 56)
+                .frame(maxWidth: .infinity).frame(height: 54)
                 .background(NunaPalette.accent, in: Capsule())
         }
         .buttonStyle(.plain)
-        .padding(.horizontal, NunaSpacing.screenH).padding(.top, 24).padding(.bottom, 12)
-        .background(LinearGradient(colors: [NunaPalette.canvas.opacity(0), NunaPalette.canvas], startPoint: .top, endPoint: .center).ignoresSafeArea())
+        .padding(.horizontal, NunaSpacing.screenH + 6).padding(.top, 26).padding(.bottom, 10)
+        .background(LinearGradient(colors: [NunaPalette.canvas.opacity(0), NunaPalette.canvas.opacity(0.96), NunaPalette.canvas], startPoint: .top, endPoint: UnitPoint(x: 0.5, y: 0.45)).ignoresSafeArea())
     }
 
     /// A pencil, like the reference: it switches the list into edit mode and back.
@@ -101,9 +135,9 @@ struct NunaJournalView: View {
     private var daySelector: some View {
         ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 6) {
+                HStack(spacing: 10) {
                     ForEach(Self.offsets, id: \.self) { off in dayColumn(off) }
-                }.padding(.horizontal, 1).padding(.vertical, 2)
+                }.padding(.horizontal, 4).padding(.vertical, 3)
             }
             .onAppear { DispatchQueue.main.async { proxy.scrollTo(dayOffset, anchor: .center) } }
             .onChange(of: dayOffset) { _, new in withAnimation(.snappy) { proxy.scrollTo(new, anchor: .center) } }
@@ -114,20 +148,20 @@ struct NunaJournalView: View {
         let on = dayOffset == off
         let logged = loggedDays.contains(Repository.localDayKey(Calendar.current.date(byAdding: .day, value: -off, to: Date()) ?? Date()))
         return Button { withAnimation(.snappy) { dayOffset = off } } label: {
-            VStack(spacing: 8) {
-                Text(verbatim: Self.weekday(off)).font(.nuna(size: 11, weight: .heavy)).tracking(0.4).textCase(.uppercase)
-                    .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
-                Text(verbatim: Self.dayNumber(off)).font(.nuna(size: 18, weight: .bold, design: NunaType.design))
+            VStack(spacing: 9) {
+                Text(verbatim: Self.weekday(off)).font(.nuna(size: 13, weight: .semibold))
+                    .foregroundStyle(NunaPalette.textPrimary.opacity(on ? 1 : 0.88)).textCase(nil)
+                Text(verbatim: Self.dayNumber(off)).font(.nuna(size: 19, weight: .bold, design: NunaType.design))
                     .foregroundStyle(NunaPalette.textPrimary)
                 if logged {
                     Image(systemName: "checkmark").font(.nuna(size: 11, weight: .black)).foregroundStyle(.black)
-                        .frame(width: 22, height: 22).background(NunaPalette.charge, in: Circle())
+                        .frame(width: 24, height: 24).background(Color(red: 0.49, green: 0.91, blue: 0.62), in: Circle())
                 } else {
-                    Circle().fill(NunaPalette.glassStrong).frame(width: 22, height: 22)
+                    Circle().fill(NunaPalette.textPrimary.opacity(0.22)).frame(width: 24, height: 24)
                 }
             }
-            .frame(width: 46, height: 84)
-            .background(on ? NunaPalette.glassStrong : .clear, in: Capsule())
+            .frame(width: 45, height: 80)
+            .background(NunaPalette.textPrimary.opacity(on ? 0.2 : 0.14), in: Capsule())
             .overlay(Capsule().strokeBorder(on ? NunaPalette.textPrimary : .clear, lineWidth: 2))
         }
         .buttonStyle(.plain).id(off)
@@ -140,9 +174,9 @@ struct NunaJournalView: View {
         let text = dayOffset == 0
             ? String(format: String(localized: "What's happening today, %@?"), date)
             : String(format: String(localized: "What's happening on %@?"), date)
-        return Text(verbatim: text).font(.nuna(size: 26, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-            .fixedSize(horizontal: false, vertical: true)
-            .frame(maxWidth: .infinity, alignment: .leading)
+        return Text(verbatim: text).font(.nuna(size: 26, weight: .medium)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            .lineSpacing(6).fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 14).padding(.bottom, 4)
     }
 
     /// Mood has its own screen, so the journal only points to it, with what was logged for the day.
@@ -170,23 +204,17 @@ struct NunaJournalView: View {
             let closed = collapsed.contains(g.rawValue)
             VStack(alignment: .leading, spacing: 10) {
                 Button { toggle(g) } label: {
-                    HStack(spacing: 10) {
-                        nunaTrendsCap(LocalizedStringKey(g.title))
-                        Text(verbatim: "\(list.count)").font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                    HStack(spacing: 12) {
+                        Text(LocalizedStringKey(g.title)).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 0.6).textCase(.uppercase)
+                            .foregroundStyle(NunaPalette.textSecondary)
                         Rectangle().fill(NunaPalette.hairline).frame(height: 1)
                         Image(systemName: closed ? "chevron.right" : "chevron.down").font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                    }.contentShape(Rectangle())
+                    }
+                    .padding(.top, 10).contentShape(Rectangle())
                 }.buttonStyle(.plain)
                 if !closed {
-                    NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                        VStack(spacing: 0) {
-                            ForEach(Array(list.enumerated()), id: \.element.canonical) { i, item in
-                                if i > 0 { NunaDivider() }
-                                itemRow(item)
-                            }
-                            if list.isEmpty { Text("Nothing here yet").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).padding(.vertical, 14) }
-                        }
-                    }
+                    ForEach(list, id: \.canonical) { item in itemRow(item) }
+                    if list.isEmpty { Text("Nothing here yet").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).padding(.vertical, 14) }
                 }
             }
         }
@@ -199,19 +227,20 @@ struct NunaJournalView: View {
     }
 
     private func itemRow(_ item: JournalCatalogItem) -> some View {
-        HStack(spacing: 10) {
-            Text(verbatim: item.display).font(.nuna(size: 16, weight: .bold)).foregroundStyle(item.hidden ? NunaPalette.textMuted : NunaPalette.textPrimary)
-                .frame(maxWidth: .infinity, alignment: .leading).fixedSize(horizontal: false, vertical: true)
+        HStack(spacing: 12) {
+            Text(verbatim: item.display).font(.nuna(size: 16, weight: .medium)).foregroundStyle(item.hidden ? NunaPalette.textMuted : NunaPalette.textPrimary)
+                .frame(maxWidth: .infinity, alignment: .leading).fixedSize(horizontal: false, vertical: true).textCase(nil)
             if editing { editControls(item) }
             else if item.kind.isNumeric { numberControl(item) }
             else { yesNo(item.canonical) }
         }
-        .padding(.vertical, 12)
+        .padding(.horizontal, 20).padding(.vertical, 15).frame(minHeight: 66)
+        .background(NunaPalette.card, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 
     /// A cross and a check, side by side: the chosen one fills (white for no, green for yes), tapping it again clears the answer.
     private func yesNo(_ q: String) -> some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 10) {
             answerButton("xmark", on: answers[q] == false, fill: NunaPalette.accent, glyph: NunaPalette.onAccent, label: "No") { set(q, false) }
             answerButton("checkmark", on: answers[q] == true, fill: NunaPalette.charge, glyph: .black, label: "Yes") { set(q, true) }
         }
@@ -219,9 +248,10 @@ struct NunaJournalView: View {
 
     private func answerButton(_ symbol: String, on: Bool, fill: Color, glyph: Color, label: LocalizedStringKey, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: symbol).font(.nuna(size: 14, weight: .heavy)).foregroundStyle(on ? glyph : NunaPalette.textSecondary)
-                .frame(width: 42, height: 42)
-                .background(on ? fill : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 11, style: .continuous))
+            Image(systemName: symbol).font(.nuna(size: 14, weight: .heavy)).foregroundStyle(on ? glyph : NunaPalette.textPrimary)
+                .frame(width: 34, height: 34)
+                .background(on ? fill : NunaPalette.textPrimary.opacity(0.14), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                .padding(4).contentShape(Rectangle()).padding(-4)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text(label))
