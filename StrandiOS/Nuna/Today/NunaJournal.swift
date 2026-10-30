@@ -241,7 +241,8 @@ struct NunaJournalView: View {
     /// A cross and a check, side by side: the chosen one fills (white for no, green for yes), tapping it again clears the answer.
     private func yesNo(_ q: String) -> some View {
         HStack(spacing: 10) {
-            answerButton("xmark", on: answers[q] == false, fill: NunaPalette.accent, glyph: NunaPalette.onAccent, label: "No") { set(q, false) }
+            // White is kept for the one button that saves; a "No" is a lighter grey, a "Yes" is green.
+            answerButton("xmark", on: answers[q] == false, fill: NunaPalette.textPrimary.opacity(0.36), glyph: NunaPalette.textPrimary, label: "No") { set(q, false) }
             answerButton("checkmark", on: answers[q] == true, fill: NunaPalette.charge, glyph: .black, label: "Yes") { set(q, true) }
         }
     }

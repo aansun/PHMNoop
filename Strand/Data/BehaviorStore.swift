@@ -41,6 +41,11 @@ final class BehaviorStore: ObservableObject {
     /// Weekdays the alarm fires on (Calendar weekday numbers: 1 = Sun … 7 = Sat). An empty set means
     /// "every day" — the backward-compatible default for anyone upgrading from before per-day scheduling.
     @Published var smartAlarmWeekdays: Set<Int> { didSet { d.set(Array(smartAlarmWeekdays).sorted(), forKey: K.alarmWeekdays) } }
+    /// How the wake time is read (iOS Sleep Planner): "exact" (the time itself), "goal" (a latest wake time, with a sleep-need goal that sets the bedtime to
+    /// aim for) or "green" (the same, aiming at a green Charge). The strap is armed at `smartAlarmMinutes` in every mode.
+    @Published var smartAlarmMode: String { didSet { d.set(smartAlarmMode, forKey: K.alarmMode) } }
+    /// The share of the sleep need the planner aims for: 100, 85 or 70.
+    @Published var smartAlarmGoal: Int { didSet { d.set(smartAlarmGoal, forKey: K.alarmGoal) } }
 
     // MARK: Illness early-warning
     @Published var illnessWatch: Bool { didSet { d.set(illnessWatch, forKey: K.illness) } }
@@ -73,6 +78,8 @@ final class BehaviorStore: ObservableObject {
         static let alarmOn = "behavior.smartAlarmEnabled"
         static let alarmTime = "behavior.smartAlarmMinutes"
         static let alarmWeekdays = "behavior.smartAlarmWeekdays"
+        static let alarmMode = "behavior.smartAlarmMode"
+        static let alarmGoal = "behavior.smartAlarmGoal"
         // "behavior.smartAlarmWindow" retired: it was stored but never read (no wake-window
         // watcher ever shipped). The defaults key is left orphaned on purpose — harmless, and
         // preserved should a real light-sleep watcher ever land.
@@ -98,6 +105,10 @@ final class BehaviorStore: ObservableObject {
         // Stored as a plain [Int]; only valid weekday numbers (1…7) are kept so a corrupted defaults
         // entry can never schedule against a bogus day. Empty (or all 7) = every day.
         smartAlarmWeekdays = Set((d.array(forKey: K.alarmWeekdays) as? [Int] ?? []).filter { (1...7).contains($0) })
+        let mode = d.string(forKey: K.alarmMode) ?? "exact"
+        smartAlarmMode = ["exact", "goal", "green"].contains(mode) ? mode : "exact"
+        let goal = d.object(forKey: K.alarmGoal) as? Int ?? 100
+        smartAlarmGoal = [100, 85, 70].contains(goal) ? goal : 100
         illnessWatch = d.object(forKey: K.illness) as? Bool ?? false
         batteryAlerts = d.object(forKey: K.batteryAlerts) as? Bool ?? true
         batteryPredictiveAlerts = d.object(forKey: K.batteryPredictiveAlerts) as? Bool ?? true
