@@ -9,11 +9,12 @@ import StrandDesign
 struct NunaTonightSleep: View {
     @EnvironmentObject private var behavior: BehaviorStore
     @EnvironmentObject private var router: NavRouter
-    @StateObject private var wind = NunaWindDownState()
+    @AppStorage(NunaGoals.sleepMinutes) private var sleepGoal = 0
 
+    /// The same bedtime the Sleep planner names, worked out in one place.
     private var bedtimeMinutes: Int {
-        let raw = wind.wakeMinutes - WindDownNudge.sleepNeedMinutes
-        return ((raw % 1440) + 1440) % 1440
+        NunaSleepPlan(wakeMinutes: behavior.smartAlarmMinutes, needMinutes: NunaSleepPlan.needMinutes(goal: sleepGoal),
+                      goalPercent: behavior.smartAlarmMode == "exact" ? 100 : behavior.smartAlarmGoal).bedtimeMinutes
     }
 
     var body: some View {
@@ -47,7 +48,6 @@ struct NunaTonightSleep: View {
                 .buttonStyle(.plain)
             }
         }
-        .onAppear { wind.reload() }
     }
 
     private func block(icon: String, time: String, line: Text, tint: Color?, footer: Text? = nil) -> some View {
