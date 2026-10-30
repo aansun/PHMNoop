@@ -26,14 +26,18 @@ struct NunaMonitorPackCard: View {
     /// always out of these, so a vital with no reading shows up as a missing one ("4/5") and not as a smaller total ("4/4").
     private static let monitored = 5
 
+    /// Nights with a sleep reading: under seven there is no range, so nothing is judged and the tile says it is calibrating.
+    private var phase: VitalRange.Phase { VitalRange.phase(nights: max(hrvS.nights, rhrS.nights)) }
+
     /// How many of the vital signs with a reading are in range, and how many have one.
     private var vitals: (within: Int, known: Int) {
         var within = 0, known = 0
         func tally(_ ok: Bool?) { if let ok { known += 1; if ok { within += 1 } } }
-        tally(hrv.flatMap { v in hrvS.band.map { abs(v - $0.mean) <= max($0.sd, 1) } })
-        tally(restingHr.flatMap { v in rhrS.band.map { abs(v - $0.mean) <= max($0.sd, 1) } })
+        guard phase.hasRange else { return (0, 0) }
+        tally(hrv.flatMap { v in hrvS.verdict(v, floor: 1).map { $0 == .inRange } })
+        tally(restingHr.flatMap { v in rhrS.verdict(v, floor: 1).map { $0 == .inRange } })
         tally(spo2.map { $0 >= 95 })
-        tally(respiratory.flatMap { v in respS.band.map { abs(v - $0.mean) <= max($0.sd, 0.3) } })
+        tally(respiratory.flatMap { v in respS.verdict(v, floor: 0.3).map { $0 == .inRange } })
         tally(skinTemp.map { abs($0) < 0.5 })
         return (within, known)
     }
@@ -82,7 +86,25 @@ struct NunaMonitorPackCard: View {
         }
     }
 
-    private var vitalTile: some View {
+    private var vitalTile: AnyView {
+        if case .calibrating(let nights) = phase, hrvS.loaded, rhrS.loaded {
+            return AnyView(shell("Vital signs") {
+                HStack(spacing: 10) {
+                    tile(tint: NunaPalette.effortModerate) {
+                        Image(systemName: "hourglass").font(.nuna(size: 16, weight: .heavy)).foregroundStyle(NunaPalette.effortModerate)
+                    }
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("Calibrating").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.effortModerate)
+                        Text(verbatim: "\(nights)/\(VitalRange.calibrationNights)").font(.nuna(size: 12.5, weight: .semibold))
+                            .foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    }
+                }
+            })
+        }
+        return AnyView(readyVitalTile)
+    }
+
+    private var readyVitalTile: some View {
         let v = vitals
         let allIn = v.known > 0 && v.within == v.known
         let tint = v.known == 0 ? NunaPalette.textMuted : (allIn ? NunaPalette.charge : NunaPalette.warning)

@@ -812,13 +812,22 @@ final class NunaSeriesModel: ObservableObject {
         return v.count >= 3 ? v.reduce(0, +) / Double(v.count) : nil
     }
 
-    /// Mean, spread and extremes of the last 30 readings before the latest one.
+    /// The usual range read from the last 30 readings before the latest one (`VitalRange`): the median as `mean`, the spread as a standard
+    /// deviation from the median absolute deviation (wider while there are few nights), and the extremes. Nil under seven nights.
     var band: (mean: Double, sd: Double, lo: Double, hi: Double)? {
-        let v = byDay.keys.sorted().dropLast().suffix(30).compactMap { byDay[$0] }
-        guard v.count >= 5 else { return nil }
-        let m = v.reduce(0, +) / Double(v.count)
-        let sd = (v.map { ($0 - m) * ($0 - m) }.reduce(0, +) / Double(v.count)).squareRoot()
-        return (m, sd, v.min() ?? m, v.max() ?? m)
+        let v = byDay.keys.sorted().dropLast().compactMap { byDay[$0] }
+        guard let b = VitalRange.band(history: v) else { return nil }
+        return (b.centre, b.spread, b.lo, b.hi)
+    }
+
+    /// Nights with a reading, the count the range and its stages go by.
+    var nights: Int { byDay.count }
+
+    /// Whether a reading sits in the usual range, above it or below it; nil while there is no range yet. `floor` is the smallest spread worth
+    /// noticing, so the Vital signs tiles, the Health card and the Today tile all judge by the one rule.
+    func verdict(_ value: Double, floor: Double) -> VitalRange.Verdict? {
+        let v = byDay.keys.sorted().dropLast().compactMap { byDay[$0] }
+        return VitalRange.band(history: v).map { VitalRange.verdict(value, in: $0, floor: floor) }
     }
 
     /// The typical range shaded behind a chart: the mean of the last 30 readings plus and minus one spread. It is the line the In range / Above range

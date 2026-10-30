@@ -258,6 +258,7 @@ struct NunaHealthMonitorCard: View {
     let skinTemp: Double?
 
     @EnvironmentObject private var repo: Repository
+    @EnvironmentObject private var appModel: AppModel
     @StateObject private var hrvS = NunaSeriesModel()
     @StateObject private var rhrS = NunaSeriesModel()
     @StateObject private var respS = NunaSeriesModel()
@@ -266,17 +267,22 @@ struct NunaHealthMonitorCard: View {
         let id: String
         let icon: String
         let label: String
-        /// nil with no reading, otherwise whether it sits in its usual range.
+        /// nil with no reading (or no range yet), otherwise whether it sits in its usual range.
         let ok: Bool?
     }
 
+    /// Nights with a sleep reading, which the range and the early warning go by.
+    private var phase: VitalRange.Phase { VitalRange.phase(nights: max(hrvS.nights, rhrS.nights)) }
+    private var loaded: Bool { hrvS.loaded && rhrS.loaded }
+
     private var vitals: [Vital] {
-        [
-            Vital(id: "resp", icon: "lungs", label: "RESP", ok: respiratory.flatMap { v in respS.band.map { abs(v - $0.mean) <= max($0.sd, 0.3) } }),
-            Vital(id: "spo2", icon: "drop", label: "SpO₂", ok: spo2.map { $0 >= 95 }),
-            Vital(id: "rhr", icon: "heart", label: "RHR", ok: restingHr.flatMap { v in rhrS.band.map { abs(v - $0.mean) <= max($0.sd, 1) } }),
-            Vital(id: "hrv", icon: "waveform.path.ecg", label: "HRV", ok: hrv.flatMap { v in hrvS.band.map { abs(v - $0.mean) <= max($0.sd, 1) } }),
-            Vital(id: "temp", icon: "thermometer.medium", label: "TEMP", ok: skinTemp.map { abs($0) < 0.5 }),
+        let hasRange = phase.hasRange
+        return [
+            Vital(id: "resp", icon: "lungs", label: "RESP", ok: respiratory.flatMap { v in respS.verdict(v, floor: 0.3).map { $0 == .inRange } }),
+            Vital(id: "spo2", icon: "drop", label: "SpO₂", ok: hasRange ? spo2.map { $0 >= 95 } : nil),
+            Vital(id: "rhr", icon: "heart", label: "RHR", ok: restingHr.flatMap { v in rhrS.verdict(v, floor: 1).map { $0 == .inRange } }),
+            Vital(id: "hrv", icon: "waveform.path.ecg", label: "HRV", ok: hrv.flatMap { v in hrvS.verdict(v, floor: 1).map { $0 == .inRange } }),
+            Vital(id: "temp", icon: "thermometer.medium", label: "TEMP", ok: hasRange ? skinTemp.map { abs($0) < 0.5 } : nil),
         ]
     }
 
@@ -292,13 +298,22 @@ struct NunaHealthMonitorCard: View {
                         Spacer(minLength: 0)
                         Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                     }
-                    HStack(spacing: 0) {
-                        ForEach(Array(all.enumerated()), id: \.element.id) { idx, v in
-                            if idx > 0 { Rectangle().fill(NunaPalette.hairline).frame(width: 1, height: 70) }
-                            column(v)
+                    if case .calibrating(let n) = phase, loaded {
+                        // Still learning the person: nothing about their vitals is judged, only how far along it is.
+                        NunaLockedColumns(items: all.map { ($0.icon, LocalizedStringKey($0.label)) }, accessibility: "The health monitor is locked")
+                        let left = VitalRange.calibrationNights - n
+                        NunaNightsPanel(message: left == 1 ? "Wear your strap to sleep for 1 more night to unlock."
+                                        : "Wear your strap to sleep for \(left) more nights to unlock.",
+                                        nights: n, needed: VitalRange.calibrationNights)
+                    } else {
+                        HStack(spacing: 0) {
+                            ForEach(Array(all.enumerated()), id: \.element.id) { idx, v in
+                                if idx > 0 { Rectangle().fill(NunaPalette.hairline).frame(width: 1, height: 70) }
+                                column(v)
+                            }
                         }
+                        if loaded { summary(within: within, known: known) }
                     }
-                    summary(within: within, known: known)
                 }
             }
         }
@@ -326,16 +341,34 @@ struct NunaHealthMonitorCard: View {
             .background(tint.opacity(0.18), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
     }
 
+    /// The count in range and, under it, the early warning: it speaks only once there are fourteen nights, and until then says how many are left.
     private func summary(within: Int, known: Int) -> some View {
         let allIn = known > 0 && within == known
-        let tint = known == 0 ? NunaPalette.textMuted : (allIn ? NunaPalette.charge : NunaPalette.warning)
+        let raised = phase.isTrusted && (appModel.illnessSignal.map { $0.level != .quiet } ?? false)
+        let tint = known == 0 ? NunaPalette.textMuted : (raised || !allIn ? NunaPalette.warning : NunaPalette.charge)
+        let title: String = raised ? String(localized: "Signals are up")
+            : (known == 0 ? String(localized: "No data") : String(localized: "\(within)/5 metrics within range"))
+        let detail: String? = {
+            if raised { return String(localized: "Some signals are away from your range. Take it easy and watch how you feel.") }
+            if case .learning(let n) = phase {
+                let left = VitalRange.trustedNights - n
+                return left == 1 ? String(localized: "Early warning starts after 14 nights: 1 more night.")
+                    : String(localized: "Early warning starts after 14 nights: \(left) more nights.")
+            }
+            return known == 0 ? nil : String(localized: "No vital-sign warning.")
+        }()
         return HStack(spacing: 12) {
-            badge(tint: tint, symbol: known == 0 ? "minus" : (allIn ? "checkmark" : "exclamationmark"))
-            Text(verbatim: known == 0 ? String(localized: "No data") : String(localized: "\(within)/5 metrics within range"))
-                .font(.nuna(size: 13, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            badge(tint: tint, symbol: known == 0 ? "minus" : (raised || !allIn ? "exclamationmark" : "checkmark"))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: title).font(.nuna(size: 13, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                if let detail {
+                    Text(verbatim: detail).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, 10).frame(height: 44)
+        .padding(.horizontal, 10).padding(.vertical, 9).frame(minHeight: 44)
         .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }
