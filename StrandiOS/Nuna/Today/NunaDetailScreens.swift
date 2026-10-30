@@ -1252,7 +1252,7 @@ struct NunaStressDetailView: View {
             dayStepper
             VStack(spacing: 10) {
                 NunaStressGauge(value: score, level: score.map { $0 < 1 ? "Low" : ($0 < 2 ? "Medium" : "High") },
-                                levelColor: tint, time: gaugeTime, onInfo: { withAnimation { showInfo.toggle() } })
+                                levelColor: tint, time: gaugeTime, onInfo: { withAnimation { showInfo.toggle() } }, height: 165)
                 if showInfo {
                     Text("0 to 3 against your own baseline from your last 14 nights. Under 1 is low, 1 to 2 medium, above 2 high. Exercise counts toward Total day but is eased toward neutral, and stays out of Non-activity.")
                         .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
@@ -1407,7 +1407,7 @@ struct NunaStressDetailView: View {
         NunaStressMonitorChart(points: trail?.chartPoints ?? [], workouts: trailWorkouts, showsNow: day.isToday,
                                sleep: sleepSpan.map { Int($0.start.timeIntervalSince1970)...Int($0.end.timeIntervalSince1970) },
                                zoomed: false, onZoom: { showZoom = true }, reads: true, domain: chartDomain)
-            .frame(height: 290)
+            .frame(height: 185)
     }
 
     /// Reads what the chart draws: the last 24 hours up to now for today (so last night is in it), the calendar day for an earlier one.
