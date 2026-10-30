@@ -173,7 +173,7 @@ struct NunaScoreRings: View {
                               gradient: effort.map(nunaEffortRingColors), target: nunaEffortTargetFractions(charge: charge.pct))
         case .rest:
             let state: LocalizedStringKey = rest.map(nunaRestWord) ?? "No data"
-            return RingValues(fraction: (rest ?? 0) / 100, color: rest.map(nunaRestColor) ?? NunaPalette.rest, textColor: rest.map(nunaRestTextColor) ?? NunaPalette.restText,
+            return RingValues(fraction: (rest ?? 0) / 100, color: NunaRestChart.steel, textColor: NunaRestChart.steel,
                               number: rest.map { "\(Int($0.rounded()))" } ?? "–", unit: "%",
                               label: "Rest", state: state, route: HeroRingMetric.rest)
         }
