@@ -340,10 +340,13 @@ struct NunaStressGauge: View {
         let ramp: [Gradient.Stop] = [.init(color: NunaStressBand.low, location: 0), .init(color: NunaStressBand.medium, location: 0.38),
                                      .init(color: NunaPalette.effort, location: 0.7), .init(color: NunaStressBand.high, location: 1)]
         var out: [Gradient.Stop] = []
-        for d in stride(from: 0.0, through: 360.0, by: 4.0) {
-            var f = (d - start).truncatingRemainder(dividingBy: 360) / span
-            if f < 0 { f += 360 / span }
-            out.append(.init(color: StrandPalette.sample(stops: ramp, at: min(max(f, 0), 1)), location: d / 360))
+        for d in stride(from: 0.0, through: 360.0, by: 2.0) {
+            var rel = (d - start).truncatingRemainder(dividingBy: 360)
+            if rel < 0 { rel += 360 }
+            // Inside the gap under the dial the colour jumps from the end of the ramp to its start, half way across it, so neither end of
+            // the arc takes the other's colour at its rounded cap.
+            let f = rel <= span ? rel / span : (rel - span < (360 - span) / 2 ? 1 : 0)
+            out.append(.init(color: StrandPalette.sample(stops: ramp, at: f), location: d / 360))
         }
         return Gradient(stops: out)
     }
