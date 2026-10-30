@@ -105,33 +105,38 @@ struct NunaWorkoutLogFigures: View {
 
 // MARK: - Heart rate
 
-/// The heart rate through the session as a filled curve: the beats-per-minute scale sits on the faint grid at the left, the start and the end are
-/// dashed marks with a dot at their foot, and the time of each is under them. With a zone picked, the curve goes grey and the stretches spent in
-/// the zone are lit in its colour, at their time and length.
+/// The heart rate through the session as a filled curve between two dashed marks (the start and the end, a dot at the foot of each, their times
+/// under them). The beats-per-minute scale sits on the faint grid at the left. The curve goes on a little past both marks in grey, as the minutes
+/// around the session, so the two margins are alike. With a zone picked, the whole session goes grey and the stretches spent in the zone are lit
+/// in its colour, at their time and length.
 struct NunaWorkoutHRArea: View {
+    /// The session itself.
     let buckets: [HRBucket]
     let start: Int
     let end: Int
+    /// The same curve with a few minutes either side (see `NunaWorkoutDetailData.hrAround`); the session alone when empty.
+    var around: [HRBucket] = []
     /// A zone (1...5) picked in the zone list.
     var highlightZone: Int? = nil
     var zoneSet: HRZoneSet? = nil
 
-    private static let plotHeight: CGFloat = 184
-    /// Room at the left for the scale; the session itself starts where its dashed mark is.
-    private static let inset: CGFloat = 30
+    private static let plotHeight: CGFloat = 150
+    /// The room either side of the dashed marks: the scale at the left, the minutes around the session at both.
+    private static let inset: CGFloat = 28
 
     var body: some View {
-        let pts = buckets.sorted { $0.ts < $1.ts }
+        let session = buckets.sorted { $0.ts < $1.ts }
+        let pts = (around.count >= 2 ? around : buckets).sorted { $0.ts < $1.ts }
         let lo = floor((pts.map(\.bpm).min() ?? 0) / 25) * 25
         let hi = max(ceil((pts.map(\.bpm).max() ?? 25) / 25) * 25, lo + 25)
         let span = max(Double(end - start), 1)
         let lit = highlightZone != nil && zoneSet != nil
-        VStack(spacing: 8) {
+        VStack(spacing: 6) {
             ZStack(alignment: .topLeading) {
                 Canvas { ctx, size in
-                    let left = Self.inset, width = size.width - Self.inset - 4
+                    let left = Self.inset, width = size.width - 2 * Self.inset
                     func pt(_ b: HRBucket) -> CGPoint {
-                        CGPoint(x: left + width * CGFloat(min(max(Double(b.ts - start) / span, 0), 1)), y: size.height * CGFloat(1 - (b.bpm - lo) / (hi - lo)))
+                        CGPoint(x: left + width * CGFloat(Double(b.ts - start) / span), y: size.height * CGFloat(1 - (b.bpm - lo) / (hi - lo)))
                     }
                     let grid = NunaPalette.ink.opacity(0.07)
                     for v in stride(from: lo, through: hi, by: 25) {
@@ -147,27 +152,32 @@ struct NunaWorkoutHRArea: View {
                     if pts.count >= 2 {
                         var line = Path()
                         for (i, b) in pts.enumerated() { i == 0 ? line.move(to: pt(b)) : line.addLine(to: pt(b)) }
+                        // Around the session: the line only, grey.
+                        ctx.stroke(line, with: .color(NunaPalette.textSecondary.opacity(0.5)), style: StrokeStyle(lineWidth: 1.6, lineCap: .round, lineJoin: .round))
+                        // The session: the area and the line, inside the two marks.
+                        var inner = ctx
+                        inner.clip(to: Path(CGRect(x: left, y: 0, width: width, height: size.height)))
                         var area = line
                         area.addLine(to: CGPoint(x: pt(pts[pts.count - 1]).x, y: size.height))
                         area.addLine(to: CGPoint(x: pt(pts[0]).x, y: size.height))
                         area.closeSubpath()
-                        ctx.fill(area, with: .linearGradient(Gradient(colors: [NunaPalette.effortModerate.opacity(lit ? 0.12 : 0.5), NunaPalette.effortMinimal.opacity(lit ? 0.02 : 0.05)]),
-                                                             startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
-                        ctx.stroke(line, with: .color(lit ? NunaPalette.textSecondary.opacity(0.55) : NunaPalette.effortModerate),
-                                   style: StrokeStyle(lineWidth: lit ? 1.6 : 2.2, lineCap: .round, lineJoin: .round))
+                        inner.fill(area, with: .linearGradient(Gradient(colors: [NunaPalette.effortModerate.opacity(lit ? 0.12 : 0.5), NunaPalette.effortMinimal.opacity(lit ? 0.02 : 0.05)]),
+                                                               startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
+                        inner.stroke(line, with: .color(lit ? NunaPalette.textSecondary.opacity(0.55) : NunaPalette.effortModerate),
+                                     style: StrokeStyle(lineWidth: lit ? 1.6 : 2.2, lineCap: .round, lineJoin: .round))
                         if let zone = highlightZone, let zoneSet {
                             let color = NunaWorkoutLogZones.colors[min(max(zone, 1), 5) - 1]
                             // The stretches spent in the zone, broken wherever the heart rate left it (or a gap in the readings): each one
                             // is the area under the curve itself, so the colour follows the line instead of standing in columns over it.
                             var runs: [[CGPoint]] = []
                             var current: [CGPoint] = []
-                            for i in pts.indices {
-                                let inZone = zoneSet.zoneNumber(forBPM: pts[i].bpm) == zone
-                                let gap = i > 0 && pts[i].ts - pts[i - 1].ts > 300
-                                if inZone, !gap { current.append(pt(pts[i])) }
+                            for i in session.indices {
+                                let inZone = zoneSet.zoneNumber(forBPM: session[i].bpm) == zone
+                                let gap = i > 0 && session[i].ts - session[i - 1].ts > 300
+                                if inZone, !gap { current.append(pt(session[i])) }
                                 else {
                                     if current.count >= 2 { runs.append(current) }
-                                    current = inZone ? [pt(pts[i])] : []
+                                    current = inZone ? [pt(session[i])] : []
                                 }
                             }
                             if current.count >= 2 { runs.append(current) }
@@ -177,11 +187,11 @@ struct NunaWorkoutHRArea: View {
                                 for q in run { fill.addLine(to: q) }
                                 fill.addLine(to: CGPoint(x: run[run.count - 1].x, y: size.height))
                                 fill.closeSubpath()
-                                ctx.fill(fill, with: .linearGradient(Gradient(colors: [color.opacity(0.6), color.opacity(0.1)]),
-                                                                     startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
+                                inner.fill(fill, with: .linearGradient(Gradient(colors: [color.opacity(0.6), color.opacity(0.1)]),
+                                                                       startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
                                 var seg = Path(); seg.move(to: run[0])
                                 for q in run.dropFirst() { seg.addLine(to: q) }
-                                ctx.stroke(seg, with: .color(color), style: StrokeStyle(lineWidth: 2.6, lineCap: .round, lineJoin: .round))
+                                inner.stroke(seg, with: .color(color), style: StrokeStyle(lineWidth: 2.6, lineCap: .round, lineJoin: .round))
                             }
                         }
                     }
@@ -189,23 +199,24 @@ struct NunaWorkoutHRArea: View {
                     for x in [left, left + width] {
                         var m = Path(); m.move(to: CGPoint(x: x, y: 0)); m.addLine(to: CGPoint(x: x, y: size.height))
                         ctx.stroke(m, with: .color(NunaPalette.textPrimary.opacity(0.75)), style: StrokeStyle(lineWidth: 1, dash: [3, 4]))
-                        ctx.fill(Path(ellipseIn: CGRect(x: x - 3.5, y: size.height - 3.5, width: 7, height: 7)), with: .color(NunaPalette.textPrimary))
+                        ctx.fill(Path(ellipseIn: CGRect(x: x - 3, y: size.height - 3, width: 6, height: 6)), with: .color(NunaPalette.textPrimary))
                     }
                 }
                 ForEach(Array(stride(from: lo, through: hi, by: 25)), id: \.self) { v in
-                    Text(verbatim: "\(Int(v))").font(.nuna(size: 12, weight: .heavy)).foregroundStyle(NunaPalette.textSecondary).monospacedDigit()
-                        .position(x: 14, y: Self.plotHeight * CGFloat(1 - (v - lo) / (hi - lo)) - 9)
+                    Text(verbatim: "\(Int(v))").font(.nuna(size: 10.5, weight: .bold)).foregroundStyle(NunaPalette.textMuted).monospacedDigit()
+                        .position(x: 14, y: Self.plotHeight * CGFloat(1 - (v - lo) / (hi - lo)) - 8)
                 }
             }
             .frame(height: Self.plotHeight)
+            // The two times, each centred under its mark.
             GeometryReader { geo in
-                let left = Self.inset, right = geo.size.width - 4
-                Text(verbatim: NunaWorkoutFormat.clock(start)).position(x: left + 4, y: 8).frame(width: geo.size.width, alignment: .leading)
-                Text(verbatim: NunaWorkoutFormat.clock(end)).position(x: right - 16, y: 8).frame(width: geo.size.width, alignment: .leading)
+                let left = Self.inset, right = geo.size.width - Self.inset
+                Text(verbatim: NunaWorkoutFormat.clock(start)).position(x: left, y: 8)
+                Text(verbatim: NunaWorkoutFormat.clock(end)).position(x: right, y: 8)
             }
-            .font(.nuna(size: 12.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).frame(height: 18)
+            .font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(height: 16)
         }
-        .padding(.top, 14)
+        .padding(.top, 10)
         .accessibilityHidden(true)
         .animation(.easeInOut(duration: 0.2), value: highlightZone)
     }
