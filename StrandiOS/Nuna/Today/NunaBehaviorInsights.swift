@@ -57,6 +57,53 @@ final class NunaBehaviorModel: ObservableObject {
     }
 }
 
+// MARK: - The page
+
+/// The page the two Behavior screens sit on: a cool light at the top fading into the dark, a back chevron and the title in capitals across the top,
+/// and the content in a scroll view.
+struct NunaBehaviorPage<Content: View>: View {
+    let title: LocalizedStringKey
+    let content: Content
+    @Environment(\.dismiss) private var dismiss
+
+    init(_ title: LocalizedStringKey, @ViewBuilder content: () -> Content) { self.title = title; self.content = content() }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ZStack {
+                Text(title).font(.nuna(size: 13, weight: .heavy)).tracking(1.7).textCase(.uppercase).foregroundStyle(Color.white)
+                HStack {
+                    Button { dismiss() } label: {
+                        Image(systemName: "chevron.left").font(.system(size: 20, weight: .semibold)).foregroundStyle(Color.white).frame(width: 44, height: 44).contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain).accessibilityLabel(Text("Back"))
+                    Spacer()
+                }
+                .padding(.leading, 14)
+            }
+            .frame(height: 44).padding(.top, 1)
+            ScrollView {
+                VStack(spacing: 10) { content }
+                    .padding(.horizontal, 16).padding(.top, 22).padding(.bottom, 60)
+            }
+            .scrollIndicators(.hidden)
+        }
+        .background(
+            LinearGradient(stops: [.init(color: Color(red: 0.17, green: 0.21, blue: 0.25), location: 0), .init(color: Color(red: 0.09, green: 0.12, blue: 0.14), location: 0.45),
+                                   .init(color: Color(red: 0.05, green: 0.07, blue: 0.08), location: 1)], startPoint: .top, endPoint: .bottom).ignoresSafeArea()
+        )
+        .toolbar(.hidden, for: .navigationBar)
+    }
+}
+
+extension View {
+    /// A card of the Behavior pages: darker than the page, with a thin light edge.
+    func nunaBehaviorCard(radius: CGFloat = 13) -> some View {
+        background(Color.black.opacity(0.27), in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: radius, style: .continuous).strokeBorder(Color.white.opacity(0.16), lineWidth: 1))
+    }
+}
+
 // MARK: - The list
 
 struct NunaBehaviorInsightsView: View {
@@ -65,23 +112,13 @@ struct NunaBehaviorInsightsView: View {
     @State private var open: String?
 
     var body: some View {
-        NunaDetailScreen("Behavior insights", centersTitle: true) {
+        NunaBehaviorPage("Behavior insights") {
             if model.loaded {
-                if model.rows.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Log your behaviors to reveal personalized insights").font(.nuna(size: 24, weight: .bold, design: NunaType.design))
-                            .foregroundStyle(NunaPalette.textPrimary).textCase(nil).fixedSize(horizontal: false, vertical: true)
-                        Text("Record at least 5 yes's and no's in your journal to see how behaviors impact your Charge.")
-                            .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                } else {
-                    header
-                    ForEach(model.rows) { row in
-                        NavigationLink(value: NunaBehaviorRoute(behavior: row.behavior)) { listRow(row) }.buttonStyle(.plain)
-                    }
-                    discovered
+                header
+                ForEach(model.rows) { row in
+                    NavigationLink(value: NunaBehaviorRoute(behavior: row.behavior)) { listRow(row) }.buttonStyle(.plain)
                 }
+                discovered
             }
         }
         .task(id: repo.refreshSeq) { await model.load(repo: repo) }
@@ -89,29 +126,30 @@ struct NunaBehaviorInsightsView: View {
     }
 
     private var header: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text("Log your behaviors to reveal personalized insights").font(.nuna(size: 24, weight: .bold, design: NunaType.design))
-                .foregroundStyle(NunaPalette.textPrimary).textCase(nil).fixedSize(horizontal: false, vertical: true)
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Log your behaviors to reveal personalized insights").font(.nuna(size: 22, weight: .regular))
+                .foregroundStyle(Color.white).textCase(nil).lineSpacing(5).fixedSize(horizontal: false, vertical: true)
             Text("Record at least 5 yes's and no's in your journal to see how behaviors impact your Charge.")
-                .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
+                .font(.nuna(size: 14.5, weight: .regular)).foregroundStyle(Color.white.opacity(0.5)).textCase(nil).lineSpacing(3).fixedSize(horizontal: false, vertical: true)
         }
-        .frame(maxWidth: .infinity, alignment: .leading).padding(.bottom, 4)
+        .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 6).padding(.bottom, 10)
     }
 
     private func listRow(_ row: BehaviorSummary.Row) -> some View {
-        NunaCard(small: true, padding: EdgeInsets(top: 14, leading: 16, bottom: 14, trailing: 16)) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Text(verbatim: NunaBehaviorModel.title(row.behavior)).font(.nuna(size: 17, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                    Spacer(minLength: 8)
-                    Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                }
-                HStack(alignment: .center, spacing: 14) {
-                    NunaImpactBar(percent: row.percent, scale: 20)
-                    counts(row)
-                }
+        VStack(alignment: .leading, spacing: 11) {
+            HStack {
+                Text(verbatim: NunaBehaviorModel.title(row.behavior)).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(Color.white).textCase(nil)
+                Spacer(minLength: 8)
+                Image(systemName: "chevron.right").font(.system(size: 15, weight: .semibold)).foregroundStyle(Color.white.opacity(0.55))
+            }
+            HStack(alignment: .center, spacing: 14) {
+                NunaImpactBar(percent: row.percent, scale: 20)
+                counts(row)
             }
         }
+        .padding(.top, 11).padding(.bottom, 14).padding(.horizontal, 13)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .nunaBehaviorCard()
     }
 
     private func counts(_ row: BehaviorSummary.Row) -> some View {
@@ -123,9 +161,9 @@ struct NunaBehaviorInsightsView: View {
 
     private func count(_ symbol: String, _ n: Int) -> some View {
         HStack(spacing: 5) {
-            Image(systemName: symbol).font(.nuna(size: 9, weight: .heavy)).foregroundStyle(NunaPalette.textSecondary)
-                .frame(width: 18, height: 18).overlay(RoundedRectangle(cornerRadius: 5, style: .continuous).strokeBorder(NunaPalette.textSecondary, lineWidth: 1.4))
-            Text(verbatim: "\(n)").font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
+            Image(systemName: symbol).font(.system(size: 8.5, weight: .heavy)).foregroundStyle(Color.white.opacity(0.6))
+                .frame(width: 17, height: 17).overlay(RoundedRectangle(cornerRadius: 4.5, style: .continuous).strokeBorder(Color.white.opacity(0.6), lineWidth: 1.2))
+            Text(verbatim: "\(n)").font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(Color.white.opacity(0.6))
         }
     }
 
@@ -133,8 +171,7 @@ struct NunaBehaviorInsightsView: View {
     @ViewBuilder private var discovered: some View {
         let split = BehaviorSummary.split(model.rows)
         if !split.hurts.isEmpty || !split.helps.isEmpty {
-            NunaCard(small: true, padding: EdgeInsets(top: 16, leading: 14, bottom: 14, trailing: 14)) {
-                VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 14) {
                     HStack(spacing: 12) {
                         Image(systemName: "person.2").font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
                         Text("What moves your Charge").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
@@ -159,12 +196,12 @@ struct NunaBehaviorInsightsView: View {
                                 Spacer(minLength: 6)
                                 Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                             }
-                            .padding(14).background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .padding(14).nunaBehaviorCard()
                         }
                         .buttonStyle(.plain)
                     }
-                }
             }
+            .padding(14).frame(maxWidth: .infinity, alignment: .leading).nunaBehaviorCard()
         }
     }
 }
@@ -183,15 +220,13 @@ struct NunaImpactBar: View {
             GeometryReader { geo in
                 let w = geo.size.width, mid = w / 2
                 ZStack(alignment: .leading) {
-                    Capsule().fill(NunaPalette.hairline.opacity(0.55)).frame(height: 7)
-                        .overlay(NunaHatch().clipShape(Capsule()).opacity(0.6))
+                    NunaHatch().frame(height: 9).clipShape(RoundedRectangle(cornerRadius: 2, style: .continuous))
                     if let p = percent {
                         let len = min(abs(p) / scale, 1) * mid
-                        Capsule().fill(p >= 0 ? NunaPalette.charge : NunaPalette.warning).frame(width: max(len, 6), height: 7)
-                            .offset(x: p >= 0 ? mid : mid - len)
+                        RoundedRectangle(cornerRadius: 2, style: .continuous).fill(p >= 0 ? NunaPalette.charge : NunaPalette.warning)
+                            .frame(width: max(len, 6), height: 9).offset(x: p >= 0 ? mid : mid - len)
                     }
-                    Circle().fill(NunaPalette.textPrimary).frame(width: 9, height: 9).overlay(Circle().strokeBorder(NunaPalette.canvas, lineWidth: 2))
-                        .offset(x: mid - 4.5)
+                    Circle().fill(Color.white).frame(width: 5.5, height: 5.5).offset(x: mid - 2.75)
                 }
                 .frame(maxHeight: .infinity)
             }
@@ -204,15 +239,15 @@ struct NunaImpactBar: View {
     }
 }
 
-/// Fine diagonal stripes: the mark of a range that has no figure yet.
+/// Slanted stripes across the bar: grey where nothing has been found, with the coloured part laid over them where something has.
 private struct NunaHatch: View {
     var body: some View {
         Canvas { ctx, size in
             var x: CGFloat = -size.height
             while x < size.width {
                 var p = Path(); p.move(to: CGPoint(x: x, y: size.height)); p.addLine(to: CGPoint(x: x + size.height, y: 0))
-                ctx.stroke(p, with: .color(NunaPalette.textMuted.opacity(0.55)), lineWidth: 1.2)
-                x += 5
+                ctx.stroke(p, with: .color(Color.white.opacity(0.26)), lineWidth: 2.5)
+                x += 6.3
             }
         }
     }
@@ -231,7 +266,7 @@ struct NunaBehaviorDetailView: View {
     private var byDay: [String: Bool] { model.answers[behavior] ?? [:] }
 
     var body: some View {
-        NunaDetailScreen("Behavior details", centersTitle: true) {
+        NunaBehaviorPage("Behavior details") {
             Text(verbatim: NunaBehaviorModel.title(behavior)).font(.nuna(size: 32, weight: .bold, design: NunaType.design))
                 .foregroundStyle(NunaPalette.textPrimary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
             impact
@@ -244,27 +279,26 @@ struct NunaBehaviorDetailView: View {
     // MARK: Impact
 
     private var impact: some View {
-        NunaCard(small: true, padding: EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16)) {
-            VStack(alignment: .leading, spacing: 14) {
-                Button { withAnimation(.easeInOut(duration: 0.2)) { open.toggle() } } label: {
-                    HStack {
-                        Text("Charge impact").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-                        Spacer()
-                        Text(verbatim: row?.percent == nil ? String(localized: "Not available") : String(localized: "Your data"))
-                            .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                            .padding(.horizontal, 10).frame(height: 28).background(NunaPalette.ink.opacity(0.1), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                        Image(systemName: open ? "chevron.up" : "chevron.down").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
-                    }
-                }
-                .buttonStyle(.plain)
-                NunaImpactBar(percent: row?.percent, scale: 20)
-                if open {
-                    Text(verbatim: message).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        .fixedSize(horizontal: false, vertical: true).padding(14).frame(maxWidth: .infinity, alignment: .leading)
-                        .background(NunaPalette.ink.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        VStack(alignment: .leading, spacing: 14) {
+            Button { withAnimation(.easeInOut(duration: 0.2)) { open.toggle() } } label: {
+                HStack {
+                    Text("Charge impact").font(.nuna(size: 13, weight: .heavy)).tracking(1.4).textCase(.uppercase).foregroundStyle(Color.white)
+                    Spacer()
+                    Text(verbatim: row?.percent == nil ? String(localized: "Not available") : String(localized: "Your data"))
+                        .font(.nuna(size: 12, weight: .medium)).foregroundStyle(Color.white.opacity(0.6)).textCase(nil)
+                        .padding(.horizontal, 10).frame(height: 26).background(Color.white.opacity(0.1), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+                    Image(systemName: open ? "chevron.up" : "chevron.down").font(.system(size: 14, weight: .semibold)).foregroundStyle(Color.white.opacity(0.7))
                 }
             }
+            .buttonStyle(.plain)
+            NunaImpactBar(percent: row?.percent, scale: 20)
+            if open {
+                Text(verbatim: message).font(.nuna(size: 14, weight: .regular)).foregroundStyle(Color.white.opacity(0.7)).textCase(nil).lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true).padding(14).frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            }
         }
+        .padding(16).frame(maxWidth: .infinity, alignment: .leading).nunaBehaviorCard()
     }
 
     private var message: String {

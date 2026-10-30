@@ -16,7 +16,7 @@ enum NunaDashItem: Identifiable, Hashable {
     }
 
     /// The trend pages that are not already a card (HRV, resting heart rate, respiratory rate, steps and calories are cards of their own).
-    static let pages: [NunaTrendPage] = NunaTrendPage.allCases.filter { ![.hrv, .rhr, .respiratory, .steps, .calories].contains($0) }
+    static let pages: [NunaTrendPage] = NunaTrendPage.allCases.filter { ![.hrv, .rhr, .respiratory, .steps, .calories, .vo2max, .skinTemp, .weight, .vitality, .spo2, .stressTotal, .stressNonActivity, .stressSleep].contains($0) }
 
     static var canonicalOrder: [NunaDashItem] { DashboardCard.canonicalOrder.map(NunaDashItem.card) + pages.map(NunaDashItem.page) }
 
@@ -63,6 +63,14 @@ extension NunaTrendPage {
         case .restorative: return String(localized: "Restorative sleep (hours)")
         case .efficiency: return String(localized: "Sleep efficiency")
         case .debt: return String(localized: "Sleep debt")
+        case .vo2max: return String(localized: "VO₂ max")
+        case .skinTemp: return String(localized: "Skin temperature")
+        case .weight: return String(localized: "Weight")
+        case .vitality: return String(localized: "Vitality")
+        case .spo2: return String(localized: "Blood oxygen")
+        case .stressTotal: return String(localized: "Total day stress")
+        case .stressNonActivity: return String(localized: "Non activity stress")
+        case .stressSleep: return String(localized: "Sleep stress")
         }
     }
 }
@@ -73,6 +81,7 @@ extension NunaTrendPage.Section {
         case .effort: return String(localized: "Effort")
         case .charge: return String(localized: "Charge")
         case .rest: return String(localized: "Rest")
+        case .other: return String(localized: "Other")
         }
     }
 }
@@ -137,7 +146,8 @@ extension NunaTodayView {
         case .restorative:
             figure = make(Dictionary(uniqueKeysWithValues: h.deepMin.keys.compactMap { k in h.remMin[k].map { (k, h.deepMin[k]! + $0) } }), good: true, format: hm)
         case .debt: figure = make(h.debtMin, good: false, format: hm)
-        case .hrZonesLow, .hrZonesHigh, .steps, .calories, .hrv, .rhr, .respiratory: break
+        case .hrZonesLow, .hrZonesHigh, .steps, .calories, .hrv, .rhr, .respiratory, .vo2max, .skinTemp, .weight, .vitality, .spo2,
+             .stressTotal, .stressNonActivity, .stressSleep: break
         }
         return NunaLinkRow(id: "page." + page.rawValue, title: page.titleText, subtitle: page.section.titleText, value: figure.0,
                            icon: page.icon, tint: nil, target: NunaRowTarget(kind: .nuna(.trend(page))), trend: figure.1)

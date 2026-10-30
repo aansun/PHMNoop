@@ -119,9 +119,11 @@ private struct NunaPinnedBrand: View {
     @ObservedObject var state: NunaCollapse
     let height: CGFloat
     var body: some View {
-        Text(verbatim: "PHMNOOP").font(.system(size: 21, weight: .ultraLight, design: .rounded)).tracking(5)
-            .foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            .frame(maxWidth: .infinity).frame(height: height * (1 - state.t), alignment: .center).clipped()
+        // The wordmark of the reference: about 17 pt, a regular stroke, wide letters, near white. The tracking is added after the last letter too, so
+        // the same amount is taken off the leading side to keep the word on the centre line.
+        Text(verbatim: "PHMN").font(.system(size: 18, weight: .regular).width(.expanded)).tracking(5)
+            .foregroundStyle(NunaPalette.textPrimary.opacity(0.92)).textCase(nil)
+            .padding(.leading, 5).frame(maxWidth: .infinity).frame(height: height * (1 - state.t), alignment: .center).clipped().offset(y: -3 * (1 - state.t))
             .opacity(Double(max(0, 1 - state.t * 1.8)))
             .accessibilityHidden(true)
     }
@@ -172,6 +174,8 @@ struct NunaTodayView: View {
     /// What the customize sheet opens on; set together with presenting it, so the sheet always gets the right page.
     @State private var customize: TodayCustomizationDestination?
     @State private var showQuick = false
+    /// Pulling Today down syncs the strap and says when it last did.
+    @StateObject private var sync = NunaPullSync()
     /// The shortcut just picked, handed to `NunaQuickRunner`.
     @State private var pendingQuick: NunaQuickAction?
     @State private var editingQuick = false
@@ -296,6 +300,7 @@ struct NunaTodayView: View {
                     })
                     }
                     .scrollIndicators(.hidden)
+                    .refreshable { await sync.run() }
                     pinnedHeader
                 }
             }
@@ -356,9 +361,19 @@ struct NunaTodayView: View {
             await history.load(repo: repo)
         }
         .background(NunaSavedSessionsWatcher(count: $savedSessions))
+        .background(NunaPullSyncBinder(sync: sync))
         #if DEBUG
         // `--open-planner`: a debug build opens the Sleep planner once, at launch, to look at it without scrolling Today. Once only: a `.task` runs
         // again every time Today comes back on screen, which would push the planner again each time the person went back.
+        // `--open-trend <page>` opens one trend page (a `NunaTrendPage` raw value), once, the same way.
+        .task {
+            let args = CommandLine.arguments
+            guard let i = args.firstIndex(of: "--open-trend"), i + 1 < args.count, let page = NunaTrendPage(rawValue: args[i + 1]),
+                  !NunaTodayDebug.openedPlanner else { return }
+            NunaTodayDebug.openedPlanner = true
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            pushToday(.trend(page))
+        }
         .task {
             guard CommandLine.arguments.contains("--open-planner"), !NunaTodayDebug.openedPlanner else { return }
             NunaTodayDebug.openedPlanner = true
@@ -420,14 +435,19 @@ struct NunaTodayView: View {
     private func pinnedHeight(collapse t: CGFloat) -> CGFloat {
         let bar: CGFloat = 52
         guard showsRings else { return bar + 8 }
-        return bar + 6 + Self.brandHeight * (1 - t) + NunaScoreRings.fullHeight + (NunaScoreRings.compactHeight - NunaScoreRings.fullHeight) * t + 8
+        let banner: CGFloat = sync.phase == nil ? 0 : (NunaSyncBanner.height + 33) * (1 - t)
+        return bar + 6 + banner + Self.brandHeight * (1 - t) + NunaScoreRings.fullHeight + (NunaScoreRings.compactHeight - NunaScoreRings.fullHeight) * t + 8
     }
 
     /// Bell, the day (with arrows to step it) and the strap on one slim row, then the three score rings. Stays at the top while
     /// the page scrolls under it; the rings shrink as the page moves.
     private var pinnedHeader: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 8) {
+            // The bell and the strap at the edges, the day pill on the centre line of the screen (and so of the label and the middle ring), whatever the
+            // widths of the two at its sides.
+            ZStack {
+                dayNav
+                HStack(spacing: 8) {
                 Button { showInbox = true } label: {
                     Image(systemName: "bell").font(.nuna(size: 17, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                         .frame(width: 44, height: 44)
@@ -439,15 +459,17 @@ struct NunaTodayView: View {
                 }
                 .accessibilityLabel(Text("Updates"))
                 Spacer(minLength: 0)
-                dayNav
-                Spacer(minLength: 0)
                 Button { router.openDevices() } label: {
                     NunaLiveStrapChip()
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text("WHOOP strap"))
+                }
             }
             .frame(height: 46)
+            if let phase = sync.phase, collapse.t < 0.05 {
+                NunaSyncBanner(phase: phase).padding(.horizontal, 4).padding(.top, 28).padding(.bottom, 5).transition(.opacity.combined(with: .move(edge: .top)))
+            }
             if showsRings {
                 NunaPinnedBrand(state: collapse, height: Self.brandHeight)
                 NunaPinnedRings(state: collapse, charge: model.charge, effort: model.effort, rest: model.rest, effortScale: effortScale)
@@ -462,25 +484,27 @@ struct NunaTodayView: View {
         )
     }
 
-    /// "<  Today  >": the arrows step one day, the middle opens the calendar.
+    /// "<  Today  >": a capsule with the arrows at its two ends and the day, in a lighter capsule, between them. The arrows step one day, the middle
+    /// opens the calendar.
     private var dayNav: some View {
         HStack(spacing: 0) {
             Button { model.dayOffset += 1 } label: {
-                Image(systemName: "chevron.left").font(.nuna(size: 14, weight: .bold)).frame(width: 40, height: 40)
+                Image(systemName: "chevron.left").font(.system(size: 15, weight: .heavy)).frame(width: 38, height: 40).contentShape(Rectangle())
             }
+            .foregroundStyle(NunaPalette.textPrimary)
             Button { showDate = true } label: {
-                Text(verbatim: dateTitle).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                    .frame(minWidth: 110).frame(height: 36)
-                    .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous))
+                Text(verbatim: dateTitle).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 1.2).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.textPrimary).frame(minWidth: 88).padding(.horizontal, 8).frame(height: 40)
+                    .background(NunaPalette.textPrimary.opacity(0.14), in: Capsule())
             }
             Button { if model.dayOffset > 0 { model.dayOffset -= 1 } } label: {
-                Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).frame(width: 40, height: 40)
-                    .opacity(model.dayOffset > 0 ? 1 : 0.3)
+                Image(systemName: "chevron.right").font(.system(size: 15, weight: .heavy)).frame(width: 38, height: 40).contentShape(Rectangle())
+                    .foregroundStyle(NunaPalette.textPrimary.opacity(model.dayOffset > 0 ? 1 : 0.38))
             }
             .disabled(model.dayOffset == 0)
         }
         .buttonStyle(.plain)
-        .foregroundStyle(NunaPalette.textPrimary)
+        .background(NunaPalette.textPrimary.opacity(0.07), in: Capsule())
     }
 
     private var dateTitle: String {
