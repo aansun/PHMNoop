@@ -10,11 +10,12 @@ struct NunaQuickPlus: View {
 
     var body: some View {
         Button(action: action) {
-            Image(systemName: open ? "xmark" : "plus").font(.nuna(size: 17, weight: .bold))
+            Image(systemName: open ? "xmark" : "plus").font(.nuna(size: 13, weight: .bold))
                 .foregroundStyle(open ? NunaPalette.textPrimary : NunaPalette.onAccent)
-                .frame(width: 40, height: 40)
-                .background(open ? NunaPalette.cardHighlight : NunaPalette.accent, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .contentShape(Rectangle())
+                .frame(width: 30, height: 30)
+                .background(open ? NunaPalette.cardHighlight : NunaPalette.accent, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                // The square stays small; the touch area reaches a little past it.
+                .padding(8).contentShape(Rectangle()).padding(-8)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text(open ? "Close" : "Quick actions"))
@@ -31,10 +32,12 @@ struct NunaQuickAnchorKey: PreferenceKey {
 struct NunaQuickMenu: View {
     let actions: [NunaQuickAction]
     let onPick: (NunaQuickAction) -> Void
+    let onCustomize: () -> Void
 
     static let width: CGFloat = 276
     static let rowHeight: CGFloat = 60
-    static func height(_ rows: Int) -> CGFloat { CGFloat(rows) * rowHeight + 20 }
+    static let footerHeight: CGFloat = 46
+    static func height(_ rows: Int) -> CGFloat { CGFloat(rows) * rowHeight + 20 + footerHeight }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -51,6 +54,17 @@ struct NunaQuickMenu: View {
                 }
                 .buttonStyle(.plain)
             }
+            Rectangle().fill(NunaPalette.hairline.opacity(0.6)).frame(height: 1).padding(.horizontal, 22)
+            Button(action: onCustomize) {
+                HStack(spacing: 10) {
+                    Image(systemName: "slider.horizontal.3").font(.nuna(size: 13, weight: .semibold)).frame(width: 30)
+                    Text("Customize").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    Spacer(minLength: 0)
+                }
+                .foregroundStyle(NunaPalette.textSecondary)
+                .padding(.horizontal, 22).frame(height: Self.footerHeight - 1).contentShape(Rectangle())
+            }
+            .buttonStyle(.plain).accessibilityLabel(Text("Customize quick actions"))
         }
         .padding(.vertical, 10)
         .frame(width: Self.width)

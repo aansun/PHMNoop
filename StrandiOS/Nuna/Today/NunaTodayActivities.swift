@@ -53,16 +53,18 @@ struct NunaTodayActivities: View {
         let rows = items
         return NunaCard(padding: EdgeInsets(top: 10, leading: 12, bottom: 12, trailing: 12)) {
         VStack(alignment: .leading, spacing: 10) {
-            // The heading of Key Metrics, in the same place inside its card, with the same chevron.
-            NunaTitleRow(title: isToday ? "Today's activities" : LocalizedStringKey(Self.dayTitle(dayStart))) {
+            // A small heading, and at the right the way into every workout.
+            HStack {
+                Text(isToday ? "Today's activities" : LocalizedStringKey(Self.dayTitle(dayStart)))
+                    .font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                Spacer(minLength: 8)
                 Button { router.requestedDestination = .workouts } label: {
-                    Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .heavy))
-                        .frame(width: 40, height: 40).contentShape(Rectangle())
+                    Image(systemName: "arrow.up.left.and.arrow.down.right").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .frame(width: 36, height: 36).contentShape(Rectangle())
                 }
                 .buttonStyle(.plain).accessibilityLabel(Text("All workouts"))
-                .padding(.trailing, -13)
             }
-            .padding(.horizontal, 6)
+            .padding(.horizontal, 6).padding(.top, 4)
             VStack(spacing: 7) {
                 if rows.isEmpty {
                     HStack(spacing: 10) {
@@ -111,16 +113,16 @@ struct NunaTodayActivities: View {
         switch item.kind {
         case .sleep:
             NavigationLink(value: NunaTodayRoute.sleep(0)) {
-                rowBody(tint: NunaPalette.rest, icon: "moon.fill", figure: sleepFigure(item), name: Text("Sleep"), start: item.start, end: item.end)
+                rowBody(tint: NunaPalette.rest, tile: NunaRestChart.steel, icon: "moon.fill", figure: sleepFigure(item), name: Text("Sleep"), start: item.start, end: item.end)
             }.buttonStyle(.plain)
         case .nap(let dayKey, let nap):
             NavigationLink(value: NunaTodayRoute.nap(dayKey, Int(nap.start.timeIntervalSince1970))) {
-                rowBody(tint: NunaPalette.rest, icon: "moon.zzz.fill", figure: Self.hoursAndMinutes(nap.asleepMin), name: Text("Nap"), start: item.start, end: item.end)
+                rowBody(tint: NunaPalette.rest, tile: NunaRestChart.steel, icon: "moon.zzz.fill", figure: Self.hoursAndMinutes(nap.asleepMin), name: Text("Nap"), start: item.start, end: item.end)
             }.buttonStyle(.plain)
         case .workout(let w):
             let strength = NunaWorkoutKind.isStrength(w)
             NavigationLink(value: NunaWorkoutRoute.summary(NunaWorkoutKey(startTs: w.startTs, sport: w.sport, source: w.source))) {
-                rowBody(tint: effortTint(w.strain), icon: strength ? "dumbbell.fill" : sportSymbol(w.sport),
+                rowBody(tint: effortTint(w.strain), tile: NunaPalette.effortModerate, icon: strength ? "dumbbell.fill" : sportSymbol(w.sport),
                         figure: workoutFigure(w), name: Text(verbatim: WorkoutSource.displaySport(w.sport)), start: item.start, end: item.end)
             }.buttonStyle(.plain)
         }
@@ -128,26 +130,26 @@ struct NunaTodayActivities: View {
 
     /// A tile in neutral grey (icon and figure), the name, when it began and ended, and a thin line with a dot at each end whose colour
     /// follows the Effort of the workout (sleep keeps the Rest colour).
-    private func rowBody(tint: Color, icon: String, figure: String, name: Text, start: Date, end: Date) -> some View {
+    private func rowBody(tint: Color, tile: Color, icon: String, figure: String, name: Text, start: Date, end: Date) -> some View {
         HStack(spacing: 12) {
             // Icon and figure start at the same place in every row, whatever the figure's width, so the column of figures reads as one line.
             HStack(spacing: 7) {
                 Image(systemName: icon).font(.nuna(size: 15, weight: .semibold)).frame(width: 20)
-                Text(verbatim: figure).font(.nuna(size: 18, weight: .bold, design: NunaType.design)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.8)
+                Text(verbatim: figure).font(.nuna(size: 17, weight: .bold, design: NunaType.design)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.8)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
             .padding(.horizontal, 11)
-            .foregroundStyle(NunaPalette.textPrimary)
-            .frame(width: 96, height: 40, alignment: .leading)
-            .background(NunaPalette.ink.opacity(0.12), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-            name.font(.nuna(size: 13, weight: .heavy)).tracking(0.8).foregroundStyle(NunaPalette.textPrimary)
+            .foregroundStyle(Color.white)
+            .frame(width: 100, height: 40, alignment: .leading)
+            .background(tile, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+            name.font(.nuna(size: 12.5, weight: .heavy)).tracking(1.1).foregroundStyle(NunaPalette.textPrimary)
                 .lineLimit(2).minimumScaleFactor(0.85).multilineTextAlignment(.leading)
             Spacer(minLength: 6)
             VStack(alignment: .trailing, spacing: 3) {
-                Text(verbatim: NunaWorkoutFormat.clock(Int(start.timeIntervalSince1970)))
-                Text(verbatim: NunaWorkoutFormat.clock(Int(end.timeIntervalSince1970)))
+                Text(verbatim: Self.stamp(start, relativeTo: dayStart))
+                Text(verbatim: Self.stamp(end, relativeTo: dayStart))
             }
-            .font(.nuna(size: 11.5, weight: .bold)).monospacedDigit().foregroundStyle(NunaPalette.textSecondary)
+            .font(.nuna(size: 12, weight: .semibold)).monospacedDigit().foregroundStyle(NunaPalette.textSecondary)
             VStack(spacing: 0) {
                 Circle().fill(NunaPalette.textPrimary.opacity(0.85)).frame(width: 3.5, height: 3.5)
                 Rectangle().fill(LinearGradient(colors: [tint.opacity(0.55), tint], startPoint: .top, endPoint: .bottom)).frame(width: 2.5, height: 24)
@@ -159,6 +161,14 @@ struct NunaTodayActivities: View {
         // A shade darker than the card it sits on (a thin wash of the text colour): it follows the active look.
         .background(NunaPalette.ink.opacity(0.09), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .contentShape(Rectangle())
+    }
+
+    /// A time of day, with the weekday in brackets before it when it falls on another day than the one on show: "[Thu] 23:04".
+    private static func stamp(_ d: Date, relativeTo dayStart: Date) -> String {
+        let clock = NunaWorkoutFormat.clock(Int(d.timeIntervalSince1970))
+        if Calendar.current.isDate(d, inSameDayAs: dayStart) { return clock }
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE")
+        return "[" + f.string(from: d) + "] " + clock
     }
 
     /// From light to heavy on the stored 0 to 100 Effort: Rest colour, Effort colour, amber, then red.

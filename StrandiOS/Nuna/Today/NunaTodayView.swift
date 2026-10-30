@@ -109,6 +109,19 @@ private struct NunaPinnedRings: View {
     var body: some View { NunaScoreRings(charge: charge, effort: effort, rest: rest, effortScale: effortScale, collapse: state.t) }
 }
 
+/// "PHMNOOP" in thin wide letters over the rings; it folds away as the rings shrink.
+private struct NunaPinnedBrand: View {
+    @ObservedObject var state: NunaCollapse
+    let height: CGFloat
+    var body: some View {
+        Text(verbatim: "PHMNOOP").font(.system(size: 21, weight: .ultraLight, design: .rounded)).tracking(5)
+            .foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            .frame(maxWidth: .infinity).frame(height: height * (1 - state.t), alignment: .center).clipped()
+            .opacity(Double(max(0, 1 - state.t * 1.8)))
+            .accessibilityHidden(true)
+    }
+}
+
 private struct NunaPinnedHairline: View {
     @ObservedObject var state: NunaCollapse
     var body: some View { Rectangle().fill(NunaPalette.hairline).frame(height: 1).opacity(Double(state.t)) }
@@ -213,7 +226,7 @@ struct NunaTodayView: View {
     /// "My Day" with the plus at its end. Holding the plus opens the choice of shortcuts.
     private var myDayRow: some View {
         HStack(alignment: .center) {
-            Text("My Day").font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            Text("My Day").font(.nuna(size: 19, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
             Spacer(minLength: 8)
             NunaQuickPlus(open: false) { setQuick(true) }
                 .opacity(showQuick ? 0 : 1)
@@ -222,7 +235,7 @@ struct NunaTodayView: View {
                     Button { editingQuick = true } label: { Label("Customize quick actions", systemImage: "slider.horizontal.3") }
                 }
         }
-        .padding(.horizontal, 4)
+        .padding(.horizontal, 4).padding(.top, 14)
     }
 
     /// The shortcuts over a dimmed screen, opening upward from the plus (downward when there is no room above), with the plus turned into a cross.
@@ -237,10 +250,13 @@ struct NunaTodayView: View {
                 let cy = above ? r.minY - 12 - h / 2 : r.maxY + 12 + h / 2
                 ZStack {
                     Color.black.opacity(0.4).ignoresSafeArea().contentShape(Rectangle()).onTapGesture { setQuick(false) }
-                    NunaQuickMenu(actions: quickActions) { a in
+                    NunaQuickMenu(actions: quickActions, onPick: { a in
                         setQuick(false)
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { pendingQuick = a }
-                    }
+                    }, onCustomize: {
+                        setQuick(false)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { editingQuick = true }
+                    })
                     .position(x: cx, y: cy)
                     .transition(.scale(scale: 0.92, anchor: above ? .bottomTrailing : .topTrailing).combined(with: .opacity))
                     NunaQuickPlus(open: true) { setQuick(false) }.position(x: r.midX, y: r.midY)
@@ -376,22 +392,26 @@ struct NunaTodayView: View {
         .sheet(isPresented: $showInbox) { NunaUpdatesInbox(onClose: { showInbox = false }).nunaSheetChrome(detents: [.large]) }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "today") }
         .environment(\.nunaAnyaCardContext, "today")
+        .environment(\.nunaAnyaRow, true)
     }
 
     // MARK: Header
 
     private var showsRings: Bool { sections.contains(.hero) }
 
+    /// The wordmark over the rings, and the room between it and the day: both go as the page scrolls.
+    private static let brandHeight: CGFloat = 46
+
     private func pinnedHeight(collapse t: CGFloat) -> CGFloat {
         let bar: CGFloat = 52
         guard showsRings else { return bar + 8 }
-        return bar + 6 + NunaScoreRings.fullHeight + (NunaScoreRings.compactHeight - NunaScoreRings.fullHeight) * t + 8
+        return bar + 6 + Self.brandHeight * (1 - t) + NunaScoreRings.fullHeight + (NunaScoreRings.compactHeight - NunaScoreRings.fullHeight) * t + 8
     }
 
     /// Bell, the day (with arrows to step it) and the strap on one slim row, then the three score rings. Stays at the top while
     /// the page scrolls under it; the rings shrink as the page moves.
     private var pinnedHeader: some View {
-        VStack(spacing: 6) {
+        VStack(spacing: 0) {
             HStack(spacing: 8) {
                 Button { showInbox = true } label: {
                     Image(systemName: "bell").font(.nuna(size: 17, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
@@ -414,6 +434,7 @@ struct NunaTodayView: View {
             }
             .frame(height: 46)
             if showsRings {
+                NunaPinnedBrand(state: collapse, height: Self.brandHeight)
                 NunaPinnedRings(state: collapse, charge: model.charge, effort: model.effort, rest: model.rest, effortScale: effortScale)
                     .padding(.horizontal, 4)
             }
