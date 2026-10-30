@@ -351,6 +351,14 @@ struct NunaTodayView: View {
             await history.load(repo: repo)
         }
         .background(NunaSavedSessionsWatcher(count: $savedSessions))
+        #if DEBUG
+        // `--open-planner`: a debug build opens the Sleep planner straight away, to look at it without scrolling Today.
+        .task {
+            guard CommandLine.arguments.contains("--open-planner") else { return }
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            pushToday(.smartAlarm)
+        }
+        #endif
         .onChange(of: model.dayOffset) { _, v in router.todayDayOffset = v }
         .onAppear { router.todayDayOffset = model.dayOffset }
         .task(id: "\(repo.refreshSeq)-\(model.dayOffset)-\(savedSessions)") {
