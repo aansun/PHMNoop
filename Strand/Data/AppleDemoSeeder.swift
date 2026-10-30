@@ -417,8 +417,8 @@ enum AppleDemoSeeder {
     }
 
     /// Real streams for the last three weeks, laid on the same nights, wake times and workouts the daily rows describe: a heart rate every
-    /// 10 s (the Stress score wants 300 samples an hour; a night that sinks to the resting rate and rises toward morning, a day with walking bursts, a workout that climbs to its average),
-    /// the wrist's motion at the same pace, and the beat-to-beat intervals of the last ten nights plus a four-minute window every 20 minutes by day, so the intraday charts (Today's
+    /// 4 s (the Stress reading wants about 150 samples in ten minutes; a night that sinks to the resting rate and rises toward morning, a day with walking bursts, a workout that climbs to its average),
+    /// the wrist's motion at the same pace, and the beat-to-beat intervals of the last eighteen nights plus a five-minute window every ten minutes by day (the stress calibration needs fourteen nights), so the intraday charts (Today's
     /// heart rate, the Stress breakdown, a workout's curve, the sleep heart-rate line) have something to draw. Written under the WHOOP id the
     /// daily rows use, in chunks.
     private static func seedStreams(_ days: [StreamDay], into store: WhoopStore, rng: inout SplitMix64) async throws {
@@ -447,7 +447,7 @@ enum AppleDemoSeeder {
         }
 
         for (n, d) in days.enumerated() {
-            let beatsFromHere = n >= days.count - 10
+            let beatsFromHere = n >= days.count - 18
             let span = Double(max(1, d.wake - d.onset))
 
             // Asleep: sinks from falling-asleep levels to the resting rate in the first hours, ripples with the ~90 min cycles, rises toward morning.
@@ -461,7 +461,7 @@ enum AppleDemoSeeder {
                 hr.append(HRSample(ts: t, bpm: Int((asleepBpm(Double(t)) + gauss(&rng, 0.0, 1.4)).clamped(38.0, 140.0))))
                 // Still, but for a turn in bed about every 25 minutes.
                 move(t, t % 1500 < 10 ? gauss(&rng, 0.45, 0.1).atLeast(0.25) : Swift.abs(gauss(&rng, 0.0, 0.012)), rng.nextDouble() * 2 * Double.pi)
-                t += 10
+                t += 4
             }
             if beatsFromHere {
                 var bt = Double(d.onset)
@@ -490,7 +490,7 @@ enum AppleDemoSeeder {
                 if (t - d.wake) % 600 == 0 {
                     let hour = Double(cal.component(.hour, from: Date(timeIntervalSince1970: TimeInterval(t))))
                     base = Double(d.rhr) + 14.0 + 4.0 * Foundation.sin(2.0 * Double.pi * (hour - 14.0) / 24.0)
-                    burst = rng.nextDouble() < 0.35 ? gauss(&rng, 18.0, 8.0).atLeast(0.0) : 0.0
+                    burst = rng.nextDouble() < 0.12 ? gauss(&rng, 14.0, 6.0).atLeast(0.0) : 0.0
                 }
                 var bpm = base + burst + 6.0 * tension(t) - 3.0 + gauss(&rng, 0.0, 2.5)
                 var training = false
@@ -508,19 +508,19 @@ enum AppleDemoSeeder {
                 hr.append(HRSample(ts: t, bpm: Int(bpm.clamped(45.0, 195.0))))
                 let step = training ? gauss(&rng, 0.5, 0.15).atLeast(0.25) : (burst > 16 ? gauss(&rng, 0.32, 0.12).atLeast(0.05) : Swift.abs(gauss(&rng, 0.0, 0.03)))
                 move(t, step, rng.nextDouble() * 2 * Double.pi)
-                t += 10
+                t += 4
             }
             if beatsFromHere {
-                var w = d.wake + 3600
-                while w + 240 < awakeEnd && w < d.wake + 13 * 3600 {
+                var w = d.wake + 600
+                while w + 300 < awakeEnd && w < d.wake + 13 * 3600 {
                     var bt = Double(w)
-                    let tense = tension(w + 120)
-                    while bt < Double(w + 240) {
+                    let tense = tension(w + 150)
+                    while bt < Double(w + 300) {
                         let ms = (60_000.0 / (Double(d.rhr) + 11.0 + 6.0 * tense) + gauss(&rng, 0.0, d.hrv * 0.4 * (1.2 - 0.5 * tense))).clamped(350.0, 1500.0)
                         beat(bt, ms)
                         bt += ms / 1000.0
                     }
-                    w += 1200
+                    w += 600
                 }
             }
         }

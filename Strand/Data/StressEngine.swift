@@ -93,7 +93,7 @@ final class StressEngine {
         var readable: [NightRecord] = []
         for n in mains.reversed().prefix(Self.nightsExamined) {
             if let k = known[n.day], k.start == n.start, k.end == n.end { readable.append(k); if readable.count == Self.requiredNights { break }; continue }
-            guard let fp = await repo.hrFingerprint(from: n.start, to: n.end), fp.count > Int(0.6 * Double(n.end - n.start)) else { continue }
+            guard let fp = await repo.hrFingerprint(from: n.start, to: n.end), fp.count > Int(0.2 * Double(n.end - n.start)) else { continue }
             let hr = await repo.hrSamples(from: n.start, to: n.end, limit: 200_000)
             let rr = await repo.rrIntervals(from: n.start, to: n.end, limit: 200_000)
             guard let f = WhoopStress.nightFigures(hr: hr, rr: rr, from: n.start, to: n.end) else { continue }

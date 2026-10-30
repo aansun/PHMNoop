@@ -1192,7 +1192,11 @@ struct NunaStressDetailView: View {
     @StateObject private var day = NunaTodayModel()
     @StateObject private var history = NunaStressHistory()
     @State private var sleepSpan: OverviewHRChart.SleepSpan?
-    @State private var zoomed = false
+    /// What the chart draws: today, the last 24 hours up to now; an earlier day, that calendar day.
+    @State private var trail: WhoopStress.Result?
+    @State private var trailWorkouts: [WorkoutRow] = []
+    @State private var chartDomain: ClosedRange<Int>?
+    @State private var showZoom = false
     @State private var showBreathing = false
     @State private var showCoach = false
     @State private var showInfo = false
@@ -1301,6 +1305,7 @@ struct NunaStressDetailView: View {
         }
         .task(id: "\(repo.refreshSeq)-\(day.dayOffset)") {
             await day.load(repo: repo, profile: profile)
+            await loadChart()
             await history.ensure(days: [selectedDate] + previousDays, repo: repo)
             await loadAnnotations()
         }
@@ -1309,6 +1314,7 @@ struct NunaStressDetailView: View {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 60_000_000_000)
                 await day.refreshStress(repo: repo)
+                if day.isToday { await loadChart() }
             }
         }
         .sheet(isPresented: $showBreathing) {
@@ -1318,6 +1324,10 @@ struct NunaStressDetailView: View {
             NunaAnyaSheet(context: "stress", metric: NunaAnyaMetric(key: "stress", source: "my-whoop", title: String(localized: "Stress"), unit: "", decimals: 1, higherIsBetter: false))
         }
         .sheet(isPresented: $showSettings) { settingsSheet }
+        .fullScreenCover(isPresented: $showZoom) {
+            NunaStressZoomScreen(points: trail?.chartPoints ?? [], workouts: trailWorkouts, sleep: sleepSpan.map { Int($0.start.timeIntervalSince1970)...Int($0.end.timeIntervalSince1970) },
+                                 domain: chartDomain, showsNow: day.isToday) { showZoom = false }
+        }
     }
 
     // MARK: Header pieces
@@ -1371,7 +1381,6 @@ struct NunaStressDetailView: View {
 
     private func step(_ delta: Int) {
         day.dayOffset = max(0, day.dayOffset + delta)
-        zoomed = false
     }
 
     private var selectedDate: Date { day.displayDate }
@@ -1447,19 +1456,34 @@ struct NunaStressDetailView: View {
     }
 
     /// The day's stress as a line from 0 to 3 straight on the page, with the night marked on top and a glyph where a workout was. Hold to read,
-    /// and the magnifier narrows it to the last six hours.
+    /// and the magnifier opens the last twelve hours across the screen.
     private var stressChart: some View {
-        NunaStressMonitorChart(points: day.stressCurve.flatMap { chartPoints($0) } ?? [], workouts: day.workouts, showsNow: day.isToday,
+        NunaStressMonitorChart(points: trail?.chartPoints ?? [], workouts: trailWorkouts, showsNow: day.isToday,
                                sleep: sleepSpan.map { Int($0.start.timeIntervalSince1970)...Int($0.end.timeIntervalSince1970) },
-                               zoomed: zoomed, onZoom: { withAnimation(.easeInOut(duration: 0.2)) { zoomed.toggle() } }, reads: true)
+                               zoomed: false, onZoom: { showZoom = true }, reads: true, domain: chartDomain)
             .frame(height: 290)
     }
 
-    /// The night of the day on show, for the moon and the band above the line.
+    /// Reads what the chart draws: the last 24 hours up to now for today (so last night is in it), the calendar day for an earlier one.
+    private func loadChart() async {
+        guard day.stressStatus.isReady else { trail = nil; return }
+        let from: Int, to: Int
+        if day.isToday {
+            to = Int(Date().timeIntervalSince1970); from = to - 86_400
+            trail = await StressEngine.shared.day(repo: repo, from: from, to: to)
+        } else {
+            from = Int(Calendar.current.startOfDay(for: day.displayDate).timeIntervalSince1970); to = from + 86_400 - 1
+            trail = day.stressWhoop
+        }
+        chartDomain = from...to
+        trailWorkouts = (await repo.workoutRows(days: 10)).filter { $0.startTs < to && $0.endTs > from }
+    }
+
+    /// The night of the window the chart covers, for the moon and the band above the line.
     private func loadAnnotations() async {
-        let start = Calendar.current.startOfDay(for: day.displayDate)
-        let bounds = start...start.addingTimeInterval(86_400)
-        let sleeps: [OverviewHRChart.SleepSpan] = await repo.allSleepSessions(days: day.dayOffset + 3).map { s in
+        guard let domain = chartDomain else { return }
+        let bounds = Date(timeIntervalSince1970: TimeInterval(domain.lowerBound))...Date(timeIntervalSince1970: TimeInterval(domain.upperBound))
+        let sleeps: [OverviewHRChart.SleepSpan] = await repo.allSleepSessions(days: day.dayOffset + 4).map { s in
             let secs = max(0, s.endTs - s.effectiveStartTs)
             return .init(start: Date(timeIntervalSince1970: TimeInterval(s.effectiveStartTs)), end: Date(timeIntervalSince1970: TimeInterval(s.endTs)),
                          label: "\(secs / 3600):" + String(format: "%02d", (secs % 3600) / 60))

@@ -321,7 +321,7 @@ public enum WhoopStress {
             while hi < hrs.count, hrs[hi].ts < t + 300 { if hrs[hi].ts >= t { sum += hrs[hi].bpm; n += 1 }; hi += 1 }
             var raw: [Double] = []
             while ri < rrs.count, rrs[ri].ts < t + 300 { if rrs[ri].ts >= t { raw.append(Double(rrs[ri].rrMs)) }; ri += 1 }
-            if n > 100 { means.append(Double(sum) / Double(n)) }
+            if n > 50 { means.append(Double(sum) / Double(n)) }
             if raw.count >= 60, let v = HRVAnalyzer.analyze(rawRR: raw).rmssd, v > 0 { rmssds.append(v) }
             t += 300
         }
