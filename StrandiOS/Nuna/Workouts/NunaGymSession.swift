@@ -261,7 +261,7 @@ struct NunaGymSessionView: View {
 
     @ViewBuilder private var heartRateTab: some View {
         if let w = workout, data.hr.count >= 2 {
-            NunaWorkoutHRArea(buckets: data.hr, start: w.startTs, end: w.endTs, highlightZone: zonePick, zoneSet: profile.hrZoneSet)
+            NunaWorkoutHRArea(buckets: data.hr, start: w.startTs, end: w.endTs, around: data.hrAround, highlightZone: zonePick, zoneSet: profile.hrZoneSet)
             if let mins = NunaWorkoutZoneMath.minutes(w, measured: data.zoneMin), mins.contains(where: { $0 > 0 }) {
                 NunaWorkoutLogZones(minutes: mins, selection: $zonePick, buckets: data.hr, start: w.startTs, end: w.endTs, typical: NunaWorkoutLogZones.typical(for: w, in: history.rows))
             }

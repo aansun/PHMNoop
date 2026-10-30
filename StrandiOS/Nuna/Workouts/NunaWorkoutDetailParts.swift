@@ -12,6 +12,8 @@ import WhoopStore
 @MainActor
 final class NunaWorkoutDetailData: ObservableObject {
     @Published var hr: [HRBucket] = []
+    /// The same curve with a few minutes either side of the session, drawn in grey past the start and end marks.
+    @Published var hrAround: [HRBucket] = []
     @Published var zoneMin: [Double]?
     @Published var route: [RouteMath.LatLng] = []
     @Published var dayEffort: Double?
@@ -26,6 +28,8 @@ final class NunaWorkoutDetailData: ObservableObject {
             steps = await NunaLiveMetrics.steps(sport: sport, from: startTs, to: endTs, repo: repo, ticksPerStep: ticksPerStep, requestPhonePermission: true)
         } else { steps = nil }
         hr = await repo.workoutHrBuckets(from: startTs, to: endTs, source: source)
+        let pad = Int(Double(max(endTs - startTs, 60)) * 0.09)
+        hrAround = await repo.workoutHrBuckets(from: startTs - pad, to: endTs + pad, source: source)
         zoneMin = await repo.workoutZoneMinutes(from: startTs, to: endTs, zoneSet: zoneSet, source: source)
         if let rt = RouteStore.load(startTs: startTs, sport: sport) {
             let pts = RouteMath.decode(rt.polyline); route = pts.count >= 2 ? pts : []
