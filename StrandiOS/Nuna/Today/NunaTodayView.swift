@@ -114,15 +114,6 @@ private struct NunaPinnedHairline: View {
     var body: some View { Rectangle().fill(NunaPalette.hairline).frame(height: 1).opacity(Double(state.t)) }
 }
 
-/// The add button, raised above the session bar while a gym session runs. The only part of Today that watches the live session.
-private struct NunaFABHost: View {
-    let action: () -> Void
-    @EnvironmentObject private var liftSession: LiftSessionController
-    var body: some View {
-        NunaFAB(action: action).padding(.bottom, liftSession.isActive && !liftSession.isPresented ? 172 : 104)
-    }
-}
-
 /// Mirrors the number of saved gym sessions into the screen, writing only when it changes.
 private struct NunaSavedSessionsWatcher: View {
     @Binding var count: Int
@@ -163,6 +154,10 @@ struct NunaTodayView: View {
     /// What the customize sheet opens on; set together with presenting it, so the sheet always gets the right page.
     @State private var customize: TodayCustomizationDestination?
     @State private var showQuick = false
+    /// The shortcut just picked, handed to `NunaQuickRunner`.
+    @State private var pendingQuick: NunaQuickAction?
+    @State private var editingQuick = false
+    @AppStorage(NunaQuickActions.storageKey) private var quickRaw = ""
     @State private var showDate = false
     @State private var showInbox = false
     @State private var showCoach = false
@@ -202,6 +197,59 @@ struct NunaTodayView: View {
     }
     private var sections: [TodaySection] { effectiveOrder.filter { !effectiveHidden.contains($0) } }
 
+    // MARK: My Day and its shortcuts
+
+    private var quickActions: [NunaQuickAction] {
+        NunaQuickActions.decode(quickRaw.isEmpty ? NunaQuickActions.encode(NunaQuickActions.defaultIDs) : quickRaw).compactMap(NunaQuickActions.action)
+    }
+
+    /// The section the "My Day" row follows: the monitor pair, or the rings when that is hidden.
+    private var myDayAnchor: TodaySection? {
+        sections.contains(.vitalMonitor) ? .vitalMonitor : (sections.contains(.hero) ? .hero : sections.first)
+    }
+
+    private func setQuick(_ open: Bool) { withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) { showQuick = open } }
+
+    /// "My Day" with the plus at its end. Holding the plus opens the choice of shortcuts.
+    private var myDayRow: some View {
+        HStack(alignment: .center) {
+            Text("My Day").font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            Spacer(minLength: 8)
+            NunaQuickPlus(open: false) { setQuick(true) }
+                .opacity(showQuick ? 0 : 1)
+                .anchorPreference(key: NunaQuickAnchorKey.self, value: .bounds) { $0 }
+                .contextMenu {
+                    Button { editingQuick = true } label: { Label("Customize quick actions", systemImage: "slider.horizontal.3") }
+                }
+        }
+        .padding(.horizontal, 4)
+    }
+
+    /// The shortcuts over a dimmed screen, opening upward from the plus (downward when there is no room above), with the plus turned into a cross.
+    @ViewBuilder private func quickOverlay(_ anchor: Anchor<CGRect>?) -> some View {
+        if showQuick, let anchor {
+            GeometryReader { geo in
+                let r = geo[anchor]
+                let h = NunaQuickMenu.height(quickActions.count)
+                // Room above counts the strip under the status bar too: the menu may cover the rings, as long as it stays on the screen.
+                let above = r.minY - 12 - h >= 8 - geo.safeAreaInsets.top
+                let cx = min(r.maxX, geo.size.width - 12) - NunaQuickMenu.width / 2
+                let cy = above ? r.minY - 12 - h / 2 : r.maxY + 12 + h / 2
+                ZStack {
+                    Color.black.opacity(0.4).ignoresSafeArea().contentShape(Rectangle()).onTapGesture { setQuick(false) }
+                    NunaQuickMenu(actions: quickActions) { a in
+                        setQuick(false)
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { pendingQuick = a }
+                    }
+                    .position(x: cx, y: cy)
+                    .transition(.scale(scale: 0.92, anchor: above ? .bottomTrailing : .topTrailing).combined(with: .opacity))
+                    NunaQuickPlus(open: true) { setQuick(false) }.position(x: r.midX, y: r.midY)
+                }
+            }
+            .transition(.opacity)
+        }
+    }
+
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
             if editing {
@@ -213,7 +261,10 @@ struct NunaTodayView: View {
                             // Space for the pinned header; it scrolls away exactly as fast as the header shrinks.
                             Color.clear.frame(height: pinnedHeight(collapse: 0))
                             if !model.isToday { pastDayBanner }
-                            ForEach(sections) { section in sectionView(section) }
+                            ForEach(sections) { section in
+                                sectionView(section)
+                                if model.isToday && section == myDayAnchor { myDayRow }
+                            }
                             customizeButton
                         }
                         .padding(.horizontal, NunaSpacing.screenH)
@@ -227,13 +278,10 @@ struct NunaTodayView: View {
                     pinnedHeader
                 }
             }
-
-            if model.isToday && !editing {
-                NunaFABHost { showQuick = true }
-                    .padding(.trailing, NunaSpacing.screenH)
-            }
         }
+        .overlayPreferenceValue(NunaQuickAnchorKey.self) { anchor in quickOverlay(anchor) }
         .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaQuickRunner(action: $pendingQuick, onAddActivity: { showManual = true }))
         .nunaTodayDestinations()
         .nunaWorkoutDestinations()
         .sheet(isPresented: $showBreath) {
@@ -310,12 +358,7 @@ struct NunaTodayView: View {
                 keyMetricsWindowDays: $keyMetricsWindowDays,
                 dashboardCardsRaw: $dashboardCardsRaw, myDashboardRaw: $myDashboardRaw, hostedCardsRaw: $hostedCardsRaw)
         }
-        .sheet(isPresented: $showQuick) {
-            NunaQuickSheet(hydrationEnabled: hydrationEnabled,
-                           onAddActivity: { DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) { showManual = true } })
-                // One fixed height: the sheet does not stretch up, whatever the finger does.
-                .nunaSheetChrome(detents: [.height(380)])
-        }
+        .sheet(isPresented: $editingQuick) { NunaQuickActionsEditor(raw: $quickRaw).nunaSheetChrome(detents: [.large]) }
         .sheet(isPresented: $showDate) {
             NunaDateSheet(dayOffset: $model.dayOffset).nunaSheetChrome(detents: [.large])
         }
