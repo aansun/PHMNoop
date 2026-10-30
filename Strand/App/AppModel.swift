@@ -1527,6 +1527,10 @@ final class AppModel: ObservableObject {
     /// SedentaryDetector, so all three honour the same switch.
     static let wristAlertsMasterKey = "notif.masterEnabled"
 
+    /// Whether wrist alerts are on. The strap alarm is a vibration, so it follows this switch like every other wrist buzz; every screen that says
+    /// whether the strap will buzz reads it here.
+    static var wristAlertsOn: Bool { UserDefaults.standard.bool(forKey: wristAlertsMasterKey) }
+
     /// Post the local notification mirroring the inactivity (sedentary) wrist nudge. Called right after
     /// `BLEManager.maybeBuzzInactivity` fires its buzz (see crossLaneNotes). `minutes` = the seated bout
     /// length the detector reported. No-op on macOS and when wrist alerts are off.
@@ -1724,7 +1728,14 @@ final class AppModel: ObservableObject {
             Self.cancelSmartAlarmBackupNotification()
             return
         }
-        ble.armStrapAlarm(at: next)
+        if Self.wristAlertsOn {
+            ble.armStrapAlarm(at: next)
+        } else {
+            // Wrist alerts off means the strap stays silent: nothing is armed on it. The backup notification below is the alarm's own and still
+            // schedules (#34), so the wake time is not left with nothing.
+            ble.disableStrapAlarm()
+            live.append(log: "Alarm: wrist alerts are off, so the strap is not armed (the phone notification still is)")
+        }
         // Replace (remove + re-add by stable identifier) on every re-arm so the backup never stacks.
         // The log sink hops to the main actor because the auth check completes off-main and LiveState is
         // @MainActor - the same Task hop the importTraceSink uses.
@@ -1815,6 +1826,8 @@ final class AppModel: ObservableObject {
             return
         }
         lastDoubleTapAt = now
+        // The alarm first: while it is buzzing a double tap turns it off and does nothing else.
+        if dismissRingingAlarm(at: now) { return }
         if let override = strapDoubleTapOverride {
             live.append(log: "Double-tap → Lift Log: next")
             override()
@@ -1822,6 +1835,29 @@ final class AppModel: ObservableObject {
         }
         live.append(log: "Double-tap → \(behavior.doubleTapAction.label)")
         runMacAction(behavior.doubleTapAction, shortcut: behavior.doubleTapShortcut)
+    }
+
+    private static let alarmDismissedKey = "alarm.lastDismissedAt"
+
+    /// A double tap while the strap's wake alarm is buzzing turns it off: the strap is told to stop, the phone's copy of the alarm is taken off the
+    /// lock screen, and the tap does not also run the double-tap action (a buzz-back would start the strap again). The strap's firmware may already
+    /// have stopped on the tap; stopping twice does no harm. Returns whether the tap was used up this way.
+    ///
+    /// Only an armed alarm counts (it must be on and wrist alerts must be on), and `AlarmRinging` decides when it is ringing.
+    private func dismissRingingAlarm(at now: Date) -> Bool {
+        let d = UserDefaults.standard
+        let t = now.timeIntervalSince1970
+        let armed: Double? = (behavior.smartAlarmEnabled && Self.wristAlertsOn) ? (d.object(forKey: "alarm.lastArmSentEpoch") as? Int).map(Double.init) : nil
+        let fired = d.object(forKey: "alarm.lastFiredAt") as? Double
+        let dismissed = d.object(forKey: Self.alarmDismissedKey) as? Double
+        guard AlarmRinging.isRinging(now: t, armedFor: armed, firedAt: fired, dismissedAt: dismissed) else { return false }
+        d.set(t, forKey: Self.alarmDismissedKey)
+        live.append(log: "Double-tap → alarm turned off")
+        stopHaptics()
+        #if os(iOS)
+        UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ["smart-alarm-wake"] + Self.smartAlarmBackupIds)
+        #endif
+        return true
     }
 
     /// Run a configured Mac action. In-app actions (buzz/moment) stay on-device; lock + shortcuts

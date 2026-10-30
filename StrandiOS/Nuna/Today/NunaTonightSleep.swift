@@ -10,6 +10,8 @@ struct NunaTonightSleep: View {
     @EnvironmentObject private var behavior: BehaviorStore
     @EnvironmentObject private var router: NavRouter
     @AppStorage(NunaGoals.sleepMinutes) private var sleepGoal = 0
+    /// The strap buzzes only while wrist alerts are on, so the card says "Alarm on" only then.
+    @AppStorage(AppModel.wristAlertsMasterKey) private var wristAlerts = false
 
     /// The same bedtime the Sleep planner names, worked out in one place.
     private var bedtimeMinutes: Int {
@@ -33,8 +35,8 @@ struct NunaTonightSleep: View {
                     block(icon: "sunset", time: NunaAlarmFormat.clock(bedtimeMinutes), line: Text("Recommended bedtime"), tint: nil)
                     Rectangle().fill(NunaPalette.hairline).frame(height: 1).frame(width: 52).padding(.top, 20)
                     block(icon: "applewatch.watchface", time: NunaAlarmFormat.clock(behavior.smartAlarmMinutes),
-                          line: Text(behavior.smartAlarmEnabled ? "Alarm on" : "Alarm off"),
-                          tint: behavior.smartAlarmEnabled ? NunaPalette.charge : NunaPalette.textMuted,
+                          line: Text(!behavior.smartAlarmEnabled ? "Alarm off" : (wristAlerts ? "Alarm on" : "Wrist alerts off")),
+                          tint: !behavior.smartAlarmEnabled ? NunaPalette.textMuted : (wristAlerts ? NunaPalette.charge : NunaPalette.warning),
                           footer: Text("Latest alarm"))
                 }
                 NavigationLink(value: NunaTodayRoute.smartAlarm) {

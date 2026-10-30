@@ -95,6 +95,8 @@ struct AutomationsView: View {
                           isOn: $wristAlertsMaster)
             }
         }
+        // The strap's wake alarm is a buzz too: it is armed only while this is on.
+        .onChangeCompat(of: wristAlertsMaster) { _ in model.applySmartAlarm() }
     }
     #endif
 
