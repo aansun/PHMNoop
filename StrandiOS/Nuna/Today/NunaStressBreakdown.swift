@@ -120,6 +120,11 @@ extension WhoopStress.Zones {
 }
 
 extension WhoopStress.Result {
+    /// Every 5-minute epoch as a point for the day chart (the point type the stress charts already draw).
+    var chartPoints: [DaytimeStress.HourPoint] {
+        epochs.map { DaytimeStress.HourPoint(hour: 0, startTs: $0.ts, level: $0.level, meanHR: $0.meanHR, rmssd: $0.rmssd) }
+    }
+
     /// The minutes in each band for one category, or nil when the category has none (nothing scored in it).
     func zones(_ category: NunaStressCategory) -> NunaStressZones? {
         let z: WhoopStress.Zones
