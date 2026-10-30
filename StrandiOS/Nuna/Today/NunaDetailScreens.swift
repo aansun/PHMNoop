@@ -1263,33 +1263,7 @@ struct NunaStressDetailView: View {
                 NunaStressCategoryCard(category: category, today: reader.zones(category, selectedKey),
                                        typical: typical(category), dateName: dateName)
             }
-            // The reading in words, the two signals behind it, Anya, then the peaks.
-            if let score { levelExplanation(score) }
-            recoveryTiles
             if coachEnabled, let line = anyaLine(score) { NunaAnyaCard(verbatim: line) { showCoach = true } }
-            if day.isToday, let curve = day.stressCurve {
-                let peaks = topPeaks(curve)
-                if !peaks.isEmpty {
-                    NunaTitleRow(title: "Today's peaks") { EmptyView() }
-                    NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                        VStack(spacing: 0) {
-                            ForEach(Array(peaks.enumerated()), id: \.offset) { idx, p in
-                                if idx > 0 { NunaDivider() }
-                                let level = p.level ?? 0
-                                HStack(spacing: 12) {
-                                    NunaIconTile("bolt", tint: level >= 2 ? NunaPalette.alertText : NunaPalette.effortText)
-                                    Text(verbatim: NunaSleepFormat.clock(Date(timeIntervalSince1970: TimeInterval(p.startTs))))
-                                        .font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                    Spacer()
-                                    Text(verbatim: String(format: "%.1f", locale: AppLanguage.activeLocale, level))
-                                        .font(.nuna(size: 18, weight: .bold, design: NunaType.design)).foregroundStyle(color(level))
-                                }
-                                .frame(minHeight: 58)
-                            }
-                        }
-                    }
-                }
-            }
             NunaCard(small: true, highlight: true, padding: EdgeInsets(top: 16, leading: 18, bottom: 16, trailing: 18)) {
                 HStack(spacing: 14) {
                     NunaIconTile("wind", tint: NunaPalette.charge)
@@ -1410,34 +1384,6 @@ struct NunaStressDetailView: View {
         return f.string(from: selectedDate)
     }
 
-    /// "Medium stress" and why: the resting heart rate and HRV against the wearer's last month.
-    @ViewBuilder private func levelExplanation(_ score: Double) -> some View {
-        let word = score < 1 ? String(localized: "Low") : (score < 2 ? String(localized: "Medium") : String(localized: "High"))
-        let rows = repo.days.suffix(31).dropLast()
-        let rhrBase = rows.compactMap { $0.restingHr.map(Double.init) }
-        let hrvBase = rows.compactMap(\.avgHrv)
-        let rhrUp = (day.restingHr != nil && rhrBase.count >= 5) ? day.restingHr! > rhrBase.reduce(0, +) / Double(rhrBase.count) + 1 : false
-        let hrvDown = (day.hrv != nil && hrvBase.count >= 5) ? day.hrv! < hrvBase.reduce(0, +) / Double(hrvBase.count) - 3 : false
-        let cause: String = {
-            let level = word.lowercased()
-            if rhrUp && hrvDown { return String(localized: "Your resting heart rate is elevated and HRV is lower than usual, resulting in a \(level) level of stress.") }
-            if rhrUp { return String(localized: "Your resting heart rate is elevated, resulting in a \(level) level of stress.") }
-            if hrvDown { return String(localized: "Your HRV is lower than usual, resulting in a \(level) level of stress.") }
-            // Nothing off in the night's signals: a raised level comes from the heart rate through the day, so it is not blamed on them.
-            if score >= 1 { return String(localized: "Your resting heart rate and HRV are close to your usual. The \(level) level comes from your heart rate through the day.") }
-            return String(localized: "Your resting heart rate and HRV are close to your usual, which keeps stress at a \(level) level.")
-        }()
-        let meaning = score < 1 ? String(localized: "This indicates your body is calm.")
-            : (score < 2 ? String(localized: "This indicates your body is moderately activated.") : String(localized: "This indicates your body is highly activated."))
-        VStack(alignment: .leading, spacing: 8) {
-            Text(score < 1 ? "Low stress" : (score < 2 ? "Medium stress" : "High stress"))
-                .font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-            Text(verbatim: cause + " " + meaning).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                .fixedSize(horizontal: false, vertical: true).textCase(nil)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
     /// Anya's line on the stress: the level now, against the wearer's own baseline.
     private func anyaLine(_ score: Double?) -> String? {
         if day.isToday, let curve = day.stressCurve {
@@ -1492,40 +1438,6 @@ struct NunaStressDetailView: View {
         sleepSpan = OverviewHRChart.mainSleep(sleeps, overlapping: bounds)
     }
 
-    /// HRV and resting heart rate, the two signals the stress read leans on: the same plain rows as the signals under Charge, with the
-    /// change from the night before.
-    private var recoveryTiles: some View {
-        NunaPlainList {
-            signal("Heart rate variability", "waveform.path.ecg", day.hrv, day.hrvDelta, false, key: "hrv")
-            NunaDivider()
-            signal("Resting heart rate", "heart", day.restingHr, day.restingHrDelta, true, key: "rhr")
-        }
-    }
-
-    @ViewBuilder private func signal(_ title: LocalizedStringKey, _ icon: String, _ value: Double?, _ delta: Double?, _ downIsGood: Bool, key: String) -> some View {
-        let row = NunaContributorRow(title: title, icon: icon, value: value.map { String(format: "%.0f", $0) }, unit: "", delta: delta, downIsGood: downIsGood, decimals: 0)
-        if let m = MetricCatalog.metric(key: key, source: "my-whoop") {
-            NavigationLink(value: NunaTodayRoute.metric(m)) { row }.buttonStyle(.plain)
-        } else { row }
-    }
-
-    /// The finer 30-minute timeline when it has scored points, otherwise the hourly read the Today card uses.
-    private func chartPoints(_ r: DaytimeStress.Result) -> [DaytimeStress.HourPoint]? {
-        let fine = r.timeline.filter { $0.level != nil || $0.maskedForActivity }
-        if fine.contains(where: { $0.level != nil }) { return fine }
-        let coarse = r.hours.filter { $0.level != nil || $0.maskedForActivity }
-        return coarse.contains(where: { $0.level != nil }) ? coarse : nil
-    }
-
-    /// The two highest scored hours, at least two hours apart so one episode is not listed twice.
-    private func topPeaks(_ r: DaytimeStress.Result) -> [DaytimeStress.HourPoint] {
-        var out: [DaytimeStress.HourPoint] = []
-        for p in r.hours.filter({ ($0.level ?? 0) >= 1 }).sorted(by: { ($0.level ?? 0) > ($1.level ?? 0) }) {
-            if out.allSatisfy({ abs($0.hour - p.hour) >= 2 }) { out.append(p) }
-            if out.count == 2 { break }
-        }
-        return out.sorted { $0.startTs < $1.startTs }
-    }
 }
 
 private extension Array {
