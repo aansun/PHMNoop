@@ -318,7 +318,7 @@ struct NunaWorkoutLogZones: View {
                         if let durationS {
                             let t = Int(durationS.rounded())
                             Text("Duration").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                            Text(verbatim: String(format: "%d:%02d:%02d", t / 3600, (t % 3600) / 60, t % 60)).font(.nuna(size: 14, weight: .heavy, design: NunaType.design))
+                            Text(verbatim: String(format: "%d:%02d:%02d", t / 3600, (t % 3600) / 60, t % 60)).font(.nuna(size: 14, weight: .heavy)).monospacedDigit()
                                 .foregroundStyle(NunaPalette.textPrimary)
                         }
                     }
@@ -330,13 +330,13 @@ struct NunaWorkoutLogZones: View {
                     let picked = selection == i + 1
                     VStack(alignment: .leading, spacing: 9) {
                         HStack(alignment: .firstTextBaseline, spacing: 9) {
-                            Text(verbatim: String(localized: "Zone \(i + 1)")).font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel + 0.4).textCase(.uppercase)
+                            Text(verbatim: String(localized: "Zone \(i + 1)")).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 0.8).textCase(.uppercase)
                                 .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textMuted)
                             if i < bands.count {
-                                Text(verbatim: "\(Int(bands[i].lower.rounded()))–\(Int(bands[i].upper.rounded())) BPM").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel)
+                                Text(verbatim: "\(Int(bands[i].lower.rounded()))–\(Int(bands[i].upper.rounded())) BPM").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 0.4)
                                     .foregroundStyle(NunaPalette.textMuted).textCase(nil)
                             }
-                            Text(verbatim: "\(Int((share * 100).rounded()))%").font(.nuna(size: 12.5, weight: .heavy))
+                            Text(verbatim: "\(Int((share * 100).rounded()))%").font(.nuna(size: 13, weight: .heavy))
                                 .foregroundStyle(on ? colors[i] : colors[i].opacity(0.45))
                             Spacer(minLength: 8)
                             time(mins[i] * 60, on: on)
@@ -345,7 +345,7 @@ struct NunaWorkoutLogZones: View {
                             bar(zone: i + 1, share: share, color: colors[i], usual: typical.flatMap { $0.indices.contains(i) ? $0[i] : nil })
                         }
                     }
-                    .padding(.horizontal, 14).padding(.vertical, on ? 11 : 9)
+                    .padding(.horizontal, 14).padding(.vertical, on ? 12 : 9)
                     .background(picked ? Color.clear : NunaPalette.tile, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(NunaPalette.textPrimary.opacity(picked ? 0.9 : 0), lineWidth: 1))
                     .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
@@ -362,44 +362,49 @@ struct NunaWorkoutLogZones: View {
 
     /// The hatched bar: the zone's share while nothing is picked, its stretches through the session once a zone is.
     private func bar(zone: Int, share: Double, color: Color, usual: ClosedRange<Double>?) -> some View {
-        GeometryReader { geo in
+        let h: CGFloat = 13
+        return GeometryReader { geo in
             ZStack(alignment: .leading) {
-                NunaHatchedTrack()
+                NunaHatchedTrack().frame(height: h)
                 if let pick = selection, !buckets.isEmpty {
                     let tint = pick == zone ? color : NunaPalette.textSecondary.opacity(0.7)
                     ForEach(Array(stretches(zone: zone).enumerated()), id: \.offset) { _, r in
                         let x = geo.size.width * CGFloat(r.lowerBound)
                         RoundedRectangle(cornerRadius: 1.5, style: .continuous).fill(tint)
-                            .frame(width: max(geo.size.width * CGFloat(r.upperBound - r.lowerBound), 3)).offset(x: min(x, geo.size.width - 3))
+                            .frame(width: max(geo.size.width * CGFloat(r.upperBound - r.lowerBound), 3), height: h).offset(x: min(x, geo.size.width - 3))
                     }
                 } else {
-                    RoundedRectangle(cornerRadius: 4, style: .continuous).fill(color).frame(width: max(geo.size.width * CGFloat(share), 10))
-                    if let usual {
-                        let x = geo.size.width * CGFloat(usual.lowerBound), w = max(geo.size.width * CGFloat(usual.upperBound - usual.lowerBound), 8)
-                        ZStack {
-                            Rectangle().fill(NunaPalette.textPrimary.opacity(0.1))
-                            HStack(spacing: 0) {
-                                Rectangle().fill(NunaPalette.textPrimary.opacity(0.7)).frame(width: 1)
-                                Spacer(minLength: 0)
-                                Rectangle().fill(NunaPalette.textPrimary.opacity(0.7)).frame(width: 1)
-                            }
-                            .mask(VStack(spacing: 2) { ForEach(0..<9, id: \.self) { _ in Rectangle().frame(height: 3) } })
+                    RoundedRectangle(cornerRadius: 4, style: .continuous).fill(color).frame(width: max(geo.size.width * CGFloat(share), 10), height: h)
+                }
+            }
+            .frame(width: geo.size.width, height: h)
+            // The usual range stands a little proud of the bar, so it is laid over it and does not take part in the layout.
+            .overlay(alignment: .leading) {
+                if selection == nil, let usual {
+                    let x = geo.size.width * CGFloat(usual.lowerBound), w = max(geo.size.width * CGFloat(usual.upperBound - usual.lowerBound), 8)
+                    ZStack {
+                        Rectangle().fill(NunaPalette.textPrimary.opacity(0.1))
+                        HStack(spacing: 0) {
+                            Rectangle().fill(NunaPalette.textPrimary.opacity(0.7)).frame(width: 1)
+                            Spacer(minLength: 0)
+                            Rectangle().fill(NunaPalette.textPrimary.opacity(0.7)).frame(width: 1)
                         }
-                        .frame(width: w, height: 22).offset(x: min(x, geo.size.width - w))
+                        .mask(VStack(spacing: 3) { ForEach(0..<4, id: \.self) { _ in Rectangle().frame(height: 3) } })
                     }
+                    .frame(width: w, height: 21).offset(x: min(x, geo.size.width - w))
                 }
             }
         }
-        .frame(height: 12)
+        .frame(height: h)
     }
 
     /// "0:02:50", the seconds smaller and in a lighter tone.
     private func time(_ seconds: Double, on: Bool) -> some View {
         let t = Int(seconds.rounded())
         return HStack(alignment: .firstTextBaseline, spacing: 0) {
-            Text(verbatim: String(format: "%d:%02d", t / 3600, (t % 3600) / 60)).font(.nuna(size: 18, weight: .bold, design: NunaType.design))
+            Text(verbatim: String(format: "%d:%02d", t / 3600, (t % 3600) / 60)).font(.nuna(size: 17, weight: .heavy)).monospacedDigit()
                 .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textMuted)
-            Text(verbatim: String(format: ":%02d", t % 60)).font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textMuted)
+            Text(verbatim: String(format: ":%02d", t % 60)).font(.nuna(size: 13, weight: .heavy)).monospacedDigit().foregroundStyle(NunaPalette.textMuted)
         }
     }
 }
