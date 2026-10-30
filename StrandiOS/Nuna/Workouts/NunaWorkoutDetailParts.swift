@@ -16,6 +16,8 @@ final class NunaWorkoutDetailData: ObservableObject {
     @Published var hrAround: [HRBucket] = []
     @Published var zoneMin: [Double]?
     @Published var route: [RouteMath.LatLng] = []
+    /// The climb of the recorded route, in metres.
+    @Published var elevationGainM: Double?
     @Published var dayEffort: Double?
     /// The Charge of the day the session belongs to.
     @Published var dayCharge: Double?
@@ -33,6 +35,7 @@ final class NunaWorkoutDetailData: ObservableObject {
         zoneMin = await repo.workoutZoneMinutes(from: startTs, to: endTs, zoneSet: zoneSet, source: source)
         if let rt = RouteStore.load(startTs: startTs, sport: sport) {
             let pts = RouteMath.decode(rt.polyline); route = pts.count >= 2 ? pts : []
+            elevationGainM = rt.elevationGainM
         }
         let k = Repository.localDayKey(Date(timeIntervalSince1970: TimeInterval(startTs)))
         dayEffort = repo.days.first { $0.day == k }?.strain
@@ -169,15 +172,83 @@ struct NunaCardioMuscularCard: View {
 
 // MARK: - Map
 
+/// The route on a light map, the way a run is shown in WHOOP: the word ROUTE and a share button over the top, the line in blue with a dot at the
+/// start and a chequered flag at the finish, and the distance, the pace (or the speed) and the climb on a dark strip over the bottom.
 struct NunaWorkoutRouteCard: View {
     let points: [RouteMath.LatLng]
+    let row: WorkoutRow
+    var elevationGainM: Double?
+    /// Exports the route as a file; nil hides the button.
+    var onShare: (() -> Void)?
+    @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
+    @AppStorage(UnitPrefs.distanceSystemKey) private var distanceRaw = ""
+
+    private var system: UnitSystem { UnitPrefs.resolveDistance(system: UnitSystem(rawValue: unitSystemRaw) ?? .metric, override: distanceRaw) }
+
     var body: some View {
-        NunaCard {
-            // A map of the captured route with start and end markers (tiles are cached by MapKit; the route itself
-            // never leaves the phone).
-            WorkoutRouteMap(points: points, stroke: UIColor(NunaPalette.effort)).environment(\.colorScheme, .dark)
-                .frame(height: 220).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        ZStack {
+            WorkoutRouteMap(points: points, stroke: UIColor(red: 0.04, green: 0.59, blue: 0.92, alpha: 1), flags: true)
+                .environment(\.colorScheme, .light)
+            VStack(spacing: 0) {
+                HStack(alignment: .top) {
+                    Text("Route").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel + 0.8).textCase(.uppercase).foregroundStyle(Color.black)
+                    Spacer()
+                    if let onShare {
+                        Button(action: onShare) {
+                            Image(systemName: "square.and.arrow.up").font(.system(size: 16, weight: .regular)).foregroundStyle(Color.white)
+                                .frame(width: 36, height: 36).background(Color(white: 0.09), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        }
+                        .buttonStyle(.plain).accessibilityLabel(Text("Export route (GPX)"))
+                    }
+                }
+                .padding(.horizontal, 16).padding(.top, 14)
+                Spacer(minLength: 0)
+                strip.padding(.horizontal, 10).padding(.bottom, 10)
+            }
         }
+        .frame(height: 380)
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+    }
+
+    // MARK: Strip
+
+    private var strip: some View {
+        let secs = row.durationS ?? Double(row.endTs - row.startTs)
+        let meters = row.distanceM ?? RouteMath.totalMeters(points)
+        let kind = NunaWorkoutSportKind.of(row.sport)
+        let distance: (String, String) = system == .imperial
+            ? (String(format: "%.2f", locale: AppLanguage.activeLocale, meters / 1609.344), "mi")
+            : (String(format: "%.2f", locale: AppLanguage.activeLocale, meters / 1000), "km")
+        var pace: (String, String, LocalizedStringKey) = ("–", "", "Pace")
+        if kind == .cycling || kind == .otherDistance {
+            if meters > 200, secs > 0 {
+                pace = (String(format: "%.1f", locale: AppLanguage.activeLocale, meters / secs * 3.6 / (system == .imperial ? 1.609344 : 1)), system == .imperial ? "mph" : "km/h", "Speed")
+            }
+        } else if let p = NunaWorkoutFormat.pace(distanceM: meters, seconds: secs, system) {
+            let parts = p.split(separator: " ", maxSplits: 1).map(String.init)
+            pace = (parts.first ?? p, parts.count > 1 ? parts[1] : "", "Pace")
+        }
+        let climb: (String, String) = elevationGainM.map { m in
+            system == .imperial ? ("\(Int((m * 3.28084).rounded()))", "ft") : ("\(Int(m.rounded()))", "m")
+        } ?? ("–", "")
+        return HStack(alignment: .top, spacing: 0) {
+            figure(distance.0, distance.1, "Distance")
+            figure(pace.0, pace.1, pace.2)
+            figure(climb.0, climb.1, "Elev. gain")
+        }
+        .padding(.vertical, 14).padding(.horizontal, 6)
+        .background(Color(white: 0.09), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    private func figure(_ value: String, _ unit: String, _ label: LocalizedStringKey) -> some View {
+        VStack(spacing: 4) {
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text(verbatim: value).font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(Color.white).lineLimit(1).minimumScaleFactor(0.6)
+                if !unit.isEmpty && value != "–" { Text(verbatim: unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(Color.white.opacity(0.85)) }
+            }
+            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(Color.white.opacity(0.6))
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 
