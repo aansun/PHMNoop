@@ -1243,7 +1243,9 @@ struct NunaStressDetailView: View {
             if !day.stressStatus.isReady {
                 // Still learning the person: nothing about stress is shown, only how far along it is.
                 if day.loaded {
-                    NunaStressCalibrationBody(nights: day.stressStatus.nights)
+                    NunaStressCalibrationCard(nights: day.stressStatus.nights, opensStress: false)
+                    Text("Stress is read against your own baseline from your last 14 nights, so it stays hidden until they are in. That keeps every figure accurate.")
+                        .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
                     NunaCard(small: true, padding: EdgeInsets(top: 6, leading: 18, bottom: 6, trailing: 18)) {
                         NunaToggleRow("Stress monitor", subtitle: "Shown as a card on Today", isOn: cardShown)
                     }
@@ -1252,7 +1254,7 @@ struct NunaStressDetailView: View {
             dayStepper
             VStack(spacing: 10) {
                 NunaStressGauge(value: score, level: score.map { $0 < 1 ? "Low" : ($0 < 2 ? "Medium" : "High") },
-                                levelColor: tint, time: gaugeTime, onInfo: { withAnimation { showInfo.toggle() } }, height: 165)
+                                levelColor: tint, time: gaugeTime, onInfo: { withAnimation { showInfo.toggle() } }, height: 205)
                 if showInfo {
                     Text("0 to 3 against your own baseline from your last 14 nights. Under 1 is low, 1 to 2 medium, above 2 high. Exercise counts toward Total day but is eased toward neutral, and stays out of Non-activity.")
                         .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
@@ -1407,7 +1409,7 @@ struct NunaStressDetailView: View {
         NunaStressMonitorChart(points: trail?.chartPoints ?? [], workouts: trailWorkouts, showsNow: day.isToday,
                                sleep: sleepSpan.map { Int($0.start.timeIntervalSince1970)...Int($0.end.timeIntervalSince1970) },
                                zoomed: false, onZoom: { showZoom = true }, reads: true, domain: chartDomain)
-            .frame(height: 185)
+            .frame(height: 230)
     }
 
     /// Reads what the chart draws: the last 24 hours up to now for today (so last night is in it), the calendar day for an earlier one.

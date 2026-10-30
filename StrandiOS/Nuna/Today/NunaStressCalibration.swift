@@ -33,7 +33,7 @@ struct NunaStressCalibrationCard: View {
                     if opensStress { Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textMuted) }
                 }
                 NunaStressLockedBands()
-                NunaStressCalibrationBody(nights: nights, explains: false)
+                NunaStressCalibrationBody(nights: nights)
             }
         }
     }
@@ -61,12 +61,9 @@ private struct NunaStressLockedBands: View {
     }
 }
 
-/// The message and the 14 segments, shared by the card and the page.
+/// The message and the 14 segments, in the dark panel at the foot of the card.
 struct NunaStressCalibrationBody: View {
     let nights: Int
-    /// The line saying why stress waits for the nights; the card leaves it to its page.
-    var explains = true
-
     /// The fill of the nights already in.
     private static let filled = Color(red: 0.74, green: 0.35, blue: 0.80)
     private var needed: Int { StressEngine.requiredNights }
@@ -84,10 +81,6 @@ struct NunaStressCalibrationBody: View {
             }
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text("\(min(nights, needed)) of \(needed) nights"))
-            if explains {
-                Text("Stress is read against your own baseline from your last 14 nights, so it stays hidden until they are in. That keeps every figure accurate.")
-                    .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
-            }
         }
         .padding(16).frame(maxWidth: .infinity, alignment: .leading)
         .background(NunaPalette.shade.opacity(0.35), in: RoundedRectangle(cornerRadius: 16, style: .continuous))

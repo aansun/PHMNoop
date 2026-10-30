@@ -329,8 +329,11 @@ struct NunaStressGauge: View {
     /// The height of the dial; the number inside follows it.
     var height: CGFloat = 250
 
-    private let start = 140.0, span = 260.0
-    private var numberSize: CGFloat { height < 220 ? 54 : 64 }
+    /// The short form (the Stress monitor page): a wider, flatter arc with the labels close under its ends, so the dial takes less height.
+    private var compact: Bool { height < 220 }
+    private var start: Double { compact ? 159 : 140 }
+    private var span: Double { compact ? 222 : 260 }
+    private var numberSize: CGFloat { compact ? 60 : 64 }
     /// Blue, green, yellow and amber along the arc. An angular gradient runs round the whole circle from 3 o'clock, so the colours are
     /// placed by the angle the arc covers (it starts low on the left and ends low on the right, past 12 o'clock).
     private var stops: Gradient {
@@ -352,8 +355,8 @@ struct NunaStressGauge: View {
                     GeometryReader { geo in
                         let lw: CGFloat = 7
                         let side = min(geo.size.width, geo.size.height)
-                        let r = side / 2 - lw
-                        let c = CGPoint(x: geo.size.width / 2, y: geo.size.height / 2 + 6)
+                        let r = compact ? min(118, geo.size.width / 2 - lw - 8) : side / 2 - lw
+                        let c = CGPoint(x: geo.size.width / 2, y: compact ? r + lw + 2 : geo.size.height / 2 + 6)
                         let f = max(0, min(1, (value ?? 0) / 3))
                         let a = Angle.degrees(start + span * f).radians
                         let m = CGPoint(x: c.x + r * CGFloat(cos(a)), y: c.y + r * CGFloat(sin(a)))
@@ -373,11 +376,11 @@ struct NunaStressGauge: View {
                                 if let level { Text(level).font(.nuna(size: 17, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(levelColor) }
                                 if let time { Text(verbatim: time).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                             }
-                            .position(x: c.x, y: c.y - 6)
+                            .position(x: c.x, y: compact ? c.y : c.y - 6)
                             ForEach([("0.0", start), ("3.0", start + span)], id: \.0) { label, deg in
                                 let rad = Angle.degrees(deg).radians
                                 Text(verbatim: label).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                                    .position(x: c.x + r * CGFloat(cos(rad)), y: c.y + r * CGFloat(sin(rad)) + 30)
+                                    .position(x: c.x + r * CGFloat(cos(rad)), y: c.y + r * CGFloat(sin(rad)) + (compact ? 20 : 30))
                             }
                         }
                     }
