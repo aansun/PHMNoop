@@ -92,9 +92,8 @@ struct NunaWorkoutSummaryView: View {
         if data.route.count >= 2 { NunaWorkoutRouteCard(points: data.route) }
         NunaWorkoutLogStats(row: shown.row, steps: data.steps, averages: averages, distanceEstimated: shown.estimated)
         if data.hr.count >= 2 { NunaWorkoutHRArea(buckets: data.hr, start: r.startTs, end: r.endTs, highlightZone: zonePick, zoneSet: profile.hrZoneSet) }
-        if mins?.contains(where: { $0 > 0 }) ?? false { NunaWorkoutLogZones(minutes: mins, selection: $zonePick, buckets: data.hr, start: r.startTs, end: r.endTs) }
+        if mins?.contains(where: { $0 > 0 }) ?? false { NunaWorkoutLogZones(minutes: mins, selection: $zonePick, buckets: data.hr, start: r.startTs, end: r.endTs, typical: NunaWorkoutLogZones.typical(for: r, in: m.rows)) }
         if let line = anyaLine(shown.row, mins: mins, averages: averages) { NunaAnyaCard(verbatim: line.headline, detail: line.detail) { showCoach = true } }
-        NunaWorkoutReviewSection(row: r)
     }
 
     // MARK: Anya
