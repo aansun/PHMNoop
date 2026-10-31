@@ -61,24 +61,26 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
 
     var icon: String {
         switch self {
-        case .effort: return "dumbbell"
-        case .calories: return "flame"
-        case .steps: return "figure.walk"
-        case .hrZonesLow: return "heart.circle"
-        case .hrZonesHigh: return "bolt.heart"
-        case .charge: return "figure.mind.and.body"
-        case .hrv: return "waveform.path.ecg"
-        case .rhr: return "heart"
-        case .respiratory: return "lungs"
-        case .restPerformance: return "moon"
-        case .timeInBed: return "stopwatch"
-        case .hoursNeededHours, .hoursNeededPct: return "moon"
-        case .consistency: return "calendar"
-        case .restorative, .debt: return "moon.zzz"
-        case .efficiency: return "bed.double"
-        case .vo2max: return "lungs"
+        case .effort: return "met:day-strain"
+        case .calories: return "met:calories"
+        case .steps: return "met:steps"
+        case .hrZonesLow: return "met:heart-rate-zones-1-3"
+        case .hrZonesHigh: return "met:heart-rate-zones-4-5"
+        case .charge: return "met:recovery"
+        case .hrv: return "met:heart-rate-variability"
+        case .rhr: return "met:resting-heart-rate"
+        case .respiratory: return "met:respiratory-rate"
+        case .restPerformance: return "met:sleep-performance"
+        case .timeInBed: return "met:time-in-bed"
+        case .hoursNeededHours: return "met:hours-vs-needed-hours"
+        case .hoursNeededPct: return "met:hours-vs-needed"
+        case .consistency: return "met:sleep-consistency"
+        case .restorative: return "met:restorative-sleep-hours"
+        case .debt: return "met:sleep-debt"
+        case .efficiency: return "met:sleep-efficiency"
+        case .vo2max: return "met:vo2-max"
         case .skinTemp: return "thermometer.medium"
-        case .weight: return "scalemass"
+        case .weight: return "met:weight"
         case .vitality: return "sparkles"
         case .spo2: return "drop"
         case .stressTotal: return NunaStressCategory.total.icon
@@ -197,7 +199,7 @@ struct NunaTrendNameBox: View {
 
     private func box(open: Bool, chevron: Bool) -> some View {
         HStack(spacing: 14) {
-            Image(systemName: icon).font(.nuna(size: 20, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
+            NunaIcon(name: icon, size: 20).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
             Text(title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
             Spacer(minLength: 0)
             if chevron { Image(systemName: open ? "chevron.up" : "chevron.down").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary) }
@@ -219,7 +221,7 @@ struct NunaTrendNameBox: View {
                     ForEach(section.pages) { page in
                         Button { menu.select(page) } label: {
                             HStack(spacing: 14) {
-                                Image(systemName: page.icon).font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
+                                NunaIcon(name: page.icon, size: 18).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
                                 Text(page.title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                                     .lineLimit(1).minimumScaleFactor(0.8)
                                 Spacer(minLength: 0)

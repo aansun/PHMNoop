@@ -402,9 +402,9 @@ struct NunaEffortActivityDetailView: View {
 
         var icon: String {
             switch self {
-            case .lowZones: return "heart.circle"
-            case .highZones: return "bolt.heart"
-            case .strength: return "dumbbell"
+            case .lowZones: return "met:heart-rate-zones-1-3"
+            case .highZones: return "met:heart-rate-zones-4-5"
+            case .strength: return "met:strength-activity-time"
             }
         }
 
