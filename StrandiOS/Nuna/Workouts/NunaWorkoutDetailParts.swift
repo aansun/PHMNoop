@@ -151,12 +151,12 @@ struct NunaCardioMuscularCard: View {
                     GeometryReader { geo in
                         let x = geo.size.width * CGFloat(split.cardioPct) / 100
                         ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 6, style: .continuous).fill(NunaPalette.effortModerate)
+                            RoundedRectangle(cornerRadius: 3, style: .continuous).fill(NunaPalette.effortModerate)
                             Rectangle().fill(Color(hex: "#0B5C9E")).frame(width: max(x, 0))
                             Rectangle().fill(Color.white).frame(width: 3, height: 26).offset(x: min(max(x - 1.5, 0), geo.size.width - 3))
                         }
-                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-                        .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(Color(hex: "#0B5C9E"), lineWidth: 1.5))
+                        .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
+                        .overlay(RoundedRectangle(cornerRadius: 3, style: .continuous).strokeBorder(Color(hex: "#0B5C9E"), lineWidth: 1.5))
                     }
                     .frame(height: 22)
                     HStack {
@@ -208,7 +208,7 @@ struct NunaWorkoutRouteCard: View {
                     if let onShare {
                         Button(action: onShare) {
                             Image(systemName: "square.and.arrow.up").font(.system(size: 16, weight: .regular)).foregroundStyle(Color.white)
-                                .frame(width: 36, height: 36).background(Color(white: 0.09), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                                .frame(width: 36, height: 36).background(Color(white: 0.09), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
                         }
                         .buttonStyle(.plain).accessibilityLabel(Text("Export route (GPX)"))
                     }
@@ -219,7 +219,7 @@ struct NunaWorkoutRouteCard: View {
             }
         }
         .frame(height: 380)
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
     // MARK: Strip
@@ -249,7 +249,7 @@ struct NunaWorkoutRouteCard: View {
             figure(climb.0, climb.1, "Elev. gain")
         }
         .padding(.vertical, 14).padding(.horizontal, 6)
-        .background(Color(white: 0.09), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(Color(white: 0.09), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 
     private func figure(_ value: String, _ unit: String, _ label: LocalizedStringKey) -> some View {

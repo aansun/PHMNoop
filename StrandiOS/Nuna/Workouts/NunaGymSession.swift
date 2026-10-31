@@ -99,7 +99,7 @@ struct NunaGymSessionView: View {
         if let program = s.programName, !program.isEmpty {
             Text(verbatim: program).font(.nuna(size: 14, weight: .semibold)).textCase(nil)
                 .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 14).frame(height: 34)
-                .overlay(Capsule().strokeBorder(NunaPalette.textSecondary.opacity(0.55), lineWidth: 1.5))
+                .overlay(RoundedRectangle(cornerRadius: 6, style: .continuous).strokeBorder(NunaPalette.textSecondary.opacity(0.55), lineWidth: 1.5))
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         effortAndSplit(s, averages: averages)
@@ -243,7 +243,7 @@ struct NunaGymSessionView: View {
             else if reservePill { Color.clear.frame(height: 28) }
         }
         .padding(14).frame(maxWidth: .infinity, alignment: .leading)
-        .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
     // MARK: Tabs
@@ -341,7 +341,7 @@ struct NunaGymSessionView: View {
     private func carouselCard(title: String, setsText: String, tint: Color, thumb: AnyView, volume: Double?, reps: Int, pr: Bool, route: NunaWorkoutRoute?) -> some View {
         VStack(spacing: 0) {
             let head = HStack(spacing: 14) {
-                thumb.frame(width: 70, height: 54).clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+                thumb.frame(width: 70, height: 54).clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                 VStack(alignment: .leading, spacing: 5) {
                     Text(verbatim: title).font(.nuna(size: 16, weight: .medium)).textCase(nil).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
                     HStack(spacing: 8) {
@@ -366,7 +366,7 @@ struct NunaGymSessionView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .background(NunaPalette.tile)
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
         .padding(.horizontal, 1)
     }
 
