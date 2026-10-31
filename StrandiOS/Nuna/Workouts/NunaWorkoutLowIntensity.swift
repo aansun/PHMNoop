@@ -341,15 +341,15 @@ struct NunaActivityImpactCard: View {
     let impact: NunaActivityImpact
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Impact on recovery").font(.nuna(size: 13.5, weight: .heavy)).tracking(nunaTrackingLabel + 0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                Text("Impact on recovery").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel + 0.6).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary.opacity(0.78))
                 Spacer()
                 if let p = impact.percent {
-                    Text(verbatim: String(format: "%+.0f%%", locale: AppLanguage.activeLocale, p)).font(.nuna(size: 22, weight: .bold, design: NunaType.design))
-                        .foregroundStyle(p >= 0 ? NunaPalette.charge : NunaPalette.alertText)
+                    Text(verbatim: String(format: "%+.0f%%", locale: AppLanguage.activeLocale, p)).font(.nuna(size: 18, weight: .bold, design: NunaType.design))
+                        .foregroundStyle((p >= 0 ? NunaPalette.charge : NunaPalette.alertText).opacity(0.8))
                 } else {
-                    Text(verbatim: "--%").font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textMuted)
+                    Text(verbatim: "--%").font(.nuna(size: 18, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textMuted.opacity(0.8))
                 }
             }
             Text(impact.percent != nil
@@ -357,19 +357,19 @@ struct NunaActivityImpactCard: View {
                  : (impact.withDays >= NunaActivityImpact.needed && impact.withoutDays >= NunaActivityImpact.needed
                     ? "There is no clear difference yet in the next day's Charge between the days you do this activity and the days you do not."
                     : "Keep logging this activity to receive insights. Once you reach 5 days with and 5 days without this activity, impacts will be unlocked."))
-                .font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
-            dots(count: impact.withDays, mark: "checkmark", tint: NunaPalette.effortModerate)
-            dots(count: impact.withoutDays, mark: "xmark", tint: NunaPalette.textPrimary)
+                .font(.nuna(size: 12.5, weight: .regular)).foregroundStyle(NunaPalette.textSecondary.opacity(0.8)).textCase(nil).fixedSize(horizontal: false, vertical: true)
+            dots(count: impact.withDays, mark: "checkmark", tint: NunaWorkoutLogZones.hrBlue)
+            dots(count: impact.withoutDays, mark: "xmark", tint: NunaPalette.textPrimary.opacity(0.6))
             NavigationLink { NunaBehaviorInsightsView() } label: {
                 HStack(spacing: 10) {
-                    Text("View more impacts").font(.nuna(size: 13.5, weight: .heavy)).tracking(nunaTrackingLabel + 0.8).textCase(.uppercase)
-                    Image(systemName: "arrow.right").font(.system(size: 16, weight: .regular))
+                    Text("View more impacts").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel + 0.6).textCase(.uppercase)
+                    Image(systemName: "arrow.right").font(.system(size: 13, weight: .regular))
                 }
-                .foregroundStyle(NunaPalette.textPrimary).frame(minHeight: 36)
+                .foregroundStyle(NunaPalette.textPrimary.opacity(0.75)).frame(minHeight: 32)
             }
             .buttonStyle(.plain)
         }
-        .padding(18)
+        .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(NunaPalette.tile.opacity(0.7), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
@@ -377,20 +377,20 @@ struct NunaActivityImpactCard: View {
     /// Five circles filled in one by one, and "3/5" at the end of the row.
     private func dots(count: Int, mark: String, tint: Color) -> some View {
         let shown = min(count, NunaActivityImpact.needed)
-        return HStack(spacing: 10) {
+        return HStack(spacing: 8) {
             ForEach(0..<NunaActivityImpact.needed, id: \.self) { i in
                 ZStack {
-                    Circle().strokeBorder(i < shown ? tint : tint.opacity(0.4), lineWidth: 2)
+                    Circle().strokeBorder(i < shown ? tint : tint.opacity(0.35), lineWidth: 1.5)
                     if i < shown {
-                        Circle().fill(tint.opacity(0.22))
-                        Image(systemName: mark).font(.system(size: 14, weight: .bold)).foregroundStyle(tint)
+                        Circle().fill(tint.opacity(0.18))
+                        Image(systemName: mark).font(.system(size: 12, weight: .bold)).foregroundStyle(tint)
                     }
                 }
-                .frame(width: 34, height: 34)
+                .frame(width: 28, height: 28)
             }
             Spacer(minLength: 4)
-            Text(verbatim: "\(shown)/\(NunaActivityImpact.needed)").font(.nuna(size: 17, weight: .heavy))
-                .foregroundStyle(mark == "checkmark" ? NunaPalette.effortModerate : NunaPalette.textPrimary)
+            Text(verbatim: "\(shown)/\(NunaActivityImpact.needed)").font(.nuna(size: 14, weight: .heavy))
+                .foregroundStyle(mark == "checkmark" ? NunaWorkoutLogZones.hrBlue : NunaPalette.textPrimary.opacity(0.7))
         }
     }
 }
