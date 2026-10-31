@@ -194,49 +194,188 @@ struct NunaPersonaView: View {
     }
 }
 
-// MARK: - Zones (PersonaZones.dc)
+// MARK: - Heart rate settings
 
+/// Heart rate zones: the maximum heart rate, the zones as a share of it (each with its percentage range) and, once "Manual" is on, where each
+/// one starts. Nothing is kept until SAVE; the cross and CANCEL leave things as they were. Zone n ends one beat below the start of zone n + 1,
+/// so editing a zone's end moves the next zone's start, and the end of zone 5 is the maximum itself.
 struct NunaZonesView: View {
     @EnvironmentObject private var profile: ProfileStore
-    private let names: [LocalizedStringKey] = ["Zone 1 · Recovery", "Zone 2 · Easy, fat burning", "Zone 3 · Aerobic", "Zone 4 · Threshold", "Zone 5 · Maximum"]
-    private let pcts = ["50 – 60%", "60 – 70%", "70 – 80%", "80 – 90%", "90 – 100%"]
+    @EnvironmentObject private var repo: Repository
+    @Environment(\.dismiss) private var dismiss
+
+    @State private var maxHR = 0
+    @State private var manual = false
+    @State private var mins: [Int] = []
+    @State private var loaded = false
+
+    private static let pcts = ["50–60%", "60–70%", "70–80%", "80–90%", "90–100%"]
+    private var resting: Int? { repo.days.last(where: { $0.restingHr != nil })?.restingHr }
+    private var tanaka: Int { Int((208 - 0.7 * Double(profile.age)).rounded()) }
+
+    /// The zone starts being shown: the typed ones when manual, otherwise the percentages of the typed maximum.
+    private var starts: [Int] { manual && mins.count == 5 ? mins : percentZones.map { Int($0.lower.rounded()) } }
+    /// The zones as the rest of the app draws them from the typed maximum (the same rounding as the workout screens).
+    private var percentZones: [HRZone] { HRZones.zones(maxHR: Double(max(maxHR, 1))).zones }
+    private var valid: Bool {
+        guard HRZones.customBPMRange.contains(maxHR) else { return false }
+        return !manual || (ProfileStore.validZoneThresholds(mins) && (mins.last ?? 0) <= maxHR)
+    }
+    private var changed: Bool {
+        maxHR != profile.hrMax || manual != profile.hasCustomHRZones || (manual && mins != profile.hrZoneThresholds)
+    }
 
     var body: some View {
-        NunaDetailScreen("Heart-rate zones") {
-            NunaCard(small: true) {
-                HStack { Text("Maximum heart rate").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary); Spacer()
-                    Text(verbatim: "\(profile.hrMax) bpm").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary) }
-            }
-            NunaCard(small: true) {
-                NunaToggleRow("Your own zones", subtitle: "Set where each zone starts. Turn off to return to percentages", systemImage: "slider.horizontal.3",
-                              isOn: Binding(get: { profile.hasCustomHRZones }, set: { profile.setCustomHRZonesEnabled($0) })).padding(.vertical, 8)
-            }
-            NunaSettingsGroup("Zone starts at") {
-                ForEach(0..<5, id: \.self) { i in
-                    if i > 0 { NunaDivider() }
-                    let bpm = Int(profile.hrZoneSet.zones.first { $0.number == i + 1 }?.lower.rounded() ?? 0)
-                    if profile.hasCustomHRZones, profile.hrZoneThresholds.indices.contains(i) {
-                        NunaStepRow(label: names[i], value: "\(profile.hrZoneThresholds[i]) bpm", note: LocalizedStringKey(pcts[i] + " " + String(localized: "of maximum")),
-                                    onMinus: { profile.stepHRZoneThreshold(at: i, up: false) }, onPlus: { profile.stepHRZoneThreshold(at: i, up: true) })
-                    } else {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text(names[i]).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                                Text(verbatim: pcts[i] + " " + String(localized: "of maximum")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                            }
-                            Spacer()
-                            Text(verbatim: "\(bpm) bpm").font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        }.padding(.vertical, 14)
+        ZStack(alignment: .top) {
+            NunaPalette.canvas.ignoresSafeArea()
+            ScrollView {
+                VStack(alignment: .leading, spacing: 22) {
+                    Color.clear.frame(height: 52)
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Heart Rate Zones").font(.nuna(size: 22, weight: .semibold)).textCase(nil).foregroundStyle(NunaPalette.textPrimary)
+                        Text("Zones are set as a share of your maximum heart rate. Change the maximum, or turn on manual zones to choose where each one starts.")
+                            .font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
                     }
+                    HStack(alignment: .top, spacing: 14) {
+                        labelled("Resting HR") { field(.constant(resting ?? 0), editable: false, blank: resting == nil) }
+                        labelled("Max HR") { field(Binding(get: { maxHR }, set: { maxHR = $0 }), editable: true) }
+                    }
+                    manualToggle
+                    table
+                    VStack(spacing: 14) {
+                        Button(action: save) {
+                            Text("Save HR zones").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel + 1).textCase(.uppercase)
+                                .foregroundStyle(changed && valid ? NunaPalette.textPrimary : NunaPalette.textMuted)
+                                .frame(maxWidth: .infinity).frame(height: 52)
+                                .overlay(Capsule().strokeBorder(changed && valid ? NunaPalette.textPrimary.opacity(0.8) : NunaPalette.textPrimary.opacity(0.18), lineWidth: 1.5))
+                        }
+                        .buttonStyle(.plain).disabled(!(changed && valid))
+                        Button { dismiss() } label: {
+                            Text("Cancel").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 1).textCase(.uppercase)
+                                .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity).frame(height: 40)
+                        }.buttonStyle(.plain)
+                    }
+                    .padding(.horizontal, 24).padding(.top, 8)
+                    nunaFootnote("Zones are used in Workouts, live sessions and zone alerts. Changing them does not change history that is already recorded.")
+                }
+                .padding(.horizontal, NunaSpacing.screenH).padding(.bottom, 60)
+            }
+            .scrollIndicators(.hidden).scrollDismissesKeyboard(.interactively)
+            header
+        }
+        .toolbar(.hidden, for: .navigationBar)
+        .nunaKeyboardDone()
+        .onAppear {
+            guard !loaded else { return }
+            loaded = true
+            maxHR = profile.hrMax; manual = profile.hasCustomHRZones
+            mins = profile.hasCustomHRZones ? profile.hrZoneThresholds : HRZones.defaultLowerBounds(maxHR: Double(profile.hrMax))
+        }
+    }
+
+    // MARK: Pieces
+
+    private var header: some View {
+        ZStack {
+            Text("Heart rate settings").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel + 1.2).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+            HStack {
+                Button { dismiss() } label: {
+                    Image(systemName: "xmark").font(.nuna(size: 20, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 52, height: 44).contentShape(Rectangle())
+                }
+                .accessibilityLabel(Text("Close"))
+                Spacer()
+            }
+        }
+        .padding(.horizontal, 8).padding(.top, 4).frame(height: 52).frame(maxWidth: .infinity)
+        .background(NunaPalette.canvas)
+    }
+
+    private func labelled<Content: View>(_ title: LocalizedStringKey, @ViewBuilder _ content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel + 1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            content()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// A number with "bpm" at the right, in a dark rounded field; a field that cannot be changed is dimmer.
+    private func field(_ value: Binding<Int>, editable: Bool, blank: Bool = false) -> some View {
+        HStack(spacing: 6) {
+            if editable {
+                TextField("", text: Binding(get: { value.wrappedValue == 0 ? "" : String(value.wrappedValue) },
+                                            set: { value.wrappedValue = Int($0.filter(\.isNumber).prefix(3)) ?? 0 }))
+                    .keyboardType(.numberPad)
+                    .font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+            } else {
+                Text(verbatim: blank ? "–" : String(value.wrappedValue)).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary.opacity(editable ? 1 : 0.55))
+                Spacer(minLength: 0)
+            }
+            Text(verbatim: "bpm").font(.nuna(size: 15, weight: .regular)).foregroundStyle(NunaPalette.textSecondary.opacity(editable ? 1 : 0.7)).textCase(nil)
+        }
+        .padding(.horizontal, 14).frame(height: 48)
+        .background(Color.black.opacity(editable ? 0.32 : 0.18), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(NunaPalette.textPrimary.opacity(editable ? 0.12 : 0.06), lineWidth: 1))
+    }
+
+    private var manualToggle: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("Manual Heart Rate Zones").font(.nuna(size: 17, weight: .medium)).textCase(nil).foregroundStyle(NunaPalette.textPrimary)
+                Spacer()
+                Toggle("", isOn: Binding(get: { manual }, set: { on in
+                    if on { mins = starts }
+                    manual = on
+                })).labelsHidden().tint(NunaPalette.effortModerate)
+            }
+            Text("As your fitness changes, the ranges follow your maximum heart rate. You can set them by hand if they do not feel right to you.")
+                .font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    private var table: some View {
+        let lows = starts
+        return VStack(spacing: 10) {
+            HStack(spacing: 10) {
+                Text("Zone").frame(width: 110, alignment: .leading)
+                Text("Zone min").frame(maxWidth: .infinity, alignment: .leading).padding(.leading, 6)
+                Text("Zone max").frame(maxWidth: .infinity, alignment: .leading).padding(.leading, 6)
+            }
+            .font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel + 1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            .padding(.leading, 6)
+            ForEach((0..<5).reversed(), id: \.self) { i in
+                HStack(spacing: 10) {
+                    zoneLabel(i)
+                    field(Binding(get: { lows.indices.contains(i) ? lows[i] : 0 }, set: { if manual, mins.indices.contains(i) { mins[i] = $0 } }), editable: manual)
+                    field(Binding(get: { manual ? (i < 4 ? (lows[i + 1] - 1) : maxHR) : Int(percentZones[i].upper.rounded()) },
+                                  set: { v in if i < 4 { if manual { mins[i + 1] = v + 1 } } else if manual { maxHR = v } }), editable: manual)
                 }
             }
-            if profile.hasCustomHRZones {
-                Button { profile.setCustomHRZonesEnabled(false) } label: {
-                    Text("Restore defaults").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                }.buttonStyle(.plain)
-            }
-            nunaFootnote("Zones are used in Workouts, live sessions and zone alerts. Changing them does not change history that is already recorded.")
         }
+    }
+
+    /// "Zone 3" over its percentage range, on a band of the zone's colour fading to the right with a bright edge at the left.
+    private func zoneLabel(_ i: Int) -> some View {
+        let color = NunaWorkoutLogZones.colors[i]
+        return HStack(spacing: 0) {
+            Rectangle().fill(color).frame(width: 4)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(verbatim: String(localized: "Zone \(i + 1)")).font(.nuna(size: 16, weight: .medium)).textCase(nil).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: Self.pcts[i]).font(.nuna(size: 11.5, weight: .semibold)).textCase(nil).foregroundStyle(NunaPalette.textSecondary)
+            }
+            .padding(.leading, 12)
+            Spacer(minLength: 0)
+        }
+        .frame(width: 104, height: 48)
+        .background(LinearGradient(colors: [color.opacity(0.30), color.opacity(0.0)], startPoint: .leading, endPoint: .trailing))
+    }
+
+    // MARK: Save
+
+    private func save() {
+        guard valid else { return }
+        profile.hrMaxOverride = maxHR == tanaka ? 0 : maxHR
+        profile.hrZoneThresholds = manual ? mins : []
+        dismiss()
     }
 }
 
