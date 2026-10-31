@@ -450,6 +450,21 @@ struct NunaWorkoutLogZones: View {
 
 // MARK: - Key statistics
 
+/// The title of a block of figures on a workout log ("KEY STATISTICS", "SESSION METRICS"): white and heavy, with the comparison to its right
+/// small and grey.
+struct NunaLogSectionTitle: View {
+    let title: LocalizedStringKey
+    var trailing: LocalizedStringKey?
+    var body: some View {
+        HStack(alignment: .firstTextBaseline) {
+            Text(title).font(.nuna(size: 14.5, weight: .black)).tracking(nunaTrackingLabel + 1).textCase(.uppercase).foregroundStyle(Color.white)
+            Spacer()
+            if let trailing { Text(trailing).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel + 0.4).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary) }
+        }
+    }
+}
+
+
 /// Everything the session measured, together: distance and steps for the sports that cover ground (GPS and treadmill alike), pace or speed,
 /// calories and the heart rate. Each tile carries the 30-day average of the same sport when there is one.
 struct NunaWorkoutLogStats: View {
@@ -547,11 +562,7 @@ struct NunaWorkoutLogStats: View {
         let hidden = Set((routeShown ? ["dist", "pace", "speed"] : []) + (stepsAtTop ? ["steps"] : []))
         let list = tiles.filter { !hidden.contains($0.id) }
         VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline) {
-                nunaTrendsCap("Key statistics")
-                Spacer()
-                if averages != nil { Text("vs. 30 day average").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textMuted) }
-            }
+            NunaLogSectionTitle(title: "Key statistics", trailing: averages != nil ? "vs. 30 day average" : nil)
             if routeShown {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 10) { ForEach(list) { tile($0).frame(width: 168) } }
