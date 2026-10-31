@@ -37,6 +37,8 @@ public struct NunaGlyph: View {
             // A drawn metric picture from the app's asset catalogue (MetricIcons), a thin-line template image.
             Image("met-" + name.dropFirst(4)).renderingMode(.template).resizable().scaledToFit()
                 .frame(width: pointSize * 1.3, height: pointSize * 1.3)
+        } else if let vital = NunaVitalGlyph(name: name, size: pointSize * 1.15) {
+            vital
         } else if name.hasPrefix("act:") {
             // An activity picture (ActivityIcons), e.g. "act:strength-trainer".
             Image("act-" + name.dropFirst(4)).renderingMode(.template).resizable().scaledToFit()

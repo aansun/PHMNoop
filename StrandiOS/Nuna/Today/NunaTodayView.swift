@@ -1055,11 +1055,11 @@ struct NunaTodayView: View {
         return enabled.map { m in
             switch m {
             case .hrv:
-                return tile(m, "HRV", fmt(model.hrv), "ms", route("hrv"), "waveform.path.ecg", NunaPalette.charge, trend: cmp(model.hrv, before(model.hrv, model.hrvDelta), good: true))
+                return tile(m, "HRV", fmt(model.hrv), "ms", route("hrv"), "met:heart-rate-variability", NunaPalette.charge, trend: cmp(model.hrv, before(model.hrv, model.hrvDelta), good: true))
             case .restingHr:
-                return tile(m, "Resting HR", fmt(model.restingHr), "bpm", route("rhr"), "heart", NunaPalette.alertText, trend: cmp(model.restingHr, before(model.restingHr, model.restingHrDelta), good: false))
+                return tile(m, "Resting HR", fmt(model.restingHr), "bpm", route("rhr"), "met:resting-heart-rate", NunaPalette.alertText, trend: cmp(model.restingHr, before(model.restingHr, model.restingHrDelta), good: false))
             case .bloodOxygen:
-                return tile(m, "Blood Oxygen", fmt(model.spo2), "%", route("spo2"), "drop", NunaPalette.effortText, trend: cmp(model.spo2, before(model.spo2, model.spo2Delta), good: true))
+                return tile(m, "Blood Oxygen", fmt(model.spo2), "%", route("spo2"), "vital:spo2", NunaPalette.effortText, trend: cmp(model.spo2, before(model.spo2, model.spo2Delta), good: true))
             case .respiratory:
                 return tile(m, "Respiratory", fmt(model.respiratory, 1), "/min", route("resp_rate"), "wind", NunaPalette.effortText, trend: cmp(model.respiratory, before(model.respiratory, model.respiratoryDelta), 1, good: nil))
             case .steps:
@@ -1070,7 +1070,7 @@ struct NunaTodayView: View {
                 return tile(m, "Weight", fmt(model.extras["weight"], 1), "kg", route("weight", "apple-health"), "scalemass", NunaPalette.effortText,
                             trend: cmp(model.extras["weight"], model.previous["weight"], 1, good: nil))
             case .skinTemp:
-                return tile(m, "Skin Temp", fmt(model.extras["skin_temp"], 1), "°C", route("skin_temp"), "thermometer", NunaPalette.alertText,
+                return tile(m, "Skin Temp", fmt(model.extras["skin_temp"], 1), "°C", route("skin_temp"), "vital:temp", NunaPalette.alertText,
                             trend: cmp(model.extras["skin_temp"], model.previous["skin_temp"], 1, good: nil))
             case .rest:
                 return tile(m, "Sleep", model.sleepMinutes.map { NunaSleepFormat.duration($0) } ?? "–", "", .sleep(0), "moon", NunaPalette.restText,

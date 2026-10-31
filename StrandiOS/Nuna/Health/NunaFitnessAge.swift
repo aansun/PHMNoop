@@ -272,7 +272,7 @@ struct NunaFitnessAgeView: View {
             NunaTitleRow(title: "What shapes it") { EmptyView() }
             Text("Two signals compared with an average person of your age. Median of 7 days.")
                 .font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity, alignment: .leading).textCase(nil)
-            componentRow(icon: "heart", title: "Resting HR",
+            componentRow(icon: "met:resting-heart-rate", title: "Resting HR",
                          reference: String(localized: "Reference \(Int(FitnessAgeEngine.restingHRReference)) bpm"),
                          value: String(format: "%.0f", rhr), unit: "bpm", years: rhrYears)
             componentRow(icon: "flame", title: "Physical activity",

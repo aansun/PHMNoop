@@ -48,13 +48,13 @@ struct NunaLockedColumns: View {
     var body: some View {
         HStack(spacing: 0) {
             ForEach(Array(items.enumerated()), id: \.offset) { i, b in
-                if i > 0 { Rectangle().fill(NunaPalette.hairline).frame(width: 1, height: 74) }
-                VStack(spacing: 10) {
-                    NunaIcon(name: b.icon, size: 25, weight: .medium).foregroundStyle(NunaPalette.textMuted).frame(height: 30)
-                    Text(b.name).font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                if i > 0 { Rectangle().fill(NunaPalette.hairline).frame(width: 1, height: 78) }
+                VStack(spacing: 6) {
+                    NunaIcon(name: b.icon, size: 23, weight: .medium).foregroundStyle(NunaPalette.textMuted).frame(height: 28)
+                    Text(b.name).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                         .lineLimit(1).minimumScaleFactor(0.7)
-                    RoundedRectangle(cornerRadius: 6, style: .continuous).fill(NunaPalette.tile).frame(width: 30, height: 30)
-                        .overlay(Circle().fill(NunaPalette.textMuted).frame(width: 10, height: 10))
+                    RoundedRectangle(cornerRadius: 5, style: .continuous).fill(NunaPalette.tile).frame(width: 22, height: 22)
+                        .overlay(Circle().fill(NunaPalette.textMuted).frame(width: 8, height: 8))
                 }
                 .frame(maxWidth: .infinity)
             }
@@ -84,7 +84,7 @@ struct NunaNightsPanel: View {
             NunaNightSegments(nights: nights, needed: needed)
         }
         .padding(16).frame(maxWidth: .infinity, alignment: .leading)
-        .background(NunaPalette.shade.opacity(0.35), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .background(NunaPalette.shade.opacity(0.35), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 
@@ -98,7 +98,7 @@ struct NunaNightSegments: View {
     var body: some View {
         HStack(spacing: 4) {
             ForEach(0..<needed, id: \.self) { i in
-                Capsule().fill(i < nights ? Self.filled : NunaPalette.hairline).frame(height: 5)
+                Capsule().fill(i < nights ? Self.filled : NunaPalette.hairline).frame(height: 4)
             }
         }
         .accessibilityElement(children: .ignore)

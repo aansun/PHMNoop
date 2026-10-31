@@ -50,9 +50,9 @@ struct NunaLineTrendView: View {
         case "resp_rate":
             return NunaLineTrendView(name: "Respiratory rate", icon: "met:respiratory-rate", noun: "average respiratory rate", key: key, unit: "rpm", decimals: 1, endingDaysAgo: endingDaysAgo)
         case "spo2":
-            return NunaLineTrendView(name: "Blood oxygen", icon: "drop", noun: "average blood oxygen", key: key, unit: "%", upIsGood: true, endingDaysAgo: endingDaysAgo)
+            return NunaLineTrendView(name: "Blood oxygen", icon: "vital:spo2", noun: "average blood oxygen", key: key, unit: "%", upIsGood: true, endingDaysAgo: endingDaysAgo)
         case "skin_temp":
-            return NunaLineTrendView(name: "Skin temperature", icon: "thermometer.medium", noun: "average skin temperature (against your usual)", key: key, unit: "°C", decimals: 1,
+            return NunaLineTrendView(name: "Skin temperature", icon: "vital:temp", noun: "average skin temperature (against your usual)", key: key, unit: "°C", decimals: 1,
                                      endingDaysAgo: endingDaysAgo)
         case "vo2max_est":
             return NunaLineTrendView(name: "VO₂ max", icon: "met:vo2-max", noun: "average estimated VO₂ max", key: key, unit: "ml/kg/min", decimals: 1, upIsGood: true,

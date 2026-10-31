@@ -278,11 +278,11 @@ struct NunaHealthMonitorCard: View {
     private var vitals: [Vital] {
         let hasRange = phase.hasRange
         return [
-            Vital(id: "resp", icon: "lungs", label: "RESP", ok: respiratory.flatMap { v in respS.verdict(v, floor: 0.3).map { $0 == .inRange } }),
-            Vital(id: "spo2", icon: "drop", label: "SpO₂", ok: hasRange ? spo2.map { $0 >= 95 } : nil),
-            Vital(id: "rhr", icon: "heart", label: "RHR", ok: restingHr.flatMap { v in rhrS.verdict(v, floor: 1).map { $0 == .inRange } }),
-            Vital(id: "hrv", icon: "waveform.path.ecg", label: "HRV", ok: hrv.flatMap { v in hrvS.verdict(v, floor: 1).map { $0 == .inRange } }),
-            Vital(id: "temp", icon: "thermometer.medium", label: "TEMP", ok: hasRange ? skinTemp.map { abs($0) < 0.5 } : nil),
+            Vital(id: "resp", icon: "met:respiratory-rate", label: "RESP", ok: respiratory.flatMap { v in respS.verdict(v, floor: 0.3).map { $0 == .inRange } }),
+            Vital(id: "spo2", icon: "vital:spo2", label: "SpO₂", ok: hasRange ? spo2.map { $0 >= 95 } : nil),
+            Vital(id: "rhr", icon: "met:resting-heart-rate", label: "RHR", ok: restingHr.flatMap { v in rhrS.verdict(v, floor: 1).map { $0 == .inRange } }),
+            Vital(id: "hrv", icon: "met:heart-rate-variability", label: "HRV", ok: hrv.flatMap { v in hrvS.verdict(v, floor: 1).map { $0 == .inRange } }),
+            Vital(id: "temp", icon: "vital:temp", label: "TEMP", ok: hasRange ? skinTemp.map { abs($0) < 0.5 } : nil),
         ]
     }
 
@@ -294,7 +294,7 @@ struct NunaHealthMonitorCard: View {
             NunaCard(small: true) {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
-                        Text("Health monitor").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                        Text("Health monitor").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                         Spacer(minLength: 0)
                         Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
                     }
@@ -308,7 +308,7 @@ struct NunaHealthMonitorCard: View {
                     } else {
                         HStack(spacing: 0) {
                             ForEach(Array(all.enumerated()), id: \.element.id) { idx, v in
-                                if idx > 0 { Rectangle().fill(NunaPalette.hairline).frame(width: 1, height: 70) }
+                                if idx > 0 { Rectangle().fill(NunaPalette.hairline).frame(width: 1, height: 78) }
                                 column(v)
                             }
                         }
@@ -327,18 +327,18 @@ struct NunaHealthMonitorCard: View {
 
     private func column(_ v: Vital) -> some View {
         let tint = v.ok == nil ? NunaPalette.textMuted : (v.ok == true ? NunaPalette.charge : NunaPalette.warning)
-        return VStack(spacing: 8) {
-            NunaIcon(name: v.icon, size: 25, weight: .medium).foregroundStyle(NunaPalette.textSecondary).frame(height: 30)
-            Text(verbatim: v.label).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).foregroundStyle(NunaPalette.textPrimary)
-            badge(tint: tint, symbol: v.ok == nil ? "minus" : (v.ok == true ? "checkmark" : "exclamationmark"))
+        return VStack(spacing: 6) {
+            NunaIcon(name: v.icon, size: 23, weight: .medium).foregroundStyle(NunaPalette.textSecondary).frame(height: 28)
+            Text(verbatim: v.label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).foregroundStyle(NunaPalette.textPrimary)
+            badge(tint: tint, symbol: v.ok == nil ? "minus" : (v.ok == true ? "checkmark" : "exclamationmark"), side: 22)
         }
         .frame(maxWidth: .infinity)
     }
 
-    private func badge(tint: Color, symbol: String) -> some View {
-        Image(systemName: symbol).font(.nuna(size: 11, weight: .heavy)).foregroundStyle(tint)
-            .frame(width: 26, height: 26)
-            .background(tint.opacity(0.18), in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+    private func badge(tint: Color, symbol: String, side: CGFloat = 26) -> some View {
+        Image(systemName: symbol).font(.nuna(size: side < 26 ? 10 : 11, weight: .heavy)).foregroundStyle(tint)
+            .frame(width: side, height: side)
+            .background(tint.opacity(0.18), in: RoundedRectangle(cornerRadius: side < 26 ? 5 : 6, style: .continuous))
     }
 
     /// The count in range and, under it, the early warning: it speaks only once there are fourteen nights, and until then says how many are left.

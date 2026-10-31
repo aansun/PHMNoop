@@ -258,6 +258,8 @@ struct NunaIcon: View {
         if name.hasPrefix("met:") {
             Image("met-" + name.dropFirst(4)).renderingMode(.template).resizable().scaledToFit()
                 .frame(width: size * 1.3, height: size * 1.3).accessibilityHidden(true)
+        } else if let vital = NunaVitalGlyph(name: name, size: size * 1.15) {
+            vital
         } else {
             Image(systemName: name).font(.nuna(size: size, weight: weight))
         }

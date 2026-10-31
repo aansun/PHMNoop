@@ -100,7 +100,7 @@ extension NunaTodayView {
             case .vo2max:      made = (num(ex["vo2max_est"], 1), desc("vo2max_est"), "met:vo2-max", nil)
             case .vitality:    made = (num(ex["vitality"]), desc("vitality"), "sparkles", nil)
             case .bloodOxygen: made = (num(model.spo2), desc("spo2"), "drop.fill", nil)
-            case .skinTemp:    made = (num(ex["skin_temp"], 1), desc("skin_temp"), "thermometer", nil)
+            case .skinTemp:    made = (num(ex["skin_temp"], 1), desc("skin_temp"), "vital:temp", nil)
             case .sleep:
                 made = (model.sleepMinutes.map { "\(Int($0) / 60)h \(Int($0) % 60)m" }, NunaRowTarget(kind: .nuna(.sleep(0))), "met:sleep-performance", NunaPalette.restText)
             case .calories:    made = (num(model.calories), desc("energy_kcal"), "met:calories", nil)

@@ -95,7 +95,7 @@ struct NunaVitalTile: View {
         NunaCard(small: true) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
-                    NunaIcon(name: icon, size: 21, weight: .medium).foregroundStyle(NunaPalette.textSecondary).frame(width: 30, height: 30)
+                    NunaIcon(name: icon, size: 17, weight: .medium).foregroundStyle(NunaPalette.textSecondary).frame(width: 28, height: 28)
                     Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
                 }
