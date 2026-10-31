@@ -41,12 +41,13 @@ enum AppleDemoSeeder {
         guard requested else { return }
         seedDemoDeviceIfNeeded(into: store)
         let existing = (try? await store.dailyMetrics(deviceId: whoop, from: "0000-00-00", to: "9999-99-99")) ?? []
-        guard existing.isEmpty else { await seedLabBookIfNeeded(into: store); await seedSportExtrasIfNeeded(into: store); await seedLowIntensityExtrasIfNeeded(into: store); return }
+        guard existing.isEmpty else { await seedLabBookIfNeeded(into: store); await seedSportExtrasIfNeeded(into: store); await seedLowIntensityExtrasIfNeeded(into: store); await seedRecoveryExtrasIfNeeded(into: store); return }
         do { try await seed(into: store) }
         catch { NSLog("AppleDemoSeeder: seed failed — \(error)") }
         await seedLabBookIfNeeded(into: store)
         await seedSportExtrasIfNeeded(into: store)
         await seedLowIntensityExtrasIfNeeded(into: store)
+        await seedRecoveryExtrasIfNeeded(into: store)
     }
 
     /// DEBUG/demo-only: so the Devices screen renders with content under `--demo-seed`, pair a second
@@ -668,6 +669,35 @@ enum AppleDemoSeeder {
                 _ = try await store.insert(Streams(hr: Array(hr[from..<Swift.min(from + 50_000, hr.count)])), deviceId: whoop)
             }
         } catch { NSLog("AppleDemoSeeder: low-intensity extras failed — \(error)") }
+    }
+
+    /// Recovery activities (breathwork, a cold shower) for the Charge tab, with a calm heart rate on the breathwork: added once.
+    private static func seedRecoveryExtrasIfNeeded(into store: WhoopStore) async {
+        let now = Int(Date().timeIntervalSince1970)
+        let recent = (try? await store.workouts(deviceId: whoop, from: now - 40 * 86_400, to: now + 86_400, limit: 2_000)) ?? []
+        guard !recent.contains(where: { $0.notes == "demo-recovery" }) else { return }
+        var rng = SplitMix64(seed: 0xB2EA7)
+        let plans: [(sport: String, ago: Double, min: Double)] = [("Breathwork", 3.0, 20), ("Breathwork", 2 * 24 + 5, 15), ("Breathwork", 6 * 24 + 4, 20), ("Cold shower", 4 * 24 + 6, 5), ("Breathwork", 11 * 24 + 5, 12)]
+        var rows: [WorkoutRow] = []
+        var hr: [HRSample] = []
+        for (i, p) in plans.enumerated() {
+            let start = now - Int(p.ago * 3600), end = start + Int(p.min * 60)
+            rows.append(WorkoutRow(startTs: start, endTs: end, sport: p.sport, source: whoop, durationS: p.min * 60, energyKcal: nil, avgHr: p.sport == "Breathwork" ? 66 : nil,
+                                   maxHr: p.sport == "Breathwork" ? 78 : nil, strain: nil, distanceM: nil, zonesJSON: nil, notes: i == 0 ? "demo-recovery" : nil, steps: nil))
+            guard p.sport == "Breathwork" else { continue }
+            var t = start - 300
+            while t <= end + 120 {
+                let calm = 1.0 + 0.04 * Foundation.sin(2.0 * Double.pi * Double(t) / 60.0)
+                hr.append(HRSample(ts: t, bpm: Int((64.0 * calm + gauss(&rng, 0.0, 1.2)).clamped(52.0, 84.0))))
+                t += 5
+            }
+        }
+        do {
+            _ = try await store.upsertWorkouts(rows, deviceId: whoop)
+            for from in stride(from: 0, to: hr.count, by: 50_000) {
+                _ = try await store.insert(Streams(hr: Array(hr[from..<Swift.min(from + 50_000, hr.count)])), deviceId: whoop)
+            }
+        } catch { NSLog("AppleDemoSeeder: recovery extras failed — \(error)") }
     }
 
     /// A closed loop of about `km` kilometres around a park in Jakarta, wobbled so no two look alike, one point every few seconds.

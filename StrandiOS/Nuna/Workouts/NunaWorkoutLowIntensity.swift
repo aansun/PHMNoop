@@ -14,7 +14,9 @@ enum NunaLowIntensity {
     /// Every session that has a heart rate and no map and is not strength work: stretching, yoga, HIIT, a class, a treadmill run. Those with a
     /// route have the map layout, gym sessions their own, and a session with no heart rate the plain one.
     static func applies(row: WorkoutRow, zoneMinutes: [Double]?, hasHeartRate: Bool, hasRoute: Bool) -> Bool {
-        hasHeartRate && !hasRoute && !NunaWorkoutKind.isStrength(row)
+        // Recovery work has this layout with or without a heart rate; the rest need one.
+        if NunaActivityKind.isCharge(row.sport) { return !hasRoute }
+        return hasHeartRate && !hasRoute && !NunaWorkoutKind.isStrength(row)
     }
 }
 
