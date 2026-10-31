@@ -103,7 +103,7 @@ struct NunaGymSessionView: View {
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
         effortAndSplit(s, averages: averages)
-        NunaGymTabs(selection: $tab)
+        NunaCapsuleTabs(options: [(value: Tab.exercises, title: "Exercises"), (value: Tab.heartRate, title: "HR zones")], selection: $tab)
         switch tab {
         case .exercises: exercisesTab
         case .heartRate: heartRateTab
@@ -384,7 +384,7 @@ struct NunaGymSessionView: View {
         if let w = workout, data.hr.count >= 2 {
             NunaWorkoutHRArea(buckets: data.hr, start: w.startTs, end: w.endTs, around: data.hrAround, highlightZone: zonePick, zoneSet: profile.hrZoneSet, plotHeight: 128)
             if let mins = NunaWorkoutZoneMath.minutes(w, measured: data.zoneMin), mins.contains(where: { $0 > 0 }) {
-                NunaWorkoutLogZones(minutes: mins, selection: $zonePick, buckets: data.hr, start: w.startTs, end: w.endTs, typical: NunaWorkoutLogZones.typical(for: w, in: history.rows))
+                NunaWorkoutLogZones(minutes: mins, selection: $zonePick, buckets: data.hr, start: w.startTs, end: w.endTs, typical: NunaWorkoutLogZones.typical(for: w, in: history.rows), belowMinutes: NunaWorkoutZoneMath.below(w, measured: data.zoneMin))
             }
         } else {
             NunaCard(small: true) {
@@ -593,32 +593,4 @@ struct NunaSaveProgramView: View {
     }
 }
 
-/// The two tabs of a gym session as a dark capsule with the chosen one raised in it.
-private struct NunaGymTabs: View {
-    @Binding var selection: NunaGymSessionView.Tab
-    @Namespace private var raised
-
-    var body: some View {
-        HStack(spacing: 0) {
-            tab(.exercises, "Exercises")
-            tab(.heartRate, "HR zones")
-        }
-        .padding(3)
-        .background(Color.black.opacity(0.3), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(NunaPalette.textPrimary.opacity(0.06), lineWidth: 1))
-    }
-
-    private func tab(_ value: NunaGymSessionView.Tab, _ title: LocalizedStringKey) -> some View {
-        let on = selection == value
-        return Button { withAnimation(.easeInOut(duration: 0.2)) { selection = value } } label: {
-            Text(title).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 0.8).textCase(.uppercase)
-                .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
-                .frame(maxWidth: .infinity).frame(height: 38)
-                .background { if on { RoundedRectangle(cornerRadius: 14, style: .continuous).fill(NunaPalette.tile).matchedGeometryEffect(id: "raised", in: raised) } }
-                .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityAddTraits(on ? .isSelected : [])
-    }
-}
 #endif

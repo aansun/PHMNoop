@@ -176,7 +176,7 @@ struct NunaWorkoutHRArea: View {
                         inner.stroke(line, with: .color(lit ? NunaPalette.textSecondary.opacity(0.55) : NunaPalette.effortModerate),
                                      style: StrokeStyle(lineWidth: lit ? 1.6 : 2.2, lineCap: .round, lineJoin: .round))
                         if let zone = highlightZone, let zoneSet {
-                            let color = NunaWorkoutLogZones.colors[min(max(zone, 1), 5) - 1]
+                            let color = NunaWorkoutLogZones.color(zone)
                             // The stretches spent in the zone, broken wherever the heart rate left it (or a gap in the readings): each one
                             // is the area under the curve itself, so the colour follows the line instead of standing in columns over it.
                             var runs: [[CGPoint]] = []
@@ -286,6 +286,13 @@ struct NunaWorkoutLogZones: View {
     var durationS: Double? = nil
     @EnvironmentObject private var profile: ProfileStore
 
+    /// Time under the lowest zone, in minutes: the "Zone 0" row at the foot of the list. nil when it is not known (the zones came as stored
+    /// percentages that already add up to the whole session), and the row is left out.
+    var belowMinutes: Double? = nil
+
+    /// The colour of a zone: white for zone 0, then the five below.
+    static func color(_ zone: Int) -> Color { zone <= 0 ? Color(hex: "#EEF1F4") : colors[min(zone, 5) - 1] }
+
     /// Lowest zone to highest: pale steel, blue, green, amber, red.
     static let colors: [Color] = [Color(hex: "#A9BAC8"), Color(hex: "#4F97C2"), Color(hex: "#6BB894"), Color(hex: "#D4A55A"), Color(hex: "#CF6068")]
 
@@ -323,11 +330,11 @@ struct NunaWorkoutLogZones: View {
     }
 
     var body: some View {
-        let colors = Self.colors
         let bands = profile.hrZoneSet.zones
         VStack(alignment: .leading, spacing: 8) {
-            if let mins = minutes, mins.count >= 5, mins.contains(where: { $0 > 0 }) {
-                let total = max(mins.reduce(0, +), 0.0001)
+            if let mins = minutes, mins.count >= 5, mins.contains(where: { $0 > 0 }) || (belowMinutes ?? 0) > 0 {
+                let total = max(mins.reduce(0, +) + (belowMinutes ?? 0), 0.0001)
+                let list: [(zone: Int, mins: Double)] = (1...5).reversed().map { ($0, mins[$0 - 1]) } + (belowMinutes.map { [(0, $0)] } ?? [])
                 if (typical != nil && selection == nil) || durationS != nil {
                     HStack(spacing: 8) {
                         if typical != nil, selection == nil {
@@ -348,32 +355,37 @@ struct NunaWorkoutLogZones: View {
                     }
                     .padding(.horizontal, 4)
                 }
-                ForEach((0..<5).reversed(), id: \.self) { i in
-                    let on = mins[i] * 60 >= 1
-                    let share = mins[i] / total
-                    let picked = selection == i + 1
+                ForEach(list, id: \.zone) { item in
+                    let zone = item.zone, m = item.mins
+                    let on = m * 60 >= 1
+                    let share = m / total
+                    let picked = selection == zone
+                    let tint = Self.color(zone)
                     VStack(alignment: .leading, spacing: 9) {
                         HStack(alignment: .firstTextBaseline, spacing: 9) {
-                            Text(verbatim: String(localized: "Zone \(i + 1)")).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 0.8).textCase(.uppercase)
+                            Text(verbatim: String(localized: "Zone \(zone)")).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 0.8).textCase(.uppercase)
                                 .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textMuted)
-                            if i < bands.count {
-                                Text(verbatim: "\(Int(bands[i].lower.rounded()))–\(Int(bands[i].upper.rounded())) BPM").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 0.4)
+                            if zone >= 1, zone <= bands.count {
+                                Text(verbatim: "\(Int(bands[zone - 1].lower.rounded()))–\(Int(bands[zone - 1].upper.rounded())) BPM").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 0.4)
+                                    .foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                            } else if zone == 0, let first = bands.first {
+                                Text(verbatim: "<\(Int(first.lower.rounded())) BPM").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 0.4)
                                     .foregroundStyle(NunaPalette.textMuted).textCase(nil)
                             }
                             Text(verbatim: "\(Int((share * 100).rounded()))%").font(.nuna(size: 13, weight: .heavy))
-                                .foregroundStyle(on ? colors[i] : colors[i].opacity(0.45))
+                                .foregroundStyle(on ? tint : tint.opacity(0.45))
                             Spacer(minLength: 8)
-                            time(mins[i] * 60, on: on)
+                            time(m * 60, on: on)
                         }
                         if on {
-                            bar(zone: i + 1, share: share, color: colors[i], usual: typical.flatMap { $0.indices.contains(i) ? $0[i] : nil })
+                            bar(zone: zone, share: share, color: tint, usual: zone >= 1 ? typical.flatMap { $0.indices.contains(zone - 1) ? $0[zone - 1] : nil } : nil)
                         }
                     }
                     .padding(.horizontal, 14).padding(.vertical, on ? 12 : 9)
                     .background(picked ? Color.clear : NunaPalette.tile, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(NunaPalette.textPrimary.opacity(picked ? 0.9 : 0), lineWidth: 1))
                     .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .onTapGesture { if on { selection = picked ? nil : i + 1 } }
+                    .onTapGesture { if on { selection = picked ? nil : zone } }
                     .accessibilityElement(children: .combine)
                     .accessibilityAddTraits(on ? .isButton : [])
                 }
@@ -454,6 +466,8 @@ struct NunaWorkoutLogStats: View {
 
     private struct Tile: Identifiable {
         let id: String; let icon: String; let label: LocalizedStringKey; let value: String; let unit: String
+        /// Shown after the value, smaller (the seconds of a duration).
+        var small = ""
         var pill: (value: Double, average: Double, text: String)?
     }
 
@@ -515,6 +529,14 @@ struct NunaWorkoutLogStats: View {
             if let avg = averages?.maxHr { t.pill = (Double(hr), avg, "\(Int(avg.rounded())) bpm") }
             out.append(t)
         }
+        // With the steps at the top, the duration is a tile here (it is not one of the two figures).
+        if stepsAtTop, secs > 0 {
+            let t = Int(secs.rounded())
+            var d = Tile(id: "dur", icon: "timer", label: "Duration", value: String(format: "%d:%02d", t / 3600, (t % 3600) / 60), unit: "")
+            d.small = String(format: ":%02d", t % 60)
+            if let avg = averages?.durationS { let a = Int(avg.rounded()); d.pill = (secs, avg, String(format: "%d:%02d:%02d", a / 3600, (a % 3600) / 60, a % 60)) }
+            out.append(d)
+        }
         return out
     }
 
@@ -550,7 +572,9 @@ struct NunaWorkoutLogStats: View {
             }
             .padding(.bottom, 8)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(verbatim: t.value).font(.nuna(size: 36, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+                (Text(verbatim: t.value).font(.nuna(size: 36, weight: .bold, design: NunaType.design))
+                    + Text(verbatim: t.small).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary))
+                    .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
                 if !t.unit.isEmpty && t.value != "–" { Text(verbatim: t.unit).font(.nuna(size: 17, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).lineLimit(1) }
             }
             .padding(.bottom, 6)
