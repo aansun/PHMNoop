@@ -308,7 +308,7 @@ struct NunaHealthMonitorCard: View {
                     } else {
                         HStack(spacing: 0) {
                             ForEach(Array(all.enumerated()), id: \.element.id) { idx, v in
-                                if idx > 0 { Rectangle().fill(NunaPalette.hairline).frame(width: 1, height: 78) }
+                                if idx > 0 { Rectangle().fill(NunaPalette.textMuted.opacity(0.4)).frame(width: 1, height: 78) }
                                 column(v)
                             }
                         }
@@ -407,6 +407,7 @@ struct NunaStressSummaryCard: View {
                             Text(isToday ? "Today's high stress" : "High stress")
                                 .font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                                 .lineLimit(2).fixedSize(horizontal: false, vertical: true)
+                                .padding(.bottom, -8)
                             HStack(alignment: .firstTextBaseline, spacing: 6) {
                                 Text(verbatim: highMin.map { String(format: "%d:%02d", $0 / 60, $0 % 60) } ?? "–")
                                     .font(.nuna(size: 40, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(40)).foregroundStyle(NunaPalette.textPrimary)

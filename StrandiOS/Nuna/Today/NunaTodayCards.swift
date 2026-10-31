@@ -543,7 +543,7 @@ struct NunaStressDayChart: View {
             }
             ZStack {
                 ForEach(0..<4, id: \.self) { i in
-                    Rectangle().fill(NunaPalette.hairline.opacity(0.7)).frame(height: 1).position(x: w / 2, y: inset + CGFloat(i) / 3 * (h - 2 * inset))
+                    Rectangle().fill(NunaPalette.textMuted.opacity(0.35)).frame(height: 1).position(x: w / 2, y: inset + CGFloat(i) / 3 * (h - 2 * inset))
                 }
                 if scored.count >= 2 {
                     Path { path in

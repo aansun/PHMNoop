@@ -48,7 +48,7 @@ struct NunaLockedColumns: View {
     var body: some View {
         HStack(spacing: 0) {
             ForEach(Array(items.enumerated()), id: \.offset) { i, b in
-                if i > 0 { Rectangle().fill(NunaPalette.hairline).frame(width: 1, height: 78) }
+                if i > 0 { Rectangle().fill(NunaPalette.textMuted.opacity(0.4)).frame(width: 1, height: 78) }
                 VStack(spacing: 6) {
                     NunaIcon(name: b.icon, size: 23, weight: .medium).foregroundStyle(NunaPalette.textMuted).frame(height: 28)
                     Text(b.name).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
