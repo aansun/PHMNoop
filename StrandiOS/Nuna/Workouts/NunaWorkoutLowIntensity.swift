@@ -64,7 +64,7 @@ struct NunaCapsuleTabs<Value: Hashable>: View {
                     Text(options[i].title).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 0.8).textCase(.uppercase)
                         .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                         .frame(maxWidth: .infinity).frame(height: 38)
-                        .background { if on { RoundedRectangle(cornerRadius: 14, style: .continuous).fill(NunaPalette.tile).matchedGeometryEffect(id: "raised", in: raised) } }
+                        .background { if on { RoundedRectangle(cornerRadius: 8, style: .continuous).fill(NunaPalette.tile).matchedGeometryEffect(id: "raised", in: raised) } }
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
@@ -72,8 +72,8 @@ struct NunaCapsuleTabs<Value: Hashable>: View {
             }
         }
         .padding(3)
-        .background(Color.black.opacity(0.3), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(NunaPalette.textPrimary.opacity(0.06), lineWidth: 1))
+        .background(Color.black.opacity(0.3), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(NunaPalette.textPrimary.opacity(0.06), lineWidth: 1))
     }
 }
 
@@ -103,7 +103,7 @@ struct NunaLowFigures: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             VStack(alignment: .leading, spacing: 6) {
-                Text(verbatim: change.map { NunaWorkoutStress.text($0) } ?? "–").font(.nuna(size: 40, weight: .bold, design: NunaType.design))
+                Text(verbatim: change.map { NunaWorkoutStress.text($0) } ?? "–").font(.nuna(size: 36, weight: .bold, design: NunaType.design))
                     .foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
                 caption("Stress change")
             }
@@ -214,24 +214,24 @@ struct NunaActivityMilestoneCard: View {
 
     var body: some View {
         let next = Self.marks.first { $0 > count } ?? (count + 1)
-        HStack(spacing: 24) {
-            badge.frame(width: 70, height: 70)
+        HStack(spacing: 18) {
+            badge.frame(width: 60, height: 60)
             VStack(alignment: .leading, spacing: 8) {
                 (Text(verbatim: "\(count)").foregroundStyle(NunaPalette.effortModerate) + Text(verbatim: "/\(next)").foregroundStyle(NunaPalette.textPrimary))
-                    .font(.nuna(size: 22, weight: .heavy))
-                Text(verbatim: String(localized: "\(next - count) more until your next milestone")).font(.nuna(size: 16, weight: .regular)).textCase(nil)
-                    .foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                    .font(.nuna(size: 20, weight: .heavy))
+                Text(verbatim: String(localized: "\(next - count) more until your next milestone")).font(.nuna(size: 14, weight: .regular)).textCase(nil)
+                    .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
                 GeometryReader { geo in
                     ZStack(alignment: .leading) {
-                        Capsule().fill(NunaPalette.textPrimary.opacity(0.14))
-                        Capsule().fill(NunaPalette.effortModerate).frame(width: geo.size.width * CGFloat(min(1, Double(count) / Double(next))))
+                        Rectangle().fill(NunaPalette.textPrimary.opacity(0.14))
+                        Rectangle().fill(NunaPalette.effortModerate).frame(width: geo.size.width * CGFloat(min(1, Double(count) / Double(next))))
                     }
                 }
                 .frame(height: 6)
             }
         }
-        .padding(.horizontal, 20).padding(.vertical, 22)
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(NunaPalette.textPrimary.opacity(0.16), lineWidth: 1.5))
+        .padding(.horizontal, 18).padding(.vertical, 18)
+        .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(NunaPalette.textPrimary.opacity(0.16), lineWidth: 1.5))
     }
 
     /// A scalloped dark disc with a lock: the badge is not earned yet.
@@ -289,14 +289,14 @@ struct NunaSessionMetrics: View {
             }
             .padding(.bottom, 6)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(verbatim: t.value).font(.nuna(size: 32, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+                Text(verbatim: t.value).font(.nuna(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
                 if t.value != "–" { Text(verbatim: "bpm").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil) }
             }
             .padding(.bottom, 4)
             if let p = t.pill { NunaAveragePill(value: p.value, average: p.average, text: p.text) } else { Color.clear.frame(height: 28) }
         }
         .padding(14).frame(maxWidth: .infinity, alignment: .leading)
-        .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 }
 
@@ -347,10 +347,10 @@ struct NunaActivityImpactCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Impact on recovery").font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel + 0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                Text("Impact on recovery").font(.nuna(size: 13.5, weight: .heavy)).tracking(nunaTrackingLabel + 0.8).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 Spacer()
                 if let p = impact.percent {
-                    Text(verbatim: String(format: "%+.0f%%", locale: AppLanguage.activeLocale, p)).font(.nuna(size: 24, weight: .bold, design: NunaType.design))
+                    Text(verbatim: String(format: "%+.0f%%", locale: AppLanguage.activeLocale, p)).font(.nuna(size: 22, weight: .bold, design: NunaType.design))
                         .foregroundStyle(p >= 0 ? NunaPalette.charge : NunaPalette.alertText)
                 } else {
                     Text(verbatim: "--%").font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textMuted)
@@ -361,7 +361,7 @@ struct NunaActivityImpactCard: View {
                  : (impact.withDays >= NunaActivityImpact.needed && impact.withoutDays >= NunaActivityImpact.needed
                     ? "There is no clear difference yet in the next day's Charge between the days you do this activity and the days you do not."
                     : "Keep logging this activity to receive insights. Once you reach 5 days with and 5 days without this activity, impacts will be unlocked."))
-                .font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
+                .font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
             dots(count: impact.withDays, mark: "checkmark", tint: NunaPalette.effortModerate)
             dots(count: impact.withoutDays, mark: "xmark", tint: NunaPalette.textPrimary)
             NavigationLink { NunaBehaviorInsightsView() } label: {
@@ -373,9 +373,9 @@ struct NunaActivityImpactCard: View {
             }
             .buttonStyle(.plain)
         }
-        .padding(20)
+        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(NunaPalette.tile.opacity(0.7), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .background(NunaPalette.tile.opacity(0.7), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
     /// Five circles filled in one by one, and "3/5" at the end of the row.
@@ -387,13 +387,13 @@ struct NunaActivityImpactCard: View {
                     Circle().strokeBorder(i < shown ? tint : tint.opacity(0.4), lineWidth: 2)
                     if i < shown {
                         Circle().fill(tint.opacity(0.22))
-                        Image(systemName: mark).font(.system(size: 17, weight: .bold)).foregroundStyle(tint)
+                        Image(systemName: mark).font(.system(size: 14, weight: .bold)).foregroundStyle(tint)
                     }
                 }
-                .frame(width: 40, height: 40)
+                .frame(width: 34, height: 34)
             }
             Spacer(minLength: 4)
-            Text(verbatim: "\(shown)/\(NunaActivityImpact.needed)").font(.nuna(size: 20, weight: .heavy))
+            Text(verbatim: "\(shown)/\(NunaActivityImpact.needed)").font(.nuna(size: 17, weight: .heavy))
                 .foregroundStyle(mark == "checkmark" ? NunaPalette.effortModerate : NunaPalette.textPrimary)
         }
     }

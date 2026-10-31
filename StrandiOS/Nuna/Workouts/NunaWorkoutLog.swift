@@ -45,7 +45,7 @@ struct NunaAveragePill: View {
         }
         .foregroundStyle(NunaPalette.textSecondary).textCase(nil)
         .padding(.horizontal, 10).frame(height: 28)
-        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
     }
 }
 
@@ -171,9 +171,9 @@ struct NunaWorkoutHRArea: View {
                         area.addLine(to: CGPoint(x: pt(pts[pts.count - 1]).x, y: size.height))
                         area.addLine(to: CGPoint(x: pt(pts[0]).x, y: size.height))
                         area.closeSubpath()
-                        inner.fill(area, with: .linearGradient(Gradient(colors: [NunaPalette.effortModerate.opacity(lit ? 0.12 : 0.5), NunaPalette.effortMinimal.opacity(lit ? 0.02 : 0.05)]),
+                        inner.fill(area, with: .linearGradient(Gradient(colors: [NunaWorkoutLogZones.hrBlue.opacity(lit ? 0.10 : 0.36), NunaPalette.effortMinimal.opacity(lit ? 0.02 : 0.05)]),
                                                                startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
-                        inner.stroke(line, with: .color(lit ? NunaPalette.textSecondary.opacity(0.55) : NunaPalette.effortModerate),
+                        inner.stroke(line, with: .color(lit ? NunaPalette.textSecondary.opacity(0.55) : NunaWorkoutLogZones.hrBlue),
                                      style: StrokeStyle(lineWidth: lit ? 1.6 : 2.2, lineCap: .round, lineJoin: .round))
                         if let zone = highlightZone, let zoneSet {
                             let color = NunaWorkoutLogZones.color(zone)
@@ -265,7 +265,7 @@ private struct NunaHatchedTrack: View {
             }
             ctx.stroke(p, with: .color(NunaPalette.ink.opacity(0.16)), lineWidth: 1.2)
         }
-        .clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+        .clipShape(RoundedRectangle(cornerRadius: 2, style: .continuous))
     }
 }
 
@@ -292,6 +292,9 @@ struct NunaWorkoutLogZones: View {
 
     /// The colour of a zone: white for zone 0, then the five below.
     static func color(_ zone: Int) -> Color { zone <= 0 ? Color(hex: "#EEF1F4") : colors[min(zone, 5) - 1] }
+
+    /// The heart-rate curve: a steel blue, calmer than the bright Effort blue.
+    static let hrBlue = Color(hex: "#2F78B4")
 
     /// Lowest zone to highest: pale steel, blue, green, amber, red.
     static let colors: [Color] = [Color(hex: "#A9BAC8"), Color(hex: "#4F97C2"), Color(hex: "#6BB894"), Color(hex: "#D4A55A"), Color(hex: "#CF6068")]
@@ -382,9 +385,9 @@ struct NunaWorkoutLogZones: View {
                         }
                     }
                     .padding(.horizontal, 14).padding(.vertical, on ? 12 : 9)
-                    .background(picked ? Color.clear : NunaPalette.tile, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(NunaPalette.textPrimary.opacity(picked ? 0.9 : 0), lineWidth: 1))
-                    .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    .background(picked ? Color.clear : NunaPalette.tile, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).stroke(NunaPalette.textPrimary.opacity(picked ? 0.9 : 0), lineWidth: 1))
+                    .contentShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                     .onTapGesture { if on { selection = picked ? nil : zone } }
                     .accessibilityElement(children: .combine)
                     .accessibilityAddTraits(on ? .isButton : [])
@@ -406,11 +409,11 @@ struct NunaWorkoutLogZones: View {
                     let tint = pick == zone ? color : NunaPalette.textSecondary.opacity(0.7)
                     ForEach(Array(stretches(zone: zone).enumerated()), id: \.offset) { _, r in
                         let x = geo.size.width * CGFloat(r.lowerBound)
-                        RoundedRectangle(cornerRadius: 1.5, style: .continuous).fill(tint)
+                        RoundedRectangle(cornerRadius: 1, style: .continuous).fill(tint)
                             .frame(width: max(geo.size.width * CGFloat(r.upperBound - r.lowerBound), 3), height: h).offset(x: min(x, geo.size.width - 3))
                     }
                 } else {
-                    RoundedRectangle(cornerRadius: 4, style: .continuous).fill(color).frame(width: max(geo.size.width * CGFloat(share), 10), height: h)
+                    RoundedRectangle(cornerRadius: 2, style: .continuous).fill(color).frame(width: max(geo.size.width * CGFloat(share), 10), height: h)
                 }
             }
             .frame(width: geo.size.width, height: h)
@@ -582,7 +585,7 @@ struct NunaWorkoutLogStats: View {
             else { Color.clear.frame(height: 28) }
         }
         .padding(16).frame(maxWidth: .infinity, alignment: .leading)
-        .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 }
 
