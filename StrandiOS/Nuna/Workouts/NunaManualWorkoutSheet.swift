@@ -23,6 +23,9 @@ struct NunaManualWorkoutSheet: View {
     /// The text the estimate filled in; the note below stays while it is still there.
     @State private var suggestedText: String?
     @State private var showSport = false
+    /// Where the strap was worn for this activity; the choice is remembered as the next default.
+    @AppStorage("workout.wearLocation") private var wearLocation = "Wrist band"
+    private static let wearOptions = ["---", "Wrist band", "Bicep band", "Arm sleeve", "Underwear", "Bra", "Shorts", "Compression top", "Leggings"]
 
     @AppStorage(UnitPrefs.systemKey) private var unitSystemRaw = UnitSystem.metric.rawValue
     @AppStorage(UnitPrefs.distanceSystemKey) private var distanceSystemRaw = ""
@@ -86,13 +89,13 @@ struct NunaManualWorkoutSheet: View {
                         HStack(spacing: 16) {
                             NunaActivityGlyph(name: sport.isEmpty ? "Select" : sport, size: 28)
                                 .foregroundStyle(NunaPalette.textSecondary).frame(width: 34, height: 34)
-                            Text(verbatim: sport.isEmpty ? String(localized: "Select activity") : sport).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 1)
+                            Text(verbatim: sport.isEmpty ? String(localized: "Select activity") : sport).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel + 1.4)
                                 .textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
                             Spacer(minLength: 8)
                             Image(systemName: "chevron.right").font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
                         }
                         .padding(.horizontal, 12).frame(height: 56).frame(maxWidth: .infinity)
-                        .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .background(Self.raised, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                         .contentShape(Rectangle())
                     }.buttonStyle(.plain)
 
@@ -105,9 +108,10 @@ struct NunaManualWorkoutSheet: View {
                     VStack(alignment: .leading, spacing: 14) {
                         nunaRuledHeader("Location")
                         Text("Where did you wear your strap?").font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).padding(.horizontal, 16)
-                        Text("Wrist band").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 1.2).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-                            .frame(maxWidth: .infinity).frame(height: 56)
-                            .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 14, style: .continuous)).padding(.horizontal, 16)
+                        Picker("", selection: $wearLocation) {
+                            ForEach(Self.wearOptions, id: \.self) { Text(verbatim: $0.uppercased()).font(.nuna(size: 18, weight: .semibold)).tag($0) }
+                        }
+                        .pickerStyle(.wheel).labelsHidden().frame(height: 190).padding(.horizontal, 16)
                     }
 
                     if !isRest {
@@ -138,10 +142,10 @@ struct NunaManualWorkoutSheet: View {
             }
             .scrollIndicators(.hidden).scrollDismissesKeyboard(.interactively)
             Button { save() } label: {
-                Text(editing == nil ? "Save" : "Save changes").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel + 1.4).textCase(.uppercase)
+                Text(editing == nil ? "Save" : "Save changes").font(.nuna(size: 14, weight: .black)).tracking(nunaTrackingLabel + 1.6).textCase(.uppercase)
                     .foregroundStyle(canSave ? NunaPalette.onAccent : NunaPalette.textMuted)
-                    .frame(maxWidth: .infinity).frame(height: 52)
-                    .background(canSave ? NunaPalette.accent : NunaPalette.tile, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .frame(maxWidth: .infinity).frame(height: 46)
+                    .background(canSave ? NunaPalette.accent : Self.raised, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             }
             .buttonStyle(.plain).disabled(!canSave)
             .padding(.horizontal, 24).padding(.vertical, 12)
@@ -156,6 +160,8 @@ struct NunaManualWorkoutSheet: View {
     }
 
     private static let info = Color(hex: "#6FB1E0")
+    /// The buttons of the sheet: a little lighter than the cards elsewhere, as in the reference.
+    private static let raised = Color.white.opacity(0.13)
 
     private var header: some View {
         ZStack {
@@ -179,9 +185,9 @@ struct NunaManualWorkoutSheet: View {
             Text(title).font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
             Spacer()
             ZStack {
-                Text(verbatim: Self.stamp(selection.wrappedValue)).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                    .padding(.horizontal, 16).frame(minWidth: 168, minHeight: 40)
-                    .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                Text(verbatim: Self.stamp(selection.wrappedValue)).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                    .padding(.horizontal, 16).frame(minWidth: 124, minHeight: 34)
+                    .background(Self.raised, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
                 DatePicker("", selection: selection, in: ...Date(), displayedComponents: [.date, .hourAndMinute])
                     .labelsHidden().colorMultiply(.clear).colorScheme(NunaTheme.mode == .light ? .light : .dark)
             }
