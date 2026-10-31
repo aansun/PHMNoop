@@ -38,13 +38,15 @@ struct NunaAveragePill: View {
     let value: Double
     let average: Double
     let text: String
+    /// A smaller pill, beside the figure at the top of the gym session.
+    var compact = false
     var body: some View {
         HStack(spacing: 4) {
-            Image(systemName: value >= average ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill").font(.system(size: 10, weight: .bold))
-            Text(verbatim: text).font(.nuna(size: 13.5, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.7)
+            Image(systemName: value >= average ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill").font(.system(size: compact ? 8 : 10, weight: .bold))
+            Text(verbatim: text).font(.nuna(size: compact ? 11.5 : 13.5, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.7)
         }
         .foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-        .padding(.horizontal, 10).frame(height: 28)
+        .padding(.horizontal, compact ? 7 : 10).frame(height: compact ? 22 : 28)
         .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
     }
 }

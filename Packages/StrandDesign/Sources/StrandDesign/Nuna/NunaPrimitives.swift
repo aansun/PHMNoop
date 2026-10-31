@@ -72,7 +72,7 @@ public struct NunaIconButton: View {
 
     public var body: some View {
         Button(action: action) {
-            NunaGlyph(systemImage, pointSize: 16)
+            NunaGlyph(systemImage, pointSize: systemImage == "chevron.left" ? 23 : 16)
                 .foregroundStyle(filled ? NunaPalette.onAccent : NunaPalette.textPrimary)
                 .frame(width: 44, height: 44)
                 // Only a filled (primary) button keeps its surface; every other icon button is the bare icon.
@@ -319,8 +319,10 @@ public struct NunaBareIcon: View {
     public init(_ symbol: String, tint: Color = NunaPalette.textPrimary, target: CGFloat = 44) {
         self.symbol = symbol; self.tint = tint; self.target = target
     }
+    /// The way back is drawn larger than the other bare icons.
+    private var size: CGFloat { symbol == "chevron.left" ? 23 : 17 }
     public var body: some View {
-        Image(systemName: symbol).font(.nuna(size: 17, weight: .bold)).foregroundStyle(tint)
+        Image(systemName: symbol).font(.nuna(size: size, weight: .bold)).foregroundStyle(tint)
             .frame(width: target, height: target).contentShape(Rectangle())
     }
 }

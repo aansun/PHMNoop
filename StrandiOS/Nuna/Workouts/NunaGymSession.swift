@@ -127,23 +127,28 @@ struct NunaGymSessionView: View {
     /// the figure and its two percentages with the caption under it.
     private func effortAndSplit(_ s: LiftSessionRow, averages: NunaWorkoutAverages?) -> some View {
         let strain = workout?.strain
-        return HStack(alignment: .bottom, spacing: 16) {
-            VStack(alignment: .leading, spacing: 6) {
-                HStack(alignment: .center, spacing: 8) {
-                    Text(verbatim: strain.map { UnitFormatter.effortDisplay($0, scale: effortScale) } ?? "–")
-                        .font(.nuna(size: 36, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(36))
-                        .foregroundStyle(strain.map(nunaEffortColor) ?? NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
-                    if let st = strain, let avg = averages?.effort {
-                        NunaAveragePill(value: st, average: avg, text: UnitFormatter.effortDisplay(avg, scale: effortScale))
+        return GeometryReader { geo in
+            HStack(alignment: .bottom, spacing: 0) {
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(alignment: .center, spacing: 6) {
+                        Text(verbatim: strain.map { UnitFormatter.effortDisplay($0, scale: effortScale) } ?? "–")
+                            .font(.nuna(size: 32, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(32))
+                            .foregroundStyle(strain.map(nunaEffortColor) ?? NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+                        if let st = strain, let avg = averages?.effort {
+                            NunaAveragePill(value: st, average: avg, text: UnitFormatter.effortDisplay(avg, scale: effortScale), compact: true)
+                        }
                     }
+                    Text("Activity Effort").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 }
-                Text("Activity Effort").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                .frame(width: geo.size.width * 0.45, alignment: .leading)
+                Rectangle().fill(NunaPalette.textPrimary.opacity(0.1)).frame(width: 1, height: 58)
+                NunaCardioMuscularCard(split: loadSplit(s), compact: true)
+                    .padding(.leading, 18)
+                    .frame(width: geo.size.width * 0.55 - 1, alignment: .leading)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            Rectangle().fill(NunaPalette.textPrimary.opacity(0.1)).frame(width: 1, height: 66)
-            NunaCardioMuscularCard(split: loadSplit(s), compact: true)
-                .frame(maxWidth: .infinity)
+            .frame(height: geo.size.height, alignment: .bottom)
         }
+        .frame(height: 64)
     }
 
     /// Effort per minute and kilograms per minute for one session, each nil when it cannot be worked out. Sessions under five
