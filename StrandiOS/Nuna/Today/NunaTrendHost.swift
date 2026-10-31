@@ -200,11 +200,11 @@ struct NunaTrendNameBox: View {
     }
 
     private func box(open: Bool, chevron: Bool) -> some View {
-        HStack(spacing: 14) {
-            NunaIcon(name: shownIcon, size: 20).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
-            Text(title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+        HStack(spacing: 16) {
+            NunaIcon(name: shownIcon, size: 21).foregroundStyle(NunaPalette.textSecondary).frame(width: 32)
+            Text(title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
             Spacer(minLength: 0)
-            if chevron { Image(systemName: open ? "chevron.up" : "chevron.down").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary) }
+            if chevron { Image(systemName: open ? "chevron.up" : "chevron.down").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary) }
         }
         .padding(.horizontal, 18).frame(height: 60)
         .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
