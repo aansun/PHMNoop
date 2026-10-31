@@ -44,24 +44,24 @@ struct NunaLineTrendView: View {
     static func forMetric(_ key: String, endingDaysAgo: Int) -> NunaLineTrendView? {
         switch key {
         case "hrv":
-            return NunaLineTrendView(name: "Heart rate variability", icon: "waveform.path.ecg", noun: "average HRV", key: key, unit: "ms", upIsGood: true, endingDaysAgo: endingDaysAgo)
+            return NunaLineTrendView(name: "Heart rate variability", icon: "met:heart-rate-variability", noun: "average HRV", key: key, unit: "ms", upIsGood: true, endingDaysAgo: endingDaysAgo)
         case "rhr":
-            return NunaLineTrendView(name: "Resting heart rate", icon: "heart", noun: "average resting heart rate", key: key, unit: "bpm", upIsGood: false, endingDaysAgo: endingDaysAgo)
+            return NunaLineTrendView(name: "Resting heart rate", icon: "met:resting-heart-rate", noun: "average resting heart rate", key: key, unit: "bpm", upIsGood: false, endingDaysAgo: endingDaysAgo)
         case "resp_rate":
-            return NunaLineTrendView(name: "Respiratory rate", icon: "lungs", noun: "average respiratory rate", key: key, unit: "rpm", decimals: 1, endingDaysAgo: endingDaysAgo)
+            return NunaLineTrendView(name: "Respiratory rate", icon: "met:respiratory-rate", noun: "average respiratory rate", key: key, unit: "rpm", decimals: 1, endingDaysAgo: endingDaysAgo)
         case "spo2":
             return NunaLineTrendView(name: "Blood oxygen", icon: "drop", noun: "average blood oxygen", key: key, unit: "%", upIsGood: true, endingDaysAgo: endingDaysAgo)
         case "skin_temp":
             return NunaLineTrendView(name: "Skin temperature", icon: "thermometer.medium", noun: "average skin temperature (against your usual)", key: key, unit: "°C", decimals: 1,
                                      endingDaysAgo: endingDaysAgo)
         case "vo2max_est":
-            return NunaLineTrendView(name: "VO₂ max", icon: "lungs", noun: "average estimated VO₂ max", key: key, unit: "ml/kg/min", decimals: 1, upIsGood: true,
+            return NunaLineTrendView(name: "VO₂ max", icon: "met:vo2-max", noun: "average estimated VO₂ max", key: key, unit: "ml/kg/min", decimals: 1, upIsGood: true,
                                      closing: String(localized: "It is worked out once a week from your resting heart rate and your profile."), endingDaysAgo: endingDaysAgo)
         case "vitality":
             return NunaLineTrendView(name: "Vitality", icon: "sparkles", noun: "average Vitality", key: key, unit: "", upIsGood: true,
                                      closing: String(localized: "It is worked out once a week from your sleep, activity and recovery."), endingDaysAgo: endingDaysAgo)
         case "weight":
-            return NunaLineTrendView(name: "Weight", icon: "scalemass", noun: "average weight", key: key, unit: "kg", decimals: 1, source: "apple-health", also: nunaManualSource,
+            return NunaLineTrendView(name: "Weight", icon: "met:weight", noun: "average weight", key: key, unit: "kg", decimals: 1, source: "apple-health", also: nunaManualSource,
                                      closing: String(localized: "Log it from Quick actions or connect Apple Health to track how it changes over time."), endingDaysAgo: endingDaysAgo)
         default:
             return nil

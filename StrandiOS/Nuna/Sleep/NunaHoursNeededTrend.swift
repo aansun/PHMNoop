@@ -82,7 +82,7 @@ struct NunaHoursNeededTrendView: View {
 
     /// The name of the reading, in a box, as the reference shows it.
     private var nameBox: some View {
-        NunaTrendNameBox(icon: "moon", title: "Hours vs. needed (hours)")
+        NunaTrendNameBox(icon: "met:hours-vs-needed-hours", title: "Hours vs. needed (hours)")
     }
 
     private func header(_ need: Double?, _ slept: Double?) -> some View {

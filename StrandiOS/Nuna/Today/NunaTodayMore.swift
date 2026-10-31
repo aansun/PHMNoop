@@ -90,26 +90,26 @@ extension NunaTodayView {
             let ex = model.extras
             let made: (String?, NunaRowTarget?, String, Color?)
             switch card {
-            case .hrv:         made = (num(model.hrv), desc("hrv"), "waveform.path.ecg", nil)
-            case .restingHr:   made = (num(model.restingHr), desc("rhr"), "heart.fill", nil)
-            case .respiratory: made = (num(model.respiratory, 1), desc("resp_rate"), "lungs.fill", nil)
-            case .steps:       made = (num(model.steps), steps, "figure.walk", nil)
-            case .stepsAverage30: made = (nil, steps, "figure.walk", nil)
+            case .hrv:         made = (num(model.hrv), desc("hrv"), "met:heart-rate-variability", nil)
+            case .restingHr:   made = (num(model.restingHr), desc("rhr"), "met:resting-heart-rate", nil)
+            case .respiratory: made = (num(model.respiratory, 1), desc("resp_rate"), "met:respiratory-rate", nil)
+            case .steps:       made = (num(model.steps), steps, "met:steps", nil)
+            case .stepsAverage30: made = (nil, steps, "met:steps", nil)
             case .stress:      made = (num(model.stress, 1), NunaRowTarget(kind: .tab(.stress)), "wind", NunaPalette.charge)
             case .fitnessAge:  made = (num(ex["fitness_age"]), desc("fitness_age"), "figure.run", nil)
-            case .vo2max:      made = (num(ex["vo2max_est"], 1), desc("vo2max_est"), "lungs", nil)
+            case .vo2max:      made = (num(ex["vo2max_est"], 1), desc("vo2max_est"), "met:vo2-max", nil)
             case .vitality:    made = (num(ex["vitality"]), desc("vitality"), "sparkles", nil)
             case .bloodOxygen: made = (num(model.spo2), desc("spo2"), "drop.fill", nil)
             case .skinTemp:    made = (num(ex["skin_temp"], 1), desc("skin_temp"), "thermometer", nil)
             case .sleep:
-                made = (model.sleepMinutes.map { "\(Int($0) / 60)h \(Int($0) % 60)m" }, NunaRowTarget(kind: .nuna(.sleep(0))), "moon.zzz.fill", NunaPalette.restText)
-            case .calories:    made = (num(model.calories), desc("energy_kcal"), "flame.fill", nil)
+                made = (model.sleepMinutes.map { "\(Int($0) / 60)h \(Int($0) % 60)m" }, NunaRowTarget(kind: .nuna(.sleep(0))), "met:sleep-performance", NunaPalette.restText)
+            case .calories:    made = (num(model.calories), desc("energy_kcal"), "met:calories", nil)
             case .hydration:
                 guard hydrationEnabled else { return nil }
                 made = (nil, NunaRowTarget(kind: .nuna(.hydration)), "drop.fill", NunaPalette.effortText)
             case .weight:
                 // The latest reading (Apple Health or one added on the Weight page), else the weight in the profile.
-                made = (num(ex["weight"] ?? (profile.weightKg > 0 ? profile.weightKg : nil), 1), NunaRowTarget(kind: .nuna(.weight)), "scalemass.fill", nil)
+                made = (num(ex["weight"] ?? (profile.weightKg > 0 ? profile.weightKg : nil), 1), NunaRowTarget(kind: .nuna(.weight)), "met:weight", nil)
             case .coupled:     made = (nil, NunaRowTarget(kind: .tab(.coupled)), "square.split.2x1.fill", nil)
             case .coach:
                 guard coachEnabled else { return nil }

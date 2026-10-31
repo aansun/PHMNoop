@@ -260,7 +260,7 @@ struct NunaRestTrendView: View {
 
     var body: some View {
         NunaPctTrendView(
-            name: "Sleep performance", icon: "moon", noun: "average Sleep Performance",
+            name: "Sleep performance", icon: "met:sleep-performance", noun: "average Sleep Performance",
             bands: [
                 .init(color: NunaRestChart.need, name: "Optimal", range: ">85%") { $0 > 85 },
                 .init(color: Color(hex: "#8A8D93"), name: "Sufficient", range: "70–85%") { $0 >= 70 && $0 <= 85 },
