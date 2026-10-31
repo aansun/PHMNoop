@@ -13,7 +13,9 @@ import WhoopStore
 enum NunaLowIntensity {
     /// Time in zones 2 to 5 is under a minute (or 5% of the session, if that is longer), and it was not strength work or a mapped one.
     static func applies(row: WorkoutRow, zoneMinutes: [Double]?, hasHeartRate: Bool, hasRoute: Bool) -> Bool {
-        guard hasHeartRate, !hasRoute, !NunaWorkoutKind.isStrength(row), let z = zoneMinutes, z.count >= 5 else { return false }
+        // No minutes at all in the zones, with a heart rate on file, means it never reached zone 1: that is the lowest-intensity case.
+        let z = zoneMinutes ?? Array(repeating: 0, count: 5)
+        guard hasHeartRate, !hasRoute, !NunaWorkoutKind.isStrength(row), z.count >= 5 else { return false }
         let minutes = (row.durationS ?? Double(row.endTs - row.startTs)) / 60
         guard minutes > 0 else { return false }
         return z.dropFirst().reduce(0, +) < max(1, minutes * 0.05)
@@ -354,9 +356,11 @@ struct NunaActivityImpactCard: View {
                     Text(verbatim: "--%").font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textMuted)
                 }
             }
-            Text(impact.percent == nil
-                 ? "Keep logging this activity to receive insights. Once you reach 5 days with and 5 days without this activity, impacts will be unlocked."
-                 : "The day after you do this activity, your Charge differs by this much from the days you do not.")
+            Text(impact.percent != nil
+                 ? "The day after you do this activity, your Charge differs by this much from the days you do not."
+                 : (impact.withDays >= NunaActivityImpact.needed && impact.withoutDays >= NunaActivityImpact.needed
+                    ? "There is no clear difference yet in the next day's Charge between the days you do this activity and the days you do not."
+                    : "Keep logging this activity to receive insights. Once you reach 5 days with and 5 days without this activity, impacts will be unlocked."))
                 .font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
             dots(count: impact.withDays, mark: "checkmark", tint: NunaPalette.effortModerate)
             dots(count: impact.withoutDays, mark: "xmark", tint: NunaPalette.textPrimary)
