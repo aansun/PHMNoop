@@ -107,11 +107,13 @@ struct NunaQuickPanel<Root: Hashable>: View {
     }
 }
 
-/// Choose, order and reset the quick actions (at most five).
+/// Choose, order and reset the quick actions (at most five). A shown action is removed by swiping it to the left, where a delete icon
+/// comes out; the actions to add are listed only while a slot is empty. The order is changed with the Reorder switch at the top.
 struct NunaQuickActionsEditor: View {
     @Binding var raw: String
     @Environment(\.dismiss) private var dismiss
     @State private var ids: [String] = []
+    @State private var reordering = false
 
     private var available: [NunaQuickAction] { NunaQuickActions.all.filter { !ids.contains($0.id) } }
     private var full: Bool { ids.count >= NunaQuickActions.maxCount }
@@ -125,52 +127,74 @@ struct NunaQuickActionsEditor: View {
                             NunaIconTile(a.icon)
                             Text(LocalizedStringKey(a.title)).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             Spacer(minLength: 0)
-                            Button { ids.removeAll { $0 == id }; save() } label: {
-                                Image(systemName: "minus.circle.fill").font(.nuna(size: 20, weight: .semibold)).foregroundStyle(NunaPalette.alert)
-                            }.buttonStyle(.plain).accessibilityLabel(Text("Remove"))
                         }
                         .listRowBackground(Color.clear)
+                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                            Button(role: .destructive) { withAnimation { ids.removeAll { $0 == id }; save() } } label: {
+                                Image(systemName: "trash")
+                            }
+                            .tint(NunaPalette.alert)
+                            .accessibilityLabel(Text("Remove"))
+                        }
                     }
                 }
                 .onMove { ids.move(fromOffsets: $0, toOffset: $1); save() }
+                // The slots still free, drawn as dashed rows.
+                ForEach(0..<max(NunaQuickActions.maxCount - ids.count, 0), id: \.self) { _ in
+                    HStack(spacing: 12) {
+                        RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(NunaPalette.textMuted.opacity(0.5), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                            .frame(width: 36, height: 36)
+                        Text("Empty slot").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                        Spacer(minLength: 0)
+                    }
+                    .listRowBackground(Color.clear).moveDisabled(true)
+                }
             } header: {
                 HStack {
                     Text(verbatim: String(localized: "Shown · \(ids.count) of \(NunaQuickActions.maxCount)"))
                     Spacer()
+                    if ids.count > 1 {
+                        Button { withAnimation { reordering.toggle() } } label: {
+                            Text(reordering ? "Done" : "Reorder").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                                .foregroundStyle(NunaPalette.textPrimary).frame(minHeight: 30)
+                        }.buttonStyle(.plain)
+                    }
                 }.font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             } footer: {
                 if full {
-                    Text("Five is the most. Remove one to add another.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    Text("Five is the most. Swipe one to the left to remove it and make room for another.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
             }
-            ForEach(Array(Dictionary(grouping: available, by: \.group).keys).sorted { groupOrder($0) < groupOrder($1) }, id: \.self) { group in
-                Section {
-                    ForEach(available.filter { $0.group == group }) { a in
-                        Button { guard !full else { return }; ids.append(a.id); save() } label: {
-                            HStack(spacing: 12) {
-                                NunaIconTile(a.icon)
-                                Text(LocalizedStringKey(a.title)).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                                Spacer(minLength: 0)
-                                Image(systemName: "plus.circle.fill").font(.nuna(size: 20, weight: .semibold)).foregroundStyle(NunaPalette.charge)
+            if !full {
+                ForEach(Array(Dictionary(grouping: available, by: \.group).keys).sorted { groupOrder($0) < groupOrder($1) }, id: \.self) { group in
+                    Section {
+                        ForEach(available.filter { $0.group == group }) { a in
+                            Button { guard !full else { return }; withAnimation { ids.append(a.id); save() } } label: {
+                                HStack(spacing: 12) {
+                                    NunaIconTile(a.icon)
+                                    Text(LocalizedStringKey(a.title)).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                                    Spacer(minLength: 0)
+                                    Image(systemName: "plus.circle.fill").font(.nuna(size: 20, weight: .semibold)).foregroundStyle(NunaPalette.charge)
+                                }
                             }
+                            .buttonStyle(.plain)
+                            .listRowBackground(Color.clear)
                         }
-                        .buttonStyle(.plain).disabled(full).opacity(full ? 0.4 : 1)
-                        .listRowBackground(Color.clear)
+                    } header: {
+                        Text(LocalizedStringKey(group)).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     }
-                } header: {
-                    Text(LocalizedStringKey(group)).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 }
             }
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
         .background(NunaPalette.canvas.ignoresSafeArea())
-        .environment(\.editMode, .constant(.active))
+        .environment(\.editMode, .constant(reordering ? .active : .inactive))
         .safeAreaInset(edge: .top, spacing: 0) {
             HStack {
                 Text("Customize quick actions").font(.nuna(size: NunaTypeSize.h2, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 Spacer()
-                Button { ids = NunaQuickActions.defaultIDs; save() } label: {
+                Button { withAnimation { ids = NunaQuickActions.defaultIDs; save() } } label: {
                     Text("Reset").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         .padding(.horizontal, 14).frame(height: 38)
                         .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
