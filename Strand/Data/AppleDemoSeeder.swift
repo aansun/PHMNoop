@@ -650,15 +650,15 @@ enum AppleDemoSeeder {
         for (i, p) in plans.enumerated() {
             let start = now - Int(p.ago * 3600), end = start + Int(p.min * 60)
             rows.append(WorkoutRow(startTs: start, endTs: end, sport: "Stretching", source: whoop, durationS: p.min * 60, energyKcal: round1(p.min * 3.4),
-                                   avgHr: 99 + i % 3, maxHr: 113 + i % 4, strain: round1(1.6 + Double(i % 3) * 0.4), distanceM: nil, zonesJSON: nil,
+                                   avgHr: 84 + i % 3, maxHr: 97 + i % 4, strain: round1(1.6 + Double(i % 3) * 0.4), distanceM: nil, zonesJSON: nil,
                                    notes: i == 0 ? "demo-low" : nil, steps: nil))
             var t = start - 300
             while t <= end + 120 {
                 let up = Swift.min(1.0, Swift.max(0.0, Double(t - start) / 180.0 + 0.2))
                 let down = Swift.min(1.0, Swift.max(0.0, Double(end + 120 - t) / 120.0))
-                let level = 66.0 + (99.0 - 66.0) * up * down
+                let level = 64.0 + (84.0 - 64.0) * up * down
                 let wave = 1.0 + 0.05 * Foundation.sin(2.0 * Double.pi * Double(t) / 150.0) + 0.03 * Foundation.sin(2.0 * Double.pi * Double(t) / 47.0)
-                hr.append(HRSample(ts: t, bpm: Int((level * wave + gauss(&rng, 0.0, 1.6)).clamped(52.0, 118.0))))
+                hr.append(HRSample(ts: t, bpm: Int((level * wave + gauss(&rng, 0.0, 1.6)).clamped(52.0, 104.0))))
                 t += 5
             }
         }
