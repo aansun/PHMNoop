@@ -23,7 +23,7 @@ struct NunaDetailHeader: View {
 
     private var backButton: some View {
         Button { dismiss() } label: {
-            Image(systemName: "chevron.left").font(.nuna(size: 16, weight: .bold))
+            Image(systemName: "chevron.left").font(.nuna(size: 23, weight: .bold))
                 .foregroundStyle(NunaPalette.textPrimary)
                 .frame(width: 44, height: 44)
         }

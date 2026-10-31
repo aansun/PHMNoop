@@ -140,7 +140,7 @@ struct NunaCardioMuscularCard: View {
     }
 
     private var inner: some View {
-            VStack(alignment: .leading, spacing: 10) {
+            VStack(alignment: .leading, spacing: 6) {
                 HStack {
                     caption("Cardio")
                     Spacer()
@@ -153,16 +153,16 @@ struct NunaCardioMuscularCard: View {
                         ZStack(alignment: .leading) {
                             RoundedRectangle(cornerRadius: 3, style: .continuous).fill(NunaPalette.effortModerate)
                             Rectangle().fill(Color(hex: "#0B5C9E")).frame(width: max(x, 0))
-                            Rectangle().fill(Color.white).frame(width: 3, height: 26).offset(x: min(max(x - 1.5, 0), geo.size.width - 3))
+                            Rectangle().fill(Color.white).frame(width: 2.5, height: 16).offset(x: min(max(x - 1.5, 0), geo.size.width - 3))
                         }
                         .clipShape(RoundedRectangle(cornerRadius: 3, style: .continuous))
                         .overlay(RoundedRectangle(cornerRadius: 3, style: .continuous).strokeBorder(Color(hex: "#0B5C9E"), lineWidth: 1.5))
                     }
-                    .frame(height: 22)
+                    .frame(height: 12)
                     HStack {
-                        Text(verbatim: "\(split.cardioPct)%").font(.nuna(size: 18, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: "\(split.cardioPct)%").font(.nuna(size: 14, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
                         Spacer()
-                        Text(verbatim: "\(split.muscularPct)%").font(.nuna(size: 18, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: "\(split.muscularPct)%").font(.nuna(size: 14, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
                     }
                     if !compact {
                         Text("Against your last \(split.sessions) sessions. An estimate; it does not change Effort.")
@@ -178,7 +178,7 @@ struct NunaCardioMuscularCard: View {
     }
 
     private func caption(_ key: LocalizedStringKey) -> some View {
-        Text(key).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+        Text(key).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
     }
 }
 

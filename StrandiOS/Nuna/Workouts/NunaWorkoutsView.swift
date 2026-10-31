@@ -115,7 +115,7 @@ struct NunaWorkoutsView: View {
     private var header: some View {
         HStack(spacing: 10) {
             Button { dismiss() } label: {
-                Image(systemName: "chevron.left").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                Image(systemName: "chevron.left").font(.nuna(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     .frame(width: 44, height: 44)
             }.buttonStyle(.plain).accessibilityLabel(Text("Back"))
             Text("Workouts").font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)

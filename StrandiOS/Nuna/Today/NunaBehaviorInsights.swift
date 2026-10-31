@@ -74,7 +74,7 @@ struct NunaBehaviorPage<Content: View>: View {
                 Text(title).font(.nuna(size: 13, weight: .heavy)).tracking(1.7).textCase(.uppercase).foregroundStyle(Color.white)
                 HStack {
                     Button { dismiss() } label: {
-                        Image(systemName: "chevron.left").font(.system(size: 20, weight: .semibold)).foregroundStyle(Color.white).frame(width: 44, height: 44).contentShape(Rectangle())
+                        Image(systemName: "chevron.left").font(.system(size: 23, weight: .bold)).foregroundStyle(Color.white).frame(width: 44, height: 44).contentShape(Rectangle())
                     }
                     .buttonStyle(.plain).accessibilityLabel(Text("Back"))
                     Spacer()

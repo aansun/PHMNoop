@@ -22,7 +22,7 @@ struct NunaStressZoomScreen: View {
                                        onZoom: onClose, reads: true, domain: domain)
                     .padding(.leading, 60).padding(.trailing, 10).padding(.top, 20).padding(.bottom, 46)
                 Button(action: onClose) {
-                    Image(systemName: "chevron.left").font(.nuna(size: 20, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Image(systemName: "chevron.left").font(.nuna(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         .frame(width: 52, height: 52).contentShape(Rectangle())
                 }
                 .padding(.leading, 18).padding(.bottom, 6).accessibilityLabel(Text("Back"))

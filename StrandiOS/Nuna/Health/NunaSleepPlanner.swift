@@ -345,7 +345,7 @@ struct NunaSmartAlarmView: View {
             Text(text).font(.nuna(size: 16, weight: .regular)).foregroundStyle(Color.white).textCase(nil)
             HStack {
                 Button(action: back) {
-                    Image(systemName: "chevron.left").font(.system(size: 17, weight: .semibold)).foregroundStyle(Color.white).frame(width: 44, height: 44).contentShape(Rectangle())
+                    Image(systemName: "chevron.left").font(.system(size: 23, weight: .bold)).foregroundStyle(Color.white).frame(width: 44, height: 44).contentShape(Rectangle())
                 }
                 .buttonStyle(.plain).accessibilityLabel(Text("Back"))
                 Spacer()

@@ -166,7 +166,7 @@ struct NunaTodayCustomizeSheet: View {
             HStack(spacing: 12) {
                 if let back {
                     Button(action: back) {
-                        Image(systemName: "chevron.left").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Image(systemName: "chevron.left").font(.nuna(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             .frame(width: 44, height: 44)
                     }.accessibilityLabel(Text("Back"))
                 } else {
