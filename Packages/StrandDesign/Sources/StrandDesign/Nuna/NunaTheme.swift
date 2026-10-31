@@ -197,11 +197,14 @@ enum NunaWHPFont {
         if proximaOK {
             // Headlines (heavy and black): Extrabold. Titles of 24 pt and up: Extrabold. Everything else is body text: Semibold, and
             // Regular only for the smallest regular captions.
+            // The guide's Bold is not among the files and Extrabold reads bulky at card sizes, so Extrabold is kept for the big titles (20 pt
+            // and up); small labels and headlines are Semibold, set apart by their capitals and 10% spacing. Words are set 7% smaller than the
+            // sizes the screens ask for, which were drawn for a wider face.
             let w: Font.Weight
-            if weight == .heavy || weight == .black || (weight == .bold && size >= 24) { w = .heavy }
+            if (weight == .heavy || weight == .black || weight == .bold) && size >= 20 { w = .heavy }
             else if weight == .regular && size < 12 { w = .regular }
             else { w = .semibold }
-            return .custom(proxima[w] ?? "ProximaNova-Semibold", size: size)
+            return .custom(proxima[w] ?? "ProximaNova-Semibold", size: (size * 0.93 * 2).rounded() / 2)
         }
         let w: Font.Weight
         var pt = size
