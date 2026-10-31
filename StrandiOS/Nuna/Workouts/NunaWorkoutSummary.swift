@@ -24,6 +24,10 @@ struct NunaWorkoutSummaryView: View {
     @State private var showEditActivity = false
     /// The zone picked in the zone list, lit on the heart-rate curve.
     @State private var zonePick: Int?
+    /// The stress through the session, for a low-intensity one (see `NunaLowIntensity`), and which of its two charts is showing.
+    @State private var stress: [NunaWorkoutStress.Point] = []
+    @State private var lowTab = LowTab.stress
+    private enum LowTab: Hashable { case stress, heartRate }
     @State private var stravaState: NunaStravaState = .off
     @State private var stravaMessage: String?
     @StateObject private var strava = StravaSettingsModel()
@@ -54,6 +58,9 @@ struct NunaWorkoutSummaryView: View {
             if let r = m.row(key) {
                 await data.load(startTs: r.startTs, endTs: r.endTs, sport: r.sport, source: r.source, knownSteps: r.steps, repo: repo, zoneSet: profile.hrZoneSet, ticksPerStep: profile.stepTicksPerStep)
                 stravaState = NunaStravaCheck.state(r)
+                let z = NunaWorkoutZoneMath.minutes(r, measured: data.zoneMin)
+                stress = NunaLowIntensity.applies(row: r, zoneMinutes: z, hasHeartRate: data.hr.count >= 2, hasRoute: data.route.count >= 2)
+                    ? await NunaWorkoutStress.series(repo: repo, from: r.startTs, to: r.endTs) : []
                 // A session that has just finished is read against the conditions now, when none was taken near it.
                 if Int(Date().timeIntervalSince1970) - r.endTs < 90 * 60, environment.snapshot(near: (r.startTs + r.endTs) / 2) == nil {
                     await environment.refreshIfNeeded(maxAge: 15 * 60)
@@ -88,12 +95,80 @@ struct NunaWorkoutSummaryView: View {
         let mins = NunaWorkoutZoneMath.minutes(r, measured: data.zoneMin)
         let averages = NunaWorkoutAverages(for: r, in: m.rows)
         let shown = NunaTreadmillEstimate.filled(r, steps: data.steps)
-        NunaWorkoutLogFigures(row: r, averages: averages, steps: data.steps)
-        if data.route.count >= 2 { NunaWorkoutRouteCard(points: data.route, row: shown.row, elevationGainM: data.elevationGainM, onShare: { Task { await exportFile(r, gpx: true) } }) }
-        NunaWorkoutLogStats(row: shown.row, steps: data.steps, averages: averages, distanceEstimated: shown.estimated, routeShown: data.route.count >= 2, stepsAtTop: data.steps != nil)
+        let mapped = data.route.count >= 2
+        if NunaLowIntensity.applies(row: r, zoneMinutes: mins, hasHeartRate: data.hr.count >= 2, hasRoute: mapped) {
+            lowContent(r, shown: shown.row, mins: mins, averages: averages)
+        } else {
+            NunaWorkoutLogFigures(row: r, averages: averages, steps: data.steps)
+            if mapped {
+                // With a map: the heart rate and its zones first, then the route, then the key statistics.
+                heartRateAndZones(r, mins: mins)
+                zoneFootnote
+                NunaWorkoutRouteCard(points: data.route, row: shown.row, elevationGainM: data.elevationGainM, onShare: { Task { await exportFile(r, gpx: true) } })
+                NunaWorkoutLogStats(row: shown.row, steps: data.steps, averages: averages, distanceEstimated: shown.estimated, routeShown: true, stepsAtTop: data.steps != nil)
+            } else {
+                NunaWorkoutLogStats(row: shown.row, steps: data.steps, averages: averages, distanceEstimated: shown.estimated, routeShown: false, stepsAtTop: data.steps != nil)
+                heartRateAndZones(r, mins: mins)
+            }
+            if let line = anyaLine(shown.row, mins: mins, averages: averages) { NunaAnyaCard(verbatim: line.headline, detail: line.detail) { showCoach = true } }
+        }
+    }
+
+    /// The heart-rate chart and, under it, the zones (the duration is said at their head when the figures at the top show the steps).
+    @ViewBuilder private func heartRateAndZones(_ r: WorkoutRow, mins: [Double]?) -> some View {
         if data.hr.count >= 2 { NunaWorkoutHRArea(buckets: data.hr, start: r.startTs, end: r.endTs, around: data.hrAround, highlightZone: zonePick, zoneSet: profile.hrZoneSet) }
-        if mins?.contains(where: { $0 > 0 }) ?? false { NunaWorkoutLogZones(minutes: mins, selection: $zonePick, buckets: data.hr, start: r.startTs, end: r.endTs, typical: NunaWorkoutLogZones.typical(for: r, in: m.rows), durationS: data.steps != nil ? (r.durationS ?? Double(r.endTs - r.startTs)) : nil) }
-        if let line = anyaLine(shown.row, mins: mins, averages: averages) { NunaAnyaCard(verbatim: line.headline, detail: line.detail) { showCoach = true } }
+        if mins?.contains(where: { $0 > 0 }) ?? false {
+            NunaWorkoutLogZones(minutes: mins, selection: $zonePick, buckets: data.hr, start: r.startTs, end: r.endTs,
+                                typical: NunaWorkoutLogZones.typical(for: r, in: m.rows),
+                                durationS: data.steps != nil ? (r.durationS ?? Double(r.endTs - r.startTs)) : nil,
+                                belowMinutes: NunaWorkoutZoneMath.below(r, measured: data.zoneMin))
+        }
+    }
+
+    /// Under the zones: where the ranges come from, and the way to change them.
+    private var zoneFootnote: some View {
+        NavigationLink { NunaZonesView() } label: {
+            (Text("Zone ranges are set from your maximum heart rate.") + Text(verbatim: " ") + Text("View HR settings").underline().foregroundStyle(NunaPalette.textPrimary))
+                .font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                .multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .buttonStyle(.plain)
+    }
+
+    // MARK: Low intensity
+
+    /// A session in which the heart rate stayed in zone 0 and zone 1: the minutes and the stress change, Anya's line, the stress and the heart
+    /// rate on two tabs, the milestone, the heart-rate figures and the impact on recovery.
+    @ViewBuilder private func lowContent(_ r: WorkoutRow, shown: WorkoutRow, mins: [Double]?, averages: NunaWorkoutAverages?) -> some View {
+        NunaLowFigures(row: r, averages: averages, stress: stress)
+        if let line = anyaLine(shown, mins: mins, averages: averages) { NunaAnyaCard(verbatim: line.headline, detail: line.detail) { showCoach = true } }
+        NunaCapsuleTabs(options: [(value: LowTab.stress, title: "Stress"), (value: LowTab.heartRate, title: "Heart rate")], selection: $lowTab)
+        switch lowTab {
+        case .stress:
+            if stress.count >= 2 { NunaWorkoutStressArea(points: stress, start: r.startTs, end: r.endTs) }
+            else { Text("There is not enough heart rate in this session to read the stress.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
+        case .heartRate:
+            NunaWorkoutHRArea(buckets: data.hr, start: r.startTs, end: r.endTs, around: data.hrAround, plotHeight: 200)
+        }
+        NunaActivityMilestoneCard(count: m.rows.filter { $0.sport == r.sport && $0.startTs <= r.startTs }.count)
+        NunaSessionMetrics(items: sessionMetrics(r, averages: averages))
+        NunaActivityImpactCard(impact: NunaActivityImpact.compute(row: r, rows: m.rows, days: repo.days))
+    }
+
+    private func sessionMetrics(_ r: WorkoutRow, averages: NunaWorkoutAverages?) -> [NunaSessionMetrics.Item] {
+        var items: [NunaSessionMetrics.Item] = []
+        if let lo = data.hr.map(\.minBpm).min() { items.append(.init(id: "min", icon: "arrow.down.heart", label: "Min HR", value: "\(Int(lo.rounded()))")) }
+        if let hr = r.avgHr {
+            var t = NunaSessionMetrics.Item(id: "avg", icon: "heart", label: "Avg HR", value: "\(hr)")
+            if let avg = averages?.avgHr { t.pill = (Double(hr), avg, "\(Int(avg.rounded()))bpm") }
+            items.append(t)
+        }
+        if let hr = r.maxHr {
+            var t = NunaSessionMetrics.Item(id: "max", icon: "bolt.heart", label: "Max HR", value: "\(hr)")
+            if let avg = averages?.maxHr { t.pill = (Double(hr), avg, "\(Int(avg.rounded()))bpm") }
+            items.append(t)
+        }
+        return items
     }
 
     // MARK: Anya

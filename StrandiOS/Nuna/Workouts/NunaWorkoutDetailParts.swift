@@ -66,6 +66,14 @@ enum NunaWorkoutZoneMath {
         return measured
     }
 
+    /// Minutes under the lowest zone, when the zones were worked out from the heart-rate readings (the stored percentages leave nothing below):
+    /// what is left of the session once the five zones are taken out. nil when that cannot be said.
+    static func below(_ r: WorkoutRow, measured: [Double]?) -> Double? {
+        guard WorkoutZones.percents(r.zonesJSON) == nil, let measured, measured.count >= 5 else { return nil }
+        let d = (r.durationS ?? Double(r.endTs - r.startTs)) / 60
+        return max(0, d - measured.reduce(0, +))
+    }
+
     static func minutes(zonesJSON: String?, durationMin: Double, measured: [Double]?) -> [Double]? {
         if let pct = WorkoutZones.percents(zonesJSON) { return pct.map { durationMin * $0 / 100 } }
         return measured
