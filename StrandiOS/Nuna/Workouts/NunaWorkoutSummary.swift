@@ -129,8 +129,8 @@ struct NunaWorkoutSummaryView: View {
     private var zoneFootnote: some View {
         NavigationLink { NunaZonesView() } label: {
             (Text("Zone ranges are set from your maximum heart rate.") + Text(verbatim: " ") + Text("View HR settings").underline().foregroundStyle(NunaPalette.textPrimary))
-                .font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                .multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                .font(.nuna(size: 12, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                .lineLimit(1).minimumScaleFactor(0.6).frame(maxWidth: .infinity, alignment: .leading)
         }
         .buttonStyle(.plain)
     }
