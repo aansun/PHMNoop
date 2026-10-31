@@ -423,7 +423,7 @@ struct NunaTrainingLoadView: View {
                     HStack(spacing: 12) {
                         NunaIconTile("dumbbell")
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("Open Gym").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            Text("Open Strength Trainer").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                             Text("Programs, sessions and the muscle map").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                         Spacer()

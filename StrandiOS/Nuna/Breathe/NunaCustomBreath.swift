@@ -102,7 +102,7 @@ struct NunaAnyaBreathCard: View {
         NunaCard(small: true) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 10) {
-                    NunaIconTile(goal.icon, tint: goal.tint)
+                    NunaActivityGlyph(name: goal.activity, size: 24).foregroundStyle(goal.tint).frame(width: 30)
                     VStack(alignment: .leading, spacing: 2) {
                         Text(verbatim: spec.title).font(.nuna(size: 16.5, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                         Text(verbatim: "\(spec.minutes) min · \(goal.shortTitle)").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
@@ -191,7 +191,7 @@ struct NunaBreathAskAnya: View {
                     HStack(spacing: 12) {
                         Button { starting = NunaCustomBreath.request(for: s) } label: {
                             HStack(spacing: 12) {
-                                NunaIconTile((BreathGoal(rawValue: s.goal) ?? .calm).icon, tint: (BreathGoal(rawValue: s.goal) ?? .calm).tint)
+                                NunaActivityGlyph(name: (BreathGoal(rawValue: s.goal) ?? .calm).activity, size: 24).foregroundStyle((BreathGoal(rawValue: s.goal) ?? .calm).tint).frame(width: 30)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(verbatim: s.title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(2).textCase(nil)
                                     Text(verbatim: "\(s.minutes) min · " + NunaCustomBreath.summary(s.stages)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(2).textCase(nil)

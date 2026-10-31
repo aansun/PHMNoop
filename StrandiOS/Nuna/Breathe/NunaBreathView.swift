@@ -28,7 +28,7 @@ struct NunaBreathView: View {
     private var liveBpm: Int? { live.worn ? model.bpm : nil }
 
     var body: some View {
-        NunaDetailScreen("Breathing", trailing: AnyView(settingsButton)) {
+        NunaDetailScreen("Breathing", trailing: AnyView(settingsButton), centersTitle: true) {
             liveCard
             if anyaOn { anyaCard }
             goalPicker
@@ -138,7 +138,7 @@ struct NunaBreathView: View {
                         let on = g == goal
                         Button { goal = g; pickedGoal = true } label: {
                             VStack(alignment: .leading, spacing: 8) {
-                                Image(systemName: g.icon).font(.nuna(size: 20, weight: .semibold)).foregroundStyle(on ? NunaPalette.onAccent : g.tint)
+                                NunaActivityGlyph(name: g.activity, size: 26).foregroundStyle(on ? NunaPalette.onAccent : g.tint)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(g.title).font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary).lineLimit(2).multilineTextAlignment(.leading)
                                     Text(g.blurb).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(on ? NunaPalette.onAccent.opacity(0.7) : NunaPalette.textSecondary).lineLimit(2).multilineTextAlignment(.leading).textCase(nil)
@@ -175,7 +175,7 @@ struct NunaBreathView: View {
         let mins = lengthPref > 0 ? lengthPref : t.minutes
         let picked = suggestion?.advice.template.id == t.id
         return HStack(spacing: 12) {
-            NunaIconTile(t.goal.icon, tint: t.goal.tint)
+            NunaActivityGlyph(name: t.goal.activity, size: 28).foregroundStyle(t.goal.tint).frame(width: 34)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 6) {
                     Text(verbatim: t.title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)

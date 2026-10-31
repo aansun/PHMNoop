@@ -318,7 +318,7 @@ struct NunaExerciseDetailView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         HStack(alignment: .top) {
                             VStack(alignment: .leading, spacing: 3) {
-                                Text(verbatim: s.program ?? String(localized: "Gym session")).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).lineLimit(2)
+                                Text(verbatim: s.program ?? String(localized: "Strength Trainer session")).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).lineLimit(2)
                                 Text(verbatim: NunaWorkoutFormat.day(s.startTs) + " · " + NunaWorkoutFormat.clock(s.startTs)).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                             }
                             Spacer()

@@ -328,7 +328,7 @@ struct NunaHealthMonitorCard: View {
     private func column(_ v: Vital) -> some View {
         let tint = v.ok == nil ? NunaPalette.textMuted : (v.ok == true ? NunaPalette.charge : NunaPalette.warning)
         return VStack(spacing: 8) {
-            Image(systemName: v.icon).font(.nuna(size: 22, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(height: 26)
+            NunaIcon(name: v.icon, size: 25, weight: .medium).foregroundStyle(NunaPalette.textSecondary).frame(height: 30)
             Text(verbatim: v.label).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).foregroundStyle(NunaPalette.textPrimary)
             badge(tint: tint, symbol: v.ok == nil ? "minus" : (v.ok == true ? "checkmark" : "exclamationmark"))
         }

@@ -211,7 +211,7 @@ struct NunaLiftSessionView: View {
                 Image(systemName: "chevron.down").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     .frame(width: 44, height: 44)
             }.buttonStyle(.plain).accessibilityLabel(Text("Minimise"))
-            Text(session.programName == nil ? "Gym" : "Program gym")
+            Text(session.programName == nil ? "Strength Trainer" : "Program strength trainer")
                 .font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
             Spacer(minLength: 8)
             if let bpm = model.bpm {
@@ -900,7 +900,7 @@ struct NunaLiftBar: View {
                     Image(systemName: "dumbbell").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                         .frame(width: 38, height: 38)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(verbatim: session.programName ?? String(localized: "Gym session")).font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+                        Text(verbatim: session.programName ?? String(localized: "Strength Trainer session")).font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
                         Text(verbatim: "\(e.completedWorkingSets)/\(e.plannedWorkingSets) · " + LiftFormat.duration(max(0, session.now - e.startTs)))
                             .font(.nuna(size: 12.5, weight: .semibold)).monospacedDigit().foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }

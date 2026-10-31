@@ -1,6 +1,14 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Strength Trainer": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Strength Trainer"}}}},
+    "Open Strength Trainer": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Buka Strength Trainer"}}}},
+    "Open in Strength Trainer": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Buka di Strength Trainer"}}}},
+    "Strength Trainer session": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Sesi Strength Trainer"}}}},
+    "Program strength trainer": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Program Strength Trainer"}}}},
+    "Open Strength Trainer to run a program or a freehand session": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Buka Strength Trainer untuk menjalankan program atau sesi bebas"}}}},
+    "It shows up in Strength Trainer under Programs and can be edited any time.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Muncul di Strength Trainer di bawah Program dan bisa diedit kapan saja."}}}},
+    "Adding it copies the routines into your Strength Trainer tab. Change the exercises, sets, reps and rest there; nothing here changes.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Menambahkannya menyalin rutinitas ke tab Strength Trainer Anda. Ubah latihan, set, repetisi, dan istirahat di sana; yang di sini tidak berubah."}}}},
     "Meal": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Waktu makan"}}}},
     "Type the numbers yourself": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ketik angkanya sendiri"}}}},
     "Type the numbers": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ketik angkanya"}}}},

@@ -215,7 +215,7 @@ struct NunaBreathHistoryView: View {
         let name = r.templateId.flatMap { BreathTemplates.template(id: $0)?.title } ?? r.protocolId
         let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.dateStyle = .medium; f.timeStyle = .short
         return HStack(spacing: 12) {
-            NunaIconTile(goal.icon, tint: goal.tint)
+            NunaActivityGlyph(name: goal.activity, size: 24).foregroundStyle(goal.tint).frame(width: 30)
             VStack(alignment: .leading, spacing: 2) {
                 Text(verbatim: name).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 Text(verbatim: "\(f.string(from: r.date)) · \(r.durationText)").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
