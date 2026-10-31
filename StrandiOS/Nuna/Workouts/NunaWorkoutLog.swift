@@ -535,12 +535,12 @@ struct NunaWorkoutLogStats: View {
             }
         }
         if let kcal = row.energyKcal {
-            var t = Tile(id: "kcal", icon: "flame", label: "Calories", value: NunaTrendsFormat.num(kcal), unit: "cal")
+            var t = Tile(id: "kcal", icon: "met:calories", label: "Calories", value: NunaTrendsFormat.num(kcal), unit: "cal")
             if let avg = averages?.kcal { t.pill = (kcal, avg, NunaTrendsFormat.num(avg)) }
             out.append(t)
         }
         if let hr = row.avgHr {
-            var t = Tile(id: "avg", icon: "heart", label: "Avg HR", value: "\(hr)", unit: "bpm")
+            var t = Tile(id: "avg", icon: "met:average-heart-rate", label: "Avg HR", value: "\(hr)", unit: "bpm")
             if let avg = averages?.avgHr { t.pill = (Double(hr), avg, "\(Int(avg.rounded())) bpm") }
             out.append(t)
         }
@@ -552,7 +552,7 @@ struct NunaWorkoutLogStats: View {
         // With the steps at the top, the duration is a tile here (it is not one of the two figures).
         if stepsAtTop, secs > 0 {
             let t = Int(secs.rounded())
-            var d = Tile(id: "dur", icon: "timer", label: "Duration", value: String(format: "%d:%02d", t / 3600, (t % 3600) / 60), unit: "")
+            var d = Tile(id: "dur", icon: "met:time-in-bed", label: "Duration", value: String(format: "%d:%02d", t / 3600, (t % 3600) / 60), unit: "")
             d.small = String(format: ":%02d", t % 60)
             if let avg = averages?.durationS { let a = Int(avg.rounded()); d.pill = (secs, avg, String(format: "%d:%02d:%02d", a / 3600, (a % 3600) / 60, a % 60)) }
             out.append(d)
@@ -582,7 +582,7 @@ struct NunaWorkoutLogStats: View {
     private func tile(_ t: Tile) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 8) {
-                Image(systemName: t.icon).font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
+                NunaIcon(name: t.icon, size: 16).foregroundStyle(NunaPalette.textSecondary)
                 Text(t.label).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingHead(0.4)).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     .lineLimit(1).minimumScaleFactor(0.7)
             }

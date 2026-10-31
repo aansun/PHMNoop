@@ -210,7 +210,7 @@ struct NunaDashboardEditor: View {
     /// `reserve` keeps a row as wide as the rows that carry the system drag handle on their right.
     private func row<Trailing: View>(_ item: NunaDashItem, reserve: CGFloat = 0, @ViewBuilder trailing: () -> Trailing) -> some View {
         HStack(spacing: 14) {
-            Image(systemName: item.icon).font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
+            NunaIcon(name: item.icon, size: 18).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
             Text(verbatim: item.title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                 .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
             Spacer(minLength: 6)
@@ -264,7 +264,7 @@ struct NunaDashboardCards: View {
     private func card(_ row: NunaLinkRow) -> some View {
         NunaCard(small: true, padding: EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 18)) {
             HStack(spacing: 14) {
-                Image(systemName: row.icon).font(.nuna(size: 20, weight: .regular)).foregroundStyle(row.tint ?? NunaPalette.textSecondary).frame(width: 30)
+                NunaIcon(name: row.icon, size: 20).foregroundStyle(row.tint ?? NunaPalette.textSecondary).frame(width: 30)
                 Text(verbatim: row.title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
                 Spacer(minLength: 8)

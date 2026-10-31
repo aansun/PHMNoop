@@ -88,9 +88,9 @@ enum NunaStressCategory: CaseIterable, Hashable {
 
     var icon: String {
         switch self {
-        case .total: return "gauge.with.dots.needle.33percent"
-        case .nonActivity: return "figure.stand"
-        case .sleep: return "moon"
+        case .total: return "met:total-day-stress"
+        case .nonActivity: return "met:non-activity-stress"
+        case .sleep: return "met:sleep-stress"
         }
     }
 
@@ -302,7 +302,7 @@ struct NunaStressCategoryCard: View {
         NunaCard {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(spacing: 10) {
-                    Image(systemName: category.icon).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    NunaIcon(name: category.icon, size: 15, weight: .bold).foregroundStyle(NunaPalette.textSecondary)
                     Text(category.title).font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textPrimary)
                     Spacer(minLength: 0)

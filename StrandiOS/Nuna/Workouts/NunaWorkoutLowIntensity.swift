@@ -282,7 +282,7 @@ struct NunaSessionMetrics: View {
     private func tile(_ t: Item) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 8) {
-                Image(systemName: t.icon).font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
+                NunaIcon(name: t.icon, size: 16).foregroundStyle(NunaPalette.textSecondary)
                 Text(t.label).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingHead(0.4)).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             }
             .padding(.bottom, 6)
