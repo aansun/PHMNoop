@@ -126,6 +126,7 @@ struct NunaTodayActivities: View {
             NavigationLink(value: NunaWorkoutRoute.summary(NunaWorkoutKey(startTs: w.startTs, sport: w.sport, source: w.source))) {
                 rowBody(tint: recovery ? Self.recoveryBlue : effortTint(w.strain), tile: recovery ? Self.recoveryBlue : NunaPalette.effortModerate,
                         icon: strength ? "dumbbell.fill" : (recovery ? ActivitySport.symbol(for: w.sport) : sportSymbol(w.sport)),
+                        drawn: w.sport,
                         figure: recovery ? Self.hoursAndMinutes((w.durationS ?? Double(w.endTs - w.startTs)) / 60) : workoutFigure(w),
                         name: Text(verbatim: WorkoutSource.displaySport(w.sport)), start: item.start, end: item.end)
             }.buttonStyle(.plain)
@@ -137,11 +138,12 @@ struct NunaTodayActivities: View {
 
     /// A tile in neutral grey (icon and figure), the name, when it began and ended, and a thin line with a dot at each end whose colour
     /// follows the Effort of the workout (sleep keeps the Rest colour).
-    private func rowBody(tint: Color, tile: Color, icon: String, figure: String, name: Text, start: Date, end: Date) -> some View {
+    private func rowBody(tint: Color, tile: Color, icon: String, drawn: String? = nil, figure: String, name: Text, start: Date, end: Date) -> some View {
         HStack(spacing: 12) {
             // Icon and figure start at the same place in every row, whatever the figure's width, so the column of figures reads as one line.
             HStack(spacing: 7) {
-                Image(systemName: icon).font(.nuna(size: 15, weight: .semibold)).frame(width: 20)
+                if let drawn, NunaActivityIcons.has(drawn) { NunaActivityGlyph(name: drawn, size: 20).frame(width: 20) }
+                else { Image(systemName: icon).font(.nuna(size: 15, weight: .semibold)).frame(width: 20) }
                 Text(verbatim: figure).font(.nuna(size: 17, weight: .bold, design: NunaType.design)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.8)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }

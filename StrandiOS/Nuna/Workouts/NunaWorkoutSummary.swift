@@ -46,7 +46,7 @@ struct NunaWorkoutSummaryView: View {
             if let ls = m.liftSessions.first(where: { $0.startTs == key.startTs }), m.row(key).map(NunaWorkoutKind.isStrength) ?? false {
                 NunaGymSessionView(sessionId: ls.id)
             } else if let r = m.row(key) ?? (m.loaded && !justSaved ? nil : initialRow) {
-                NunaDetailScreen(LocalizedStringKey(WorkoutSource.displaySport(r.sport)), titleSymbol: ActivitySport.symbol(for: r.sport), subtitle: NunaWorkoutFormat.span(r.startTs, r.endTs), trailing: AnyView(actionsMenu(r))) { content(r) }
+                NunaDetailScreen(LocalizedStringKey(WorkoutSource.displaySport(r.sport)), titleSymbol: ActivitySport.symbol(for: r.sport), subtitle: NunaWorkoutFormat.span(r.startTs, r.endTs), titleActivity: r.sport, trailing: AnyView(actionsMenu(r))) { content(r) }
             } else {
                 NunaDetailScreen("Workout") {
                     NunaCard { Text(m.loaded ? "This session is no longer saved." : " ").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) }
