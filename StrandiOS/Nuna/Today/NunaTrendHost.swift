@@ -79,10 +79,10 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case .debt: return "met:sleep-debt"
         case .efficiency: return "met:sleep-efficiency"
         case .vo2max: return "met:vo2-max"
-        case .skinTemp: return "thermometer.medium"
+        case .skinTemp: return "vital:temp"
         case .weight: return "met:weight"
         case .vitality: return "sparkles"
-        case .spo2: return "drop"
+        case .spo2: return "vital:spo2"
         case .stressTotal: return NunaStressCategory.total.icon
         case .stressNonActivity: return NunaStressCategory.nonActivity.icon
         case .stressSleep: return NunaStressCategory.sleep.icon

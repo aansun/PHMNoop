@@ -173,11 +173,11 @@ struct NunaHealthView: View {
         }
         let dot = !hasRange
         return LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-            linked("resp_rate", NunaVitalTile(icon: "lungs", label: "Respiratory", value: fmt(day.respiratory, 1), unit: "/min", chip: respChip?.text, chipColor: respChip?.color ?? NunaPalette.charge, chipDot: dot))
-            linked("spo2", NunaVitalTile(icon: "drop", label: "Blood Oxygen", value: fmt(spo2), unit: "%", chip: spo2Chip?.text, chipColor: spo2Chip?.color ?? NunaPalette.charge, chipDot: dot))
-            linked("rhr", NunaVitalTile(icon: "heart", label: "Resting HR", value: fmt(day.restingHr), unit: "bpm", chip: rhrChip?.text, chipColor: rhrChip?.color ?? NunaPalette.charge, chipDot: dot))
-            linked("hrv", NunaVitalTile(icon: "waveform.path.ecg", label: "HRV", value: fmt(day.hrv), unit: "ms", chip: hrvChip?.text, chipColor: hrvChip?.color ?? NunaPalette.charge, chipDot: dot))
-            linked("skin_temp", NunaVitalTile(icon: "thermometer.medium", label: "Skin Temp", value: skinText, unit: "°C", chip: skinChip?.text, chipColor: skinChip?.color ?? NunaPalette.charge, chipDot: dot))
+            linked("resp_rate", NunaVitalTile(icon: "met:respiratory-rate", label: "Respiratory", value: fmt(day.respiratory, 1), unit: "/min", chip: respChip?.text, chipColor: respChip?.color ?? NunaPalette.charge, chipDot: dot))
+            linked("spo2", NunaVitalTile(icon: "vital:spo2", label: "Blood Oxygen", value: fmt(spo2), unit: "%", chip: spo2Chip?.text, chipColor: spo2Chip?.color ?? NunaPalette.charge, chipDot: dot))
+            linked("rhr", NunaVitalTile(icon: "met:resting-heart-rate", label: "Resting HR", value: fmt(day.restingHr), unit: "bpm", chip: rhrChip?.text, chipColor: rhrChip?.color ?? NunaPalette.charge, chipDot: dot))
+            linked("hrv", NunaVitalTile(icon: "met:heart-rate-variability", label: "HRV", value: fmt(day.hrv), unit: "ms", chip: hrvChip?.text, chipColor: hrvChip?.color ?? NunaPalette.charge, chipDot: dot))
+            linked("skin_temp", NunaVitalTile(icon: "vital:temp", label: "Skin Temp", value: skinText, unit: "°C", chip: skinChip?.text, chipColor: skinChip?.color ?? NunaPalette.charge, chipDot: dot))
         }
     }
 

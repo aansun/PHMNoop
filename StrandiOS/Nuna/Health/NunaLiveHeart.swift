@@ -413,10 +413,10 @@ struct NunaDeepTimelineView: View {
     private func icon(_ m: Repository.TimelineMetric) -> String {
         switch m {
         case .hr: return "heart"
-        case .hrv: return "waveform.path.ecg"
-        case .spo2: return "drop"
-        case .skinTemp: return "thermometer.medium"
-        case .respiration: return "lungs"
+        case .hrv: return "met:heart-rate-variability"
+        case .spo2: return "vital:spo2"
+        case .skinTemp: return "vital:temp"
+        case .respiration: return "met:respiratory-rate"
         case .motion, .ouraMovement: return "figure.walk.motion"
         case .bandSleepState: return "moon.zzz"
         }
@@ -448,7 +448,7 @@ struct NunaDeepTimelineView: View {
         } label: {
             // The signal's icon in the neutral icon colour; the colour of the signal lives in the chart only.
             HStack(spacing: 12) {
-                Image(systemName: icon(metric)).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 26)
+                NunaIcon(name: icon(metric), size: 14, weight: .semibold).foregroundStyle(NunaPalette.textSecondary).frame(width: 26)
                 Text(verbatim: metric.title).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
                 Spacer(minLength: 8)
                 Image(systemName: "chevron.up.chevron.down").font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)

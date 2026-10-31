@@ -61,16 +61,16 @@ struct NunaChargeDetailView: View {
             }
             NunaSignalPanel {
                 VStack(spacing: 0) {
-                    signal("Heart rate variability", "waveform.path.ecg", key: "hrv", value: day.hrv, average: average30(hrvSeries), good: true)
+                    signal("Heart rate variability", "met:heart-rate-variability", key: "hrv", value: day.hrv, average: average30(hrvSeries), good: true)
                     NunaDivider()
-                    signal("Resting heart rate", "heart", key: "rhr", value: day.restingHr, average: average30(rhrSeries), good: false)
+                    signal("Resting heart rate", "met:resting-heart-rate", key: "rhr", value: day.restingHr, average: average30(rhrSeries), good: false)
                     NunaDivider()
-                    signal("Respiratory rate", "lungs", key: "resp_rate", value: day.respiratory, average: average30(respSeries), decimals: 1, good: nil)
+                    signal("Respiratory rate", "met:respiratory-rate", key: "resp_rate", value: day.respiratory, average: average30(respSeries), decimals: 1, good: nil)
                     NunaDivider()
                     signal("Sleep performance", "moon", key: "sleep_performance", value: day.rest ?? restSeries.latest(asOf: cutoff)?.value,
                            average: average30(restSeries), good: true)
                     NunaDivider()
-                    signal("Skin temperature", "thermometer", key: "skin_temp", value: skinSeries.latest(asOf: cutoff)?.value,
+                    signal("Skin temperature", "vital:temp", key: "skin_temp", value: skinSeries.latest(asOf: cutoff)?.value,
                            average: average30(skinSeries), decimals: 1, signed: true, good: nil)
                 }
                 NunaTrendLegend(text: router.todayDayOffset == 0 ? "Today vs. last 30 days" : "This day vs. the 30 days before")
@@ -321,7 +321,7 @@ struct NunaEffortDetailView: View {
 
     /// Touch it for the resting-heart-rate page: the night's figure against the days before it.
     @ViewBuilder private var resting: some View {
-        let row = NunaSignalRow(title: "Resting heart rate", icon: "heart", value: restingDay.map { String(format: "%.0f", $0) },
+        let row = NunaSignalRow(title: "Resting heart rate", icon: "met:resting-heart-rate", value: restingDay.map { String(format: "%.0f", $0) },
                                 trend: NunaTrend.make(current: restingDay, previous: rhrSeries.average30(before: dayKey), decimals: 0, upIsGood: false))
         if let m = MetricCatalog.metric(key: "rhr", source: "my-whoop") {
             NavigationLink(value: NunaTodayRoute.metric(m)) { row }.buttonStyle(.plain)
@@ -1482,15 +1482,15 @@ struct NunaAllMetricsView: View {
             Row(id: "charge", title: "Charge", icon: "bolt", tint: NunaPalette.charge, value: f(day.charge.pct, 0, "%"), route: r("recovery")),
             Row(id: "effort", title: "Effort", icon: "flame", tint: NunaPalette.effortText, value: day.effort.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–", route: r("strain")),
             Row(id: "rest", title: "Rest", icon: "moon", tint: NunaPalette.restText, value: f(day.rest, 0, "%"), route: .sleep(0)),
-            Row(id: "hrv", title: "HRV", icon: "waveform.path.ecg", tint: NunaPalette.charge, value: f(day.hrv, 0, " ms"), delta: h?.0, good: h?.1, route: r("hrv")),
-            Row(id: "rhr", title: "Resting HR", icon: "heart", tint: NunaPalette.alertText, value: f(day.restingHr), delta: p?.0, good: p?.1, route: r("rhr")),
-            Row(id: "spo2", title: "Blood Oxygen", icon: "drop", tint: NunaPalette.effortText, value: f(day.spo2, 0, "%"), route: r("spo2")),
-            Row(id: "resp", title: "Respiratory", icon: "lungs", tint: NunaPalette.effortText, value: f(day.respiratory, 1), route: r("resp_rate")),
+            Row(id: "hrv", title: "HRV", icon: "met:heart-rate-variability", tint: NunaPalette.charge, value: f(day.hrv, 0, " ms"), delta: h?.0, good: h?.1, route: r("hrv")),
+            Row(id: "rhr", title: "Resting HR", icon: "met:resting-heart-rate", tint: NunaPalette.alertText, value: f(day.restingHr), delta: p?.0, good: p?.1, route: r("rhr")),
+            Row(id: "spo2", title: "Blood Oxygen", icon: "vital:spo2", tint: NunaPalette.effortText, value: f(day.spo2, 0, "%"), route: r("spo2")),
+            Row(id: "resp", title: "Respiratory", icon: "met:respiratory-rate", tint: NunaPalette.effortText, value: f(day.respiratory, 1), route: r("resp_rate")),
             Row(id: "steps", title: "Steps", icon: "figure.walk", tint: NunaPalette.charge, value: f(day.steps),
                 route: MetricCatalog.todayStepsMetric(hasMeasuredSteps: day.steps != nil).map { .metric($0) }),
             Row(id: "weight", title: "Weight", icon: "scalemass", tint: NunaPalette.effortText, value: f(day.extras["weight"], 1, " kg"), route: r("weight", "apple-health")),
             Row(id: "kcal", title: "Calories", icon: "flame.fill", tint: NunaPalette.effortText, value: f(day.calories), route: r("energy_kcal")),
-            Row(id: "skin", title: "Skin Temp", icon: "thermometer", tint: NunaPalette.alertText, value: f(day.extras["skin_temp"], 1, "°"), route: r("skin_temp")),
+            Row(id: "skin", title: "Skin Temp", icon: "vital:temp", tint: NunaPalette.alertText, value: f(day.extras["skin_temp"], 1, "°"), route: r("skin_temp")),
         ]
     }
 
