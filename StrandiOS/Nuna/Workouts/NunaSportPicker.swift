@@ -72,28 +72,28 @@ struct NunaSportPicker: View {
     private func row(_ name: String, route: Bool) -> some View {
         let on = name.caseInsensitiveCompare(selection) == .orderedSame
         return Button { pick(name) } label: {
-            HStack(spacing: 18) {
-                NunaGlyph(Self.symbol(for: name), pointSize: 24, weight: .regular)
-                    .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary).frame(width: 40, height: 40)
-                Text(LocalizedStringKey(name)).font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel + 1.2).textCase(.uppercase)
+            HStack(spacing: 14) {
+                NunaActivityGlyph(name: name, size: 28)
+                    .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary).frame(width: 34, height: 34)
+                Text(LocalizedStringKey(name)).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 1).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
                 Spacer(minLength: 8)
                 if route { Image(systemName: "location").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) }
                 if on { Image(systemName: "checkmark").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary) }
             }
-            .padding(.horizontal, 14).frame(height: 62).frame(maxWidth: .infinity)
+            .padding(.horizontal, 12).frame(height: 54).frame(maxWidth: .infinity)
             .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
             .contentShape(Rectangle())
         }.buttonStyle(.plain)
     }
 
     private var tabBar: some View {
-        HStack(spacing: 28) {
+        HStack(spacing: 24) {
             ForEach(tabs) { t in
                 let on = tab == t
                 Button { withAnimation(.easeInOut(duration: 0.2)) { tab = t } } label: {
                     VStack(spacing: 7) {
-                        Text(t.title).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 1).textCase(.uppercase)
+                        Text(t.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel + 1).textCase(.uppercase)
                             .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                         Rectangle().fill(on ? NunaPalette.textPrimary : Color.clear).frame(height: 2)
                     }
@@ -107,7 +107,7 @@ struct NunaSportPicker: View {
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                Text("Select activity").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel + 1.2).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                Text("Select activity").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel + 1.2).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 HStack {
                     Button(action: onClose) {
                         Image(systemName: "chevron.left").font(.nuna(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
@@ -117,32 +117,36 @@ struct NunaSportPicker: View {
                 }
             }
             .padding(.horizontal, 8).padding(.top, 14).frame(height: 62)
-            ScrollView {
-                VStack(alignment: .leading, spacing: 14) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "magnifyingglass").font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
-                        TextField("", text: $query, prompt: Text("Search for Activities").foregroundStyle(NunaPalette.textSecondary))
-                            .font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
-                            .textInputAutocapitalization(.never).autocorrectionDisabled().textCase(nil)
-                        if !query.isEmpty {
-                            Button { query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(NunaPalette.textMuted) }.buttonStyle(.plain)
-                        }
+            // The search and the tabs stay at the top while the list scrolls under them.
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 12) {
+                    Image(systemName: "magnifyingglass").font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
+                    TextField("", text: $query, prompt: Text("Search for Activities").foregroundStyle(NunaPalette.textSecondary))
+                        .font(.nuna(size: 15, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
+                        .textInputAutocapitalization(.never).autocorrectionDisabled().textCase(nil)
+                    if !query.isEmpty {
+                        Button { query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(NunaPalette.textMuted) }.buttonStyle(.plain)
                     }
-                    .padding(.horizontal, 16).frame(height: 54)
-                    .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
-                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(NunaPalette.textPrimary.opacity(0.1), lineWidth: 1))
-                    tabBar.padding(.top, 4)
+                }
+                .padding(.horizontal, 14).frame(height: 48)
+                .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(NunaPalette.textPrimary.opacity(0.1), lineWidth: 1))
+                tabBar
+            }
+            .padding(.horizontal, NunaSpacing.screenH).padding(.top, 4).padding(.bottom, 4)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 10) {
                     if showCustom {
                         Button { pick(trimmed) } label: {
-                            HStack(spacing: 18) {
-                                NunaGlyph("pencil", pointSize: 22, weight: .regular).foregroundStyle(NunaPalette.textSecondary).frame(width: 40, height: 40)
+                            HStack(spacing: 14) {
+                                NunaGlyph("pencil", pointSize: 20, weight: .regular).foregroundStyle(NunaPalette.textSecondary).frame(width: 32, height: 32)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Use as typed").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                                     Text(verbatim: trimmed).font(.nuna(size: 15, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                                 }
                                 Spacer(minLength: 0)
                             }
-                            .padding(.horizontal, 14).frame(height: 62).frame(maxWidth: .infinity)
+                            .padding(.horizontal, 12).frame(height: 54).frame(maxWidth: .infinity)
                             .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                         }.buttonStyle(.plain)
                     }

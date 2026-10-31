@@ -84,14 +84,14 @@ struct NunaManualWorkoutSheet: View {
 
                     Button { showSport = true } label: {
                         HStack(spacing: 16) {
-                            NunaGlyph(sport.isEmpty ? "figure.arms.open" : NunaSportPicker.symbol(for: sport), pointSize: 24, weight: .regular)
-                                .foregroundStyle(NunaPalette.textSecondary).frame(width: 40, height: 40)
-                            Text(verbatim: sport.isEmpty ? String(localized: "Select activity") : sport).font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel + 1.2)
+                            NunaActivityGlyph(name: sport.isEmpty ? "Select" : sport, size: 28)
+                                .foregroundStyle(NunaPalette.textSecondary).frame(width: 34, height: 34)
+                            Text(verbatim: sport.isEmpty ? String(localized: "Select activity") : sport).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 1)
                                 .textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
                             Spacer(minLength: 8)
                             Image(systemName: "chevron.right").font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
                         }
-                        .padding(.horizontal, 14).frame(height: 66).frame(maxWidth: .infinity)
+                        .padding(.horizontal, 12).frame(height: 58).frame(maxWidth: .infinity)
                         .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                         .contentShape(Rectangle())
                     }.buttonStyle(.plain)
