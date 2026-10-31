@@ -268,11 +268,7 @@ struct NunaSessionMetrics: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline) {
-                nunaTrendsCap("Session metrics")
-                Spacer()
-                if showsRange { Text("vs. 30 day range").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textMuted) }
-            }
+            NunaLogSectionTitle(title: "Session metrics", trailing: showsRange ? "vs. 30 day range" : nil)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) { ForEach(items) { tile($0).frame(width: 168) } }
                     .padding(.horizontal, NunaSpacing.screenH)

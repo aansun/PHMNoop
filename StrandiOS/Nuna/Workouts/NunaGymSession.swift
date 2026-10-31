@@ -123,10 +123,11 @@ struct NunaGymSessionView: View {
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
     private var effortScale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
 
-    /// The Effort the session added with its 30-day average beside it, and the cardio and muscular share at the right.
+    /// The Effort the session added with its 30-day average beside it, and the cardio and muscular share at the right. The bar is level with
+    /// the figure and its two percentages with the caption under it.
     private func effortAndSplit(_ s: LiftSessionRow, averages: NunaWorkoutAverages?) -> some View {
         let strain = workout?.strain
-        return HStack(alignment: .top, spacing: 16) {
+        return HStack(alignment: .bottom, spacing: 16) {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .center, spacing: 8) {
                     Text(verbatim: strain.map { UnitFormatter.effortDisplay($0, scale: effortScale) } ?? "–")
@@ -139,7 +140,7 @@ struct NunaGymSessionView: View {
                 Text("Activity Effort").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            Rectangle().fill(NunaPalette.textPrimary.opacity(0.1)).frame(width: 1, height: 70)
+            Rectangle().fill(NunaPalette.textPrimary.opacity(0.1)).frame(width: 1, height: 66)
             NunaCardioMuscularCard(split: loadSplit(s), compact: true)
                 .frame(maxWidth: .infinity)
         }
@@ -209,11 +210,7 @@ struct NunaGymSessionView: View {
             tiles.append(t)
         }
         return VStack(alignment: .leading, spacing: 10) {
-            HStack(alignment: .firstTextBaseline) {
-                nunaTrendsCap("Key statistics")
-                Spacer()
-                if averages != nil { Text("vs. 30 day average").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textMuted) }
-            }
+            NunaLogSectionTitle(title: "Key statistics", trailing: averages != nil ? "vs. 30 day average" : nil)
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 10) {
                     ForEach(tiles) { statTile($0, reservePill: tiles.contains { $0.pill != nil }).frame(width: 168) }
@@ -231,18 +228,18 @@ struct NunaGymSessionView: View {
                 Text(t.label).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel + 0.4).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     .lineLimit(1).minimumScaleFactor(0.7)
             }
-            .padding(.bottom, 6)
+            .padding(.bottom, 4)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                (Text(verbatim: t.value).font(.nuna(size: 32, weight: .bold, design: NunaType.design))
-                    + Text(verbatim: t.small).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary))
+                (Text(verbatim: t.value).font(.nuna(size: 28, weight: .bold, design: NunaType.design))
+                    + Text(verbatim: t.small).font(.nuna(size: 20, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary))
                     .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
                 if !t.unit.isEmpty && t.value != "–" { Text(verbatim: t.unit).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).lineLimit(1) }
             }
             .padding(.bottom, 4)
             if let p = t.pill { NunaAveragePill(value: p.value, average: p.average, text: p.text) }
-            else if reservePill { Color.clear.frame(height: 28) }
+            else if reservePill { Color.clear.frame(height: 24) }
         }
-        .padding(14).frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12).frame(maxWidth: .infinity, alignment: .leading)
         .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 
@@ -250,7 +247,7 @@ struct NunaGymSessionView: View {
 
     @ViewBuilder private var exercisesTab: some View {
         if let w = workout, data.hr.count >= 2 {
-            NunaWorkoutHRArea(buckets: data.hr, start: w.startTs, end: w.endTs, around: data.hrAround, rangeHighlight: pageRanges, plotHeight: 128)
+            NunaWorkoutHRArea(buckets: data.hr, start: w.startTs, end: w.endTs, around: data.hrAround, rangeHighlight: pageRanges)
         }
         exerciseCarousel
         if let s = session {
@@ -291,13 +288,13 @@ struct NunaGymSessionView: View {
 
     private var exerciseCarousel: some View {
         let pages = summaries.count + 1
-        return VStack(spacing: 8) {
+        return VStack(spacing: 4) {
             TabView(selection: $page) {
                 summaryCard.tag(0)
                 ForEach(Array(summaries.enumerated()), id: \.element.exercise) { i, s in exerciseCard(s).tag(i + 1) }
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
-            .frame(height: 140)
+            .frame(height: 122)
             ZStack {
                 HStack(spacing: 10) {
                     let first = max(0, min(page - 3, pages - 7))
@@ -333,7 +330,7 @@ struct NunaGymSessionView: View {
         let rows = working.filter { $0.exercise == s.exercise }
         let reps = rows.compactMap(\.reps).reduce(0, +)
         return carouselCard(title: s.exercise, setsText: String(localized: "\(s.workingSets) Sets"), tint: NunaWorkoutLogZones.colors[2],
-                            thumb: AnyView(NunaExerciseThumb(name: s.exercise, width: 70, height: 54)),
+                            thumb: AnyView(NunaExerciseThumb(name: s.exercise, width: 60, height: 46)),
                             volume: s.volumeKg, reps: reps, pr: records.contains(s.exercise), route: NunaExerciseLibrary.match(s.exercise).map { NunaWorkoutRoute.exercise($0.id) })
     }
 
@@ -341,18 +338,18 @@ struct NunaGymSessionView: View {
     private func carouselCard(title: String, setsText: String, tint: Color, thumb: AnyView, volume: Double?, reps: Int, pr: Bool, route: NunaWorkoutRoute?) -> some View {
         VStack(spacing: 0) {
             let head = HStack(spacing: 14) {
-                thumb.frame(width: 70, height: 54).clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
+                thumb.frame(width: 60, height: 46).clipShape(RoundedRectangle(cornerRadius: 4, style: .continuous))
                 VStack(alignment: .leading, spacing: 5) {
-                    Text(verbatim: title).font(.nuna(size: 16, weight: .medium)).textCase(nil).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
+                    Text(verbatim: title).font(.nuna(size: 15, weight: .medium)).textCase(nil).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
                     HStack(spacing: 8) {
-                        Text(verbatim: setsText).font(.nuna(size: 14.5, weight: .semibold)).textCase(nil).foregroundStyle(tint)
+                        Text(verbatim: setsText).font(.nuna(size: 13.5, weight: .semibold)).textCase(nil).foregroundStyle(tint)
                         if pr { Image(systemName: "rosette").font(.system(size: 17, weight: .regular)).foregroundStyle(NunaPalette.warning) }
                     }
                 }
                 Spacer(minLength: 8)
                 if route != nil { Image(systemName: "chevron.right").font(.system(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textPrimary) }
             }
-            .padding(5).padding(.trailing, 8)
+            .padding(4).padding(.trailing, 8)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color.white.opacity(0.05))
             .contentShape(Rectangle())
@@ -362,7 +359,7 @@ struct NunaGymSessionView: View {
                 metric("\(reps)", "", "Total reps")
                 Spacer(minLength: 0)
             }
-            .padding(.horizontal, 18).padding(.vertical, 12)
+            .padding(.horizontal, 16).padding(.vertical, 8)
             .frame(maxWidth: .infinity, alignment: .leading)
         }
         .background(NunaPalette.tile)
@@ -373,16 +370,16 @@ struct NunaGymSessionView: View {
     private func metric(_ value: String, _ unit: String, _ label: LocalizedStringKey) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(verbatim: value).font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
-                if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil) }
+                Text(verbatim: value).font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+                if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil) }
             }
-            Text(label).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel + 0.6).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel + 0.6).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
         }
     }
 
     @ViewBuilder private var heartRateTab: some View {
         if let w = workout, data.hr.count >= 2 {
-            NunaWorkoutHRArea(buckets: data.hr, start: w.startTs, end: w.endTs, around: data.hrAround, highlightZone: zonePick, zoneSet: profile.hrZoneSet, plotHeight: 128)
+            NunaWorkoutHRArea(buckets: data.hr, start: w.startTs, end: w.endTs, around: data.hrAround, highlightZone: zonePick, zoneSet: profile.hrZoneSet)
             if let mins = NunaWorkoutZoneMath.minutes(w, measured: data.zoneMin), mins.contains(where: { $0 > 0 }) {
                 NunaWorkoutLogZones(minutes: mins, selection: $zonePick, buckets: data.hr, start: w.startTs, end: w.endTs, typical: NunaWorkoutLogZones.typical(for: w, in: history.rows), belowMinutes: NunaWorkoutZoneMath.below(w, measured: data.zoneMin))
             }
