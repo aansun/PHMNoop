@@ -148,7 +148,8 @@ struct NunaWorkoutSummaryView: View {
             if stress.count >= 2 { NunaWorkoutStressArea(points: stress, start: r.startTs, end: r.endTs) }
             else { Text("There is not enough heart rate in this session to read the stress.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
         case .heartRate:
-            NunaWorkoutHRArea(buckets: data.hr, start: r.startTs, end: r.endTs, around: data.hrAround, plotHeight: 200)
+            if data.hr.count >= 2 { NunaWorkoutHRArea(buckets: data.hr, start: r.startTs, end: r.endTs, around: data.hrAround, plotHeight: 200) }
+            else { Text("There is no heart rate for this session.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
         }
         NunaActivityMilestoneCard(count: m.rows.filter { $0.sport == r.sport && $0.startTs <= r.startTs }.count)
         NunaSessionMetrics(items: sessionMetrics(r, averages: averages))

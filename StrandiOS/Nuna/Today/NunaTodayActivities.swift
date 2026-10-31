@@ -121,12 +121,19 @@ struct NunaTodayActivities: View {
             }.buttonStyle(.plain)
         case .workout(let w):
             let strength = NunaWorkoutKind.isStrength(w)
+            // Recovery work (breathwork, a cold shower, a sauna) is not Effort: a lighter blue tile that says how long it lasted.
+            let recovery = NunaActivityKind.isCharge(w.sport)
             NavigationLink(value: NunaWorkoutRoute.summary(NunaWorkoutKey(startTs: w.startTs, sport: w.sport, source: w.source))) {
-                rowBody(tint: effortTint(w.strain), tile: NunaPalette.effortModerate, icon: strength ? "dumbbell.fill" : sportSymbol(w.sport),
-                        figure: workoutFigure(w), name: Text(verbatim: WorkoutSource.displaySport(w.sport)), start: item.start, end: item.end)
+                rowBody(tint: recovery ? Self.recoveryBlue : effortTint(w.strain), tile: recovery ? Self.recoveryBlue : NunaPalette.effortModerate,
+                        icon: strength ? "dumbbell.fill" : (recovery ? ActivitySport.symbol(for: w.sport) : sportSymbol(w.sport)),
+                        figure: recovery ? Self.hoursAndMinutes((w.durationS ?? Double(w.endTs - w.startTs)) / 60) : workoutFigure(w),
+                        name: Text(verbatim: WorkoutSource.displaySport(w.sport)), start: item.start, end: item.end)
             }.buttonStyle(.plain)
         }
     }
+
+    /// The tile and line of a recovery activity: a light blue, apart from the Effort blue.
+    private static let recoveryBlue = Color(hex: "#5EA9E8")
 
     /// A tile in neutral grey (icon and figure), the name, when it began and ended, and a thin line with a dot at each end whose colour
     /// follows the Effort of the workout (sleep keeps the Rest colour).
