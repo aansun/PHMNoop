@@ -184,6 +184,8 @@ struct NunaRootView: View {
         }
         .toolbar(.hidden, for: .tabBar)
         .environment(\.nunaPushToday) { paths[Tab.today.rawValue].append($0) }
+        .environment(\.nunaPushMe) { paths[Tab.today.rawValue].append($0) }
+        .environment(\.nunaPushWorkout) { paths[Tab.today.rawValue].append($0) }
         // Pushed screens live in UIKit hosting; they need the choice stated again to resolve the adaptive palette.
         .preferredColorScheme(NunaTheme.colorScheme)
         .tag(tab.rawValue)
@@ -273,7 +275,18 @@ struct NunaRootView: View {
 /// Pushes a Today page from a screen that would otherwise push it by a flag: a push made by a flag is not in the tab's navigation path, so the
 /// shell could not tell a page had been opened and would keep the tab bar over it.
 private struct NunaPushTodayKey: EnvironmentKey { static let defaultValue: (NunaTodayRoute) -> Void = { _ in } }
+/// The same for a page of More or of Workouts opened from Today (the quick actions).
+private struct NunaPushMeKey: EnvironmentKey { static let defaultValue: (NunaMeRoute) -> Void = { _ in } }
+private struct NunaPushWorkoutKey: EnvironmentKey { static let defaultValue: (NunaWorkoutRoute) -> Void = { _ in } }
 extension EnvironmentValues {
+    var nunaPushMe: (NunaMeRoute) -> Void {
+        get { self[NunaPushMeKey.self] }
+        set { self[NunaPushMeKey.self] = newValue }
+    }
+    var nunaPushWorkout: (NunaWorkoutRoute) -> Void {
+        get { self[NunaPushWorkoutKey.self] }
+        set { self[NunaPushWorkoutKey.self] = newValue }
+    }
     var nunaPushToday: (NunaTodayRoute) -> Void {
         get { self[NunaPushTodayKey.self] }
         set { self[NunaPushTodayKey.self] = newValue }

@@ -45,6 +45,9 @@ enum NunaTodayRoute: Hashable {
     case chargeEffort
     /// A trend page chosen for My Dashboard on Today.
     case trend(NunaTrendPage)
+    /// The journal and the strap page, pushed from the quick actions like any other page.
+    case journal
+    case devices
 }
 
 extension View {
@@ -81,6 +84,8 @@ extension View {
             case .sleepSettings: NunaSleepSettingsView()
             case .sleepOverview: NunaHealthView()
             case .chargeEffort: NunaChargeEffortView()
+            case .journal: NunaJournalView()
+            case .devices: NunaDevicesView()
             }
         }
     }

@@ -252,9 +252,13 @@ struct NunaTodayView: View {
         if showQuick, let anchor {
             GeometryReader { geo in
                 let r = geo[anchor]
-                let h = NunaQuickMenu.height(quickActions.count)
-                // Room above counts the strip under the status bar too: the menu may cover the rings, as long as it stays on the screen.
-                let above = r.minY - 12 - h >= 8 - geo.safeAreaInsets.top
+                let rows = max(quickActions.count, 1)
+                // Between the top of the wordmark and the plus, the rows are as tall as they can be (not past their full height, not under 40 pt).
+                let fitting = (r.minY - 12 - Self.quickTopLimit - 2 * NunaQuickMenu.verticalPadding) / CGFloat(rows)
+                let rowH = min(NunaQuickMenu.fullRowHeight, max(fitting, NunaQuickMenu.minRowHeight))
+                let h = NunaQuickMenu.height(rows, rowHeight: rowH)
+                // The menu never rises past the top of the PHMN wordmark: with no room for it between there and the plus, it opens downward.
+                let above = r.minY - 12 - h >= Self.quickTopLimit
                 let cx = min(r.maxX, geo.size.width - 12) - NunaQuickMenu.width / 2
                 let cy = above ? r.minY - 12 - h / 2 : r.maxY + 12 + h / 2
                 ZStack {
@@ -262,10 +266,7 @@ struct NunaTodayView: View {
                     NunaQuickMenu(actions: quickActions, onPick: { a in
                         setQuick(false)
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { pendingQuick = a }
-                    }, onCustomize: {
-                        setQuick(false)
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { editingQuick = true }
-                    })
+                    }, rowHeight: rowH)
                     .position(x: cx, y: cy)
                     .transition(.scale(scale: 0.92, anchor: above ? .bottomTrailing : .topTrailing).combined(with: .opacity))
                     NunaQuickPlus(open: true) { setQuick(false) }.position(x: r.midX, y: r.midY)
@@ -431,6 +432,10 @@ struct NunaTodayView: View {
 
     /// The wordmark over the rings, and the room between it and the day: both go as the page scrolls.
     private static let brandHeight: CGFloat = 58
+
+    /// Where the top of the PHMN wordmark is, measured from the top of the safe area: the pinned header's top padding, the row of the bell, the
+    /// day and the strap, and the space the wordmark's own line leaves above its letters.
+    private static let quickTopLimit: CGFloat = 2 + 46 + (brandHeight - 14) / 2
 
     private func pinnedHeight(collapse t: CGFloat) -> CGFloat {
         let bar: CGFloat = 52
