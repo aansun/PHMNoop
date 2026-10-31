@@ -13,8 +13,11 @@ enum NunaActivityKind: String, CaseIterable, Identifiable {
 
     /// Recovery activities, the Charge tab. Saved like any other manual activity under the name as typed here.
     static let chargeNames = [
-        "Acupuncture", "Air compression", "Breathwork", "Bright light therapy", "Chiropractor", "Cold shower", "Contrast therapy",
-        "Cuddling with child", "Dry sauna", "Foam rolling", "Ice bath", "Infrared sauna", "Massage", "Meditation", "Red light therapy", "Steam room",
+        "Acupuncture", "Air Compression", "Air Compression (Normatec)", "Breathwork", "Bright Light Therapy", "Chiropractor", "Cuddling with Child",
+        "Cold Shower", "Contrast Therapy", "Dry Sauna", "Foam Rolling", "Guided Breathing - Increase Alertness", "Guided Breathing - Increase Relaxation",
+        "Hot Tub", "Ice Bath", "Infrared Sauna", "Knitting", "Massage Therapy", "Meditation", "Non-sleep, deep rest", "Other - Recovery",
+        "Percussive Massage", "Percussive Massage (Hypervolt)", "Playing with Child", "QiGong", "Red Light Therapy", "Restorative Yoga", "Sound healing",
+        "Steam Room", "Stretching", "Tai Chi", "Warm Bath",
     ]
     /// Rest, the Rest tab. A pick here is added as a nap or a night of sleep, not as a workout.
     static let restNames = ["Nap", "Sleep"]
@@ -48,7 +51,7 @@ struct NunaSportPicker: View {
         var out: [Item] = []
         func add(_ names: [String], route: (String) -> Bool = { _ in false }) { for n in names where !out.contains(where: { $0.name == n }) { out.append(Item(name: n, route: route(n))) } }
         let sports = WorkoutCatalog.matching(query)
-        if tab == .all || tab == .effort { add(sports.map(\.name), route: { WorkoutCatalog.sport(named: $0)?.isDistanceSport == true }) }
+        if tab == .all || tab == .effort { add(sports.map(\.name).filter { !NunaActivityKind.isCharge($0) }, route: { WorkoutCatalog.sport(named: $0)?.isDistanceSport == true }) }
         if tab == .all || tab == .charge { add(NunaActivityKind.chargeNames.filter { trimmed.isEmpty || $0.range(of: trimmed, options: .caseInsensitive) != nil }) }
         if includesRest, tab == .all || tab == .rest { add(NunaActivityKind.restNames.filter { trimmed.isEmpty || $0.range(of: trimmed, options: .caseInsensitive) != nil }) }
         return out.sorted { a, b in
