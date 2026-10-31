@@ -4,21 +4,17 @@ import StrandDesign
 import StrandAnalytics
 import WhoopStore
 
-// The log of a session in which the heart rate stayed in zone 0 and zone 1 (stretching, yoga, a slow walk without a map): there are no zones
-// worth a list, so it is read for the stress it kept or lifted, with its heart rate on the second tab, the sessions of the activity counted
-// toward a milestone, the heart-rate figures against the wearer's own usual, and what the activity does to the next day's Charge.
+// The log of a session with no map (stretching, yoga, HIIT, a class, a treadmill run): it is read for the stress it kept or lifted, with its
+// heart rate on the second tab, the sessions of the activity counted toward a milestone, the heart-rate figures against the wearer's own usual,
+// and what the activity does to the next day's Charge.
 
 // MARK: - What counts as a low-intensity session
 
 enum NunaLowIntensity {
-    /// Time in zones 2 to 5 is under a minute (or 5% of the session, if that is longer), and it was not strength work or a mapped one.
+    /// Every session that has a heart rate and no map and is not strength work: stretching, yoga, HIIT, a class, a treadmill run. Those with a
+    /// route have the map layout, gym sessions their own, and a session with no heart rate the plain one.
     static func applies(row: WorkoutRow, zoneMinutes: [Double]?, hasHeartRate: Bool, hasRoute: Bool) -> Bool {
-        // No minutes at all in the zones, with a heart rate on file, means it never reached zone 1: that is the lowest-intensity case.
-        let z = zoneMinutes ?? Array(repeating: 0, count: 5)
-        guard hasHeartRate, !hasRoute, !NunaWorkoutKind.isStrength(row), z.count >= 5 else { return false }
-        let minutes = (row.durationS ?? Double(row.endTs - row.startTs)) / 60
-        guard minutes > 0 else { return false }
-        return z.dropFirst().reduce(0, +) < max(1, minutes * 0.05)
+        hasHeartRate && !hasRoute && !NunaWorkoutKind.isStrength(row)
     }
 }
 
@@ -44,7 +40,11 @@ enum NunaWorkoutStress {
     }
 
     static func word(_ level: Double) -> LocalizedStringKey { level < 1 ? "Low" : (level < 2 ? "Medium" : "High") }
-    static func text(_ v: Double) -> String { String(format: "%.1f", locale: AppLanguage.activeLocale, v) }
+    static func text(_ v: Double) -> String {
+        // A change that rounds to nothing is "0.0", never "-0.0".
+        let r = (v * 10).rounded() / 10
+        return String(format: "%.1f", locale: AppLanguage.activeLocale, r == 0 ? 0 : r)
+    }
 }
 
 // MARK: - Tabs
