@@ -73,13 +73,13 @@ struct NunaManualWorkoutSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     if editing == nil {
-                        HStack(alignment: .top, spacing: 14) {
+                        HStack(alignment: .center, spacing: 14) {
                             Image(systemName: "sparkle").font(.nuna(size: 17, weight: .regular)).foregroundStyle(Self.info).frame(width: 26)
                             Text("Adding a past activity helps PHMN recognize and classify your future workouts more accurately.")
-                                .font(.nuna(size: 15, weight: .regular)).foregroundStyle(Self.info).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                                .font(.nuna(size: 14, weight: .regular)).foregroundStyle(Self.info).fixedSize(horizontal: false, vertical: true).textCase(nil)
                         }
-                        .padding(.horizontal, 16).padding(.vertical, 16).frame(maxWidth: .infinity, alignment: .leading)
-                        .background(Self.info.opacity(0.16), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .padding(.horizontal, 16).padding(.vertical, 14).frame(maxWidth: .infinity, alignment: .leading)
+                        .background(Self.info.opacity(0.16), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
 
                     Button { showSport = true } label: {
@@ -91,8 +91,8 @@ struct NunaManualWorkoutSheet: View {
                             Spacer(minLength: 8)
                             Image(systemName: "chevron.right").font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
                         }
-                        .padding(.horizontal, 12).frame(height: 58).frame(maxWidth: .infinity)
-                        .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                        .padding(.horizontal, 12).frame(height: 56).frame(maxWidth: .infinity)
+                        .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                         .contentShape(Rectangle())
                     }.buttonStyle(.plain)
 
@@ -100,13 +100,14 @@ struct NunaManualWorkoutSheet: View {
                         nunaRuledHeader("Time")
                         dateRow("Start Time", selection: startBinding)
                         dateRow("End Time", selection: $end)
-                        HStack {
-                            Text("Duration").font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                            Spacer()
-                            Text(verbatim: durationLabel).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                            Stepper("", value: durationBinding, in: 1...(24 * 60), step: 5).labelsHidden().fixedSize()
-                        }
-                        .padding(.horizontal, 16).frame(minHeight: 48).accessibilityElement(children: .combine)
+                    }
+
+                    VStack(alignment: .leading, spacing: 14) {
+                        nunaRuledHeader("Location")
+                        Text("Where did you wear your strap?").font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).padding(.horizontal, 16)
+                        Text("Wrist band").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 1.2).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                            .frame(maxWidth: .infinity).frame(height: 56)
+                            .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 14, style: .continuous)).padding(.horizontal, 16)
                     }
 
                     if !isRest {
@@ -139,11 +140,11 @@ struct NunaManualWorkoutSheet: View {
             Button { save() } label: {
                 Text(editing == nil ? "Save" : "Save changes").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel + 1.4).textCase(.uppercase)
                     .foregroundStyle(canSave ? NunaPalette.onAccent : NunaPalette.textMuted)
-                    .frame(maxWidth: .infinity).frame(height: 56)
-                    .background(canSave ? NunaPalette.accent : NunaPalette.tile, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .frame(maxWidth: .infinity).frame(height: 52)
+                    .background(canSave ? NunaPalette.accent : NunaPalette.tile, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
             .buttonStyle(.plain).disabled(!canSave)
-            .padding(.horizontal, NunaSpacing.screenH).padding(.vertical, 12)
+            .padding(.horizontal, 24).padding(.vertical, 12)
         }
         .background(NunaPalette.canvas.ignoresSafeArea())
         .presentationDragIndicator(.visible)
@@ -172,14 +173,27 @@ struct NunaManualWorkoutSheet: View {
         .padding(.horizontal, 8).padding(.top, 14).frame(height: 62)
     }
 
+    /// "Start Time" at the left and, at the right, one dark pill with the day and the time ("31 Oct at 8:52 AM"); touching it opens the picker.
     private func dateRow(_ title: LocalizedStringKey, selection: Binding<Date>) -> some View {
         HStack {
             Text(title).font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
             Spacer()
-            DatePicker("", selection: selection, in: ...Date(), displayedComponents: [.date, .hourAndMinute])
-                .labelsHidden().colorScheme(NunaTheme.mode == .light ? .light : .dark)
+            ZStack {
+                Text(verbatim: Self.stamp(selection.wrappedValue)).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                    .padding(.horizontal, 16).frame(minWidth: 168, minHeight: 40)
+                    .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                DatePicker("", selection: selection, in: ...Date(), displayedComponents: [.date, .hourAndMinute])
+                    .labelsHidden().colorMultiply(.clear).colorScheme(NunaTheme.mode == .light ? .light : .dark)
+            }
+            .fixedSize()
         }
-        .padding(.horizontal, 16).frame(minHeight: 48)
+        .padding(.horizontal, 16).frame(minHeight: 52)
+    }
+
+    private static func stamp(_ d: Date) -> String {
+        let day = DateFormatter(); day.locale = AppLanguage.activeLocale; day.setLocalizedDateFormatFromTemplate("d MMM")
+        let time = DateFormatter(); time.locale = AppLanguage.activeLocale; time.setLocalizedDateFormatFromTemplate("jmm")
+        return day.string(from: d) + " " + String(localized: "at") + " " + time.string(from: d)
     }
 
     private func numberRow(_ title: LocalizedStringKey, text: Binding<String>, unit: String, field: NumberField) -> some View {
@@ -187,7 +201,7 @@ struct NunaManualWorkoutSheet: View {
             Text(title).font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
             Spacer()
             TextField("", text: text, prompt: Text("optional").foregroundStyle(NunaPalette.textMuted))
-                .font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                .font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                 .multilineTextAlignment(.trailing).keyboardType(.decimalPad).focused($focus, equals: field)
                 .frame(maxWidth: 120)
             Text(verbatim: unit).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(minWidth: 30, alignment: .leading)
