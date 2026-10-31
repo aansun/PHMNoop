@@ -195,12 +195,15 @@ struct NunaGymPage: View {
     var body: some View {
         ScrollView {
             VStack(spacing: NunaSpacing.section) {
-                HStack(spacing: 10) {
-                    Button { dismiss() } label: {
-                        Image(systemName: "chevron.left").font(.nuna(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44)
-                    }.buttonStyle(.plain).accessibilityLabel(Text("Back"))
-                    Text("Gym").font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                    Spacer()
+                ZStack {
+                    HStack {
+                        Button { dismiss() } label: {
+                            Image(systemName: "chevron.left").font(.nuna(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44)
+                        }.buttonStyle(.plain).accessibilityLabel(Text("Back"))
+                        Spacer()
+                    }
+                    Text("Strength Trainer").font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                        .accessibilityAddTraits(.isHeader)
                 }
                 NunaPageTabs([(value: 0, title: "Progress"), (value: 1, title: "My Program"), (value: 2, title: "Explore")], selection: $tab)
                 NunaActiveWorkoutBanner { openLive = true }

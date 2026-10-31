@@ -40,7 +40,7 @@ enum NunaQuickActions {
         .init(id: "cycle", title: "Menstrual cycle", icon: "calendar", group: "Log", kind: .today(.cycle)),
         // Train
         .init(id: "start", title: "Start session", icon: "play", group: "Train", kind: .route(.activeWorkout)),
-        .init(id: "gym", title: "Gym", icon: "dumbbell", group: "Train", kind: .workout(.gym)),
+        .init(id: "gym", title: "Strength Trainer", icon: "act:strength-trainer", group: "Train", kind: .workout(.gym)),
         .init(id: "workouts", title: "Workouts", icon: "figure.run", group: "Train", kind: .route(.workouts)),
         .init(id: "history", title: "History", icon: "clock.arrow.circlepath", group: "Train", kind: .workout(.history)),
         .init(id: "load", title: "Training load", icon: "chart.bar", group: "Train", kind: .workout(.load)),

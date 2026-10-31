@@ -124,7 +124,7 @@ struct NunaAnyaProgramCard: View {
                     HStack(spacing: 10) {
                         Label(String(localized: "Saved"), systemImage: "checkmark.circle.fill").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.charge)
                         Spacer()
-                        Button { showGym = true } label: { Text("Open in Gym").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary) }.buttonStyle(.plain)
+                        Button { showGym = true } label: { Text("Open in Strength Trainer").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary) }.buttonStyle(.plain)
                     }
                 } else {
                     Button { Task { await save() } } label: {

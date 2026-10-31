@@ -366,7 +366,7 @@ struct NunaWorkoutStartView: View {
         if isStrength {
             NavigationLink(value: NunaWorkoutRoute.gym) {
                 NunaCard(highlight: true) {
-                    NunaListRow("Log sets and weights", description: "Open Gym to run a program or a freehand session", systemImage: "dumbbell", showsChevron: true)
+                    NunaListRow("Log sets and weights", description: "Open Strength Trainer to run a program or a freehand session", systemImage: "act:strength-trainer", showsChevron: true)
                 }
             }
             .buttonStyle(.plain)

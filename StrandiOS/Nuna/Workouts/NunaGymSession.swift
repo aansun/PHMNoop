@@ -41,7 +41,7 @@ struct NunaGymSessionView: View {
     private var system: UnitSystem { UnitSystem(rawValue: unitSystemRaw) ?? .metric }
 
     var body: some View {
-        NunaDetailScreen("Gym session", titleSymbol: session.map { ActivitySport.symbol(for: $0.sport) } ?? "dumbbell", subtitle: session.map { NunaWorkoutFormat.span($0.startTs, $0.endTs ?? $0.startTs) }, trailing: session == nil ? nil : AnyView(actionsMenu)) {
+        NunaDetailScreen("Strength Trainer session", titleSymbol: session.map { ActivitySport.symbol(for: $0.sport) } ?? "dumbbell", subtitle: session.map { NunaWorkoutFormat.span($0.startTs, $0.endTs ?? $0.startTs) }, trailing: session == nil ? nil : AnyView(actionsMenu)) {
             if let session { VStack(spacing: 14) { content(session) } }
             else if loaded { NunaCard { Text("This session is no longer saved.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading) } }
         }
@@ -531,7 +531,7 @@ struct NunaSaveProgramView: View {
                 HStack {
                     Text(verbatim: NunaWorkoutFormat.day(session.startTs)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     Spacer()
-                    Text(verbatim: session.programName ?? String(localized: "Gym")).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: session.programName ?? String(localized: "Strength Trainer")).font(.nuna(size: 13.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                 }
                 NunaFormField("Program name") { TextField("", text: $name, prompt: Text("Push · chest and shoulders").foregroundStyle(NunaPalette.textMuted)) }
                 NunaTitleRow(title: "Included exercises") { EmptyView() }
@@ -559,7 +559,7 @@ struct NunaSaveProgramView: View {
                 Button { Task { await save() } } label: {
                     Text("Save program").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 56).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                 }.buttonStyle(.plain).disabled(!canSave).opacity(canSave ? 1 : 0.4)
-                Text("It shows up in Gym under Programs and can be edited any time.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
+                Text("It shows up in Strength Trainer under Programs and can be edited any time.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
             }
             .scrollDismissesKeyboard(.interactively)
             .toolbar(.hidden, for: .navigationBar)

@@ -50,7 +50,7 @@ struct NunaLockedColumns: View {
             ForEach(Array(items.enumerated()), id: \.offset) { i, b in
                 if i > 0 { Rectangle().fill(NunaPalette.hairline).frame(width: 1, height: 74) }
                 VStack(spacing: 10) {
-                    Image(systemName: b.icon).font(.nuna(size: 22, weight: .regular)).foregroundStyle(NunaPalette.textMuted).frame(height: 26)
+                    NunaIcon(name: b.icon, size: 25, weight: .medium).foregroundStyle(NunaPalette.textMuted).frame(height: 30)
                     Text(b.name).font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                         .lineLimit(1).minimumScaleFactor(0.7)
                     RoundedRectangle(cornerRadius: 6, style: .continuous).fill(NunaPalette.tile).frame(width: 30, height: 30)

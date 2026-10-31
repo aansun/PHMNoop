@@ -72,7 +72,7 @@ struct NunaMiniChip: View {
     var body: some View {
         HStack(spacing: 6) {
             if dot { Circle().fill(color).frame(width: 7, height: 7) }
-            Text(text).font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(color).textCase(dot ? nil : .uppercase).lineLimit(1)
+            Text(text).font(.nuna(size: 10.5, weight: .bold)).foregroundStyle(color).textCase(dot ? nil : .uppercase).lineLimit(1)
         }
         .padding(.horizontal, 9).frame(height: 24)
         .background(NunaPalette.tint(color), in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
@@ -95,15 +95,15 @@ struct NunaVitalTile: View {
         NunaCard(small: true) {
             VStack(alignment: .leading, spacing: 10) {
                 HStack(spacing: 8) {
-    Image(systemName: icon).font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 24, height: 24)
-                    Text(label).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    NunaIcon(name: icon, size: 21, weight: .medium).foregroundStyle(NunaPalette.textSecondary).frame(width: 30, height: 30)
+                    Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 3) {
                     Text(verbatim: value).font(.nuna(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design))
                         .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
                     if !unit.isEmpty && value != "–" {
-                        Text(verbatim: unit).font(.nuna(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: unit).font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                 }
                 if let chip { NunaMiniChip(text: chip, color: chipColor, dot: chipDot) }

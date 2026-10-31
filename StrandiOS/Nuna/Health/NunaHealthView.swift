@@ -78,7 +78,7 @@ struct NunaHealthView: View {
 
     @ViewBuilder private var container: some View {
         if vitalsOnly {
-            NunaDetailScreen("Vital signs") { vitalTab }
+            NunaDetailScreen("Vital signs", centersTitle: true) { vitalTab }
         } else {
             // The sleep overview: the last seven nights, need against actual, bedtime and stages. A page of its own now that Health
             // is no longer a tab.
@@ -238,7 +238,7 @@ struct NunaHealthView: View {
                 HStack(spacing: 10) {
                     Button { legacy = .breathing } label: {
                         HStack(spacing: 8) {
-                            Image(systemName: "wind").font(.nuna(size: 14, weight: .bold))
+                            NunaActivityGlyph(name: "Breathwork", size: 20)
                             Text("Breathe 5 min").font(.nuna(size: 15, weight: .bold))
                         }
                         .foregroundStyle(NunaPalette.onAccent)

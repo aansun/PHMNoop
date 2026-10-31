@@ -107,6 +107,13 @@ extension BreathGoal {
         case .energize: return "bolt"; case .recover: return "heart.circle"
         }
     }
+    /// The activity picture of the goal, from the WHOOP set (see `NunaActivityIcons`).
+    var activity: String {
+        switch self {
+        case .calm: return "Meditation"; case .sleep: return "Sleep"; case .focus: return "Breathwork"
+        case .energize: return "Guided Breathing - Increase Alertness"; case .recover: return "Restorative Yoga"
+        }
+    }
     var tint: Color {
         switch self {
         case .calm: return NunaPalette.rest; case .sleep: return NunaPalette.restLight; case .focus: return NunaPalette.charge

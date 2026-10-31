@@ -332,7 +332,7 @@ struct NunaStarterProgramView: View {
                     }
                 }
             }
-            nunaFootnote("Adding it copies the routines into your Gym tab. Change the exercises, sets, reps and rest there; nothing here changes.")
+            nunaFootnote("Adding it copies the routines into your Strength Trainer tab. Change the exercises, sets, reps and rest there; nothing here changes.")
         }
         .safeAreaInset(edge: .bottom, spacing: 0) { addBar }
     }
