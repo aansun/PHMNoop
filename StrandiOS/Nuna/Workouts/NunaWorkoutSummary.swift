@@ -129,24 +129,22 @@ struct NunaWorkoutSummaryView: View {
     // MARK: Header actions
 
     private func actionsMenu(_ r: WorkoutRow) -> some View {
-        Menu {
-            Section("Share") {
-                Button { Task { await exportFile(r, gpx: false) } } label: { Label("Export file", systemImage: "square.and.arrow.up") }
-                if data.route.count >= 2 { Button { Task { await exportFile(r, gpx: true) } } label: { Label("Export route (GPX)", systemImage: "map") } }
-                if stravaState == .ready {
-                    Button { Task { await sendToStrava(r) } } label: { Label("Upload to Strava", systemImage: "arrow.up.circle") }
-                } else if stravaState == .uploaded || stravaState == .processing {
-                    Button {} label: { Label("On Strava", systemImage: "checkmark.circle") }.disabled(true)
-                }
-            }
-            Section {
-                if WorkoutSource.classify(r.source) == .manual {
-                    Button { showEditActivity = true } label: { Label("Edit activity", systemImage: "pencil") }
-                } else if Self.canEditTime(r) { Button { showEdit = true } label: { Label("Edit time", systemImage: "clock") } }
-                Button(role: .destructive) { confirmDelete = true } label: { Label("Delete", systemImage: "trash") }
-            }
-        } label: { NunaBareIcon("ellipsis") }
-        .accessibilityLabel(Text("More"))
+        var items: [NunaActionItem] = [
+            NunaActionItem(title: "Export file", symbol: "square.and.arrow.up") { Task { await exportFile(r, gpx: false) } },
+        ]
+        if data.route.count >= 2 { items.append(NunaActionItem(title: "Export route (GPX)", symbol: "map") { Task { await exportFile(r, gpx: true) } }) }
+        if stravaState == .ready {
+            items.append(NunaActionItem(title: "Upload to Strava", symbol: "arrow.up.circle") { Task { await sendToStrava(r) } })
+        } else if stravaState == .uploaded || stravaState == .processing {
+            items.append(NunaActionItem(title: "On Strava", symbol: "checkmark.circle", enabled: false) {})
+        }
+        if WorkoutSource.classify(r.source) == .manual {
+            items.append(NunaActionItem(title: "Edit activity", symbol: "pencil") { showEditActivity = true })
+        } else if Self.canEditTime(r) {
+            items.append(NunaActionItem(title: "Edit time", symbol: "clock") { showEdit = true })
+        }
+        items.append(NunaActionItem(title: "Delete", symbol: "trash", destructive: true) { confirmDelete = true })
+        return NunaActionsButton(items: items)
     }
 
     /// Only a session this app owns can be moved in time: a strap or manual one, never an Apple Health, imported file or Hevy session.

@@ -40,12 +40,12 @@ struct NunaAveragePill: View {
     let text: String
     var body: some View {
         HStack(spacing: 4) {
-            Image(systemName: value >= average ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill").font(.system(size: 8, weight: .bold))
-            Text(verbatim: text).font(.nuna(size: 11.5, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.7)
+            Image(systemName: value >= average ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill").font(.system(size: 10, weight: .bold))
+            Text(verbatim: text).font(.nuna(size: 13.5, weight: .semibold)).lineLimit(1).minimumScaleFactor(0.7)
         }
         .foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-        .padding(.horizontal, 8).frame(height: 22)
-        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 6, style: .continuous))
+        .padding(.horizontal, 10).frame(height: 28)
+        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
     }
 }
 
@@ -126,8 +126,11 @@ struct NunaWorkoutHRArea: View {
     /// A zone (1...5) picked in the zone list.
     var highlightZone: Int? = nil
     var zoneSet: HRZoneSet? = nil
+    /// Stretches of the session (start and end times) to light in green, such as the sets of the exercise on the card below the chart.
+    var rangeHighlight: [ClosedRange<Int>] = []
 
-    private static let plotHeight: CGFloat = 150
+    /// The height of the plot itself (the gym session, which has more under it, draws it lower).
+    var plotHeight: CGFloat = 150
     /// The room either side of the dashed marks: the scale at the left, the minutes around the session at both.
     private static let inset: CGFloat = 28
 
@@ -137,7 +140,7 @@ struct NunaWorkoutHRArea: View {
         let lo = floor((pts.map(\.bpm).min() ?? 0) / 25) * 25
         let hi = max(ceil((pts.map(\.bpm).max() ?? 25) / 25) * 25, lo + 25)
         let span = max(Double(end - start), 1)
-        let lit = highlightZone != nil && zoneSet != nil
+        let lit = (highlightZone != nil && zoneSet != nil) || !rangeHighlight.isEmpty
         VStack(spacing: 6) {
             ZStack(alignment: .topLeading) {
                 Canvas { ctx, size in
@@ -202,6 +205,25 @@ struct NunaWorkoutHRArea: View {
                             }
                         }
                     }
+                    if !rangeHighlight.isEmpty, pts.count >= 2 {
+                        var inner = ctx
+                        inner.clip(to: Path(CGRect(x: left, y: 0, width: width, height: size.height)))
+                        let color = NunaWorkoutLogZones.colors[2]
+                        for r in rangeHighlight {
+                            let near = session.filter { $0.ts >= r.lowerBound - 20 && $0.ts <= r.upperBound + 20 }
+                            guard near.count >= 2 else { continue }
+                            let run = near.map(pt)
+                            var fill = Path()
+                            fill.move(to: CGPoint(x: run[0].x, y: size.height))
+                            for q in run { fill.addLine(to: q) }
+                            fill.addLine(to: CGPoint(x: run[run.count - 1].x, y: size.height))
+                            fill.closeSubpath()
+                            inner.fill(fill, with: .linearGradient(Gradient(colors: [color.opacity(0.55), color.opacity(0.08)]), startPoint: .zero, endPoint: CGPoint(x: 0, y: size.height)))
+                            var seg = Path(); seg.move(to: run[0])
+                            for q in run.dropFirst() { seg.addLine(to: q) }
+                            inner.stroke(seg, with: .color(color), style: StrokeStyle(lineWidth: 2.4, lineCap: .round, lineJoin: .round))
+                        }
+                    }
                     // The start and the end of the session: dashed marks with a dot at the foot.
                     for x in [left, left + width] {
                         var m = Path(); m.move(to: CGPoint(x: x, y: 0)); m.addLine(to: CGPoint(x: x, y: size.height))
@@ -211,10 +233,10 @@ struct NunaWorkoutHRArea: View {
                 }
                 ForEach(Array(stride(from: lo, through: hi, by: 25)), id: \.self) { v in
                     Text(verbatim: "\(Int(v))").font(.nuna(size: 10.5, weight: .bold)).foregroundStyle(NunaPalette.textMuted).monospacedDigit()
-                        .position(x: 14, y: Self.plotHeight * CGFloat(1 - (v - lo) / (hi - lo)) - 8)
+                        .position(x: 14, y: plotHeight * CGFloat(1 - (v - lo) / (hi - lo)) - 8)
                 }
             }
-            .frame(height: Self.plotHeight)
+            .frame(height: plotHeight)
             // The two times, each centred under its mark.
             GeometryReader { geo in
                 let left = Self.inset, right = geo.size.width - Self.inset
@@ -520,21 +542,23 @@ struct NunaWorkoutLogStats: View {
     }
 
     private func tile(_ t: Tile) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 6) {
-                Image(systemName: t.icon).font(.nuna(size: 12, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
-                Text(t.label).font(.nuna(size: 10, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 8) {
+                Image(systemName: t.icon).font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
+                Text(t.label).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel + 0.4).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     .lineLimit(1).minimumScaleFactor(0.7)
             }
-            HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text(verbatim: t.value).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
-                if !t.unit.isEmpty && t.value != "–" { Text(verbatim: t.unit).font(.nuna(size: 11.5, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1) }
+            .padding(.bottom, 8)
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Text(verbatim: t.value).font(.nuna(size: 36, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
+                if !t.unit.isEmpty && t.value != "–" { Text(verbatim: t.unit).font(.nuna(size: 17, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).lineLimit(1) }
             }
+            .padding(.bottom, 6)
             if let p = t.pill { NunaAveragePill(value: p.value, average: p.average, text: p.text) }
-            else { Color.clear.frame(height: 22) }
+            else { Color.clear.frame(height: 28) }
         }
-        .padding(12).frame(maxWidth: .infinity, alignment: .leading)
-        .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .padding(16).frame(maxWidth: .infinity, alignment: .leading)
+        .background(NunaPalette.tile, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
     }
 }
 
@@ -593,6 +617,56 @@ struct NunaWorkoutTimeSheet: View {
             DatePicker("", selection: date, in: ...Date().addingTimeInterval(60), displayedComponents: [.date, .hourAndMinute]).labelsHidden()
         }
         .padding(.vertical, 12)
+    }
+}
+
+// MARK: - Actions
+
+/// One line of the actions popover.
+struct NunaActionItem: Identifiable {
+    let id = UUID()
+    let title: LocalizedStringKey
+    let symbol: String
+    var destructive = false
+    var enabled = true
+    let action: () -> Void
+}
+
+/// The three outlined circles at the corner of a saved workout, and the small dark popover under them: a large symbol and a capital label for
+/// each action. The action runs once the popover has gone, so a sheet or a dialog can open without meeting it.
+struct NunaActionsButton: View {
+    let items: [NunaActionItem]
+    @State private var shown = false
+
+    var body: some View {
+        Button { shown = true } label: {
+            HStack(spacing: 4) { ForEach(0..<3, id: \.self) { _ in Circle().strokeBorder(NunaPalette.textPrimary, lineWidth: 2).frame(width: 8, height: 8) } }
+                .frame(width: 44, height: 44).contentShape(Rectangle())
+        }
+        .accessibilityLabel(Text("More"))
+        .popover(isPresented: $shown, attachmentAnchor: .point(.bottom), arrowEdge: .top) {
+            VStack(alignment: .leading, spacing: 0) {
+                ForEach(items) { item in
+                    Button {
+                        shown = false
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { item.action() }
+                    } label: {
+                        HStack(spacing: 16) {
+                            Image(systemName: item.symbol).font(.system(size: 22, weight: .light)).frame(width: 30)
+                            Text(item.title).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel + 0.8).textCase(.uppercase).lineLimit(1)
+                        }
+                        .foregroundStyle(item.destructive ? NunaPalette.alertText : NunaPalette.textPrimary)
+                        .padding(.horizontal, 20).frame(maxWidth: .infinity, alignment: .leading).frame(height: 58)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain).disabled(!item.enabled).opacity(item.enabled ? 1 : 0.4)
+                }
+            }
+            .padding(.vertical, 6).frame(minWidth: 230)
+            .presentationCompactAdaptation(.popover)
+            .presentationBackground(Color(white: 0.13))
+            .preferredColorScheme(NunaTheme.colorScheme)
+        }
     }
 }
 #endif
