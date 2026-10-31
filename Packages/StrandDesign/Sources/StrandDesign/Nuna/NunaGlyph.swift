@@ -33,6 +33,10 @@ public struct NunaGlyph: View {
             Image("AnyaGlyph").renderingMode(.template)
                 .resizable().scaledToFit()
                 .frame(width: pointSize * 1.3, height: pointSize * 1.3)
+        } else if name.hasPrefix("met:") {
+            // A drawn metric picture from the app's asset catalogue (MetricIcons), a thin-line template image.
+            Image("met-" + name.dropFirst(4)).renderingMode(.template).resizable().scaledToFit()
+                .frame(width: pointSize * 1.3, height: pointSize * 1.3)
         } else {
             Image(systemName: name).font(.nuna(size: pointSize, weight: weight))
         }

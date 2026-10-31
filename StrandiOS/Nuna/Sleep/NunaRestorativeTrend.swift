@@ -77,7 +77,7 @@ struct NunaRestorativeTrendView: View {
     }
 
     private var nameBox: some View {
-        NunaTrendNameBox(icon: "moon.zzz", title: "Restorative sleep (hours)")
+        NunaTrendNameBox(icon: "met:restorative-sleep-hours", title: "Restorative sleep (hours)")
     }
 
     private func header(_ all: [Day], _ average: Double?) -> some View {

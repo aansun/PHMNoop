@@ -308,7 +308,7 @@ struct NunaHoursNeededPctTrendView: View {
     var endingDaysAgo = 0
     var body: some View {
         NunaPctTrendView(
-            name: "Hours vs. needed (%)", icon: "moon", noun: "Hours vs. Needed",
+            name: "Hours vs. needed (%)", icon: "met:hours-vs-needed", noun: "Hours vs. Needed",
             bands: [
                 .init(color: NunaRestChart.need, name: "Optimal", range: ">85%") { $0 > 85 },
                 .init(color: Color(hex: "#8A8D93"), name: "Sufficient", range: "70–85%") { $0 >= 70 && $0 <= 85 },
@@ -324,7 +324,7 @@ struct NunaConsistencyTrendView: View {
     var endingDaysAgo = 0
     var body: some View {
         NunaPctTrendView(
-            name: "Sleep consistency", icon: "calendar", noun: "Sleep Consistency Score",
+            name: "Sleep consistency", icon: "met:sleep-consistency", noun: "Sleep Consistency Score",
             bands: [
                 .init(color: NunaRestChart.need, name: "Optimal", range: "80%+") { $0 >= 80 },
                 .init(color: Color(hex: "#8A8D93"), name: "Sufficient", range: "70–79%") { $0 >= 70 && $0 < 80 },
@@ -340,7 +340,7 @@ struct NunaEfficiencyTrendView: View {
     var endingDaysAgo = 0
     var body: some View {
         NunaPctTrendView(
-            name: "Sleep efficiency", icon: "bed.double", noun: "average sleep efficiency",
+            name: "Sleep efficiency", icon: "met:sleep-efficiency", noun: "average sleep efficiency",
             bands: [
                 .init(color: NunaRestChart.need, name: "Optimal", range: "85%+") { $0 >= 85 },
                 .init(color: Color(hex: "#8A8D93"), name: "Sufficient", range: "70–85%") { $0 >= 70 && $0 < 85 },
@@ -356,7 +356,7 @@ struct NunaSleepDebtTrendView: View {
     var endingDaysAgo = 0
     var body: some View {
         NunaPctTrendView(
-            name: "Sleep debt", icon: "moon.zzz", noun: "average sleep debt",
+            name: "Sleep debt", icon: "met:sleep-debt", noun: "average sleep debt",
             bands: [
                 .init(color: Color(hex: "#7BA4C4"), name: "High", range: ">0:45") { $0 > 45 },
                 .init(color: Color(hex: "#587C99"), name: "Moderate", range: "0:30–0:45") { $0 >= 30 && $0 <= 45 },
@@ -372,7 +372,7 @@ struct NunaChargeScoreTrendView: View {
     var endingDaysAgo = 0
     var body: some View {
         NunaPctTrendView(
-            name: "Charge", icon: "figure.mind.and.body", noun: "average Charge",
+            name: "Charge", icon: "met:recovery", noun: "average Charge",
             bands: NunaDaysBreakdown.chargeBands,
             breakdownTitle: "Charge breakdown",
             value: { $0.charge[$1] }, zones: { nunaChargeColor($0) }, endingDaysAgo: endingDaysAgo)
@@ -394,7 +394,7 @@ struct NunaEffortScoreTrendView: View {
         func edge(_ v: Double) -> String { String(format: "%.1f", v * k) }
         let blue = NunaPalette.effortModerate
         return NunaPctTrendView(
-            name: "Effort", icon: "dumbbell", noun: "average Strain",
+            name: "Effort", icon: "met:day-strain", noun: "average Strain",
             bands: [
                 .init(color: NunaPalette.effortAllOut, name: "All out", range: ">\(edge(18))") { $0 > 18 * k },
                 .init(color: NunaPalette.effortModerate, name: "Strenuous", range: "\(edge(14.1))–\(edge(18))") { $0 > 14 * k && $0 <= 18 * k },
@@ -419,7 +419,7 @@ struct NunaCaloriesTrendView: View {
 
     private var page: NunaPctTrendView {
         NunaPctTrendView(
-            name: "Calories", icon: "flame", noun: "calories", bands: [], breakdownTitle: "",
+            name: "Calories", icon: "met:calories", noun: "calories", bands: [], breakdownTitle: "",
             value: { $0.calories[$1] },
             format: { Self.thousands($0) }, hidesUnit: false,
             axisTicks: [0, 1000, 2000, 3000],
@@ -450,7 +450,7 @@ struct NunaStepsTrendView: View {
 
     private var page: NunaPctTrendView {
         NunaPctTrendView(
-            name: "Steps", icon: "figure.walk", noun: "steps", bands: [], breakdownTitle: "",
+            name: "Steps", icon: "met:steps", noun: "steps", bands: [], breakdownTitle: "",
             value: { $0.steps[$1] },
             format: { nunaThousands($0) }, hidesUnit: true,
             axisTicks: [0, 5000, 10000, 15000],

@@ -71,7 +71,7 @@ struct NunaTimeInBedTrendView: View {
     }
 
     private var nameBox: some View {
-        NunaTrendNameBox(icon: "stopwatch", title: "Time in bed")
+        NunaTrendNameBox(icon: "met:time-in-bed", title: "Time in bed")
     }
 
     private func header(_ all: [Night], _ average: Double?) -> some View {

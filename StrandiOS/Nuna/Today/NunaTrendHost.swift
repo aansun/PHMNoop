@@ -184,6 +184,8 @@ struct NunaTrendNameBox: View {
     let icon: String
     let title: LocalizedStringKey
     @Environment(\.nunaTrendMenu) private var menu
+    /// Inside the host the page on show names its own picture, so the box and the list can never show two different ones.
+    private var shownIcon: String { menu?.current.icon ?? icon }
 
     var body: some View {
         VStack(spacing: 10) {
@@ -199,7 +201,7 @@ struct NunaTrendNameBox: View {
 
     private func box(open: Bool, chevron: Bool) -> some View {
         HStack(spacing: 14) {
-            NunaIcon(name: icon, size: 20).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
+            NunaIcon(name: shownIcon, size: 20).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
             Text(title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
             Spacer(minLength: 0)
             if chevron { Image(systemName: open ? "chevron.up" : "chevron.down").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary) }
