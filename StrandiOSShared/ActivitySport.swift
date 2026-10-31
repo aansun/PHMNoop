@@ -14,6 +14,11 @@ enum ActivitySport {
             ("tennis", "figure.tennis"), ("padel", "figure.tennis"), ("badminton", "figure.badminton"), ("golf", "figure.golf"),
             ("soccer", "figure.soccer"), ("football", "figure.american.football"), ("basketball", "figure.basketball"), ("ski", "figure.skiing.downhill"),
             ("stair", "figure.stairs"), ("hiit", "bolt.heart"), ("stretch", "figure.flexibility"), ("martial", "figure.martial.arts"),
+            // Recovery and rest.
+            ("nap", "bed.double"), ("sleep", "moon"), ("sauna", "flame"), ("steam", "humidity"), ("cold", "snowflake"), ("ice bath", "snowflake"),
+            ("contrast", "thermometer.variable"), ("breath", "lungs"), ("meditat", "figure.mind.and.body"), ("massage", "hand.raised"),
+            ("acupuncture", "cross.case"), ("chiropractor", "figure.cooldown"), ("compression", "waveform.path"), ("light therapy", "sun.max"),
+            ("foam", "figure.cooldown"), ("cuddl", "heart"),
         ]
         return table.first { n.contains($0.0) }?.1 ?? "figure.mixed.cardio"
     }
