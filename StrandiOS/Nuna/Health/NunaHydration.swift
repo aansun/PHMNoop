@@ -139,7 +139,7 @@ private struct NunaHydrationAmountSheet: View {
             }
         }
         .padding(24).frame(maxWidth: .infinity, alignment: .leading)
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .preferredColorScheme(NunaTheme.colorScheme)
         .presentationDetents([.height(300)]).presentationDragIndicator(.visible)
     }

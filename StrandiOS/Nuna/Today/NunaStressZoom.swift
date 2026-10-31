@@ -33,7 +33,7 @@ struct NunaStressZoomScreen: View {
         }
         .ignoresSafeArea()
         .statusBarHidden(true)
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .preferredColorScheme(NunaTheme.colorScheme)
     }
 }

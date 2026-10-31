@@ -28,7 +28,7 @@ struct NunaHealthTabView: View {
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 120)
         }
         .scrollIndicators(.hidden)
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .nunaTodayDestinations()
         .task(id: repo.refreshSeq) { await day.load(repo: repo, profile: profile) }
     }

@@ -273,9 +273,16 @@ targets:
               CFBundleIconFiles: []
               UIPrerenderedIcon: false
         NSSupportsLiveActivities: true
-        # Fonts for the WHP style: D-DIN-PRO (SIL OFL) for figures and Montserrat (SIL OFL, the sheet's stand-in for Proxima Nova) for words.
+        # Fonts for the WHP style, from the WHOOP brand guide: DINPro for figures and Proxima Nova for words (licensed fonts, kept in Fonts/WHOOPType;
+        # D-DIN-PRO and Montserrat stay as the fallback when one of these is missing).
         # Fonts for the Flow style: Fraunces for large figures and titles, Plus Jakarta Sans for the rest (both SIL OFL).
         UIAppFonts:
+          - DINPro-Regular.otf
+          - DINPro-Medium.otf
+          - DINPro-Bold.otf
+          - ProximaNova-Regular.ttf
+          - ProximaNova-Semibold.ttf
+          - ProximaNova-Extrabold.ttf
           - D-DIN-PRO-400-Regular.otf
           - D-DIN-PRO-500-Medium.otf
           - D-DIN-PRO-600-SemiBold.otf

@@ -61,7 +61,7 @@ struct NunaBreathReportView: View {
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 22).padding(.bottom, 32)
         }
         .scrollIndicators(.hidden)
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .preferredColorScheme(NunaTheme.colorScheme)
         .sheet(isPresented: $showAnya) { NunaAnyaSheet(context: "Breathing") }
     }
@@ -191,7 +191,7 @@ struct NunaBreathHistoryView: View {
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 22).padding(.bottom, 32)
         }
         .scrollIndicators(.hidden)
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .preferredColorScheme(NunaTheme.colorScheme)
         .sheet(item: $opened) { r in
             NunaBreathReportView(record: r, readOnly: true, onDone: { opened = nil }).nunaSheetChrome(detents: [.large])

@@ -63,7 +63,7 @@ struct NunaTrendsReportSheet: View {
             .padding(.horizontal, NunaSpacing.screenH).padding(.bottom, 30)
         }
         .scrollIndicators(.hidden)
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .preferredColorScheme(NunaTheme.colorScheme)
         .nunaSheetChrome(detents: [.large])
         .task {

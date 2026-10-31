@@ -89,7 +89,7 @@ struct NunaManualWorkoutSheet: View {
                         HStack(spacing: 16) {
                             NunaActivityGlyph(name: sport.isEmpty ? "Select" : sport, size: 28)
                                 .foregroundStyle(NunaPalette.textSecondary).frame(width: 34, height: 34)
-                            Text(verbatim: sport.isEmpty ? String(localized: "Select activity") : sport).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel + 1.4)
+                            Text(verbatim: sport.isEmpty ? String(localized: "Select activity") : sport).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingHead(1.4))
                                 .textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
                             Spacer(minLength: 8)
                             Image(systemName: "chevron.right").font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
@@ -142,7 +142,7 @@ struct NunaManualWorkoutSheet: View {
             }
             .scrollIndicators(.hidden).scrollDismissesKeyboard(.interactively)
             Button { save() } label: {
-                Text(editing == nil ? "Save" : "Save changes").font(.nuna(size: 14, weight: .black)).tracking(nunaTrackingLabel + 1.6).textCase(.uppercase)
+                Text(editing == nil ? "Save" : "Save changes").font(.nuna(size: 14, weight: .black)).tracking(nunaTrackingHead(1.6)).textCase(.uppercase)
                     .foregroundStyle(canSave ? NunaPalette.onAccent : NunaPalette.textMuted)
                     .frame(maxWidth: .infinity).frame(height: 46)
                     .background(canSave ? NunaPalette.accent : Self.raised, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
@@ -150,7 +150,7 @@ struct NunaManualWorkoutSheet: View {
             .buttonStyle(.plain).disabled(!canSave)
             .padding(.horizontal, 24).padding(.vertical, 12)
         }
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .presentationDragIndicator(.visible)
         .preferredColorScheme(NunaTheme.colorScheme)
         .toolbar { ToolbarItemGroup(placement: .keyboard) { Spacer(); Button("Done") { focus = nil } } }
@@ -165,7 +165,7 @@ struct NunaManualWorkoutSheet: View {
 
     private var header: some View {
         ZStack {
-            Text(editing == nil ? "Add activity" : "Edit activity").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel + 1.2)
+            Text(editing == nil ? "Add activity" : "Edit activity").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingHead(1.2))
                 .textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
             HStack {
                 Button { dismiss() } label: {

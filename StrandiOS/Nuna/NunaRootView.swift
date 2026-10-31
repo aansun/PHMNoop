@@ -175,7 +175,7 @@ struct NunaRootView: View {
     private func stack<Root: View>(_ tab: Tab, @ViewBuilder root: () -> Root) -> some View {
         NavigationStack(path: $paths[tab.rawValue]) {
             root()
-                .background(NunaPalette.canvas.ignoresSafeArea())
+                .background(NunaBackdrop())
                 .toolbar(.hidden, for: .navigationBar)
                 .tabRouteDestinations()
                 .nunaAnyaDestinations()
@@ -199,7 +199,7 @@ struct NunaRootView: View {
                 .nunaDeviceDestinations()
                 .nunaAnyaDestinations()
                 .nunaMeDestinations()
-                .background(NunaPalette.canvas.ignoresSafeArea())
+                .background(NunaBackdrop())
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbarBackground(.hidden, for: .navigationBar)
                 .toolbar {

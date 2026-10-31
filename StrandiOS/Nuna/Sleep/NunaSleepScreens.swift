@@ -424,7 +424,7 @@ private struct NunaAddNapSheet: View {
             Spacer(minLength: 0)
         }
         .padding(.horizontal, NunaSpacing.screenH)
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .preferredColorScheme(NunaTheme.colorScheme)
         .nunaSheetChrome(detents: [.medium])
         .onAppear {

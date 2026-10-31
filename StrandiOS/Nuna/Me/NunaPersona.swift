@@ -227,7 +227,7 @@ struct NunaZonesView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            NunaPalette.canvas.ignoresSafeArea()
+            NunaBackdrop()
             ScrollView {
                 VStack(alignment: .leading, spacing: 22) {
                     Color.clear.frame(height: 52)
@@ -244,14 +244,14 @@ struct NunaZonesView: View {
                     table
                     VStack(spacing: 14) {
                         Button(action: save) {
-                            Text("Save HR zones").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel + 1).textCase(.uppercase)
+                            Text("Save HR zones").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingHead(1)).textCase(.uppercase)
                                 .foregroundStyle(changed && valid ? NunaPalette.textPrimary : NunaPalette.textMuted)
                                 .frame(maxWidth: .infinity).frame(height: 52)
                                 .overlay(Capsule().strokeBorder(changed && valid ? NunaPalette.textPrimary.opacity(0.8) : NunaPalette.textPrimary.opacity(0.18), lineWidth: 1.5))
                         }
                         .buttonStyle(.plain).disabled(!(changed && valid))
                         Button { dismiss() } label: {
-                            Text("Cancel").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 1).textCase(.uppercase)
+                            Text("Cancel").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingHead(1)).textCase(.uppercase)
                                 .foregroundStyle(NunaPalette.textSecondary).frame(maxWidth: .infinity).frame(height: 40)
                         }.buttonStyle(.plain)
                     }
@@ -277,7 +277,7 @@ struct NunaZonesView: View {
 
     private var header: some View {
         ZStack {
-            Text("Heart rate settings").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel + 1.2).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+            Text("Heart rate settings").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingHead(1.2)).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
             HStack {
                 Button { dismiss() } label: {
                     Image(systemName: "xmark").font(.nuna(size: 20, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 52, height: 44).contentShape(Rectangle())
@@ -292,7 +292,7 @@ struct NunaZonesView: View {
 
     private func labelled<Content: View>(_ title: LocalizedStringKey, @ViewBuilder _ content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel + 1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingHead(1)).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             content()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -340,7 +340,7 @@ struct NunaZonesView: View {
                 Text("Zone min").frame(maxWidth: .infinity, alignment: .leading).padding(.leading, 6)
                 Text("Zone max").frame(maxWidth: .infinity, alignment: .leading).padding(.leading, 6)
             }
-            .font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel + 1).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            .font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingHead(1)).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             .padding(.leading, 6)
             ForEach((0..<5).reversed(), id: \.self) { i in
                 HStack(spacing: 10) {

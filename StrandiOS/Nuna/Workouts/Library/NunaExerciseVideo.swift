@@ -28,7 +28,7 @@ struct NunaExerciseVideoSheet: View {
                 .frame(maxWidth: .infinity).padding(.vertical, 10)
             Spacer(minLength: 0)
         }
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .preferredColorScheme(NunaTheme.colorScheme)
         .presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
     }

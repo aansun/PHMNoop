@@ -69,7 +69,7 @@ struct NunaBreathSettingsView: View {
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 22).padding(.bottom, 32)
         }
         .scrollIndicators(.hidden)
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .preferredColorScheme(NunaTheme.colorScheme)
         .alert("Forget Anya's notes in Breathing?", isPresented: $confirmForget) {
             Button("Forget", role: .destructive) { NunaAnyaMemory.clear(.breathing); memoryCount = 0 }

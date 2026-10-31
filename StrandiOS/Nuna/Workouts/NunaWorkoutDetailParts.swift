@@ -203,7 +203,7 @@ struct NunaWorkoutRouteCard: View {
                 .environment(\.colorScheme, .light)
             VStack(spacing: 0) {
                 HStack(alignment: .top) {
-                    Text("Route").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel + 0.8).textCase(.uppercase).foregroundStyle(Color.black)
+                    Text("Route").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingHead(0.8)).textCase(.uppercase).foregroundStyle(Color.black)
                     Spacer()
                     if let onShare {
                         Button(action: onShare) {

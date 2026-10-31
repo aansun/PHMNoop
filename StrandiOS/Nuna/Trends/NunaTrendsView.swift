@@ -74,7 +74,7 @@ struct NunaTrendsView: View {
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 120)
         }
         .scrollIndicators(.hidden)
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .nunaTrendsDestinations()
         .nunaTodayDestinations()
         .task(id: repo.refreshSeq) { await m.load(repo: repo) }

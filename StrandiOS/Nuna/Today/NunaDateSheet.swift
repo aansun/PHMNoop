@@ -42,7 +42,7 @@ struct NunaDateSheet: View {
             Spacer(minLength: 0)
         }
         .padding(.horizontal, NunaSpacing.screenH).padding(.top, 26).padding(.bottom, 20)
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .preferredColorScheme(NunaTheme.colorScheme)
         .onAppear { month = viewed }
     }

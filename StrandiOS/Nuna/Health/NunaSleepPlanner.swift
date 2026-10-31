@@ -472,7 +472,7 @@ struct NunaSmartAlarmView: View {
             Spacer(minLength: 0)
         }
         .padding(22).frame(maxWidth: .infinity, alignment: .leading)
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .presentationDetents([.height(280)]).presentationDragIndicator(.visible)
         .preferredColorScheme(NunaTheme.colorScheme)
     }
@@ -501,7 +501,7 @@ struct NunaSmartAlarmView: View {
             }
             .padding(22).frame(maxWidth: .infinity, alignment: .leading)
         }
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
         .preferredColorScheme(NunaTheme.colorScheme)
     }

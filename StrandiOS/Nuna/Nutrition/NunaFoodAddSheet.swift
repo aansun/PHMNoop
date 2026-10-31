@@ -73,7 +73,7 @@ struct NunaFoodAddSheet: View {
                 }
             }
         }
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .task { saved = await NunaFoodStore.savedFoods(repo: repo); recent = await NunaFoodStore.recentFoods(repo: repo) }
         .nunaKeyboardDone()
         .onChange(of: photoItem) { _, item in

@@ -62,7 +62,7 @@ struct NunaDetailHeader: View {
                         Image(systemName: titleSymbol).font(.nuna(size: 28, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).frame(width: 36)
                     }
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(title).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel + 0.6).textCase(.uppercase)
+                        Text(title).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingHead(0.6)).textCase(.uppercase)
                             .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).accessibilityAddTraits(.isHeader)
                         Text(verbatim: subtitle).font(.nuna(size: 13, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                             .lineLimit(1).minimumScaleFactor(0.8)
@@ -106,7 +106,7 @@ struct NunaDetailScreen<Content: View>: View {
         VStack(spacing: 0) {
             NunaDetailHeader(title: title, titleSymbol: titleSymbol, subtitle: subtitle, titleActivity: titleActivity, onAnya: onAnya, trailing: trailing, centersTitle: centersTitle)
                 .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 4)
-                .background(NunaPalette.canvas)
+                .background(NunaBackdrop(top: true))
             ScrollView {
                 VStack(spacing: NunaSpacing.section) {
                     content
@@ -117,7 +117,7 @@ struct NunaDetailScreen<Content: View>: View {
             }
             .scrollIndicators(.hidden).scrollDismissesKeyboard(.interactively)
         }
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .toolbar(.hidden, for: .navigationBar)
     }
 }

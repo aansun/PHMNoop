@@ -106,7 +106,7 @@ struct NunaAnyaView: View {
             }
         }
         .textCase(nil)
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .task {
             await coach.loadPersistedMessagesIfNeeded()
             if coach.messages.isEmpty, let stored = CoachBriefScheduler.consumeStoredBrief() { coach.surfaceScheduledBrief(stored) }
@@ -542,7 +542,7 @@ struct NunaAnyaVoiceSheet: View {
             }
         }
         .padding(.horizontal, NunaSpacing.screenH).padding(.bottom, 20)
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .presentationDetents([.medium, .large]).preferredColorScheme(NunaTheme.colorScheme)
         .task {
             guard !started else { return }

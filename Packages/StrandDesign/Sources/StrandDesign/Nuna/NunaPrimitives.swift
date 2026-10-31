@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 // MARK: - Nuna primitives
 //
@@ -566,7 +569,7 @@ public extension View {
 
     /// Standard Nuna screen background.
     func nunaScreenBackground() -> some View {
-        self.background(NunaPalette.canvas.ignoresSafeArea())
+        self.background(NunaBackdrop())
     }
 }
 
@@ -589,6 +592,42 @@ struct NunaSheetChrome: ViewModifier {
         }
         #else
         content
+        #endif
+    }
+}
+
+/// The ground of a screen: the canvas colour, and in WHP the guide's background gradient (#283339 at the top to #101518 at the bottom, over the
+/// height of the screen). Drawn from the top of the screen, so a header laid over it with `NunaBackdrop(top: true)` carries the same colours.
+public struct NunaBackdrop: View {
+    private let top: Bool
+    /// `top: true` for a bar at the top of the screen: it shows just the part of the gradient behind it, and does not take the safe area.
+    public init(top: Bool = false) { self.top = top }
+
+    public var body: some View { ground.allowsHitTesting(false) }
+
+    @ViewBuilder private var ground: some View {
+        if NunaThemePrefs.skin == .whp {
+            let gradient = LinearGradient(colors: [Color(hex: "#283339"), Color(hex: "#101518")], startPoint: .top, endPoint: .bottom)
+            if top {
+                // A bar: the same gradient as the screen behind it, cut to the bar's own size.
+                GeometryReader { geo in
+                    gradient.frame(width: geo.size.width, height: Self.screenHeight)
+                        .frame(width: geo.size.width, height: geo.size.height, alignment: .top).clipped()
+                }
+                .ignoresSafeArea(edges: .top)
+            } else {
+                gradient.ignoresSafeArea()
+            }
+        } else {
+            NunaPalette.canvas.ignoresSafeArea()
+        }
+    }
+
+    private static var screenHeight: CGFloat {
+        #if canImport(UIKit) && !os(watchOS)
+        return UIScreen.main.bounds.height
+        #else
+        return 900
         #endif
     }
 }

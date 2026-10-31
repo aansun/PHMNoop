@@ -93,7 +93,7 @@ struct NunaQuickPanel<Root: Hashable>: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            NunaPalette.canvas.ignoresSafeArea()
+            NunaBackdrop()
                 .toolbar(.hidden, for: .navigationBar)
                 .nunaTodayDestinations()
                 .nunaMeDestinations()
@@ -188,7 +188,7 @@ struct NunaQuickActionsEditor: View {
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .environment(\.editMode, .constant(reordering ? .active : .inactive))
         .safeAreaInset(edge: .top, spacing: 0) {
             HStack {
