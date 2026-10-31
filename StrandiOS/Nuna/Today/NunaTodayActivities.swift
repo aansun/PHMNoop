@@ -134,7 +134,7 @@ struct NunaTodayActivities: View {
     }
 
     /// The tile and line of a recovery activity: a light blue, apart from the Effort blue.
-    private static let recoveryBlue = Color(hex: "#5EA9E8")
+    private static var recoveryBlue: Color { NunaPalette.recoveryBlue }
 
     /// A tile in neutral grey (icon and figure), the name, when it began and ended, and a thin line with a dot at each end whose colour
     /// follows the Effort of the workout (sleep keeps the Rest colour).

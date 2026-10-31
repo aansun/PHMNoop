@@ -147,7 +147,7 @@ struct NunaEarlyWarningView: View {
             .padding(.bottom, 120)
         }
         .scrollIndicators(.hidden)
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .toolbar(.hidden, for: .navigationBar)
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "early warning") }
     }

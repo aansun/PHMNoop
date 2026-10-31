@@ -130,7 +130,7 @@ struct NunaExercisePicker: View {
                 }
                 .scrollDismissesKeyboard(.interactively)
             }
-            .background(NunaPalette.canvas.ignoresSafeArea())
+            .background(NunaBackdrop())
             .overlay(alignment: .bottom) { confirmBar }
             .toolbar(.hidden, for: .navigationBar)
         }

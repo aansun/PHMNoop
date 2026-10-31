@@ -63,7 +63,7 @@ struct NunaCapsuleTabs<Value: Hashable>: View {
                 let value = options[i].value
                 let on = selection == value
                 Button { withAnimation(.easeInOut(duration: 0.2)) { selection = value } } label: {
-                    Text(options[i].title).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 0.8).textCase(.uppercase)
+                    Text(options[i].title).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingHead(0.8)).textCase(.uppercase)
                         .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                         .frame(maxWidth: .infinity).frame(height: 38)
                         .background { if on { RoundedRectangle(cornerRadius: 8, style: .continuous).fill(NunaPalette.tile).matchedGeometryEffect(id: "raised", in: raised) } }
@@ -195,7 +195,7 @@ struct NunaWorkoutStressArea: View {
     private func reading(_ level: Double, leading: Bool) -> some View {
         HStack(spacing: 8) {
             if leading { value(level) }
-            Text(NunaWorkoutStress.word(level)).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel + 0.6).textCase(.uppercase)
+            Text(NunaWorkoutStress.word(level)).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingHead(0.6)).textCase(.uppercase)
                 .foregroundStyle(NunaStressBand.color(for: level))
             if !leading { value(level) }
         }
@@ -283,7 +283,7 @@ struct NunaSessionMetrics: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 8) {
                 Image(systemName: t.icon).font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
-                Text(t.label).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel + 0.4).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text(t.label).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingHead(0.4)).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             }
             .padding(.bottom, 6)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
@@ -345,7 +345,7 @@ struct NunaActivityImpactCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Impact on recovery").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel + 0.6).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary.opacity(0.78))
+                Text("Impact on recovery").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingHead(0.6)).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary.opacity(0.78))
                 Spacer()
                 if let p = impact.percent {
                     Text(verbatim: String(format: "%+.0f%%", locale: AppLanguage.activeLocale, p)).font(.nuna(size: 18, weight: .bold, design: NunaType.design))
@@ -364,7 +364,7 @@ struct NunaActivityImpactCard: View {
             dots(count: impact.withoutDays, mark: "xmark", tint: NunaPalette.textPrimary.opacity(0.6))
             NavigationLink { NunaBehaviorInsightsView() } label: {
                 HStack(spacing: 10) {
-                    Text("View more impacts").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel + 0.6).textCase(.uppercase)
+                    Text("View more impacts").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingHead(0.6)).textCase(.uppercase)
                     Image(systemName: "arrow.right").font(.system(size: 13, weight: .regular))
                 }
                 .foregroundStyle(NunaPalette.textPrimary.opacity(0.75)).frame(minHeight: 32)

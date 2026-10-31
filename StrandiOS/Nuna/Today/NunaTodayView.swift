@@ -307,7 +307,7 @@ struct NunaTodayView: View {
             }
         }
         .overlayPreferenceValue(NunaQuickAnchorKey.self) { anchor in quickOverlay(anchor) }
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .background(NunaQuickRunner(action: $pendingQuick, onAddActivity: { showManual = true }))
         .nunaTodayDestinations()
         .nunaWorkoutDestinations()
@@ -484,7 +484,7 @@ struct NunaTodayView: View {
         .padding(.horizontal, NunaSpacing.screenH - 4)
         .padding(.top, 2).padding(.bottom, 8)
         .background(
-            NunaPalette.canvas.ignoresSafeArea(edges: .top)
+            NunaBackdrop(top: true)
                 .overlay(alignment: .bottom) { NunaPinnedHairline(state: collapse) }
         )
     }
@@ -498,7 +498,7 @@ struct NunaTodayView: View {
             }
             .foregroundStyle(NunaPalette.textPrimary)
             Button { showDate = true } label: {
-                Text(verbatim: dateTitle).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel + 0.8).textCase(.uppercase)
+                Text(verbatim: dateTitle).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingHead(0.8)).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textPrimary).frame(minWidth: 84).padding(.horizontal, 6).frame(height: 28)
                     .background(NunaPalette.textPrimary.opacity(0.14), in: Capsule())
             }

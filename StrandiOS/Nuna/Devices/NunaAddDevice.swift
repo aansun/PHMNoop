@@ -35,7 +35,7 @@ struct NunaAddDeviceSheet: View {
             .transition(.opacity)
             Spacer(minLength: 0)
         }
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .preferredColorScheme(NunaTheme.colorScheme)
         .animation(.easeInOut(duration: 0.18), value: step)
         .onDisappear { model.stopWhoopScan() }

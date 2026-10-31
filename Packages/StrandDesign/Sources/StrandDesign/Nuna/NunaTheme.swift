@@ -21,11 +21,14 @@ public enum NunaPalette {
         return Color(light: light, dark: NunaThemePrefs.skin == .whp ? whp : dark)
     }
 
+    /// A colour that is `whp` (a hex, the same in every appearance) in the WHP style and `base` in the others: the WHOOP brand guide's colours.
+    static func whpOverride(_ whp: String, _ base: Color) -> Color { NunaThemePrefs.skin == .whp ? Color(hex: whp) : base }
+
     // Every surface and text token is adaptive: the first hex is the light value, the second the dark one. The dark
     // values are the Nuna originals; the light ones keep the same hierarchy on a white-grey canvas.
 
     // Surfaces. Dark values follow the "Rekomendasi Palet Warna Health App Dark Mode" guide: pure black canvas, #121214 cards.
-    public static var canvas: Color { skinned(light: "#E9ECEF", dark: "#000000", whp: "#0F1519", flow: ("#FBF6F2", "#1A1217")) }
+    public static var canvas: Color { skinned(light: "#E9ECEF", dark: "#000000", whp: "#101518", flow: ("#FBF6F2", "#1A1217")) }
     public static var card: Color { skinned(light: "#FFFFFF", dark: "#121214", whp: "#1B242B", flow: ("#FFFFFF", "#241A20")) }
     public static var cardHighlight: Color { skinned(light: "#E9EEF2", dark: "#1B1B1F", whp: "#25313A", flow: ("#F3E9E3", "#2E2228")) }
     /// The well of a text field or a segmented control: a dark inset on the dark themes, a soft light grey on the light one (a dark
@@ -58,25 +61,38 @@ public enum NunaPalette {
 
     // Meaning colours (fills) and their readable text variants. Each area has its own neon: Sleep / Rest cyan, Health / Charge
     // green, Trend / Effort yellow; alert is the guide's #FF3366. Light values stay readable on white.
-    public static let charge        = Color(light: "#0CB300", dark: "#00FF66")   // ok, Charge, Health, active toggles
-    public static let effort        = Color(light: "#8FA000", dark: "#DFFF00")   // Effort, Trend
-    public static let effortText    = Color(light: "#6B7A00", dark: "#DFFF00")
-    public static let rest          = Color(light: "#00A3BA", dark: "#00E5FF")   // Rest, Sleep
-    public static let restText      = Color(light: "#007C90", dark: "#5CEFFF")
-    public static let restLight     = Color(light: "#4FC3D6", dark: "#9BF4FF")   // REM
-    public static let restDeep      = Color(light: "#00697A", dark: "#0093A8")   // deep sleep
-    public static var warning: Color { NunaThemePrefs.skin == .flow ? Color(light: "#C2410C", dark: "#FFB27A") : Color(light: "#C98A00", dark: "#FFB020") }
-    public static var alert: Color { NunaThemePrefs.skin == .flow ? Color(light: "#C4182B", dark: "#FF7A8A") : Color(light: "#E0003C", dark: "#FF3366") }
-    public static var alertText: Color { NunaThemePrefs.skin == .flow ? Color(light: "#C4182B", dark: "#FF7A8A") : Color(light: "#D0103C", dark: "#FF6B8E") }
+    // WHP takes the WHOOP brand guide: Teal #00F19F for positives, call-to-actions and highlights, Strain #0093E7 for Effort, Sleep #7BA1BB for Rest.
+    public static var charge: Color { whpOverride("#00F19F", Color(light: "#0CB300", dark: "#00FF66")) }   // ok, Charge, Health, active toggles
+    public static var effort: Color { whpOverride("#0093E7", Color(light: "#8FA000", dark: "#DFFF00")) }   // Effort, Trend
+    public static var effortText: Color { whpOverride("#38B0F2", Color(light: "#6B7A00", dark: "#DFFF00")) }
+    public static var rest: Color { whpOverride("#7BA1BB", Color(light: "#00A3BA", dark: "#00E5FF")) }   // Rest, Sleep
+    public static var restText: Color { whpOverride("#9DBBD0", Color(light: "#007C90", dark: "#5CEFFF")) }
+    public static var restLight: Color { whpOverride("#A9C3D6", Color(light: "#4FC3D6", dark: "#9BF4FF")) }   // REM
+    public static var restDeep: Color { whpOverride("#5A7E98", Color(light: "#00697A", dark: "#0093A8")) }   // deep sleep
+    /// Recovery Blue of the WHOOP guide: recovery related data shown without a valuation (a heart-rate line, for one).
+    public static var recoveryBlue: Color { Color(hex: "#67AEE6") }
+    public static var warning: Color {
+        if NunaThemePrefs.skin == .whp { return Color(hex: "#FFDE00") }
+        return NunaThemePrefs.skin == .flow ? Color(light: "#C2410C", dark: "#FFB27A") : Color(light: "#C98A00", dark: "#FFB020")
+    }
+    public static var alert: Color {
+        if NunaThemePrefs.skin == .whp { return Color(hex: "#FF0026") }
+        return NunaThemePrefs.skin == .flow ? Color(light: "#C4182B", dark: "#FF7A8A") : Color(light: "#E0003C", dark: "#FF3366")
+    }
+    public static var alertText: Color {
+        if NunaThemePrefs.skin == .whp { return Color(hex: "#FF4D69") }
+        return NunaThemePrefs.skin == .flow ? Color(light: "#C4182B", dark: "#FF7A8A") : Color(light: "#D0103C", dark: "#FF6B8E")
+    }
 
     // Charge zones (low, mid, high) and Effort levels (minimal, moderate, all out) from the score guide: red, yellow and green for how ready the
     // body is; dark to light blue for how hard the day was.
-    public static let scoreLow      = Color(light: "#D0132D", dark: "#F0243A")
-    public static let scoreMid      = Color(light: "#C99A00", dark: "#F5C400")
-    public static let scoreHigh     = Color(light: "#2EA800", dark: "#46D200")
-    public static let effortMinimal = Color(light: "#1D4C9C", dark: "#2A66C8")
-    public static let effortModerate = Color(light: "#1480DA", dark: "#2BA0F5")
-    public static let effortAllOut  = Color(light: "#19A8E0", dark: "#66DCFF")
+    // WHP: Low #FF0026, Medium #FFDE00 and High #16EC06 recovery of the guide, and Strain #0093E7 as the middle of the Effort blues.
+    public static var scoreLow: Color { whpOverride("#FF0026", Color(light: "#D0132D", dark: "#F0243A")) }
+    public static var scoreMid: Color { whpOverride("#FFDE00", Color(light: "#C99A00", dark: "#F5C400")) }
+    public static var scoreHigh: Color { whpOverride("#16EC06", Color(light: "#2EA800", dark: "#46D200")) }
+    public static var effortMinimal: Color { whpOverride("#00538F", Color(light: "#1D4C9C", dark: "#2A66C8")) }
+    public static var effortModerate: Color { whpOverride("#0093E7", Color(light: "#1480DA", dark: "#2BA0F5")) }
+    public static var effortAllOut: Color { whpOverride("#5CC0F5", Color(light: "#19A8E0", dark: "#66DCFF")) }
     /// The full circle behind a score ring, so the ring always reads as a closed loop whatever the style or theme.
     public static var ringTrack: Color { skinned(light: "#0A0D1020", dark: "#FFFFFF1F", whp: "#FFFFFF1F", flow: ("#E6D6CE", "#3D2D36")) }
     public static var zoneBase: Color { skinned(light: "#C3C9D6", dark: "#3F3F46", whp: "#3A4650", flow: ("#E6D6CE", "#3D2D36")) }   // zone 1 / awake track
@@ -153,24 +169,39 @@ public enum NunaType {
     public static var design: Font.Design { NunaThemePrefs.skin != .standard ? .rounded : .default }
 }
 
-/// The WHP style's fonts: D-DIN-PRO for figures, Montserrat (the cheat sheet's free stand-in for Proxima Nova) for words, with the system
-/// font as the fallback when a file is missing.
+/// The WHP style's fonts, from the WHOOP brand guide: DINPro Bold for numbers; Proxima Nova for words, Semibold for body text and (the guide
+/// asks for Bold, which is not among the files) Extrabold for headlines. D-DIN-PRO and Montserrat, then the system font, stand in when a file is missing.
 enum NunaWHPFont {
     private static func available(_ name: String) -> Bool {
         CTFontCopyPostScriptName(CTFontCreateWithName(name as CFString, 12, nil)) as String == name
     }
+    private static let dinPro: [Font.Weight: String] = [.regular: "DINPro-Regular", .medium: "DINPro-Medium", .bold: "DINPro-Bold"]
+    private static let dinProOK = dinPro.values.allSatisfy(available)
+    private static let proxima: [Font.Weight: String] = [.regular: "ProximaNova-Regular", .semibold: "ProximaNova-Semibold", .heavy: "ProximaNova-Extrabld"]
+    private static let proximaOK = proxima.values.allSatisfy(available)
     private static let din: [Font.Weight: String] = [.regular: "D-DIN-PRO-Regular", .medium: "D-DIN-PRO-Medium", .semibold: "D-DIN-PRO-SemiBold", .bold: "D-DIN-PRO-Bold"]
     private static let dinOK = din.values.allSatisfy(available)
     /// Montserrat ships as one variable file; its family name is "Montserrat" and the weight axis follows `.weight`.
     private static let montserratOK = CTFontCopyFamilyName(CTFontCreateWithName("Montserrat" as CFString, 12, nil)) as String == "Montserrat"
 
     static func font(size: CGFloat, weight: Font.Weight, design: Font.Design) -> Font {
-        // Headings ask for the figure design too but in the heaviest weight; below 32 pt those are words, set in Montserrat.
+        // Headings ask for the figure design too but in the heaviest weight; below 32 pt those are words.
         let isHeading = (weight == .heavy || weight == .black) && size < 32
         if design == .rounded && !isHeading {
-            // Figures: bold when large, semibold in lists, regular for small units.
-            let w: Font.Weight = size >= 24 ? .bold : (size >= 15 ? .semibold : (weight == .regular ? .regular : .medium))
-            return dinOK ? .custom(din[w] ?? "D-DIN-PRO-Bold", size: size) : .system(size: size, weight: w, design: .default).width(.condensed)
+            // Numbers: DINPro Bold (a lighter cut only for the smallest units).
+            let w: Font.Weight = size >= 15 ? .bold : (weight == .regular ? .regular : .medium)
+            if dinProOK { return .custom(dinPro[w] ?? "DINPro-Bold", size: size) }
+            let w2: Font.Weight = size >= 24 ? .bold : (size >= 15 ? .semibold : (weight == .regular ? .regular : .medium))
+            return dinOK ? .custom(din[w2] ?? "D-DIN-PRO-Bold", size: size) : .system(size: size, weight: w2, design: .default).width(.condensed)
+        }
+        if proximaOK {
+            // Headlines (heavy and black): Extrabold. Titles of 24 pt and up: Extrabold. Everything else is body text: Semibold, and
+            // Regular only for the smallest regular captions.
+            let w: Font.Weight
+            if weight == .heavy || weight == .black || (weight == .bold && size >= 24) { w = .heavy }
+            else if weight == .regular && size < 12 { w = .regular }
+            else { w = .semibold }
+            return .custom(proxima[w] ?? "ProximaNova-Semibold", size: size)
         }
         let w: Font.Weight
         var pt = size
@@ -278,8 +309,11 @@ public enum NunaTypeSize {
 }
 
 /// Letter spacing in points for a number of `size` (-1.5%) and for small labels.
-public func nunaTrackingNumber(_ size: CGFloat) -> CGFloat { -size * 0.015 }
-public let nunaTrackingLabel: CGFloat = 0.4
+public func nunaTrackingNumber(_ size: CGFloat) -> CGFloat { NunaThemePrefs.skin == .whp ? 0 : -size * 0.015 }
+/// Letter spacing of a small uppercase label. WHP follows the WHOOP guide: headlines are uppercase with 10% letter spacing, about 1.2 pt at the label sizes.
+public var nunaTrackingLabel: CGFloat { NunaThemePrefs.skin == .whp ? 1.2 : 0.4 }
+/// A heading's letter spacing: the label spacing plus `extra` in the other styles, the 10% of the guide in WHP.
+public func nunaTrackingHead(_ extra: CGFloat) -> CGFloat { NunaThemePrefs.skin == .whp ? 1.4 : 0.4 + extra }
 
 /// Which look the whole app uses. Stored in `@AppStorage(ExperienceMode.storageKey)`.
 public enum ExperienceMode: String, CaseIterable, Identifiable {

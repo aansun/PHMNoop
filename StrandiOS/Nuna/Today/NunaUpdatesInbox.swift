@@ -49,7 +49,7 @@ struct NunaUpdatesInbox: View {
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 18).padding(.bottom, 40)
         }
         .scrollIndicators(.hidden)
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .preferredColorScheme(NunaTheme.colorScheme)
     }
 

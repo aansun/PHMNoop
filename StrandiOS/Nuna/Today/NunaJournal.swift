@@ -77,7 +77,7 @@ struct NunaJournalView: View {
     /// The cross to leave, the name of the page in the middle and the pencil that edits the list.
     private var header: some View {
         ZStack {
-            Text("Journal").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 1.4).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+            Text("Journal").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingHead(1.4)).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
             HStack {
                 Button { dismiss() } label: {
                     Image(systemName: "xmark").font(.nuna(size: 19, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
@@ -94,7 +94,7 @@ struct NunaJournalView: View {
     /// Every answer is written the moment it is tapped, so this only closes the journal; it is there so finishing reads as a step.
     private var saveBar: some View {
         Button { dismiss() } label: {
-            Text("Done").font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel + 1.2).textCase(.uppercase)
+            Text("Done").font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingHead(1.2)).textCase(.uppercase)
                 .foregroundStyle(NunaPalette.onAccent)
                 .frame(maxWidth: .infinity).frame(height: 54)
                 .background(NunaPalette.accent, in: Capsule())
@@ -205,7 +205,7 @@ struct NunaJournalView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Button { toggle(g) } label: {
                     HStack(spacing: 12) {
-                        Text(LocalizedStringKey(g.title)).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 0.6).textCase(.uppercase)
+                        Text(LocalizedStringKey(g.title)).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingHead(0.6)).textCase(.uppercase)
                             .foregroundStyle(NunaPalette.textSecondary)
                         Rectangle().fill(NunaPalette.hairline).frame(height: 1)
                         Image(systemName: closed ? "chevron.right" : "chevron.down").font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textMuted)

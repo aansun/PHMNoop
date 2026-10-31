@@ -43,7 +43,7 @@ struct NunaHRFullScreen: View {
         }
         .ignoresSafeArea()
         .statusBarHidden(true)
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .preferredColorScheme(NunaTheme.colorScheme)
         .task(id: "\(Int(dayStart.timeIntervalSince1970))|\(zoomed)|\(repo.refreshSeq)") { await load() }
         .task {

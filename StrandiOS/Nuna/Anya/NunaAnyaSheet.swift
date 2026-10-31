@@ -91,7 +91,7 @@ struct NunaAnyaSheet: View {
             .scrollIndicators(.hidden).scrollDismissesKeyboard(.immediately)
             .simultaneousGesture(TapGesture().onEnded { focused = false })
             .textCase(nil)
-            .background(NunaPalette.canvas.ignoresSafeArea())
+            .background(NunaBackdrop())
             .toolbar(.hidden, for: .navigationBar)
             .nunaAnyaDestinations()
         }

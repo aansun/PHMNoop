@@ -117,7 +117,7 @@ struct NunaBreathSessionView: View {
             controls
         }
         .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 20)
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .preferredColorScheme(NunaTheme.colorScheme)
         .onReceive(clockTimer) { now in onClock(now) }
         .onRRPackets(live) { ingest($0) }

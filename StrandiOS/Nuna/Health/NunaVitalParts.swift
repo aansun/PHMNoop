@@ -142,7 +142,7 @@ struct NunaWaistSheet: View {
         }
         .padding(24)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .presentationDetents([.height(380)])
         .onAppear { cm = profile.waistCm > 0 ? profile.waistCm : 80 }
     }

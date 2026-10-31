@@ -75,7 +75,7 @@ struct NunaSportPicker: View {
             HStack(spacing: 14) {
                 NunaActivityGlyph(name: name, size: 28)
                     .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary).frame(width: 34, height: 34)
-                Text(LocalizedStringKey(name)).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 1).textCase(.uppercase)
+                Text(LocalizedStringKey(name)).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingHead(1)).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
                 Spacer(minLength: 8)
                 if route { Image(systemName: "location").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted) }
@@ -93,7 +93,7 @@ struct NunaSportPicker: View {
                 let on = tab == t
                 Button { withAnimation(.easeInOut(duration: 0.2)) { tab = t } } label: {
                     VStack(spacing: 7) {
-                        Text(t.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel + 1).textCase(.uppercase)
+                        Text(t.title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingHead(1)).textCase(.uppercase)
                             .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                         Rectangle().fill(on ? NunaPalette.textPrimary : Color.clear).frame(height: 2)
                     }
@@ -107,7 +107,7 @@ struct NunaSportPicker: View {
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                Text("Select activity").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel + 1.2).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                Text("Select activity").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingHead(1.2)).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 HStack {
                     Button(action: onClose) {
                         Image(systemName: "chevron.left").font(.nuna(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
@@ -169,7 +169,7 @@ struct NunaSportPicker: View {
             }
             .scrollIndicators(.hidden).scrollDismissesKeyboard(.interactively)
         }
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .presentationDragIndicator(.visible)
         .preferredColorScheme(NunaTheme.colorScheme)
         .onAppear { if NunaActivityKind.isRest(selection) { tab = .rest } else if NunaActivityKind.isCharge(selection) { tab = .charge } }

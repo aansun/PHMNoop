@@ -128,7 +128,7 @@ struct NunaWorkoutStartView: View {
                 actionDock
             }
         }
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .toolbar(.hidden, for: .navigationBar)
         .onAppear {
             if resume, !didResume, model.activeWorkout != nil { didResume = true; live = true }
@@ -609,7 +609,7 @@ private struct NunaWorkoutStartSettings: View {
         }
         .padding(.horizontal, NunaSpacing.screenH)
         .padding(.top, NunaSpacing.section)
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .sheet(isPresented: $showAudioCoach) {
             NunaAnyaVoiceCoachView()
                 .nunaSheetChrome(detents: [.large])
@@ -676,7 +676,7 @@ private struct NunaWorkoutTargetSheet: View {
             }
             startDock
         }
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .onAppear {
             if !isDistanceActivity, goal.distanceOn { goal.distanceOn = false }
             open = goal.timeOn ? .time : (goal.distanceOn ? .distance : (goal.zoneOn ? .zone : nil))
@@ -1191,7 +1191,7 @@ struct NunaLiveWorkoutView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                NunaPalette.canvas.ignoresSafeArea()
+                NunaBackdrop()
                 if let w = model.activeWorkout {
                     TimelineView(.periodic(from: .now, by: 1)) { tick in
                         content(w, now: tick.date)

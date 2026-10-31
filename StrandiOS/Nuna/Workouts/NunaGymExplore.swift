@@ -234,7 +234,7 @@ struct NunaGymExploreView: View {
             }
             .padding(.horizontal, NunaSpacing.screenH).padding(.vertical, 12)
         }
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
     }
 
     private func filterGroup(_ title: LocalizedStringKey, _ options: [(Int, LocalizedStringKey, String)], selection: Int?, _ pick: @escaping (Int?) -> Void) -> some View {

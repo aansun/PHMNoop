@@ -4,7 +4,7 @@ import StrandDesign
 
 /// The colours the Rest page's charts share: one steel blue for the sleep figures, a green for the need, and the two restorative stages.
 enum NunaRestChart {
-    static let steel = Color(hex: "#7BA4C4")
+    static var steel: Color { Color(hex: "#7BA1BB") }
     static let need = Color(hex: "#19D9A0")
     static let deep = Color(hex: "#F78CF5")
     static let rem = Color(hex: "#A55AE8")

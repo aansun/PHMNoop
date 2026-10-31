@@ -894,7 +894,7 @@ struct NunaAnyaReplyDemo: View {
     }
     var body: some View {
         ZStack {
-            NunaPalette.canvas.ignoresSafeArea()
+            NunaBackdrop()
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {

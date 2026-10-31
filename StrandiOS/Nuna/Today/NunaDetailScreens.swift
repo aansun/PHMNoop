@@ -1554,7 +1554,7 @@ private struct NunaAllMetricsScaffold<Content: View>: View {
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 120)
         }
         .scrollIndicators(.hidden)
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .toolbar(.hidden, for: .navigationBar)
     }
 }

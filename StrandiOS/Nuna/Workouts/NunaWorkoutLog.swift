@@ -368,13 +368,13 @@ struct NunaWorkoutLogZones: View {
                     let tint = Self.color(zone)
                     VStack(alignment: .leading, spacing: 9) {
                         HStack(alignment: .firstTextBaseline, spacing: 9) {
-                            Text(verbatim: String(localized: "Zone \(zone)")).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 0.8).textCase(.uppercase)
+                            Text(verbatim: String(localized: "Zone \(zone)")).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingHead(0.8)).textCase(.uppercase)
                                 .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textMuted)
                             if zone >= 1, zone <= bands.count {
-                                Text(verbatim: "\(Int(bands[zone - 1].lower.rounded()))–\(Int(bands[zone - 1].upper.rounded())) BPM").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 0.4)
+                                Text(verbatim: "\(Int(bands[zone - 1].lower.rounded()))–\(Int(bands[zone - 1].upper.rounded())) BPM").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingHead(0.4))
                                     .foregroundStyle(NunaPalette.textMuted).textCase(nil)
                             } else if zone == 0, let first = bands.first {
-                                Text(verbatim: "<\(Int(first.lower.rounded())) BPM").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel + 0.4)
+                                Text(verbatim: "<\(Int(first.lower.rounded())) BPM").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingHead(0.4))
                                     .foregroundStyle(NunaPalette.textMuted).textCase(nil)
                             }
                             Text(verbatim: "\(Int((share * 100).rounded()))%").font(.nuna(size: 13, weight: .heavy))
@@ -459,9 +459,9 @@ struct NunaLogSectionTitle: View {
     var trailing: LocalizedStringKey?
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
-            Text(title).font(.nuna(size: 14.5, weight: .black)).tracking(nunaTrackingLabel + 1).textCase(.uppercase).foregroundStyle(Color.white)
+            Text(title).font(.nuna(size: 14.5, weight: .black)).tracking(nunaTrackingHead(1)).textCase(.uppercase).foregroundStyle(Color.white)
             Spacer()
-            if let trailing { Text(trailing).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel + 0.4).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary) }
+            if let trailing { Text(trailing).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingHead(0.4)).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary) }
         }
     }
 }
@@ -583,7 +583,7 @@ struct NunaWorkoutLogStats: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 8) {
                 Image(systemName: t.icon).font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
-                Text(t.label).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel + 0.4).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text(t.label).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingHead(0.4)).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     .lineLimit(1).minimumScaleFactor(0.7)
             }
             .padding(.bottom, 8)
@@ -646,7 +646,7 @@ struct NunaWorkoutTimeSheet: View {
                 .buttonStyle(.nuna(.primary, fullWidth: true)).disabled(!valid || !changed)
         }
         .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 24)
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .preferredColorScheme(NunaTheme.colorScheme)
     }
 
@@ -693,7 +693,7 @@ struct NunaActionsButton: View {
                     } label: {
                         HStack(spacing: 16) {
                             Image(systemName: item.symbol).font(.system(size: 22, weight: .light)).frame(width: 30)
-                            Text(item.title).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel + 0.8).textCase(.uppercase).lineLimit(1)
+                            Text(item.title).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingHead(0.8)).textCase(.uppercase).lineLimit(1)
                         }
                         .foregroundStyle(item.destructive ? NunaPalette.alertText : NunaPalette.textPrimary)
                         .padding(.horizontal, 20).frame(maxWidth: .infinity, alignment: .leading).frame(height: 58)

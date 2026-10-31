@@ -230,7 +230,7 @@ struct NunaGymSessionView: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 8) {
                 Image(systemName: t.icon).font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
-                Text(t.label).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel + 0.4).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text(t.label).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingHead(0.4)).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     .lineLimit(1).minimumScaleFactor(0.7)
             }
             .padding(.bottom, 4)
@@ -313,7 +313,7 @@ struct NunaGymSessionView: View {
                     Spacer()
                     Button { showAll = true } label: {
                         HStack(spacing: 8) {
-                            Text("View all").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel + 0.8).textCase(.uppercase)
+                            Text("View all").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingHead(0.8)).textCase(.uppercase)
                             Image(systemName: "arrow.right").font(.system(size: 17, weight: .regular))
                         }
                         .foregroundStyle(NunaPalette.textPrimary).frame(minHeight: 36)
@@ -378,7 +378,7 @@ struct NunaGymSessionView: View {
                 Text(verbatim: value).font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
                 if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil) }
             }
-            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel + 0.6).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingHead(0.6)).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
         }
     }
 

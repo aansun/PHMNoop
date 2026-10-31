@@ -59,7 +59,7 @@ struct NunaLiftSessionView: View {
 
     var body: some View {
         ZStack {
-            NunaPalette.canvas.ignoresSafeArea()
+            NunaBackdrop()
             if let engine {
                 VStack(spacing: 0) {
                     // Pinned: the header and the running timer stay on screen however many exercises are below.

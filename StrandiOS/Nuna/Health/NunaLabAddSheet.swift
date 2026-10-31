@@ -72,7 +72,7 @@ struct NunaLabAddSheet: View {
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 14).padding(.bottom, 40)
         }
         .scrollIndicators(.hidden).scrollDismissesKeyboard(.interactively)
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .toolbar { ToolbarItemGroup(placement: .keyboard) { Spacer(); Button("Done") { focused = nil } } }
     }
 

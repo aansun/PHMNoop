@@ -136,7 +136,7 @@ struct NunaTodayCustomizeSheet: View {
                     .navigationBarHidden(true)
                 }
         }
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
         .preferredColorScheme(NunaTheme.colorScheme)
         .interactiveDismissDisabled(isDirty)
         .confirmationDialog("Discard your changes?", isPresented: $confirmDiscard, titleVisibility: .visible) {
@@ -186,7 +186,7 @@ struct NunaTodayCustomizeSheet: View {
             .padding(.horizontal, NunaSpacing.screenH).padding(.top, 14).padding(.bottom, 10)
             content()
         }
-        .background(NunaPalette.canvas.ignoresSafeArea())
+        .background(NunaBackdrop())
     }
 
     private func save() {
