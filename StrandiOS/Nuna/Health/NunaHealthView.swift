@@ -97,15 +97,6 @@ struct NunaHealthView: View {
             rangeBanner
             vitalBento
             shareReport
-            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
-                VStack(spacing: 0) {
-                    NavigationLink(value: NunaTodayRoute.rhythm) {
-                        NunaListRow("Rhythm", description: "Beat-to-beat view", systemImage: "waveform.path.ecg.rectangle", showsChevron: true) {
-                            NunaChip("Experimental")
-                        }
-                    }.buttonStyle(.plain)
-                }
-            }
         }
     }
 
