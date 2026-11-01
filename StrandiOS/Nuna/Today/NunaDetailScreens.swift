@@ -421,12 +421,13 @@ struct NunaEffortDetailView: View {
 /// and time spent strength training legible without pretending that one is the other.
 struct NunaEffortActivityDetailView: View {
     enum Kind: Hashable, CaseIterable {
-        case lowZones, highZones, strength
+        case lowZones, highZones, allZones, strength
 
         var title: String {
             switch self {
             case .lowZones: return String(localized: "Heart rate zones 1–3")
             case .highZones: return String(localized: "Heart rate zones 4–5")
+            case .allZones: return String(localized: "Heart rate zones all")
             case .strength: return String(localized: "Strength activity time")
             }
         }
@@ -436,6 +437,7 @@ struct NunaEffortActivityDetailView: View {
             switch self {
             case .lowZones: return [0, 1, 2]
             case .highZones: return [3, 4]
+            case .allZones: return [0, 1, 2, 3, 4]
             case .strength: return []
             }
         }
@@ -444,6 +446,7 @@ struct NunaEffortActivityDetailView: View {
             switch self {
             case .lowZones: return "low"
             case .highZones: return "high"
+            case .allZones: return "all"
             case .strength: return "strength"
             }
         }
@@ -452,6 +455,7 @@ struct NunaEffortActivityDetailView: View {
             switch self {
             case .lowZones: return "met:heart-rate-zones-1-3"
             case .highZones: return "met:heart-rate-zones-4-5"
+            case .allZones: return "met:heart-rate-zones-all"
             case .strength: return "met:strength-activity-time"
             }
         }
@@ -460,6 +464,7 @@ struct NunaEffortActivityDetailView: View {
             switch self {
             case .lowZones: return NunaPalette.rest
             case .highZones: return NunaPalette.alert
+            case .allZones: return NunaPalette.rest
             case .strength: return NunaPalette.effort
             }
         }
@@ -930,7 +935,7 @@ struct NunaEffortActivityDetailView: View {
         var zonesByDay: [Date: [Double]] = [:]
         var prior = 0.0
         switch kind {
-        case .lowZones, .highZones:
+        case .lowZones, .highZones, .allZones:
             zonesByDay = await zoneMinutes(for: days)
             // A month is two reads of 30 days; six months would double an already long scan, so it carries no comparison.
             if range <= 30 {
@@ -945,7 +950,7 @@ struct NunaEffortActivityDetailView: View {
             let zones = zonesByDay[day] ?? [Double](repeating: 0, count: 5)
             let value: Double
             switch kind {
-            case .lowZones, .highZones: value = kind.zoneIndexes.reduce(0) { $0 + zones[$1] }
+            case .lowZones, .highZones, .allZones: value = kind.zoneIndexes.reduce(0) { $0 + zones[$1] }
             case .strength: value = strengthMinutes(day)
             }
             return Bucket(start: day, end: cal.date(byAdding: .day, value: 1, to: day) ?? day, value: value, zones: zones)
