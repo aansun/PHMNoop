@@ -1,6 +1,10 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Today's Activities": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Aktivitas Hari Ini"}}}},
+    "Weekly Trends": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tren Mingguan"}}}},
+    "Strength activity time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Waktu aktivitas kekuatan"}}}},
+    "Health monitor": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Monitor kesehatan"}}}},
     "Strength Trainer": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Strength Trainer"}}}},
     "Open Strength Trainer": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Buka Strength Trainer"}}}},
     "Open in Strength Trainer": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Buka di Strength Trainer"}}}},

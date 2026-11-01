@@ -51,6 +51,7 @@ extension NunaTrendPage {
         case .steps: return String(localized: "Steps")
         case .hrZonesLow: return String(localized: "Heart rate zones 1–3")
         case .hrZonesHigh: return String(localized: "Heart rate zones 4–5")
+        case .strengthTime: return String(localized: "Strength activity time")
         case .charge: return String(localized: "Charge")
         case .hrv: return String(localized: "Heart rate variability")
         case .rhr: return String(localized: "Resting heart rate")
@@ -146,7 +147,7 @@ extension NunaTodayView {
         case .restorative:
             figure = make(Dictionary(uniqueKeysWithValues: h.deepMin.keys.compactMap { k in h.remMin[k].map { (k, h.deepMin[k]! + $0) } }), good: true, format: hm)
         case .debt: figure = make(h.debtMin, good: false, format: hm)
-        case .hrZonesLow, .hrZonesHigh, .steps, .calories, .hrv, .rhr, .respiratory, .vo2max, .skinTemp, .weight, .vitality, .spo2,
+        case .hrZonesLow, .hrZonesHigh, .strengthTime, .steps, .calories, .hrv, .rhr, .respiratory, .vo2max, .skinTemp, .weight, .vitality, .spo2,
              .stressTotal, .stressNonActivity, .stressSleep: break
         }
         return NunaLinkRow(id: "page." + page.rawValue, title: page.titleText, subtitle: page.section.titleText, value: figure.0,
