@@ -80,35 +80,48 @@ struct NunaMiniChip: View {
     }
 }
 
-/// Vital tile from the Health Vital mockup: icon tile and label, the value, then a status chip or note.
+/// A vital sign on the Health monitor page, as on the WHOOP page: the picture and the name, the reading large with its unit, and under it a
+/// pill that says where the reading sits against the wearer's own range ("within 60 - 62", "elevated > 80"), with a check when that is fine.
 struct NunaVitalTile: View {
     let icon: String
     let label: LocalizedStringKey
     let value: String
     var unit: String = ""
-    var chip: LocalizedStringKey?
+    /// The pill's words and colour; a check mark leads when `symbol` is given, a dot when it is nil (no verdict yet).
+    var chip: String?
     var chipColor: Color = NunaPalette.charge
-    var chipDot = false
-    var note: String?
+    var symbol: String?
 
     var body: some View {
-        NunaCard(small: true) {
-            VStack(alignment: .leading, spacing: 10) {
-                HStack(spacing: 8) {
-                    NunaIcon(name: icon, size: 17, weight: .medium).foregroundStyle(NunaPalette.textSecondary).frame(width: 28, height: 28)
-                    Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                        .foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
+        NunaCard(small: true, padding: EdgeInsets(top: 12, leading: 12, bottom: 10, trailing: 12)) {
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .top, spacing: 10) {
+                    NunaIcon(name: icon, size: 17, weight: .medium).foregroundStyle(NunaPalette.textSecondary).frame(width: 26, height: 26)
+                    Text(label).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        .foregroundStyle(NunaPalette.textSecondary).lineLimit(2).multilineTextAlignment(.leading).padding(.top, 6)
                 }
-                HStack(alignment: .firstTextBaseline, spacing: 3) {
-                    Text(verbatim: value).font(.nuna(size: NunaTypeSize.numberM, weight: .bold, design: NunaType.design))
+                .frame(minHeight: 26, alignment: .top)
+                HStack(alignment: .firstTextBaseline, spacing: 5) {
+                    Text(verbatim: value).font(.nuna(size: 36, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(36))
                         .foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
                     if !unit.isEmpty && value != "–" {
-                        Text(verbatim: unit).font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text(verbatim: unit).font(.nuna(size: 15, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                     }
                 }
-                if let chip { NunaMiniChip(text: chip, color: chipColor, dot: chipDot) }
-                else if let note { Text(verbatim: note).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).frame(height: 24, alignment: .leading) }
-                else { Color.clear.frame(height: 24) }
+                .frame(height: 40).padding(.top, 10)
+                Group {
+                    if let chip {
+                        HStack(spacing: 6) {
+                            if let symbol { Image(systemName: symbol).font(.nuna(size: 10, weight: .heavy)) } else { Circle().fill(chipColor).frame(width: 6, height: 6) }
+                            Text(verbatim: chip).font(.nuna(size: 13, weight: .semibold)).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
+                        }
+                        .foregroundStyle(chipColor).padding(.horizontal, 8).frame(height: 24)
+                        .background(chipColor.opacity(0.16), in: RoundedRectangle(cornerRadius: 5, style: .continuous))
+                    } else {
+                        Color.clear.frame(height: 24)
+                    }
+                }
+                .padding(.top, 8)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
