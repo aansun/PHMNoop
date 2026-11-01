@@ -26,6 +26,8 @@ struct NunaManualWorkoutSheet: View {
     /// The text the estimate filled in; the note below stays while it is still there.
     @State private var suggestedText: String?
     @State private var showSport = false
+    /// The strap-location wheel is shut by default, showing the chosen place on one button; tapping the button opens the wheel and tapping it again settles on the pick.
+    @State private var wearOpen = false
     /// Where the strap was worn for this activity; the choice is remembered as the next default.
     @AppStorage("workout.wearLocation") private var wearLocation = "Wrist band"
     private static let wearOptions = ["---", "Wrist band", "Bicep band", "Arm sleeve", "Underwear", "Bra", "Shorts", "Compression top", "Leggings"]
@@ -114,10 +116,23 @@ struct NunaManualWorkoutSheet: View {
                     VStack(alignment: .leading, spacing: 14) {
                         nunaRuledHeader("Location")
                         Text("Where did you wear your strap?").font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).padding(.horizontal, 16)
-                        Picker("", selection: $wearLocation) {
-                            ForEach(Self.wearOptions, id: \.self) { Text(verbatim: $0.uppercased()).font(.nuna(size: 18, weight: .semibold)).tag($0) }
+                        Button { withAnimation(.easeInOut(duration: 0.2)) { wearOpen.toggle() } } label: {
+                            HStack(spacing: 8) {
+                                Text(verbatim: wearLocation.uppercased()).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingHead(1.4))
+                                    .foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+                                if wearOpen { Image(systemName: "checkmark").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textPrimary) }
+                            }
+                            .frame(maxWidth: .infinity).frame(height: 50)
+                            .background(Self.raised, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .contentShape(Rectangle())
                         }
-                        .pickerStyle(.wheel).labelsHidden().frame(height: 190).padding(.horizontal, 16)
+                        .buttonStyle(.plain).padding(.horizontal, 16)
+                        if wearOpen {
+                            Picker("", selection: $wearLocation) {
+                                ForEach(Self.wearOptions, id: \.self) { Text(verbatim: $0.uppercased()).font(.nuna(size: 18, weight: .semibold)).tag($0) }
+                            }
+                            .pickerStyle(.wheel).labelsHidden().frame(height: 190).padding(.horizontal, 16)
+                        }
                     }
 
                     if !isRest {
