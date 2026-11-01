@@ -329,9 +329,10 @@ struct NunaEffortDetailView: View {
     private var weeklyTrends: some View {
         VStack(alignment: .leading, spacing: 12) {
             NunaWeeklyHeading()
+            // As on the WHOOP Strain card: every bar and its figure in one blue, the last day lifted on its lighter column.
             NunaWeeklyTrendCard(title: "Effort", key: "strain", style: .bars, color: NunaPalette.effortModerate,
-                                barFill: { v, last in last ? nunaEffortColor(v) : NunaPalette.textSecondary },
-                                labelFill: { v, last in last ? nunaEffortColor(v) : NunaPalette.textPrimary },
+                                barFill: { _, _ in Color(hex: "#3E90E0") },
+                                labelFill: { _, _ in Color(hex: "#3E90E0") },
                                 destination: { AnyView(NunaTrendHost(initial: .effort, endingDaysAgo: router.todayDayOffset)) },
                                 valueText: { UnitFormatter.effortDisplay($0, scale: scale) }, endingDaysAgo: router.todayDayOffset)
             NunaZoneWeeklyCard(title: "HR zones 1–3", zones: [0, 1, 2], byDay: zones.zonesByDay, endingDaysAgo: router.todayDayOffset,

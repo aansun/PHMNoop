@@ -86,7 +86,7 @@ struct NunaWeeklyTrendCard: View {
     /// The last day sits on a lighter column that reaches from the top of the plot down through its label.
     private var highlight: some View {
         GeometryReader { g in
-            RoundedRectangle(cornerRadius: 12, style: .continuous).fill(NunaPalette.glassStrong.opacity(0.55))
+            RoundedRectangle(cornerRadius: 12, style: .continuous).fill(NunaPalette.glassStrong)
                 .frame(width: g.size.width / 7 - 4, height: g.size.height)
                 .offset(x: g.size.width * 6 / 7 + 2)
         }
@@ -212,13 +212,13 @@ private struct NunaWeeklyPlot: View {
         if style == .bars {
             let barHeight = max(2, size.height - top)
             UnevenRoundedRectangle(topLeadingRadius: 3, bottomLeadingRadius: 0, bottomTrailingRadius: 0, topTrailingRadius: 3, style: .continuous)
-                .fill(fill(v, isLast)).frame(width: size.width / 7 * 0.36, height: barHeight).position(x: cx, y: top + barHeight / 2)
+                .fill(fill(v, isLast)).frame(width: size.width / 7 * 0.30, height: barHeight).position(x: cx, y: top + barHeight / 2)
         } else {
             Circle().fill(NunaPalette.canvas).overlay(Circle().strokeBorder(lineColor, lineWidth: 2.5)).frame(width: 11, height: 11).position(x: cx, y: top)
         }
         // The figure sits above its point, and under it at a low point, where the line comes in from both sides.
         let below = style == .line && isLow(i, v) && top + 19 < size.height - 6
-        Text(verbatim: label(v)).font(.nuna(size: 13, weight: .heavy, design: NunaType.design)).foregroundStyle(labelColor(v, isLast))
+        Text(verbatim: label(v)).font(.nuna(size: 14, weight: .bold, design: NunaType.design)).foregroundStyle(labelColor(v, isLast))
             .fixedSize().position(x: cx, y: below ? top + 17 : max(9, top - 17))
     }
 }
