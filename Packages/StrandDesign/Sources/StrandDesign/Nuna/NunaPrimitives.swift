@@ -597,7 +597,8 @@ struct NunaSheetChrome: ViewModifier {
 }
 
 /// The ground of a screen: the canvas colour, and in WHP the guide's background gradient (#283339 at the top to #101518 at the bottom, over the
-/// height of the screen). Drawn from the top of the screen, so a header laid over it with `NunaBackdrop(top: true)` carries the same colours.
+/// height of the screen). The stops follow the WHOOP sleep pages as measured: it darkens faster than a straight line, to #161A1E by 45% of the
+/// height and about #0F1415 by 85%. Drawn from the top of the screen, so a header laid over it with `NunaBackdrop(top: true)` carries the same colours.
 public struct NunaBackdrop: View {
     private let top: Bool
     /// `top: true` for a bar at the top of the screen: it shows just the part of the gradient behind it, and does not take the safe area.
@@ -607,7 +608,11 @@ public struct NunaBackdrop: View {
 
     @ViewBuilder private var ground: some View {
         if NunaThemePrefs.skin == .whp {
-            let gradient = LinearGradient(colors: [Color(hex: "#283339"), Color(hex: "#101518")], startPoint: .top, endPoint: .bottom)
+            let gradient = LinearGradient(stops: [
+                .init(color: Color(hex: "#263137"), location: 0), .init(color: Color(hex: "#232E33"), location: 0.10),
+                .init(color: Color(hex: "#212B31"), location: 0.15), .init(color: Color(hex: "#161A1E"), location: 0.45),
+                .init(color: Color(hex: "#0F1415"), location: 0.85), .init(color: Color(hex: "#0E1313"), location: 1)],
+                startPoint: .top, endPoint: .bottom)
             if top {
                 // A bar: the same gradient as the screen behind it, cut to the bar's own size.
                 GeometryReader { geo in

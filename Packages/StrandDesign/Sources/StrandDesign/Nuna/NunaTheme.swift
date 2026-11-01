@@ -37,6 +37,9 @@ public enum NunaPalette {
     public static var glass: Color { skinned(light: "#0A0D100D", dark: "#FFFFFF0D", whp: "#FFFFFF0D", flow: ("#2A1B240D", "#F5EBEF0D")) }
     /// The surface of every card and tile: the ink at a low opacity over the canvas, so it follows the skin and the light or dark theme.
     public static var tile: Color { skinned(light: "#0A0D1014", dark: "#FFFFFF17", whp: "#FFFFFF17", flow: ("#2A1B2410", "#F5EBEF14")) }
+    /// The surface of a card. In WHP it is white at 5.5%, measured on the WHOOP sleep pages: the card is the page behind it lifted by a constant
+    /// small step, so it follows the background gradient instead of being a fixed grey. The other looks keep the tile.
+    public static var cardSurface: Color { skinned(light: "#0A0D1014", dark: "#FFFFFF17", whp: "#FFFFFF0E", flow: ("#2A1B2410", "#F5EBEF14")) }
     public static var glassStrong: Color { skinned(light: "#0A0D1014", dark: "#FFFFFF17", whp: "#FFFFFF17", flow: ("#2A1B2410", "#F5EBEF14")) }
     // Lines are opaque tones a step off the card colour, so a card edge reads as part of the card instead of a drawn outline.
     // The card itself stays clearly apart from the canvas (#121214 on #000000, white on #E9ECEF).
@@ -346,7 +349,7 @@ public struct NunaCard<Content: View>: View {
     /// Flow draws a card as a raised surface (white on cream, a lifted plum-tinted dark); the others keep the soft tile.
     private var cardFill: Color {
         if NunaThemePrefs.skin == .flow { return highlight ? NunaPalette.cardHighlight : NunaPalette.card }
-        return highlight ? NunaPalette.cardHighlight : NunaPalette.tile
+        return highlight ? NunaPalette.cardHighlight : NunaPalette.cardSurface
     }
 
     public var body: some View {

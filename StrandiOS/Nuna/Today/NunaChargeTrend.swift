@@ -28,13 +28,17 @@ struct NunaSignalRow: View {
 struct NunaSignalPanel<Content: View>: View {
     @ViewBuilder let content: Content
 
+    /// WHP: the panel is the page lifted by white at 9% at its top and clear at its bottom (WHOOP sleep page: #262D2F fading to the page colour).
+    private static var top: Color { NunaThemePrefs.skin == .whp ? Color.white.opacity(0.09) : NunaPalette.cardHighlight }
+    private static var bottom: Color { NunaThemePrefs.skin == .whp ? Color.white.opacity(0) : NunaPalette.canvas }
+
     var body: some View {
         VStack(spacing: 0) {
-            NunaNotch().fill(NunaPalette.cardHighlight).frame(width: 24, height: 9)
+            NunaNotch().fill(Self.top).frame(width: 24, height: 9)
             VStack(spacing: 0) { content }
                 .padding(.horizontal, 18).padding(.top, 4).padding(.bottom, 16)
                 // Lighter at the top, and by the bottom the same as the screen behind it: no edge down there, the card fades into the page.
-                .background(LinearGradient(colors: [NunaPalette.cardHighlight, NunaPalette.canvas], startPoint: .top, endPoint: .bottom),
+                .background(LinearGradient(colors: [Self.top, Self.bottom], startPoint: .top, endPoint: .bottom),
                             in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous)
                     .strokeBorder(LinearGradient(colors: [NunaPalette.hairline.opacity(0.6), .clear], startPoint: .top, endPoint: .bottom), lineWidth: 1))
