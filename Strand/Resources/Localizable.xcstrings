@@ -1,6 +1,11 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Heart rate zones all": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Zona detak jantung semua"}}}},
+    "Total volume load": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Total beban volume"}}}},
+    "View workouts": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lihat latihan"}}}},
+    "Personal Records": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Rekor pribadi"}}}},
+    "Avg. volume load": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Rata-rata beban volume"}}}},
     "Today's Activities": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Aktivitas Hari Ini"}}}},
     "Weekly Trends": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tren Mingguan"}}}},
     "Strength activity time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Waktu aktivitas kekuatan"}}}},

@@ -4,7 +4,7 @@ import StrandDesign
 
 /// Every trend page of the app, in the order the dropdown at the top of a trend page lists them: Effort, Charge and Rest, each with the readings it is made of.
 enum NunaTrendPage: String, CaseIterable, Identifiable {
-    case effort, steps, hrZonesLow, hrZonesHigh, strengthTime, calories, vo2max
+    case effort, steps, hrZonesLow, hrZonesHigh, hrZonesAll, strengthTime, totalVolumeLoad, calories, vo2max
     case charge, hrv, rhr, respiratory, skinTemp
     case restPerformance, timeInBed, hoursNeededHours, hoursNeededPct, consistency, restorative, efficiency, debt
     case weight, vitality, spo2, stressTotal, stressNonActivity, stressSleep
@@ -22,7 +22,7 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
 
     var section: Section {
         switch self {
-        case .effort, .steps, .calories, .hrZonesLow, .hrZonesHigh, .strengthTime, .vo2max: return .effort
+        case .effort, .steps, .calories, .hrZonesLow, .hrZonesHigh, .hrZonesAll, .strengthTime, .totalVolumeLoad, .vo2max: return .effort
         case .charge, .hrv, .rhr, .respiratory, .skinTemp: return .charge
         case .weight, .vitality, .spo2, .stressTotal, .stressNonActivity, .stressSleep: return .other
         default: return .rest
@@ -36,7 +36,9 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case .steps: return "Steps"
         case .hrZonesLow: return "Heart rate zones 1–3"
         case .hrZonesHigh: return "Heart rate zones 4–5"
+        case .hrZonesAll: return "Heart rate zones all"
         case .strengthTime: return "Strength activity time"
+        case .totalVolumeLoad: return "Total volume load"
         case .charge: return "Charge"
         case .hrv: return "Heart rate variability"
         case .rhr: return "Resting heart rate"
@@ -67,7 +69,9 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case .steps: return "met:steps"
         case .hrZonesLow: return "met:heart-rate-zones-1-3"
         case .hrZonesHigh: return "met:heart-rate-zones-4-5"
+        case .hrZonesAll: return "met:heart-rate-zones-all"
         case .strengthTime: return "met:strength-activity-time"
+        case .totalVolumeLoad: return "met:total-volume-load"
         case .charge: return "met:recovery"
         case .hrv: return "met:heart-rate-variability"
         case .rhr: return "met:resting-heart-rate"
@@ -119,7 +123,9 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case .steps: NunaStepsTrendView(endingDaysAgo: endingDaysAgo)
         case .hrZonesLow: NunaEffortActivityDetailView(kind: .lowZones)
         case .hrZonesHigh: NunaEffortActivityDetailView(kind: .highZones)
+        case .hrZonesAll: NunaEffortActivityDetailView(kind: .allZones)
         case .strengthTime: NunaEffortActivityDetailView(kind: .strength)
+        case .totalVolumeLoad: NunaVolumeLoadTrendView()
         case .charge: NunaChargeScoreTrendView(endingDaysAgo: endingDaysAgo)
         case .hrv: NunaLineTrendView.forMetric("hrv", endingDaysAgo: endingDaysAgo)
         case .rhr: NunaLineTrendView.forMetric("rhr", endingDaysAgo: endingDaysAgo)
