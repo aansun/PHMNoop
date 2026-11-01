@@ -231,9 +231,6 @@ struct NunaEffortDetailView: View {
                 NunaAnyaCard(verbatim: NunaInsightText.effort(effort: e, chargePct: day.charge.pct)
                              ?? String(localized: "Your Effort is \(UnitFormatter.effortDisplay(e, scale: scale)) of \(UnitFormatter.effortScaleMax(scale)) so far today.")) { showCoach = true }
             }
-            NunaTodayActivities(workouts: todayWorkouts, effortScale: scale,
-                                dayStart: NunaSelectedDay.date(offset: router.todayDayOffset), sleepMinutes: nil,
-                                isToday: router.todayDayOffset == 0, includesSleep: false)
             weeklyTrends
             NunaExpandRow(title: "How it's calculated", subtitle: "Cardio load across the day",
                           text: "Effort adds up how hard your heart worked during the day, weighted by heart rate zone. Workouts and everyday movement both count. It is shown on the scale you chose in Settings.")
@@ -337,15 +334,16 @@ struct NunaEffortDetailView: View {
                                 labelFill: { v, last in last ? nunaEffortColor(v) : NunaPalette.textPrimary },
                                 destination: { AnyView(NunaTrendHost(initial: .effort, endingDaysAgo: router.todayDayOffset)) },
                                 valueText: { UnitFormatter.effortDisplay($0, scale: scale) }, endingDaysAgo: router.todayDayOffset)
-            NunaWeeklyTrendCard(title: "Calories", key: "energy_kcal", style: .bars, color: NunaPalette.effortModerate,
-                                destination: { AnyView(NunaTrendHost(initial: .calories, endingDaysAgo: router.todayDayOffset)) },
-                                points: kcalPoints, valueText: { String(format: "%.0f", locale: AppLanguage.activeLocale, $0) }, autoScale: true,
-                                endingDaysAgo: router.todayDayOffset)
             NunaZoneWeeklyCard(title: "HR zones 1–3", zones: [0, 1, 2], byDay: zones.zonesByDay, endingDaysAgo: router.todayDayOffset,
                                destination: { AnyView(NunaTrendHost(initial: .hrZonesLow)) })
             NunaZoneWeeklyCard(title: "HR zones 4–5", zones: [3, 4], byDay: zones.zonesByDay, endingDaysAgo: router.todayDayOffset,
                                destination: { AnyView(NunaTrendHost(initial: .hrZonesHigh)) })
             NunaWeeklyTrendCard(title: "Resting heart rate", key: "rhr", style: .line, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
+            // Calories last.
+            NunaWeeklyTrendCard(title: "Calories", key: "energy_kcal", style: .bars, color: NunaPalette.effortModerate,
+                                destination: { AnyView(NunaTrendHost(initial: .calories, endingDaysAgo: router.todayDayOffset)) },
+                                points: kcalPoints, valueText: { String(format: "%.0f", locale: AppLanguage.activeLocale, $0) }, autoScale: true,
+                                endingDaysAgo: router.todayDayOffset)
         }
     }
 

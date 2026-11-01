@@ -226,8 +226,9 @@ private struct NunaWeeklyPlot: View {
 /// The heading over a run of weekly cards, in the same type as the card titles under it, with room above and below.
 struct NunaWeeklyHeading: View {
     var body: some View {
-        Text("Weekly trends").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-            .accessibilityAddTraits(.isHeader).padding(.top, 20).padding(.bottom, 4).padding(.horizontal, 4)
+        // As on the WHOOP pages: a plain title, in capitals and small letters, about 20 pt, a little in from the cards.
+        Text("Weekly Trends").font(.nuna(size: 22, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            .accessibilityAddTraits(.isHeader).padding(.top, 22).padding(.bottom, 2).padding(.horizontal, 4)
     }
 }
 
