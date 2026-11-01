@@ -379,6 +379,21 @@ struct NunaEffortDetailView: View {
                                 destination: { AnyView(NunaTrendHost(initial: .calories, endingDaysAgo: router.todayDayOffset)) },
                                 points: kcalPoints, valueText: { String(format: "%.0f", locale: AppLanguage.activeLocale, $0) }, autoScale: true,
                                 endingDaysAgo: router.todayDayOffset)
+            // Strength activity time last: the minutes of logged strength activities, day by day.
+            NunaWeeklyTrendCard(title: "Strength activity time", key: "strength_time", style: .bars, color: NunaPalette.effortModerate,
+                                destination: { AnyView(NunaTrendHost(initial: .strengthTime)) },
+                                points: strengthPoints, valueText: { Self.hm($0) }, autoScale: true,
+                                endingDaysAgo: router.todayDayOffset)
+        }
+    }
+
+    /// Strength minutes for each of the last 60 days (zero for a day with none), for the weekly card.
+    private var strengthPoints: [(day: String, value: Double)] {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        return (0..<60).compactMap { cal.date(byAdding: .day, value: -$0, to: today) }.map {
+            let key = Repository.localDayKey($0)
+            return (day: key, value: strengthMinutes(on: key))
         }
     }
 
