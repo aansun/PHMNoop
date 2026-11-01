@@ -23,6 +23,9 @@ struct NunaTodayActivities: View {
     /// The two buttons under the rows. Left out (nil) where the card is embedded and the screen has its own way to start.
     var onAdd: (() -> Void)?
     var onStart: (() -> Void)?
+    /// The Effort page's version: no card, no buttons. A plain title over bare rows, and only the activities that gave Effort (a walk, a run,
+    /// a lift), not sleep, naps, recovery work or a detected suggestion.
+    var plain = false
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var router: NavRouter
     @State private var night: (onset: Date, wake: Date)?
@@ -58,7 +61,32 @@ struct NunaTodayActivities: View {
         return String(localized: "Activities") + " · " + f.string(from: d)
     }
 
+    /// The workouts of the day that added Effort.
+    private var effortRows: [Item] {
+        items.filter { item in
+            if case .workout(let w) = item.kind { return (w.strain ?? 0) > 0 && !NunaActivityKind.isCharge(w.sport) }
+            return false
+        }
+    }
+
+    @ViewBuilder private var plainBody: some View {
+        let rows = effortRows
+        if !rows.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                Text(isToday ? "Today's Activities" : LocalizedStringKey(Self.dayTitle(dayStart)))
+                    .font(.nuna(size: 22, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                    .accessibilityAddTraits(.isHeader).padding(.top, 22).padding(.horizontal, 4)
+                VStack(spacing: 12) { ForEach(rows) { item in row(item) } }
+            }
+        }
+    }
+
     var body: some View {
+        if plain { plainBody.task(id: "\(repo.refreshSeq)-\(dayStart.timeIntervalSince1970)") { night = nil; naps = [] } }
+        else { cardBody }
+    }
+
+    private var cardBody: some View {
         let rows = items
         return NunaCard(padding: EdgeInsets(top: 10, leading: 12, bottom: 12, trailing: 12)) {
         VStack(alignment: .leading, spacing: 10) {

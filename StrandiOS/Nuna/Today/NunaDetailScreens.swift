@@ -194,7 +194,11 @@ struct NunaEffortDetailView: View {
     @StateObject private var day = NunaTodayModel()
     /// Minutes in the heart-rate zones day by day, for the 30-day comparison and the weekly zone cards.
     @StateObject private var zones = NunaEffortZoneHistory()
-    @StateObject private var rhrSeries = NunaSeriesModel()
+    /// Steps for the 30-day comparison (the stored estimate), and the workouts of every day, for the strength time and its 30-day average.
+    @StateObject private var stepsSeries = NunaSeriesModel()
+    @State private var allWorkouts: [WorkoutRow] = []
+    /// Steps day by day, the on-device estimate with Apple Health's count for the days that have none: the weekly steps card.
+    @State private var stepsPoints: [(day: String, value: Double)] = []
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
     @State private var showCoach = false
     @State private var showInfo = false
@@ -231,22 +235,35 @@ struct NunaEffortDetailView: View {
                 NunaAnyaCard(verbatim: NunaInsightText.effort(effort: e, chargePct: day.charge.pct)
                              ?? String(localized: "Your Effort is \(UnitFormatter.effortDisplay(e, scale: scale)) of \(UnitFormatter.effortScaleMax(scale)) so far today.")) { showCoach = true }
             }
+            // Only the activities that gave Effort, as bare rows under a plain title, as on the WHOOP page.
+            NunaTodayActivities(workouts: todayWorkouts, effortScale: scale,
+                                dayStart: NunaSelectedDay.date(offset: router.todayDayOffset), sleepMinutes: nil,
+                                isToday: router.todayDayOffset == 0, includesSleep: false, plain: true)
             weeklyTrends
             NunaExpandRow(title: "How it's calculated", subtitle: "Cardio load across the day",
                           text: "Effort adds up how hard your heart worked during the day, weighted by heart rate zone. Workouts and everyday movement both count. It is shown on the scale you chose in Settings.")
         }
         .task(id: "\(repo.refreshSeq)-\(router.todayDayOffset)") {
             day.dayOffset = router.todayDayOffset
-            await rhrSeries.load(repo: repo, key: "rhr", source: "my-whoop")
+            await stepsSeries.load(repo: repo, key: "steps_est", source: "my-whoop")
             await day.load(repo: repo, profile: profile)
             await loadDay()
             await loadCalories()
+            await loadSteps()
         }
         .task(id: "zones-\(repo.refreshSeq)-\(router.todayDayOffset)") {
             await zones.load(repo: repo, profile: profile, endingOffset: router.todayDayOffset)
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "Effort") }
         .environment(\.nunaDetailSwitch, nil)
+    }
+
+    /// Steps by day: the estimate and Apple Health's count, the larger of the two for a day that has both.
+    private func loadSteps() async {
+        var byDay: [String: Double] = [:]
+        for r in await repo.appleDailyRows() { if let s = r.steps, s > 0 { byDay[r.day] = Double(s) } }
+        for p in await repo.exploreSeries(key: "steps_est", source: "my-whoop", days: 60) where p.value > 0 { byDay[p.day] = max(byDay[p.day] ?? 0, p.value) }
+        stepsPoints = byDay.map { (day: $0.key, value: $0.value) }
     }
 
     private func loadCalories() async {
@@ -265,6 +282,7 @@ struct NunaEffortDetailView: View {
         let end = isToday ? Int(Date().timeIntervalSince1970) : Int((cal.date(byAdding: .day, value: 1, to: dayStart) ?? dayStart).timeIntervalSince1970)
         hrDay = await repo.hrSamples(from: start, to: end, limit: 200_000)
         let rows = await repo.workoutRows()
+        allWorkouts = rows
         todayWorkouts = rows.filter { $0.startTs >= start && $0.startTs < Int((cal.date(byAdding: .day, value: 1, to: dayStart) ?? dayStart).timeIntervalSince1970) }
         // Everyday movement: the part of a finished day's Effort that none of its workouts explains. Effort is a logarithm of heart-rate load, so the split is
         // made on the load (`EffortAttribution`), not by subtracting points. Only for a past day: today's Effort is still moving.
@@ -309,20 +327,33 @@ struct NunaEffortDetailView: View {
                     NunaSignalRow(title: "Everyday movement", icon: "met:steps", value: everydayDay.map { UnitFormatter.effortDisplay($0, scale: scale) }, trend: nil)
                 }
                 NunaDivider()
-                resting
+                NavigationLink { NunaTrendHost(initial: .strengthTime) } label: {
+                    NunaSignalRow(title: "Strength activity time", icon: "met:strength-activity-time", value: Self.hm(strengthMinutes(on: dayKey)),
+                                  trend: trend(strengthMinutes(on: dayKey), strengthAverage(before: dayKey), good: true, format: Self.hm))
+                }.buttonStyle(.plain)
+                NunaDivider()
+                NavigationLink { NunaTrendHost(initial: .steps, endingDaysAgo: router.todayDayOffset) } label: {
+                    NunaSignalRow(title: "Steps", icon: "met:steps", value: day.steps.map { String(format: "%.0f", locale: AppLanguage.activeLocale, $0) },
+                                  trend: trend(day.steps, stepsSeries.average30(before: dayKey), good: true, format: { String(format: "%.0f", locale: AppLanguage.activeLocale, $0) }))
+                }.buttonStyle(.plain)
             }
             NunaTrendLegend(text: router.todayDayOffset == 0 ? "Today vs. last 30 days" : "This day vs. the 30 days before")
                 .padding(.top, 8)
         }
     }
 
-    /// Touch it for the resting-heart-rate page: the night's figure against the days before it.
-    @ViewBuilder private var resting: some View {
-        let row = NunaSignalRow(title: "Resting heart rate", icon: "met:resting-heart-rate", value: restingDay.map { String(format: "%.0f", $0) },
-                                trend: NunaTrend.make(current: restingDay, previous: rhrSeries.average30(before: dayKey), decimals: 0, upIsGood: false))
-        if let m = MetricCatalog.metric(key: "rhr", source: "my-whoop") {
-            NavigationLink(value: NunaTodayRoute.metric(m)) { row }.buttonStyle(.plain)
-        } else { row }
+    /// Minutes in logged strength activities on the day with this key.
+    private func strengthMinutes(on key: String) -> Double {
+        allWorkouts.filter { NunaWorkoutKind.isStrength($0) && Repository.localDayKey(Date(timeIntervalSince1970: TimeInterval($0.startTs))) == key }
+            .reduce(0) { $0 + ($1.durationS ?? Double($1.endTs - $1.startTs)) / 60 }
+    }
+
+    /// The daily average of strength minutes over the 30 days before `key`, days without any counted as zero.
+    private func strengthAverage(before key: String) -> Double? {
+        let cal = Calendar.current
+        let end = NunaSelectedDay.date(offset: router.todayDayOffset)
+        let keys = (1...30).compactMap { cal.date(byAdding: .day, value: -$0, to: end) }.map { Repository.localDayKey($0) }
+        return keys.reduce(0) { $0 + strengthMinutes(on: $1) } / 30
     }
 
     /// The week as bare cards, one each: Effort itself, calories, the time in each zone group, then resting heart rate.
@@ -339,7 +370,10 @@ struct NunaEffortDetailView: View {
                                destination: { AnyView(NunaTrendHost(initial: .hrZonesLow)) })
             NunaZoneWeeklyCard(title: "HR zones 4–5", zones: [3, 4], byDay: zones.zonesByDay, endingDaysAgo: router.todayDayOffset,
                                destination: { AnyView(NunaTrendHost(initial: .hrZonesHigh)) })
-            NunaWeeklyTrendCard(title: "Resting heart rate", key: "rhr", style: .line, color: NunaPalette.effortModerate, endingDaysAgo: router.todayDayOffset)
+            NunaWeeklyTrendCard(title: "Steps", key: "steps_est", style: .bars, color: NunaPalette.effortModerate,
+                                destination: { AnyView(NunaTrendHost(initial: .steps, endingDaysAgo: router.todayDayOffset)) },
+                                points: stepsPoints, valueText: { String(format: "%.0f", locale: AppLanguage.activeLocale, $0) }, autoScale: true,
+                                endingDaysAgo: router.todayDayOffset)
             // Calories last.
             NunaWeeklyTrendCard(title: "Calories", key: "energy_kcal", style: .bars, color: NunaPalette.effortModerate,
                                 destination: { AnyView(NunaTrendHost(initial: .calories, endingDaysAgo: router.todayDayOffset)) },
