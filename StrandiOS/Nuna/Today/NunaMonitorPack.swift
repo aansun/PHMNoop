@@ -72,13 +72,15 @@ struct NunaMonitorPackCard: View {
     // MARK: Tiles
 
     private func shell<Body: View>(_ title: LocalizedStringKey, @ViewBuilder _ content: () -> Body) -> some View {
-        NunaCard(small: true) {
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(alignment: .top, spacing: 8) {
-                    Text(title).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+        // As on the WHOOP cards: 16 pt inside, the title and a thin chevron on one line, 20 pt, then a 24 pt tile with two lines of text.
+        NunaCard(small: true, padding: EdgeInsets(top: 14.5, leading: 16, bottom: 18, trailing: 16)) {
+            VStack(alignment: .leading, spacing: 18.3) {
+                HStack(alignment: .center, spacing: 8) {
+                    Text(title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textPrimary).lineLimit(2).multilineTextAlignment(.leading)
                     Spacer(minLength: 0)
-                    Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                    Image(systemName: "chevron.right").font(.system(size: 16, weight: .light)).foregroundStyle(NunaPalette.textSecondary)
+                        .padding(.trailing, 4).offset(y: 2)
                 }
                 content()
             }
@@ -88,13 +90,13 @@ struct NunaMonitorPackCard: View {
 
     private var vitalTile: AnyView {
         if case .calibrating(let nights) = phase, hrvS.loaded, rhrS.loaded {
-            return AnyView(shell("Vital signs") {
-                HStack(spacing: 10) {
+            return AnyView(shell("Health monitor") {
+                HStack(spacing: 8) {
                     tile(tint: NunaPalette.effortModerate) {
-                        Image(systemName: "hourglass").font(.nuna(size: 14, weight: .heavy)).foregroundStyle(NunaPalette.effortModerate)
+                        Image(systemName: "hourglass").font(.nuna(size: 11, weight: .heavy)).foregroundStyle(NunaPalette.effortModerate)
                     }
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Calibrating").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.effortModerate)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text("Calibrating").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.effortModerate)
                         Text(verbatim: "\(nights)/\(VitalRange.calibrationNights)").font(.nuna(size: 11, weight: .semibold))
                             .foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
@@ -108,14 +110,14 @@ struct NunaMonitorPackCard: View {
         let v = vitals
         let allIn = v.known > 0 && v.within == v.known
         let tint = v.known == 0 ? NunaPalette.textMuted : (allIn ? NunaPalette.charge : NunaPalette.warning)
-        return shell("Vital signs") {
-            HStack(spacing: 10) {
+        return shell("Health monitor") {
+            HStack(spacing: 8) {
                 tile(tint: tint) {
-                    Image(systemName: v.known == 0 ? "minus" : (allIn ? "checkmark" : "exclamationmark")).font(.nuna(size: 14, weight: .heavy)).foregroundStyle(tint)
+                    Image(systemName: v.known == 0 ? "minus" : (allIn ? "checkmark" : "exclamationmark")).font(.nuna(size: 11, weight: .heavy)).foregroundStyle(tint)
                 }
-                VStack(alignment: .leading, spacing: 2) {
+                VStack(alignment: .leading, spacing: 0) {
                     Text(v.known == 0 ? "No data" : (allIn ? "Within range" : "Outside range"))
-                        .font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(tint)
+                        .font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(tint)
                         .lineLimit(2).fixedSize(horizontal: false, vertical: true)
                     if v.known > 0 {
                         Text(verbatim: String(localized: "\(v.within)/\(Self.monitored) Metrics")).font(.nuna(size: 11, weight: .semibold))
@@ -129,12 +131,12 @@ struct NunaMonitorPackCard: View {
     private var stressTile: AnyView {
         if let nights = stressNights {
             return AnyView(shell("Stress monitor") {
-                HStack(spacing: 10) {
+                HStack(spacing: 8) {
                     tile(tint: NunaPalette.effortModerate) {
-                        Image(systemName: "hourglass").font(.nuna(size: 14, weight: .heavy)).foregroundStyle(NunaPalette.effortModerate)
+                        Image(systemName: "hourglass").font(.nuna(size: 11, weight: .heavy)).foregroundStyle(NunaPalette.effortModerate)
                     }
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Calibrating").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.effortModerate)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text("Calibrating").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.effortModerate)
                         Text(verbatim: "\(nights)/\(StressEngine.requiredNights)").font(.nuna(size: 11, weight: .semibold))
                             .foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
@@ -145,13 +147,13 @@ struct NunaMonitorPackCard: View {
         let tint: Color = r.map { NunaStressBars.color($0.value) } ?? NunaPalette.textMuted
         let word: LocalizedStringKey = r.map { $0.value < 1 ? "Low" : ($0.value < 2 ? "Medium" : "High") } ?? "No data"
         return AnyView(shell("Stress monitor") {
-            HStack(spacing: 10) {
+            HStack(spacing: 8) {
                 tile(tint: tint) {
                     Text(verbatim: r.map { String(format: "%.1f", locale: AppLanguage.activeLocale, $0.value) } ?? "–")
-                        .font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(tint).minimumScaleFactor(0.7).lineLimit(1)
+                        .font(.nuna(size: 12.5, weight: .bold, design: NunaType.design)).foregroundStyle(tint).minimumScaleFactor(0.7).lineLimit(1)
                 }
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(word).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(tint)
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(word).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(tint)
                     if let time = r?.time {
                         Text(verbatim: time).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
@@ -163,8 +165,8 @@ struct NunaMonitorPackCard: View {
     /// The small rounded square that carries the icon or the number, tinted by status.
     private func tile<Content: View>(tint: Color, @ViewBuilder _ content: () -> Content) -> some View {
         content()
-            .frame(width: 34, height: 34)
-            .background(tint.opacity(0.16), in: RoundedRectangle(cornerRadius: NunaRadius.iconTile, style: .continuous))
+            .frame(width: 24, height: 24)
+            .background(tint.opacity(0.18), in: RoundedRectangle(cornerRadius: 5, style: .continuous))
     }
 }
 #endif
