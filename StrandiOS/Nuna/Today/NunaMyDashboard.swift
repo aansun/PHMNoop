@@ -69,6 +69,7 @@ extension NunaTrendPage {
         case .vo2max: return String(localized: "VO₂ max")
         case .skinTemp: return String(localized: "Skin temperature")
         case .weight: return String(localized: "Weight")
+        case .leanBodyMass: return String(localized: "Lean body mass")
         case .vitality: return String(localized: "Vitality")
         case .spo2: return String(localized: "Blood oxygen")
         case .stressTotal: return String(localized: "Total day stress")
@@ -149,7 +150,7 @@ extension NunaTodayView {
         case .restorative:
             figure = make(Dictionary(uniqueKeysWithValues: h.deepMin.keys.compactMap { k in h.remMin[k].map { (k, h.deepMin[k]! + $0) } }), good: true, format: hm)
         case .debt: figure = make(h.debtMin, good: false, format: hm)
-        case .hrZonesLow, .hrZonesHigh, .hrZonesAll, .strengthTime, .totalVolumeLoad, .steps, .calories, .hrv, .rhr, .respiratory, .vo2max, .skinTemp, .weight, .vitality, .spo2,
+        case .hrZonesLow, .hrZonesHigh, .hrZonesAll, .strengthTime, .totalVolumeLoad, .steps, .calories, .hrv, .rhr, .respiratory, .vo2max, .skinTemp, .weight, .leanBodyMass, .vitality, .spo2,
              .stressTotal, .stressNonActivity, .stressSleep: break
         }
         return NunaLinkRow(id: "page." + page.rawValue, title: page.titleText, subtitle: page.section.titleText, value: figure.0,

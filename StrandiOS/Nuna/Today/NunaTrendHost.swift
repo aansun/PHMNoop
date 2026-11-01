@@ -7,7 +7,7 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
     case effort, steps, hrZonesLow, hrZonesHigh, hrZonesAll, strengthTime, totalVolumeLoad, calories, vo2max
     case charge, hrv, rhr, respiratory, skinTemp
     case restPerformance, timeInBed, hoursNeededHours, hoursNeededPct, consistency, restorative, efficiency, debt
-    case weight, vitality, spo2, stressTotal, stressNonActivity, stressSleep
+    case weight, leanBodyMass, vitality, spo2, stressTotal, stressNonActivity, stressSleep
 
     var id: String { rawValue }
 
@@ -24,7 +24,7 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         switch self {
         case .effort, .steps, .calories, .hrZonesLow, .hrZonesHigh, .hrZonesAll, .strengthTime, .totalVolumeLoad, .vo2max: return .effort
         case .charge, .hrv, .rhr, .respiratory, .skinTemp: return .charge
-        case .weight, .vitality, .spo2, .stressTotal, .stressNonActivity, .stressSleep: return .other
+        case .weight, .leanBodyMass, .vitality, .spo2, .stressTotal, .stressNonActivity, .stressSleep: return .other
         default: return .rest
         }
     }
@@ -54,6 +54,7 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case .vo2max: return "VO₂ max"
         case .skinTemp: return "Skin temperature"
         case .weight: return "Weight"
+        case .leanBodyMass: return "Lean body mass"
         case .vitality: return "Vitality"
         case .spo2: return "Blood oxygen"
         case .stressTotal: return "Total day stress"
@@ -87,6 +88,7 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case .vo2max: return "met:vo2-max"
         case .skinTemp: return "vital:temp"
         case .weight: return "met:weight"
+        case .leanBodyMass: return "met:lean-body-mass"
         case .vitality: return "sparkles"
         case .spo2: return "vital:spo2"
         case .stressTotal: return NunaStressCategory.total.icon
@@ -141,6 +143,7 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case .vo2max: NunaLineTrendView.forMetric("vo2max_est", endingDaysAgo: endingDaysAgo)
         case .skinTemp: NunaLineTrendView.forMetric("skin_temp", endingDaysAgo: endingDaysAgo)
         case .weight: NunaLineTrendView.forMetric("weight", endingDaysAgo: endingDaysAgo)
+        case .leanBodyMass: NunaLeanMassTrendView()
         case .vitality: NunaLineTrendView.forMetric("vitality", endingDaysAgo: endingDaysAgo)
         case .spo2: NunaLineTrendView.forMetric("spo2", endingDaysAgo: endingDaysAgo)
         case .stressTotal: NunaStressTrendView(category: .total)
