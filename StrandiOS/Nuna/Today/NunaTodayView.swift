@@ -409,6 +409,9 @@ struct NunaTodayView: View {
         .sheet(isPresented: $showDate) {
             NunaDateSheet(dayOffset: $model.dayOffset).nunaSheetChrome(detents: [.height(470)])
         }
+        .onReceive(NotificationCenter.default.publisher(for: .nunaWorkoutsChanged)) { _ in
+            Task { await intelligence.analyzeRecent(); await model.load(repo: repo, profile: profile) }
+        }
         .sheet(isPresented: $showManual) {
             NunaManualWorkoutSheet(editing: nil) { row, replacing in
                 Task {

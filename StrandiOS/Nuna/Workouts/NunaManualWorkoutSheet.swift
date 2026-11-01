@@ -11,6 +11,9 @@ struct NunaManualWorkoutSheet: View {
     /// A distance worked out from steps and height, offered while the session has none (a treadmill).
     var suggestedDistanceM: Double? = nil
     let onSave: (_ row: WorkoutRow, _ replacing: WorkoutRow?) -> Void
+    /// A workout the detector found: the times and heart rate come filled in and the wearer only picks the activity (or deletes it).
+    var detected: AutoWorkoutSuggestion? = nil
+    var onDelete: (() -> Void)? = nil
 
     @Environment(\.dismiss) private var dismiss
     @EnvironmentObject private var repo: Repository
@@ -37,14 +40,16 @@ struct NunaManualWorkoutSheet: View {
     }
     private var distanceUnit: String { UnitFormatter.distanceUnit(distanceUnitSystem) }
 
-    init(editing: WorkoutRow? = nil, suggestedDistanceM: Double? = nil, onSave: @escaping (_ row: WorkoutRow, _ replacing: WorkoutRow?) -> Void) {
+    init(editing: WorkoutRow? = nil, suggestedDistanceM: Double? = nil, detected: AutoWorkoutSuggestion? = nil, onDelete: (() -> Void)? = nil,
+         onSave: @escaping (_ row: WorkoutRow, _ replacing: WorkoutRow?) -> Void) {
         self.editing = editing; self.onSave = onSave; self.suggestedDistanceM = suggestedDistanceM
+        self.detected = detected; self.onDelete = onDelete
         let e = editing
-        _sport = State(initialValue: e.map { WorkoutSource.editableSport($0.sport) } ?? "")
+        _sport = State(initialValue: e.map { WorkoutSource.editableSport($0.sport) } ?? detected?.sport ?? "")
         let defaultEnd = Date()
-        _start = State(initialValue: e.map { Date(timeIntervalSince1970: TimeInterval($0.startTs)) } ?? defaultEnd.addingTimeInterval(-45 * 60))
-        _end = State(initialValue: e.map { Date(timeIntervalSince1970: TimeInterval($0.endTs)) } ?? defaultEnd)
-        _avgHrText = State(initialValue: e?.avgHr.map(String.init) ?? "")
+        _start = State(initialValue: e.map { Date(timeIntervalSince1970: TimeInterval($0.startTs)) } ?? detected.map { Date(timeIntervalSince1970: TimeInterval($0.startSec)) } ?? defaultEnd.addingTimeInterval(-45 * 60))
+        _end = State(initialValue: e.map { Date(timeIntervalSince1970: TimeInterval($0.endTs)) } ?? detected.map { Date(timeIntervalSince1970: TimeInterval($0.endSec)) } ?? defaultEnd)
+        _avgHrText = State(initialValue: e?.avgHr.map(String.init) ?? detected.map { String($0.avgBpm) } ?? "")
         _kcalText = State(initialValue: e?.energyKcal.map { String(Int($0.rounded())) } ?? "")
         let body = UnitSystem(rawValue: UserDefaults.standard.string(forKey: UnitPrefs.systemKey) ?? "") ?? .metric
         let sys = UnitPrefs.resolveDistance(system: body, override: UserDefaults.standard.string(forKey: UnitPrefs.distanceSystemKey) ?? "")
@@ -78,7 +83,8 @@ struct NunaManualWorkoutSheet: View {
                     if editing == nil {
                         HStack(alignment: .center, spacing: 14) {
                             Image(systemName: "sparkle").font(.nuna(size: 17, weight: .regular)).foregroundStyle(Self.info).frame(width: 26)
-                            Text("Adding a past activity helps PHMN recognize and classify your future workouts more accurately.")
+                            Text(detected == nil ? "Adding a past activity helps PHMN recognize and classify your future workouts more accurately."
+                                 : "PHMN detected this activity. Pick what it was and save it, or delete it if the detection was wrong.")
                                 .font(.nuna(size: 14, weight: .regular)).foregroundStyle(Self.info).fixedSize(horizontal: false, vertical: true).textCase(nil)
                         }
                         .padding(.horizontal, 16).padding(.vertical, 14).frame(maxWidth: .infinity, alignment: .leading)
@@ -141,13 +147,23 @@ struct NunaManualWorkoutSheet: View {
                 .padding(.horizontal, NunaSpacing.screenH).padding(.top, 16).padding(.bottom, 24)
             }
             .scrollIndicators(.hidden).scrollDismissesKeyboard(.interactively)
-            Button { save() } label: {
-                Text(editing == nil ? "Save" : "Save changes").font(.nuna(size: 14, weight: .black)).tracking(nunaTrackingHead(1.6)).textCase(.uppercase)
-                    .foregroundStyle(canSave ? NunaPalette.onAccent : NunaPalette.textMuted)
-                    .frame(maxWidth: .infinity).frame(height: 46)
-                    .background(canSave ? NunaPalette.accent : Self.raised, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            HStack(spacing: 10) {
+                if let onDelete {
+                    Button { onDelete(); dismiss() } label: {
+                        HStack(spacing: 8) { Image(systemName: "trash").font(.nuna(size: 13, weight: .bold)); Text("Delete") }
+                            .font(.nuna(size: 14, weight: .black)).tracking(nunaTrackingHead(1.6)).textCase(.uppercase)
+                            .foregroundStyle(NunaPalette.alertText).frame(maxWidth: .infinity).frame(height: 46)
+                            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(NunaPalette.alertText.opacity(0.6), lineWidth: 1.5))
+                    }.buttonStyle(.plain)
+                }
+                Button { save() } label: {
+                    Text(editing == nil ? "Save" : "Save changes").font(.nuna(size: 14, weight: .black)).tracking(nunaTrackingHead(1.6)).textCase(.uppercase)
+                        .foregroundStyle(canSave ? NunaPalette.onAccent : NunaPalette.textMuted)
+                        .frame(maxWidth: .infinity).frame(height: 46)
+                        .background(canSave ? NunaPalette.accent : Self.raised, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                }
+                .buttonStyle(.plain).disabled(!canSave)
             }
-            .buttonStyle(.plain).disabled(!canSave)
             .padding(.horizontal, 24).padding(.vertical, 12)
         }
         .background(NunaBackdrop())
@@ -155,7 +171,7 @@ struct NunaManualWorkoutSheet: View {
         .preferredColorScheme(NunaTheme.colorScheme)
         .toolbar { ToolbarItemGroup(placement: .keyboard) { Spacer(); Button("Done") { focus = nil } } }
         .sheet(isPresented: $showSport) {
-            NunaSportPicker(selection: $sport, allowsCustom: true, includesRest: editing == nil) { showSport = false }.nunaSheetChrome(detents: [.large])
+            NunaSportPicker(selection: $sport, allowsCustom: true, includesRest: editing == nil && detected == nil) { showSport = false }.nunaSheetChrome(detents: [.large])
         }
     }
 
@@ -165,7 +181,7 @@ struct NunaManualWorkoutSheet: View {
 
     private var header: some View {
         ZStack {
-            Text(editing == nil ? "Add activity" : "Edit activity").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingHead(1.2))
+            Text(detected != nil ? "Activity detected" : (editing == nil ? "Add activity" : "Edit activity")).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingHead(1.2))
                 .textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
             HStack {
                 Button { dismiss() } label: {

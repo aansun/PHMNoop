@@ -4,6 +4,11 @@ import StrandDesign
 import StrandAnalytics
 import WhoopStore
 
+extension Notification.Name {
+    /// A workout was saved from outside Today's own sheets (a detected one): Today reloads its day.
+    static let nunaWorkoutsChanged = Notification.Name("nunaWorkoutsChanged")
+}
+
 /// "Today's activities": one card with a row for the night's sleep and every workout of the day in the order they happened. Each row is a
 /// coloured tile with the figure that matters (sleep time, Effort), the name, and when it began and ended. A row opens its own detail; the
 /// chevron at the top right opens all workouts. Nothing is cut off: a day with six activities shows six rows.
@@ -22,6 +27,10 @@ struct NunaTodayActivities: View {
     @EnvironmentObject private var router: NavRouter
     @State private var night: (onset: Date, wake: Date)?
     @State private var naps: [(dayKey: String, nap: NunaNap)] = []
+    /// A workout the detector found that is not logged yet (Auto-detect on): shown as its own row until it is saved or deleted.
+    @AppStorage(PuffinExperiment.autoDetectWorkoutsKey) private var autoDetect = false
+    @State private var detected: AutoWorkoutSuggestion?
+    @State private var confirming = false
 
     private struct Item: Identifiable {
         enum Kind { case sleep, workout(WorkoutRow), nap(String, NunaNap) }
@@ -77,6 +86,7 @@ struct NunaTodayActivities: View {
                 } else {
                     ForEach(rows) { item in row(item) }
                 }
+                if let detected { detectedRow(detected) }
             }
             if onAdd != nil || onStart != nil {
                 HStack(spacing: 8) {
@@ -92,6 +102,57 @@ struct NunaTodayActivities: View {
             if includesSleep { await loadNight() }
             else { night = nil; naps = [] }
         }
+        .task(id: "\(autoDetect)-\(repo.refreshSeq)-\(dayStart.timeIntervalSince1970)") { await loadDetected() }
+        .sheet(isPresented: $confirming) {
+            if let s = detected {
+                NunaManualWorkoutSheet(detected: s, onDelete: { repo.dismissDetectedSuggestion(s.workout); detected = nil }) { row, _ in
+                    Task {
+                        await repo.saveManualWorkout(row)
+                        await repo.refresh()
+                        NotificationCenter.default.post(name: .nunaWorkoutsChanged, object: nil)
+                    }
+                    detected = nil
+                }
+                .nunaSheetChrome(detents: [.large])
+            }
+        }
+    }
+
+    /// The detector's suggestion, when it began on the day on show.
+    private func loadDetected() async {
+        #if DEBUG
+        if CommandLine.arguments.contains("--demo-detected") {
+            // A made-up detection an hour ago, to look at the row and the check without waiting for a real one.
+            let end = Int(Date().timeIntervalSince1970) - 600
+            let w = DetectedWorkout(startSec: end - 38 * 60, endSec: end, avgBpm: 128, peakBpm: 151, durationMin: 38)
+            let s = AutoWorkoutSuggestion(workout: w, sport: "Walking", confidence: 0.5, alternatives: ["Running", "Hiking"])
+            detected = Calendar.current.isDate(Date(timeIntervalSince1970: TimeInterval(w.startSec)), inSameDayAs: dayStart) ? s : nil
+            return
+        }
+        #endif
+        guard autoDetect, let s = await repo.autoDetectSuggestion() else { detected = nil; return }
+        let start = Date(timeIntervalSince1970: TimeInterval(s.startSec))
+        detected = Calendar.current.isDate(start, inSameDayAs: dayStart) ? s : nil
+    }
+
+    /// "Activity detected" with a Process button: a dark outlined tile, the words, and the way into the check.
+    private func detectedRow(_ s: AutoWorkoutSuggestion) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: "figure.arms.open").font(.nuna(size: 24, weight: .regular)).foregroundStyle(Color.white)
+                .frame(width: 100, height: 40)
+                .background(Color.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).strokeBorder(Color.white.opacity(0.35), lineWidth: 1))
+            Text("Activity detected").font(.nuna(size: 12.5, weight: .heavy)).tracking(1.1).foregroundStyle(NunaPalette.textPrimary)
+                .lineLimit(2).multilineTextAlignment(.leading)
+            Spacer(minLength: 6)
+            Button { confirming = true } label: {
+                Text("Process").font(.nuna(size: 12, weight: .heavy)).tracking(1.1).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                    .frame(width: 96, height: 40)
+                    .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).strokeBorder(NunaPalette.textPrimary, lineWidth: 1.5))
+            }.buttonStyle(.plain)
+        }
+        .padding(.horizontal, 6).padding(.vertical, 6)
+        .background(NunaPalette.ink.opacity(0.09), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
     private func actionButton(_ title: LocalizedStringKey, icon: String, action: @escaping () -> Void) -> some View {
