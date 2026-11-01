@@ -242,9 +242,10 @@ struct NunaStressDayReader {
 
 enum NunaStressBand {
     /// Blue, green and amber, the same three the gauge runs through, so the gauge, its level word and these bars read as one scale.
-    static let low = NunaPalette.effortModerate
-    static let medium = NunaPalette.charge
-    static let high = NunaPalette.warning
+    /// In WHP the bars follow the WHOOP stress page: light Recovery Blue, teal and an orange for high.
+    static var low: Color { NunaThemePrefs.skin == .whp ? NunaPalette.recoveryBlue : NunaPalette.effortModerate }
+    static var medium: Color { NunaPalette.charge }
+    static var high: Color { NunaThemePrefs.skin == .whp ? Color(hex: "#FFA31A") : NunaPalette.warning }
 
     /// The band a 0 to 3 reading is in.
     static func color(for level: Double) -> Color { level < 1 ? low : (level < 2 ? medium : high) }
@@ -258,7 +259,7 @@ enum NunaStressBand {
 /// "■ LOW  ■ MEDIUM  ■ HIGH"
 struct NunaStressLegend: View {
     var body: some View {
-        HStack(spacing: 14) {
+        HStack(spacing: 18) {
             item(NunaStressBand.high, "High")
             item(NunaStressBand.medium, "Medium")
             item(NunaStressBand.low, "Low")
@@ -266,8 +267,8 @@ struct NunaStressLegend: View {
     }
 
     private func item(_ color: Color, _ title: LocalizedStringKey) -> some View {
-        HStack(spacing: 6) {
-            RoundedRectangle(cornerRadius: 3, style: .continuous).fill(color).frame(width: 10, height: 10)
+        HStack(spacing: 8) {
+            RoundedRectangle(cornerRadius: 1.5, style: .continuous).fill(color).frame(width: 9, height: 9)
             Text(title).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                 .foregroundStyle(NunaPalette.textSecondary)
         }
@@ -382,6 +383,9 @@ struct NunaStressTrendView: View {
     @State private var range = 7
     @State private var pageOffset = 0
     @State private var todayResult: WhoopStress.Result?
+    /// The day under the finger: its bar is lit, the others dimmed, and its three figures replace the average at the top.
+    @State private var picked: Date?
+    @State private var touchBeganOnPicked: Bool?
     private static let maxPages = 52
 
     private struct Bar: Identifiable {
@@ -434,6 +438,9 @@ struct NunaStressTrendView: View {
         NunaDetailScreen("Trend view", centersTitle: true) {
             NunaTrendNameBox(icon: category.icon, title: category.trendTitle)
             HStack(alignment: .top, spacing: 12) {
+                if let picked, let zones = bars.first(where: { cal.isDate($0.date, inSameDayAs: picked) })?.zones {
+                    pickedBlock(picked, zones)
+                } else {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Avg. high stress").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.textPrimary)
@@ -441,30 +448,33 @@ struct NunaStressTrendView: View {
                         Text(verbatim: average.map(NunaStressBand.hm) ?? "–").font(.nuna(size: 40, weight: .semibold, design: NunaType.design))
                             .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
                         if average != nil {
-                            Text("hr").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                            Text("hr").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                         }
                     }
+                    if let average, let prior, prior > 0 {
+                        let up = average >= prior
+                        let tint = up ? NunaStressBand.high : NunaPalette.charge
+                        HStack(spacing: 5) {
+                            Image(systemName: up ? "arrowtriangle.up.fill" : "arrowtriangle.down.fill").font(.nuna(size: 8, weight: .bold))
+                            Text(verbatim: NunaStressBand.hm(abs(average - prior))).font(.nuna(size: 13, weight: .bold, design: NunaType.design)).textCase(nil)
+                        }
+                        .foregroundStyle(tint).padding(.horizontal, 8).frame(height: 24)
+                        .background(tint.opacity(0.16), in: RoundedRectangle(cornerRadius: 5, style: .continuous))
+                        .padding(.top, 6)
+                    }
+                }
                 }
                 Spacer(minLength: 0)
-                VStack(alignment: .trailing, spacing: 14) {
-                    NunaRangeSwitch(range: $range) { pageOffset = 0 }
+                VStack(alignment: .trailing, spacing: 22) {
+                    NunaRangeSwitch(range: $range) { pageOffset = 0; picked = nil }
                     NunaDateStepper(label: dateRange, canGoBack: pageOffset < Self.maxPages, canGoForward: pageOffset > 0,
-                                    back: { pageOffset += 1 }, forward: { pageOffset = max(0, pageOffset - 1) })
+                                    back: { pageOffset += 1; picked = nil }, forward: { pageOffset = max(0, pageOffset - 1); picked = nil })
                 }
             }
             .padding(.horizontal, 2)
-            if let average, let prior, prior > 0 {
-                let change = (average - prior) / prior * 100
-                HStack(spacing: 0) {
-                    NunaChip(verbatim: (change >= 0 ? "▲ " : "▼ ") + "\(Int(abs(change).rounded()))% " + String(localized: "vs. prior period"),
-                             color: change > 0 ? NunaPalette.warning : NunaPalette.charge)
-                    Spacer(minLength: 0)
-                }
-                .padding(.horizontal, 2)
-            }
-            Text(verbatim: summary(average: average, prior: prior)).font(.nuna(size: 13.5, weight: .semibold))
-                .foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.horizontal, 2)
-            HStack { Spacer(minLength: 0); NunaStressLegend() }.padding(.horizontal, 2)
+            Text(verbatim: summary(average: average, prior: prior)).font(.nuna(size: 16, weight: .regular))
+                .foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.horizontal, 8).padding(.top, 6)
+            HStack { NunaStressLegend(); Spacer(minLength: 0) }.padding(.horizontal, 2).padding(.top, 6)
             if bars.isEmpty {
                 Text(history.loading ? "Working out your days…" : "No stress data in this period")
                     .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
@@ -493,6 +503,41 @@ struct NunaStressTrendView: View {
             await history.ensure(days: windowDays + (range <= 30 ? priorDays : []), repo: repo)
         }
     }
+
+    /// The touched day: its date, then the high, medium and low time, each a figure in its band's colour over its name.
+    private func pickedBlock(_ date: Date, _ zones: NunaStressZones) -> some View {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE, MMM d")
+        let rows: [(minutes: Double, color: Color, name: LocalizedStringKey)] = [
+            (zones.high, NunaStressBand.high, "High"), (zones.medium, NunaStressBand.medium, "Medium"), (zones.low, NunaStressBand.low, "Low")]
+        return VStack(alignment: .leading, spacing: 6) {
+            Text(verbatim: f.string(from: date)).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+            ForEach(Array(rows.enumerated()), id: \.offset) { _, row in
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Text(verbatim: NunaStressBand.hm(row.minutes)).font(.nuna(size: 24, weight: .semibold, design: NunaType.design)).foregroundStyle(row.color)
+                    Text("hr").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(row.color).textCase(nil)
+                    Text(row.name).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                }
+            }
+        }
+    }
+
+    /// Touching a bar picks its day (dragging moves along the days), and touching the one already picked lets it go.
+    private func touchLayer(_ proxy: ChartProxy, _ frame: CGRect, day: @escaping (CGFloat) -> Date?) -> some View {
+        Rectangle().fill(Color.clear).contentShape(Rectangle()).frame(width: frame.width, height: frame.height)
+            .position(x: frame.midX, y: frame.midY)
+            .gesture(DragGesture(minimumDistance: 0)
+                .onChanged { g in
+                    let hit = day(g.location.x - frame.minX)
+                    if touchBeganOnPicked == nil { touchBeganOnPicked = picked != nil && hit.map { cal.isDate($0, inSameDayAs: picked!) } == true }
+                    if let hit { picked = hit }
+                }
+                .onEnded { g in
+                    if touchBeganOnPicked == true, abs(g.translation.width) < 6 { picked = nil }
+                    touchBeganOnPicked = nil
+                })
+    }
+
+    private func dim(_ date: Date) -> Double { picked == nil || cal.isDate(picked!, inSameDayAs: date) ? 1 : 0.3 }
 
     private var todayLabel: String {
         let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("d MMM")
@@ -528,9 +573,9 @@ struct NunaStressTrendView: View {
 
     @AxisContentBuilder private var percentAxis: some AxisContent {
         AxisMarks(position: .leading, values: [0, 25, 50, 75, 100]) { value in
-            AxisGridLine().foregroundStyle(NunaPalette.hairline.opacity(0.5))
+            AxisGridLine().foregroundStyle(NunaPalette.textMuted.opacity(0.25))
             AxisValueLabel {
-                if let v = value.as(Double.self) { Text(verbatim: "\(Int(v))%").font(.nuna(size: 12, weight: .heavy)).foregroundStyle(NunaPalette.textMuted) }
+                if let v = value.as(Double.self) { Text(verbatim: "\(Int(v))%").font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil) }
             }
         }
     }
@@ -542,12 +587,20 @@ struct NunaStressTrendView: View {
         let all = windowDays
         return Chart {
             ForEach(bars) { bar in
-                BarMark(x: .value("Day", Self.key(bar.date)), y: .value("Low", share(bar.zones.low, of: bar.zones)), width: .ratio(0.62))
-                    .foregroundStyle(NunaStressBand.low).cornerRadius(2)
-                BarMark(x: .value("Day", Self.key(bar.date)), y: .value("Medium", share(bar.zones.medium, of: bar.zones)), width: .ratio(0.62))
-                    .foregroundStyle(NunaStressBand.medium).cornerRadius(2)
-                BarMark(x: .value("Day", Self.key(bar.date)), y: .value("High", share(bar.zones.high, of: bar.zones)), width: .ratio(0.62))
-                    .foregroundStyle(NunaStressBand.high).cornerRadius(2)
+                BarMark(x: .value("Day", Self.key(bar.date)), y: .value("Low", share(bar.zones.low, of: bar.zones)), width: .ratio(0.36))
+                    .foregroundStyle(NunaStressBand.low).opacity(dim(bar.date))
+                BarMark(x: .value("Day", Self.key(bar.date)), y: .value("Medium", share(bar.zones.medium, of: bar.zones)), width: .ratio(0.36))
+                    .foregroundStyle(NunaStressBand.medium).opacity(dim(bar.date))
+                BarMark(x: .value("Day", Self.key(bar.date)), y: .value("High", share(bar.zones.high, of: bar.zones)), width: .ratio(0.36))
+                    .foregroundStyle(NunaStressBand.high).opacity(dim(bar.date))
+                    .annotation(position: .top, spacing: 4, overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
+                        // The day's high-stress time over its bar, in the colour of the band.
+                        Text(verbatim: NunaStressBand.hm(bar.zones.high)).font(.nuna(size: 12, weight: .bold, design: NunaType.design)).textCase(nil)
+                            .foregroundStyle(NunaStressBand.high).opacity(dim(bar.date))
+                    }
+            }
+            if let picked, let bar = bars.first(where: { cal.isDate($0.date, inSameDayAs: picked) }) {
+                RuleMark(x: .value("Picked", Self.key(bar.date))).foregroundStyle(Color.white.opacity(0.85)).lineStyle(StrokeStyle(lineWidth: 1, dash: [2, 3]))
             }
         }
         .chartYScale(domain: 0...100)
@@ -561,7 +614,17 @@ struct NunaStressTrendView: View {
             }
         }
         .chartYAxis { percentAxis }
-        .frame(height: 260)
+        .chartOverlay { proxy in
+            GeometryReader { geo in
+                if let frame = proxy.plotFrame.map({ geo[$0] }) {
+                    touchLayer(proxy, frame) { x in
+                        guard let k: String = proxy.value(atX: x) else { return nil }
+                        return bars.first { Self.key($0.date) == k }?.date
+                    }
+                }
+            }
+        }
+        .frame(height: 260).padding(.top, 22)
         .accessibilityLabel(Text("Stress share chart"))
     }
 
@@ -571,7 +634,7 @@ struct NunaStressTrendView: View {
             Text(verbatim: { f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE"); return f.string(from: date) }())
             Text(verbatim: { f.setLocalizedDateFormatFromTemplate("d"); return f.string(from: date) }())
         }
-        .font(.nuna(size: 12, weight: .heavy)).foregroundStyle(NunaPalette.textMuted)
+        .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
     }
 
     // MARK: Six months: each month's average split, drawn as a line per band over the faint days
@@ -657,15 +720,29 @@ struct NunaStressTrendView: View {
         return Chart {
             ForEach(bars) { bar in
                 BarMark(x: .value("Day", bar.date, unit: .day), y: .value("Low", share(bar.zones.low, of: bar.zones)), width: .automatic)
-                    .foregroundStyle(NunaStressBand.low)
+                    .foregroundStyle(NunaStressBand.low).opacity(dim(bar.date))
                 BarMark(x: .value("Day", bar.date, unit: .day), y: .value("Medium", share(bar.zones.medium, of: bar.zones)), width: .automatic)
-                    .foregroundStyle(NunaStressBand.medium)
+                    .foregroundStyle(NunaStressBand.medium).opacity(dim(bar.date))
                 BarMark(x: .value("Day", bar.date, unit: .day), y: .value("High", share(bar.zones.high, of: bar.zones)), width: .automatic)
-                    .foregroundStyle(NunaStressBand.high)
+                    .foregroundStyle(NunaStressBand.high).opacity(dim(bar.date))
+            }
+            if let picked {
+                RuleMark(x: .value("Picked", cal.date(byAdding: .hour, value: 12, to: cal.startOfDay(for: picked)) ?? picked))
+                    .foregroundStyle(Color.white.opacity(0.85)).lineStyle(StrokeStyle(lineWidth: 1, dash: [2, 3]))
             }
         }
         .chartYScale(domain: 0...100)
         .chartXScale(domain: firstDay...end)
+        .chartOverlay { proxy in
+            GeometryReader { geo in
+                if let frame = proxy.plotFrame.map({ geo[$0] }) {
+                    touchLayer(proxy, frame) { x in
+                        guard let touched: Date = proxy.value(atX: x) else { return nil }
+                        return bars.min { abs($0.date.timeIntervalSince(touched) + 43200) < abs($1.date.timeIntervalSince(touched) + 43200) }?.date
+                    }
+                }
+            }
+        }
         .chartXAxis {
             AxisMarks(values: .automatic(desiredCount: 5)) { _ in
                 AxisGridLine().foregroundStyle(NunaPalette.hairline.opacity(0.5))
