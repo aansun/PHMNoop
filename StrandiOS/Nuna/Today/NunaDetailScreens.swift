@@ -67,7 +67,7 @@ struct NunaChargeDetailView: View {
                     NunaDivider()
                     signal("Respiratory rate", "met:respiratory-rate", key: "resp_rate", value: day.respiratory, average: average30(respSeries), decimals: 1, good: nil)
                     NunaDivider()
-                    signal("Sleep performance", "moon", key: "sleep_performance", value: day.rest ?? restSeries.latest(asOf: cutoff)?.value,
+                    signal("Sleep performance", "met:sleep-performance", key: "sleep_performance", value: day.rest ?? restSeries.latest(asOf: cutoff)?.value,
                            average: average30(restSeries), good: true)
                     NunaDivider()
                     signal("Skin temperature", "vital:temp", key: "skin_temp", value: skinSeries.latest(asOf: cutoff)?.value,
@@ -299,17 +299,17 @@ struct NunaEffortDetailView: View {
         return NunaSignalPanel {
             VStack(spacing: 0) {
                 NavigationLink { NunaTrendHost(initial: .hrZonesLow) } label: {
-                    NunaSignalRow(title: "Heart rate zones 1–3", icon: "heart.circle", value: now.map { Self.hm($0.easy) },
+                    NunaSignalRow(title: "Heart rate zones 1–3", icon: "met:heart-rate-zones-1-3", value: now.map { Self.hm($0.easy) },
                                   trend: trend(now?.easy, zones.average(easy: true, before: dayKey), good: true, format: Self.hm))
                 }.buttonStyle(.plain)
                 NunaDivider()
                 NavigationLink { NunaTrendHost(initial: .hrZonesHigh) } label: {
-                    NunaSignalRow(title: "Heart rate zones 4–5", icon: "bolt.heart", value: now.map { Self.hm($0.hard) },
+                    NunaSignalRow(title: "Heart rate zones 4–5", icon: "met:heart-rate-zones-4-5", value: now.map { Self.hm($0.hard) },
                                   trend: trend(now?.hard, zones.average(easy: false, before: dayKey), good: true, format: Self.hm))
                 }.buttonStyle(.plain)
                 if showsEverydayMovement {
                     NunaDivider()
-                    NunaSignalRow(title: "Everyday movement", icon: "figure.walk", value: everydayDay.map { UnitFormatter.effortDisplay($0, scale: scale) }, trend: nil)
+                    NunaSignalRow(title: "Everyday movement", icon: "met:steps", value: everydayDay.map { UnitFormatter.effortDisplay($0, scale: scale) }, trend: nil)
                 }
                 NunaDivider()
                 resting

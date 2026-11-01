@@ -265,13 +265,13 @@ struct NunaRestDetailView: View {
         }
         return NunaSignalPanel {
             VStack(spacing: 0) {
-                row("Hours vs. needed", "bed.double", model.hoursVsNeeded(night), sufficientFrom: 70, optimalFrom: 85, page: .hoursNeededPct)
+                row("Hours vs. needed", "met:hours-vs-needed", model.hoursVsNeeded(night), sufficientFrom: 70, optimalFrom: 85, page: .hoursNeededPct)
                 NunaDivider()
-                row("Sleep consistency", "calendar", model.consistency(night), sufficientFrom: 70, optimalFrom: 80, page: .consistency)
+                row("Sleep consistency", "met:sleep-consistency", model.consistency(night), sufficientFrom: 70, optimalFrom: 80, page: .consistency)
                 NunaDivider()
-                row("Sleep efficiency", "gauge.with.dots.needle.67percent", model.efficiency(night), sufficientFrom: 70, optimalFrom: 85, page: .efficiency)
+                row("Sleep efficiency", "met:sleep-efficiency", model.efficiency(night), sufficientFrom: 70, optimalFrom: 85, page: .efficiency)
                 NunaDivider()
-                row("Restorative sleep", "moon.zzz", model.restorative(night), sufficientFrom: 50, optimalFrom: 75, page: .restorative)
+                row("Restorative sleep", "met:restorative-sleep", model.restorative(night), sufficientFrom: 50, optimalFrom: 75, page: .restorative)
             }
             NunaLevelLegend().padding(.top, 8)
         }

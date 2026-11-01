@@ -12,7 +12,7 @@ struct NunaSignalRow: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            Image(systemName: icon).font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
+            NunaIcon(name: icon, size: 18, weight: .regular).foregroundStyle(NunaPalette.textSecondary).frame(width: 30)
             Text(title).font(.nuna(size: 13.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 .lineLimit(1).minimumScaleFactor(0.7)
             Spacer(minLength: 8)
@@ -178,7 +178,7 @@ struct NunaLevelRow: View {
 
     var body: some View {
         HStack(spacing: 14) {
-            Image(systemName: icon).font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
+            NunaIcon(name: icon, size: 18, weight: .regular).foregroundStyle(NunaPalette.textSecondary).frame(width: 30)
             Text(title).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 .lineLimit(1).minimumScaleFactor(0.65)
             Spacer(minLength: 6)
