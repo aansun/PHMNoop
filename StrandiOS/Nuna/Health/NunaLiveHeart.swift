@@ -59,30 +59,34 @@ struct NunaLiveHRCard: View {
         return String(localized: "Zone \(profile.hrZoneSet.zoneNumber(forBPM: Double(hr)))")
     }
 
+    /// The blue of the WHOOP page's heart and trace.
+    private static let monitorBlue = Color(hex: "#4090E0")
+
     private var zoneNumber: Int { bigBpm.map { profile.hrZoneSet.zoneNumber(forBPM: Double($0)) } ?? 0 }
 
     /// The page's version of the card: a flat block on the page background.
     private var monitorBody: some View {
         ZStack(alignment: .topLeading) {
             NunaMonitorTrace(values: trace, live: isLive, bpm: bigBpm, hint: live.connected ? "Waiting for a live heartbeat…" : "Connect your strap to see live heart rate",
-                             tint: NunaPalette.effort, monitor: true, inset: 96)
-                .frame(height: 150)
-                .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.12), .init(color: .black, location: 0.8), .init(color: .clear, location: 1)], startPoint: .top, endPoint: .bottom))
+                             tint: Self.monitorBlue, monitor: true, inset: 71)
+                .frame(height: 142)
+                .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.10), .init(color: .black, location: 0.86), .init(color: .clear, location: 1)], startPoint: .top, endPoint: .bottom))
+            // The words at the left, 8 pt inside the page margin, with the gaps measured on the WHOOP page.
             VStack(alignment: .leading, spacing: 0) {
-                Text("Heart rate").font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-                Image(systemName: "heart.fill").font(.system(size: 24)).foregroundStyle(NunaPalette.effort).padding(.top, 6)
-                Text(verbatim: bigBpm.map(String.init) ?? "–").font(.nuna(size: 46, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(46)).monospacedDigit()
-                    .foregroundStyle(NunaPalette.textPrimary).frame(height: 46)
-                Text("bpm").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                Text(verbatim: String(localized: "Zone \(zoneNumber)")).font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).padding(.top, 8)
-                HStack(spacing: 4) {
+                Text("Heart rate").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                Image(systemName: "heart.fill").font(.system(size: 19)).foregroundStyle(Self.monitorBlue).padding(.top, 12)
+                Text(verbatim: bigBpm.map(String.init) ?? "–").font(.nuna(size: 32, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(32)).monospacedDigit()
+                    .foregroundStyle(NunaPalette.textPrimary).padding(.top, 8)
+                Text("bpm").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(Color(hex: "#A2A4A6")).padding(.top, 2)
+                Text(verbatim: String(localized: "Zone \(zoneNumber)")).font(.nuna(size: 13, weight: .regular)).foregroundStyle(Color(hex: "#BCBEBF")).textCase(nil).padding(.top, 14)
+                HStack(spacing: 2) {
                     ForEach(1...5, id: \.self) { i in
-                        Capsule().fill(i <= zoneNumber ? NunaPalette.textPrimary : NunaPalette.textMuted.opacity(0.5)).frame(width: 14, height: 3)
+                        Rectangle().fill(i <= zoneNumber ? Color(hex: "#BCBEBF") : Color(hex: "#34393D")).frame(width: 20, height: 2)
                     }
                 }
-                .padding(.top, 6)
+                .padding(.top, 14)
             }
-            .padding(.top, 2)
+            .padding(.top, 14).padding(.leading, 8)
         }
     }
 
@@ -176,13 +180,16 @@ struct NunaMonitorTrace: View {
     private func points(in size: CGSize) -> [CGPoint] {
         guard values.count >= 2, let lo = values.min(), let hi = values.max() else { return [] }
         // At least 24 bpm of range, so a steady heart reads as a gently moving line and not as noise stretched to the screen.
-        let mid = (lo + hi) / 2, half = max((hi - lo) / 2 * 1.25, 12)
+        let mid = (lo + hi) / 2, half = max((hi - lo) / 2 * 1.25, monitor ? 18 : 12)
         let top = mid + half, span = half * 2
         let pad: CGFloat = 8
-        let slots = CGFloat(max(values.count - 1, 29))
+        let slots = CGFloat(max(values.count - 1, monitor ? 1 : 29))
         let left = pad + inset
+        // The monitor page keeps the trace in the lower middle of the block and ends it 17 pt from the right edge, where the dot sits.
+        let yTop = monitor ? size.height * 0.30 : pad, yBottom = monitor ? size.height * 0.14 : pad
+        let rightPad: CGFloat = monitor ? 17 : pad
         return values.enumerated().map { i, v in
-            CGPoint(x: left + (size.width - left - pad) * CGFloat(i) / slots, y: pad + (size.height - pad * 2) * CGFloat((top - v) / span))
+            CGPoint(x: left + (size.width - left - rightPad) * CGFloat(i) / slots, y: yTop + (size.height - yTop - yBottom) * CGFloat((top - v) / span))
         }
     }
 
@@ -192,22 +199,23 @@ struct NunaMonitorTrace: View {
             ZStack {
                 Canvas { ctx, size in
                     // Graph paper: a fine line every 12 pt, a stronger one every fifth.
-                    let step: CGFloat = monitor ? 17 : 12
+                    let step: CGFloat = monitor ? 15 : 12
                     let paper: Color = monitor ? Color.white : green
-                    let faint = monitor ? 0.05 : 0.06, strong = monitor ? 0.05 : 0.14
+                    let faint = monitor ? 0.038 : 0.06, strong = monitor ? 0.038 : 0.14
+                    let paperWidth: CGFloat = monitor ? 1.3 : 0.7
                     var x: CGFloat = 0, n = 0
                     while x <= size.width {
                         var p = Path(); p.move(to: CGPoint(x: x, y: 0)); p.addLine(to: CGPoint(x: x, y: size.height))
-                        ctx.stroke(p, with: .color(paper.opacity(n % 5 == 0 ? strong : faint)), lineWidth: 0.7); x += step; n += 1
+                        ctx.stroke(p, with: .color(paper.opacity(n % 5 == 0 ? strong : faint)), lineWidth: paperWidth); x += step; n += 1
                     }
                     var y: CGFloat = 0; n = 0
                     while y <= size.height {
                         var p = Path(); p.move(to: CGPoint(x: 0, y: y)); p.addLine(to: CGPoint(x: size.width, y: y))
-                        ctx.stroke(p, with: .color(paper.opacity(n % 5 == 0 ? strong : faint)), lineWidth: 0.7); y += step; n += 1
+                        ctx.stroke(p, with: .color(paper.opacity(n % 5 == 0 ? strong : faint)), lineWidth: paperWidth); y += step; n += 1
                     }
                     if monitor, let last = pts.last {
-                        var rule = Path(); rule.move(to: CGPoint(x: last.x, y: 6)); rule.addLine(to: CGPoint(x: last.x, y: size.height - 6))
-                        ctx.stroke(rule, with: .color(Color.white.opacity(0.55)), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                        var rule = Path(); rule.move(to: CGPoint(x: last.x, y: max(last.y - 75, 0))); rule.addLine(to: CGPoint(x: last.x, y: min(last.y + 43, size.height)))
+                        ctx.stroke(rule, with: .color(Color.white.opacity(0.5)), style: StrokeStyle(lineWidth: 0.8, dash: [2, 2]))
                     }
                     guard pts.count >= 2 else {
                         var base = Path(); base.move(to: CGPoint(x: 0, y: size.height / 2)); base.addLine(to: CGPoint(x: size.width, y: size.height / 2))
@@ -217,12 +225,33 @@ struct NunaMonitorTrace: View {
                     var path = Path(); path.move(to: pts[0])
                     for q in pts.dropFirst() { path.addLine(to: q) }
                     let alpha = live ? 1.0 : 0.55
-                    ctx.stroke(path, with: .color(green.opacity(0.22 * alpha)), style: StrokeStyle(lineWidth: 8, lineCap: .round, lineJoin: .round))
-                    ctx.stroke(path, with: .color(green.opacity(alpha)), style: StrokeStyle(lineWidth: 2.4, lineCap: .round, lineJoin: .round))
+                    if monitor, let first = pts.first, let last = pts.last {
+                        // A soft area under the line, and a line that fades in from the left, as on the WHOOP page.
+                        var area = path
+                        area.addLine(to: CGPoint(x: last.x, y: size.height * 0.86)); area.addLine(to: CGPoint(x: first.x, y: size.height * 0.86)); area.closeSubpath()
+                        ctx.drawLayer { layer in
+                            layer.fill(area, with: .linearGradient(Gradient(colors: [green.opacity(0.22), green.opacity(0)]),
+                                                                   startPoint: CGPoint(x: 0, y: size.height * 0.3), endPoint: CGPoint(x: 0, y: size.height * 0.86)))
+                            // The area fades in from the left with the line.
+                            layer.blendMode = .destinationIn
+                            layer.fill(Path(CGRect(origin: .zero, size: size)),
+                                       with: .linearGradient(Gradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 1)]),
+                                                             startPoint: CGPoint(x: first.x, y: 0), endPoint: CGPoint(x: first.x + (last.x - first.x) * 0.12, y: 0)))
+                        }
+                        let fade = Gradient(stops: [.init(color: green.opacity(0), location: 0), .init(color: green, location: 0.12), .init(color: green, location: 1)])
+                        ctx.stroke(path, with: .linearGradient(fade, startPoint: CGPoint(x: first.x, y: 0), endPoint: CGPoint(x: last.x, y: 0)), style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round))
+                    } else {
+                        ctx.stroke(path, with: .color(green.opacity(0.22 * alpha)), style: StrokeStyle(lineWidth: 8, lineCap: .round, lineJoin: .round))
+                        ctx.stroke(path, with: .color(green.opacity(alpha)), style: StrokeStyle(lineWidth: 2.4, lineCap: .round, lineJoin: .round))
+                    }
                 }
                 if pts.count < 2 {
                     Text(hint).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.mapOverlayText.opacity(0.7)).textCase(nil)
                         .multilineTextAlignment(.leading).padding(.leading, 12 + inset).padding(.trailing, 12).frame(maxWidth: .infinity, alignment: .leading).offset(y: monitor ? 0 : 30)
+                } else if monitor, let last = pts.last {
+                    // A white dot in a darker ring at the newest reading.
+                    Circle().fill(Color.black.opacity(0.4)).frame(width: 18, height: 18).position(last)
+                    Circle().fill(Color.white).frame(width: 8, height: 8).position(last)
                 } else if let last = pts.last {
                     Circle().fill(NunaPalette.mapOverlayText).frame(width: 8, height: 8).opacity(live ? 1 : 0.6).position(last)
                     if live {
