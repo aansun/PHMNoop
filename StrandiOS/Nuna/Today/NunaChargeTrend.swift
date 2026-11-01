@@ -29,8 +29,25 @@ struct NunaSignalPanel<Content: View>: View {
     @ViewBuilder let content: Content
 
     /// WHP: the panel is the page lifted by white at 9% at its top and clear at its bottom (WHOOP sleep page: #262D2F fading to the page colour).
-    private static var top: Color { NunaThemePrefs.skin == .whp ? Color.white.opacity(0.09) : NunaPalette.cardHighlight }
+    private static var top: Color { NunaThemePrefs.skin == .whp ? Color.white.opacity(0.096) : NunaPalette.cardHighlight }
     private static var bottom: Color { NunaThemePrefs.skin == .whp ? Color.white.opacity(0) : NunaPalette.canvas }
+
+    /// The panel's surface. In WHP it is lit from the top middle, as on the WHOOP pages: brightest at the centre of the top edge, dark at the left and right
+    /// edges, and fading into the page by the bottom (white 9.6% at the centre top, 2% at the edges, about 1% at the foot, measured from the screenshots).
+    @ViewBuilder private var surface: some View {
+        let shape = RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous)
+        if NunaThemePrefs.skin == .whp {
+            shape.fill(LinearGradient(stops: [.init(color: Color.white.opacity(0.096), location: 0), .init(color: Color.white.opacity(0.08), location: 0.3),
+                                              .init(color: Color.white.opacity(0.03), location: 0.7), .init(color: Color.white.opacity(0.005), location: 1)],
+                                      startPoint: .top, endPoint: .bottom))
+                .mask(LinearGradient(stops: [.init(color: .black.opacity(0.2), location: 0), .init(color: .black.opacity(0.46), location: 0.17),
+                                             .init(color: .black.opacity(0.83), location: 0.33), .init(color: .black, location: 0.5),
+                                             .init(color: .black.opacity(0.83), location: 0.67), .init(color: .black.opacity(0.46), location: 0.83),
+                                             .init(color: .black.opacity(0.2), location: 1)], startPoint: .leading, endPoint: .trailing))
+        } else {
+            shape.fill(LinearGradient(colors: [Self.top, Self.bottom], startPoint: .top, endPoint: .bottom))
+        }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -38,8 +55,7 @@ struct NunaSignalPanel<Content: View>: View {
             VStack(spacing: 0) { content }
                 .padding(.horizontal, 18).padding(.top, 4).padding(.bottom, 16)
                 // Lighter at the top, and by the bottom the same as the screen behind it: no edge down there, the card fades into the page.
-                .background(LinearGradient(colors: [Self.top, Self.bottom], startPoint: .top, endPoint: .bottom),
-                            in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+                .background { surface }
                 .overlay(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous)
                     .strokeBorder(LinearGradient(colors: [NunaPalette.hairline.opacity(0.6), .clear], startPoint: .top, endPoint: .bottom), lineWidth: 1))
         }
