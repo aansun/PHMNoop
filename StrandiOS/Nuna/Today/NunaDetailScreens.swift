@@ -881,6 +881,30 @@ struct NunaEffortActivityDetailView: View {
         .accessibilityLabel(Text("Activity time chart"))
     }
 
+    /// Zones 1 to 3 down the left and 4 and 5 down the right, as on the WHOOP page; a page with three zones or fewer keeps one column.
+    private func zoneLegend(parts: [(color: Color, minutes: Double)], names: [String]) -> some View {
+        let split = parts.count > 3 ? 3 : parts.count
+        return HStack(alignment: .top, spacing: 12) {
+            zoneLegendColumn(parts, names, 0..<split)
+            if parts.count > split { zoneLegendColumn(parts, names, split..<parts.count) }
+        }
+    }
+
+    private func zoneLegendColumn(_ parts: [(color: Color, minutes: Double)], _ names: [String], _ range: Range<Int>) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            ForEach(Array(range), id: \.self) { i in
+                HStack(spacing: 10) {
+                    RoundedRectangle(cornerRadius: 2, style: .continuous).fill(parts[i].color).frame(width: 10, height: 10)
+                    Text(verbatim: Self.hm(parts[i].minutes)).font(.nuna(size: 16, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                        .frame(width: 44, alignment: .leading)
+                    Text(verbatim: names[i]).font(.nuna(size: 15, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    Spacer(minLength: 0)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .topLeading)
+    }
+
     /// Time in each zone over the window (a week's total, or the weekly average of a longer stretch), as a bar split by zone and a line each.
     @ViewBuilder private var breakdown: some View {
         let divisor = range == 7 ? 1.0 : max(Double(range) / 7, 1)
@@ -895,16 +919,7 @@ struct NunaEffortActivityDetailView: View {
             let names = zoneNames
             if parts.map(\.minutes).reduce(0, +) > 0 {
                 NunaProportionBar(parts: parts.map { (weight: $0.minutes, color: $0.color) }, height: 14)
-                VStack(alignment: .leading, spacing: 9) {
-                    ForEach(Array(parts.enumerated()), id: \.offset) { i, part in
-                        HStack(spacing: 12) {
-                            RoundedRectangle(cornerRadius: 3, style: .continuous).fill(part.color).frame(width: 10, height: 10)
-                            Text(verbatim: Self.hm(part.minutes)).font(.nuna(size: 14.5, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).frame(width: 40, alignment: .leading)
-                            Text(verbatim: names[i]).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                            Spacer(minLength: 0)
-                        }
-                    }
-                }
+                zoneLegend(parts: parts, names: names)
             } else {
                 Text(kind == .strength ? "No strength activities in this period" : "No heart-rate samples in this period")
                     .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)

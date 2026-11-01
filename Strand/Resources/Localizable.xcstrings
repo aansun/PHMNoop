@@ -1,6 +1,12 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "Avg. lean body mass": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Rata-rata massa tubuh tanpa lemak"}}}},
+    "Add manual measurement": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tambah pengukuran manual"}}}},
+    "See all recordings": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lihat semua catatan"}}}},
+    "All recorded data": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Semua data tercatat"}}}},
+    "Added by hand": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ditambahkan manual"}}}},
+    "Imported from Apple Health": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Diimpor dari Apple Health"}}}},
     "Heart rate zones all": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Zona detak jantung semua"}}}},
     "Total volume load": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Total beban volume"}}}},
     "View workouts": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lihat latihan"}}}},
