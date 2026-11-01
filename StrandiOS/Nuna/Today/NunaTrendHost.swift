@@ -212,6 +212,7 @@ struct NunaTrendNameBox: View {
     }
 
     private func list(_ menu: NunaTrendMenu) -> some View {
+        ScrollViewReader { proxy in
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 ForEach(NunaTrendPage.Section.allCases, id: \.self) { section in
@@ -229,18 +230,21 @@ struct NunaTrendNameBox: View {
                                 Spacer(minLength: 0)
                             }
                             .padding(.horizontal, 12).frame(height: 52)
-                            .background(page == menu.current ? Color.white.opacity(0.1) : Color.clear, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            .background(page == menu.current ? Color.white.opacity(0.12) : Color.clear, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
                             .contentShape(Rectangle())
                         }
-                        .buttonStyle(.plain)
+                        .buttonStyle(.plain).id(page)
                     }
                 }
             }
             .padding(10)
         }
         .scrollIndicators(.hidden)
+        // The list opens on the page on show, so the highlighted row is always in view however far down it is.
+        .onAppear { DispatchQueue.main.async { proxy.scrollTo(menu.current, anchor: .center) } }
         .frame(height: 480)
         .background(Color.black, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+        }
     }
 }
 #endif
