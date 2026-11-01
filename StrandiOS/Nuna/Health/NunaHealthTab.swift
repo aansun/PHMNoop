@@ -17,7 +17,8 @@ struct NunaHealthTabView: View {
                 if !day.stressStatus.isReady {
                     // Still learning the person: no stress figure, only how far along it is.
                     if day.loaded { NunaStressCalibrationCard(nights: day.stressStatus.nights) }
-                } else if day.stress != nil || day.stressCurve != nil {
+                } else if day.loaded {
+                    // Shown even before the day has a reading, so the card does not come and go: it then reads "–" over an empty chart.
                     NunaStressSummaryCard(curve: day.stressCurve, typicalMin: day.stressTypicalMin, isToday: day.isToday)
                 }
                 Text("Fitness age, the health monitor and the stress monitor are not medical devices and cannot diagnose or manage medical conditions. They do not give medical advice. Always consult your doctor about health concerns, and never delay or change medical care because of what they show.")
@@ -411,7 +412,7 @@ struct NunaStressSummaryCard: View {
                             HStack(alignment: .firstTextBaseline, spacing: 6) {
                                 Text(verbatim: highMin.map { String(format: "%d:%02d", $0 / 60, $0 % 60) } ?? "–")
                                     .font(.nuna(size: 40, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(40)).foregroundStyle(NunaPalette.textPrimary)
-                                Text("hrs").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                                if highMin != nil { Text("hrs").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                             }
                             comparison
                         }
