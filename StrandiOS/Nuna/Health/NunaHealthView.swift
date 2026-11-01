@@ -35,6 +35,7 @@ struct NunaHealthView: View {
     @State private var legacy: Legacy?
     @State private var showCoach = false
     @State private var showSleepCoach = false
+    @State private var showReport = false
 
     private enum Legacy: String, Identifiable { case appleHealth, live, mood, cycle, breathing; var id: String { rawValue } }
 
@@ -74,11 +75,12 @@ struct NunaHealthView: View {
         }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "health") }
         .sheet(isPresented: $showSleepCoach) { NunaAnyaSheet(context: "sleep") }
+        .sheet(isPresented: $showReport) { NunaHealthReportSheet().nunaSheetChrome(detents: [.medium, .large]) }
     }
 
     @ViewBuilder private var container: some View {
         if vitalsOnly {
-            NunaDetailScreen("Vital signs", centersTitle: true) { vitalTab }
+            NunaDetailScreen("Health monitor", centersTitle: true) { vitalTab }
         } else {
             // The sleep overview: the last seven nights, need against actual, bedtime and stages. A page of its own now that Health
             // is no longer a tab.
@@ -91,10 +93,10 @@ struct NunaHealthView: View {
 
     private var vitalTab: some View {
         VStack(spacing: NunaSpacing.section) {
-            liveCard
-            if coachEnabled { NunaAnyaCard(title: "Are my vitals normal today?") { showCoach = true } }
+            NunaLiveHRCard(monitor: true)
             rangeBanner
             vitalBento
+            shareReport
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
                     NavigationLink(value: NunaTodayRoute.rhythm) {
@@ -105,6 +107,26 @@ struct NunaHealthView: View {
                 }
             }
         }
+    }
+
+    /// "Share your health report": the 30 and 180 day report as a PDF, with a line on who it is for.
+    private var shareReport: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Button { showReport = true } label: {
+                HStack(spacing: 16) {
+                    Image(systemName: "square.and.arrow.up").font(.system(size: 24, weight: .light)).foregroundStyle(NunaPalette.textSecondary).frame(width: 34)
+                    Text("Share your health report").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingHead(1.4)).textCase(.uppercase)
+                        .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 16).frame(height: 62).frame(maxWidth: .infinity)
+                .background(NunaPalette.cardSurface, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
+                .contentShape(Rectangle())
+            }.buttonStyle(.plain)
+            Text("Printable report for sharing with your doctor, physical trainer, or anyone of your choosing.")
+                .font(.nuna(size: 15, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.top, 12)
     }
 
     /// Resting heart rate in the same one-card layout as every metric detail: the reading, the W / M / 6M switch and date stepper, and the chart.
@@ -146,38 +168,47 @@ struct NunaHealthView: View {
         }
     }
 
-    /// Respiratory, blood oxygen, resting heart rate, HRV and skin temperature, each with its status chip. Each opens its own chart. While the
-    /// range is calibrating the readings show with a grey "Calibrating range" and no verdict.
+    /// Respiratory, blood oxygen, resting heart rate, HRV and skin temperature, each with a pill that says where it sits against the wearer's own
+    /// range. Each opens its own chart. While the range is calibrating the readings show with a grey "Calibrating range" and no verdict.
     private var vitalBento: some View {
         let hasRange = rangePhase.hasRange
-        typealias Chip = (text: LocalizedStringKey, color: Color)
-        let calibrating: Chip = ("Calibrating range", NunaPalette.textSecondary)
+        typealias Chip = (text: String, color: Color, symbol: String?)
+        let calibrating: Chip = (String(localized: "Calibrating range"), NunaPalette.textSecondary, nil)
+        let ok = NunaPalette.charge, warn = NunaPalette.warning
 
-        var respChip: Chip? = hasRange ? nil : calibrating
-        if hasRange, let v = day.respiratory, let verdict = respS.verdict(v, floor: 0.3) {
-            respChip = verdict == .inRange ? ("Normal", NunaPalette.charge) : (verdict == .above ? ("Above range", NunaPalette.warning) : ("Below range", NunaPalette.warning))
+        /// "within 60 - 62", "elevated > 80" or "low < 15.0" for a reading against a series' typical range. Above is only a warning when
+        /// `aboveIsGood` is false, below only when `belowIsGood` is false.
+        func ranged(_ v: Double?, _ series: NunaSeriesModel, decimals: Int, floor: Double, aboveIsGood: Bool = false, belowIsGood: Bool = false) -> Chip? {
+            guard hasRange else { return calibrating }
+            guard let v, let verdict = series.verdict(v, floor: floor), let r = series.typicalRange else { return nil }
+            func f(_ x: Double) -> String { String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, x) }
+            switch verdict {
+            case .inRange: return (String(localized: "within \(f(r.lowerBound)) - \(f(r.upperBound))"), ok, "checkmark")
+            case .above: return (String(localized: "elevated > \(f(r.upperBound))"), aboveIsGood ? ok : warn, aboveIsGood ? "checkmark" : "exclamationmark")
+            case .below: return (String(localized: "low < \(f(r.lowerBound))"), belowIsGood ? ok : warn, belowIsGood ? "checkmark" : "exclamationmark")
+            }
         }
+        let respChip = ranged(day.respiratory, respS, decimals: 1, floor: 0.3, aboveIsGood: false, belowIsGood: true)
+        let hrvChip = ranged(day.hrv, hrvS, decimals: 0, floor: 1, aboveIsGood: true, belowIsGood: false)
+        // A resting heart rate below the usual is good news, so only a rise is marked.
+        let rhrChip = ranged(day.restingHr, rhrS, decimals: 0, floor: 1, aboveIsGood: false, belowIsGood: true)
         let spo2 = day.spo2
-        let spo2Chip: Chip? = hasRange ? spo2.map { $0 >= 95 ? ("Normal", NunaPalette.charge) : ("Low", NunaPalette.warning) } : calibrating
+        let spo2Chip: Chip? = hasRange ? spo2.map { $0 >= 95 ? (String(localized: "within 95% - 100%"), ok, "checkmark") : (String(localized: "low < 95%"), warn, "exclamationmark") } : calibrating
         let skin = day.extras["skin_temp"]
-        let skinChip: Chip? = hasRange ? skin.map { abs($0) < 0.5 ? ("Small deviation", NunaPalette.charge) : ("Larger deviation", NunaPalette.warning) } : calibrating
+        let skinChip: Chip? = hasRange ? skin.map { v in
+            abs(v) < 0.5 ? (String(localized: "within -0.5 - 0.5"), ok, "checkmark")
+                : (v < 0 ? (String(localized: "low < -0.5"), warn, "exclamationmark") : (String(localized: "elevated > 0.5"), warn, "exclamationmark"))
+        } : calibrating
         let skinText = skin.map { (($0 >= 0 ? "+" : "−") + String(format: "%.1f", locale: AppLanguage.activeLocale, abs($0))) } ?? "–"
-        var hrvChip: Chip? = hasRange ? nil : calibrating
-        if hasRange, let v = day.hrv, let verdict = hrvS.verdict(v, floor: 1) {
-            hrvChip = verdict == .inRange ? ("In range", NunaPalette.charge) : (verdict == .above ? ("Above range", NunaPalette.warning) : ("Below range", NunaPalette.warning))
+        func tile(_ key: String, icon: String, label: LocalizedStringKey, value: String, unit: String, _ chip: Chip?) -> some View {
+            linked(key, NunaVitalTile(icon: icon, label: label, value: value, unit: unit, chip: chip?.text, chipColor: chip?.color ?? ok, symbol: chip?.symbol))
         }
-        var rhrChip: Chip? = hasRange ? nil : calibrating
-        if hasRange, let v = day.restingHr, let verdict = rhrS.verdict(v, floor: 1) {
-            // A resting heart rate below the usual is good news, so only a rise is marked.
-            rhrChip = verdict == .inRange ? ("In range", NunaPalette.charge) : (verdict == .above ? ("Above range", NunaPalette.warning) : ("Below range", NunaPalette.charge))
-        }
-        let dot = !hasRange
         return LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
-            linked("resp_rate", NunaVitalTile(icon: "met:respiratory-rate", label: "Respiratory", value: fmt(day.respiratory, 1), unit: "/min", chip: respChip?.text, chipColor: respChip?.color ?? NunaPalette.charge, chipDot: dot))
-            linked("spo2", NunaVitalTile(icon: "vital:spo2", label: "Blood Oxygen", value: fmt(spo2), unit: "%", chip: spo2Chip?.text, chipColor: spo2Chip?.color ?? NunaPalette.charge, chipDot: dot))
-            linked("rhr", NunaVitalTile(icon: "met:resting-heart-rate", label: "Resting HR", value: fmt(day.restingHr), unit: "bpm", chip: rhrChip?.text, chipColor: rhrChip?.color ?? NunaPalette.charge, chipDot: dot))
-            linked("hrv", NunaVitalTile(icon: "met:heart-rate-variability", label: "HRV", value: fmt(day.hrv), unit: "ms", chip: hrvChip?.text, chipColor: hrvChip?.color ?? NunaPalette.charge, chipDot: dot))
-            linked("skin_temp", NunaVitalTile(icon: "vital:temp", label: "Skin Temp", value: skinText, unit: "°C", chip: skinChip?.text, chipColor: skinChip?.color ?? NunaPalette.charge, chipDot: dot))
+            tile("resp_rate", icon: "met:respiratory-rate", label: "Respiratory rate", value: fmt(day.respiratory, 1), unit: "rpm", respChip)
+            tile("spo2", icon: "vital:spo2", label: "Blood oxygen (SpO₂)", value: fmt(spo2), unit: "%", spo2Chip)
+            tile("rhr", icon: "met:resting-heart-rate", label: "RHR", value: fmt(day.restingHr), unit: "bpm", rhrChip)
+            tile("hrv", icon: "met:heart-rate-variability", label: "HRV", value: fmt(day.hrv), unit: "ms", hrvChip)
+            tile("skin_temp", icon: "vital:temp", label: "Skin temp (from baseline)", value: skinText, unit: "°C", skinChip)
         }
     }
 

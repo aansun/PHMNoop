@@ -12,6 +12,8 @@ import WhoopStore
 /// it has (the newest readings stored on the phone) and says when that signal was, until a new one arrives. Tapping opens the day's heart rate across
 /// the whole screen.
 struct NunaLiveHRCard: View {
+    /// The Health monitor page's look: no card, the title and a blue heart with the reading and its zone at the left, the trace across the page.
+    var monitor = false
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var live: LiveState
     @EnvironmentObject private var profile: ProfileStore
@@ -57,8 +59,36 @@ struct NunaLiveHRCard: View {
         return String(localized: "Zone \(profile.hrZoneSet.zoneNumber(forBPM: Double(hr)))")
     }
 
+    private var zoneNumber: Int { bigBpm.map { profile.hrZoneSet.zoneNumber(forBPM: Double($0)) } ?? 0 }
+
+    /// The page's version of the card: a flat block on the page background.
+    private var monitorBody: some View {
+        ZStack(alignment: .topLeading) {
+            NunaMonitorTrace(values: trace, live: isLive, bpm: bigBpm, hint: live.connected ? "Waiting for a live heartbeat…" : "Connect your strap to see live heart rate",
+                             tint: NunaPalette.effort, monitor: true, inset: 96)
+                .frame(height: 150)
+                .mask(LinearGradient(stops: [.init(color: .clear, location: 0), .init(color: .black, location: 0.12), .init(color: .black, location: 0.8), .init(color: .clear, location: 1)], startPoint: .top, endPoint: .bottom))
+            VStack(alignment: .leading, spacing: 0) {
+                Text("Heart rate").font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                Image(systemName: "heart.fill").font(.system(size: 24)).foregroundStyle(NunaPalette.effort).padding(.top, 6)
+                Text(verbatim: bigBpm.map(String.init) ?? "–").font(.nuna(size: 46, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(46)).monospacedDigit()
+                    .foregroundStyle(NunaPalette.textPrimary).frame(height: 46)
+                Text("bpm").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: String(localized: "Zone \(zoneNumber)")).font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).padding(.top, 8)
+                HStack(spacing: 4) {
+                    ForEach(1...5, id: \.self) { i in
+                        Capsule().fill(i <= zoneNumber ? NunaPalette.textPrimary : NunaPalette.textMuted.opacity(0.5)).frame(width: 14, height: 3)
+                    }
+                }
+                .padding(.top, 6)
+            }
+            .padding(.top, 2)
+        }
+    }
+
     var body: some View {
         Button { showFull = true } label: {
+            if monitor { monitorBody } else {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
                     HStack(spacing: 6) {
@@ -87,6 +117,7 @@ struct NunaLiveHRCard: View {
             .background(NunaPalette.shade, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
             .overlay(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous).strokeBorder(NunaPalette.charge.opacity(0.18), lineWidth: 1))
             .contentShape(Rectangle())
+            }
         }
         .buttonStyle(.plain)
         .fullScreenCover(isPresented: $showFull) { NunaHRFullScreen { showFull = false } }
@@ -133,8 +164,14 @@ struct NunaMonitorTrace: View {
     let live: Bool
     let bpm: Int?
     let hint: LocalizedStringKey
+    /// The colour of the trace; green on the bedside monitor card.
+    var tint: Color = NunaPalette.charge
+    /// The Health monitor page's flat look: faint white paper across the whole width, no rounded screen, the trace starting `inset` from the left
+    /// and a dashed line down from its newest reading.
+    var monitor = false
+    var inset: CGFloat = 0
 
-    private let green = NunaPalette.charge
+    private var green: Color { tint }
 
     private func points(in size: CGSize) -> [CGPoint] {
         guard values.count >= 2, let lo = values.min(), let hi = values.max() else { return [] }
@@ -143,8 +180,9 @@ struct NunaMonitorTrace: View {
         let top = mid + half, span = half * 2
         let pad: CGFloat = 8
         let slots = CGFloat(max(values.count - 1, 29))
+        let left = pad + inset
         return values.enumerated().map { i, v in
-            CGPoint(x: pad + (size.width - pad * 2) * CGFloat(i) / slots, y: pad + (size.height - pad * 2) * CGFloat((top - v) / span))
+            CGPoint(x: left + (size.width - left - pad) * CGFloat(i) / slots, y: pad + (size.height - pad * 2) * CGFloat((top - v) / span))
         }
     }
 
@@ -154,16 +192,22 @@ struct NunaMonitorTrace: View {
             ZStack {
                 Canvas { ctx, size in
                     // Graph paper: a fine line every 12 pt, a stronger one every fifth.
-                    let step: CGFloat = 12
+                    let step: CGFloat = monitor ? 17 : 12
+                    let paper: Color = monitor ? Color.white : green
+                    let faint = monitor ? 0.05 : 0.06, strong = monitor ? 0.05 : 0.14
                     var x: CGFloat = 0, n = 0
                     while x <= size.width {
                         var p = Path(); p.move(to: CGPoint(x: x, y: 0)); p.addLine(to: CGPoint(x: x, y: size.height))
-                        ctx.stroke(p, with: .color(green.opacity(n % 5 == 0 ? 0.14 : 0.06)), lineWidth: 0.7); x += step; n += 1
+                        ctx.stroke(p, with: .color(paper.opacity(n % 5 == 0 ? strong : faint)), lineWidth: 0.7); x += step; n += 1
                     }
                     var y: CGFloat = 0; n = 0
                     while y <= size.height {
                         var p = Path(); p.move(to: CGPoint(x: 0, y: y)); p.addLine(to: CGPoint(x: size.width, y: y))
-                        ctx.stroke(p, with: .color(green.opacity(n % 5 == 0 ? 0.14 : 0.06)), lineWidth: 0.7); y += step; n += 1
+                        ctx.stroke(p, with: .color(paper.opacity(n % 5 == 0 ? strong : faint)), lineWidth: 0.7); y += step; n += 1
+                    }
+                    if monitor, let last = pts.last {
+                        var rule = Path(); rule.move(to: CGPoint(x: last.x, y: 6)); rule.addLine(to: CGPoint(x: last.x, y: size.height - 6))
+                        ctx.stroke(rule, with: .color(Color.white.opacity(0.55)), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
                     }
                     guard pts.count >= 2 else {
                         var base = Path(); base.move(to: CGPoint(x: 0, y: size.height / 2)); base.addLine(to: CGPoint(x: size.width, y: size.height / 2))
@@ -178,7 +222,7 @@ struct NunaMonitorTrace: View {
                 }
                 if pts.count < 2 {
                     Text(hint).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.mapOverlayText.opacity(0.7)).textCase(nil)
-                        .multilineTextAlignment(.leading).padding(.horizontal, 12).frame(maxWidth: .infinity, alignment: .leading).offset(y: 30)
+                        .multilineTextAlignment(.leading).padding(.leading, 12 + inset).padding(.trailing, 12).frame(maxWidth: .infinity, alignment: .leading).offset(y: monitor ? 0 : 30)
                 } else if let last = pts.last {
                     Circle().fill(NunaPalette.mapOverlayText).frame(width: 8, height: 8).opacity(live ? 1 : 0.6).position(last)
                     if live {
@@ -189,7 +233,7 @@ struct NunaMonitorTrace: View {
                     }
                 }
             }
-            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: monitor ? 0 : 10, style: .continuous))
         }
         .accessibilityHidden(true)
     }
