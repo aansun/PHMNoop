@@ -34,6 +34,37 @@ struct NunaHighlightInputs {
     var stressNow: Double?
     var stressHighMin: Int?
     var illness: IllnessSignalEngine.Result?
+    /// The baselines still being built, with the nights read so far.
+    var calibrating: [NunaCalibrationStage] = []
+    /// Baselines that finished today, by stage id.
+    var calibrationDone: [String] = []
+    /// Workouts that just ended or were added since Today was first opened, newest first.
+    var workouts: [NunaHighlightWorkout] = []
+    var dayStrainShown: String?
+    /// Naps that just ended.
+    var naps: [NunaHighlightNap] = []
+    /// Last night's sleep, until the middle of the day.
+    var sleepRecorded: (duration: String, score: Int?)?
+}
+
+struct NunaCalibrationStage: Equatable {
+    /// "recovery" or "stress".
+    let id: String
+    let nights: Int
+    let total: Int
+}
+
+struct NunaHighlightWorkout: Equatable {
+    let id: String
+    let sport: String
+    let duration: String
+    let strain: String?
+    let manual: Bool
+}
+
+struct NunaHighlightNap: Equatable {
+    let id: String
+    let duration: String
 }
 
 enum NunaHighlightEngine {
@@ -47,8 +78,54 @@ enum NunaHighlightEngine {
             out.append(.init(id: "illness", title: String(localized: "Early warning"), message: localizedIllnessCopy(r)))
         }
 
-        // 2. Resting heart rate above its usual.
-        if let rhr = i.restingHr, let avg = i.restingHrAverage, avg > 0 {
+        // 2. Baselines: still being built, or finished today.
+        for stage in i.calibrating {
+            if stage.id == "recovery" {
+                out.append(.init(id: "calib-recovery", title: String(localized: "Calibrating Recovery"),
+                                 message: String(localized: "\(stage.nights) of \(stage.total) nights recorded. Wear your strap to sleep each night; your Recovery score and usual ranges appear once your baseline is ready.")))
+            } else {
+                out.append(.init(id: "calib-stress", title: String(localized: "Calibrating Stress monitor"),
+                                 message: String(localized: "\(stage.nights) of \(stage.total) nights recorded. The Stress monitor shows readings once your baseline is complete.")))
+            }
+        }
+        for id in i.calibrationDone {
+            out.append(.init(id: "calib-done-\(id)", title: String(localized: "Calibration complete"),
+                             message: id == "recovery"
+                                ? String(localized: "Your baseline is ready. Recovery now compares each night with your own usual.")
+                                : String(localized: "Your stress baseline is ready. The Stress monitor now shows readings against your own usual.")))
+        }
+
+        // 3. A workout that just ended, or one added by hand.
+        for w in i.workouts {
+            if w.manual {
+                let msg = w.strain.map { String(localized: "\(w.sport) was added to your day: \(w.duration), Strain \($0).") }
+                    ?? String(localized: "\(w.sport) was added to your day: \(w.duration).")
+                out.append(.init(id: w.id, title: String(localized: "Activity added"), message: msg))
+            } else {
+                let msg: String
+                if let st = w.strain, let day = i.dayStrainShown {
+                    msg = String(localized: "\(w.sport), \(w.duration). It added Strain \(st); the day is at Strain \(day).")
+                } else if let st = w.strain {
+                    msg = String(localized: "\(w.sport), \(w.duration). It added Strain \(st).")
+                } else {
+                    msg = String(localized: "\(w.sport), \(w.duration).")
+                }
+                out.append(.init(id: w.id, title: String(localized: "Workout recorded"), message: msg))
+            }
+        }
+
+        // 4. A nap that just ended, and last night's sleep in the morning.
+        for n in i.naps {
+            out.append(.init(id: n.id, title: String(localized: "Nap recorded"), message: String(localized: "A \(n.duration) nap was added to your day.")))
+        }
+        if let sl = i.sleepRecorded {
+            let msg = sl.score.map { String(localized: "You slept \(sl.duration) last night, a Sleep score of \($0)%.") }
+                ?? String(localized: "You slept \(sl.duration) last night.")
+            out.append(.init(id: "sleep-recorded", title: String(localized: "Sleep recorded"), message: msg))
+        }
+
+        // 5. Resting heart rate above its usual (not while the baseline is still being built).
+        if i.calibrating.isEmpty, let rhr = i.restingHr, let avg = i.restingHrAverage, avg > 0 {
             let pct = Int(((rhr - avg) / avg * 100).rounded())
             if let word = recoveryWord, pct >= 2 {
                 out.append(.init(id: "rhr", title: String(localized: "Elevated RHR"),
@@ -59,8 +136,8 @@ enum NunaHighlightEngine {
             }
         }
 
-        // 3. HRV below its usual.
-        if let hrv = i.hrv, let avg = i.hrvAverage, avg > 0 {
+        // 6. HRV below its usual.
+        if i.calibrating.isEmpty, let hrv = i.hrv, let avg = i.hrvAverage, avg > 0 {
             let pct = Int(((avg - hrv) / avg * 100).rounded())
             if pct >= (i.charge.map { $0 < 67 } == true ? 10 : 20) {
                 out.append(.init(id: "hrv", title: String(localized: "Low HRV"),
@@ -68,7 +145,7 @@ enum NunaHighlightEngine {
             }
         }
 
-        // 4. Sleep debt, building or simply there; or a short night when the debt has nothing to add.
+        // 7. Sleep debt, building or simply there; or a short night when the debt has nothing to add.
         var debtShown = false
         if let debt = i.debtMin, debt >= 60 {
             if let before = i.debtBeforeMin, debt >= before + 10 {
@@ -89,13 +166,13 @@ enum NunaHighlightEngine {
                              actionTitle: String(localized: "Wind down"), action: .windDown))
         }
 
-        // 5. More Strain than today's Recovery supports.
+        // 8. More Strain than today's Recovery supports.
         if let e = i.effort, let hi = i.effortTargetHigh, e > hi * 1.15, let shown = i.effortShown, let band = i.effortTargetText {
             out.append(.init(id: "strain", title: String(localized: "Strain above your target"),
                              message: String(localized: "Strain \(shown) is above today's range for your Recovery (\(band)). More training now costs tomorrow's Recovery.")))
         }
 
-        // 6. A long stretch of high stress.
+        // 9. A long stretch of high stress.
         if (i.stressHighMin ?? 0) >= 180 || (i.stressNow ?? 0) >= 2.2 {
             let spent = StressTrace.clock(minutes: i.stressHighMin ?? 0)
             out.append(.init(id: "stress", title: String(localized: "High stress today"),
@@ -105,7 +182,7 @@ enum NunaHighlightEngine {
         return out
     }
 
-    private static func hm(_ minutes: Double) -> String {
+    static func hm(_ minutes: Double) -> String {
         let m = Int(minutes.rounded())
         return m >= 60 ? String(localized: "\(m / 60) hr \(m % 60) min") : String(localized: "\(m) min")
     }
@@ -121,6 +198,11 @@ struct NunaHighlightsCard: View {
     let effort: Double?
     let stressNow: Double?
     let stressHighMin: Int?
+    let rest: Double?
+    let workouts: [WorkoutRow]
+    /// The baselines still being built, with the nights read so far.
+    let calibrating: [NunaCalibrationStage]
+    @ObservedObject var feed: NunaHighlightsFeed
     let onBreathe: () -> Void
     let onWindDown: () -> Void
 
@@ -157,7 +239,27 @@ struct NunaHighlightsCard: View {
             return "\(lo)–\(up)"
         }
         let earlier = repo.days.filter { $0.day < ((repo.today?.day) ?? dayKey) }
-        return NunaHighlightInputs(
+        let nowDate = Date()
+        let nowTs = Int(nowDate.timeIntervalSince1970)
+        // A workout shows while it is fresh (ended within 90 minutes), and for as long as it was not there when Today was first opened
+        // today (so one added later, by hand or by a sync, is announced too).
+        let announced = workouts.filter { w in
+            guard w.endTs <= nowTs + 60 else { return false }
+            let isNew = feed.baseline.map { !$0.contains(w.startTs) } ?? false
+            return nowTs - w.endTs <= 90 * 60 || isNew
+        }.sorted { $0.endTs > $1.endTs }.prefix(3).map { w in
+            NunaHighlightWorkout(id: "workout-\(w.startTs)", sport: WorkoutSource.displaySport(w.sport),
+                                 duration: NunaWorkoutFormat.duration(w.durationS ?? Double(w.endTs - w.startTs)),
+                                 strain: w.strain.map { UnitFormatter.effortDisplay($0, scale: scale) },
+                                 manual: WorkoutSource.classify(w.source) == .manual)
+        }
+        let freshNaps = feed.naps.filter { $0.end <= nowDate && nowDate.timeIntervalSince($0.end) <= 3 * 3600 }.map {
+            NunaHighlightNap(id: "nap-\(Int($0.start.timeIntervalSince1970))", duration: NunaHighlightEngine.hm($0.asleepMin))
+        }
+        let hour = Calendar.current.component(.hour, from: nowDate)
+        let slept: (duration: String, score: Int?)? = (hour < 14 && (sleepMinutes ?? 0) >= 60)
+            ? (NunaHighlightEngine.hm(sleepMinutes ?? 0), rest.map { Int($0.rounded()) }) : nil
+        var result = NunaHighlightInputs(
             charge: charge, hrv: hrv, restingHr: restingHr,
             hrvAverage: mean(before.compactMap(\.avgHrv)),
             restingHrAverage: mean(before.compactMap { $0.restingHr.map(Double.init) }),
@@ -165,8 +267,34 @@ struct NunaHighlightsCard: View {
             debtMin: debt(repo.days), debtBeforeMin: debt(earlier),
             effort: effort, effortTargetHigh: hi, effortTargetText: bandText,
             effortShown: effort.map { UnitFormatter.effortDisplay($0, scale: scale) },
-            stressNow: stressNow, stressHighMin: stressHighMin, illness: appModel.illnessSignal)
+            stressNow: stressNow, stressHighMin: stressHighMin, illness: appModel.illnessSignal,
+            calibrating: calibrating, calibrationDone: ["recovery", "stress"].filter { feed.doneStages.contains($0) },
+            workouts: Array(announced), dayStrainShown: effort.map { UnitFormatter.effortDisplay($0, scale: scale) },
+            naps: freshNaps, sleepRecorded: slept)
+#if DEBUG
+        Self.demo(&result)
+#endif
+        return result
     }
+
+#if DEBUG
+    /// `--demo-highlights=calibrating,done,workout,manual,nap,sleep` puts that situation into the inputs, since the demo data has none of them.
+    private static func demo(_ i: inout NunaHighlightInputs) {
+        guard let arg = CommandLine.arguments.first(where: { $0.hasPrefix("--demo-highlights=") }) else { return }
+        for kind in arg.dropFirst("--demo-highlights=".count).split(separator: ",") {
+            switch kind {
+            case "calibrating": i.calibrating = [.init(id: "recovery", nights: 2, total: 4), .init(id: "stress", nights: 5, total: 14)]
+            case "done": i.calibrationDone = ["recovery"]
+            case "workout":
+                i.workouts.append(.init(id: "demo-w", sport: "Running", duration: "42 min", strain: "9.4", manual: false)); i.dayStrainShown = "12.1"
+            case "manual": i.workouts.append(.init(id: "demo-m", sport: "Padel", duration: "1h 0m", strain: "7.2", manual: true))
+            case "nap": i.naps.append(.init(id: "demo-n", duration: "25 min"))
+            case "sleep": i.sleepRecorded = ("7 hr 12 min", 82)
+            default: break
+            }
+        }
+    }
+#endif
 
     /// What stands out today and has not been put away.
     private func liveHighlights() -> [NunaHighlight] {
@@ -273,5 +401,70 @@ struct NunaHighlightsCard: View {
 /// Where the highlights keep what was put away.
 enum NunaHighlightPrefs {
     static let dismissedKey = "nuna.highlights.dismissed"
+}
+/// What the highlights need beyond the day's figures: today's naps, the workouts that were already there when Today was first opened, and
+/// which baselines finished today. It keeps the last two in `UserDefaults`, so a relaunch neither re-announces old workouts nor loses a
+/// finished calibration before it was seen.
+@MainActor
+final class NunaHighlightsFeed: ObservableObject {
+    @Published private(set) var naps: [NunaNap] = []
+    /// Start times of today's workouts at the first look today; nil until there was one.
+    @Published private(set) var baseline: Set<Int>?
+    /// Baselines ("recovery", "stress") that finished today.
+    @Published private(set) var doneStages: Set<String> = []
+
+    private static let baselineKey = "nuna.highlights.baseline"
+    private static func stageKey(_ id: String) -> String { "nuna.highlights.calib.\(id)" }
+    private let defaults = UserDefaults.standard
+
+    init() {
+        let today = Repository.localDayKey(Date())
+        if let raw = defaults.string(forKey: Self.baselineKey) {
+            let p = raw.split(separator: "|", maxSplits: 1, omittingEmptySubsequences: false)
+            if p.count == 2, String(p[0]) == today { baseline = Set(p[1].split(separator: ",").compactMap { Int($0) }) }
+        }
+        for id in ["recovery", "stress"] where defaults.string(forKey: Self.stageKey(id)) == "done:\(today)" { doneStages.insert(id) }
+    }
+
+    func update(repo: Repository, loaded: Bool, workouts: [WorkoutRow], calibrating: [String]) async {
+        guard loaded else { return }
+        let today = Repository.localDayKey(Date())
+        if baseline == nil {
+            let set = Set(workouts.map(\.startTs))
+            baseline = set
+            defaults.set("\(today)|" + set.sorted().map(String.init).joined(separator: ","), forKey: Self.baselineKey)
+        }
+        for id in ["recovery", "stress"] {
+            let key = Self.stageKey(id)
+            let cur = defaults.string(forKey: key)
+            if calibrating.contains(id) {
+                if cur != "pending" { defaults.set("pending", forKey: key) }
+                doneStages.remove(id)
+            } else if cur == "pending" {
+                defaults.set("done:\(today)", forKey: key)
+                doneStages.insert(id)
+            }
+        }
+        let start = Calendar.current.startOfDay(for: Date())
+        let found = await NunaSleepModel.naps(from: start, to: start.addingTimeInterval(86_400), repo: repo).map(\.nap)
+        if found.map(\.id) != naps.map(\.id) { naps = found }
+    }
+}
+
+/// Keeps the feed current. It draws nothing, and sits where the screen always has a view (the score rings), because the card itself is not
+/// there while nothing stands out.
+struct NunaHighlightsTracker: View {
+    @ObservedObject var feed: NunaHighlightsFeed
+    let loaded: Bool
+    let workouts: [WorkoutRow]
+    let calibrating: [NunaCalibrationStage]
+    @EnvironmentObject private var repo: Repository
+
+    var body: some View {
+        Color.clear.frame(width: 0, height: 0)
+            .task(id: "\(repo.refreshSeq)-\(loaded)-\(workouts.count)-\(calibrating.map(\.id).joined())") {
+                await feed.update(repo: repo, loaded: loaded, workouts: workouts, calibrating: calibrating.map(\.id))
+            }
+    }
 }
 #endif
