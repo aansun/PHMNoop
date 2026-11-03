@@ -4,10 +4,11 @@ import WhoopStore
 
 /// Finishing a session: what saves, and whether the program keeps a changed set count.
 ///
-/// Asked for after a real session, 15 Sep 2026: grey numbers stay grey during the session, finishing
-/// asks once whether the sets without typed numbers are completed with them or left out ("the user
-/// might not complete all the workout, just a couple of exercises"), and a set count changed with ⊕/⊖
-/// reaches the program only if the user says so.
+/// Asked for after a real session, 15 Sep 2026: finishing asks once whether the sets that were never
+/// performed are completed with their grey numbers or left out ("the user might not complete all the
+/// workout, just a couple of exercises"), and a set count changed with ⊕/⊖ reaches the program only if
+/// the user says so. Since 3 Nov 2026 a set that was performed records the number its row showed, so
+/// leaving it alone saves the recommendation and it is never one of the sets finishing asks about.
 @MainActor
 final class LiftSessionFinishTests: XCTestCase {
 
@@ -30,7 +31,7 @@ final class LiftSessionFinishTests: XCTestCase {
         super.tearDown()
     }
 
-    /// Bench set 1 done with only its weight typed, bench set 2 done untyped, the rest never started.
+    /// Bench set 1 done with only its weight typed, bench set 2 done untyped (it records the recommended numbers), the rest never started.
     private func halfDoneSession() -> LiftSessionController {
         let c = controller()
         c.start(plan: plan(), programId: "p", programName: "Upper A")
@@ -42,24 +43,31 @@ final class LiftSessionFinishTests: XCTestCase {
         return c
     }
 
-    /// A session run face-down, every set advanced on the strap and nothing typed. Discarding then
-    /// leaves NOTHING: this is the precondition `LiftSessionView.save` guards on, because filing it
-    /// wrote a session with no sets and a manual workout the engine would fill strain into, so an
-    /// hour that recorded nothing read back as a workout. Completing still saves all five.
-    func testAFaceDownSessionDiscardingSavesNothingAtAll() {
+    /// A session run face-down, every set advanced on the strap and nothing typed: each set was
+    /// performed, so each records the recommended numbers and nothing is left for finishing to ask
+    /// about. A session where no set was performed still files nothing (see the next test).
+    func testAFaceDownSessionSavesEverySetWithTheRecommendedNumbers() {
         let c = controller()
         c.start(plan: plan(), programId: "p", programName: "Upper A")
         for _ in 0..<10 { c.advance() }                           // every set worked, none typed
-        XCTAssertEqual(c.unfinishedSlots.count, 5, "nothing typed, so every slot is unentered")
-        XCTAssertTrue(c.setsToSave(completingUnfinished: false).isEmpty,
-                      "discarding an all-untyped session must leave no set to file")
-        XCTAssertEqual(c.setsToSave(completingUnfinished: true).count, 5,
-                       "completing still files every set with its grey numbers")
+        XCTAssertTrue(c.unfinishedSlots.isEmpty, "performed sets are entered with their recommended numbers")
+        let saved = c.setsToSave(completingUnfinished: false)
+        XCTAssertEqual(saved.count, 5)
+        XCTAssertEqual(saved.first?.weightKg, 50)
+        XCTAssertEqual(saved.first?.reps, 10)
     }
 
-    func testUnfinishedSetsAreTheUntypedAndTheNeverStarted() {
+    func testASessionWithNoSetPerformedSavesNothingWhenDiscarded() {
+        let c = controller()
+        c.start(plan: plan(), programId: "p", programName: "Upper A")
+        XCTAssertEqual(c.unfinishedSlots.count, 5)
+        XCTAssertTrue(c.setsToSave(completingUnfinished: false).isEmpty)
+        XCTAssertEqual(c.setsToSave(completingUnfinished: true).count, 5)
+    }
+
+    func testUnfinishedSetsAreTheNeverStarted() {
         XCTAssertEqual(halfDoneSession().unfinishedSlots,
-                       [slot(0, 2), slot(0, 3), slot(1, 1), slot(1, 2)])
+                       [slot(0, 3), slot(1, 1), slot(1, 2)])
     }
 
     /// A set with anything typed always saves, and a blank field takes its grey number rather than
@@ -76,7 +84,7 @@ final class LiftSessionFinishTests: XCTestCase {
 
     func testDiscardingLeavesEveryUnfinishedSetOut() {
         let saved = halfDoneSession().setsToSave(completingUnfinished: false)
-        XCTAssertEqual(saved.map(\.slot), [slot(0, 1)])
+        XCTAssertEqual(saved.map(\.slot), [slot(0, 1), slot(0, 2)])
     }
 
     /// Completing saves the untyped and the never-started sets with the grey numbers the sheet showed:

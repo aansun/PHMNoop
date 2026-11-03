@@ -248,6 +248,7 @@ final class LiftSessionController: ObservableObject {
         let stamp = Int(Date().timeIntervalSince1970)
         engine?.advance(now: stamp)
         applyPendingInput()
+        fillRecommendedNumbers()
         now = stamp
         warnedFor = nil
         persist()
@@ -403,6 +404,16 @@ final class LiftSessionController: ObservableObject {
                                reps: typed?.reps ?? last.reps,
                                rpe: typed?.rpe ?? last.rpe,
                                isWarmup: warmup)
+    }
+
+    /// A set that was just finished without a number typed in records the number the row was showing (what the set above did, last session, or
+    /// the program's target), so leaving it alone saves the recommendation. RPE is never filled: it is how the set felt, which nobody can guess.
+    private func fillRecommendedNumbers() {
+        guard let engine, let last = engine.sets.last, last.weightKg == nil || last.reps == nil else { return }
+        let shown = values(of: last.slot)
+        let weight = last.weightKg ?? shown.weightKg, reps = last.reps ?? shown.reps
+        guard weight != last.weightKg || reps != last.reps else { return }
+        self.engine?.updateSet(last.slot, weightKg: weight, reps: reps, rpe: last.rpe, isWarmup: last.isWarmup)
     }
 
     /// Begin a specific set — the out-of-order path, for when a machine is occupied.
