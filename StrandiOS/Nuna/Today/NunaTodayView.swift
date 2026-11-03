@@ -173,6 +173,7 @@ struct NunaTodayView: View {
     /// The year of sleep, charge and effort figures the My Dashboard cards that open a trend page show.
     @StateObject var history = NunaSleepHistory()
     @StateObject private var sparks = NunaKeySparkModel()
+    @StateObject private var highlightsFeed = NunaHighlightsFeed()
     /// What the customize sheet opens on; set together with presenting it, so the sheet always gets the right page.
     @State private var customize: TodayCustomizationDestination?
     @State private var showQuick = false
@@ -204,6 +205,15 @@ struct NunaTodayView: View {
     var dayKeyNow: String { model.dayKey(repo: repo) }
 
     private var effortScale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
+
+    /// The baselines still being built, for the Highlights card: Recovery needs its first nights, the stress reading needs 14.
+    private var calibrationStages: [NunaCalibrationStage] {
+        guard model.loaded else { return [] }
+        var out: [NunaCalibrationStage] = []
+        if case .calibrating(let n) = model.charge { out.append(.init(id: "recovery", nights: n, total: Baselines.minNightsSeed)) }
+        if !model.stressStatus.isReady { out.append(.init(id: "stress", nights: model.stressStatus.nights, total: StressEngine.requiredNights)) }
+        return out
+    }
 
     /// The order and visibility the Nuna mockup shows until the person arranges the cards themselves.
     /// Stored values (shared with Default) win as soon as they exist.
@@ -854,7 +864,12 @@ struct NunaTodayView: View {
         case .hero:
             // The rings themselves are pinned at the top; the state chips are a section of their own.
             Color.clear.frame(height: 0)
-                .background { if model.isToday { NunaIllnessNotifier() } }
+                .background {
+                    if model.isToday {
+                        NunaIllnessNotifier()
+                        NunaHighlightsTracker(feed: highlightsFeed, loaded: model.loaded, workouts: model.workouts, calibrating: calibrationStages)
+                    }
+                }
         case .stateChips:
             if readyLine != nil || model.charge.pct != nil {
                 // Readiness, Charge state and heart rate: three chips of one shape on one line.
@@ -865,6 +880,7 @@ struct NunaTodayView: View {
                 NunaHighlightsCard(charge: model.charge.pct, hrv: model.hrv, restingHr: model.restingHr, sleepMinutes: model.sleepMinutes,
                                    effort: model.effort, stressNow: model.stressCurve.flatMap(StressDayCurve.latestLevel),
                                    stressHighMin: model.stressCurve.map(StressDayCurve.highMinutes),
+                                   rest: model.rest, workouts: model.workouts, calibrating: calibrationStages, feed: highlightsFeed,
                                    onBreathe: { showBreath = true }, onWindDown: { pushToday(.windDown) })
             }
         case .recoveryVitals:
