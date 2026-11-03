@@ -57,12 +57,7 @@ struct NunaRootView: View {
     }
 
     /// Anya's button: her mark in a ring, on the same glass as the bar. It opens her sheet over the page; it is not a tab.
-    private var anyaButton: AnyView {
-        AnyView(ZStack {
-            Circle().strokeBorder(NunaAnyaWing.gradient, lineWidth: 2.2)
-            AnyaMark(size: 17)
-        }.frame(width: 34, height: 34))
-    }
+    private var anyaButton: AnyView { AnyView(NunaAnyaRing(size: 34)) }
 
     /// What Anya reads for the tab that is open.
     private var anyaContext: String { selection == Tab.health.rawValue ? "Health" : "Today" }
