@@ -107,8 +107,8 @@ struct NunaQuickPanel<Root: Hashable>: View {
     }
 }
 
-/// Choose, order and reset the quick actions (at most five). A shown action is removed by swiping it to the left, where a delete icon
-/// comes out; the actions to add are listed only while a slot is empty. The order is changed with the Reorder switch at the top.
+/// Choose, order and reset the quick actions (at most five). A shown action is removed by sliding it to the left, which uncovers a round
+/// delete button; the actions to add are listed only while a slot is empty. The order is changed with the Reorder switch at the top.
 struct NunaQuickActionsEditor: View {
     @Binding var raw: String
     @Environment(\.dismiss) private var dismiss
@@ -123,19 +123,15 @@ struct NunaQuickActionsEditor: View {
             Section {
                 ForEach(ids, id: \.self) { id in
                     if let a = NunaQuickActions.action(id) {
-                        HStack(spacing: 12) {
-                            NunaIconTile(a.icon)
-                            Text(LocalizedStringKey(a.title)).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            Spacer(minLength: 0)
+                        // Slid to the left, the row uncovers a round red delete button (not while the order is being changed).
+                        NunaSwipeDeleteRow(enabled: !reordering, onDelete: { ids.removeAll { $0 == id }; save() }) {
+                            HStack(spacing: 12) {
+                                NunaIconTile(a.icon)
+                                Text(LocalizedStringKey(a.title)).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                                Spacer(minLength: 0)
+                            }
                         }
                         .listRowBackground(Color.clear)
-                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                            Button(role: .destructive) { withAnimation { ids.removeAll { $0 == id }; save() } } label: {
-                                Image(systemName: "trash")
-                            }
-                            .tint(NunaPalette.alert)
-                            .accessibilityLabel(Text("Remove"))
-                        }
                     }
                 }
                 .onMove { ids.move(fromOffsets: $0, toOffset: $1); save() }
