@@ -430,6 +430,10 @@ public enum NunaTabBarPrefs {
 public struct NunaTabBar: View {
     private let items: [NunaTabItem]
     private let trailing: NunaTabItem?
+    /// When set, the round button at the right is an action (it opens something over the page) and not a tab: it takes this view as its face and
+    /// calls `onTrailing`, and never becomes the selection.
+    private let trailingView: AnyView?
+    private let onTrailing: (() -> Void)?
     @Binding private var selection: Int
     private let onReselect: (Int) -> Void
     private let minimized: Bool
@@ -438,9 +442,11 @@ public struct NunaTabBar: View {
     @AppStorage(NunaTabBarPrefs.transparencyKey) private var transparency = NunaTabBarPrefs.defaultTransparency
 
     /// `minimized` shrinks the bar to a small pill with the current tab, the way the system tab bar does while a page scrolls; tapping the pill calls `onExpand`.
-    public init(items: [NunaTabItem], trailing: NunaTabItem? = nil, selection: Binding<Int>, minimized: Bool = false,
+    public init(items: [NunaTabItem], trailing: NunaTabItem? = nil, trailingView: AnyView? = nil, onTrailing: (() -> Void)? = nil,
+                selection: Binding<Int>, minimized: Bool = false,
                 onExpand: @escaping () -> Void = {}, onReselect: @escaping (Int) -> Void = { _ in }) {
-        self.items = items; self.trailing = trailing; self._selection = selection; self.onReselect = onReselect
+        self.items = items; self.trailing = trailing; self.trailingView = trailingView; self.onTrailing = onTrailing
+        self._selection = selection; self.onReselect = onReselect
         self.minimized = minimized; self.onExpand = onExpand
     }
 
@@ -469,8 +475,8 @@ public struct NunaTabBar: View {
             .buttonStyle(.plain).accessibilityLabel(Text("Show the bottom bar"))
             Spacer(minLength: 0)
             if let trailing {
-                Button { if selection == trailing.id { onReselect(trailing.id) } else { selection = trailing.id } } label: {
-                    glyph(trailing, size: 22).opacity(selection == trailing.id ? 1 : 0.62)
+                Button { activateTrailing(trailing) } label: {
+                    glyph(trailing, size: 22).opacity(onTrailing != nil || selection == trailing.id ? 1 : 0.62)
                         .frame(width: 44, height: 44).background { surface(cornerRadius: 22) }
                 }
                 .buttonStyle(.plain).accessibilityLabel(Text(verbatim: trailing.title))
@@ -492,12 +498,13 @@ public struct NunaTabBar: View {
             if trailing == nil { Spacer(minLength: 0) }
             if let trailing {
                 Button {
-                    if selection == trailing.id { onReselect(trailing.id) } else { selection = trailing.id }
+                    activateTrailing(trailing)
                 } label: {
-                    glyph(trailing, size: 30)
-                        .opacity(selection == trailing.id ? 1 : 0.62)
-                        .frame(width: 64, height: 64)
-                        .background { surface(cornerRadius: radius) }
+                    Group {
+                        if let trailingView { trailingView } else { glyph(trailing, size: 30).opacity(selection == trailing.id ? 1 : 0.62) }
+                    }
+                    .frame(width: 64, height: 64)
+                    .background { surface(cornerRadius: radius) }
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text(verbatim: trailing.title))
@@ -528,6 +535,11 @@ public struct NunaTabBar: View {
 
     /// `anyaScale` is how much larger than the other glyphs her mark is drawn: her artwork has a thin ring that needs room, but inside the row of
     /// tabs she stays within the height of the others.
+    private func activateTrailing(_ item: NunaTabItem) {
+        if let onTrailing { onTrailing(); return }
+        if selection == item.id { onReselect(item.id) } else { selection = item.id }
+    }
+
     @ViewBuilder private func glyph(_ item: NunaTabItem, size: CGFloat, anyaScale: CGFloat = 1.45) -> some View {
         if item.systemImage == NunaGlyph.anya {
             // Anya is drawn as a template in the bar, so she takes the colour of the other tabs: bright on her own page, dimmed elsewhere.

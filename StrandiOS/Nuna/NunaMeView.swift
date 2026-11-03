@@ -20,6 +20,7 @@ struct NunaMeView: View {
     @AppStorage(HydrationStore.enabledKey) private var hydration = false
     @AppStorage(StravaExperiment.enabledKey) private var strava = false
     @StateObject private var memory = CoachMemoryStore()
+    @EnvironmentObject private var router: NavRouter
 
     var body: some View {
         ScrollView {
@@ -35,6 +36,10 @@ struct NunaMeView: View {
                 // Gym opens straight to its own page, without going through Workouts.
                 NavigationLink { NunaGymPage() } label: {
                     NunaCard(small: true) { NunaListRow("Strength Trainer", subtitle: "Programs, progress and sessions", systemImage: "act:strength-trainer", showsChevron: true) }
+                }.buttonStyle(.plain)
+                // Trends left the tab bar; the page is still here.
+                Button { router.requestedDestination = .trends } label: {
+                    NunaCard(small: true) { NunaListRow("Trends", subtitle: "Recovery, Strain and Sleep over time", systemImage: "chart.line.uptrend.xyaxis", showsChevron: true) }
                 }.buttonStyle(.plain)
                 group("Personalize", count: 4) {
                     row(.devices, "Devices", LocalizedStringKey(deviceSubtitle), "applewatch")

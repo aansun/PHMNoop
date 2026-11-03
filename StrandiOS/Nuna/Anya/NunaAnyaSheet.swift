@@ -45,6 +45,8 @@ struct NunaAnyaSheet: View {
     var metric: NunaAnyaMetric?
     /// The floating style: a dark sheet with the line, suggestion chips and one box to ask in (the one the floating Anya button opens).
     var floating = false
+    /// The provider's analysis the floating pill already fetched, so the sheet opens on it.
+    var seed: String?
     @EnvironmentObject private var coach: AICoachEngine
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
@@ -97,6 +99,7 @@ struct NunaAnyaSheet: View {
                 if module == .nutrition, let r = read { detail = [c.detail, r.headline + ".", r.detail].compactMap { $0 }.joined(separator: " ") }
                 read = NunaAnyaRead(headline: c.headline, detail: detail, read: module == .nutrition ? (read?.read ?? c.read) : c.read, module: read?.module ?? module, questions: read?.questions ?? [])
             }
+            if explanation == nil, let seed { explanation = seed }
             loaded = true
         }
     }
@@ -357,16 +360,17 @@ extension NunaAnyaSheet {
     }
 
     @ViewBuilder private var floatingMessage: some View {
-        if let read {
+        if explaining {
+            HStack(spacing: 8) { ProgressView().controlSize(.small).tint(.white.opacity(0.7)); Text("Anya is thinking…").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(.white.opacity(0.7)) }
+        } else if let explanation {
+            // Her written analysis is the message; the local read stays behind it.
+            Text(Self.markdown(AnyaActions.proseOnly(explanation))).font(.nuna(size: 20, weight: .regular)).lineSpacing(9)
+                .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+            if turns.isEmpty { feedbackRow(copying: AnyaActions.proseOnly(explanation), note: String(explanation.prefix(80))) }
+        } else if let read {
             Text(NunaMark.attributed(NunaMark.compose(headline: read.headline, detail: read.detail), size: 20))
                 .font(.nuna(size: 20, weight: .regular)).lineSpacing(9).fixedSize(horizontal: false, vertical: true)
                 .frame(maxWidth: .infinity, alignment: .leading)
-            if explaining {
-                HStack(spacing: 8) { ProgressView().controlSize(.small).tint(.white.opacity(0.7)); Text("Anya is thinking…").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(.white.opacity(0.7)) }
-            } else if let explanation {
-                Text(Self.markdown(AnyaActions.proseOnly(explanation))).font(.nuna(size: 18, weight: .regular)).lineSpacing(8)
-                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
-            }
             if turns.isEmpty { feedbackRow(copying: NunaMark.plain(NunaMark.compose(headline: read.headline, detail: read.detail)), note: read.headline) }
         } else if loaded {
             Text("Anya shows a line only when it has figures to cite. Wear the strap and sync, then ask again.")
