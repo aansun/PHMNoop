@@ -79,6 +79,11 @@ final class ProfileStore: ObservableObject {
         }
     }
 
+    /// What the person likes to be called (optional). Shown on the profile page and in "<name>'s Daily Outlook"; never leaves the phone.
+    @Published var displayName: String {
+        didSet { d.set(displayName.trimmingCharacters(in: .whitespaces), forKey: K.displayName) }
+    }
+
     private let d = UserDefaults.standard
     private enum K {
         static let dateOfBirth = "profile.dateOfBirth"
@@ -97,6 +102,7 @@ final class ProfileStore: ObservableObject {
         static let stepsManualCoeff = "profile.stepsManualCoefficient"
         static let stepsHasMotion = "profile.stepsHasBankedMotion"
         static let avatar = "profile.avatarImageData"
+        static let displayName = "profile.displayName"
     }
 
     init() {
@@ -137,6 +143,7 @@ final class ProfileStore: ObservableObject {
         stepsManualCoefficient = max(0, d.object(forKey: K.stepsManualCoeff) as? Double ?? 0)
         stepsHasBankedMotion = d.object(forKey: K.stepsHasMotion) as? Bool ?? false
         avatarImageData = d.data(forKey: K.avatar)
+        displayName = d.string(forKey: K.displayName) ?? ""
     }
 
     // MARK: - Profile picture

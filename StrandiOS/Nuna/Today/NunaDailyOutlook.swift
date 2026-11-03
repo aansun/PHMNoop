@@ -259,6 +259,13 @@ enum NunaOutlookLoader {
 struct NunaDailyOutlookCard: View {
     let action: () -> Void
     @AppStorage(NunaOutlookGate.seenDayKey) private var seenDay = ""
+    @EnvironmentObject private var profile: ProfileStore
+
+    /// "Sui's Daily Outlook" once the profile has a name, "Daily Outlook" before.
+    private var title: String {
+        let first = profile.displayName.split(separator: " ").first.map(String.init) ?? ""
+        return first.isEmpty ? String(localized: "Daily Outlook") : String(localized: "\(first)'s Daily Outlook")
+    }
 
     var body: some View {
         // New today: the brown to blue wash. Once it was opened, it settles into a plain card.
@@ -266,7 +273,7 @@ struct NunaDailyOutlookCard: View {
         Button(action: action) {
             HStack(spacing: 14) {
                 Image(systemName: "sun.max").font(.system(size: 22, weight: .light)).foregroundStyle(seen ? NunaPalette.textSecondary : .white.opacity(0.9)).frame(width: 26)
-                Text("Daily Outlook").font(.nuna(size: 17, weight: .medium)).foregroundStyle(seen ? NunaPalette.textPrimary : .white).textCase(nil)
+                Text(verbatim: title).font(.nuna(size: 17, weight: .medium)).foregroundStyle(seen ? NunaPalette.textPrimary : .white).textCase(nil)
                 Spacer(minLength: 8)
                 Image(systemName: "chevron.right").font(.system(size: 15, weight: .semibold)).foregroundStyle(seen ? NunaPalette.textSecondary : .white.opacity(0.9))
             }

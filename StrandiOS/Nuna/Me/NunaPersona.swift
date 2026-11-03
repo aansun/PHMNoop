@@ -109,6 +109,13 @@ struct NunaPersonaView: View {
                 }
             }
             NunaSettingsGroup("About you") {
+                HStack(spacing: 12) {
+                    Text("Name").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                    TextField("", text: $profile.displayName, prompt: Text("What should we call you?").foregroundStyle(NunaPalette.textMuted))
+                        .multilineTextAlignment(.trailing).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                        .textInputAutocapitalization(.words).autocorrectionDisabled()
+                }.padding(.vertical, 12)
+                NunaDivider()
                 HStack {
                     Text("Date of birth").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Spacer()
