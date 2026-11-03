@@ -443,8 +443,9 @@ extension NunaAnyaSheet {
                 HStack(spacing: 12) {
                     ForEach(qs) { q in
                         Button { chipTapped(q) } label: {
-                            Text(verbatim: q.title).font(.nuna(size: 15, weight: .medium)).foregroundStyle(Self.ink)
-                                .padding(.horizontal, 20).frame(height: 46).background(.white, in: Capsule())
+                            // The Outlook's follow-ups are smaller: a 30 pt pill with 13 pt words.
+                            Text(verbatim: q.title).font(.nuna(size: outlook ? 13 : 15, weight: .medium)).foregroundStyle(Self.ink)
+                                .padding(.horizontal, outlook ? 12 : 20).frame(height: outlook ? 30 : 46).background(.white, in: Capsule())
                         }.buttonStyle(.plain)
                     }
                 }
@@ -495,6 +496,7 @@ extension NunaAnyaSheet {
 extension NunaAnyaSheet {
     fileprivate func loadOutlook() async {
         UserDefaults.standard.set(true, forKey: NunaOutlookGate.openedKey)
+        UserDefaults.standard.set(Repository.localDayKey(Date()), forKey: NunaOutlookGate.seenDayKey)
         let i = await NunaOutlookLoader.inputs(repo: repo, profile: profile)
         outlookInputs = i
         outlookData = NunaOutlookEngine.build(i, offset: outlookOffset)
@@ -516,7 +518,7 @@ extension NunaAnyaSheet {
 
     /// Commits to one of the ideas: remembered by Anya for this module, and shown as done on its card.
     fileprivate func commit(_ idea: NunaOutlookIdea) {
-        NunaOutlookGate.commit(idea.id)
+        NunaOutlookGate.commit(idea)
         outlookCommitted = NunaOutlookGate.committed()
         NunaAnyaMemory.remember(module, "Committed to \(idea.title) today.")
     }
