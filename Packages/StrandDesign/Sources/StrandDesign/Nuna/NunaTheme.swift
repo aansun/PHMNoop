@@ -156,6 +156,11 @@ public enum NunaTheme {
 
 public extension Font {
     /// The Nuna system font (SF Pro) at a design size.
+    /// A bold figure (numbers, and the percent sign beside them): DIN Bold in WHP at any size, the system's bold figure otherwise.
+    static func nunaBoldFigure(size: CGFloat) -> Font {
+        NunaThemePrefs.skin == .whp ? NunaWHPFont.boldFigure(size: size) : nuna(size: size, weight: .bold, design: NunaType.design)
+    }
+
     static func nuna(size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> Font {
         // WHP follows the WHOOP typography cheat sheet by role. Figures (the call sites that ask for `NunaType.design`) are D-DIN-PRO,
         // the DIN role of the sheet; words are Proxima Nova: main headers (24 to 31) bold, card headers (16 to 23) semibold, body (13 to 15)
@@ -186,6 +191,14 @@ enum NunaWHPFont {
     private static let dinOK = din.values.allSatisfy(available)
     /// Montserrat ships as one variable file; its family name is "Montserrat" and the weight axis follows `.weight`.
     private static let montserratOK = CTFontCopyFamilyName(CTFontCreateWithName("Montserrat" as CFString, 12, nil)) as String == "Montserrat"
+
+    /// The figure face in its Bold cut at any size, for the small readouts (a battery percentage) that the reference sets in DIN Bold, not in the
+    /// lighter cut `font` uses below 15 pt.
+    static func boldFigure(size: CGFloat) -> Font {
+        if dinProOK { return .custom("DINPro-Bold", size: size) }
+        if dinOK { return .custom("D-DIN-PRO-Bold", size: size) }
+        return .system(size: size, weight: .bold, design: .default).width(.condensed)
+    }
 
     static func font(size: CGFloat, weight: Font.Weight, design: Font.Design) -> Font {
         // Headings ask for the figure design too but in the heaviest weight; below 32 pt those are words.

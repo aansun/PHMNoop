@@ -47,7 +47,7 @@ struct NunaStrapChip: View {
     var body: some View {
         HStack(spacing: 6) {
             if let battery {
-                Text(verbatim: "\(Int(battery.rounded()))%").font(.nuna(size: 12.5, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                Text(verbatim: "\(Int(battery.rounded()))%").font(.nunaBoldFigure(size: 13)).foregroundStyle(NunaPalette.textMuted)
             }
             // The strap as drawn in the reference, with the dot on it that says whether it is connected.
             NunaStrapIcon().foregroundStyle(NunaPalette.textPrimary)
