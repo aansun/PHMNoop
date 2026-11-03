@@ -262,6 +262,7 @@ struct NunaGymView: View {
     @State private var picking = false
     @State private var choosingStart = false
     @State private var buildingWithAnya = false
+    @State private var groupListOpen = false
     @ObservedObject private var groupsModel = NunaProgramGroupsModel.shared
     @State private var groupDialog: GroupDialog?
     @State private var groupName = ""
@@ -469,40 +470,74 @@ struct NunaGymView: View {
         Image(systemName: name).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 40, height: 36).contentShape(Rectangle())
     }
 
-    /// The drop-down that names the group on show, with the options of that group beside it.
+    /// The drop-down that names the group on show, as on the trend pages: a box with the folder, the name and the count, a chevron that opens the
+    /// list of groups below it with the one on show lit, and the menu of that group beside it.
     private func groupPicker(_ open: NunaProgramGroup?, count: Int) -> some View {
-        HStack(spacing: 8) {
-            Menu {
-                Button { withAnimation(.easeInOut(duration: 0.2)) { groupsModel.openGroupId = "" } } label: {
-                    if open == nil { Label(String(localized: "Ungrouped") + " (\(groupsModel.ungrouped(programs).count))", systemImage: "checkmark") }
-                    else { Text(verbatim: String(localized: "Ungrouped") + " (\(groupsModel.ungrouped(programs).count))") }
+        VStack(spacing: 10) {
+            HStack(spacing: 8) {
+                Button { withAnimation(.easeOut(duration: 0.2)) { groupListOpen.toggle() } } label: {
+                    HStack(spacing: 16) {
+                        Image(systemName: "folder").font(.nuna(size: 19, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 32)
+                        Text(verbatim: open?.name ?? String(localized: "Ungrouped")).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                            .foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+                        Text(verbatim: "\(count)").font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
+                        Spacer(minLength: 0)
+                        Image(systemName: groupListOpen ? "chevron.up" : "chevron.down").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                    }
+                    .padding(.horizontal, 18).frame(height: 60)
+                    .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+                    .contentShape(Rectangle())
                 }
-                ForEach(groupsModel.groups) { g in
-                    Button { withAnimation(.easeInOut(duration: 0.2)) { groupsModel.openGroupId = g.id } } label: {
-                        let n = groupsModel.programs(in: g, from: programs).count
-                        if open?.id == g.id { Label(g.name + " (\(n))", systemImage: "checkmark") } else { Text(verbatim: g.name + " (\(n))") }
+                .buttonStyle(.plain).accessibilityLabel(Text("Group"))
+                if let open {
+                    Menu {
+                        Button { askForGroup(.rename(open)) } label: { Label("Rename group", systemImage: "pencil") }
+                        Button(role: .destructive) { deletingGroup = open } label: { Label("Delete group", systemImage: "trash") }
+                    } label: {
+                        Image(systemName: "ellipsis").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 34, height: 44).contentShape(Rectangle())
                     }
                 }
-            } label: {
-                HStack(spacing: 12) {
-                    Text(verbatim: open?.name ?? String(localized: "Ungrouped")).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).lineLimit(1)
-                    Text(verbatim: "\(count)").font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
-                    Spacer(minLength: 0)
-                    Image(systemName: "chevron.down").font(.nuna(size: 14, weight: .bold))
-                }
-                .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 4).frame(maxWidth: .infinity).frame(height: 44)
-                .contentShape(Rectangle())
             }
-            .accessibilityLabel(Text("Group"))
-            if let open {
-                Menu {
-                    Button { askForGroup(.rename(open)) } label: { Label("Rename group", systemImage: "pencil") }
-                    Button(role: .destructive) { deletingGroup = open } label: { Label("Delete group", systemImage: "trash") }
-                } label: {
-                    Image(systemName: "ellipsis").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 34, height: 36).contentShape(Rectangle())
-                }
-            }
+            if groupListOpen { groupList(open) }
         }
+    }
+
+    /// The groups in a black panel under the box, the one on show lit and scrolled into view.
+    private func groupList(_ open: NunaProgramGroup?) -> some View {
+        let rows = 1 + groupsModel.groups.count
+        return ScrollViewReader { proxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    groupRow(id: "", icon: "tray", title: String(localized: "Ungrouped"), count: groupsModel.ungrouped(programs).count, lit: open == nil)
+                    ForEach(groupsModel.groups) { g in
+                        groupRow(id: g.id, icon: "folder", title: g.name, count: groupsModel.programs(in: g, from: programs).count, lit: open?.id == g.id)
+                    }
+                }
+                .padding(10)
+            }
+            .scrollIndicators(.hidden)
+            .onAppear { DispatchQueue.main.async { proxy.scrollTo(open?.id ?? "", anchor: .center) } }
+            .frame(height: min(CGFloat(rows) * 52 + 20, 320))
+            .background(Color.black, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
+        }
+    }
+
+    private func groupRow(id: String, icon: String, title: String, count: Int, lit: Bool) -> some View {
+        Button {
+            withAnimation(.easeInOut(duration: 0.2)) { groupsModel.openGroupId = id; groupListOpen = false }
+        } label: {
+            HStack(spacing: 14) {
+                Image(systemName: icon).font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
+                Text(verbatim: title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                    .lineLimit(1).minimumScaleFactor(0.8)
+                Spacer(minLength: 0)
+                Text(verbatim: "\(count)").font(.nuna(size: 13, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textSecondary)
+            }
+            .padding(.horizontal, 12).frame(height: 52)
+            .background(lit ? Color.white.opacity(0.12) : Color.clear, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain).id(id)
     }
 
     /// Programs named "Plan · Day A" and "Plan · Day B" can be put together in one tap.
