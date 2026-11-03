@@ -7843,5 +7843,10 @@
  "Green Recovery means your body is well recovered and ready for Strain. A good day to train towards your target.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Recovery hijau berarti tubuhmu pulih dengan baik dan siap menerima Strain. Hari yang bagus untuk berlatih menuju targetmu."}}}},
  "Red Recovery means your body is asking for rest. Keep today light and prioritize sleep and hydration tonight.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Recovery merah berarti tubuhmu meminta istirahat. Jalani hari ini dengan ringan dan utamakan tidur serta cairan malam ini."}}}},
  "Yellow Recovery is normal and means your body is maintaining. Train steadily rather than pushing hard today.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Recovery kuning itu normal dan berarti tubuhmu menjaga kondisi. Berlatihlah stabil, jangan memaksa hari ini."}}}},
- "You've hit the optimal Strain range for your Recovery. Keep moving towards your target of %@ for more fitness gains.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu sudah mencapai rentang Strain optimal untuk Recovery-mu. Terus bergerak menuju target %@ untuk manfaat kebugaran lebih besar."}}}}
+ "You've hit the optimal Strain range for your Recovery. Keep moving towards your target of %@ for more fitness gains.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu sudah mencapai rentang Strain optimal untuk Recovery-mu. Terus bergerak menuju target %@ untuk manfaat kebugaran lebih besar."}}}},
+ "Ask Anya anything": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tanya Anya apa saja"}}}},
+ "Connect Anya to ask questions about your data": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Hubungkan Anya untuk bertanya tentang datamu"}}}},
+ "Helpful": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Membantu"}}}},
+ "Not helpful": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kurang membantu"}}}},
+ "Opens Anya": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Membuka Anya"}}}}
 }, "version":"1.0" }
