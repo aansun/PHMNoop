@@ -877,7 +877,7 @@ struct NunaTodayView: View {
             }
         case .synthesis:
             if model.isToday {
-                NunaHighlightsCard(charge: model.charge.pct, hrv: model.hrv, restingHr: model.restingHr, sleepMinutes: model.sleepMinutes,
+                NunaHighlightsCard(charge: model.charge.pct, chargeScored: { if case .scored = model.charge { return true } else { return false } }(), hrv: model.hrv, restingHr: model.restingHr, sleepMinutes: model.sleepMinutes,
                                    effort: model.effort, stressNow: model.stressCurve.flatMap(StressDayCurve.latestLevel),
                                    stressHighMin: model.stressCurve.map(StressDayCurve.highMinutes),
                                    rest: model.rest, workouts: model.workouts, calibrating: calibrationStages, feed: highlightsFeed,
