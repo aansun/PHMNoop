@@ -188,6 +188,8 @@ enum NunaGymStore {
 
 /// Gym as a page of its own, apart from the Workouts hub: three tabs (Progress, My Program, Explore) under its own header, with the banner of a running session.
 struct NunaGymPage: View {
+    /// Shown as the root of the Trainer tab: there is nothing to go back to, so the back chevron is left out.
+    var asTabRoot = false
     @Environment(\.dismiss) private var dismiss
     @State private var openLive = false
     @State private var tab = 1
@@ -197,9 +199,11 @@ struct NunaGymPage: View {
             VStack(spacing: NunaSpacing.section) {
                 ZStack {
                     HStack {
-                        Button { dismiss() } label: {
-                            Image(systemName: "chevron.left").font(.nuna(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44)
-                        }.buttonStyle(.plain).accessibilityLabel(Text("Back"))
+                        if !asTabRoot {
+                            Button { dismiss() } label: {
+                                Image(systemName: "chevron.left").font(.nuna(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44)
+                            }.buttonStyle(.plain).accessibilityLabel(Text("Back"))
+                        }
                         Spacer()
                     }
                     Text("Strength Trainer").font(.nuna(size: 15, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)

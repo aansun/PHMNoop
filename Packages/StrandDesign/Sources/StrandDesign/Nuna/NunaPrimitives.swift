@@ -542,6 +542,9 @@ public struct NunaTabBar: View {
     @ViewBuilder private func glyph(_ item: NunaTabItem, size: CGFloat, anyaScale: CGFloat = 1.45) -> some View {
         if let kind = NunaTabIcon.Kind(rawValue: item.systemImage) {
             NunaTabIcon(kind: kind)
+        } else if item.systemImage.hasPrefix("act:") {
+            // An activity picture, the one the rest of the app uses for it, at the size of the other tab icons.
+            NunaGlyph(item.systemImage, pointSize: size * 0.82)
         } else if item.systemImage == NunaGlyph.anya {
             // Anya is drawn as a template in the bar, so she takes the colour of the other tabs: bright on her own page, dimmed elsewhere.
             Image("AnyaGlyph").renderingMode(.template).resizable().scaledToFit().frame(width: size * anyaScale, height: size * anyaScale)
