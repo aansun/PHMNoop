@@ -47,6 +47,8 @@ struct NunaAnyaSheet: View {
     var floating = false
     /// The provider's analysis the floating pill already fetched, so the sheet opens on it.
     var seed: String?
+    /// Set by the Daily Outlook card: the sheet opens on the Outlook (the read of the day, ideas and cards to commit to).
+    var outlook = false
     @EnvironmentObject private var coach: AICoachEngine
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
@@ -66,6 +68,11 @@ struct NunaAnyaSheet: View {
     @State private var path = NavigationPath()
     /// What the sheet shows: Anya's read of the line that was tapped, or a conversation about it. Each sheet has its own conversation.
     @State private var tab = "read"
+    /// The Daily Outlook on show, how far "Generate alternatives" has moved on, and what was committed today.
+    @State private var outlookData: NunaOutlook?
+    @State private var outlookInputs: NunaOutlookInputs?
+    @State private var outlookOffset = 0
+    @State private var outlookCommitted = NunaOutlookGate.committed()
 
     /// Provider replies use light markdown (bold, lists); show it formatted and keep line breaks.
     static func markdown(_ s: String) -> AttributedString {
@@ -100,7 +107,9 @@ struct NunaAnyaSheet: View {
                 read = NunaAnyaRead(headline: c.headline, detail: detail, read: module == .nutrition ? (read?.read ?? c.read) : c.read, module: read?.module ?? module, questions: read?.questions ?? [])
             }
             if explanation == nil, let seed { explanation = seed }
+            if outlook { await loadOutlook() }
             loaded = true
+            if outlook { await explainOutlook() }
         }
     }
 
@@ -356,7 +365,9 @@ extension NunaAnyaSheet {
     }
 
     @ViewBuilder private var floatingMessage: some View {
-        if explaining {
+        if outlook {
+            outlookMessage
+        } else if explaining {
             HStack(spacing: 8) { ProgressView().controlSize(.small).tint(.white.opacity(0.7)); Text("Anya is thinking…").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(.white.opacity(0.7)) }
         } else if let explanation {
             // Her written analysis is the message; the local read stays behind it.
@@ -426,7 +437,7 @@ extension NunaAnyaSheet {
 
     /// The questions this page offers, as white pills in a row that scrolls sideways.
     @ViewBuilder private var floatingChips: some View {
-        let qs = read?.questions ?? []
+        let qs = outlook ? outlookChips : (read?.questions ?? [])
         if !qs.isEmpty {
             ScrollView(.horizontal) {
                 HStack(spacing: 12) {
@@ -444,6 +455,7 @@ extension NunaAnyaSheet {
     }
 
     private func chipTapped(_ q: NunaAnyaQuestion) {
+        if outlook, let idea = outlookData?.ideas.first(where: { q.id == outlookChipTitle($0) }) { chooseIdea(idea, prompt: q.prompt, shown: q.title); return }
         if !coach.isConfigured { path.append(NunaAnyaRoute.connect); return }
         Task { await ask(q.prompt, shown: q.title) }
     }
@@ -475,6 +487,65 @@ extension NunaAnyaSheet {
             .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(NunaAnyaWing.gradient.opacity(0.8), lineWidth: 1))
         }
         .padding(.horizontal, 20).padding(.bottom, 12)
+    }
+}
+
+// MARK: - Daily Outlook
+
+extension NunaAnyaSheet {
+    fileprivate func loadOutlook() async {
+        UserDefaults.standard.set(true, forKey: NunaOutlookGate.openedKey)
+        let i = await NunaOutlookLoader.inputs(repo: repo, profile: profile)
+        outlookInputs = i
+        outlookData = NunaOutlookEngine.build(i, offset: outlookOffset)
+    }
+
+    /// When Anya is connected, her own words replace the local paragraph. Without a provider the local read stands.
+    fileprivate func explainOutlook() async {
+        guard explanation == nil, coach.isConfigured, coach.dataConsent, let o = outlookData else { return }
+        explaining = true; defer { explaining = false }
+        let page = "today\n\n" + NunaOutlookEngine.summary(o) + (NunaAnyaMemory.summary(module).map { "\n\n" + $0 } ?? "")
+        explanation = await coach.generateContextualBrief(pageContext: page).map { AnyaActions.proseOnly($0) }
+    }
+
+    fileprivate func outlookChipTitle(_ idea: NunaOutlookIdea) -> String { String(localized: "I'll go with \(idea.title.lowercased())") }
+
+    fileprivate var outlookChips: [NunaAnyaQuestion] {
+        (outlookData?.ideas ?? []).map { NunaAnyaQuestion(title: outlookChipTitle($0), prompt: "I'll go with \($0.title) today. Help me plan it around my Recovery.") }
+    }
+
+    /// Commits to one of the ideas: remembered by Anya for this module, and shown as done on its card.
+    fileprivate func commit(_ idea: NunaOutlookIdea) {
+        NunaOutlookGate.commit(idea.id)
+        outlookCommitted = NunaOutlookGate.committed()
+        NunaAnyaMemory.remember(module, "Committed to \(idea.title) today.")
+    }
+
+    /// A chip: commits to the idea, and answers (the provider when connected, a short local reply otherwise).
+    fileprivate func chooseIdea(_ idea: NunaOutlookIdea, prompt: String, shown: String) {
+        commit(idea)
+        if coach.isConfigured, coach.dataConsent { Task { await ask(prompt, shown: shown) }; return }
+        turns.append(ChatMessage(id: UUID(), role: .user, text: shown))
+        turns.append(ChatMessage(id: UUID(), role: .assistant,
+                                 text: String(localized: "Noted: \(idea.title) is on for today. \(idea.line) Connect Anya if you want help shaping the session itself.")))
+    }
+
+    fileprivate func alternatives() {
+        guard let i = outlookInputs else { return }
+        outlookOffset += 3
+        withAnimation(.easeInOut(duration: 0.2)) { outlookData = NunaOutlookEngine.build(i, offset: outlookOffset) }
+    }
+
+    @ViewBuilder fileprivate var outlookMessage: some View {
+        if let o = outlookData {
+            NunaOutlookContent(outlook: o, provider: explanation, committed: outlookCommitted, onCommit: { commit($0) }, onAlternatives: { alternatives() })
+            if explaining {
+                HStack(spacing: 8) { ProgressView().controlSize(.small).tint(.white.opacity(0.7)); Text("Anya is thinking…").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(.white.opacity(0.7)) }
+            }
+            if turns.isEmpty { feedbackRow(copying: NunaMark.plain(o.greeting + "\n" + (explanation ?? o.paragraph)), note: o.greeting) }
+        } else {
+            HStack(spacing: 8) { ProgressView().controlSize(.small).tint(.white.opacity(0.7)); Text("Anya is thinking…").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(.white.opacity(0.7)) }
+        }
     }
 }
 
