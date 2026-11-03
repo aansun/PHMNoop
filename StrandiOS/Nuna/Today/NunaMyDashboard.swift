@@ -173,61 +173,62 @@ extension NunaTodayView {
     }
 }
 
-/// The My Dashboard page of the Today editor: the cards on the dashboard in the order they show (drag to move, the minus takes one off), and under
-/// them everything that can be added, each with a plus.
+/// The My Dashboard page of the Today editor: the cards on the dashboard in the order they show (the handle at the right moves one, sliding
+/// it to the left uncovers the red delete button), and under them everything that can be added, each with a plus.
 struct NunaDashboardEditor: View {
     @Binding var draft: EditableLayoutDraft<NunaDashItem>
     let onReset: () -> Void
 
+    /// A row is 60 pt tall with 8 pt between rows.
+    private static let pitch: CGFloat = 68
+    @State private var dragging: NunaDashItem?
+    @State private var dragY: CGFloat = 0
+
     var body: some View {
-        List {
-            Text("My Dashboard").font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                .listRowBackground(Color.clear).listRowSeparator(.hidden).listRowInsets(EdgeInsets(top: 12, leading: NunaSpacing.screenH, bottom: 8, trailing: NunaSpacing.screenH))
-            ForEach(draft.visible) { item in
-                row(item) {
-                    Button { remove(item) } label: {
-                        Image(systemName: "minus.circle.fill").font(.nuna(size: 20, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
-                            .frame(width: 36, height: 36).contentShape(Rectangle())
+        ScrollView {
+            VStack(spacing: 8) {
+                Text("My Dashboard").font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                    .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 12).padding(.bottom, 4)
+                ForEach(draft.visible) { item in
+                    NunaSwipeDeleteRow(enabled: dragging == nil, onDelete: { remove(item) }) {
+                        row(item) { handle(item) }
                     }
-                    .buttonStyle(.plain).accessibilityLabel(Text("Remove"))
+                    .offset(y: shift(item)).zIndex(dragging == item ? 1 : 0)
+                    .shadow(color: .black.opacity(dragging == item ? 0.35 : 0), radius: 10, y: 4)
+                    .animation(dragging == item ? nil : .spring(response: 0.3, dampingFraction: 0.85), value: shift(item))
                 }
-                .deleteDisabled(true)
-            }
-            .onMove { draft.moveVisible(from: $0, to: $1) }
 
-            if !draft.hidden.isEmpty {
-                HStack(spacing: 14) {
-                    Text("Add to my dashboard").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                    Rectangle().fill(NunaPalette.hairline).frame(height: 1)
-                }
-                .listRowBackground(Color.clear).listRowSeparator(.hidden).listRowInsets(EdgeInsets(top: 22, leading: NunaSpacing.screenH, bottom: 8, trailing: NunaSpacing.screenH))
-                .moveDisabled(true).deleteDisabled(true)
-                ForEach(draft.hidden) { item in
-                    row(item, reserve: 40) {
-                        Button { add(item) } label: {
-                            Image(systemName: "plus").font(.nuna(size: 20, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
-                                .frame(width: 36, height: 36).contentShape(Rectangle())
+                if !draft.hidden.isEmpty {
+                    HStack(spacing: 14) {
+                        Text("Add to my dashboard").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Rectangle().fill(NunaPalette.hairline).frame(height: 1)
+                    }
+                    .padding(.top, 22).padding(.bottom, 4)
+                    ForEach(draft.hidden) { item in
+                        row(item) {
+                            Button { add(item) } label: {
+                                Image(systemName: "plus").font(.nuna(size: 20, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
+                                    .frame(width: 44, height: 44).contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain).accessibilityLabel(Text("Add"))
                         }
-                        .buttonStyle(.plain).accessibilityLabel(Text("Add"))
+                        .onTapGesture { add(item) }
                     }
-                    .moveDisabled(true).deleteDisabled(true)
-                    .onTapGesture { add(item) }
                 }
-            }
 
-            Button(role: .destructive, action: onReset) {
-                Text("Reset this layout").font(.nuna(size: 15.5, weight: .bold)).frame(maxWidth: .infinity)
+                Button(role: .destructive, action: onReset) {
+                    Text("Reset this layout").font(.nuna(size: 15.5, weight: .bold)).frame(maxWidth: .infinity).frame(height: 44)
+                }
+                .padding(.top, 12)
             }
-            .listRowBackground(Color.clear).listRowSeparator(.hidden).listRowInsets(EdgeInsets(top: 12, leading: NunaSpacing.screenH, bottom: 12, trailing: NunaSpacing.screenH)).moveDisabled(true).deleteDisabled(true)
+            .padding(.horizontal, NunaSpacing.screenH).padding(.bottom, 24)
         }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
+        .scrollIndicators(.hidden)
+        .scrollDisabled(dragging != nil)
         .background(NunaPalette.canvas)
-        .environment(\.editMode, .constant(.active))
     }
 
-    /// `reserve` keeps a row as wide as the rows that carry the system drag handle on their right.
-    private func row<Trailing: View>(_ item: NunaDashItem, reserve: CGFloat = 0, @ViewBuilder trailing: () -> Trailing) -> some View {
+    private func row<Trailing: View>(_ item: NunaDashItem, @ViewBuilder trailing: () -> Trailing) -> some View {
         HStack(spacing: 14) {
             NunaIcon(name: item.icon, size: 18).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
             Text(verbatim: item.title).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
@@ -235,11 +236,43 @@ struct NunaDashboardEditor: View {
             Spacer(minLength: 6)
             trailing()
         }
-        .padding(.leading, 14).padding(.trailing, 2).frame(height: 60)
+        .padding(.leading, 14).padding(.trailing, 6).frame(height: 60)
         .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
-        .listRowBackground(Color.clear)
-        .listRowSeparator(.hidden)
-        .listRowInsets(EdgeInsets(top: 4, leading: NunaSpacing.screenH, bottom: 4, trailing: NunaSpacing.screenH + reserve))
+    }
+
+    // MARK: Moving
+
+    /// The two bars at the right of a row: dragging them moves the row, and the rows it passes make way.
+    private func handle(_ item: NunaDashItem) -> some View {
+        Image(systemName: "equal").font(.nuna(size: 20, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+            .frame(width: 44, height: 44).contentShape(Rectangle())
+            .highPriorityGesture(
+                DragGesture(minimumDistance: 0, coordinateSpace: .global)
+                    .onChanged { v in dragging = item; dragY = v.translation.height }
+                    .onEnded { _ in
+                        if let from = draft.visible.firstIndex(of: item) {
+                            let to = target(from)
+                            if to != from { withAnimation(.easeInOut(duration: 0.2)) { draft.moveVisible(from: IndexSet(integer: from), to: to > from ? to + 1 : to) } }
+                        }
+                        dragging = nil; dragY = 0
+                    }
+            )
+            .accessibilityLabel(Text("Reorder"))
+    }
+
+    /// Where the row being dragged would land.
+    private func target(_ from: Int) -> Int {
+        min(max(from + Int((dragY / Self.pitch).rounded()), 0), draft.visible.count - 1)
+    }
+
+    /// How far a row is moved on screen: the dragged one follows the finger, the ones it has passed move one place the other way.
+    private func shift(_ item: NunaDashItem) -> CGFloat {
+        guard let dragging, let from = draft.visible.firstIndex(of: dragging), let i = draft.visible.firstIndex(of: item) else { return 0 }
+        if item == dragging { return dragY }
+        let to = target(from)
+        if from < i && i <= to { return -Self.pitch }
+        if to <= i && i < from { return Self.pitch }
+        return 0
     }
 
     private func add(_ item: NunaDashItem) {

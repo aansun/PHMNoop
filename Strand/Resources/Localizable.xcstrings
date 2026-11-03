@@ -7910,5 +7910,6 @@
  "I'll go with %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Aku pilih %@"}}}},
  "Noted: %@ is on for today. %@ Connect Anya if you want help shaping the session itself.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Dicatat: %1$@ masuk rencana hari ini. %2$@ Hubungkan Anya jika kamu ingin dibantu menyusun sesinya."}}}},
  "Recommended: %lld min": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Disarankan: %lld mnt"}}}},
- "Intensity level": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tingkat intensitas"}}}}
+ "Intensity level": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tingkat intensitas"}}}},
+ "Reorder": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Urutkan"}}}}
 }, "version":"1.0" }
