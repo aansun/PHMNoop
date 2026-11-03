@@ -488,14 +488,14 @@ public struct NunaTabBar: View {
 
     private var full: some View {
         HStack(spacing: 10) {
-            // The bar is as wide as its tabs (each a fixed, comfortable width, narrower from five tabs on so the bar fits a phone) and sits in the middle, so four tabs stay close together
-            // instead of being pulled to the edges of the screen.
-            Spacer(minLength: 0)
+            // The bar takes the width the round button leaves, and its tabs share it evenly.
             HStack(spacing: 0) { ForEach(items) { tab($0) } }
-                .padding(.horizontal, 8)
+                .padding(.horizontal, 6)
                 .frame(height: 64)
+                .frame(maxWidth: .infinity)
+                // The glow of the active tab stays inside the bar.
+                .clipShape(RoundedRectangle(cornerRadius: radius, style: .continuous))
                 .background { surface(cornerRadius: radius) }
-            if trailing == nil { Spacer(minLength: 0) }
             if let trailing {
                 Button {
                     activateTrailing(trailing)
@@ -515,8 +515,6 @@ public struct NunaTabBar: View {
         .padding(.bottom, 6)
     }
 
-    /// Glass: the page shows through, softened only a little, with a faint tint and a bright hairline on the edge. How much of the tint is
-    /// left is the transparency setting. Off, the bar is a solid surface.
     @ViewBuilder private func surface(cornerRadius r: CGFloat) -> some View {
         let t = Double(min(max(transparency, 0), 100)) / 100
         let shape = RoundedRectangle(cornerRadius: r, style: .continuous)
@@ -528,6 +526,7 @@ public struct NunaTabBar: View {
                 shape.fill(NunaPalette.card)
             }
         }
+        .overlay(shape.fill(LinearGradient(colors: [NunaPalette.textPrimary.opacity(0.05), .clear], startPoint: .top, endPoint: .center)).allowsHitTesting(false))
         .overlay(shape.strokeBorder(glass ? LinearGradient(colors: [NunaPalette.ink.opacity(0.28), NunaPalette.ink.opacity(0.06)], startPoint: .top, endPoint: .bottom)
                                           : LinearGradient(colors: [NunaPalette.ink.opacity(0.08)], startPoint: .top, endPoint: .bottom), lineWidth: 1))
         .shadow(color: NunaPalette.shade.opacity(glass ? 0.22 : 0.35), radius: 14, y: 5)
@@ -541,7 +540,9 @@ public struct NunaTabBar: View {
     }
 
     @ViewBuilder private func glyph(_ item: NunaTabItem, size: CGFloat, anyaScale: CGFloat = 1.45) -> some View {
-        if item.systemImage == NunaGlyph.anya {
+        if let kind = NunaTabIcon.Kind(rawValue: item.systemImage) {
+            NunaTabIcon(kind: kind).frame(width: size, height: size * 0.86)
+        } else if item.systemImage == NunaGlyph.anya {
             // Anya is drawn as a template in the bar, so she takes the colour of the other tabs: bright on her own page, dimmed elsewhere.
             Image("AnyaGlyph").renderingMode(.template).resizable().scaledToFit().frame(width: size * anyaScale, height: size * anyaScale)
         } else if item.usesAssetImage {
@@ -556,18 +557,78 @@ public struct NunaTabBar: View {
         return Button {
             if on { onReselect(item.id) } else { selection = item.id }
         } label: {
-            VStack(spacing: 4) {
-                glyph(item, size: 28, anyaScale: 1.1).frame(width: 32, height: 28)
-                Text(verbatim: item.title).font(.nuna(size: NunaThemePrefs.skin == .whp ? 10.5 : 12, weight: .bold)).lineLimit(1)
+            VStack(spacing: 5) {
+                glyph(item, size: 27, anyaScale: 1.1).frame(width: 34, height: 25)
+                Text(verbatim: item.title).font(.nuna(size: NunaThemePrefs.skin == .whp ? 11.5 : 12, weight: .semibold)).lineLimit(1)
                     .textCase(nil).minimumScaleFactor(0.7).allowsTightening(true)
             }
-            // The active tab is lit; the others are dimmed. No card behind either.
+            // The active tab is lit; the others are dimmed. No card behind either, only a faint glow at the foot of the active one.
             .foregroundStyle(on ? NunaPalette.textPrimary : NunaPalette.textPrimary.opacity(0.52))
-            .frame(width: items.count >= 5 ? 66 : 78, height: 52)
+            .frame(maxWidth: .infinity).frame(height: 64)
+            .background(alignment: .bottom) {
+                if on {
+                    Ellipse().fill(RadialGradient(colors: [NunaPalette.textPrimary.opacity(0.16), .clear], center: .center, startRadius: 0, endRadius: 34))
+                        .frame(width: 84, height: 30).offset(y: 12).allowsHitTesting(false)
+                }
+            }
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .accessibilityAddTraits(on ? .isSelected : [])
+    }
+}
+
+/// The three tab icons, drawn in one thin rounded line: a house with a trend line in it, a heart with a pulse, and three bars.
+struct NunaTabIcon: View {
+    enum Kind: String { case home = "tab:home", health = "tab:health", more = "tab:more" }
+    let kind: Kind
+
+    var body: some View {
+        GeometryReader { g in
+            let u = min(g.size.width, g.size.height * 24 / 20.6) / 24   // one unit of the 24-point drawing
+            let line = StrokeStyle(lineWidth: max(1.3, 1.22 * u), lineCap: .round, lineJoin: .round)
+            ZStack {
+                switch kind {
+                case .home:
+                    Path { p in
+                        p.move(to: CGPoint(x: 2 * u, y: 11.2 * u)); p.addLine(to: CGPoint(x: 12 * u, y: 3 * u)); p.addLine(to: CGPoint(x: 22 * u, y: 11.2 * u))
+                        p.move(to: CGPoint(x: 5 * u, y: 9.2 * u)); p.addLine(to: CGPoint(x: 5 * u, y: 20.6 * u))
+                        p.addLine(to: CGPoint(x: 19 * u, y: 20.6 * u)); p.addLine(to: CGPoint(x: 19 * u, y: 9.2 * u))
+                        // The trend line inside, with its arrow head.
+                        p.move(to: CGPoint(x: 8.2 * u, y: 16.4 * u)); p.addLine(to: CGPoint(x: 11 * u, y: 13.4 * u))
+                        p.addLine(to: CGPoint(x: 13.4 * u, y: 15.6 * u)); p.addLine(to: CGPoint(x: 16.6 * u, y: 11.8 * u))
+                        p.move(to: CGPoint(x: 14.6 * u, y: 11.6 * u)); p.addLine(to: CGPoint(x: 16.8 * u, y: 11.6 * u)); p.addLine(to: CGPoint(x: 16.8 * u, y: 13.8 * u))
+                    }
+                    .stroke(style: line)
+                case .health:
+                    Path { p in
+                        // Heart: two lobes and a point.
+                        p.move(to: CGPoint(x: 12 * u, y: 21 * u))
+                        p.addCurve(to: CGPoint(x: 2.6 * u, y: 9.2 * u), control1: CGPoint(x: 6 * u, y: 17.4 * u), control2: CGPoint(x: 2.6 * u, y: 13.8 * u))
+                        p.addCurve(to: CGPoint(x: 12 * u, y: 6.2 * u), control1: CGPoint(x: 2.6 * u, y: 4.6 * u), control2: CGPoint(x: 9.4 * u, y: 3.6 * u))
+                        p.addCurve(to: CGPoint(x: 21.4 * u, y: 9.2 * u), control1: CGPoint(x: 14.6 * u, y: 3.6 * u), control2: CGPoint(x: 21.4 * u, y: 4.6 * u))
+                        p.addCurve(to: CGPoint(x: 12 * u, y: 21 * u), control1: CGPoint(x: 21.4 * u, y: 13.8 * u), control2: CGPoint(x: 18 * u, y: 17.4 * u))
+                    }
+                    .stroke(style: line)
+                    Path { p in
+                        // The pulse across it.
+                        p.move(to: CGPoint(x: 6.4 * u, y: 12 * u)); p.addLine(to: CGPoint(x: 9.4 * u, y: 12 * u)); p.addLine(to: CGPoint(x: 11 * u, y: 9.2 * u))
+                        p.addLine(to: CGPoint(x: 13.2 * u, y: 14.8 * u)); p.addLine(to: CGPoint(x: 14.6 * u, y: 12 * u)); p.addLine(to: CGPoint(x: 17.6 * u, y: 12 * u))
+                    }
+                    .stroke(style: StrokeStyle(lineWidth: max(1.2, 1.1 * u), lineCap: .round, lineJoin: .round))
+                case .more:
+                    Path { p in
+                        for y in [6.2, 12.0, 17.8] {
+                            p.move(to: CGPoint(x: 2.2 * u, y: y * u)); p.addLine(to: CGPoint(x: 21.8 * u, y: y * u))
+                        }
+                    }
+                    .stroke(style: line)
+                }
+            }
+            .frame(width: 24 * u, height: 24 * u)
+            .frame(width: g.size.width, height: g.size.height)
+        }
+        .accessibilityHidden(true)
     }
 }
 

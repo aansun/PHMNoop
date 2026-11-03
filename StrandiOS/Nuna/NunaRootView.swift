@@ -50,18 +50,18 @@ struct NunaRootView: View {
     /// One bar: Today, Health and More. Anya is the round button beside it.
     private var items: [NunaTabItem] {
         [
-            NunaTabItem(id: Tab.today.rawValue, title: "Today", systemImage: "square.grid.2x2.fill"),
-            NunaTabItem(id: Tab.health.rawValue, title: "Health", systemImage: "heart.text.square"),
-            NunaTabItem(id: Tab.me.rawValue, title: "More", systemImage: "line.3.horizontal"),
+            NunaTabItem(id: Tab.today.rawValue, title: "Home", systemImage: "tab:home"),
+            NunaTabItem(id: Tab.health.rawValue, title: "Health", systemImage: "tab:health"),
+            NunaTabItem(id: Tab.me.rawValue, title: "More", systemImage: "tab:more"),
         ]
     }
 
     /// Anya's button: her mark in a ring, on the same glass as the bar. It opens her sheet over the page; it is not a tab.
     private var anyaButton: AnyView {
         AnyView(ZStack {
-            Circle().strokeBorder(NunaAnyaWing.gradient, lineWidth: 3)
-            AnyaMark(size: 20)
-        }.frame(width: 40, height: 40))
+            Circle().strokeBorder(NunaAnyaWing.gradient, lineWidth: 2.2)
+            AnyaMark(size: 17)
+        }.frame(width: 34, height: 34))
     }
 
     /// What Anya reads for the tab that is open.
