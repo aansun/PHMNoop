@@ -962,43 +962,50 @@ struct NunaJournalWeekCard: View {
         return (0..<7).reversed().compactMap { cal.date(byAdding: .day, value: -$0, to: today) }
     }
 
+    private var whp: Bool { NunaThemePrefs.skin == .whp }
+    /// Measured on the reference: the card and the button on it.
+    private var cardFill: Color? { whp ? Color(red: 0.173, green: 0.184, blue: 0.200) : nil }
+    private var buttonFill: Color { whp ? Color(red: 0.251, green: 0.263, blue: 0.275) : NunaPalette.ink.opacity(0.1) }
+    private let mint = Color(red: 0.431, green: 0.929, blue: 0.647)
+    private let grey = Color(red: 0.588, green: 0.60, blue: 0.60)
+
     var body: some View {
-        NunaCard(small: true) {
-                VStack(alignment: .leading, spacing: 14) {
-                    Button(action: onOpen) {
-                        HStack {
-                            Text("My journal").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                                .foregroundStyle(NunaPalette.textPrimary)
-                            Spacer()
-                            Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                        }
-                        .contentShape(Rectangle())
+        NunaCard(small: true, padding: EdgeInsets(top: 16, leading: 16, bottom: 16, trailing: 16), fill: cardFill) {
+            VStack(alignment: .leading, spacing: 0) {
+                Button(action: onOpen) {
+                    HStack {
+                        Text("My journal").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                            .foregroundStyle(Color(red: 0.92, green: 0.92, blue: 0.925))
+                        Spacer()
+                        Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(grey)
                     }
-                    .buttonStyle(.plain)
-                    HStack(spacing: 4) {
-                        ForEach(days, id: \.self) { d in
-                            let isToday = Calendar.current.isDateInToday(d)
-                            VStack(spacing: 6) {
-                                Text(verbatim: Self.weekday(d)).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                                    .foregroundStyle(isToday ? NunaPalette.textPrimary : NunaPalette.textSecondary)
-                                mark(done: logged.contains(Repository.localDayKey(d)))
-                            }
-                            .padding(.vertical, 10).frame(maxWidth: .infinity)
-                            .background(isToday ? NunaPalette.glassStrong : .clear, in: Capsule())
-                            .overlay(Capsule().strokeBorder(isToday ? NunaPalette.hairline : .clear, lineWidth: 1))
-                        }
-                    }
-                    .padding(.top, 8)
-                    NavigationLink(value: NunaTodayRoute.behaviorInsights) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "lightbulb").font(.nuna(size: 14, weight: .regular))
-                            Text("Behavior insights").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                        }
-                        .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 46)
-                        .background(NunaPalette.ink.opacity(0.1), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    }
-                    .buttonStyle(.plain)
+                    .frame(height: 16)
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
+                // The seven days spread with equal gaps between them (the labels are not all the same width), a little in from the card's edges.
+                HStack(spacing: 0) {
+                    ForEach(Array(days.enumerated()), id: \.element) { i, d in
+                        let isToday = Calendar.current.isDateInToday(d)
+                        if i > 0 { Spacer(minLength: 4) }
+                        VStack(spacing: 9) {
+                            Text(verbatim: Self.weekday(d)).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                                .foregroundStyle(isToday ? Color.white : grey)
+                            mark(done: logged.contains(Repository.localDayKey(d)), today: isToday)
+                        }
+                    }
+                }
+                .padding(.horizontal, 22).padding(.top, 32)
+                NavigationLink(value: NunaTodayRoute.behaviorInsights) {
+                    HStack(spacing: 9) {
+                        NunaTracedIconView(icon: NunaTracedIcon.bulb)
+                        Text("Behavior insights").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    }
+                    .foregroundStyle(.white).frame(maxWidth: .infinity).frame(height: 40)
+                    .background(buttonFill, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+                .buttonStyle(.plain).padding(.top, 32)
+            }
         }
         .task(id: repo.refreshSeq) {
             guard let first = days.first, let last = days.last else { return }
@@ -1006,12 +1013,17 @@ struct NunaJournalWeekCard: View {
         }
     }
 
-    @ViewBuilder private func mark(done: Bool) -> some View {
+    /// A mint disc with a black tick for a day that has answers; the day on show (nothing logged yet) is a grey disc with a white ring; any other day
+    /// without answers is an empty ring.
+    @ViewBuilder private func mark(done: Bool, today: Bool) -> some View {
         if done {
-            Image(systemName: "checkmark").font(.nuna(size: 11, weight: .black)).foregroundStyle(.black)
-                .frame(width: 22, height: 22).background(NunaPalette.charge, in: Circle())
+            Image(systemName: "checkmark").font(.system(size: 11, weight: .black)).foregroundStyle(.black)
+                .frame(width: 20, height: 20).background(mint, in: Circle())
+        } else if today {
+            Circle().fill(Color(red: 0.42, green: 0.427, blue: 0.439)).frame(width: 20, height: 20)
+                .overlay(Circle().strokeBorder(Color.white, lineWidth: 1))
         } else {
-            Circle().strokeBorder(NunaPalette.hairline, lineWidth: 1.5).frame(width: 22, height: 22)
+            Circle().strokeBorder(NunaPalette.hairline, lineWidth: 1.5).frame(width: 20, height: 20)
         }
     }
 

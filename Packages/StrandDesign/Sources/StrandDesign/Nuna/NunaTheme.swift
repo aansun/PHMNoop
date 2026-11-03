@@ -353,11 +353,13 @@ public struct NunaCard<Content: View>: View {
     private let small: Bool
     private let highlight: Bool
     private let padding: EdgeInsets?
+    private let fill: Color?
     private let content: Content
-    /// `padding` overrides the default inner padding for the few cards the mockups inset differently.
-    public init(small: Bool = false, highlight: Bool = false, padding: EdgeInsets? = nil,
+    /// `padding` overrides the default inner padding for the few cards the mockups inset differently; `fill` the surface colour of a card
+    /// whose colour was measured on its own.
+    public init(small: Bool = false, highlight: Bool = false, padding: EdgeInsets? = nil, fill: Color? = nil,
                 @ViewBuilder content: () -> Content) {
-        self.small = small; self.highlight = highlight; self.padding = padding; self.content = content()
+        self.small = small; self.highlight = highlight; self.padding = padding; self.fill = fill; self.content = content()
     }
     /// Flow draws a card as a raised surface (white on cream, a lifted plum-tinted dark); the others keep the soft tile.
     private var cardFill: Color {
@@ -373,7 +375,7 @@ public struct NunaCard<Content: View>: View {
                                            trailing: small ? NunaSpacing.cardInnerSmall : NunaSpacing.cardInner))
             .frame(maxWidth: .infinity, alignment: .leading)
             // One flat tile: a soft lift off the canvas, no outline. Only the highlighted card (Anya, the selected one) keeps an edge.
-            .background(FlowCardSurface(fill: cardFill, radius: small ? NunaRadius.cardSmall : NunaRadius.card, lifted: NunaThemePrefs.skin == .flow))
+            .background(FlowCardSurface(fill: fill ?? cardFill, radius: small ? NunaRadius.cardSmall : NunaRadius.card, lifted: NunaThemePrefs.skin == .flow))
             .overlay {
                 if highlight {
                     RoundedRectangle(cornerRadius: small ? NunaRadius.cardSmall : NunaRadius.card, style: .continuous)
