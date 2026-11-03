@@ -337,11 +337,7 @@ extension NunaAnyaSheet {
     private var floatingHeader: some View {
         HStack(spacing: 10) {
             HStack(spacing: 8) {
-                ZStack {
-                    Circle().strokeBorder(NunaAnyaWing.gradient, lineWidth: 2)
-                    AnyaMark(size: 17)
-                }
-                .frame(width: 34, height: 34)
+                NunaAnyaRing(size: 34)
                 Text("Anya").font(.nuna(size: 15, weight: .semibold))
             }
             .padding(.leading, 6).padding(.trailing, 14).frame(height: 40)
