@@ -116,7 +116,7 @@ enum NunaDashPrefs {
 
 extension NunaTodayView {
     /// The earlier figure of a page's series: the latest day before `day` that has one.
-    private func earlier(_ series: [String: Double], before day: String) -> Double? {
+    func earlier(_ series: [String: Double], before day: String) -> Double? {
         series.keys.filter { $0 < day }.max().flatMap { series[$0] }
     }
 
@@ -131,6 +131,10 @@ extension NunaTodayView {
             // The figure of the day on show, else the latest one before it (today's night may not be in yet).
             guard let nowKey = series[day] != nil ? day : series.keys.filter({ $0 <= day }).max(), let now = series[nowKey] else { return (nil, nil) }
             return (format(now), NunaTrend.make(current: now, previous: earlier(series, before: nowKey), decimals: decimals, upIsGood: good, format: format))
+        }
+        func fig(_ v: Double?, _ previous: Double?, _ decimals: Int = 0, good: Bool?) -> (String?, NunaTrend?) {
+            guard let v else { return (nil, nil) }
+            return (String(format: "%.\(decimals)f", locale: AppLanguage.activeLocale, v), NunaTrend.make(current: v, previous: previous, decimals: decimals, upIsGood: good, format: nil))
         }
         let scale = UnitPrefs.resolveEffortScale(UserDefaults.standard.string(forKey: UnitPrefs.effortScaleKey) ?? EffortScale.whoop.rawValue)
         var figure: (String?, NunaTrend?) = (nil, nil)
@@ -150,7 +154,18 @@ extension NunaTodayView {
         case .restorative:
             figure = make(Dictionary(uniqueKeysWithValues: h.deepMin.keys.compactMap { k in h.remMin[k].map { (k, h.deepMin[k]! + $0) } }), good: true, format: hm)
         case .debt: figure = make(h.debtMin, good: false, format: hm)
-        case .hrZonesLow, .hrZonesHigh, .hrZonesAll, .strengthTime, .totalVolumeLoad, .steps, .calories, .hrv, .rhr, .respiratory, .vo2max, .skinTemp, .weight, .leanBodyMass, .vitality, .spo2,
+        // The figures Today already holds for the day on show, each against the one before it, so these rows show their number straight away.
+        case .steps: figure = fig(model.steps, model.previous["steps"], good: true)
+        case .calories: figure = fig(model.calories, model.previous["calories"], good: nil)
+        case .hrv: figure = fig(model.hrv, model.hrvDelta.flatMap { d in model.hrv.map { $0 - d } }, good: true)
+        case .rhr: figure = fig(model.restingHr, model.restingHrDelta.flatMap { d in model.restingHr.map { $0 - d } }, good: false)
+        case .respiratory: figure = fig(model.respiratory, model.respiratoryDelta.flatMap { d in model.respiratory.map { $0 - d } }, 1, good: nil)
+        case .spo2: figure = fig(model.spo2, model.spo2Delta.flatMap { d in model.spo2.map { $0 - d } }, good: true)
+        case .skinTemp: figure = fig(model.extras["skin_temp"], model.previous["skin_temp"], 1, good: nil)
+        case .weight: figure = fig(model.extras["weight"], model.previous["weight"], 1, good: nil)
+        case .vitality: figure = fig(model.extras["vitality"], model.previous["vitality"], good: true)
+        // Not measured every day, or kept in a history this screen does not load: these open their page without a figure.
+        case .hrZonesLow, .hrZonesHigh, .hrZonesAll, .strengthTime, .totalVolumeLoad, .vo2max, .leanBodyMass,
              .stressTotal, .stressNonActivity, .stressSleep: break
         }
         return NunaLinkRow(id: "page." + page.rawValue, title: page.titleText, subtitle: page.section.titleText, value: figure.0,
