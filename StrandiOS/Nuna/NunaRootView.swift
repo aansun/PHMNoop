@@ -3,7 +3,7 @@ import SwiftUI
 import UIKit
 import StrandDesign
 
-/// The Nuna navigation shell: three tabs (Today, Health, More) in one floating tab bar, with Anya as a floating button beside it.
+/// The Nuna navigation shell: four tabs (Home, Health, Trainer, More) in one floating tab bar, with Anya as a floating button beside it.
 ///
 /// Phase 0 of docs/nuna/IMPLEMENTATION_PLAN.md. The tab roots still host the existing screens; later
 /// phases replace them one by one. The shell is only used when `ExperienceMode` is `.nuna`; the default
@@ -33,7 +33,7 @@ struct NunaRootView: View {
         }
     }
 
-    private enum Tab: Int, CaseIterable { case today = 0, health, me }
+    private enum Tab: Int, CaseIterable { case today = 0, health, trainer, me }
 
     @State private var selection = Tab.today.rawValue
     @State private var paths: [NavigationPath] = Array(repeating: NavigationPath(), count: Tab.allCases.count)
@@ -47,11 +47,12 @@ struct NunaRootView: View {
     @AppStorage(NunaTabBarPrefs.autoHideKey) private var autoHide = false
     @State private var barHidden = false
 
-    /// One bar: Today, Health and More. Anya is the round button beside it.
+    /// One bar: Home, Health, Trainer (Strength Trainer) and More. Anya is the round button beside it.
     private var items: [NunaTabItem] {
         [
             NunaTabItem(id: Tab.today.rawValue, title: "Home", systemImage: "tab:home"),
             NunaTabItem(id: Tab.health.rawValue, title: "Health", systemImage: "tab:health"),
+            NunaTabItem(id: Tab.trainer.rawValue, title: "Trainer", systemImage: "act:strength-trainer"),
             NunaTabItem(id: Tab.me.rawValue, title: "More", systemImage: "tab:more"),
         ]
     }
@@ -60,7 +61,13 @@ struct NunaRootView: View {
     private var anyaButton: AnyView { AnyView(NunaAnyaRing(size: 34)) }
 
     /// What Anya reads for the tab that is open.
-    private var anyaContext: String { selection == Tab.health.rawValue ? "Health" : "Today" }
+    private var anyaContext: String {
+        switch selection {
+        case Tab.health.rawValue: return "Health"
+        case Tab.trainer.rawValue: return "workouts"
+        default: return "Today"
+        }
+    }
 
     /// The tab bar belongs to the main page of a tab. Once a page is pushed the bar steps away and the page's own back button is the way out.
     private var atTabRoot: Bool { selection < paths.count ? paths[selection].isEmpty : true }
@@ -69,6 +76,7 @@ struct NunaRootView: View {
         TabView(selection: $selection) {
             stack(.today) { NunaTodayView() }
             stack(.health) { NunaHealthTabView() }
+            stack(.trainer) { NunaGymPage(asTabRoot: true) }
             stack(.me) { NunaMeView() }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
