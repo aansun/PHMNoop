@@ -888,8 +888,8 @@ struct NunaAnyaReplyDemo: View {
             return ("I had nasi goreng with a fried egg for lunch.",
                     "Logged as an estimate for lunch: check the portion before you add it.\n```anya-food\n{\"meal\":\"lunch\",\"items\":[{\"name\":\"Nasi goreng\",\"amount\":\"1 plate\",\"kcal\":520,\"proteinG\":14,\"carbsG\":68,\"fatG\":21},{\"name\":\"Fried egg\",\"amount\":\"1\",\"kcal\":90,\"proteinG\":6,\"carbsG\":0,\"fatG\":7}]}\n```")
         default:
-            return ("Show my Charge and Effort for the last 14 days as a chart.",
-                    "Here are your Charge and Effort over the last two weeks, drawn from your own readings.\n```anya-chart\n{\"title\":\"Charge and Effort, last 14 days\",\"metrics\":[\"recovery\",\"strain\"],\"days\":14}\n```")
+            return ("Show my Recovery and Strain for the last 14 days as a chart.",
+                    "Here are your Recovery and Strain over the last two weeks, drawn from your own readings.\n```anya-chart\n{\"title\":\"Recovery and Strain, last 14 days\",\"metrics\":[\"recovery\",\"strain\"],\"days\":14}\n```")
         }
     }
     var body: some View {

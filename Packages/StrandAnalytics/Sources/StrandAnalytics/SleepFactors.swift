@@ -72,7 +72,7 @@ public enum SleepFactors {
         return SleepFactorKind.allCases.map { kind in
             let yes = yesNights[kind] ?? [], no = (noNights[kind] ?? []).subtracting(yes)
             let effect = BehaviorInsights.effect(behaviorDays: yes, controlDays: no, outcomeByDay: restByWakeDay,
-                                                 behavior: kind.rawValue, outcome: "Rest")
+                                                 behavior: kind.rawValue, outcome: "Sleep")
             return Evidence(kind: kind, nYes: effect?.nWith ?? 0, nNo: effect?.nWithout ?? 0,
                             restDelta: effect?.delta, significant: effect?.significant ?? false)
         }

@@ -90,7 +90,7 @@ struct LiftLogView: View {
                     }
                     Spacer(minLength: 0)
                 }
-                Text("Lifting adds volume and set counts. It never changes your Effort, which stays measured from heart rate.")
+                Text("Lifting adds volume and set counts. It never changes your Strain, which stays measured from heart rate.")
                     .font(StrandFont.footnote)
                     .foregroundStyle(StrandPalette.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)

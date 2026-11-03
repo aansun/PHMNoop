@@ -30,7 +30,7 @@
 "PEAK" = "PUNCAK";
 "EFFORT" = "EFFORT";
 "TIME" = "WAKTU";
-"Effort %lld" = "Effort %lld";
+"Strain %lld" = "Strain %lld";
 "No data" = "Belum ada data";
 "SETS" = "SET";
 "LOAD" = "BEBAN";
@@ -46,8 +46,8 @@
 "Resting" = "Istirahat";
 "Gym" = "Gym";
 "kcal" = "kkal";
-"Effort +%lld" = "Effort +%lld";
-"Effort +%@" = "Effort +%@";
+"Strain +%lld" = "Strain +%lld";
+"Strain +%@" = "Strain +%@";
 "Ready for a moderate load" = "Siap beban sedang";
 "Keep it light today" = "Ringan saja hari ini";
 "Recover today" = "Pulihkan diri hari ini";
@@ -59,9 +59,9 @@
 "Calories" = "Kalori";
 "Score" = "Skor";
 "Lock Screen ring" = "Cincin layar kunci";
-"Charge, Effort and Rest at a glance." = "Charge, Effort, dan Rest sekilas.";
-"Charge, Effort and Rest as rings." = "Charge, Effort, dan Rest sebagai cincin.";
-"Charge %lld%%" = "Charge %lld%%";
+"Recovery, Strain and Sleep at a glance." = "Recovery, Strain, dan Sleep sekilas.";
+"Recovery, Strain and Sleep as rings." = "Recovery, Strain, dan Sleep sebagai cincin.";
+"Recovery %lld%%" = "Recovery %lld%%";
 "HRV %lld" = "HRV %lld";
 "Vital sign" = "Vital sign";
 "SpO₂" = "SpO₂";

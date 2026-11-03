@@ -218,7 +218,7 @@ struct NunaBreathAskAnya: View {
             if let b = i.bpm { bits.append("heart rate \(b) bpm") }
             if let r = i.liveRmssd { bits.append("HRV \(Int(r.rounded())) ms") }
             if let s = i.stress { bits.append("stress \(String(format: "%.1f", s)) of 3") }
-            if let c = i.charge { bits.append("Charge \(Int(c.rounded()))%") }
+            if let c = i.charge { bits.append("Recovery \(Int(c.rounded()))%") }
             bits.append("hour \(i.hour)")
             context = "Right now: " + bits.joined(separator: ", ")
         }

@@ -23,7 +23,7 @@ struct NunaTrendsMetricView: View {
 
     // MARK: Per-kind configuration
 
-    private var title: LocalizedStringKey { kind == .charge ? "Charge" : (kind == .effort ? "Effort" : "Rest") }
+    private var title: LocalizedStringKey { kind == .charge ? "Recovery" : (kind == .effort ? "Strain" : "Sleep") }
     private var color: Color { kind == .charge ? NunaScoreStyle.chargeSeries : (kind == .effort ? NunaScoreStyle.effortSeries : NunaScoreStyle.restSeries) }
     private var bar: Color { kind == .charge ? NunaScoreStyle.chargeSeries : (kind == .effort ? NunaScoreStyle.effortSeries : NunaScoreStyle.restSeries) }
     private var raw: NunaDaySeries { kind == .charge ? m.charge : (kind == .effort ? m.effort : m.rest) }
@@ -88,9 +88,9 @@ struct NunaTrendsMetricView: View {
             links
         }
         .environment(\.nunaDetailSwitch, NunaDetailSwitch(current: kindKey, items: [
-            .init(key: "charge", title: String(localized: "Charge"), icon: "heart.circle"),
-            .init(key: "effort", title: String(localized: "Effort"), icon: "flame"),
-            .init(key: "rest", title: String(localized: "Rest"), icon: "moon.stars"),
+            .init(key: "charge", title: String(localized: "Recovery"), icon: "heart.circle"),
+            .init(key: "effort", title: String(localized: "Strain"), icon: "flame"),
+            .init(key: "rest", title: String(localized: "Sleep"), icon: "moon.stars"),
         ]) { key in kind = key == "charge" ? .charge : (key == "effort" ? .effort : .rest) })
         .task(id: repo.refreshSeq) {
             await m.load(repo: repo)
@@ -168,7 +168,7 @@ struct NunaTrendsMetricView: View {
                         }, color: NunaScoreStyle.effortSeries, highlightColor: NunaScoreStyle.effortSeries)
                         if let last = t.last {
                             let avg = t.map(\.total).reduce(0, +) / Double(t.count)
-                            Text(verbatim: String(localized: "Total Effort for every 7 days. This week \(NunaTrendsFormat.num(disp(last.total), 0)), average \(NunaTrendsFormat.num(disp(avg), 0))."))
+                            Text(verbatim: String(localized: "Total Strain for every 7 days. This week \(NunaTrendsFormat.num(disp(last.total), 0)), average \(NunaTrendsFormat.num(disp(avg), 0))."))
                                 .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                     }
@@ -186,7 +186,7 @@ struct NunaTrendsMetricView: View {
         let cons = nights.compactMap { sleep.consistency($0) }
         let debt = (avgMin != nil && need != nil) ? max(0, need! - avgMin!) : nil
         return VStack(alignment: .leading, spacing: 12) {
-            NunaTitleRow(title: "What shapes Rest") { EmptyView() }
+            NunaTitleRow(title: "What shapes Sleep") { EmptyView() }
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)], spacing: 12) {
                 NunaStatTile(label: "Average duration", value: avgMin.map(NunaSleepFormat.duration) ?? "–", caption: need.map { LocalizedStringKey(String(localized: "needs \(NunaSleepFormat.duration($0))")) })
                 NunaStatTile(label: "Consistency", value: cons.isEmpty ? "–" : NunaTrendsFormat.num(cons.reduce(0, +) / Double(cons.count)), unit: cons.isEmpty ? "" : "%", caption: "similar bedtimes")
@@ -285,7 +285,7 @@ struct NunaTrendsMetricView: View {
                     }
                     if let r = restNow.now {
                         NunaDivider()
-                        NavigationLink(value: NunaTrendsRoute.rest) { driver("moon", String(localized: "Rest averaged \(Int(r.rounded()))%"), chevron: true) }.buttonStyle(.plain)
+                        NavigationLink(value: NunaTrendsRoute.rest) { driver("moon", String(localized: "Sleep averaged \(Int(r.rounded()))%"), chevron: true) }.buttonStyle(.plain)
                     }
                 }
             }
@@ -300,16 +300,16 @@ struct NunaTrendsMetricView: View {
         VStack(spacing: 12) {
             if kind == .effort || kind == .rest {
                 NavigationLink(value: kind == .effort ? NunaTrendsRoute.chargeEffort : NunaTrendsRoute.chargeRest) {
-                    NunaCard(small: true) { NunaListRow("Compare with Charge", subtitle: kind == .effort ? "How Effort shapes tomorrow's Charge" : "How sleep shapes Charge", systemImage: "chart.line.uptrend.xyaxis", showsChevron: true) }
+                    NunaCard(small: true) { NunaListRow("Compare with Recovery", subtitle: kind == .effort ? "How Strain shapes tomorrow's Recovery" : "How sleep shapes Recovery", systemImage: "chart.line.uptrend.xyaxis", showsChevron: true) }
                 }.buttonStyle(.plain)
             } else {
                 NavigationLink(value: NunaTrendsRoute.chargeEffort) {
-                    NunaCard(small: true) { NunaListRow("Compare with Effort", description: "The link between load and recovery", systemImage: "chart.line.uptrend.xyaxis", showsChevron: true) }
+                    NunaCard(small: true) { NunaListRow("Compare with Strain", description: "The link between load and recovery", systemImage: "chart.line.uptrend.xyaxis", showsChevron: true) }
                 }.buttonStyle(.plain)
             }
             if let md = MetricCatalog.metric(key: kind == .charge ? "recovery" : (kind == .effort ? "strain" : "sleep_performance"), source: "my-whoop") {
                 NavigationLink(value: NunaTodayRoute.metric(md)) {
-                    NunaCard(small: true) { NunaListRow(kind == .charge ? "See today's Charge" : (kind == .effort ? "See today's Effort" : "See last night"), systemImage: kind == .rest ? "moon" : "bolt", showsChevron: true) }
+                    NunaCard(small: true) { NunaListRow(kind == .charge ? "See today's Recovery" : (kind == .effort ? "See today's Strain" : "See last night"), systemImage: kind == .rest ? "moon" : "bolt", showsChevron: true) }
                 }.buttonStyle(.plain)
             }
         }

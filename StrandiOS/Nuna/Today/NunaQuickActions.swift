@@ -46,12 +46,12 @@ enum NunaQuickActions {
         .init(id: "load", title: "Training load", icon: "chart.bar", group: "Train", kind: .workout(.load)),
         .init(id: "liveHeart", title: "Live heart rate", icon: "heart", group: "Train", kind: .today(.deepTimeline)),
         // Calm and sleep
-        .init(id: "breathing", title: "Breathing", icon: "wind", group: "Rest", kind: .breathing),
-        .init(id: "nap", title: "Nap", icon: "moon", group: "Rest", kind: .today(.sleepNaps(0))),
-        .init(id: "sleep", title: "Sleep", icon: "bed.double", group: "Rest", kind: .today(.sleep(0))),
-        .init(id: "bodyClock", title: "Body clock", icon: "clock", group: "Rest", kind: .today(.bodyClock)),
-        .init(id: "smartAlarm", title: "Smart alarm", icon: "alarm", group: "Rest", kind: .today(.smartAlarm)),
-        .init(id: "windDown", title: "Wind down", icon: "moon.stars", group: "Rest", kind: .today(.windDown)),
+        .init(id: "breathing", title: "Breathing", icon: "wind", group: "Sleep", kind: .breathing),
+        .init(id: "nap", title: "Nap", icon: "moon", group: "Sleep", kind: .today(.sleepNaps(0))),
+        .init(id: "sleep", title: "Sleep", icon: "bed.double", group: "Sleep", kind: .today(.sleep(0))),
+        .init(id: "bodyClock", title: "Body clock", icon: "clock", group: "Sleep", kind: .today(.bodyClock)),
+        .init(id: "smartAlarm", title: "Smart alarm", icon: "alarm", group: "Sleep", kind: .today(.smartAlarm)),
+        .init(id: "windDown", title: "Wind down", icon: "moon.stars", group: "Sleep", kind: .today(.windDown)),
         // Read
         .init(id: "hrv", title: "Heart Rate Variability", icon: "waveform.path.ecg", group: "Read", kind: .metric("hrv")),
         .init(id: "stress", title: "Stress monitor", icon: "gauge.with.dots.needle.50percent", group: "Read", kind: .metric("stress")),
@@ -212,7 +212,7 @@ struct NunaQuickActionsEditor: View {
         .preferredColorScheme(NunaTheme.colorScheme)
     }
 
-    private func groupOrder(_ g: String) -> Int { ["Log", "Train", "Rest", "Read", "App"].firstIndex(of: g) ?? 9 }
+    private func groupOrder(_ g: String) -> Int { ["Log", "Train", "Sleep", "Read", "App"].firstIndex(of: g) ?? 9 }
     private func save() { raw = NunaQuickActions.encode(ids) }
 }
 #endif

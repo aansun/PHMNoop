@@ -97,7 +97,7 @@ struct HostedTrendCard: View {
             // Plotted on the stored 0-100 axis so the line's shape is scale-independent; only the
             // printed numbers follow the Effort-scale toggle, converted inside `fmt`, exactly as the
             // Trends tab does it (#268).
-            chart(title: "Effort", unit: "/ \(UnitFormatter.effortScaleMax(effortScale))",
+            chart(title: "Strain", unit: "/ \(UnitFormatter.effortScaleMax(effortScale))",
                   colour: StrandPalette.effortColor, fallback: 0...100, value: { $0.strain },
                   fmt: { UnitFormatter.effortDisplay($0, scale: effortScale) })
         default:

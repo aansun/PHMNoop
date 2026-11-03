@@ -353,7 +353,7 @@ struct NunaWorkoutStartView: View {
             if let c = charge {
                 HStack(spacing: 10) {
                     Image(systemName: "bolt").foregroundStyle(NunaPalette.textPrimary)
-                    Text(verbatim: String(localized: "Charge \(Int(c.rounded()))%. \(c >= 67 ? String(localized: "Ready for a hard session.") : (c >= 34 ? String(localized: "A steady session suits today.") : String(localized: "Keep it easy today.")))"))
+                    Text(verbatim: String(localized: "Recovery \(Int(c.rounded()))%. \(c >= 67 ? String(localized: "Ready for a hard session.") : (c >= 34 ? String(localized: "A steady session suits today.") : String(localized: "Keep it easy today.")))"))
                         .font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                     Spacer(minLength: 0)
                 }
@@ -385,7 +385,7 @@ struct NunaWorkoutStartView: View {
                     showTargetSetup = true
                 } label: {
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Effort target")
+                        Text("Strain target")
                             .font(.nuna(size: NunaTypeSize.h3, weight: .heavy))
                             .foregroundStyle(NunaPalette.textPrimary)
                         HStack(spacing: 4) {
@@ -398,7 +398,7 @@ struct NunaWorkoutStartView: View {
                     .frame(maxWidth: .infinity, minHeight: NoopButtonMetrics.minHitTarget, alignment: .leading)
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(Text("Configure Effort target"))
+                .accessibilityLabel(Text("Configure Strain target"))
                 Toggle("", isOn: targetEnabledBinding)
                     .labelsHidden()
                     .tint(NunaPalette.effortModerate)
@@ -699,7 +699,7 @@ private struct NunaWorkoutTargetSheet: View {
     }
 
     private var helpText: some View {
-        Text("Effort adds up on a log scale, so two Efforts are not simply summed. Activity effort is what this session alone would score. After activity is where your day would end: the higher your Effort already is, the less the same session adds. All figures are estimates.")
+        Text("Strain adds up on a log scale, so two Strains are not simply summed. Activity strain is what this session alone would score. After activity is where your day would end: the higher your Strain already is, the less the same session adds. All figures are estimates.")
             .font(.nuna(size: NunaTypeSize.caption + 1, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             .fixedSize(horizontal: false, vertical: true).textCase(nil)
     }
@@ -892,7 +892,7 @@ private struct NunaWorkoutTargetSheet: View {
                     Rectangle().fill(NunaPalette.mapOverlayText).frame(width: 3, height: barH + 8).offset(x: max(lo - 1.5, 0), y: top - 4)
                 }
                 if let target {
-                    Text("Activity effort").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    Text("Activity strain").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.charge).fixedSize().position(x: pillX, y: 6)
                     Text(verbatim: target)
                         .font(.nuna(size: 18, weight: .bold, design: NunaType.design)).monospacedDigit()
@@ -1091,7 +1091,7 @@ private struct NunaWorkoutTargetSheet: View {
                     .frame(height: 1)
             }
         } else if charge == nil {
-            Text("Anya suggests a session once today's Charge is ready.")
+            Text("Anya suggests a session once today's Recovery is ready.")
                 .font(.nuna(size: NunaTypeSize.caption + 1, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
@@ -1101,9 +1101,9 @@ private struct NunaWorkoutTargetSheet: View {
     private func sentence(_ s: NunaDayPlanResult) -> String {
         let title = s.title.prefix(1).lowercased() + s.title.dropFirst()
         guard let lo = s.plan.effortLow, let hi = s.plan.effortHigh else {
-            return String(localized: "Anya suggests \(title) for Charge \(s.charge).")
+            return String(localized: "Anya suggests \(title) for Recovery \(s.charge).")
         }
-        return String(localized: "Anya suggests \(title) for Charge \(s.charge) (+\(Int(lo.rounded()))–\(Int(hi.rounded())) Effort).")
+        return String(localized: "Anya suggests \(title) for Recovery \(s.charge) (+\(Int(lo.rounded()))–\(Int(hi.rounded())) Strain).")
     }
 
     // MARK: Actions
@@ -1334,7 +1334,7 @@ struct NunaLiveWorkoutView: View {
             VStack(spacing: 8) {
                 header(w)
                 sessionProgress(w, elapsed: elapsed, distance: gps.distanceM)
-                NunaPageTabs([(value: LiveTab.effort, title: "Effort"), (value: .heartRate, title: "Heart rate")], selection: $selectedTab)
+                NunaPageTabs([(value: LiveTab.effort, title: "Strain"), (value: .heartRate, title: "Heart rate")], selection: $selectedTab)
                     .transaction { if reduceMotion { $0.disablesAnimations = true } }
             }
             .padding(.horizontal, NunaSpacing.screenH)
@@ -1480,7 +1480,7 @@ struct NunaLiveWorkoutView: View {
             lineWidth: 16
         ) {
             VStack(spacing: 8) {
-                Text(isHeartRate ? "Heart rate" : "Activity effort")
+                Text(isHeartRate ? "Heart rate" : "Activity strain")
                     .font(.nuna(size: NunaTypeSize.caption, weight: .heavy))
                     .tracking(nunaTrackingLabel)
                     .textCase(.uppercase)

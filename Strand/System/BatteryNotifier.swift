@@ -170,7 +170,7 @@ enum BatteryNotifier {
         if result.fire, let runway = result.runway {
             post(identifier: "battery-bedtime",
                  title: String(localized: "Won't last the night"),
-                 body: String(localized: "\(BatteryEstimator.label(hours: runway.usableHours)) of recording left, but tonight needs about \(BatteryEstimator.label(hours: runway.requiredHours)). Charge before bed."),
+                 body: String(localized: "\(BatteryEstimator.label(hours: runway.usableHours)) of recording left, but tonight needs about \(BatteryEstimator.label(hours: runway.requiredHours)). Recovery before bed."),
                  interruptionLevel: .timeSensitive)
         }
     }

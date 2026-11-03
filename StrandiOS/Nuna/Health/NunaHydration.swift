@@ -28,8 +28,8 @@ struct NunaHydrationView: View {
         NunaDetailScreen("Water") {
             trendCard
             logCard
-            NunaExpandRow(title: "How the goal is set", subtitle: "Your sex and today's Effort", systemImage: "drop",
-                          text: "A simple goal that starts from your sex and rises with the Effort you add during the day. It is a guide, not a prescription.")
+            NunaExpandRow(title: "How the goal is set", subtitle: "Your sex and today's Strain", systemImage: "drop",
+                          text: "A simple goal that starts from your sex and rises with the Strain you add during the day. It is a guide, not a prescription.")
         }
         .task(id: reloadTick) { await reload() }
         .sheet(isPresented: $settingCustom) {

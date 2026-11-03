@@ -9,7 +9,7 @@ import Foundation
 /// The strings are unchanged and keep their existing String Catalog keys, so nothing needs retranslating.
 enum CoachPrompts {
     static let suggestions: [String] = [
-        String(localized: "How's my charge trending?"),
+        String(localized: "How's my recovery trending?"),
         String(localized: "What should today's training look like?"),
         String(localized: "Analyse my sleep"),
         String(localized: "Why am I run down?"),

@@ -60,7 +60,7 @@ struct NunaTestCentreView: View {
         .confirmationDialog("Restart the baseline?", isPresented: $confirmRecalibrate, titleVisibility: .visible) {
             Button("Restart", role: .destructive) { Baselines.recalibrateRecoveryBaselines(); Task { await model.intelligence.analyzeRecent(); await model.repo.refresh() }; recalibrated = true }
             Button("Cancel", role: .cancel) {}
-        } message: { Text("Charge and your HRV baseline are learned again from tonight, which takes about 4 nights. Your history stays.") }
+        } message: { Text("Recovery and your HRV baseline are learned again from tonight, which takes about 4 nights. Your history stays.") }
     }
 }
 

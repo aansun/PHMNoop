@@ -150,7 +150,7 @@ public enum AnyaActions {
     ```anya-chart
     {"title":"HRV, last 14 days","metrics":["hrv"],"days":14}
     ```
-    metrics are keys from: recovery (Charge), strain (Effort), sleep_performance (Rest), hrv, rhr, resp_rate, spo2, skin_temp, stress, weight, steps; at most 3; days 7 to 365. \
+    metrics are keys from: recovery (Recovery), strain (Strain), sleep_performance (Sleep), hrv, rhr, resp_rate, spo2, skin_temp, stress, weight, steps; at most 3; days 7 to 365. \
     The app draws the chart from the person's stored data.
     ```anya-program
     {"name":"Beginner full body","note":"3 days a week","days":[{"title":"Day A","items":[{"exercise":"Goblet squat","sets":3,"repsLow":8,"repsHigh":10,"restSec":90}]}]}
@@ -306,7 +306,7 @@ public enum AnyaActions {
 
     /// Asked for in the Breathing screen: one exercise from what the person typed and how they are right now.
     public static let breathInstruction = """
-    You make ONE breathing exercise for the person from what they ask for and, when given, how they are right now (heart rate, HRV, stress, Charge, the hour). \
+    You make ONE breathing exercise for the person from what they ask for and, when given, how they are right now (heart rate, HRV, stress, Recovery, the hour). \
     Reply with one or two plain sentences saying what it is for and how it should feel, then ONE fenced block exactly like the example, valid JSON, no comments.
     ```anya-breath
     {"title":"Box breathing, 4 4 4 4","goal":"focus","minutes":5,"stages":[{"phase":"inhale","seconds":4},{"phase":"hold","seconds":4},{"phase":"exhale","seconds":4},{"phase":"hold","seconds":4}],"note":"Breathe through the nose"}

@@ -33,7 +33,7 @@ struct AboutView: View {
                 aboutLink("How PHMN works", "How sleep, local storage, and device sync fit together.", "questionmark.circle") {
                     HowNoopWorksView(onClose: {})
                 }
-                aboutLink("How your scores work", "How Charge, Effort, and Rest are calculated.", "chart.bar.doc.horizontal") {
+                aboutLink("How your scores work", "How Recovery, Strain, and Sleep are calculated.", "chart.bar.doc.horizontal") {
                     ScoringGuideView(onClose: {})
                 }
                 aboutLink("Diagnostics", "Device and build information for troubleshooting.", "stethoscope") {

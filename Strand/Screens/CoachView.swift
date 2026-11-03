@@ -97,7 +97,7 @@ struct CoachView: View {
     private var initialPromptItems: [PromptItem] {
         let workoutPrompts = [
             PromptItem(
-                prompt: "Recommend the best workout for today using my Charge, Effort, Rest, recent workouts, and goal. Give the workout type, duration, target Heart Rate Zone or strength intensity, and one thing to avoid.",
+                prompt: "Recommend the best workout for today using my Recovery, Strain, Sleep, recent workouts, and goal. Give the workout type, duration, target Heart Rate Zone or strength intensity, and one thing to avoid.",
                 title: activeLanguageText("Recommend a workout")),
             PromptItem(
                 prompt: "Create a practical workout plan for today. Include warm-up, main work, cooldown, duration, intensity or Heart Rate Zone, and progression. If strength training fits best, include exercises, sets, reps, and rest.",
@@ -1094,7 +1094,7 @@ struct CoachView: View {
         case "Try asking": return "Coba tanyakan"
         case "Ask Coach about your data…": return "Tanyakan data Anda kepada Coach…"
         case "Configure Coach to start chatting…": return "Atur Coach untuk mulai chat…"
-        case "How's my charge trending?": return "Bagaimana tren Charge saya?"
+        case "How's my recovery trending?": return "Bagaimana tren Recovery saya?"
         case "What should today's training look like?": return "Latihan hari ini sebaiknya seperti apa?"
         case "Analyse my sleep": return "Analisis tidur saya"
         case "Why am I run down?": return "Mengapa saya merasa lelah?"

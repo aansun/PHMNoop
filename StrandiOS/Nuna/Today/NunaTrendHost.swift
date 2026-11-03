@@ -15,7 +15,7 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case effort, charge, rest, other
 
         var title: LocalizedStringKey {
-            switch self { case .effort: return "Effort"; case .charge: return "Charge"; case .rest: return "Rest"; case .other: return "Other" }
+            switch self { case .effort: return "Strain"; case .charge: return "Recovery"; case .rest: return "Sleep"; case .other: return "Other" }
         }
         var pages: [NunaTrendPage] { NunaTrendPage.allCases.filter { $0.section == self } }
     }
@@ -31,7 +31,7 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
 
     var title: LocalizedStringKey {
         switch self {
-        case .effort: return "Effort"
+        case .effort: return "Strain"
         case .calories: return "Calories"
         case .steps: return "Steps"
         case .hrZonesLow: return "Heart rate zones 1–3"
@@ -39,7 +39,7 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
         case .hrZonesAll: return "Heart rate zones all"
         case .strengthTime: return "Strength activity time"
         case .totalVolumeLoad: return "Total volume load"
-        case .charge: return "Charge"
+        case .charge: return "Recovery"
         case .hrv: return "Heart rate variability"
         case .rhr: return "Resting heart rate"
         case .respiratory: return "Respiratory rate"

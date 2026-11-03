@@ -79,7 +79,7 @@ struct NunaWorkoutLogFigures: View {
     var body: some View {
         let secs = row.durationS ?? Double(row.endTs - row.startTs)
         HStack(alignment: .top, spacing: 16) {
-            figure(label: "Activity Effort",
+            figure(label: "Activity Strain",
                    value: row.strain.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–",
                    color: row.strain.map(nunaEffortColor) ?? NunaPalette.textPrimary,
                    pill: row.strain.flatMap { s in averages?.effort.map { avg in

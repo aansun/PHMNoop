@@ -84,7 +84,7 @@ private struct PHMNRingsWidgetView: View {
 
             HStack(alignment: .center, spacing: 18) {
                 metricColumn(
-                    primaryLabel: "Charge", primaryURL: PHMNRingsLink.metric("recovery"), secondaryURL: PHMNRingsLink.metric("hrv"),
+                    primaryLabel: "Recovery", primaryURL: PHMNRingsLink.metric("recovery"), secondaryURL: PHMNRingsLink.metric("hrv"),
                     primaryValue: snapshot.recovery.map(String.init) ?? "—",
                     primaryColor: recoveryColor,
                     secondaryLabel: "HRV",
@@ -100,7 +100,7 @@ private struct PHMNRingsWidgetView: View {
                     .frame(width: 96, height: 96)
 
                 metricColumn(
-                    primaryLabel: "Effort", primaryURL: PHMNRingsLink.metric("strain"), secondaryURL: PHMNRingsLink.metric(secondaryMetric == .calories ? "energy_kcal" : "steps"),
+                    primaryLabel: "Strain", primaryURL: PHMNRingsLink.metric("strain"), secondaryURL: PHMNRingsLink.metric(secondaryMetric == .calories ? "energy_kcal" : "steps"),
                     primaryValue: effortText,
                     primaryColor: strainColor,
                     secondaryLabel: secondaryLabel,
@@ -237,8 +237,8 @@ private struct PHMNRingsWidgetView: View {
 
     private var accessibilityText: String {
         let format = secondaryMetric == .calories
-            ? "Charge %@, HRV %@, Effort %@, Calories %@, Battery %@"
-            : "Charge %@, HRV %@, Effort %@, Steps %@, Battery %@"
+            ? "Recovery %@, HRV %@, Strain %@, Calories %@, Battery %@"
+            : "Recovery %@, HRV %@, Strain %@, Steps %@, Battery %@"
         return String(format: format,
                       snapshot.recovery.map { "\($0)%" } ?? "—",
                       snapshot.hrv.map(String.init) ?? "—",
@@ -278,7 +278,7 @@ struct PHMNRingsWidget: Widget {
                 .containerBackground(StrandPalette.surfaceBase, for: .widget)
         }
         .configurationDisplayName("PHMN Rings")
-        .description("Charge, HRV, Effort, Steps and battery at a glance.")
+        .description("Recovery, HRV, Strain, Steps and battery at a glance.")
         .supportedFamilies([.systemMedium])
     }
 }
@@ -294,7 +294,7 @@ struct NOOPRing2Widget: Widget {
                 .containerBackground(StrandPalette.surfaceBase, for: .widget)
         }
         .configurationDisplayName("PHMN Ring 2")
-        .description("Full Charge and Effort rings with HRV, Calories and battery.")
+        .description("Full Recovery and Strain rings with HRV, Calories and battery.")
         .supportedFamilies([.systemMedium])
     }
 }

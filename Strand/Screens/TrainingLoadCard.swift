@@ -169,7 +169,7 @@ struct TrainingLoadCard: View {
             subtitle: String(localized: "Chronic vs acute load"),
             chart: {
                 VStack(spacing: NoopMetrics.space2) {
-                    Text("Needs \(Self.minimum)+ consecutive days of Effort to begin. \(contiguousDays) so far.")
+                    Text("Needs \(Self.minimum)+ consecutive days of Strain to begin. \(contiguousDays) so far.")
                         .font(StrandFont.subhead)
                         .foregroundStyle(StrandPalette.textTertiary)
                         .multilineTextAlignment(.center)

@@ -101,8 +101,8 @@ private extension NOOPActivityAttributes.ContentState {
     /// What the compact Island shows on the right for a route sport: speed on a bike, pace otherwise.
     var mainFigure: String { ((isCycling ? speed : pace) ?? "–").replacingOccurrences(of: " ", with: "") }
     func effortText(_ e: Int) -> Text {
-        if activityName == nil { return Text("Effort \(e)") }
-        return effortLabel.map { Text("Effort +\($0)") } ?? Text("Effort +\(e)")
+        if activityName == nil { return Text("Strain \(e)") }
+        return effortLabel.map { Text("Strain +\($0)") } ?? Text("Strain +\(e)")
     }
 }
 
@@ -284,7 +284,7 @@ private struct WorkoutFigures: View {
     var body: some View {
         if state.activityName == nil {
             HStack(spacing: 0) {
-                NOOPLiveMetric(label: "EFFORT", text: Text(verbatim: state.effort.map(String.init) ?? "–"), size: size, alignment: .leading)
+                NOOPLiveMetric(label: "STRAIN", text: Text(verbatim: state.effort.map(String.init) ?? "–"), size: size, alignment: .leading)
                 VStack(spacing: 4) {
                     Text("Battery").font(.nuna(size: 10, weight: .heavy)).tracking(0.8).foregroundStyle(NunaPalette.textSecondary)
                     NOOPBatteryRing(percent: state.batteryPct, size: size)

@@ -96,7 +96,7 @@ enum DashboardCard: String, CaseIterable, Identifiable {
         case .coupled:     return String(localized: "Recovery, strain and sleep in one glance")
         // Reuses the Coach screen's own subtitle, so the card and the screen describe the feature
         // identically and no new copy needs translating into ten locales.
-        case .coach:       return String(localized: "Ask about your charge, effort, rest and workouts, grounded in your own numbers.")
+        case .coach:       return String(localized: "Ask about your recovery, strain, sleep and workouts, grounded in your own numbers.")
         }
     }
 

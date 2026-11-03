@@ -203,10 +203,10 @@ enum NunaDemoYear {
         let thread: [(String, String)] = [
             ("user", "How did I sleep this week?"),
             ("assistant", "You averaged about 7 h 10 min, with a steady bedtime around 23:10. Deep sleep held at roughly a fifth of the night. Two late screens in bed cost you some efficiency on Tuesday and Thursday."),
-            ("user", "Why was my Charge low on Thursday?"),
+            ("user", "Why was my Recovery low on Thursday?"),
             ("assistant", "Your HRV dipped about 12% under your baseline and your resting heart rate was 3 bpm above it. Alcohol the evening before and a late coffee are logged in your journal, and both tend to move those two numbers in your own history."),
             ("user", "What should I do tomorrow?"),
-            ("assistant", "Keep it moderate: a 30–40 minute easy session in zones 1–3 fits a Charge in the 60s. Water early, magnesium in the evening, and aim to be in bed by 23:00."),
+            ("assistant", "Keep it moderate: a 30–40 minute easy session in zones 1–3 fits a Recovery in the 60s. Water early, magnesium in the evening, and aim to be in bed by 23:00."),
         ]
         let rows = thread.enumerated().map { i, m in
             CoachMessageRow(id: "demo-coach-\(i)", role: m.0, text: m.1, provider: "demo", createdAt: now - (thread.count - i) * 90, orderIndex: i)

@@ -363,7 +363,7 @@ struct LiveView: View {
                 .font(StrandFont.headline)
                 .foregroundStyle(StrandPalette.textPrimary)
             Text(activeConnection
-                 ? "Start a workout when the stream matters. NOOP records the interval, HR, peak, average and effort from the same live feed."
+                 ? "Start a workout when the stream matters. NOOP records the interval, HR, peak, average and strain from the same live feed."
                  : "Connect the strap first, then mark a workout from the live stream.")
                 .font(StrandFont.subhead)
                 .foregroundStyle(StrandPalette.textSecondary)
@@ -379,7 +379,7 @@ struct LiveView: View {
                 showStartSport = true
             }
             .disabled(!activeConnection)
-            .help("Track a workout manually. Records heart rate and effort until you end it.")
+            .help("Track a workout manually. Records heart rate and strain until you end it.")
 
             NoopButton("Refresh", systemImage: "arrow.clockwise", kind: .secondary) {
                 model.getBattery()
@@ -453,7 +453,7 @@ struct LiveView: View {
     private func workoutSavedRow(_ row: WorkoutRow) -> some View {
         let mins = Int((row.durationS ?? 0) / 60)
         let parts = [String(localized: "\(mins) min"), row.avgHr.map { String(localized: "\($0) avg bpm") },
-                     row.strain.map { String(localized: "effort \(UnitFormatter.effortDisplay($0, scale: effortScale))") }].compactMap { $0 }
+                     row.strain.map { String(localized: "strain \(UnitFormatter.effortDisplay($0, scale: effortScale))") }].compactMap { $0 }
         return HStack(spacing: 8) {
             Image(systemName: "checkmark.circle.fill").foregroundStyle(StrandPalette.accent)
             Text("Workout saved · \(parts.joined(separator: " · "))")
@@ -1230,7 +1230,7 @@ private struct ActiveWorkoutLive: View {
                      tint: model.bpm == nil ? StrandPalette.textPrimary : StrandPalette.metricRose)
                 stat(String(localized: "Avg"), workout.avgHr > 0 ? "\(workout.avgHr)" : "—")
                 stat(String(localized: "Peak"), workout.peakHr > 0 ? "\(workout.peakHr)" : "—")
-                stat(String(localized: "Effort"), UnitFormatter.effortDisplay(workout.liveStrain, scale: effortScale),
+                stat(String(localized: "Strain"), UnitFormatter.effortDisplay(workout.liveStrain, scale: effortScale),
                      tint: StrandPalette.strainColor(workout.liveStrain))
             }
             // A liquid effort tube — the live effort as a fraction of the 0–100 strain axis.

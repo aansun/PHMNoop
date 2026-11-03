@@ -155,7 +155,7 @@ struct NunaManualWorkoutSheet: View {
                         Text(verbatim: note).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.warning).fixedSize(horizontal: false, vertical: true).textCase(nil)
                     }
                     if avgHrEditedNote {
-                        Text("Avg HR is shown as typed. The HR graph, zones and Effort stay from the recorded session.")
+                        Text("Avg HR is shown as typed. The HR graph, zones and Strain stay from the recorded session.")
                             .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.warning).fixedSize(horizontal: false, vertical: true)
                     }
                 }

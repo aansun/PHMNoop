@@ -150,7 +150,7 @@ struct LiftSessionDetailSheet: View {
                      sessionLoadText,
                      sessionLoadCaption)
 
-                tile(String(localized: "Effort"),
+                tile(String(localized: "Strain"),
                      workout?.strain.map { LiftFormat.trim($0) } ?? "—",
                      String(localized: "measured from heart rate"))
             }
@@ -406,7 +406,7 @@ struct LiftSessionDetailSheet: View {
     }
 
     private var footnote: some View {
-        Text("Lifting figures are worked out from the sets above. Effort stays measured from heart rate and is never derived from weights and reps.")
+        Text("Lifting figures are worked out from the sets above. Strain stays measured from heart rate and is never derived from weights and reps.")
             .font(StrandFont.footnote)
             .foregroundStyle(StrandPalette.textTertiary)
             .fixedSize(horizontal: false, vertical: true)

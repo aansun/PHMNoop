@@ -18,7 +18,7 @@ enum NunaMeIndex {
     static let all: [NunaMeItem] = [
         .init(route: .persona, title: "Persona", icon: "person.fill", group: "Account and device", keywords: "profile age height weight sex birthday"),
         .init(route: .zones, title: "Heart-rate zones", icon: "heart", group: "Account and device", keywords: "max heart rate zone hrmax"),
-        .init(route: .goals, title: "Targets", icon: "target", group: "Account and device", keywords: "goal steps sleep need effort"),
+        .init(route: .goals, title: "Targets", icon: "target", group: "Account and device", keywords: "goal steps sleep need effort strain recovery charge rest"),
         .init(route: .devices, title: "Devices", icon: "applewatch", group: "Account and device", keywords: "strap whoop oura pair bluetooth battery"),
         .init(route: .anya, title: "Anya", icon: NunaGlyph.anya, group: "Account and device", keywords: "coach ai key memory voice assistant"),
         .init(route: .appearance, title: "Appearance", icon: "slider.horizontal.3", group: "Appearance", keywords: "theme dark light colour color font style experience nuna icon"),

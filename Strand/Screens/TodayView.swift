@@ -1499,7 +1499,7 @@ struct TodayView: View {
                     if !scoresBuildingDismissed {
                         DataPendingNote(
                             title: "Live now. Your scores are building.",
-                            message: "Your live heart rate is working from the strap, and charge, effort and rest build from it over your next few nights of wear, sharpening as it learns your baseline. Want your full history instantly? Import your WHOOP export in Data Sources and it backfills in about a minute."
+                            message: "Your live heart rate is working from the strap, and recovery, strain and sleep build from it over your next few nights of wear, sharpening as it learns your baseline. Want your full history instantly? Import your WHOOP export in Data Sources and it backfills in about a minute."
                         )
                         // A small × dismisses the card INTO the Updates inbox (restorable from there).
                         .overlay(alignment: .topTrailing) {
@@ -1507,7 +1507,7 @@ struct TodayView: View {
                                 dismissTodayCard(
                                     id: "scoresBuilding",
                                     title: String(localized: "Live now. Your scores are building."),
-                                    message: String(localized: "Charge, Effort and Rest build over your next few nights of wear.")
+                                    message: String(localized: "Recovery, Strain and Sleep build over your next few nights of wear.")
                                 )
                             }
                         }
@@ -1729,7 +1729,7 @@ struct TodayView: View {
                     Text("New here?")
                         .font(StrandFont.headline)
                         .foregroundStyle(StrandPalette.textPrimary)
-                    Text("See how Charge, Effort and Rest are calculated, and how they differ from WHOOP.")
+                    Text("See how Recovery, Strain and Sleep are calculated, and how they differ from WHOOP.")
                         .font(StrandFont.subhead)
                         .foregroundStyle(StrandPalette.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -1751,7 +1751,7 @@ struct TodayView: View {
                         dismissTodayCard(
                             id: "newHere",
                             title: String(localized: "New here?"),
-                            message: String(localized: "How Charge, Effort and Rest are calculated, and how they differ from WHOOP.")
+                            message: String(localized: "How Recovery, Strain and Sleep are calculated, and how they differ from WHOOP.")
                         )
                     }
                 } label: {
@@ -1812,7 +1812,7 @@ struct TodayView: View {
                         // #1405: mark this as a DIFFERENT axis from the home Synthesis word (the Charge-%
                         // band). Stated where the two get compared, so "Primed" here vs "Steady" there
                         // doesn't read as one value contradicting itself. Keep parity with Kotlin.
-                        Text("A training read, separate from your Charge score.")
+                        Text("A training read, separate from your Recovery score.")
                             .font(StrandFont.footnote)
                             .foregroundStyle(StrandPalette.textTertiary)
                             .fixedSize(horizontal: false, vertical: true)
@@ -2050,7 +2050,7 @@ struct TodayView: View {
                         Text("Start session")
                             .font(StrandFont.headline)
                             .foregroundStyle(StrandPalette.textPrimary)
-                        Text("Silent strap coaching against today's Charge.")
+                        Text("Silent strap coaching against today's Recovery.")
                             .font(StrandFont.caption)
                             .foregroundStyle(StrandPalette.textSecondary)
                     }
@@ -2065,7 +2065,7 @@ struct TodayView: View {
             }
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("Start a live session. Beta. Silent strap coaching against today's Charge.")
+        .accessibilityLabel("Start a live session. Beta. Silent strap coaching against today's Recovery.")
     }
 
     private var recoveryVitalsSection: some View {
@@ -2119,7 +2119,7 @@ struct TodayView: View {
                             dismissTodayCard(
                                 id: "calibratingBaseline",
                                 title: String(localized: "Building your baseline"),
-                                message: String(localized: "Charge, Effort and Rest become personal after a few nights of wear.")
+                                message: String(localized: "Recovery, Strain and Sleep become personal after a few nights of wear.")
                             )
                         }
                     }
@@ -2207,7 +2207,7 @@ struct TodayView: View {
     private func chargeCalibrationCountdown(banked: Int) -> some View {
         let remaining = max(1, Baselines.minNightsSeed - banked)
         let countdown = ChargeBreakdownFormat.calibrationCountdown(nightsRemaining: remaining)
-        let unlock = ChargeBreakdownFormat.calibrationUnlockCopy(scoreName: String(localized: "Charge"))
+        let unlock = ChargeBreakdownFormat.calibrationUnlockCopy(scoreName: String(localized: "Recovery"))
         let progress = ChargeBreakdownFormat.calibrationProgress(banked: banked, seed: Baselines.minNightsSeed)
         NoopCard(padding: 14, tint: StrandPalette.chargeColor) {
             HStack(alignment: .top, spacing: 12) {
@@ -2243,7 +2243,7 @@ struct TodayView: View {
             }
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("Charge baseline calibrating. \(countdown), \(unlock). \(progress).")
+        .accessibilityLabel("Recovery baseline calibrating. \(countdown), \(unlock). \(progress).")
     }
 
     // MARK: A1/S4 Charge breakdown sheet (the Charge-ring tap target)
@@ -2299,7 +2299,7 @@ struct TodayView: View {
                                 .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(StrandPalette.chargeColor)
                             VStack(alignment: .leading, spacing: 1) {
-                                Text("How Charge is calculated")
+                                Text("How Recovery is calculated")
                                     .font(StrandFont.subhead).foregroundStyle(StrandPalette.textPrimary)
                                 Text("The method behind the score, not today's values.")
                                     .font(StrandFont.caption).foregroundStyle(StrandPalette.textTertiary)
@@ -2314,7 +2314,7 @@ struct TodayView: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("How Charge is calculated. The method behind the score.")
+                    .accessibilityLabel("How Recovery is calculated. The method behind the score.")
                 }
                 .padding(NoopMetrics.screenPadding)
                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -2324,7 +2324,7 @@ struct TodayView: View {
             .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
             #endif
             .background(StrandPalette.surfaceBase.ignoresSafeArea())
-            .navigationTitle("What shaped your Charge")
+            .navigationTitle("What shaped your Recovery")
             #if os(iOS)
             .navigationBarTitleDisplayMode(.inline)
             #endif
@@ -2349,7 +2349,7 @@ struct TodayView: View {
     private var chargeBreakdownEmptyNote: some View {
         NoopCard(padding: 18, tint: StrandPalette.chargeColor) {
             VStack(alignment: .leading, spacing: NoopMetrics.space2) {
-                Text("No Charge breakdown yet")
+                Text("No Recovery breakdown yet")
                     .font(StrandFont.headline)
                     .foregroundStyle(StrandPalette.textPrimary)
                 Text(Self.needsStrapCaption)
@@ -3325,9 +3325,9 @@ struct TodayView: View {
     /// Kotlin (the Android hero already reads its label from a localized resource, not the enum name).
     private static func domainLabel(_ domain: DomainTheme) -> LocalizedStringKey {
         switch domain {
-        case .charge: return "Charge"
-        case .effort: return "Effort"
-        case .rest:   return "Rest"
+        case .charge: return "Recovery"
+        case .effort: return "Strain"
+        case .rest:   return "Sleep"
         case .stress: return "Stress"
         }
     }
@@ -3336,9 +3336,9 @@ struct TodayView: View {
     /// interpolated from a localized literal (so the spoken sentence is translated, not half-English).
     private static func domainDetailAccessibilityLabel(_ domain: DomainTheme) -> LocalizedStringKey {
         switch domain {
-        case .charge: return "Open your Charge detail"
-        case .effort: return "Open your Effort detail"
-        case .rest:   return "Open your Rest detail"
+        case .charge: return "Open your Recovery detail"
+        case .effort: return "Open your Strain detail"
+        case .rest:   return "Open your Sleep detail"
         case .stress: return "Open your Stress detail"
         }
     }
@@ -3346,9 +3346,9 @@ struct TodayView: View {
     /// The VoiceOver label for a hero ring's "how this score is calculated" chevron.
     private static func domainGuideAccessibilityLabel(_ domain: DomainTheme) -> LocalizedStringKey {
         switch domain {
-        case .charge: return "How Charge is calculated"
-        case .effort: return "How Effort is calculated"
-        case .rest:   return "How Rest is calculated"
+        case .charge: return "How Recovery is calculated"
+        case .effort: return "How Strain is calculated"
+        case .rest:   return "How Sleep is calculated"
         case .stress: return "How Stress is calculated"
         }
     }
@@ -3404,7 +3404,7 @@ struct TodayView: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Self.domainLabel(domain))
-                .accessibilityHint("See what shaped your Charge")
+                .accessibilityHint("See what shaped your Recovery")
                 .accessibilityAddTraits(.isButton)
             } else {
                 ring()
@@ -3441,7 +3441,7 @@ struct TodayView: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel(onOpenBreakdown == nil ? Self.domainGuideAccessibilityLabel(domain)
-                                                        : "See what shaped your Charge")
+                                                        : "See what shaped your Recovery")
             // Component 4, the real per-day source under the ring (only when this score has a value for
             // the day AND we resolved its winner; a calibrating / empty ring shows no provenance badge).
             // Apple Watch (M1): a watch-sourced score reads "Apple Watch" with its confidence bound to the
@@ -3623,7 +3623,7 @@ struct TodayView: View {
     /// own overlay, a past day isn't annotated).
     private var effortZeroNote: String? {
         guard selectedDayOffset == 0, let s = effortStrain(displayDay), s < 1.0 else { return nil }
-        return String(localized: "No cardio load yet. Effort builds once your heart rate climbs into your effort zone (around 50% of your heart-rate reserve). A calm day honestly reads near zero.")
+        return String(localized: "No cardio load yet. Strain builds once your heart rate climbs into your effort zone (around 50% of your heart-rate reserve). A calm day honestly reads near zero.")
     }
 
     /// Strain value to feed the Effort gauge, on the SELECTED display scale (#313). The effective
@@ -3872,7 +3872,7 @@ struct TodayView: View {
         let at = sleepToday.map { Date(timeIntervalSince1970: TimeInterval($0.endTs)) }
             ?? hrPoints.first?.date
         guard let date = at else { return nil }
-        return .init(date: date, label: String(localized: "\(Int(rec.rounded()))% Charge"),
+        return .init(date: date, label: String(localized: "\(Int(rec.rounded()))% Recovery"),
                      color: StrandPalette.recoveryColor(rec), alignment: .leading)
     }
 
@@ -3885,7 +3885,7 @@ struct TodayView: View {
         // whole active morning behind the hero ring, which resolves through the same `effortStrain`.
         guard let strain = effortStrain(displayDay), let date = hrPoints.last?.date else { return nil }
         return .init(date: date,
-                     label: String(localized: "\(UnitFormatter.effortDisplay(strain, scale: effortScale)) Effort"),
+                     label: String(localized: "\(UnitFormatter.effortDisplay(strain, scale: effortScale)) Strain"),
                      color: StrandPalette.effortTint(fraction: strain / StrainScorer.maxStrain), alignment: .trailing)
     }
 
@@ -4064,7 +4064,7 @@ struct TodayView: View {
             // value labelled as prior, it never fabricates a number for the new day.
             let carried = lastScoredCharge
             StatTile(
-                label: "Charge",
+                label: "Recovery",
                 value: d?.recovery.map { "\(Int($0.rounded()))%" }
                     ?? recoveryCalibration.map { "\($0)/\(Baselines.minNightsSeed)" }
                     ?? carried.map { "\(Int($0.value.rounded()))%" } ?? "—",
@@ -4086,7 +4086,7 @@ struct TodayView: View {
             // `d.strain` straight off the daily row left it behind by the whole morning on an active day.
             let effort = effortStrain(d)
             StatTile(
-                label: "Effort",
+                label: "Strain",
                 value: effort.map { UnitFormatter.effortDisplay($0, scale: effortScale) } ?? "—",
                 caption: effort != nil ? String(localized: "of \(UnitFormatter.effortScaleMax(effortScale))")
                                        : (buildingHint(.effort) ?? String(localized: "of \(UnitFormatter.effortScaleMax(effortScale))")),
@@ -4105,7 +4105,7 @@ struct TodayView: View {
             // Unscored TODAY → "building, wear it tonight" instead of a lone caption (#527); a scored day
             // keeps its sleep-duration / efficiency caption.
             StatTile(
-                label: "Rest",
+                label: "Sleep",
                 value: restScore.map { "\(Int($0.rounded()))%" } ?? "—",
                 // Component 2: a scored day shows its duration/efficiency caption; an unscored TODAY shows
                 // the "building" hint; a past day with no Rest falls to the honest "Needs the strap" rather
@@ -5405,21 +5405,21 @@ struct TodayView: View {
         switch rec {
         case ..<50:
             switch sleptWell {
-            case true?:  return String(localized: "Charge is low and sleep was consistent.")
-            case false?: return String(localized: "Charge is low but sleep ran short.")
-            case nil:    return String(localized: "Charge is low.")
+            case true?:  return String(localized: "Recovery is low and sleep was consistent.")
+            case false?: return String(localized: "Recovery is low but sleep ran short.")
+            case nil:    return String(localized: "Recovery is low.")
             }
         case ..<70:
             switch sleptWell {
-            case true?:  return String(localized: "Charge is steady and sleep was consistent.")
-            case false?: return String(localized: "Charge is steady but sleep ran short.")
-            case nil:    return String(localized: "Charge is steady.")
+            case true?:  return String(localized: "Recovery is steady and sleep was consistent.")
+            case false?: return String(localized: "Recovery is steady but sleep ran short.")
+            case nil:    return String(localized: "Recovery is steady.")
             }
         default:
             switch sleptWell {
-            case true?:  return String(localized: "Charge is strong and sleep was consistent.")
-            case false?: return String(localized: "Charge is strong but sleep ran short.")
-            case nil:    return String(localized: "Charge is strong.")
+            case true?:  return String(localized: "Recovery is strong and sleep was consistent.")
+            case false?: return String(localized: "Recovery is strong but sleep ran short.")
+            case nil:    return String(localized: "Recovery is strong.")
             }
         }
     }

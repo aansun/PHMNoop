@@ -68,7 +68,7 @@ private func metricAccent(_ m: MetricDescriptor) -> Color {
 /// The gradient for a metric's trend line — strain/recovery ride their data scales;
 /// everything else uses a flat tint of its category accent.
 private func metricGradient(_ m: MetricDescriptor) -> Gradient {
-    if m.category == "Effort" { return StrandPalette.strainGradient }
+    if m.category == "Strain" { return StrandPalette.strainGradient }
     if m.key == "recovery" { return StrandPalette.recoveryGradient }
     let c = metricAccent(m)
     return Gradient(colors: [c.opacity(0.55), c])
@@ -80,9 +80,9 @@ private func metricGradient(_ m: MetricDescriptor) -> Gradient {
 /// tint + the hero gauge/number glow.
 private func metricDomain(_ m: MetricDescriptor) -> DomainTheme {
     switch m.category {
-    case "Charge":            return .charge
-    case "Effort":            return .effort
-    case "Rest", "Mind":      return .rest
+    case "Recovery":            return .charge
+    case "Strain":            return .effort
+    case "Sleep", "Mind":      return .rest
     default:
         // Heart / Health / Nutrition: lean on the metric's own world. RHR-style risk
         // metrics read as Stress (teal); everything else rides the Charge green chrome.

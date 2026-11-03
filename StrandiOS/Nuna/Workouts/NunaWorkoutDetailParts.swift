@@ -108,7 +108,7 @@ struct NunaWorkoutHeaderCard: View {
                 if let s = strain {
                     HStack(alignment: .lastTextBaseline, spacing: 10) {
                         Text(verbatim: "+" + UnitFormatter.effortDisplay(s, scale: scale)).font(.nuna(size: 46, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.effortText)
-                        Text("Effort added").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                        Text("Strain added").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         Spacer(minLength: 0)
                     }
                     if let d = dayEffort {
@@ -165,12 +165,12 @@ struct NunaCardioMuscularCard: View {
                         Text(verbatim: "\(split.muscularPct)%").font(.nuna(size: 14, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
                     }
                     if !compact {
-                        Text("Against your last \(split.sessions) sessions. An estimate; it does not change Effort.")
+                        Text("Against your last \(split.sessions) sessions. An estimate; it does not change Strain.")
                             .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                 } else {
-                    Text(compact ? "Appears after three earlier sessions with sets." : "Appears once you have three earlier sessions with logged sets and an Effort.")
+                    Text(compact ? "Appears after three earlier sessions with sets." : "Appears once you have three earlier sessions with logged sets and a Strain.")
                         .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         .fixedSize(horizontal: false, vertical: true)
                 }

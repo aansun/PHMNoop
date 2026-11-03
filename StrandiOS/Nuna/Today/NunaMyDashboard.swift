@@ -46,7 +46,7 @@ extension NunaTrendPage {
     /// The page name as plain text, for rows that are built from strings.
     var titleText: String {
         switch self {
-        case .effort: return String(localized: "Effort")
+        case .effort: return String(localized: "Strain")
         case .calories: return String(localized: "Calories")
         case .steps: return String(localized: "Steps")
         case .hrZonesLow: return String(localized: "Heart rate zones 1–3")
@@ -54,7 +54,7 @@ extension NunaTrendPage {
         case .hrZonesAll: return String(localized: "Heart rate zones all")
         case .strengthTime: return String(localized: "Strength activity time")
         case .totalVolumeLoad: return String(localized: "Total volume load")
-        case .charge: return String(localized: "Charge")
+        case .charge: return String(localized: "Recovery")
         case .hrv: return String(localized: "Heart rate variability")
         case .rhr: return String(localized: "Resting heart rate")
         case .respiratory: return String(localized: "Respiratory rate")
@@ -82,9 +82,9 @@ extension NunaTrendPage {
 extension NunaTrendPage.Section {
     var titleText: String {
         switch self {
-        case .effort: return String(localized: "Effort")
-        case .charge: return String(localized: "Charge")
-        case .rest: return String(localized: "Rest")
+        case .effort: return String(localized: "Strain")
+        case .charge: return String(localized: "Recovery")
+        case .rest: return String(localized: "Sleep")
         case .other: return String(localized: "Other")
         }
     }

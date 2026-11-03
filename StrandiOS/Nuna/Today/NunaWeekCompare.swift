@@ -35,7 +35,7 @@ struct NunaWeekCompare: View {
         NavigationLink(value: NunaTodayRoute.chargeEffort) {
             NunaCard {
                 VStack(alignment: .leading, spacing: 14) {
-                    NunaTitleRow(title: "Charge & Effort") {
+                    NunaTitleRow(title: "Recovery & Strain") {
                         Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
                     }
                     if loaded && !hasData {

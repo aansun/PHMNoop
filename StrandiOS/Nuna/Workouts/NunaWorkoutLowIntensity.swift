@@ -326,7 +326,7 @@ struct NunaActivityImpact {
         }
         var pct: Double?
         if done.count >= needed, without.count >= needed,
-           let e = BehaviorInsights.effect(behaviorDays: done, controlDays: without, outcomeByDay: next, behavior: row.sport, outcome: "Charge"), e.significant {
+           let e = BehaviorInsights.effect(behaviorDays: done, controlDays: without, outcomeByDay: next, behavior: row.sport, outcome: "Recovery"), e.significant {
             pct = e.pctChange
         }
         return NunaActivityImpact(withDays: done.count, withoutDays: without.count, percent: pct)
@@ -355,9 +355,9 @@ struct NunaActivityImpactCard: View {
                 }
             }
             Text(impact.percent != nil
-                 ? "The day after you do this activity, your Charge differs by this much from the days you do not."
+                 ? "The day after you do this activity, your Recovery differs by this much from the days you do not."
                  : (impact.withDays >= NunaActivityImpact.needed && impact.withoutDays >= NunaActivityImpact.needed
-                    ? "There is no clear difference yet in the next day's Charge between the days you do this activity and the days you do not."
+                    ? "There is no clear difference yet in the next day's Recovery between the days you do this activity and the days you do not."
                     : "Keep logging this activity to receive insights. Once you reach 5 days with and 5 days without this activity, impacts will be unlocked."))
                 .font(.nuna(size: 12.5, weight: .regular)).foregroundStyle(NunaPalette.textSecondary.opacity(0.8)).textCase(nil).fixedSize(horizontal: false, vertical: true)
             dots(count: impact.withDays, mark: "checkmark", tint: NunaWorkoutLogZones.hrBlue)

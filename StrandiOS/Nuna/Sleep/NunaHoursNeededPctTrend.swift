@@ -372,9 +372,9 @@ struct NunaChargeScoreTrendView: View {
     var endingDaysAgo = 0
     var body: some View {
         NunaPctTrendView(
-            name: "Charge", icon: "met:recovery", noun: "average Charge",
+            name: "Recovery", icon: "met:recovery", noun: "average Recovery",
             bands: NunaDaysBreakdown.chargeBands,
-            breakdownTitle: "Charge breakdown",
+            breakdownTitle: "Recovery breakdown",
             value: { $0.charge[$1] }, zones: { nunaChargeColor($0) }, endingDaysAgo: endingDaysAgo)
     }
 }
@@ -394,7 +394,7 @@ struct NunaEffortScoreTrendView: View {
         func edge(_ v: Double) -> String { String(format: "%.1f", v * k) }
         let blue = NunaPalette.effortModerate
         return NunaPctTrendView(
-            name: "Effort", icon: "met:day-strain", noun: "average Strain",
+            name: "Strain", icon: "met:day-strain", noun: "average Strain",
             bands: [
                 .init(color: NunaPalette.effortAllOut, name: "All out", range: ">\(edge(18))") { $0 > 18 * k },
                 .init(color: NunaPalette.effortModerate, name: "Strenuous", range: "\(edge(14.1))–\(edge(18))") { $0 > 14 * k && $0 <= 18 * k },

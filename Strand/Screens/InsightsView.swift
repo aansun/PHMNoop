@@ -75,9 +75,9 @@ struct InsightsView: View {
         /// Short segment label.
         var label: String {
             switch self {
-            case .recovery: return String(localized: "Charge")
+            case .recovery: return String(localized: "Recovery")
             case .hrv:      return "HRV"
-            case .sleep:    return String(localized: "Rest")
+            case .sleep:    return String(localized: "Sleep")
             case .rhr:      return "RHR"
             }
         }
@@ -93,9 +93,9 @@ struct InsightsView: View {
         /// The human outcome name used by BehaviorInsights.sentence.
         var outcomeName: String {
             switch self {
-            case .recovery: return String(localized: "Charge")
+            case .recovery: return String(localized: "Recovery")
             case .hrv:      return "HRV"
-            case .sleep:    return String(localized: "Rest")
+            case .sleep:    return String(localized: "Sleep")
             case .rhr:      return String(localized: "Resting HR")
             }
         }
@@ -245,7 +245,7 @@ struct InsightsView: View {
                     if behaviours.isEmpty {
                         // No journal yet, explain, without dead-ending on a paid export.
                         NoopCard {
-                            Text("Log behaviours above. After a few days of answers, NOOP ranks how each one moves your charge, HRV and rest. Importing a WHOOP export (which includes its journal) backfills history instantly.")
+                            Text("Log behaviours above. After a few days of answers, NOOP ranks how each one moves your recovery, HRV and sleep. Importing a WHOOP export (which includes its journal) backfills history instantly.")
                                 .font(StrandFont.subhead)
                                 .foregroundStyle(StrandPalette.textSecondary)
                                 .fixedSize(horizontal: false, vertical: true)
@@ -309,7 +309,7 @@ struct InsightsView: View {
                         Text("WHAT MOVES YOU \u{203A}")
                             .font(StrandFont.overline).tracking(StrandFont.overlineTracking)
                             .foregroundStyle(StrandPalette.textPrimary)
-                        Text("Ranked, lag-aware: which of your habits actually move your Charge, plus your personal alcohol/caffeine dose-response.")
+                        Text("Ranked, lag-aware: which of your habits actually move your Recovery, plus your personal alcohol/caffeine dose-response.")
                             .font(StrandFont.footnote).foregroundStyle(StrandPalette.textTertiary)
                             .fixedSize(horizontal: false, vertical: true)
                     }
@@ -1201,9 +1201,9 @@ struct InsightsView: View {
                           alignment: .leading, spacing: NoopMetrics.gap) {
                     StatTile(label: "Next morning",
                              value: "\(Int(cost.meanNextMorning.rounded()))",
-                             caption: String(localized: "Charge · \(pointsLabel) pts"),
+                             caption: String(localized: "Recovery · \(pointsLabel) pts"),
                              accent: accent)
-                    StatTile(label: "Rest baseline",
+                    StatTile(label: "Sleep baseline",
                              value: "\(Int(cost.baselineMean.rounded()))",
                              caption: String(localized: "untouched days"),
                              accent: StrandPalette.textPrimary)
@@ -1267,24 +1267,24 @@ struct InsightsView: View {
         if let c = CorrelationEngine.pearson(
             CorrelationEngine.alignByDay(series("sleep_performance"), series("recovery"))) {
             out.append(.init(id: "sleep-rec",
-                             title: String(localized: "Rest ↔ Charge"),
-                             blurb: String(localized: "How closely a good night tracks next-morning charge."),
+                             title: String(localized: "Sleep ↔ Recovery"),
+                             blurb: String(localized: "How closely a good night tracks next-morning recovery."),
                              corr: c))
         }
         // HRV ↔ recovery (same day).
         if let c = CorrelationEngine.pearson(
             CorrelationEngine.alignByDay(series("hrv"), series("recovery"))) {
             out.append(.init(id: "hrv-rec",
-                             title: String(localized: "HRV ↔ Charge"),
-                             blurb: String(localized: "Heart-rate variability as the engine behind your charge score."),
+                             title: String(localized: "HRV ↔ Recovery"),
+                             blurb: String(localized: "Heart-rate variability as the engine behind your recovery score."),
                              corr: c))
         }
         // Resting HR ↔ recovery (same day), expected to be negative.
         if let c = CorrelationEngine.pearson(
             CorrelationEngine.alignByDay(series("rhr"), series("recovery"))) {
             out.append(.init(id: "rhr-rec",
-                             title: String(localized: "Resting HR ↔ Charge"),
-                             blurb: String(localized: "A lower resting heart rate usually means a higher charge."),
+                             title: String(localized: "Resting HR ↔ Recovery"),
+                             blurb: String(localized: "A lower resting heart rate usually means a higher recovery."),
                              corr: c))
         }
         // Today's recovery ↔ NEXT-day recovery (1-day lag) as a strain/carry-over proxy.
@@ -1292,8 +1292,8 @@ struct InsightsView: View {
         //  how much yesterday carries into today.)
         if let c = CorrelationEngine.lagged(x: series("recovery"), y: series("recovery"), lagDays: 1) {
             out.append(.init(id: "rec-lag",
-                             title: String(localized: "Charge → Next-day charge"),
-                             blurb: String(localized: "How much one day's charge carries into the next."),
+                             title: String(localized: "Recovery → Next-day recovery"),
+                             blurb: String(localized: "How much one day's recovery carries into the next."),
                              corr: c))
         }
 

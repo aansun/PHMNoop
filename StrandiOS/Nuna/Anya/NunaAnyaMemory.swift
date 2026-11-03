@@ -15,11 +15,11 @@ enum NunaAnyaMemory {
 
     /// How each remembered figure is named and written, per figure key.
     private static let figures: [String: (name: String, unit: String, decimals: Int)] = [
-        "charge": ("Charge", "%", 0), "effort": ("Effort", "", 0), "rest": ("Rest", "%", 0),
+        "charge": ("Recovery", "%", 0), "effort": ("Strain", "", 0), "rest": ("Sleep", "%", 0),
         "hrv": ("HRV", " ms", 0), "rhr": ("Resting heart rate", " bpm", 0), "spo2": ("SpO₂", "%", 0), "resp": ("Breathing", "/min", 1),
         "sleepMin": ("Sleep", " min", 0), "efficiency": ("Sleep efficiency", "%", 0), "deepMin": ("Deep sleep", " min", 0),
-        "week": ("Charge this week", "%", 0), "before": ("Charge before that", "%", 0),
-        "sessions": ("Sessions in 7 days", "", 0), "minutes": ("Training minutes", " min", 0), "weekEffort": ("Effort this week", "", 0),
+        "week": ("Recovery this week", "%", 0), "before": ("Recovery before that", "%", 0),
+        "sessions": ("Sessions in 7 days", "", 0), "minutes": ("Training minutes", " min", 0), "weekEffort": ("Strain this week", "", 0),
     ]
 
     /// Records today's figures for a module (one snapshot per day, replaced as the day goes on) and returns a sentence on what

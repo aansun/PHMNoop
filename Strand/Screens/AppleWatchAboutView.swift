@@ -75,19 +75,19 @@ struct AppleWatchAboutView: View {
     // the watch is strongest at down to what it can't honestly do, so the page reads as a fair
     // appraisal rather than a sales pitch.
     private let metrics: [WatchMetric] = [
-        WatchMetric(icon: "bed.double.fill", metric: String(localized: "Sleep / Rest"),
+        WatchMetric(icon: "bed.double.fill", metric: String(localized: "Sleep"),
                     confidence: .great,
-                    detail: String(localized: "Apple's own sleep stages drive Rest directly. This is one of the watch's strengths.")),
+                    detail: String(localized: "Apple's own sleep stages drive Sleep directly. This is one of the watch's strengths.")),
         WatchMetric(icon: "figure.walk", metric: String(localized: "Steps & workouts"),
                     confidence: .great,
-                    detail: String(localized: "Steps, active energy and logged workouts feed Effort. Dense and reliable.")),
+                    detail: String(localized: "Steps, active energy and logged workouts feed Strain. Dense and reliable.")),
         WatchMetric(icon: "lungs.fill", metric: String(localized: "Fitness Age"),
                     confidence: .great,
                     detail: String(localized: "Built from Apple's cardio-fitness VO₂ max estimate, the same number the Fitness app shows.")),
-        WatchMetric(icon: "flame.fill", metric: String(localized: "Effort"),
+        WatchMetric(icon: "flame.fill", metric: String(localized: "Strain"),
                     confidence: .good,
                     detail: String(localized: "Heart rate plus active energy give a solid daily cardiovascular load. An on-watch workout sharpens it further.")),
-        WatchMetric(icon: "heart.fill", metric: String(localized: "Recovery / Charge"),
+        WatchMetric(icon: "heart.fill", metric: String(localized: "Recovery"),
                     confidence: .calibrating,
                     detail: String(localized: "Led by your heart-rate variability versus your own baseline. The watch samples HRV rather than streaming it, so this needs about a week of nights to calibrate. Until then NOOP shows \u{201C}needs more data\u{201D}, never a guessed number.")),
         WatchMetric(icon: "thermometer.medium", metric: String(localized: "Skin temperature"),
@@ -133,7 +133,7 @@ struct AppleWatchAboutView: View {
                         .foregroundStyle(StrandPalette.textPrimary)
                     Spacer(minLength: 0)
                 }
-                Text("NOOP can run off only an Apple Watch, no chest strap needed. The watch is the sensor; NOOP does the thinking on your phone, computing Charge, Rest, Effort and your Fitness Age from your Health data, all on-device.")
+                Text("NOOP can run off only an Apple Watch, no chest strap needed. The watch is the sensor; NOOP does the thinking on your phone, computing Recovery, Sleep, Strain and your Fitness Age from your Health data, all on-device.")
                     .font(StrandFont.subhead)
                     .foregroundStyle(StrandPalette.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -214,11 +214,11 @@ struct AppleWatchAboutView: View {
                         .foregroundStyle(StrandPalette.textPrimary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                Text("Recovery, NOOP's Charge score, is led by your heart-rate variability measured against your own personal baseline. A chest strap streams beat-to-beat data densely all night, so it can learn that baseline fast. An Apple Watch instead samples HRV, a handful of readings through the day plus overnight, so the signal is real but sparser.")
+                Text("Recovery, NOOP's own score, is led by your heart-rate variability measured against your own personal baseline. A chest strap streams beat-to-beat data densely all night, so it can learn that baseline fast. An Apple Watch instead samples HRV, a handful of readings through the day plus overnight, so the signal is real but sparser.")
                     .font(StrandFont.subhead)
                     .foregroundStyle(StrandPalette.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("That's why a watch-only Charge starts out \u{201C}Calibrating\u{201D}. NOOP needs about seven nights of your HRV to learn what normal looks like for you. Until it has them it withholds the score rather than guess. Once the baseline is set, your Charge appears with its confidence, on the same 0-100 scale as a strap's.")
+                Text("That's why a watch-only Recovery starts out \u{201C}Calibrating\u{201D}. NOOP needs about seven nights of your HRV to learn what normal looks like for you. Until it has them it withholds the score rather than guess. Once the baseline is set, your Recovery appears with its confidence, on the same 0-100 scale as a strap's.")
                     .font(StrandFont.subhead)
                     .foregroundStyle(StrandPalette.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)

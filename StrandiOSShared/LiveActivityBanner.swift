@@ -184,7 +184,7 @@ struct NOOPBannerLockScreen: View {
             return [Figure(id: "distance", label: "DISTANCE", value: d.0, unit: d.1),
                     Figure(id: "pace", label: isCycling ? "SPEED" : "PACE", value: p.0, unit: p.1)]
         }
-        let effort = Figure(id: "effort", label: "EFFORT", value: state.effortLabel ?? state.effort.map(String.init) ?? "–")
+        let effort = Figure(id: "effort", label: "STRAIN", value: state.effortLabel ?? state.effort.map(String.init) ?? "–")
         if onFoot, let steps = state.steps { return [Figure(id: "steps", label: "STEPS", value: String(steps)), calories] }
         return [calories, effort]
     }

@@ -14,7 +14,7 @@ struct NunaDayStateView: View {
     @StateObject private var day = NunaTodayModel()
 
     var body: some View {
-        NunaDetailScreen(kind == .charge ? "Charge state" : "Readiness") {
+        NunaDetailScreen(kind == .charge ? "Recovery state" : "Readiness") {
             switch kind {
             case .charge: chargeContent
             case .readiness: readinessContent
@@ -54,19 +54,19 @@ struct NunaDayStateView: View {
                 legend("Green", "67% and above. You are well recovered: a hard session should land well.", current: (pct ?? -1) >= 67, color: NunaPalette.scoreHigh, plainTitle: true)
                 legend("Yellow", "34% to 66%. Moderate recovery: train at a steady pace and watch how you feel.", current: pct.map { $0 >= 34 && $0 < 67 } ?? false, color: NunaPalette.scoreMid, plainTitle: true)
                 legend("Red", "Below 34%. Recovery is low: keep the day easy and put sleep first.", current: pct.map { $0 < 34 } ?? false, color: NunaPalette.scoreLow, plainTitle: true)
-                legend("Grey", "There is no Charge yet, so the dot has no colour to give.", current: pct == nil, color: NunaPalette.textMuted, plainTitle: true)
+                legend("Grey", "There is no Recovery yet, so the dot has no colour to give.", current: pct == nil, color: NunaPalette.textMuted, plainTitle: true)
             }.frame(maxWidth: .infinity, alignment: .leading)
         }
         nunaTrendsCap("The four states")
         NunaCard(small: true) {
             VStack(alignment: .leading, spacing: 14) {
-                legend("Solid", "Today's Charge is scored from last night's sleep, against a baseline that is trusted.", current: { if case .scored = state { return true }; return false }())
+                legend("Solid", "Today's Recovery is scored from last night's sleep, against a baseline that is trusted.", current: { if case .scored = state { return true }; return false }())
                 legend("Last night", "Today has no score of its own yet, so the last scored night is shown.", current: { if case .carried = state { return true }; return false }())
                 legend("Calibrating", "PHMN is still learning your baseline; the first nights give no score.", current: { if case .calibrating = state { return true }; return false }())
                 legend("No data", "No scored night yet and not calibrating: nothing honest to show.", current: { if case .noData = state { return true }; return false }())
             }.frame(maxWidth: .infinity, alignment: .leading)
         }
-        nunaFootnote("Charge is made from your HRV, resting heart rate, breathing and sleep, each against your own baseline. Not medical advice.")
+        nunaFootnote("Recovery is made from your HRV, resting heart rate, breathing and sleep, each against your own baseline. Not medical advice.")
     }
 
     private func tone(for state: LiquidTodayView.ChargeDisplay) -> Color? {
@@ -75,10 +75,10 @@ struct NunaDayStateView: View {
 
     private func chargeHeadline(_ state: LiquidTodayView.ChargeDisplay) -> String {
         switch state {
-        case .scored: return String(localized: "Today's Charge is scored.")
+        case .scored: return String(localized: "Today's Recovery is scored.")
         case .carried: return String(localized: "Today has no score of its own yet.")
         case .calibrating(let nights): return String(localized: "Learning your baseline, \(nights) of \(Baselines.minNightsSeed) nights.")
-        case .noData: return String(localized: "There is no Charge to show yet.")
+        case .noData: return String(localized: "There is no Recovery to show yet.")
         }
     }
 
@@ -87,7 +87,7 @@ struct NunaDayStateView: View {
         case .scored:
             return String(localized: "It comes from last night's sleep and is the number on the ring. Your baseline is established, so you can rely on it.")
         case .carried(_, let caption):
-            return String(localized: "The ring shows the last scored night (\(caption)). Charge is worked out after a night's sleep is recorded and synced; none has been scored for today, so this is the last real number, not a new estimate. It becomes Solid once tonight's sleep is scored.")
+            return String(localized: "The ring shows the last scored night (\(caption)). Recovery is worked out after a night's sleep is recorded and synced; none has been scored for today, so this is the last real number, not a new estimate. It becomes Solid once tonight's sleep is scored.")
         case .calibrating:
             var text = String(localized: "A score needs a few nights of your own HRV to compare against. Until then PHMN keeps the ring empty instead of guessing.")
             if let reason = state.calibrationReason(dayKeys: repo.days.map(\.day), nightlyHrv: repo.days.map(\.avgHrv), today: day.dayKey(repo: repo)) {
@@ -101,10 +101,10 @@ struct NunaDayStateView: View {
 
     private func chargeAdvice(_ state: LiquidTodayView.ChargeDisplay) -> String {
         switch state {
-        case .scored: return String(localized: "Nothing to do. Plan today's load against the Effort target on Today.")
+        case .scored: return String(localized: "Nothing to do. Plan today's load against the Strain target on Today.")
         case .carried: return String(localized: "Wear the strap tonight and let it sync in the morning. If you slept with it on and it still says Last night, open the Devices page and sync.")
         case .calibrating: return String(localized: "Keep wearing the strap while you sleep. Each night with an HRV reading counts toward the baseline.")
-        case .noData: return String(localized: "Pair the strap, wear it overnight and sync. Charge appears once a night has been scored.")
+        case .noData: return String(localized: "Pair the strap, wear it overnight and sync. Recovery appears once a night has been scored.")
         }
     }
 

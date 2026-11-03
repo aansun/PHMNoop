@@ -437,7 +437,7 @@ struct WorkoutDetailView: View {
                 // the typed average disagrees materially with this trace's own mean AND the row carries that
                 // captured strain/zones, say so plainly. We do NOT re-score from the typed number.
                 if avgHrEditedDisclosure(traceMean: values.reduce(0, +) / Double(values.count)) {
-                    Text("The average above was edited. The graph, zones and Effort stay from the recorded session.")
+                    Text("The average above was edited. The graph, zones and Strain stay from the recorded session.")
                         .font(StrandFont.footnote)
                         .foregroundStyle(StrandPalette.textTertiary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -536,7 +536,7 @@ struct WorkoutDetailView: View {
         let scaleMax: Double = effortScale == .whoop ? 21 : 100
         let fraction = max(0, min(1, displayValue / scaleMax))
         return VStack(alignment: .leading, spacing: NoopMetrics.gap) {
-            SectionHeader("Effort", overline: "This session")
+            SectionHeader("Strain", overline: "This session")
             NoopCard(tint: StrandPalette.effortColor) {
                 HStack(alignment: .center, spacing: 18) {
                     ZStack {
@@ -558,9 +558,9 @@ struct WorkoutDetailView: View {
                         .allowsHitTesting(false)
                     }
                     .accessibilityElement(children: .ignore)
-                    .accessibilityLabel(String(localized: "Effort \(UnitFormatter.effortDisplay(strain, scale: effortScale)) \(effortScale == .whoop ? "of 21" : "of 100")"))
+                    .accessibilityLabel(String(localized: "Strain \(UnitFormatter.effortDisplay(strain, scale: effortScale)) \(effortScale == .whoop ? "of 21" : "of 100")"))
                     Spacer(minLength: 0)
-                    Text("This session's contribution to the day's Effort, as captured during the workout.")
+                    Text("This session's contribution to the day's Strain, as captured during the workout.")
                         .font(StrandFont.subhead)
                         .foregroundStyle(StrandPalette.textSecondary)
                         .fixedSize(horizontal: false, vertical: true)

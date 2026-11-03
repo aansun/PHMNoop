@@ -138,7 +138,7 @@ struct NunaGymSessionView: View {
                             NunaAveragePill(value: st, average: avg, text: UnitFormatter.effortDisplay(avg, scale: effortScale), compact: true)
                         }
                     }
-                    Text("Activity Effort").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Activity Strain").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 }
                 .frame(width: geo.size.width * 0.45, alignment: .leading)
                 Rectangle().fill(NunaPalette.textPrimary.opacity(0.1)).frame(width: 1, height: 58)

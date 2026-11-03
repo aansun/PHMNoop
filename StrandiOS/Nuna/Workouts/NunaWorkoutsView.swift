@@ -157,7 +157,7 @@ struct NunaWorkoutsView: View {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     Text(verbatim: UnitFormatter.effortDisplay(total, scale: scale)).font(.nuna(size: 44, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(44)).foregroundStyle(NunaPalette.textPrimary)
                     if let usual { Text(verbatim: "/ " + UnitFormatter.effortDisplay(usual, scale: scale)).font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
-                    Text("Effort").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                    Text("Strain").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 NunaColumns(items: days.map { d, rs in
                     let e = m.effort(rs)
@@ -188,7 +188,7 @@ struct NunaWorkoutsView: View {
         let week = rows(inWeek: 0)
         return Group {
             if !week.isEmpty {
-                NunaAnyaCard(verbatim: String(localized: "This week: \(week.count) sessions, Effort \(UnitFormatter.effortDisplay(m.effort(week), scale: scale)).")) { showCoach = true }
+                NunaAnyaCard(verbatim: String(localized: "This week: \(week.count) sessions, Strain \(UnitFormatter.effortDisplay(m.effort(week), scale: scale)).")) { showCoach = true }
             }
         }
     }
@@ -567,7 +567,7 @@ struct NunaWorkoutMonthGrid: View {
             }
             HStack(spacing: 16) {
                 legend(NunaPalette.effort, "Cardio"); legend(NunaPalette.textPrimary, "Strength")
-                HStack(spacing: 6) { RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.textMuted).frame(width: 9, height: 1.5); Text("Rest").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
+                HStack(spacing: 6) { RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous).fill(NunaPalette.textMuted).frame(width: 9, height: 1.5); Text("Sleep").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
             }
             .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 4)
         }

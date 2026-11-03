@@ -309,7 +309,7 @@ final class AICoachEngine: ObservableObject {
     with kindness and explain the trade-off. If the user asks how they feel, answer with the best-supported \
     body-state interpretation first, then say what to watch over the next several hours.
     PROACTIVE COMPANION MODE — When opening a page or when there is no direct question, volunteer a useful \
-    observation. Start with the insight, not "Your Charge is...". A good opening sounds like: "You look \
+    observation. Start with the insight, not "Your Recovery is...". A good opening sounds like: "You look \
     ready for controlled quality today, but your recent load says this is a day to stay measured." Then \
     connect it to only the evidence that matters. When confidence is limited, be transparent without becoming \
     cold. End with a small next step or a gentle choice, not a generic question.
@@ -327,7 +327,7 @@ final class AICoachEngine: ObservableObject {
     6. When the user asks for a workout recommendation or plan, make it practical and specific: name the \
     workout type, target duration, intensity or Heart Rate Zone, warm-up, main work, and cooldown. For \
     strength training include exercises, sets, reps, rest, and a simple progression note. Use the user's \
-    Charge, Effort, Rest, recent workouts, and stated goal when available. Never invent a measured value; \
+    Recovery, Strain, Sleep, recent workouts, and stated goal when available. Never invent a measured value; \
     label assumptions clearly. End with one clear action such as starting or saving the plan in Workouts.
     If data is unavailable, say so in one sentence and give general guidance. You are not a doctor: \
     never diagnose; briefly recommend a qualified professional for concerning symptoms.
@@ -360,7 +360,7 @@ final class AICoachEngine: ObservableObject {
             default: return ""
             }
             return """
-            LANGUAGE: Reply in natural, concise \(languageName). Keep established health and product terms in their original form: Charge, Effort, Rest, Heart Rate, HRV, RHR, SpO₂, Zone, Pace, Cadence, Baseline, Apple Health, Strava, GPS, and Live Activity. Do not translate metric names or units.
+            LANGUAGE: Reply in natural, concise \(languageName). Keep established health and product terms in their original form: Recovery, Strain, Sleep, Heart Rate, HRV, RHR, SpO₂, Zone, Pace, Cadence, Baseline, Apple Health, Strava, GPS, and Live Activity. Do not translate metric names or units.
             """
         }()
         let languagePrompt = localizedLanguageOverlay.isEmpty ? "" : "\n\n\(localizedLanguageOverlay)"
@@ -384,14 +384,14 @@ final class AICoachEngine: ObservableObject {
     /// How Anya uses the "right now" block and the per-session lines: a planning answer in the morning, a review in the evening,
     /// and a workout explained from the session itself. Appended in the Nuna experience only, beside `AnyaActions.instruction`.
     static let dayRhythmInstruction = """
-    DAY RHYTHM: The context carries RIGHT NOW (the time and part of the day), the session the Plan card suggests, the Effort banked, \
+    DAY RHYTHM: The context carries RIGHT NOW (the time and part of the day), the session the Plan card suggests, the Strain banked, \
     tonight's sleep need and a NEXT STEP worked out from them. Use them. Talk like a coach who has just looked at the person's day: \
     say what you see in one or two sentences, then close with the NEXT STEP in your own words, adjusted only if their message \
     points elsewhere. In the morning, plan the day around the suggested session and say what would change it. \
-    In the evening, review the day: what its Effort cost, how the night ahead looks, and a bedtime that follows from the sleep need. \
+    In the evening, review the day: what its Strain cost, how the night ahead looks, and a bedtime that follows from the sleep need. \
     Never recommend a session that contradicts the suggested one unless the person gives a reason, and then say what changed. \
-    When asked about a workout, explain it from the session's own line: duration, Effort, average and max heart rate and the time in \
-    zones. Name what drove the Effort, say what it means for the next day or two, and offer one follow-up the person can ask. \
+    When asked about a workout, explain it from the session's own line: duration, Strain, average and max heart rate and the time in \
+    zones. Name what drove the Strain, say what it means for the next day or two, and offer one follow-up the person can ask. \
     If a figure the answer needs is not in the context, say so instead of estimating it. This is guidance from the person's own \
     numbers, not medical advice.
     """
@@ -409,7 +409,7 @@ final class AICoachEngine: ObservableObject {
     static func answerStyleBlock(_ defaults: UserDefaults = .standard) -> String {
         var out = ""
         switch defaults.string(forKey: responseLanguageKey) ?? "app" {
-        case "id": out += "\n\nLANGUAGE: Always reply in natural, concise Indonesian, whatever language the question is in. Keep established health and product terms in their original form: Charge, Effort, Rest, Heart Rate, HRV, RHR, SpO₂, Zone, Pace, Cadence, Baseline."
+        case "id": out += "\n\nLANGUAGE: Always reply in natural, concise Indonesian, whatever language the question is in. Keep established health and product terms in their original form: Recovery, Strain, Sleep, Heart Rate, HRV, RHR, SpO₂, Zone, Pace, Cadence, Baseline."
         case "en": out += "\n\nLANGUAGE: Always reply in clear, concise English, whatever language the question is in."
         default: break
         }
@@ -420,7 +420,7 @@ final class AICoachEngine: ObservableObject {
         }
         // Goals the wearer set in Me > Persona > Targets; a line is added only for a goal that is set.
         var goals: [String] = []
-        if defaults.double(forKey: "nuna.goal.weeklyEffort") > 0 { goals.append("weekly Effort target \(Int(defaults.double(forKey: "nuna.goal.weeklyEffort")))") }
+        if defaults.double(forKey: "nuna.goal.weeklyEffort") > 0 { goals.append("weekly Strain target \(Int(defaults.double(forKey: "nuna.goal.weeklyEffort")))") }
         let sleepGoal = defaults.integer(forKey: "nuna.goal.sleepMinutes")
         if sleepGoal > 0 { goals.append("sleep target \(sleepGoal / 60)h \(sleepGoal % 60)m") }
         if defaults.integer(forKey: "nuna.goal.steps") > 0 { goals.append("daily steps target \(defaults.integer(forKey: "nuna.goal.steps"))") }
@@ -1518,7 +1518,7 @@ final class AICoachEngine: ObservableObject {
                 repo.days.compactMap { d in d.recovery.map { (d.day, $0) } },
                 uniquingKeysWith: { _, last in last })
             let ranked = EffectRanker.rank(behaviors: byBehaviour, controls: controls,
-                                           outcomeByDay: outcomeByDay, outcome: "Charge")
+                                           outcomeByDay: outcomeByDay, outcome: "Recovery")
                 .filter { $0.effect.significant }
                 .prefix(3)
             if !ranked.isEmpty {
@@ -1716,7 +1716,7 @@ final class AICoachEngine: ObservableObject {
             lines.append(Self.bodyStateSummary(current: current, history: days))
         }
         lines.append("")
-        lines.append("Recent days (newest first) — charge(0-100), effort(0-100), rest/sleep(h), "
+        lines.append("Recent days (newest first) — recovery(0-100), strain(0-100), sleep(h), "
                      + "deep/REM/light(h), eff(%), HRV(ms), RHR(bpm). A dash means NOT MEASURED, not zero:")
         for d in recent {
             lines.append("  " + dayLine(d))
@@ -1726,8 +1726,8 @@ final class AICoachEngine: ObservableObject {
         let last30 = Array(days.suffix(30))
         lines.append("")
         lines.append("30-day averages:")
-        lines.append("  charge: \(avgInt(last30.compactMap { $0.recovery }))"
-                     + ", effort: \(avgOne(last30.compactMap { $0.strain }))"
+        lines.append("  recovery: \(avgInt(last30.compactMap { $0.recovery }))"
+                     + ", strain: \(avgOne(last30.compactMap { $0.strain }))"
                      + ", sleep: \(avgSleepHours(last30))h"
                      + ", HRV: \(avgInt(last30.compactMap { $0.avgHrv })) ms"
                      + ", RHR: \(avgInt(last30.compactMap { $0.restingHr.map(Double.init) })) bpm")
@@ -1784,7 +1784,7 @@ final class AICoachEngine: ObservableObject {
             state = "recovery needed"
             stance = "Prefer easy movement, mobility, or extra sleep; avoid stacking another hard session."
         } else if (shortSleep || sleepBelowBaseline) && (hrvDown || rhrUp) {
-            state = "under-recovered despite the Charge score"
+            state = "under-recovered despite the Recovery score"
             stance = "Keep intensity controlled and reassess energy and Heart Rate before doing hard work."
         } else if hrvDown && rhrUp {
             state = "autonomic load is elevated"
@@ -1804,7 +1804,7 @@ final class AICoachEngine: ObservableObject {
         }
 
         var evidence: [String] = []
-        if let charge { evidence.append("Charge \(Int(charge.rounded()))") }
+        if let charge { evidence.append("Recovery \(Int(charge.rounded()))") }
         if let sleep {
             let comparison = sleepBaseline.map { " vs \(Self.formatHours($0))h baseline" } ?? ""
             evidence.append("sleep \(Self.formatHours(sleep))h\(comparison)")
@@ -1818,10 +1818,10 @@ final class AICoachEngine: ObservableObject {
             evidence.append("RHR \(rhr)bpm\(comparison)")
         }
         if let recentEffort {
-            let comparison = effortBaseline.map { " vs \(String(format: "%.1f", $0)) average daily effort" } ?? ""
-            evidence.append("recent effort \(String(format: "%.1f", recentEffort))\(comparison)")
+            let comparison = effortBaseline.map { " vs \(String(format: "%.1f", $0)) average daily strain" } ?? ""
+            evidence.append("recent strain \(String(format: "%.1f", recentEffort))\(comparison)")
         } else if let effort {
-            evidence.append("Effort \(String(format: "%.1f", effort))")
+            evidence.append("Strain \(String(format: "%.1f", effort))")
         }
 
         // Effort describes load, not recovery. It can support the recommendation, but by itself it
@@ -1858,7 +1858,7 @@ final class AICoachEngine: ObservableObject {
         for w in rows.prefix(limit) {
             var parts = ["  \(dateString(w.startTs)) \(w.sport)"]
             if let dur = w.durationS { parts.append("\(Int((dur / 60).rounded())) min") }
-            if let s = w.strain { parts.append("effort \(String(format: "%.1f", s))") }
+            if let s = w.strain { parts.append("strain \(String(format: "%.1f", s))") }
             if let hr = w.avgHr { parts.append("avg HR \(hr)") }
             if let mx = w.maxHr { parts.append("max HR \(mx)") }
             if let kcal = w.energyKcal { parts.append("\(Int(kcal.rounded())) kcal") }
@@ -1892,9 +1892,9 @@ final class AICoachEngine: ObservableObject {
     /// with fifteen Kotlin tests would ship untested.
     func dayLine(_ d: DailyMetric) -> String {
         var parts: [String] = [d.day + ":"]
-        parts.append("charge " + (d.recovery.map { "\(Int($0.rounded()))" } ?? "—"))
-        parts.append("effort " + (d.strain.map { String(format: "%.1f", $0) } ?? "—"))
-        parts.append("rest " + (d.totalSleepMin.map { String(format: "%.1fh", $0 / 60) } ?? "—"))
+        parts.append("recovery " + (d.recovery.map { "\(Int($0.rounded()))" } ?? "—"))
+        parts.append("strain " + (d.strain.map { String(format: "%.1f", $0) } ?? "—"))
+        parts.append("sleep " + (d.totalSleepMin.map { String(format: "%.1fh", $0 / 60) } ?? "—"))
         // The stage breakdown and efficiency, which the coach could not see at all: a user asked why it
         // said it had no access to sleep stages, and it was answering honestly — `rest 7.8h` was every
         // word it got about a night. These four sit on the SAME DailyMetric the line already reads, so

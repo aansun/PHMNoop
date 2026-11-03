@@ -197,7 +197,7 @@ enum ChargeBreakdownFormat {
 
     /// The explanatory detail + next step: names the cause (Deep window, no deep sleep that night) and
     /// the two ways out, rather than leaving an unexplained blank ring.
-    static let chargeDeepWindowGapDetail = String(localized: "The Deep sleep HRV window needs a night with deep-stage sleep to score Charge. Switch to Whole night in Settings, or wait for a night with more deep sleep.")
+    static let chargeDeepWindowGapDetail = String(localized: "The Deep sleep HRV window needs a night with deep-stage sleep to score Recovery. Switch to Whole night in Settings, or wait for a night with more deep sleep.")
 
     /// VoiceOver plain string (title + detail).
     static var chargeDeepWindowGapAccessibility: String {
@@ -390,7 +390,7 @@ struct SkinTempDeviationRow: View {
 }
 
 #if DEBUG
-#Preview("Charge breakdown") {
+#Preview("Recovery breakdown") {
     ScrollView {
         VStack(alignment: .leading, spacing: NoopMetrics.sectionGap) {
             HStack(spacing: 10) {
@@ -456,7 +456,7 @@ struct ChargeBreakdownDemoHost: View {
                 .padding(NoopMetrics.screenPadding)
             }
             .background(StrandPalette.surfaceBase)
-            .navigationTitle("What shaped your Charge")
+            .navigationTitle("What shaped your Recovery")
         }
         .preferredColorScheme(.dark)
     }

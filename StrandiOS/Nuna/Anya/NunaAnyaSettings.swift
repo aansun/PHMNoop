@@ -612,7 +612,7 @@ struct NunaAnyaVoiceCoachView: View {
                 if heartRate {
                     // The target is the one set when an activity starts (its Effort target), not a second setting kept here.
                     NunaCard(small: true) {
-                        NunaListRow("Heart-rate target", subtitle: "Read from the activity you start. Set it there under Effort target.",
+                        NunaListRow("Heart-rate target", subtitle: "Read from the activity you start. Set it there under Strain target.",
                                     systemImage: "heart.circle")
                     }
                 }

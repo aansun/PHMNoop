@@ -141,7 +141,7 @@ struct NunaHowItWorksView: View {
                 }
             }
             NavigationLink { NunaScoringGuideView() } label: {
-                NunaCard(small: true) { NunaListRow("How scores are worked out", description: "Charge, Effort and Rest", systemImage: "chart.bar.doc.horizontal", showsChevron: true) }
+                NunaCard(small: true) { NunaListRow("How scores are worked out", description: "Recovery, Strain and Sleep", systemImage: "chart.bar.doc.horizontal", showsChevron: true) }
             }.buttonStyle(.plain)
             nunaFootnote("NOOP never makes up a number. When it can't compute one honestly it tells you what's missing and what to do, rather than showing a fake value.")
         }
@@ -167,7 +167,7 @@ struct NunaScoringGuideView: View {
                 NunaCard(highlight: true) {
                     VStack(alignment: .leading, spacing: 10) {
                         nunaRuledHeader("The three scores")
-                        Text("NOOP gives you three daily scores (Charge, Effort and Rest), each on a 0-100 scale. They're built from your strap's raw signals using published, peer-reviewed sport science, and computed entirely on your device. They are NOT WHOOP's scores: we don't have WHOOP's private algorithms and don't pretend to. They aim at the same three questions using open science, so they'll usually track WHOOP's in direction, but won't match number-for-number. And that's the point.")
+                        Text("NOOP gives you three daily scores (Recovery, Strain and Sleep), each on a 0-100 scale. They're built from your strap's raw signals using published, peer-reviewed sport science, and computed entirely on your device. They are NOT WHOOP's scores: we don't have WHOOP's private algorithms and don't pretend to. They aim at the same three questions using open science, so they'll usually track WHOOP's in direction, but won't match number-for-number. And that's the point.")
                             .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                         HStack(spacing: 16) {
                             ForEach(ScoreSection.allCases) { s in

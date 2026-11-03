@@ -266,7 +266,7 @@ struct NunaHRFullScreen: View {
                 let ex = x(t1)
                 Path { p in p.move(to: CGPoint(x: ex, y: plot.minY - 22)); p.addLine(to: CGPoint(x: ex, y: plot.maxY)) }
                     .stroke(NunaPalette.effortModerate, style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
-                Text("Effort").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                Text("Strain").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.effortModerate).fixedSize().position(x: ex, y: iconY + 2)
                 Text(verbatim: UnitFormatter.effortDisplay(effort, scale: UnitPrefs.resolveEffortScale(effortScaleRaw)))
                     .font(.nuna(size: 17, weight: .bold, design: NunaType.design))

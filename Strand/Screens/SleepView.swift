@@ -1826,9 +1826,9 @@ struct SleepView: View {
         let points = restTrendPoints
         let average = points.isEmpty ? nil : points.map(\.value).reduce(0, +) / Double(points.count)
         return VStack(alignment: .leading, spacing: NoopMetrics.gap) {
-            SectionHeader("Rest", overline: "Trend")
+            SectionHeader("Sleep", overline: "Trend")
             ChartCard(
-                title: "Rest trend",
+                title: "Sleep trend",
                 subtitle: "Sleep performance over time",
                 trailing: average.map { "\(Int($0.rounded()))% avg" },
                 height: NoopMetrics.chartHeight,
@@ -1841,7 +1841,7 @@ struct SleepView: View {
                                    showsBars: false,
                                    height: NoopMetrics.chartHeight,
                                    valueFormat: { "\(Int($0.rounded()))" },
-                                   accessibilityLabel: String(localized: "Rest trend"))
+                                   accessibilityLabel: String(localized: "Sleep trend"))
                     } else {
                         Text("Not enough nights yet.")
                             .font(StrandFont.subhead)

@@ -79,7 +79,7 @@ struct NunaTrainingLoadView: View {
                                    (vol.last ?? 0) / vTop, NunaPalette.textPrimary, vBand, NunaPalette.textPrimary)
                     }
                     HStack(spacing: 10) {
-                        NavigationLink(value: NunaWorkoutRoute.loadCardio) { pill("Effort · see cardio") }.buttonStyle(.plain)
+                        NavigationLink(value: NunaWorkoutRoute.loadCardio) { pill("Strain · see cardio") }.buttonStyle(.plain)
                         NavigationLink(value: NunaWorkoutRoute.loadMuscle) { pill("kg · see strength") }.buttonStyle(.plain)
                     }
                 }
@@ -89,14 +89,14 @@ struct NunaTrainingLoadView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack { nunaTrendsCap("6 weeks"); Spacer(); Text("Top: strength · bottom: cardio").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                     weeklyPair(cardio, vol)
-                    HStack(spacing: 14) { NunaLegendItem(color: NunaPalette.effort, text: "Cardio · Effort", dot: true); NunaLegendItem(color: NunaPalette.textPrimary, text: "Strength · volume kg", dot: true) }
+                    HStack(spacing: 14) { NunaLegendItem(color: NunaPalette.effort, text: "Cardio · Strain", dot: true); NunaLegendItem(color: NunaPalette.textPrimary, text: "Strength · volume kg", dot: true) }
                 }
             }
             NunaTitleRow(title: "This week's breakdown") { EmptyView() }
             NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                 VStack(spacing: 0) {
                     NavigationLink(value: NunaWorkoutRoute.loadCardio) {
-                        NunaListRow("Cardio", subtitle: LocalizedStringKey(String(localized: "Effort \(UnitFormatter.effortDisplay(m.effort(week), scale: scale)) · \(week.count) sessions with heart rate")), systemImage: "heart", showsChevron: true)
+                        NunaListRow("Cardio", subtitle: LocalizedStringKey(String(localized: "Strain \(UnitFormatter.effortDisplay(m.effort(week), scale: scale)) · \(week.count) sessions with heart rate")), systemImage: "heart", showsChevron: true)
                     }.buttonStyle(.plain)
                     NunaDivider()
                     NavigationLink(value: NunaWorkoutRoute.loadMuscle) {
@@ -107,7 +107,7 @@ struct NunaTrainingLoadView: View {
             NunaCard(small: true) {
                 HStack(alignment: .top, spacing: 12) {
                     AnyaMark(size: 18).foregroundStyle(NunaPalette.textMuted)
-                    Text("Cardio is counted from daily Effort, not TRIMP. Strength is estimated from the volume you lift and stays separate from cardiovascular Effort.")
+                    Text("Cardio is counted from daily Strain, not TRIMP. Strength is estimated from the volume you lift and stays separate from cardiovascular Strain.")
                         .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
@@ -212,7 +212,7 @@ struct NunaTrainingLoadView: View {
                             VStack(alignment: .leading, spacing: 4) { Text("Fatigue · ATL").font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary); Text(verbatim: NunaTrendsFormat.num(eff(last.atl), 1)).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.effortText) }.frame(maxWidth: .infinity, alignment: .leading)
                         }
                     } else {
-                        Text("The model needs at least 14 days in a row with Effort before it draws anything.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        Text("The model needs at least 14 days in a row with Strain before it draws anything.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                 }
             }
@@ -220,7 +220,7 @@ struct NunaTrainingLoadView: View {
                 NunaSegmented([(value: 4, title: "4 wk"), (value: 5, title: "5 wk"), (value: 12, title: "3 mo")], selection: $weeks, onBlack: true)
                 NunaCard {
                     VStack(alignment: .leading, spacing: 12) {
-                        HStack { nunaTrendsCap("Fitness and fatigue"); Spacer(); Text("Effort scale").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
+                        HStack { nunaTrendsCap("Fitness and fatigue"); Spacer(); Text("Strain scale").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                         let all = shown.flatMap { [$0.ctl, $0.atl] }
                         let lo = all.min() ?? 0, span = max((all.max() ?? 1) - lo, 0.0001)
                         NunaMultiLineChart(start: shown.first!.day, days: shown.count,
@@ -278,7 +278,7 @@ struct NunaTrainingLoadView: View {
             NunaCard(small: true) {
                 HStack(alignment: .top, spacing: 12) {
                     AnyaMark(size: 18).foregroundStyle(NunaPalette.textMuted)
-                    Text("Fitness (CTL) averages Effort over 42 days, fatigue (ATL) over 7 days, and form is the gap. Descriptive only: it does not change Charge or any other score.")
+                    Text("Fitness (CTL) averages Strain over 42 days, fatigue (ATL) over 7 days, and form is the gap. Descriptive only: it does not change Recovery or any other score.")
                         .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
@@ -434,7 +434,7 @@ struct NunaTrainingLoadView: View {
             NunaCard(small: true) {
                 HStack(alignment: .top, spacing: 12) {
                     AnyaMark(size: 18).foregroundStyle(NunaPalette.textMuted)
-                    Text("Estimated from lifting volume (weight × reps). This is not cardiovascular Effort, so it is not added to cardio Effort.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    Text("Estimated from lifting volume (weight × reps). This is not cardiovascular Strain, so it is not added to cardio Strain.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }
             }
         }

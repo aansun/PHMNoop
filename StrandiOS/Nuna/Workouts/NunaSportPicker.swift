@@ -8,7 +8,7 @@ enum NunaActivityKind: String, CaseIterable, Identifiable {
     case all, effort, charge, rest
     var id: String { rawValue }
     var title: LocalizedStringKey {
-        switch self { case .all: return "All"; case .effort: return "Effort"; case .charge: return "Charge"; case .rest: return "Rest" }
+        switch self { case .all: return "All"; case .effort: return "Strain"; case .charge: return "Recovery"; case .rest: return "Sleep" }
     }
 
     /// Recovery activities, the Charge tab. Saved like any other manual activity under the name as typed here.

@@ -116,7 +116,7 @@ struct MetricDescriptor: Identifiable, Hashable {
 /// Canonical catalog — mirrors the WHOOP "Trend View" plus Apple Health body metrics.
 /// Keys match exactly what the importers write into metricSeries.
 enum MetricCatalog {
-    static let categories = ["Heart", "Charge", "Rest", "Effort", "Health", "Nutrition", "Mind"]
+    static let categories = ["Heart", "Recovery", "Sleep", "Strain", "Health", "Nutrition", "Mind"]
 
     static let all: [MetricDescriptor] = [
         // ── Heart
@@ -130,51 +130,51 @@ enum MetricCatalog {
         d("body_age", String(localized: "Body Age"), "Heart", "yrs", "my-whoop", "figure.stand", 0, false),
 
         // ── Charge (was Recovery)
-        d("recovery", String(localized: "Charge"), "Charge", "%", "my-whoop", "heart.circle", 0, true,
+        d("recovery", String(localized: "Recovery"), "Recovery", "%", "my-whoop", "heart.circle", 0, true,
           String(localized: "How recovered you are, led by HRV versus your personal baseline.")),
-        d("hrv", String(localized: "Heart Rate Variability"), "Charge", "ms", "my-whoop", "waveform.path.ecg", 0, true),
-        d("rhr", String(localized: "Resting Heart Rate"), "Charge", "bpm", "my-whoop", "heart", 0, false),
-        d("resp_rate", String(localized: "Respiratory Rate"), "Charge", "rpm", "my-whoop", "lungs", 1, nil),
-        d("spo2", String(localized: "Blood Oxygen"), "Charge", "%", "my-whoop", "drop", 0, true),
-        d("skin_temp", String(localized: "Skin Temperature"), "Charge", "°C", "my-whoop", "thermometer", 1, nil),
+        d("hrv", String(localized: "Heart Rate Variability"), "Recovery", "ms", "my-whoop", "waveform.path.ecg", 0, true),
+        d("rhr", String(localized: "Resting Heart Rate"), "Recovery", "bpm", "my-whoop", "heart", 0, false),
+        d("resp_rate", String(localized: "Respiratory Rate"), "Recovery", "rpm", "my-whoop", "lungs", 1, nil),
+        d("spo2", String(localized: "Blood Oxygen"), "Recovery", "%", "my-whoop", "drop", 0, true),
+        d("skin_temp", String(localized: "Skin Temperature"), "Recovery", "°C", "my-whoop", "thermometer", 1, nil),
 
         // ── Rest (was Sleep)
-        d("sleep_performance", String(localized: "Rest"), "Rest", "%", "my-whoop", "moon.stars", 0, true,
+        d("sleep_performance", String(localized: "Sleep"), "Sleep", "%", "my-whoop", "moon.stars", 0, true,
           String(localized: "How restorative your sleep was: duration, efficiency, deep+REM, timing.")),
-        d("in_bed_min", String(localized: "Time in Bed"), "Rest", "min", "my-whoop", "bed.double", 0, nil),
-        d("sleep_total_min", String(localized: "Asleep Time"), "Rest", "min", "my-whoop", "moon.zzz", 0, true),
-        d("hours_vs_needed_pct", String(localized: "Hours vs Needed"), "Rest", "%", "my-whoop", "gauge.medium", 0, true),
-        d("sleep_consistency", String(localized: "Sleep Consistency"), "Rest", "%", "my-whoop", "calendar", 0, true),
-        d("restorative_pct", String(localized: "Restorative Sleep"), "Rest", "%", "my-whoop", "sparkles", 0, true),
-        d("restorative_min", String(localized: "Restorative Sleep"), "Rest", "min", "my-whoop", "sparkles", 0, true),
-        d("sleep_efficiency", String(localized: "Sleep Efficiency"), "Rest", "%", "my-whoop", "bed.double.fill", 0, true),
-        d("sleep_deep_min", String(localized: "Deep (SWS) Sleep"), "Rest", "min", "my-whoop", "moon.fill", 0, true),
-        d("sleep_rem_min", String(localized: "REM Sleep"), "Rest", "min", "my-whoop", "moon.haze", 0, true),
-        d("sleep_light_min", String(localized: "Light Sleep"), "Rest", "min", "my-whoop", "moon", 0, nil),
-        d("sleep_need_min", String(localized: "Sleep Need"), "Rest", "min", "my-whoop", "gauge", 0, nil),
-        d("sleep_debt_min", String(localized: "Sleep Debt"), "Rest", "min", "my-whoop", "exclamationmark.circle", 0, false),
+        d("in_bed_min", String(localized: "Time in Bed"), "Sleep", "min", "my-whoop", "bed.double", 0, nil),
+        d("sleep_total_min", String(localized: "Asleep Time"), "Sleep", "min", "my-whoop", "moon.zzz", 0, true),
+        d("hours_vs_needed_pct", String(localized: "Hours vs Needed"), "Sleep", "%", "my-whoop", "gauge.medium", 0, true),
+        d("sleep_consistency", String(localized: "Sleep Consistency"), "Sleep", "%", "my-whoop", "calendar", 0, true),
+        d("restorative_pct", String(localized: "Restorative Sleep"), "Sleep", "%", "my-whoop", "sparkles", 0, true),
+        d("restorative_min", String(localized: "Restorative Sleep"), "Sleep", "min", "my-whoop", "sparkles", 0, true),
+        d("sleep_efficiency", String(localized: "Sleep Efficiency"), "Sleep", "%", "my-whoop", "bed.double.fill", 0, true),
+        d("sleep_deep_min", String(localized: "Deep (SWS) Sleep"), "Sleep", "min", "my-whoop", "moon.fill", 0, true),
+        d("sleep_rem_min", String(localized: "REM Sleep"), "Sleep", "min", "my-whoop", "moon.haze", 0, true),
+        d("sleep_light_min", String(localized: "Light Sleep"), "Sleep", "min", "my-whoop", "moon", 0, nil),
+        d("sleep_need_min", String(localized: "Sleep Need"), "Sleep", "min", "my-whoop", "gauge", 0, nil),
+        d("sleep_debt_min", String(localized: "Sleep Debt"), "Sleep", "min", "my-whoop", "exclamationmark.circle", 0, false),
 
         // ── Effort (was Strain)
-        d("strain", String(localized: "Effort"), "Effort", "/100", "my-whoop", "flame", 1, nil,
+        d("strain", String(localized: "Strain"), "Strain", "/100", "my-whoop", "flame", 1, nil,
           String(localized: "Cardiovascular load for the day, on a 0-100 scale (was 0-21).")),
-        d("steps", String(localized: "Steps"), "Effort", "", "apple-health", "figure.walk", 0, true),
+        d("steps", String(localized: "Steps"), "Strain", "", "apple-health", "figure.walk", 0, true),
         // WHOOP 5.0 / MG exposes a measured daily step count. Declared AFTER apple-health on purpose:
         // the bare-key `first { key == "steps" }` resolvers (LabBookView, CompareView, the TabRoute
         // `.metric` fallback) keep their prior apple-health default, so this entry's position never
         // changes where any of them tap through. The Today card/tile route to it EXPLICITLY by source
         // (`.metricSourced` / `todayStepsMetric`), which is what actually needs it.
-        d("steps", String(localized: "Steps"), "Effort", "steps", "my-whoop", "figure.walk", 0, true),
+        d("steps", String(localized: "Steps"), "Strain", "steps", "my-whoop", "figure.walk", 0, true),
         // On-device steps ESTIMATE for a WHOOP 4.0 (no real step count over BLE): the strap's daily
         // motion volume scaled by a personal calibration. Stored under the computed "-noop" source, so
         // it reads through the same exploreSeries fallback fitness_age/vitality use. Distinct from the
         // real "steps" above — labelled "(estimated)" so it's never mistaken for a measured count.
-        d("steps_est", String(localized: "Steps (estimated)"), "Effort", "steps", "my-whoop", "figure.walk.motion", 0, true,
+        d("steps_est", String(localized: "Steps (estimated)"), "Strain", "steps", "my-whoop", "figure.walk.motion", 0, true,
           String(localized: "Estimated from your WHOOP's motion, calibrated to your phone. Not a measured step count.")),
-        d("hr_zones13_min", String(localized: "HR Zones 1-3"), "Effort", "min", "my-whoop", "heart", 0, nil),
-        d("hr_zones45_min", String(localized: "HR Zones 4-5"), "Effort", "min", "my-whoop", "heart.fill", 0, nil),
-        d("hr_zones_all_min", String(localized: "HR Zones (All)"), "Effort", "min", "my-whoop", "heart.text.square", 0, nil),
-        d("strength_min", String(localized: "Strength Activity Time"), "Effort", "min", "my-whoop", "dumbbell", 0, nil),
-        d("active_kcal", String(localized: "Active Energy"), "Effort", "kcal", "apple-health", "flame.fill", 0, nil),
+        d("hr_zones13_min", String(localized: "HR Zones 1-3"), "Strain", "min", "my-whoop", "heart", 0, nil),
+        d("hr_zones45_min", String(localized: "HR Zones 4-5"), "Strain", "min", "my-whoop", "heart.fill", 0, nil),
+        d("hr_zones_all_min", String(localized: "HR Zones (All)"), "Strain", "min", "my-whoop", "heart.text.square", 0, nil),
+        d("strength_min", String(localized: "Strength Activity Time"), "Strain", "min", "my-whoop", "dumbbell", 0, nil),
+        d("active_kcal", String(localized: "Active Energy"), "Strain", "kcal", "apple-health", "flame.fill", 0, nil),
 
         // ── Health / Body
         d("weight", String(localized: "Weight"), "Health", "kg", "apple-health", "scalemass", 1, nil),
@@ -199,15 +199,15 @@ enum MetricCatalog {
         d("max_hr", String(localized: "Max Heart Rate"), "Heart", "bpm", "xiaomi-band", "bolt.heart", 0, nil),
         d("energy_kcal", String(localized: "Calories"), "Heart", "kcal", "xiaomi-band", "flame", 0, nil),
         d("vitality", String(localized: "Vitality"), "Heart", "", "xiaomi-band", "sparkles", 0, true),
-        d("rhr", String(localized: "Resting Heart Rate"), "Charge", "bpm", "xiaomi-band", "heart", 0, false),
-        d("spo2", String(localized: "Blood Oxygen"), "Charge", "%", "xiaomi-band", "drop", 0, true),
-        d("sleep_total_min", String(localized: "Asleep Time"), "Rest", "min", "xiaomi-band", "moon.zzz", 0, true),
-        d("sleep_deep_min", String(localized: "Deep (SWS) Sleep"), "Rest", "min", "xiaomi-band", "moon.fill", 0, true),
-        d("sleep_rem_min", String(localized: "REM Sleep"), "Rest", "min", "xiaomi-band", "moon.haze", 0, true),
-        d("sleep_light_min", String(localized: "Light Sleep"), "Rest", "min", "xiaomi-band", "moon", 0, nil),
-        d("sleep_score", String(localized: "Sleep Score"), "Rest", "", "xiaomi-band", "moon.stars", 0, true),
-        d("steps", String(localized: "Steps"), "Effort", "", "xiaomi-band", "figure.walk", 0, true),
-        d("intensity_min", String(localized: "Intensity Minutes"), "Effort", "min", "xiaomi-band", "figure.run", 0, true),
+        d("rhr", String(localized: "Resting Heart Rate"), "Recovery", "bpm", "xiaomi-band", "heart", 0, false),
+        d("spo2", String(localized: "Blood Oxygen"), "Recovery", "%", "xiaomi-band", "drop", 0, true),
+        d("sleep_total_min", String(localized: "Asleep Time"), "Sleep", "min", "xiaomi-band", "moon.zzz", 0, true),
+        d("sleep_deep_min", String(localized: "Deep (SWS) Sleep"), "Sleep", "min", "xiaomi-band", "moon.fill", 0, true),
+        d("sleep_rem_min", String(localized: "REM Sleep"), "Sleep", "min", "xiaomi-band", "moon.haze", 0, true),
+        d("sleep_light_min", String(localized: "Light Sleep"), "Sleep", "min", "xiaomi-band", "moon", 0, nil),
+        d("sleep_score", String(localized: "Sleep Score"), "Sleep", "", "xiaomi-band", "moon.stars", 0, true),
+        d("steps", String(localized: "Steps"), "Strain", "", "xiaomi-band", "figure.walk", 0, true),
+        d("intensity_min", String(localized: "Intensity Minutes"), "Strain", "min", "xiaomi-band", "figure.run", 0, true),
         d("stress", String(localized: "Stress"), "Health", "/100", "xiaomi-band", "gauge.with.dots.needle.50percent", 0, false),
     ]
 
@@ -218,7 +218,7 @@ enum MetricCatalog {
 
     static func metric(key: String, source: String) -> MetricDescriptor? {
         if key == "steps", source == combinedStepsSource {
-            return d("steps", String(localized: "Steps"), "Effort", "", source, "figure.walk", 0, true)
+            return d("steps", String(localized: "Steps"), "Strain", "", source, "figure.walk", 0, true)
         }
         return all.first { $0.key == key && $0.source == source }
     }
@@ -252,9 +252,9 @@ enum MetricCatalog {
     static func categoryDisplayName(_ category: String) -> String {
         switch category {
         case "Heart":     return String(localized: "Heart")
-        case "Charge":    return String(localized: "Charge")
-        case "Rest":      return String(localized: "Rest")
-        case "Effort":    return String(localized: "Effort")
+        case "Recovery":    return String(localized: "Recovery")
+        case "Sleep":      return String(localized: "Sleep")
+        case "Strain":    return String(localized: "Strain")
         case "Health":    return String(localized: "Health")
         case "Nutrition": return String(localized: "Nutrition")
         case "Mind":      return String(localized: "Mind")

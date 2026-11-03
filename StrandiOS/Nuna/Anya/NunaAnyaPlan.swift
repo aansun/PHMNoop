@@ -79,7 +79,7 @@ struct NunaAnyaPlanView: View {
                 NunaCard {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("No plan yet").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("Anya needs today's Charge to suggest a session. Wear the strap overnight and sync, then come back.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        Text("Anya needs today's Recovery to suggest a session. Wear the strap overnight and sync, then come back.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
@@ -96,7 +96,7 @@ struct NunaAnyaPlanView: View {
                 HStack {
                     nunaTrendsCap("Planned for you")
                     Spacer()
-                    NunaChip(verbatim: String(localized: "Charge \(charge)%"))
+                    NunaChip(verbatim: String(localized: "Recovery \(charge)%"))
                 }
                 Text(verbatim: title(plan)).font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 Text(verbatim: blurb(plan.kind)).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
@@ -104,7 +104,7 @@ struct NunaAnyaPlanView: View {
                 HStack {
                     tile("Duration", String(format: "%d:00", plan.totalMinutes), nil)
                     tile("Zone", "\(plan.mainZone)", nil)
-                    tile("Effort", effortText(plan), effortText(plan) == "–" ? nil : String(localized: "estimated"))
+                    tile("Strain", effortText(plan), effortText(plan) == "–" ? nil : String(localized: "estimated"))
                 }
             }
         }
@@ -172,8 +172,8 @@ struct NunaAnyaPlanView: View {
     }
 
     private var readNames: [String] {
-        var out = ["Charge"]
-        if yesterdayEffort != nil { out.append(String(localized: "Effort yesterday")) }
+        var out = ["Recovery"]
+        if yesterdayEffort != nil { out.append(String(localized: "Strain yesterday")) }
         if band != nil { out.append(String(localized: "Load 6 weeks")) }
         out.append(String(localized: "Heart-rate zones"))
         return out
@@ -189,7 +189,7 @@ struct NunaAnyaPlanView: View {
             }.buttonStyle(.plain)
             if coach.isConfigured {
                 Button {
-                    coach.pendingPrompt = "Here is the session you suggested for today: \(title(plan)), main zone \(plan.mainZone). My Charge is \(charge)%. Adjust it to fit my day and explain the change."
+                    coach.pendingPrompt = "Here is the session you suggested for today: \(title(plan)), main zone \(plan.mainZone). My Recovery is \(charge)%. Adjust it to fit my day and explain the change."
                     router.requestedDestination = .coach
                 } label: {
                     Text("Ask Anya to change it").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
@@ -212,8 +212,8 @@ struct NunaAnyaPlanView: View {
     private func blurb(_ k: DayPlan.Kind) -> String {
         switch k {
         case .recovery: return String(localized: "A light day that helps you recover. Keep it gentle.")
-        case .easy: return String(localized: "Enough to keep moving without digging into tomorrow's Charge.")
-        case .steady: return String(localized: "A calm, steady effort that builds fitness and protects tomorrow's Charge.")
+        case .easy: return String(localized: "Enough to keep moving without digging into tomorrow's Recovery.")
+        case .steady: return String(localized: "A calm, steady effort that builds fitness and protects tomorrow's Recovery.")
         case .quality: return String(localized: "Your body is ready for harder work. A controlled tempo session fits.")
         }
     }
@@ -249,8 +249,8 @@ struct NunaAnyaPlanView: View {
     }
 
     private func reasons(_ p: DayPlan.Plan, _ charge: Int) -> [String] {
-        var out = [String(localized: "Charge is \(charge)%.")]
-        if let y = yesterdayEffort { out.append(String(localized: "Yesterday's Effort was \(UnitFormatter.effortDisplay(y, scale: scale)).")) }
+        var out = [String(localized: "Recovery is \(charge)%.")]
+        if let y = yesterdayEffort { out.append(String(localized: "Yesterday's Strain was \(UnitFormatter.effortDisplay(y, scale: scale)).")) }
         if let band {
             switch band {
             case .under: out.append(String(localized: "Your recent load is light, so there is room to add."))

@@ -90,42 +90,42 @@ enum AnyaDayContext {
         var clockLine = "RIGHT NOW: \(fmt.string(from: i.now)), \(String(format: "%02d:%02d", hour, minute)) (\(part.rawValue))."
         switch part {
         case .morning, .midday:
-            clockLine += " This is the planning part of the day: when asked what to do today, anchor on the suggested session below and the Effort already banked."
+            clockLine += " This is the planning part of the day: when asked what to do today, anchor on the suggested session below and the Strain already banked."
         case .afternoon:
-            clockLine += " The day is half done: judge a training question by the Effort already banked and by how much daylight and energy are left."
+            clockLine += " The day is half done: judge a training question by the Strain already banked and by how much daylight and energy are left."
         case .evening, .night:
-            clockLine += " This is the review part of the day: when asked how the day went, say what its Effort and the night ahead imply and point to bedtime, not to a new hard session."
+            clockLine += " This is the review part of the day: when asked how the day went, say what its Strain and the night ahead imply and point to bedtime, not to a new hard session."
         }
         lines.append(clockLine)
 
         // Effort so far, against what is usual and against the week.
         var effort: [String] = []
         if let t = i.todayEffort, t > 0 {
-            var s = "Effort so far today \(oneDecimal(t))"
+            var s = "Strain so far today \(oneDecimal(t))"
             if let u = i.usualEffort, u > 0 { s += " (a usual day is about \(oneDecimal(u)))" }
             effort.append(s)
         } else if i.todayEffort != nil {
-            effort.append("no Effort banked yet today")
+            effort.append("no Strain banked yet today")
         }
         if let lo = i.effortTargetLow, let hi = i.effortTargetHigh {
-            effort.append("the Effort worth aiming for at today's Charge is \(Int(lo.rounded()))-\(Int(hi.rounded()))")
+            effort.append("the Strain worth aiming for at today's Recovery is \(Int(lo.rounded()))-\(Int(hi.rounded()))")
         }
         if let w = i.weekEffort, w > 0 {
             var s = "last 7 days \(Int(w.rounded()))"
             if let g = i.weeklyEffortGoal, g > 0 { s += " of the weekly target \(Int(g.rounded()))" }
             effort.append(s)
         }
-        if !effort.isEmpty { lines.append("EFFORT (0-100 axis): " + effort.joined(separator: "; ") + ".") }
+        if !effort.isEmpty { lines.append("STRAIN (0-100 axis): " + effort.joined(separator: "; ") + ".") }
 
         // The Plan card's session. Anya must not contradict it unless the person gives a reason to change it.
         if let title = i.sessionTitle {
             var s = "TODAY'S SUGGESTED SESSION (the same one the Plan card shows; do not contradict it unless the person gives a reason): \(title)"
             if let z = i.sessionMainZone { s += ", main work in zone \(z)" }
             if let lo = i.sessionEffortLow, let hi = i.sessionEffortHigh {
-                s += ", about +\(Int(lo.rounded()))-\(Int(hi.rounded())) Effort"
+                s += ", about +\(Int(lo.rounded()))-\(Int(hi.rounded())) Strain"
             }
             s += "."
-            if let c = i.chargePct { s += " It was chosen from a Charge of \(Int(c.rounded()))."}
+            if let c = i.chargePct { s += " It was chosen from a Recovery of \(Int(c.rounded()))."}
             lines.append(s)
         }
 
@@ -216,7 +216,7 @@ enum AnyaDayContext {
             return s
         }
         guard let title = i.sessionTitle, let kind = i.sessionKind else {
-            return "There is no Charge to plan from yet: wear the strap overnight and sync, and keep to easy movement until then."
+            return "There is no Recovery to plan from yet: wear the strap overnight and sync, and keep to easy movement until then."
         }
         var s: String
         switch kind {

@@ -39,7 +39,7 @@ struct NunaUnitsView: View {
             group("Skin temperature", "How Health shows it") {
                 NunaSegmented([(value: "", title: "Temperature"), (value: SkinTempDisplay.Kind.deviation.rawValue, title: "Vs baseline")], selection: $skinTemp)
             }
-            group("Effort scale", "The 0 to 21 scale is like WHOOP's") {
+            group("Strain scale", "The 0 to 21 scale is like WHOOP's") {
                 NunaSegmented([(value: EffortScale.hundred.rawValue, title: "0 to 100"), (value: EffortScale.whoop.rawValue, title: "0 to 21")], selection: $effortScale)
             }
             NunaCard {
@@ -48,7 +48,7 @@ struct NunaUnitsView: View {
                     HStack {
                         preview("Weight", bodyUnits == .imperial ? String(format: "%.1f lb", locale: AppLanguage.activeLocale, profile.weightKg * 2.20462) : String(format: "%.1f kg", locale: AppLanguage.activeLocale, profile.weightKg))
                         preview("Run", distUnits == .imperial ? "3.2 mi" : "5.2 km")
-                        preview("Effort", UnitFormatter.effortDisplay(12.4, scale: scale))
+                        preview("Strain", UnitFormatter.effortDisplay(12.4, scale: scale))
                     }
                 }
             }
@@ -187,10 +187,10 @@ struct NunaLanguageView: View {
                     Spacer()
                     Text(verbatim: l.effective.autonym).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
                 }
-                row(l.say("Score"), "Charge 78% · \(l.say("Ready"))")
+                row(l.say("Score"), "Recovery 78% · \(l.say("Ready"))")
                 row(l.say("Button"), l.say("Start workout"))
                 row(l.say("Date"), f.string(from: Date()))
-                row(l.say("Number"), "\(n.string(from: 12.4) ?? "12.4") Effort · \(g.string(from: 1240) ?? "1240") \(unit)")
+                row(l.say("Number"), "\(n.string(from: 12.4) ?? "12.4") Strain · \(g.string(from: 1240) ?? "1240") \(unit)")
             }
         }
     }
@@ -300,11 +300,11 @@ struct NunaNotificationsView: View {
                 NunaToggleRow("Early-illness warning", subtitle: "When two signals drift together", systemImage: "waveform.path.ecg", isOn: Binding(get: { behavior.illnessWatch }, set: { behavior.illnessWatch = $0; if $0 { IllnessNotifier.requestAuthorization() } })).padding(.vertical, 8)
             }
             NunaSettingsGroup("Workouts and notes") {
-                NunaToggleRow("Summary after a workout", subtitle: "Effort, duration and heart rate", systemImage: "list.bullet.clipboard", isOn: Binding(get: { workoutReport }, set: { workoutReport = $0; if $0 { WorkoutReportNotifier.requestAuthorization() } })).padding(.vertical, 8)
+                NunaToggleRow("Summary after a workout", subtitle: "Strain, duration and heart rate", systemImage: "list.bullet.clipboard", isOn: Binding(get: { workoutReport }, set: { workoutReport = $0; if $0 { WorkoutReportNotifier.requestAuthorization() } })).padding(.vertical, 8)
                 NunaDivider()
                 NunaToggleRow("Journal reminder", subtitle: "A card in Today", systemImage: "book", isOn: $journal).padding(.vertical, 8)
                 NunaDivider()
-                NunaToggleRow("Effort target reached", subtitle: "Once a day, after the strap syncs", systemImage: "target", isOn: Binding(get: { behavior.strainTargetNudge }, set: { behavior.strainTargetNudge = $0; if $0 { StrainTargetNotifier.requestAuthorization(); model.evaluateStrainTarget() } })).padding(.vertical, 8)
+                NunaToggleRow("Strain target reached", subtitle: "Once a day, after the strap syncs", systemImage: "target", isOn: Binding(get: { behavior.strainTargetNudge }, set: { behavior.strainTargetNudge = $0; if $0 { StrainTargetNotifier.requestAuthorization(); model.evaluateStrainTarget() } })).padding(.vertical, 8)
             }
             NunaSettingsGroup("Device") {
                 NunaToggleRow("Strap battery", subtitle: "Low and full, plus the estimate", systemImage: "battery.25percent", isOn: Binding(get: { behavior.batteryAlerts }, set: { behavior.batteryAlerts = $0; if $0 { BatteryNotifier.requestAuthorization() } })).padding(.vertical, 8)

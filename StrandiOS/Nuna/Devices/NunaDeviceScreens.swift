@@ -54,7 +54,7 @@ struct NunaDeviceBatteryView: View {
                 nunaRuledHeader("Looking after the battery")
                 NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                     VStack(spacing: 0) {
-                        NunaListRow("Charge while you are awake", description: "In the shower or at your desk, so no sleep data is lost", systemImage: "moon.zzz")
+                        NunaListRow("Recovery while you are awake", description: "In the shower or at your desk, so no sleep data is lost", systemImage: "moon.zzz")
                         NunaDivider()
                         NunaListRow("Avoid heat", description: "Do not charge in direct sunlight", systemImage: "sun.max")
                         NunaDivider()
