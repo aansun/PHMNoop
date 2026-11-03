@@ -47,11 +47,14 @@ struct NunaStrapChip: View {
     var body: some View {
         HStack(spacing: 6) {
             if let battery {
-                Text(verbatim: "\(Int(battery.rounded()))%").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                Text(verbatim: "\(Int(battery.rounded()))%").font(.nuna(size: 12.5, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
             }
-            Image(systemName: "applewatch").font(.nuna(size: 20, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
-                .overlay(alignment: .topTrailing) {
-                    Circle().fill(connected ? NunaPalette.charge : NunaPalette.textMuted).frame(width: 7, height: 7).offset(x: 2, y: -1)
+            // The strap as drawn in the reference, with the dot on it that says whether it is connected.
+            NunaStrapIcon().foregroundStyle(NunaPalette.textPrimary)
+                .overlay(alignment: .topLeading) {
+                    let d = NunaStrapIconArt.dotDiameter
+                    Circle().fill(connected ? Color(red: 0.431, green: 0.929, blue: 0.647) : NunaPalette.textMuted).frame(width: d, height: d)
+                        .offset(x: NunaStrapIconArt.dotCenter.x - d / 2, y: NunaStrapIconArt.dotCenter.y - d / 2)
                 }
         }
         .frame(minHeight: 44)
