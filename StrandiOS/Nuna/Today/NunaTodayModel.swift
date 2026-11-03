@@ -173,7 +173,10 @@ final class NunaTodayModel: ObservableObject {
         let appleSteps = apple.filter { $0.day == appleKey }.compactMap { $0.steps }.max()
         let appleKcal = apple.filter { $0.day == appleKey }.compactMap { $0.activeKcal }.max()
         steps = row?.steps.map(Double.init) ?? appleSteps.map(Double.init) ?? estSteps
-        calories = appleKcal ?? row?.activeKcalEst
+        // The calories page reads the stored `energy_kcal` series first, so the card does too (the latest day for today, as the steps do).
+        let kcalSeries = (await repo.exploreSeries(key: "energy_kcal", source: "my-whoop", days: 30)).filter { $0.value > 0 }
+        let kcalByDay = Dictionary(kcalSeries.map { ($0.day, $0.value) }, uniquingKeysWith: { _, last in last })
+        calories = kcalByDay[key] ?? appleKcal ?? row?.activeKcalEst ?? (today ? kcalSeries.last?.value : nil)
 
         var ex: [String: Double] = [:]
         var prev: [String: Double] = [:]
@@ -193,7 +196,7 @@ final class NunaTodayModel: ObservableObject {
         if let s = prevDay?.steps.map(Double.init) ?? apple.filter({ $0.day == prevKey }).compactMap({ $0.steps }).max().map(Double.init) ?? stepsByDay[prevKey] {
             prev["steps"] = s
         }
-        if let c = apple.filter({ $0.day == prevKey }).compactMap({ $0.activeKcal }).max() ?? prevDay?.activeKcalEst { prev["calories"] = c }
+        if let c = kcalByDay[prevKey] ?? apple.filter({ $0.day == prevKey }).compactMap({ $0.activeKcal }).max() ?? prevDay?.activeKcalEst { prev["calories"] = c }
         if let m = repo.days.last(where: { $0.day < key && $0.totalSleepMin != nil })?.totalSleepMin { prev["sleep"] = m }
         previous = prev
         // The curve is scored as of "now" for today and as of the end of the day for a past day.

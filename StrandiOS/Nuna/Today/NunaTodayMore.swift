@@ -102,7 +102,8 @@ extension NunaTodayView {
             case .bloodOxygen: made = (num(model.spo2), desc("spo2"), "drop.fill", nil)
             case .skinTemp:    made = (num(ex["skin_temp"], 1), desc("skin_temp"), "vital:temp", nil)
             case .sleep:
-                made = (model.sleepMinutes.map { "\(Int($0) / 60)h \(Int($0) % 60)m" }, NunaRowTarget(kind: .nuna(.sleep(0))), "met:sleep-performance", NunaPalette.restText)
+                // The card reads as Sleep performance: the score of the night on show, with the night before under it.
+                made = (model.rest.map { String(format: "%.0f%%", locale: AppLanguage.activeLocale, $0) }, NunaRowTarget(kind: .nuna(.sleep(0))), "met:sleep-performance", NunaPalette.restText)
             case .calories:    made = (num(model.calories), desc("energy_kcal"), "met:calories", nil)
             case .hydration:
                 guard hydrationEnabled else { return nil }
@@ -135,11 +136,11 @@ extension NunaTodayView {
             case .skinTemp: trend = cmp(ex["skin_temp"], model.previous["skin_temp"], 1, good: nil)
             case .calories: trend = cmp(model.calories, model.previous["calories"], good: nil)
             case .sleep:
-                trend = cmp(model.sleepMinutes, model.previous["sleep"], good: true, format: { "\(Int($0) / 60)h \(Int($0) % 60)m" })
+                trend = cmp(model.rest, earlier(history.performance, before: dayKeyNow), good: true, format: { String(format: "%.0f%%", locale: AppLanguage.activeLocale, $0) })
             case .weight: trend = cmp(ex["weight"] ?? (profile.weightKg > 0 ? profile.weightKg : nil), ex["weight"] == nil ? nil : model.previous["weight"], 1, good: nil)
             case .stepsAverage30, .hydration, .coupled, .coach: trend = nil
             }
-            return NunaLinkRow(id: card.rawValue, title: card.title, subtitle: card.subtitle, value: made.0,
+            return NunaLinkRow(id: card.rawValue, title: card == .sleep ? String(localized: "Sleep performance") : card.title, subtitle: card.subtitle, value: made.0,
                                icon: made.2, tint: made.3, target: target, trend: trend)
         }
     }

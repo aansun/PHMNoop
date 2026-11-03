@@ -380,9 +380,13 @@ struct NunaTodayView: View {
                 ? Self.nunaDefaultMetrics : KeyMetricPrefs.decodeEnabled(keyMetricsRaw)
             await sparks.load(repo: repo, metrics: chosen, days: max(keyMetricsWindowDays, 2))
         }
-        // Only the cards that open a trend page need the long history.
+        // Only the cards that open a trend page, and the Sleep performance card (it compares with the night before), need the long history.
         .task(id: "\(repo.refreshSeq)-\(myDashboardRaw)") {
-            guard NunaDashPrefs.items(myDashboardRaw, cardsRaw: dashboardCardsRaw).contains(where: { if case .page = $0 { return true } else { return false } }) else { return }
+            guard NunaDashPrefs.items(myDashboardRaw, cardsRaw: dashboardCardsRaw).contains(where: {
+                if case .page = $0 { return true }
+                if case .card(let c) = $0 { return c == .sleep }
+                return false
+            }) else { return }
             await history.load(repo: repo)
         }
         .background(NunaSavedSessionsWatcher(count: $savedSessions))
