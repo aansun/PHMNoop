@@ -141,7 +141,7 @@ extension NunaTodayView {
             case .stepsAverage30, .hydration, .coupled, .coach: trend = nil
             }
             return NunaLinkRow(id: card.rawValue, title: card == .sleep ? String(localized: "Sleep performance") : card.title, subtitle: card.subtitle, value: made.0,
-                               icon: made.2, tint: made.3, target: target, trend: trend)
+                               icon: card.nunaIcon, tint: made.3, target: target, trend: trend)
         }
     }
 

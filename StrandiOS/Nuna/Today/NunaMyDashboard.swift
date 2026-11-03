@@ -34,10 +34,35 @@ enum NunaDashItem: Identifiable, Hashable {
         }
     }
 
+    /// The icon the dashboard card shows on Today, so the editor lists the same one.
     var icon: String {
         switch self {
-        case .card(let c): return c.icon
+        case .card(let c): return c.nunaIcon
         case .page(let p): return p.icon
+        }
+    }
+}
+
+extension DashboardCard {
+    /// The icon of a card on Today: the traced metric icons where there is one, a symbol otherwise. `DashboardCard.icon` is the older set shared with
+    /// the other platforms; My Dashboard and its editor read this one.
+    var nunaIcon: String {
+        switch self {
+        case .hrv: return "met:heart-rate-variability"
+        case .restingHr: return "met:resting-heart-rate"
+        case .respiratory: return "met:respiratory-rate"
+        case .steps, .stepsAverage30: return "met:steps"
+        case .stress: return "wind"
+        case .fitnessAge: return "figure.run"
+        case .vo2max: return "met:vo2-max"
+        case .vitality: return "sparkles"
+        case .bloodOxygen, .hydration: return "drop.fill"
+        case .skinTemp: return "vital:temp"
+        case .sleep: return "met:sleep-performance"
+        case .calories: return "met:calories"
+        case .weight: return "met:weight"
+        case .coupled: return "square.split.2x1.fill"
+        case .coach: return NunaGlyph.anya
         }
     }
 }
