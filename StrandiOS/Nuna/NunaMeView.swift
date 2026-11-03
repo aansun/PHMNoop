@@ -2,29 +2,12 @@
 import SwiftUI
 import StrandDesign
 
-/// "Saya": the Nuna settings hub (docs/nuna/mockups/Personalize.dc.html). Every row opens a Nuna screen over the same stored
-/// settings the Default screens edit, and its subtitle states the current value instead of a generic description.
+/// Settings, as the reference lays them out: "Account & settings" (My Account, Device Settings, App Settings, Privacy Settings) and "Support", each row
+/// one card. The long list of what used to sit here lives one level down, in App Settings.
 struct NunaMeView: View {
-    @EnvironmentObject private var profile: ProfileStore
-    @EnvironmentObject private var live: LiveState
-    @EnvironmentObject private var repo: Repository
-    @EnvironmentObject private var coach: AICoachEngine
-    @EnvironmentObject private var behavior: BehaviorStore
-    @AppStorage(ExperienceMode.storageKey) private var experienceRaw = ExperienceMode.nuna.rawValue
-    @AppStorage(UnitPrefs.systemKey) private var unitSystem = UnitSystem.metric.rawValue
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScale = EffortScale.hundred.rawValue
-    @AppStorage(AppLanguage.storageKey) private var language = AppLanguage.system.rawValue
-    @AppStorage("notif.masterEnabled") private var wrist = false
-    @AppStorage("coachBrief.enabled") private var brief = false
-    @AppStorage(PuffinExperiment.autoDetectWorkoutsKey) private var autoDetect = false
-    @AppStorage(HydrationStore.enabledKey) private var hydration = false
-    @AppStorage(StravaExperiment.enabledKey) private var strava = false
-    @StateObject private var memory = CoachMemoryStore()
-    @EnvironmentObject private var router: NavRouter
-
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: NunaSpacing.section) {
+            VStack(alignment: .leading, spacing: 0) {
                 NunaHeader("Settings") {
                     NavigationLink(value: NunaMeRoute.search) {
                         NunaGlyph("magnifyingglass", pointSize: 16).foregroundStyle(NunaPalette.textPrimary)
@@ -32,140 +15,34 @@ struct NunaMeView: View {
                     }
                     .buttonStyle(.plain).accessibilityLabel(Text("Search"))
                 }
-                profileCard
-                group("Personalize", count: 4) {
-                    row(.devices, "Devices", LocalizedStringKey(deviceSubtitle), "applewatch")
-                    NunaDivider()
-                    row(.achievements, "Achievements", LocalizedStringKey(achievementsSubtitle), "trophy")
-                    NunaDivider()
-                    row(.anya, "Anya", LocalizedStringKey(anyaSubtitle), NunaGlyph.anya)
-                    NunaDivider()
-                    row(.appearance, "Appearance", LocalizedStringKey(appearanceSubtitle), "slider.horizontal.3")
+                NunaSettingsHeading("Account & settings").padding(.top, 22).padding(.bottom, 12)
+                VStack(spacing: 10) {
+                    NunaSettingsLink(route: .profile, icon: "person.crop.circle", title: "My Account")
+                    NunaSettingsLink(route: .devices, icon: "applewatch", title: "Device Settings")
+                    NunaSettingsLink(route: .appSettings, icon: "doc.text", title: "App Settings")
+                    NunaSettingsLink(route: .privacy, icon: "eye", title: "Privacy Settings")
                 }
-                group("Notifications and automation", count: 3) {
-                    row(.notifications, "Notifications", LocalizedStringKey(notificationsSubtitle), "bell.fill")
-                    NunaDivider()
-                    row(.automations, "Strap automations", LocalizedStringKey(wrist ? String(localized: "Wrist alerts on") : String(localized: "Wrist alerts off")), "applewatch.radiowaves.left.and.right")
-                    NunaDivider()
-                    row(.features, "Optional features", LocalizedStringKey(featuresSubtitle), "checkmark.circle.fill")
+                NunaSettingsHeading("Support").padding(.top, 34).padding(.bottom, 12)
+                VStack(spacing: 10) {
+                    NunaSettingsLink(route: .howItWorks, icon: "questionmark.circle", title: "How it works", subtitle: "How your scores are worked out")
+                    NunaSettingsLink(route: .whatsNew, icon: "graduationcap", title: "What's new")
+                    NunaSettingsLink(route: .about, icon: "info.circle", title: "About")
                 }
-                group("Data", count: 4) {
-                    row(.applications, "Application", "Strength Trainer, trends, vital signs, stress, water, lab book, nutrition, nap", "square.grid.2x2")
-                    NunaDivider()
-                    row(.data, "Data and integrations", nil, "square.and.arrow.up")
-                    NunaDivider()
-                    row(.backup, "Backup", LocalizedStringKey(FolderBackup.lastBackupMs > 0 ? String(localized: "Last \(NunaDataHubView.when(FolderBackup.lastBackupMs))") : String(localized: "Not backed up yet")), "clock.arrow.circlepath")
-                    NunaDivider()
-                    row(.privacy, "Privacy", nil, "lock.shield.fill")
-                }
-                group("More", count: 2) {
-                    row(.advanced, "Advanced and experiments", nil, "flame.fill")
-                    NunaDivider()
-                    row(.about, "About and help", nil, "info.circle.fill")
-                }
+                Text(verbatim: Self.versionLine).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).multilineTextAlignment(.center).padding(.top, 40)
                 Text("PHMN · a fork of NOOP. Not a medical device.")
-                    .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).frame(maxWidth: .infinity).multilineTextAlignment(.center).textCase(nil)
+                    .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).frame(maxWidth: .infinity).multilineTextAlignment(.center).textCase(nil).padding(.top, 8)
             }
-            .padding(.horizontal, NunaSpacing.screenH).padding(.top, 14).padding(.bottom, 24)
+            .padding(.horizontal, 20).padding(.top, 14).padding(.bottom, 130)
         }
+        .scrollIndicators(.hidden)
         .nunaScreenBackground()
     }
 
-    // MARK: Subtitles
-
-    private var deviceSubtitle: String {
-        if live.connected, let pct = live.batteryPct { return String(localized: "Connected · \(Int(pct.rounded()))%") }
-        return live.connected ? String(localized: "Connected") : String(localized: "Not connected")
-    }
-    private var achievementsSubtitle: String {
-        let n = repo.days.filter { $0.recovery != nil }.count
-        return String(localized: "Level \(1 + n / 30)")
-    }
-    private var anyaSubtitle: String {
-        guard coach.isConfigured else { return String(localized: "Not connected") }
-        let n = memory.memories.filter(\.isActive).count
-        return coach.provider.nunaSubtitle(model: "") + (n > 0 ? " · " + String(localized: "Memory · \(n)") : "")
-    }
-    private var appearanceSubtitle: String {
-        let exp = ExperienceMode(rawValue: experienceRaw)?.displayName ?? ""
-        let u = (UnitSystem(rawValue: unitSystem) ?? .metric) == .imperial ? String(localized: "Imperial") : String(localized: "Metric")
-        let code = AppLanguage.activeLocale.identifier.split(whereSeparator: { $0 == "_" || $0 == "-" }).first.map(String.init) ?? "en"
-        let lang = (Locale(identifier: code).localizedString(forLanguageCode: code) ?? code).capitalized
-        return "\(exp) · \(lang) · \(u)"
-    }
-    private var notificationsSubtitle: String {
-        let n = [brief, behavior.illnessWatch, behavior.batteryAlerts, behavior.strainTargetNudge].filter { $0 }.count
-        return n == 0 ? String(localized: "Nothing scheduled") : String(localized: "\(n) active")
-    }
-    private var featuresSubtitle: String {
-        let on = [hydration ? String(localized: "Water") : nil, autoDetect ? String(localized: "Auto workouts") : nil].compactMap { $0 }
-        return on.isEmpty ? String(localized: "Water, journal, auto workouts") : on.joined(separator: " · ")
-    }
-
-    // MARK: Pieces
-
-    private var profileCard: some View {
-        NavigationLink(value: NunaMeRoute.persona) {
-            // On the page background, not in a card: the profile heads the page. The avatar and name, then the four figures in one even row.
-            VStack(alignment: .leading, spacing: 18) {
-                HStack(spacing: 16) {
-                    ProfileAvatarView(imageData: profile.avatarImageData, size: 72)
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Persona").font(.nuna(size: 20, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-                        Text(verbatim: String(localized: "\(repo.days.count) days of data")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    }
-                    Spacer(minLength: 8)
-                    Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
-                }
-                HStack(spacing: 0) {
-                    figure("Age", "\(profile.age)", "")
-                    figureDivider
-                    figure("Height", "\(Int(profile.heightCm.rounded()))", "cm")
-                    figureDivider
-                    figure("Weight", String(format: "%.1f", locale: AppLanguage.activeLocale, profile.weightKg), "kg")
-                    figureDivider
-                    figure("Max HR", "\(profile.hrMax)", "bpm")
-                }
-                .padding(.top, 14)
-                .overlay(alignment: .top) { NunaDivider() }
-            }
-            .padding(.vertical, 4)
-            .contentShape(Rectangle())
-        }.buttonStyle(.plain)
-    }
-
-    private var figureDivider: some View {
-        Rectangle().fill(NunaPalette.hairline).frame(width: 1, height: 32)
-    }
-
-    /// One figure: a small label over a large number with its unit, centred in an equal quarter of the row.
-    private func figure(_ label: LocalizedStringKey, _ value: String, _ unit: String) -> some View {
-        VStack(spacing: 5) {
-            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text(verbatim: value).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
-                if !unit.isEmpty { Text(verbatim: unit).font(.nuna(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
-            }
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    private func group<Rows: View>(_ title: LocalizedStringKey, count: Int, @ViewBuilder _ rows: () -> Rows) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            nunaRuledHeader(title, count: count)
-            NunaCard(small: true) { VStack(spacing: 0) { rows() } }
-        }
-    }
-
-    @ViewBuilder private func row(_ route: NunaMeRoute, _ title: LocalizedStringKey, _ subtitle: LocalizedStringKey?, _ icon: String) -> some View {
-        if route == .anya {
-            // Anya's name is never set in capitals.
-            NavigationLink(value: route) { NunaListRow(title, subtitle: subtitle, systemImage: icon, showsChevron: true).textCase(nil) }.buttonStyle(.plain)
-                .simultaneousGesture(TapGesture().onEnded { NunaMeRecents.record(route) })
-        } else {
-            NavigationLink(value: route) { NunaListRow(title, subtitle: subtitle, systemImage: icon, showsChevron: true) }.buttonStyle(.plain)
-                .simultaneousGesture(TapGesture().onEnded { NunaMeRecents.record(route) })
-        }
+    private static var versionLine: String {
+        let info = Bundle.main.infoDictionary
+        let v = info?["CFBundleShortVersionString"] as? String ?? "?", b = info?["CFBundleVersion"] as? String ?? "?"
+        return String(localized: "App version: \(v) (build \(b))")
     }
 }
 
@@ -177,6 +54,8 @@ enum NunaMeRoute: Hashable {
     case advanced, experiments, testCentre, about
     case search
     case applications
+    /// The new Settings structure: the profile page, the App Settings list, the levels, and the two Support pages.
+    case profile, appSettings, levels, howItWorks, whatsNew
 }
 
 extension View {
@@ -217,6 +96,11 @@ extension View {
             case .about: NunaAboutView()
             case .search: NunaMeSearchView()
             case .applications: NunaApplicationsView()
+            case .profile: NunaProfileView()
+            case .appSettings: NunaAppSettingsView()
+            case .levels: NunaLevelsView()
+            case .howItWorks: NunaHowItWorksView()
+            case .whatsNew: NunaWhatsNewView()
             }
         }
     }
