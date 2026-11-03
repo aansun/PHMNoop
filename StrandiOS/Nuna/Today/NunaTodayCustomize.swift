@@ -9,7 +9,7 @@ extension TodaySection {
         switch self {
         case .hero: return String(localized: "Daily scores")
         case .stateChips: return String(localized: "State chips")
-        case .synthesis: return "Anya"
+        case .synthesis: return String(localized: "Highlights")
         case .recoveryVitals: return String(localized: "Stress monitor")
         case .vitalMonitor: return String(localized: "Vital and stress monitors")
         case .weekCompare: return String(localized: "Recovery & Strain")
@@ -28,7 +28,7 @@ extension TodaySection {
         switch self {
         case .hero: return String(localized: "Recovery, Strain and Sleep")
         case .stateChips: return String(localized: "Readiness, Recovery state and heart rate")
-        case .synthesis: return String(localized: "One suggestion for today")
+        case .synthesis: return String(localized: "What stands out today")
         case .recoveryVitals: return String(localized: "Average and timeline")
         case .vitalMonitor: return String(localized: "Vital signs and stress side by side")
         case .weekCompare: return String(localized: "The last 7 days, side by side")

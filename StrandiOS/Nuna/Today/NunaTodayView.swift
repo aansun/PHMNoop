@@ -21,11 +21,11 @@ enum NunaTodayDefaults {
     /// different defaults, so one must not leak into the other.
     static let orderKey = "nuna.today.sectionOrder"
     static let hiddenKey = "nuna.today.hiddenSections"
-    /// Rings, the Vital signs and Stress monitor pair, Anya, what was done today, the journal with mood, Your cards, Charge and Effort for the
+    /// Rings, Highlights, the Vital signs and Stress monitor pair, what was done today, the journal with mood, Your cards, Charge and Effort for the
     /// week, then the add-or-arrange card. The state chips, key metrics, heart rate, start session, cycle and added cards stay out until the
     /// person adds them.
     static let order: [TodaySection] = [
-        .hero, .vitalMonitor, .synthesis, .workouts, .journal, .yourCards, .weekCompare, .recoveryVitals,
+        .hero, .synthesis, .vitalMonitor, .workouts, .journal, .yourCards, .weekCompare, .recoveryVitals,
         .stateChips, .keyMetrics, .heartRate, .liveSession, .menstrualCycle, .addedCards,
     ]
     static let hidden: [TodaySection] = [.stateChips, .keyMetrics, .heartRate, .liveSession, .menstrualCycle, .addedCards]
@@ -38,6 +38,8 @@ enum NunaTodayDefaults {
     static let monitorHiddenKey = "nuna.today.monitorHidden.v1"
     /// Set once the Activity card has been brought back on a layout saved while it was hidden by default.
     static let activityShownKey = "nuna.today.activityShown.v1"
+    /// Set once Highlights has been moved up to just under the rings on a layout saved before it took that place.
+    static let highlightsMovedKey = "nuna.today.highlightsMoved.v1"
 }
 
 // The small views below each observe one fast-changing object, so a heart-rate tick or a strap update redraws a chip, not the whole screen.
@@ -328,6 +330,18 @@ struct NunaTodayView: View {
                     }
                 }
             }
+            // Highlights took Anya's place and sit right under the rings, so a saved layout that has it further down is moved up once.
+            if !UserDefaults.standard.bool(forKey: NunaTodayDefaults.highlightsMovedKey) {
+                UserDefaults.standard.set(true, forKey: NunaTodayDefaults.highlightsMovedKey)
+                if !sectionOrderRaw.trimmingCharacters(in: .whitespaces).isEmpty {
+                    var order = TodayLayoutPrefs.decodeOrder(sectionOrderRaw)
+                    if let from = order.firstIndex(of: .synthesis), let hero = order.firstIndex(of: .hero), from != hero + 1 {
+                        order.remove(at: from)
+                        order.insert(.synthesis, at: (order.firstIndex(of: .hero) ?? -1) + 1)
+                        sectionOrderRaw = TodayLayoutPrefs.encode(order)
+                    }
+                }
+            }
             guard !UserDefaults.standard.bool(forKey: NunaTodayDefaults.activityShownKey) else { return }
             UserDefaults.standard.set(true, forKey: NunaTodayDefaults.activityShownKey)
             let raw = hiddenSectionsRaw.trimmingCharacters(in: .whitespaces)
@@ -544,7 +558,7 @@ struct NunaTodayView: View {
         switch s {
         case .hero: return "Daily scores"
         case .stateChips: return "State chips"
-        case .synthesis: return "Anya"
+        case .synthesis: return "Highlights"
         case .recoveryVitals: return "Stress monitor"
         case .vitalMonitor: return "Vital and stress monitors"
         case .weekCompare: return "Recovery & Strain"
@@ -657,7 +671,7 @@ struct NunaTodayView: View {
             // Only a picture of the chips while arranging: tapping one must not open its page.
             HStack(spacing: 8) { Spacer(minLength: 0); synthesisChips; heartRatePill }.allowsHitTesting(false)
         case .synthesis:
-            previewRow("sparkles", nil, synthLine, "Anya suggestion").background(inner)
+            previewRow("sparkles", nil, String(localized: "Highlights"), "What stands out today").background(inner)
         case .recoveryVitals:
             previewRow("wind", NunaPalette.charge, model.stress.map { String(localized: "Stress \(String(format: "%.1f", locale: AppLanguage.activeLocale, $0)) / 3") } ?? String(localized: "Stress"), "Intraday curve").background(inner)
         case .weekCompare:
@@ -847,14 +861,11 @@ struct NunaTodayView: View {
                 HStack(spacing: 8) { Spacer(minLength: 0); synthesisChips; heartRatePill }
             }
         case .synthesis:
-            if coachEnabled && model.isToday {
-                NunaAnyaTodayCard(plan: dayPlan, fallbackLine: synthLine, workouts: model.workouts, effort: model.effort,
-                                  charge: model.charge.pct, onCoach: { showCoach = true },
-                                  onBreathe: { showBreath = true }, onWindDown: { pushToday(.windDown) },
-                                  stressNow: model.stressCurve.flatMap(StressDayCurve.latestLevel),
-                                  stressHighMin: model.stressCurve.map(StressDayCurve.highMinutes),
-                                  restingHr: model.restingHr, hrvDelta: model.hrvDelta, restingHrDelta: model.restingHrDelta,
-                                  sleepMinutes: model.sleepMinutes)
+            if model.isToday {
+                NunaHighlightsCard(charge: model.charge.pct, hrv: model.hrv, restingHr: model.restingHr, sleepMinutes: model.sleepMinutes,
+                                   effort: model.effort, stressNow: model.stressCurve.flatMap(StressDayCurve.latestLevel),
+                                   stressHighMin: model.stressCurve.map(StressDayCurve.highMinutes),
+                                   onBreathe: { showBreath = true }, onWindDown: { pushToday(.windDown) })
             }
         case .recoveryVitals:
             if !model.stressStatus.isReady {
