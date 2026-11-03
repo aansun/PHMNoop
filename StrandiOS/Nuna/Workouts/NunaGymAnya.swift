@@ -158,10 +158,22 @@ struct NunaGymAnyaCard: View {
     var body: some View {
         Group {
             if coachEnabled, !session.isActive, let r = model.reading {
-                NunaAnyaCard(verbatim: headline(r), detail: detail(r), buttonTitle: r.proposal == nil ? nil : buttonTitle(r),
-                             onButton: { sheet = true }, action: { sheet = true })
-                    // The card opens the plan, not the general sheet.
-                    .environment(\.nunaAnyaCardContext, nil)
+                // Kept short: two lines of Anya's read and one button; the whole read and the plan are in the sheet the button opens.
+                VStack(alignment: .leading, spacing: 14) {
+                    Text(verbatim: headline(r)).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                        .lineLimit(2).multilineTextAlignment(.leading).textCase(nil)
+                    if r.proposal != nil {
+                        Button { sheet = true } label: {
+                            Text(buttonTitle(r)).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                                .padding(.horizontal, 20).frame(height: 44)
+                                .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                .nunaAnyaOutline()
+                .contentShape(Rectangle())
+                .onTapGesture { if r.proposal != nil { sheet = true } }
             }
         }
         .sheet(isPresented: $sheet) {
