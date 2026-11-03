@@ -7853,5 +7853,9 @@
  "Anya reads it as soon as your heart rate has spent time in the zones.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Anya membacanya begitu detak jantungmu sudah berada di zona latihan."}}}},
  "Strain %@ of %@ so far today": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Strain %1$@ dari %2$@ sejauh ini hari ini"}}}},
  "Recovery, Strain and Sleep over time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Recovery, Strain, dan Sleep dari waktu ke waktu"}}}},
- "Analyzing…": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Menganalisis…"}}}}
+ "Analyzing…": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Menganalisis…"}}}},
+ "Generate with Anya": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Buat dengan Anya"}}}},
+ "Describe your goal and Anya will build the program for you.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ceritakan tujuanmu dan Anya akan menyusun programnya untukmu."}}}},
+ "Get started": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Mulai"}}}},
+ "Build a workout": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Susun latihan"}}}}
 }, "version":"1.0" }

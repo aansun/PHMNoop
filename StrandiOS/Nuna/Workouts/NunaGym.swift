@@ -284,10 +284,11 @@ struct NunaGymView: View {
             weekSection
             recordsSection
         case 1:
-            NunaGymAnyaCard(model: anyaModel)
+            // Start a workout, then My Workouts: build one with Anya or by hand, then the list. Anya's own note about training comes last.
             topActions
             NunaDivider()
             programsSection
+            NunaGymAnyaCard(model: anyaModel)
         default:
             NunaGymExploreView(embedded: true)
         }
@@ -411,11 +412,11 @@ struct NunaGymView: View {
         let suggestion = open == nil ? groupsModel.suggestions(for: programs).first : nil
         return VStack(alignment: .leading, spacing: 12) {
             NunaTitleRow(title: "My Workouts") {
-                HStack(spacing: 6) {
-                    NavigationLink(value: NunaWorkoutRoute.program("new")) { programIcon("plus") }.buttonStyle(.plain).accessibilityLabel(Text("New program"))
-                    Button { askForGroup(.new(programId: nil)) } label: { programIcon("folder.badge.plus") }.buttonStyle(.plain).accessibilityLabel(Text("New group"))
-                }
+                Button { askForGroup(.new(programId: nil)) } label: { programIcon("folder.badge.plus") }.buttonStyle(.plain).accessibilityLabel(Text("New group"))
             }
+            generateCard
+            buildButton
+            NunaDivider().padding(.vertical, 6)
             VStack(alignment: .leading, spacing: 12) {
                 groupPicker(open, count: inGroup.count)
                 if let suggestion { suggestionCard(suggestion) }
@@ -427,6 +428,40 @@ struct NunaGymView: View {
                 ForEach(inGroup, id: \.id) { p in programRow(p) }
             }
         }
+    }
+
+    /// The card that builds a program with Anya: a violet-to-teal outline, what it does, and the way in.
+    private var generateCard: some View {
+        let shape = RoundedRectangle(cornerRadius: 22, style: .continuous)
+        return Button { buildingWithAnya = true } label: {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Generate with Anya").font(.nuna(size: 16.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                Text("Describe your goal and Anya will build the program for you.").font(.nuna(size: 15, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
+                    .lineSpacing(3).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                HStack(spacing: 8) {
+                    Text("Get started").font(.nuna(size: 13.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    Image(systemName: "arrow.right").font(.nuna(size: 15, weight: .bold))
+                }
+                .foregroundStyle(Color(red: 0.49, green: 0.46, blue: 0.94)).padding(.top, 2)
+            }
+            .padding(.horizontal, 18).padding(.vertical, 16).frame(maxWidth: .infinity, alignment: .leading)
+            .background(LinearGradient(colors: [Color(red: 0.17, green: 0.15, blue: 0.33).opacity(0.9), Color(red: 0.11, green: 0.2, blue: 0.26).opacity(0.9)],
+                                       startPoint: .topLeading, endPoint: .bottomTrailing), in: shape)
+            .overlay(shape.strokeBorder(LinearGradient(colors: [Color(red: 0.47, green: 0.4, blue: 0.9), Color(red: 0.25, green: 0.6, blue: 0.72)],
+                                                       startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1.5))
+            .contentShape(shape)
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// The same, by hand.
+    private var buildButton: some View {
+        NavigationLink(value: NunaWorkoutRoute.program("new")) {
+            Text("Build a workout").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 54)
+                .background(NunaPalette.cardSurface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
     }
 
     /// A bare icon at the right end of the My Program title.
@@ -548,7 +583,7 @@ struct NunaGymView: View {
             programMenu(p)
         }
         .padding(.leading, 18).padding(.trailing, 8)
-        .background(NunaPalette.field, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
+        .background(NunaPalette.cardSurface, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
     }
 
     // MARK: Sets per muscle group
