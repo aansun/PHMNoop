@@ -204,7 +204,6 @@ struct NunaWeightView: View {
                 note: targetNote,
                 series: weightS, showsBand: false, reference: target > 0 ? target : nil, lineColor: NunaPalette.charge, decimals: 1,
                 directional: false, range: $range, page: $page)
-            if coachEnabled, let line = anyaLine(delta: delta) { NunaAnyaCard(verbatim: line) { showCoach = true } }
             NunaBodyHealthCard(weightKg: latest, bmi: bmi, waistCm: profile.waistCm, heightCm: profile.heightCm, showsChevron: false)
             NunaBodyCompositionCard(weightKg: latest, fatPct: fatS.latest?.value, leanKg: leanS.latest?.value, bmi: bmi)
             NunaExpandRow(title: "About body composition", subtitle: "From a smart scale via Apple Health", systemImage: "sparkles",
@@ -219,9 +218,8 @@ struct NunaWeightView: View {
             NunaNumberSheet(title: "Weight target", unit: "kg", initial: target > 0 ? target : (latest ?? 70), range: 25...250, step: 0.5, decimals: 1) { v in target = v }
         }
         .task(id: repo.refreshSeq) { await load() }
-        .sheet(isPresented: $showCoach) {
-            NunaAnyaSheet(context: "Weight", metric: NunaAnyaMetric(key: "weight", source: "apple-health", title: String(localized: "Weight"), unit: "kg", decimals: 1, higherIsBetter: nil))
-        }
+        .nunaAnyaFloating(context: "Weight", line: anyaLine(delta: delta),
+                          metric: NunaAnyaMetric(key: "weight", source: "apple-health", title: String(localized: "Weight"), unit: "kg", decimals: 1, higherIsBetter: nil))
     }
 
     private func saveWeight(_ v: Double) async {

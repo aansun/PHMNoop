@@ -83,19 +83,15 @@ struct NunaSkinTempView: View {
                     }
                 }
             }
-            if coachEnabled, let latest {
-                let small = abs(latest) < 0.5
-                NunaAnyaCard(verbatim: String(localized: "Skin temperature") + " " + nunaSigned(latest) + " °C · " + (small ? String(localized: "Small deviation") : String(localized: "Larger deviation"))) { showCoach = true }
-            }
             NavigationLink(value: NunaTodayRoute.earlyWarning) {
                 NunaCard(small: true) { NunaListRow("Early warning", description: "It takes two signals away from your range", systemImage: "bell", showsChevron: true) }
             }.buttonStyle(.plain)
             NunaExpandRow(title: "How it's calculated", systemImage: "sparkles", plain: howText)
         }
         .task { await skinS.load(repo: repo, key: "skin_temp", source: "my-whoop") }
-        .sheet(isPresented: $showCoach) {
-            NunaAnyaSheet(context: "Skin temperature", metric: NunaAnyaMetric(key: "skin_temp", source: "my-whoop", title: String(localized: "Skin temperature"), unit: "°C", decimals: 1, higherIsBetter: nil))
-        }
+        .nunaAnyaFloating(context: "Skin temperature",
+                          line: latest.map { String(localized: "Skin temperature") + " " + nunaSigned($0) + " °C · " + (abs($0) < 0.5 ? String(localized: "Small deviation") : String(localized: "Larger deviation")) },
+                          metric: NunaAnyaMetric(key: "skin_temp", source: "my-whoop", title: String(localized: "Skin temperature"), unit: "°C", decimals: 1, higherIsBetter: nil))
     }
 }
 

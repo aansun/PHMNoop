@@ -38,7 +38,6 @@ struct NunaRestDetailView: View {
         NunaDetailScreen(restCaption, trailing: AnyView(headerButtons), centersTitle: true) {
             hero
             if let night = model.night { components(night) }
-            if coachEnabled, model.index == 0, router.todayDayOffset == 0, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
             if let night = model.night {
                 NunaSleepNightSections(model: model, night: night, showsNeed: false, showsBodyClock: false)
                 insights(night)
@@ -57,7 +56,9 @@ struct NunaRestDetailView: View {
             else if model.loaded, startIndex == 0, router.todayDayOffset > 0, model.index == 0,
                     let i = model.nights.firstIndex(where: { $0.dayKey == NunaSelectedDay.key(offset: router.todayDayOffset) }) { model.index = i }
         }
-        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "sleep") }
+        // Her line is about the latest night, so she reads it only while that night is on show.
+        .nunaAnyaFloating(context: "sleep", line: (model.index == 0 && router.todayDayOffset == 0) ? anyaLine : nil,
+                          analyses: model.index == 0 && router.todayDayOffset == 0)
         .environment(\.nunaDetailSwitch, nil)
     }
 

@@ -76,8 +76,6 @@ struct NunaChargeDetailView: View {
                 NunaTrendLegend(text: router.todayDayOffset == 0 ? "Today vs. last 30 days" : "This day vs. the 30 days before")
                     .padding(.top, 8)
             }
-            // Anya's line speaks of today (what to do with the day), so it is shown on today only.
-            if coachEnabled, router.todayDayOffset == 0, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
             weeklyTrends
             NunaExpandRow(title: "How it's calculated", subtitle: "Three signals, against your own baseline",
                           text: "Recovery compares last night's heart rate variability, resting heart rate and sleep with your own baseline from the last 30 days. It is an estimate computed on this phone from your strap's data.")
@@ -92,7 +90,8 @@ struct NunaChargeDetailView: View {
             await respSeries.load(repo: repo, key: "resp_rate", source: "my-whoop")
             await day.load(repo: repo, profile: profile)
         }
-        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "Recovery") }
+        // Anya floats over the page and reads it as it opens; her line speaks of today, so on another day she is only the button.
+        .nunaAnyaFloating(context: "Recovery", line: router.todayDayOffset == 0 ? anyaLine : nil, analyses: router.todayDayOffset == 0)
         .environment(\.nunaDetailSwitch, nil)
     }
 
@@ -1118,7 +1117,6 @@ struct NunaMetricDetailView: View {
             series: series, reference: (metric.key == "steps" || metric.key == "steps_est") ? Double(NunaGoals.stepTarget(storedStepGoal)) : nil, referenceLabel: "Target",
             lineColor: lineColor, decimals: metric.decimals,
             higherIsBetter: metric.higherIsBetter ?? true, bars: isColumns, range: $range, page: $page)
-        if coachEnabled, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
         if ["spo2", "resp_rate", "hrv", "rhr"].contains(metric.key) {
             NavigationLink(value: NunaTodayRoute.earlyWarning) {
                 NunaCard(small: true) { NunaListRow("Part of the early warning", description: "Breathing, SpO₂, HRV and resting heart rate are watched too", systemImage: "bell", showsChevron: true) }
@@ -1183,10 +1181,9 @@ struct NunaMetricDetailView: View {
             }
         }
         .task(id: "\(metric.id)-\(repo.refreshSeq)") { await series.load(repo: repo, key: metric.key, source: metric.source, days: usesTrendCard ? 400 : 190) }
-        .sheet(isPresented: $showCoach) {
-            NunaAnyaSheet(context: metric.title, metric: NunaAnyaMetric(key: metric.key, source: metric.source, title: metric.title, unit: metric.unit,
-                                                                       decimals: metric.decimals, higherIsBetter: metric.higherIsBetter))
-        }
+        .nunaAnyaFloating(context: metric.title, line: anyaLine,
+                          metric: NunaAnyaMetric(key: metric.key, source: metric.source, title: metric.title, unit: metric.unit,
+                                                 decimals: metric.decimals, higherIsBetter: metric.higherIsBetter))
     }
 
     private var previous: Double? {
@@ -1337,7 +1334,6 @@ struct NunaStressDetailView: View {
                 NunaStressCategoryCard(category: category, today: reader.zones(category, selectedKey),
                                        typical: typical(category), dateName: dateName)
             }
-            if coachEnabled, let line = anyaLine(score) { NunaAnyaCard(verbatim: line) { showCoach = true } }
             NunaCard(small: true, highlight: true, padding: EdgeInsets(top: 16, leading: 18, bottom: 16, trailing: 18)) {
                 HStack(spacing: 14) {
                     NunaIconTile("wind", tint: NunaPalette.charge)
@@ -1368,9 +1364,9 @@ struct NunaStressDetailView: View {
         .sheet(isPresented: $showBreathing) {
             NavigationStack { NunaBreathView().toolbar(.hidden, for: .navigationBar) }
         }
-        .sheet(isPresented: $showCoach) {
-            NunaAnyaSheet(context: "stress", metric: NunaAnyaMetric(key: "stress", source: "my-whoop", title: String(localized: "Stress"), unit: "", decimals: 1, higherIsBetter: false))
-        }
+        .nunaAnyaFloating(context: "stress", line: day.isToday ? anyaLine(gaugeValue) : nil,
+                          metric: NunaAnyaMetric(key: "stress", source: "my-whoop", title: String(localized: "Stress"), unit: "", decimals: 1, higherIsBetter: false),
+                          analyses: day.isToday)
         .sheet(isPresented: $showSettings) { settingsSheet }
         .fullScreenCover(isPresented: $showZoom) {
             NunaStressZoomScreen(points: trail?.chartPoints ?? [], workouts: trailWorkouts, sleep: sleepSpan.map { Int($0.start.timeIntervalSince1970)...Int($0.end.timeIntervalSince1970) },
