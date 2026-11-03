@@ -33,14 +33,6 @@ struct NunaMeView: View {
                     .buttonStyle(.plain).accessibilityLabel(Text("Search"))
                 }
                 profileCard
-                // Gym opens straight to its own page, without going through Workouts.
-                NavigationLink { NunaGymPage() } label: {
-                    NunaCard(small: true) { NunaListRow("Strength Trainer", subtitle: "Programs, progress and sessions", systemImage: "act:strength-trainer", showsChevron: true) }
-                }.buttonStyle(.plain)
-                // Trends left the tab bar; the page is still here.
-                Button { router.requestedDestination = .trends } label: {
-                    NunaCard(small: true) { NunaListRow("Trends", subtitle: "Recovery, Strain and Sleep over time", systemImage: "chart.line.uptrend.xyaxis", showsChevron: true) }
-                }.buttonStyle(.plain)
                 group("Personalize", count: 4) {
                     row(.devices, "Devices", LocalizedStringKey(deviceSubtitle), "applewatch")
                     NunaDivider()
@@ -58,7 +50,7 @@ struct NunaMeView: View {
                     row(.features, "Optional features", LocalizedStringKey(featuresSubtitle), "checkmark.circle.fill")
                 }
                 group("Data", count: 4) {
-                    row(.applications, "Application", "Vital signs, stress, sleep, water, lab book, nutrition, nap", "square.grid.2x2")
+                    row(.applications, "Application", "Strength Trainer, trends, vital signs, stress, water, lab book, nutrition, nap", "square.grid.2x2")
                     NunaDivider()
                     row(.data, "Data and integrations", nil, "square.and.arrow.up")
                     NunaDivider()
