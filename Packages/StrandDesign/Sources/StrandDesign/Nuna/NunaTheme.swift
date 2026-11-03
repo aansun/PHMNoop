@@ -161,6 +161,11 @@ public extension Font {
         NunaThemePrefs.skin == .whp ? NunaWHPFont.boldFigure(size: size) : nuna(size: size, weight: .bold, design: NunaType.design)
     }
 
+    /// Words in the heaviest cut the skin has, at body sizes where `nuna(weight: .bold)` reads no heavier than regular text (a bold figure inside a paragraph).
+    static func nunaStrong(size: CGFloat) -> Font {
+        NunaThemePrefs.skin == .whp ? NunaWHPFont.strong(size: size) : nuna(size: size, weight: .bold)
+    }
+
     static func nuna(size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> Font {
         // WHP follows the WHOOP typography cheat sheet by role. Figures (the call sites that ask for `NunaType.design`) are D-DIN-PRO,
         // the DIN role of the sheet; words are Proxima Nova: main headers (24 to 31) bold, card headers (16 to 23) semibold, body (13 to 15)
@@ -198,6 +203,13 @@ enum NunaWHPFont {
         if dinProOK { return .custom("DINPro-Bold", size: size) }
         if dinOK { return .custom("D-DIN-PRO-Bold", size: size) }
         return .system(size: size, weight: .bold, design: .default).width(.condensed)
+    }
+
+    /// The heaviest cut of the words face at the same set size `font` gives body text of this size.
+    static func strong(size: CGFloat) -> Font {
+        if proximaOK { return .custom("ProximaNova-Extrabld", size: (size * 0.93 * 2).rounded() / 2) }
+        if montserratOK { return montserrat(size: (((size * 0.92).rounded()) * 0.92 * 2).rounded() / 2, weight: .bold) }
+        return .system(size: size, weight: .bold, design: .default)
     }
 
     static func font(size: CGFloat, weight: Font.Weight, design: Font.Design) -> Font {

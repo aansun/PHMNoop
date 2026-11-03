@@ -34,6 +34,9 @@ struct NunaTodayActivities: View {
     @AppStorage(PuffinExperiment.autoDetectWorkoutsKey) private var autoDetect = false
     @State private var detected: AutoWorkoutSuggestion?
     @State private var confirming = false
+    /// Ideas committed to in the Daily Outlook, shown after today's rows until they are added, started or removed.
+    @AppStorage(NunaOutlookGate.plannedKey) private var plannedRaw = ""
+    @State private var openPlan: NunaPlannedActivity?
 
     private struct Item: Identifiable {
         enum Kind { case sleep, workout(WorkoutRow), nap(String, NunaNap) }
@@ -115,6 +118,9 @@ struct NunaTodayActivities: View {
                     ForEach(rows) { item in row(item) }
                 }
                 if let detected { detectedRow(detected) }
+                if isToday { ForEach(NunaOutlookGate.planned(plannedRaw)) { plan in
+                    Button { openPlan = plan } label: { NunaPlannedRow(plan: plan, effortScale: effortScale) }.buttonStyle(.plain)
+                } }
             }
             if onAdd != nil || onStart != nil {
                 HStack(spacing: 8) {
@@ -131,6 +137,9 @@ struct NunaTodayActivities: View {
             else { night = nil; naps = [] }
         }
         .task(id: "\(autoDetect)-\(repo.refreshSeq)-\(dayStart.timeIntervalSince1970)") { await loadDetected() }
+        .sheet(item: $openPlan) { plan in
+            NunaPlannedSheet(plan: plan, effortScale: effortScale, onAdd: onAdd, onStart: onStart, onRemove: { NunaOutlookGate.remove(plan) })
+        }
         .sheet(isPresented: $confirming) {
             if let s = detected {
                 NunaManualWorkoutSheet(detected: s, onDelete: { repo.dismissDetectedSuggestion(s.workout); detected = nil }) { row, _ in

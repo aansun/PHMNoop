@@ -7908,5 +7908,7 @@
  "%@ is one of your most-logged activities; %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "%1$@ adalah salah satu aktivitas yang paling sering kamu catat; %2$@"}}}},
  "%@ is a regular part of your routine, so the ideas below build on it.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "%@ adalah bagian rutin dari harimu, jadi ide-ide di bawah ini dibangun dari itu."}}}},
  "I'll go with %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Aku pilih %@"}}}},
- "Noted: %@ is on for today. %@ Connect Anya if you want help shaping the session itself.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Dicatat: %1$@ masuk rencana hari ini. %2$@ Hubungkan Anya jika kamu ingin dibantu menyusun sesinya."}}}}
+ "Noted: %@ is on for today. %@ Connect Anya if you want help shaping the session itself.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Dicatat: %1$@ masuk rencana hari ini. %2$@ Hubungkan Anya jika kamu ingin dibantu menyusun sesinya."}}}},
+ "Recommended: %lld min": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Disarankan: %lld mnt"}}}},
+ "Intensity level": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tingkat intensitas"}}}}
 }, "version":"1.0" }
