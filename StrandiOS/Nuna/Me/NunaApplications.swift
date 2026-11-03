@@ -6,6 +6,7 @@ import StrandDesign
 /// book, nutrition and naps (and the menstrual cycle while cycle awareness has a reading). Sleep has no entry of its own: its detail is the Rest screen.
 struct NunaApplicationsView: View {
     @EnvironmentObject private var appModel: AppModel
+    @EnvironmentObject private var router: NavRouter
     @AppStorage(HydrationStore.enabledKey) private var hydration = false
 
     private var stressRoute: NunaTodayRoute {
@@ -16,6 +17,15 @@ struct NunaApplicationsView: View {
         NunaDetailScreen("Application") {
             NunaCard(small: true) {
                 VStack(spacing: 0) {
+                    // Strength Trainer opens straight to its own page; Trends opens over this one (it has no back button of its own).
+                    NavigationLink { NunaGymPage() } label: {
+                        NunaListRow("Strength Trainer", subtitle: "Programs, progress and sessions", systemImage: "act:strength-trainer", showsChevron: true)
+                    }.buttonStyle(.plain)
+                    NunaDivider()
+                    Button { router.requestedDestination = .trends } label: {
+                        NunaListRow("Trends", subtitle: "Recovery, Strain and Sleep over time", systemImage: "chart.line.uptrend.xyaxis", showsChevron: true)
+                    }.buttonStyle(.plain)
+                    NunaDivider()
                     app(.vitalSigns, "Vital signs", "HRV, resting heart rate, blood oxygen and more", "heart.text.square")
                     NunaDivider()
                     app(stressRoute, "Stress monitor", "Level now and through the day", "gauge.with.dots.needle.50percent")
