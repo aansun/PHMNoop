@@ -271,7 +271,7 @@ struct CoachSettingsView: View {
                     // hard, per session. This toggle is the only place someone is asked to agree to it.
                     // Android says the same sentence (#2033).
                     Text(coach.dataConsent
-                         ? "On: your charge, rest, HRV and workouts are sent to the provider, each workout with its sport, duration, distance and heart rate."
+                         ? "On: your recovery, sleep, HRV and workouts are sent to the provider, each workout with its sport, duration, distance and heart rate."
                          : "Off: the coach answers generally and sends none of your metrics.")
                         .font(StrandFont.footnote).foregroundStyle(StrandPalette.textTertiary)
                         .fixedSize(horizontal: false, vertical: true)

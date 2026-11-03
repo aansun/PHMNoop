@@ -571,7 +571,7 @@ struct AddDeviceWizard: View {
                     ouraBullet(String(localized: "Your ring talks to NOOP only, fully offline, no Oura account."))
                     ouraBullet(String(localized: "Live heart rate, and HRV when the ring can measure it."))
                     ouraBullet(String(localized: "Overnight sleep staging, resting heart rate, skin-temperature trend, motion and battery, read straight off the ring."))
-                    ouraBullet(String(localized: "NOOP's own Charge, Effort and Rest, computed on your device from published methods."))
+                    ouraBullet(String(localized: "NOOP's own Recovery, Strain and Sleep, computed on your device from published methods."))
                 }
                 Divider().overlay(StrandPalette.hairline)
                 VStack(alignment: .leading, spacing: 6) {

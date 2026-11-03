@@ -29,9 +29,9 @@ struct NunaAnyaCardLine: Equatable {
         // The weather and air are one more thing Anya sees once they are on.
         let outdoors = EnvironmentExperiment.isEnabled && EnvironmentKeyStore.hasAny ? ["Weather and air"] : []
         switch context {
-        case "today": return ["Charge", "Effort", "Sleep"] + outdoors
-        case "workouts": return ["Effort", "Distance", "Steps", "Heart rate zones"] + outdoors
-        case "trends": return ["Charge", "Effort"]
+        case "today": return ["Recovery", "Strain", "Sleep"] + outdoors
+        case "workouts": return ["Strain", "Distance", "Steps", "Heart rate zones"] + outdoors
+        case "trends": return ["Recovery", "Strain"]
         default: return []
         }
     }

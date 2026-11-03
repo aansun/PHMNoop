@@ -455,9 +455,9 @@ struct TrendsView: View {
         if chargeAvg != nil || effortAvg != nil || restAvg != nil {
             NoopCard {
                 VStack(alignment: .leading, spacing: NoopMetrics.cardInnerSpacing) {
-                    SectionHeader("Week in review", overline: "Charge · Effort · Rest")
+                    SectionHeader("Week in review", overline: "Recovery · Strain · Sleep")
                     if let v = chargeAvg {
-                        pipScoreRow(label: "Charge", value: v, range: 0...100,
+                        pipScoreRow(label: "Recovery", value: v, range: 0...100,
                                     tint: StrandPalette.chargeColor, frac: v / 100,
                                     format: { "\(Int($0.rounded()))" })
                     }
@@ -472,12 +472,12 @@ struct TrendsView: View {
                         let oneDecimal = effortScale == .whoop
                         // The vessel fills off the stored 0–100 internal scale (v), so it agrees with the
                         // Charge/Rest vessels regardless of the displayed Effort unit.
-                        pipScoreRow(label: "Effort", value: display, range: 0...maxV,
+                        pipScoreRow(label: "Strain", value: display, range: 0...maxV,
                                     tint: StrandPalette.effortColor, frac: v / 100,
                                     format: { oneDecimal ? String(format: "%.1f", $0) : "\(Int($0.rounded()))" })
                     }
                     if let v = restAvg {
-                        pipScoreRow(label: "Rest", value: v, range: 0...100,
+                        pipScoreRow(label: "Sleep", value: v, range: 0...100,
                                     tint: StrandPalette.restColor, frac: v / 100,
                                     format: { "\(Int($0.rounded()))" })
                     }
@@ -598,7 +598,7 @@ struct TrendsView: View {
         // Charge world — the WHOOP recovery value scale (red→yellow→green) drawn as a crisp flat line
         // with a bright "now" cap. No glow.
         let card = ChartCard(
-            title: "Charge",
+            title: "Recovery",
             // The range bar above already prints the authoritative reading-count caption;
             // the hero only names its window so the count isn't doubled in one card height.
             subtitle: rangeSubtitle,
@@ -613,7 +613,7 @@ struct TrendsView: View {
                               valueRange: 0...106,
                               tip: StrandPalette.chargeBright,
                               valueFormat: { "\(Int($0.rounded()))" },
-                              accessibilityLabel: String(localized: "Charge trend"))
+                              accessibilityLabel: String(localized: "Recovery trend"))
                 } else {
                     sparsePlaceholder
                 }
@@ -638,7 +638,7 @@ struct TrendsView: View {
         // with a hint that a tap opens the detail.
         NavigationLink(value: TabRoute.metric("recovery")) { card }
             .buttonStyle(LiquidPressStyle())
-            .accessibilityHint(Text(String(localized: "Opens the full Charge metric.")))
+            .accessibilityHint(Text(String(localized: "Opens the full Recovery metric.")))
     }
 
     // MARK: Rest — sleep-performance trend
@@ -650,7 +650,7 @@ struct TrendsView: View {
         let pts = rest.points
         let avg = mean(pts)
         let card = ChartCard(
-            title: "Rest",
+            title: "Sleep",
             icon: "bed.double.fill",
             subtitle: rangeSubtitle,
             trailing: avg.map { "\(Int($0.rounded()))%" },
@@ -662,7 +662,7 @@ struct TrendsView: View {
                               valueRange: 0...106,
                               tip: StrandPalette.restLine,
                               valueFormat: { "\(Int($0.rounded()))" },
-                              accessibilityLabel: String(localized: "Rest trend"))
+                              accessibilityLabel: String(localized: "Sleep trend"))
                 } else {
                     sparsePlaceholder
                 }
@@ -727,8 +727,8 @@ struct TrendsView: View {
                 metricChart(
                     // Plotted points + range stay on the stored 0–100 scale (line shape unchanged); only the
                     // displayed numbers + unit follow the Effort-scale toggle, converted inside `fmt`. (#268)
-                    title: "Effort", unit: "/ \(UnitFormatter.effortScaleMax(effortScale))",
-                    accessibilityTitle: String(localized: "Effort"),
+                    title: "Strain", unit: "/ \(UnitFormatter.effortScaleMax(effortScale))",
+                    accessibilityTitle: String(localized: "Strain"),
                     metricKey: "strain",
                     points: strainPts,
                     // WHOOP: Effort/Strain is always BLUE — a deep→bright blue line, not the amber ramp.
@@ -806,7 +806,7 @@ struct TrendsView: View {
             guard let dt = date(d.day) else { return nil }
             return RecoveryDay(date: dt, score: d.recovery)
         }
-        let title = (range == .all && repo.days.count > 365) ? String(localized: "Charge (all history)") : String(localized: "Charge (past year)")
+        let title = (range == .all && repo.days.count > 365) ? String(localized: "Recovery (all history)") : String(localized: "Recovery (past year)")
         return NoopCard {
             VStack(alignment: .leading, spacing: NoopMetrics.cardInnerSpacing) {
                 SectionHeader("\(title)", overline: "Calendar", trailing: String(localized: "\(recoveryDays.filter { $0.score != nil }.count) days"))
@@ -841,7 +841,7 @@ struct TrendsView: View {
         }
         .frame(maxWidth: .infinity)
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Charge scale, depleted to peaked")
+        .accessibilityLabel("Recovery scale, depleted to peaked")
     }
 
     // MARK: Shared bits

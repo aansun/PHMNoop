@@ -186,7 +186,7 @@ struct NunaPersonaView: View {
                 recalibrated = true
             }
             Button("Cancel", role: .cancel) {}
-        } message: { Text("Charge and your HRV baseline are learned again from tonight, which takes about 4 nights. Your history stays.") }
+        } message: { Text("Recovery and your HRV baseline are learned again from tonight, which takes about 4 nights. Your history stays.") }
     }
 
     private static func feetInches(_ cm: Double) -> String {
@@ -405,7 +405,7 @@ struct NunaGoalsView: View {
                 NunaCard(highlight: true) {
                     VStack(alignment: .leading, spacing: 8) {
                         nunaTrendsCap("Suggested from your numbers")
-                        Text(verbatim: String(localized: "Your Effort over the last 7 days was \(UnitFormatter.effortDisplay(w, scale: scale)). A weekly target of \(UnitFormatter.effortDisplay(w * 1.1, scale: scale)) to \(UnitFormatter.effortDisplay(w * 1.2, scale: scale)) is a realistic step up."))
+                        Text(verbatim: String(localized: "Your Strain over the last 7 days was \(UnitFormatter.effortDisplay(w, scale: scale)). A weekly target of \(UnitFormatter.effortDisplay(w * 1.1, scale: scale)) to \(UnitFormatter.effortDisplay(w * 1.2, scale: scale)) is a realistic step up."))
                             .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
                         Button { effort = (w * 1.15).rounded() } label: {
                             Text("Use it").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 20).frame(height: 40).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
@@ -414,7 +414,7 @@ struct NunaGoalsView: View {
                 }
             }
             NunaSettingsGroup("Training and recovery") {
-                NunaStepRow(label: "Weekly Effort", value: effort > 0 ? UnitFormatter.effortDisplay(effort, scale: scale) : "–", note: LocalizedStringKey(weekAvg.map { String(localized: "Last 7 days: \(UnitFormatter.effortDisplay($0, scale: scale))") } ?? ""), canDecrement: effort > 0,
+                NunaStepRow(label: "Weekly Strain", value: effort > 0 ? UnitFormatter.effortDisplay(effort, scale: scale) : "–", note: LocalizedStringKey(weekAvg.map { String(localized: "Last 7 days: \(UnitFormatter.effortDisplay($0, scale: scale))") } ?? ""), canDecrement: effort > 0,
                             onMinus: { effort = max(0, effort - 5) }, onPlus: { effort = effort + 5 })
                 NunaDivider()
                 NunaStepRow(label: "Sleep", value: sleep > 0 ? "\(sleep / 60)h \(String(format: "%02d", sleep % 60))m" : "–", note: "Same as your sleep need", canDecrement: sleep > 0,
@@ -424,7 +424,7 @@ struct NunaGoalsView: View {
                 NunaStepRow(label: "Steps per day", value: steps > 0 ? NunaTrendsFormat.num(Double(steps)) : "–", note: LocalizedStringKey(avgSteps.map { String(localized: "Average \(NunaTrendsFormat.num(Double($0)))") } ?? ""), canDecrement: steps > 0,
                             onMinus: { steps = max(0, steps - 500) }, onPlus: { steps = steps == 0 ? 8000 : steps + 500 })
                 NunaDivider()
-                NunaStepRow(label: "Water per day", value: water > 0 ? String(format: "%.1f L", locale: AppLanguage.activeLocale, water) : "–", note: "Water tracking adjusts it with Effort", canDecrement: water > 0,
+                NunaStepRow(label: "Water per day", value: water > 0 ? String(format: "%.1f L", locale: AppLanguage.activeLocale, water) : "–", note: "Water tracking adjusts it with Strain", canDecrement: water > 0,
                             onMinus: { water = max(0, water - 0.25) }, onPlus: { water = water == 0 ? 2.0 : water + 0.25 })
                 NunaDivider()
                 NunaStepRow(label: "Target weight", value: targetWeight > 0 ? String(format: "%.1f kg", locale: AppLanguage.activeLocale, targetWeight) : "–",

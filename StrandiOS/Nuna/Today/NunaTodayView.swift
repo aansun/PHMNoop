@@ -547,7 +547,7 @@ struct NunaTodayView: View {
         case .synthesis: return "Anya"
         case .recoveryVitals: return "Stress monitor"
         case .vitalMonitor: return "Vital and stress monitors"
-        case .weekCompare: return "Charge & Effort"
+        case .weekCompare: return "Recovery & Strain"
         case .keyMetrics: return "Key metrics"
         case .workouts: return "Activity"
         case .journal: return "Quick log"
@@ -648,9 +648,9 @@ struct NunaTodayView: View {
         switch section {
         case .hero:
             HStack {
-                miniRing(model.charge.pct, "Charge", NunaPalette.charge, "%")
-                miniRing(model.effort.map { Double(UnitFormatter.effortDisplay($0, scale: effortScale).replacingOccurrences(of: ",", with: ".")) ?? 0 }, "Effort", NunaPalette.effort, "", fraction: (model.effort ?? 0) / 100)
-                miniRing(model.rest, "Rest", NunaPalette.rest, "%")
+                miniRing(model.charge.pct, "Recovery", NunaPalette.charge, "%")
+                miniRing(model.effort.map { Double(UnitFormatter.effortDisplay($0, scale: effortScale).replacingOccurrences(of: ",", with: ".")) ?? 0 }, "Strain", NunaPalette.effort, "", fraction: (model.effort ?? 0) / 100)
+                miniRing(model.rest, "Sleep", NunaPalette.rest, "%")
             }
             .padding(.vertical, 12).frame(maxWidth: .infinity).background(inner)
         case .stateChips:
@@ -661,7 +661,7 @@ struct NunaTodayView: View {
         case .recoveryVitals:
             previewRow("wind", NunaPalette.charge, model.stress.map { String(localized: "Stress \(String(format: "%.1f", locale: AppLanguage.activeLocale, $0)) / 3") } ?? String(localized: "Stress"), "Intraday curve").background(inner)
         case .weekCompare:
-            previewRow("chart.bar.xaxis", NunaPalette.charge, String(localized: "Charge & Effort"), "Last 7 days").background(inner)
+            previewRow("chart.bar.xaxis", NunaPalette.charge, String(localized: "Recovery & Strain"), "Last 7 days").background(inner)
         case .vitalMonitor:
             HStack(spacing: 8) {
                 previewRow("heart.text.square", NunaPalette.charge, String(localized: "Vital signs"), "Within range").background(inner)

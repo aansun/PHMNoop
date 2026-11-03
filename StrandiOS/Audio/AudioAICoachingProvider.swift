@@ -42,7 +42,7 @@ struct AudioAICoachingProvider {
         Rewrite the approved intent as exactly one short spoken workout instruction. Use only the
         provided values. No markdown, no diagnosis, no safety claim, no invented data, and no more
         than 18 words.
-        (AudioCoachingCopy.isIndonesian ? "Use natural, concise Indonesian. Keep Heart Rate, Zone, Pace, Cadence, Effort, and units unchanged." : "Use concise natural English.")
+        (AudioCoachingCopy.isIndonesian ? "Use natural, concise Indonesian. Keep Heart Rate, Zone, Pace, Cadence, Strain, and units unchanged." : "Use concise natural English.")
         """
 
         let client = CustomClient()

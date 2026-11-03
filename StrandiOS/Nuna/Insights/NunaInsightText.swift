@@ -145,8 +145,8 @@ enum NunaInsightText {
                                    : String(localized: "Shorter than your usual \(u) min: this one ran \(m) min.")
         case let .effort(stored, usual):
             let e = UnitFormatter.effortDisplay(stored, scale: scale), u = UnitFormatter.effortDisplay(usual, scale: scale)
-            return stored > usual ? String(localized: "A heavier session than most: Effort \(e) against your 30-day average of \(u).")
-                                  : String(localized: "A lighter session than most: Effort \(e) against your 30-day average of \(u).")
+            return stored > usual ? String(localized: "A heavier session than most: Strain \(e) against your 30-day average of \(u).")
+                                  : String(localized: "A lighter session than most: Strain \(e) against your 30-day average of \(u).")
         case let .zone(number, minutes, usual):
             return minutes > usual ? String(localized: "You spent \(minutes) min in zone \(number); your usual is \(usual) min, so this one ran harder.")
                                    : String(localized: "You spent \(minutes) min in zone \(number); your usual is \(usual) min, so this one was lighter.")
@@ -155,14 +155,14 @@ enum NunaInsightText {
             let range = UnitFormatter.effortDisplay(low, scale: scale) + "–" + UnitFormatter.effortDisplay(high, scale: scale)
             let c = Int(charge.rounded())
             switch state {
-            case .below: return String(localized: "The day is at Effort \(e), under the \(range) your Charge of \(c) supports: there is room for more.")
-            case .inside: return String(localized: "The day is at Effort \(NunaMark.pos(e)), inside the \(range) your Charge of \(c) supports.")
-            case .above: return String(localized: "The day is at Effort \(NunaMark.neg(e)), above the \(range) your Charge of \(c) supports: let recovery lead tomorrow.")
+            case .below: return String(localized: "The day is at Strain \(e), under the \(range) your Recovery of \(c) supports: there is room for more.")
+            case .inside: return String(localized: "The day is at Strain \(NunaMark.pos(e)), inside the \(range) your Recovery of \(c) supports.")
+            case .above: return String(localized: "The day is at Strain \(NunaMark.neg(e)), above the \(range) your Recovery of \(c) supports: let recovery lead tomorrow.")
             }
         case let .conditions(_, reasons):
             return workoutConditions(reasons)
         case .typical:
-            return String(localized: "This session sat right on your 30-day norms: about the same length, Effort and zones as usual.")
+            return String(localized: "This session sat right on your 30-day norms: about the same length, Strain and zones as usual.")
         }
     }
 
@@ -206,7 +206,7 @@ enum NunaInsightText {
                 why = s > 0 ? String(localized: "An irregular bedtime held this night back: you fell asleep \(duration(s)) later than your usual.")
                             : String(localized: "An irregular bedtime held this night back: you fell asleep \(duration(-s)) earlier than your usual.")
             } else {
-                why = String(localized: "A bedtime that moves around has been costing Rest lately.")
+                why = String(localized: "A bedtime that moves around has been costing Sleep lately.")
             }
         case .carriedBy(.duration):
             why = r.durationGapMin >= 15 ? String(localized: "A full night did the work: you slept \(duration(r.durationGapMin)) past what you need.")
@@ -268,7 +268,7 @@ enum NunaInsightText {
         if abs(s) <= 20 { return String(localized: "Within 20 minutes of your usual bedtime: your body clock is steady.") }
         let m = Int(abs(s).rounded())
         return (s > 0 ? String(localized: "\(duration(m)) later than your usual bedtime.") : String(localized: "\(duration(m)) earlier than your usual bedtime."))
-            + " " + String(localized: "Swings of more than an hour are what cost Rest.")
+            + " " + String(localized: "Swings of more than an hour are what cost Sleep.")
     }
 
     static func efficiencyNote(events: [(start: TimeInterval, end: TimeInterval)], totalSec: TimeInterval) -> String {
@@ -290,23 +290,23 @@ enum NunaInsightText {
         var parts: [String] = []
         if let l = r.lift {
             switch l.factor {
-            case .hrv: parts.append(String(localized: "A higher HRV than usual is carrying today's Charge."))
-            case .restingHr: parts.append(String(localized: "A lower resting heart rate than usual is carrying today's Charge."))
-            case .sleep: parts.append(String(localized: "A good night's sleep is carrying today's Charge."))
+            case .hrv: parts.append(String(localized: "A higher HRV than usual is carrying today's Recovery."))
+            case .restingHr: parts.append(String(localized: "A lower resting heart rate than usual is carrying today's Recovery."))
+            case .sleep: parts.append(String(localized: "A good night's sleep is carrying today's Recovery."))
             default: break
             }
         }
         if let d = r.drag {
             switch d.factor {
-            case .hrv: parts.append(String(localized: "HRV sitting under its usual is what holds Charge back."))
-            case .restingHr: parts.append(String(localized: "A resting heart rate above your usual is holding Charge back."))
-            case .sleep: parts.append(String(localized: "A short or broken night is holding Charge back."))
-            case .load: parts.append(String(localized: "Yesterday's hard Effort is still weighing on Charge."))
-            case .breathing: parts.append(String(localized: "A breathing rate off its usual is holding Charge back."))
-            case .skinTemp: parts.append(String(localized: "A skin temperature off your baseline is holding Charge back."))
+            case .hrv: parts.append(String(localized: "HRV sitting under its usual is what holds Recovery back."))
+            case .restingHr: parts.append(String(localized: "A resting heart rate above your usual is holding Recovery back."))
+            case .sleep: parts.append(String(localized: "A short or broken night is holding Recovery back."))
+            case .load: parts.append(String(localized: "Yesterday's hard Strain is still weighing on Recovery."))
+            case .breathing: parts.append(String(localized: "A breathing rate off its usual is holding Recovery back."))
+            case .skinTemp: parts.append(String(localized: "A skin temperature off your baseline is holding Recovery back."))
             }
         }
-        if parts.isEmpty { parts.append(String(localized: "Nothing stands out: your signals sit at their usual, so Charge is simply where your baseline puts it.")) }
+        if parts.isEmpty { parts.append(String(localized: "Nothing stands out: your signals sit at their usual, so Recovery is simply where your baseline puts it.")) }
         parts.append(chargePct >= 67 ? String(localized: "A good day for quality work.")
                      : (chargePct >= 34 ? String(localized: "Keep intensity controlled and let how you feel decide.")
                                         : String(localized: "Make it an easy day: sleep is the best training today.")))
@@ -356,7 +356,7 @@ enum NunaInsightText {
         switch (up, down, rUp, rDown) {
         case (_, _, _, true) where up || !down:
             headline = String(localized: "Your body looks recovered: HRV is at or above its usual and resting heart rate is under it.")
-            detail = String(localized: "A good day to train if Charge agrees.")
+            detail = String(localized: "A good day to train if Recovery agrees.")
         case (_, true, true, _):
             headline = String(localized: "Both overnight signals point the same way: HRV is under its usual and resting heart rate is above it.")
             detail = String(localized: "That pairing usually follows a short night, alcohol, illness or a hard block. Keep today easy and see whether it clears.")
@@ -395,9 +395,9 @@ enum NunaInsightText {
         guard let chargePct, let band = CoupledView.optimalStrainRange(recovery: chargePct) else { return nil }
         let lo = Double(band.lowerBound) / UnitFormatter.effortScaleFactor
         let hi = Double(band.upperBound) / UnitFormatter.effortScaleFactor
-        if effort < lo { return String(localized: "You are under the Effort your Charge supports today, so there is room for a session if you feel like it.") }
-        if effort <= hi { return String(localized: "You are inside the Effort your Charge supports today: more adds load without much return.") }
-        return String(localized: "You are past the Effort your Charge supports today: food, water and an early night are the work now.")
+        if effort < lo { return String(localized: "You are under the Strain your Recovery supports today, so there is room for a session if you feel like it.") }
+        if effort <= hi { return String(localized: "You are inside the Strain your Recovery supports today: more adds load without much return.") }
+        return String(localized: "You are past the Strain your Recovery supports today: food, water and an early night are the work now.")
     }
 }
 
@@ -434,7 +434,7 @@ extension NunaInsightText {
         guard !logged.isEmpty else { return nil }
         let evidence = context.evidence.filter { logged.contains($0.kind) }
         if let worst = evidence.filter(\.costsRest).min(by: { ($0.restDelta ?? 0) < ($1.restDelta ?? 0) }), let d = worst.restDelta {
-            let why = String(localized: "Your journal explains part of it: you logged \(habitName(worst.kind)) yesterday, and after the \(worst.nYes) nights you did, your Rest ran \(Int(abs(d).rounded())) points lower.")
+            let why = String(localized: "Your journal explains part of it: you logged \(habitName(worst.kind)) yesterday, and after the \(worst.nYes) nights you did, your Sleep ran \(Int(abs(d).rounded())) points lower.")
             return (why, String(localized: "Skip it tonight and see whether the night recovers."))
         }
         if let first = evidence.first {

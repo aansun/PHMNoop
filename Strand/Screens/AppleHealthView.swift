@@ -619,7 +619,7 @@ struct AppleHealthView: View {
 
     private var sleepSection: some View {
         VStack(alignment: .leading, spacing: NoopMetrics.gap) {
-            SectionHeader("Sleep", overline: "Rest",
+            SectionHeader("Sleep", overline: "Sleep",
                           trailing: range.caption)
             chartCard(title: "Asleep", key: "asleep_min",
                       gradient: purpleGradient, fallback: 240...600,

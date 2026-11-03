@@ -432,7 +432,7 @@ struct AutomationsView: View {
 
     private var strainTargetCard: some View {
         Section2(icon: "flame", title: String(localized: "Strain target"),
-                 blurb: String(localized: "A once-a-day nudge when your Effort reaches the low end of today's optimal strain range, worked out from your recovery."),
+                 blurb: String(localized: "A once-a-day nudge when your Strain reaches the low end of today's optimal strain range, worked out from your recovery."),
                  active: behavior.strainTargetNudge) {
             ToggleRow(label: String(localized: "Notify when optimal strain is reached"),
                       help: String(localized: "Posts after your strap syncs and NOOP scores the day — not the exact second you cross it. At most once per day."),
@@ -457,7 +457,7 @@ struct AutomationsView: View {
                  blurb: String(localized: "Optional phone notifications for workouts saved by NOOP. Nothing is sent off this iPhone."),
                  active: postWorkoutSummary) {
             ToggleRow(label: String(localized: "Post-workout summary"),
-                      help: String(localized: "After you save a live workout, show its Effort, duration and average heart rate. Existing workouts are not replayed."),
+                      help: String(localized: "After you save a live workout, show its Strain, duration and average heart rate. Existing workouts are not replayed."),
                       isOn: $postWorkoutSummary)
                 .onChangeCompat(of: postWorkoutSummary) { on in
                     if on { WorkoutReportNotifier.requestAuthorization() }

@@ -179,7 +179,7 @@ struct NunaAnyaView: View {
             .frame(width: 42, height: 42)
     }
     private var readNames: [String] {
-        [String(localized: "Charge"), String(localized: "Sleep"), String(localized: "Workouts 7 days")]
+        [String(localized: "Recovery"), String(localized: "Sleep"), String(localized: "Workouts 7 days")]
     }
 
     private func chip(_ t: String) -> some View {
@@ -212,7 +212,7 @@ struct NunaAnyaView: View {
                 }
             }
             NavigationLink(value: NunaAnyaRoute.plan) {
-                NunaListRow("Today's plan", description: "Built on this iPhone from your Charge, no provider needed", systemImage: "list.bullet.rectangle", showsChevron: true)
+                NunaListRow("Today's plan", description: "Built on this iPhone from your Recovery, no provider needed", systemImage: "list.bullet.rectangle", showsChevron: true)
             }.buttonStyle(.plain)
         }
     }
@@ -291,8 +291,8 @@ struct NunaAnyaView: View {
     private var starters: [Starter] {
         (environment.isActive ? [Starter(title: String(localized: "Is it a good time to train outside?"), subtitle: String(localized: "From the weather and air where you are"),
                  prompt: "Given the weather and air quality around me right now, is it a good time to train outside? Tell me what to change: the hour, the length, the intensity, or whether to move indoors.")] : []) +
-        [Starter(title: String(localized: "Recommend a workout"), subtitle: String(localized: "From Charge, Effort, Rest and your goal"),
-                 prompt: "Recommend the best workout for today using my Charge, Effort, Rest, recent workouts, and goal. Give the workout type, duration, target Heart Rate Zone or strength intensity, and one thing to avoid."),
+        [Starter(title: String(localized: "Recommend a workout"), subtitle: String(localized: "From Recovery, Strain, Sleep and your goal"),
+                 prompt: "Recommend the best workout for today using my Recovery, Strain, Sleep, recent workouts, and goal. Give the workout type, duration, target Heart Rate Zone or strength intensity, and one thing to avoid."),
          Starter(title: String(localized: "Why is my sleep short?"), subtitle: String(localized: "Compare the last 7 nights"),
                  prompt: "Why might my sleep be short lately? Compare my last 7 nights and point to the pattern."),
          Starter(title: String(localized: "Why did HRV drop?"), subtitle: String(localized: "Look for triggers in the journal and workouts"),

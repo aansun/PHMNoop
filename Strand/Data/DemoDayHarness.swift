@@ -46,11 +46,11 @@ enum DemoDayHarness {
         DemoDayFrame(hour: 5,  greeting: "Early start",    readiness: "Solid",    effort: 5,  hrvMs: 81, rhrBpm: 51, stress0to3: 0, synthHeadline: "Waking",       synthBody: "First light. Recovery is looking strong."),
         DemoDayFrame(hour: 6,  greeting: "Good morning",   readiness: "Solid",    effort: 7,  hrvMs: 78, rhrBpm: 53, stress0to3: 1, synthHeadline: "Ready",        synthBody: "You are rested and set for the day ahead."),
         DemoDayFrame(hour: 7,  greeting: "Good morning",   readiness: "Solid",    effort: 11, hrvMs: 73, rhrBpm: 57, stress0to3: 1, synthHeadline: "Ready",        synthBody: "Recovery is solid. A good day to push."),
-        DemoDayFrame(hour: 8,  greeting: "Good morning",   readiness: "Moderate", effort: 18, hrvMs: 67, rhrBpm: 61, stress0to3: 2, synthHeadline: "Warming up",   synthBody: "Effort is building as the day gets going."),
+        DemoDayFrame(hour: 8,  greeting: "Good morning",   readiness: "Moderate", effort: 18, hrvMs: 67, rhrBpm: 61, stress0to3: 2, synthHeadline: "Warming up",   synthBody: "Strain is building as the day gets going."),
         DemoDayFrame(hour: 10, greeting: "Good morning",   readiness: "Moderate", effort: 31, hrvMs: 62, rhrBpm: 64, stress0to3: 2, synthHeadline: "In the swing", synthBody: "A steady load through the morning."),
-        DemoDayFrame(hour: 14, greeting: "Good afternoon", readiness: "Moderate", effort: 56, hrvMs: 55, rhrBpm: 71, stress0to3: 2, synthHeadline: "Pushing",      synthBody: "Midday effort is climbing. Stay hydrated."),
+        DemoDayFrame(hour: 14, greeting: "Good afternoon", readiness: "Moderate", effort: 56, hrvMs: 55, rhrBpm: 71, stress0to3: 2, synthHeadline: "Pushing",      synthBody: "Midday strain is climbing. Stay hydrated."),
         DemoDayFrame(hour: 17, greeting: "Good evening",   readiness: "Moderate", effort: 69, hrvMs: 58, rhrBpm: 66, stress0to3: 1, synthHeadline: "Easing off",   synthBody: "A strong day logged. Start winding down."),
-        DemoDayFrame(hour: 19, greeting: "Good evening",   readiness: "Solid",    effort: 77, hrvMs: 63, rhrBpm: 61, stress0to3: 1, synthHeadline: "Winding down", synthBody: "Effort is in. Time to let your body recover."),
+        DemoDayFrame(hour: 19, greeting: "Good evening",   readiness: "Solid",    effort: 77, hrvMs: 63, rhrBpm: 61, stress0to3: 1, synthHeadline: "Winding down", synthBody: "Strain is in. Time to let your body recover."),
         DemoDayFrame(hour: 22, greeting: "Good night",     readiness: "Solid",    effort: 84, hrvMs: 71, rhrBpm: 55, stress0to3: 0, synthHeadline: "Time for bed", synthBody: "A big day done. Prioritise sleep tonight."),
     ]
 

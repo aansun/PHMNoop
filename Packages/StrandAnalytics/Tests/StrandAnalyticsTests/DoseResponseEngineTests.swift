@@ -24,7 +24,7 @@ final class DoseResponseEngineTests: XCTestCase {
         XCTAssertTrue(r.priorDominated)
         XCTAssertFalse(r.contradictsPrior)
         XCTAssertEqual(r.confidence, .calibrating)
-        XCTAssertEqual(r.outcome, "Charge")
+        XCTAssertEqual(r.outcome, "Recovery")
     }
 
     // MARK: - shrinkage weight w = n/(n+k) is exact at the boundary n = k

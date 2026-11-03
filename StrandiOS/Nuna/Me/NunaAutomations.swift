@@ -47,7 +47,7 @@ struct NunaAutomationsView: View {
                     NunaListRow("Sitting too long", subtitle: LocalizedStringKey(inactivity.enabled ? String(localized: "Vibrates after \(inactivity.thresholdMinutes) minutes") : String(localized: "Off")), systemImage: "chair", showsChevron: true)
                 }.buttonStyle(.plain)
                 NunaDivider()
-                NavigationLink(value: NunaMeRoute.notifications) { NunaListRow("Battery, Effort target and reports", description: "Under Notifications", systemImage: "bell", showsChevron: true) }.buttonStyle(.plain)
+                NavigationLink(value: NunaMeRoute.notifications) { NunaListRow("Battery, Strain target and reports", description: "Under Notifications", systemImage: "bell", showsChevron: true) }.buttonStyle(.plain)
             }
             NunaSettingsGroup("Siri and Shortcuts") {
                 NavigationLink(value: NunaMeRoute.shortcuts) { NunaListRow("Available shortcuts", description: "Sync Strap, breathe, mark a moment, export", systemImage: "square.stack.3d.up", showsChevron: true) }.buttonStyle(.plain)

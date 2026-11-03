@@ -728,7 +728,7 @@ struct MarkerDetailView: View {
                     }
 
                     if signal == nil {
-                        Text("Pick a wearable signal (resting HR, HRV, sleep, Charge, weight…) to line it up against this marker. NOOP averages the signal over the \(window.phrase) before each reading.")
+                        Text("Pick a wearable signal (resting HR, HRV, sleep, Recovery, weight…) to line it up against this marker. NOOP averages the signal over the \(window.phrase) before each reading.")
                             .font(StrandFont.subhead)
                             .foregroundStyle(StrandPalette.textTertiary)
                             .fixedSize(horizontal: false, vertical: true)

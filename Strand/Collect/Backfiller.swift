@@ -546,7 +546,7 @@ final class Backfiller {
     /// both platforms; localizing that surface is its own change. No em-dash (project rule).
     nonisolated static func staleRecordBanner(newestUnix: Int, wallNowUnix: Int) -> String {
         let ageDays = max(0, wallNowUnix - newestUnix) / 86_400
-        return "Synced, but your strap handed over no stored history, and its newest saved record is about \(ageDays) day(s) old. If you have been wearing it since then, it has stopped saving to flash. Charge it to 100% and reconnect; NOOP already re-sets its clock every connect, so if that does not help, try Restart strap in Devices, then forget and re-pair. If the official WHOOP app is missing these days too, the strap is the cause and not NOOP."
+        return "Synced, but your strap handed over no stored history, and its newest saved record is about \(ageDays) day(s) old. If you have been wearing it since then, it has stopped saving to flash. Recovery it to 100% and reconnect; NOOP already re-sets its clock every connect, so if that does not help, try Restart strap in Devices, then forget and re-pair. If the official WHOOP app is missing these days too, the strap is the cause and not NOOP."
     }
 
     /// #1754: the banner for an empty offload whose flash cursor is VALID and ADVANCING — the strap is

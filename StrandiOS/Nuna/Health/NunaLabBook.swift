@@ -481,7 +481,7 @@ struct NunaMarkerDetailView: View {
                 }
                 NunaSegmented(LabWindow.allCases.map { (value: $0, title: LocalizedStringKey($0.label)) }, selection: $window)
                 if signal == nil {
-                    Text("Pick a wearable signal (resting HR, HRV, sleep, Charge, weight…) to line it up against this marker. NOOP averages the signal over the \(window.phrase) before each reading.")
+                    Text("Pick a wearable signal (resting HR, HRV, sleep, Recovery, weight…) to line it up against this marker. NOOP averages the signal over the \(window.phrase) before each reading.")
                         .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 } else {
                     resultBlock(m)

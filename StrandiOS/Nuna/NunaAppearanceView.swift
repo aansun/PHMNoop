@@ -87,7 +87,7 @@ struct NunaAppearanceView: View {
     private var unitsSummary: String {
         let body = (UnitSystem(rawValue: unitSystem) ?? .metric) == .imperial ? String(localized: "Imperial") : String(localized: "Metric")
         let dist = UnitPrefs.resolveDistance(system: UnitSystem(rawValue: unitSystem) ?? .metric, override: distance) == .imperial ? "mi" : "km"
-        return body + " · " + dist + " · " + (UnitPrefs.resolveEffortScale(effortScale) == .whoop ? String(localized: "Effort 0 to 21") : String(localized: "Effort 0 to 100"))
+        return body + " · " + dist + " · " + (UnitPrefs.resolveEffortScale(effortScale) == .whoop ? String(localized: "Strain 0 to 21") : String(localized: "Strain 0 to 100"))
     }
 
     private var preview: some View {

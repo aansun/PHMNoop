@@ -12,7 +12,7 @@ extension TodaySection {
         case .synthesis: return "Anya"
         case .recoveryVitals: return String(localized: "Stress monitor")
         case .vitalMonitor: return String(localized: "Vital and stress monitors")
-        case .weekCompare: return String(localized: "Charge & Effort")
+        case .weekCompare: return String(localized: "Recovery & Strain")
         case .keyMetrics: return String(localized: "Key metrics")
         case .workouts: return String(localized: "Activity")
         case .journal: return String(localized: "Quick log")
@@ -26,8 +26,8 @@ extension TodaySection {
 
     var nunaNote: String {
         switch self {
-        case .hero: return String(localized: "Charge, Effort and Rest")
-        case .stateChips: return String(localized: "Readiness, Charge state and heart rate")
+        case .hero: return String(localized: "Recovery, Strain and Sleep")
+        case .stateChips: return String(localized: "Readiness, Recovery state and heart rate")
         case .synthesis: return String(localized: "One suggestion for today")
         case .recoveryVitals: return String(localized: "Average and timeline")
         case .vitalMonitor: return String(localized: "Vital signs and stress side by side")

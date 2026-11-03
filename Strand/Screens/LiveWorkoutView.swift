@@ -229,7 +229,7 @@ struct LiveWorkoutView: View {
             ? String(format: "%.1f", displayEffort)
             : "\(Int(displayEffort.rounded()))"
         let scaleCaption = String(localized: "of \(UnitFormatter.effortScaleMax(effortScale))")
-        let effortAccessibilityLabel = "\(String(localized: "Effort")) \(valueText) \(scaleCaption)"
+        let effortAccessibilityLabel = "\(String(localized: "Strain")) \(valueText) \(scaleCaption)"
         return VStack(spacing: NoopMetrics.space1) {
             CountUpText(value: displayEffort,
                         format: { value in
@@ -242,7 +242,7 @@ struct LiveWorkoutView: View {
             .accessibilityLabel(effortAccessibilityLabel)
             .accessibilityValue(Text(StrainGauge.stateLabel(forFraction: fraction)))
 
-            Text("EFFORT BUILDING")
+            Text("STRAIN BUILDING")
                 .font(StrandFont.overline).tracking(StrandFont.overlineTracking)
                 .foregroundStyle(StrandPalette.effortColor)
             Text(StrainGauge.stateLabel(forFraction: fraction))
@@ -308,7 +308,7 @@ struct LiveWorkoutView: View {
                 stat(String(localized: "PEAK"), (w?.peakHr ?? 0) > 0 ? "\(w!.peakHr)" : "—",
                      tint: (w?.peakHr ?? 0) > 0 ? StrandPalette.metricRose : StrandPalette.textPrimary)
                 statDivider
-                stat(String(localized: "EFFORT"), UnitFormatter.effortDisplay(w?.liveStrain ?? 0, scale: effortScale),
+                stat(String(localized: "STRAIN"), UnitFormatter.effortDisplay(w?.liveStrain ?? 0, scale: effortScale),
                      tint: StrandPalette.strainColor(w?.liveStrain ?? 0))
             }
         }

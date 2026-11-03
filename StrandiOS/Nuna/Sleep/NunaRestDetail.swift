@@ -9,7 +9,7 @@ struct NunaRestDetailView: View {
     /// The night to open on (0 is the latest). The Sleep entries open this same screen on the night they were showing.
     var startIndex = 0
     /// "Rest" behind the ring, "Sleep" behind the Sleep tile and rows: one screen, one night, whichever way it was opened.
-    var title: LocalizedStringKey = "Rest"
+    var title: LocalizedStringKey = "Sleep"
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var router: NavRouter
     @AppStorage("noop.coachEnabled") private var coachEnabled = true
@@ -46,7 +46,7 @@ struct NunaRestDetailView: View {
                 NunaBodyClockLink()
             }
             NunaExpandRow(title: "How it's calculated", subtitle: "Four parts of the night",
-                          text: "Rest adds up how long you slept against what you need (half of the score), how much of your time in bed you were asleep, the share of deep and REM sleep, and how regular your bedtime is. It is an estimate computed on this phone from your strap's data.\n\nEach part has a range for Poor, Sufficient and Optimal.\n\nHours vs. needed: Optimal 85%+, Sufficient 70–85%, Poor under 70%.\nSleep consistency: Optimal 80%+, Sufficient 70–80%, Poor under 70%.\nSleep efficiency: Optimal 85%+, Sufficient 70–85%, Poor under 70%.")
+                          text: "Sleep adds up how long you slept against what you need (half of the score), how much of your time in bed you were asleep, the share of deep and REM sleep, and how regular your bedtime is. It is an estimate computed on this phone from your strap's data.\n\nEach part has a range for Poor, Sufficient and Optimal.\n\nHours vs. needed: Optimal 85%+, Sufficient 70–85%, Poor under 70%.\nSleep consistency: Optimal 80%+, Sufficient 70–80%, Poor under 70%.\nSleep efficiency: Optimal 85%+, Sufficient 70–85%, Poor under 70%.")
         }
         .task(id: "\(repo.refreshSeq)-\(autoNaps)") {
             await series.load(repo: repo, key: "sleep_performance", source: "my-whoop")
@@ -160,9 +160,9 @@ struct NunaRestDetailView: View {
     private var hero: some View {
         NunaScoreHero(caption: "",
                       fraction: (rest ?? 0) / 100, number: rest.map { "\(Int($0.rounded()))" } ?? "–", unit: "%",
-                      name: rest.map(nunaRestWord) ?? "Rest", nameColor: Self.ringBlue,
+                      name: rest.map(nunaRestWord) ?? "Sleep", nameColor: Self.ringBlue,
                       color: Self.ringBlue, hasNote: againstRecent != nil,
-                      showsCaptionRow: false, ringTitle: "Rest", ringLevel: rest.map { NunaLevel.of($0, sufficientFrom: 70, optimalFrom: 85) },
+                      showsCaptionRow: false, ringTitle: "Sleep", ringLevel: rest.map { NunaLevel.of($0, sufficientFrom: 70, optimalFrom: 85) },
                       ringSize: 252, info: $showInfo) {
             if let d = againstRecent {
                 Text(verbatim: comparison(d)).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
@@ -179,7 +179,7 @@ struct NunaRestDetailView: View {
         guard let rest, let d = againstRecent else { return nil }
         let note = d == 0 ? String(localized: "in line with your last 14 nights")
             : (d > 0 ? String(localized: "\(d) points above your last 14 nights") : String(localized: "\(-d) points below your last 14 nights"))
-        return String(localized: "Your Rest is \(Int(rest.rounded()))%, \(note).")
+        return String(localized: "Your Sleep is \(Int(rest.rounded()))%, \(note).")
     }
 
     // MARK: Weekly trends

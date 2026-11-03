@@ -53,7 +53,7 @@ struct NunaCapsuleChart: View {
         }
         .frame(height: h)
         .accessibilityElement()
-        .accessibilityLabel(Text("Charge and Effort"))
+        .accessibilityLabel(Text("Recovery and Strain"))
     }
 
     // MARK: Touch
@@ -186,11 +186,11 @@ struct NunaCapsuleLegend: View {
                                                  .init(color: NunaPalette.scoreMid, location: 0.67), .init(color: NunaPalette.scoreLow, location: 0.67)],
                                          startPoint: .top, endPoint: .bottom))
                     .frame(width: 9, height: 16)
-                Text("Charge").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                Text("Recovery").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             HStack(spacing: 6) {
                 RoundedRectangle(cornerRadius: 2, style: .continuous).fill(NunaScoreStyle.effortSeries).frame(width: 16, height: 4)
-                Text("Effort").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                Text("Strain").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
         }
     }

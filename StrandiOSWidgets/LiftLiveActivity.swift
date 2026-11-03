@@ -77,7 +77,7 @@ struct LiftLiveActivity: Widget {
 private extension LiftActivityAttributes.ContentState {
     /// Blue through a rest, otherwise the colour of the current heart-rate zone.
     var accent: Color { isResting ? NunaPalette.rest : NOOPLive.tint(zone: heartRateZone) }
-    func effortText(_ e: Int) -> Text { effortLabel.map { Text("Effort +\($0)") } ?? Text("Effort +\(e)") }
+    func effortText(_ e: Int) -> Text { effortLabel.map { Text("Strain +\($0)") } ?? Text("Strain +\(e)") }
     var ringProgress: Double? {
         guard let d = setsDone, let p = setsPlanned, p > 0 else { return nil }
         return min(max(Double(d) / Double(p), 0), 1)

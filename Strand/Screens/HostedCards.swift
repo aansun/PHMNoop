@@ -82,7 +82,7 @@ enum HostedCard: String, CaseIterable, Identifiable {
         case .stressToday: return String(localized: "Stress through the day")
         case .trendHRV: return String(localized: "Heart rate variability")
         case .trendRestingHR: return String(localized: "Resting heart rate")
-        case .trendEffort: return String(localized: "Effort")
+        case .trendEffort: return String(localized: "Strain")
         }
     }
 

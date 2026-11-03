@@ -48,8 +48,8 @@ struct NunaChargeDetailView: View {
             NunaScoreHero(caption: "",
                           fraction: (day.charge.pct ?? latest?.value ?? 0) / 100,
                           number: (day.charge.pct ?? latest?.value).map { String(format: "%.0f", $0) } ?? "–",
-                          unit: "%", name: chargeWord ?? "Charge", nameColor: (day.charge.pct ?? latest?.value).map(nunaChargeTextColor), color: (day.charge.pct ?? latest?.value).map(nunaChargeColor) ?? NunaPalette.charge,
-                          hasNote: hasNote, showsCaptionRow: false, ringTitle: "Charge", ringSize: 252, info: $showInfo) {
+                          unit: "%", name: chargeWord ?? "Recovery", nameColor: (day.charge.pct ?? latest?.value).map(nunaChargeTextColor), color: (day.charge.pct ?? latest?.value).map(nunaChargeColor) ?? NunaPalette.charge,
+                          hasNote: hasNote, showsCaptionRow: false, ringTitle: "Recovery", ringSize: 252, info: $showInfo) {
                 if let v = day.charge.pct ?? latest?.value, let base = series.baseline {
                     let d = Int((v - base).rounded())
                     let readiness = chip.map { $0.0 + ". " } ?? ""
@@ -80,7 +80,7 @@ struct NunaChargeDetailView: View {
             if coachEnabled, router.todayDayOffset == 0, let line = anyaLine { NunaAnyaCard(verbatim: line) { showCoach = true } }
             weeklyTrends
             NunaExpandRow(title: "How it's calculated", subtitle: "Three signals, against your own baseline",
-                          text: "Charge compares last night's heart rate variability, resting heart rate and sleep with your own baseline from the last 30 days. It is an estimate computed on this phone from your strap's data.")
+                          text: "Recovery compares last night's heart rate variability, resting heart rate and sleep with your own baseline from the last 30 days. It is an estimate computed on this phone from your strap's data.")
         }
         .task(id: "\(repo.refreshSeq)-\(router.todayDayOffset)") {
             day.dayOffset = router.todayDayOffset
@@ -92,7 +92,7 @@ struct NunaChargeDetailView: View {
             await respSeries.load(repo: repo, key: "resp_rate", source: "my-whoop")
             await day.load(repo: repo, profile: profile)
         }
-        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "Charge") }
+        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "Recovery") }
         .environment(\.nunaDetailSwitch, nil)
     }
 
@@ -133,7 +133,7 @@ struct NunaChargeDetailView: View {
     private var weeklyTrends: some View {
         VStack(alignment: .leading, spacing: 12) {
             NunaWeeklyHeading()
-            NunaWeeklyTrendCard(title: "Charge", key: "recovery", style: .bars, color: NunaPalette.charge,
+            NunaWeeklyTrendCard(title: "Recovery", key: "recovery", style: .bars, color: NunaPalette.charge,
                                 barFill: { v, last in last ? nunaChargeColor(v) : NunaPalette.textSecondary },
                                 labelFill: { v, last in last ? nunaChargeColor(v) : NunaPalette.textPrimary },
                                 destination: { AnyView(NunaTrendHost(initial: .charge, endingDaysAgo: router.todayDayOffset)) }, endingDaysAgo: router.todayDayOffset)
@@ -224,16 +224,16 @@ struct NunaEffortDetailView: View {
                           fraction: (day.effort ?? 0) / 100,
                           number: day.effort.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–",
                           suffix: String(localized: "of \(UnitFormatter.effortScaleMax(scale))"),
-                          name: level?.0 ?? "Effort", nameColor: level?.1, gradient: day.effort.map(nunaEffortRingColors), target: nunaEffortTargetFractions(charge: day.charge.pct),
+                          name: level?.0 ?? "Strain", nameColor: level?.1, gradient: day.effort.map(nunaEffortRingColors), target: nunaEffortTargetFractions(charge: day.charge.pct),
                           color: day.effort.map(nunaEffortColor) ?? NunaPalette.effortModerate,
-                          showsCaptionRow: false, ringTitle: "Effort", ringSize: 252, info: $showInfo) {
+                          showsCaptionRow: false, ringTitle: "Strain", ringSize: 252, info: $showInfo) {
                 Text(verbatim: router.todayDayOffset > 0 ? String(localized: "Cardio load for the day") : (targetNote ?? String(localized: "Cardio load so far today"))).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     .fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
             signalPanel
             if coachEnabled, router.todayDayOffset == 0, let e = day.effort {
                 NunaAnyaCard(verbatim: NunaInsightText.effort(effort: e, chargePct: day.charge.pct)
-                             ?? String(localized: "Your Effort is \(UnitFormatter.effortDisplay(e, scale: scale)) of \(UnitFormatter.effortScaleMax(scale)) so far today.")) { showCoach = true }
+                             ?? String(localized: "Your Strain is \(UnitFormatter.effortDisplay(e, scale: scale)) of \(UnitFormatter.effortScaleMax(scale)) so far today.")) { showCoach = true }
             }
             // Only the activities that gave Effort, as bare rows under a plain title, as on the WHOOP page.
             NunaTodayActivities(workouts: todayWorkouts, effortScale: scale,
@@ -241,7 +241,7 @@ struct NunaEffortDetailView: View {
                                 isToday: router.todayDayOffset == 0, includesSleep: false, plain: true)
             weeklyTrends
             NunaExpandRow(title: "How it's calculated", subtitle: "Cardio load across the day",
-                          text: "Effort adds up how hard your heart worked during the day, weighted by heart rate zone. Workouts and everyday movement both count. It is shown on the scale you chose in Settings.")
+                          text: "Strain adds up how hard your heart worked during the day, weighted by heart rate zone. Workouts and everyday movement both count. It is shown on the scale you chose in Settings.")
         }
         .task(id: "\(repo.refreshSeq)-\(router.todayDayOffset)") {
             day.dayOffset = router.todayDayOffset
@@ -254,7 +254,7 @@ struct NunaEffortDetailView: View {
         .task(id: "zones-\(repo.refreshSeq)-\(router.todayDayOffset)") {
             await zones.load(repo: repo, profile: profile, endingOffset: router.todayDayOffset)
         }
-        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "Effort") }
+        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "Strain") }
         .environment(\.nunaDetailSwitch, nil)
     }
 
@@ -361,7 +361,7 @@ struct NunaEffortDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             NunaWeeklyHeading()
             // As on the WHOOP Strain card: every bar and its figure in one blue, the last day lifted on its lighter column.
-            NunaWeeklyTrendCard(title: "Effort", key: "strain", style: .bars, color: NunaPalette.effortModerate,
+            NunaWeeklyTrendCard(title: "Strain", key: "strain", style: .bars, color: NunaPalette.effortModerate,
                                 barFill: { _, _ in Color(hex: "#3E90E0") },
                                 labelFill: { _, _ in Color(hex: "#3E90E0") },
                                 destination: { AnyView(NunaTrendHost(initial: .effort, endingDaysAgo: router.todayDayOffset)) },
@@ -407,7 +407,7 @@ struct NunaEffortDetailView: View {
     private var targetNote: String? {
         guard let band = CoupledView.optimalStrainRange(recovery: day.charge.pct) else { return nil }
         func shown(_ whoop: Int) -> Int { Int(UnitFormatter.effortValue(Double(whoop) / 21.0 * 100, scale: scale).rounded()) }
-        return String(localized: "Today's target \(shown(band.lowerBound))–\(shown(band.upperBound)), from your Charge")
+        return String(localized: "Today's target \(shown(band.lowerBound))–\(shown(band.upperBound)), from your Recovery")
     }
 
     private var level: (LocalizedStringKey, Color)? {
@@ -1075,17 +1075,17 @@ struct NunaMetricDetailView: View {
     private var isColumns: Bool { ["steps", "steps_est", "energy_kcal", "active_kcal"].contains(metric.key) }
     private var color: Color {
         switch metric.category {
-        case "Effort": return NunaPalette.effortText
-        case "Rest": return NunaPalette.restText
-        case "Charge": return NunaPalette.charge
+        case "Strain": return NunaPalette.effortText
+        case "Sleep": return NunaPalette.restText
+        case "Recovery": return NunaPalette.charge
         default: return NunaPalette.textPrimary   // body and nutrition metrics carry no score meaning
         }
     }
     /// Chart colour by area: overnight vitals are Health (green), Rest is cyan, Effort is yellow, Charge green, the rest white.
     private var lineColor: Color {
-        if ["Effort"].contains(metric.category) { return NunaPalette.effort }
-        if ["Rest"].contains(metric.category) { return NunaPalette.rest }
-        if ["Charge"].contains(metric.category) || overnight { return NunaPalette.charge }
+        if ["Strain"].contains(metric.category) { return NunaPalette.effort }
+        if ["Sleep"].contains(metric.category) { return NunaPalette.rest }
+        if ["Recovery"].contains(metric.category) || overnight { return NunaPalette.charge }
         return NunaPalette.ink
     }
     private var overnight: Bool { ["hrv", "rhr", "spo2", "resp_rate", "skin_temp"].contains(metric.key) }
@@ -1124,7 +1124,7 @@ struct NunaMetricDetailView: View {
                       text: "Sleep, alcohol, hydration, stress, illness and training load all move your daily numbers. Look at the trend over weeks rather than a single day.")
         NunaExpandRow(title: "How it's calculated", subtitle: "Source and method",
                       text: metric.key == "spo2" && metric.source == "my-whoop" && PuffinExperiment.spo2CandidateDisplayEnabled
-                        ? "Nights without a calibrated reading show the strap's own estimate (WHOOP 5/MG, Oura). It is not verified, so read it as a trend and not as a measurement. It never feeds Charge or the early warning."
+                        ? "Nights without a calibrated reading show the strap's own estimate (WHOOP 5/MG, Oura). It is not verified, so read it as a trend and not as a measurement. It never feeds Recovery or the early warning."
                         : LocalizedStringKey("Source: \(metric.sourceLabel). Values are read from the data stored on this phone."))
     }
 
@@ -1547,9 +1547,9 @@ struct NunaAllMetricsView: View {
         let h = dl(day.hrvDelta), p = dl(day.restingHrDelta, down: true)
         let scale = UnitPrefs.resolveEffortScale(effortScaleRaw)
         return [
-            Row(id: "charge", title: "Charge", icon: "bolt", tint: NunaPalette.charge, value: f(day.charge.pct, 0, "%"), route: r("recovery")),
-            Row(id: "effort", title: "Effort", icon: "flame", tint: NunaPalette.effortText, value: day.effort.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–", route: r("strain")),
-            Row(id: "rest", title: "Rest", icon: "moon", tint: NunaPalette.restText, value: f(day.rest, 0, "%"), route: .sleep(0)),
+            Row(id: "charge", title: "Recovery", icon: "bolt", tint: NunaPalette.charge, value: f(day.charge.pct, 0, "%"), route: r("recovery")),
+            Row(id: "effort", title: "Strain", icon: "flame", tint: NunaPalette.effortText, value: day.effort.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–", route: r("strain")),
+            Row(id: "rest", title: "Sleep", icon: "moon", tint: NunaPalette.restText, value: f(day.rest, 0, "%"), route: .sleep(0)),
             Row(id: "hrv", title: "HRV", icon: "met:heart-rate-variability", tint: NunaPalette.charge, value: f(day.hrv, 0, " ms"), delta: h?.0, good: h?.1, route: r("hrv")),
             Row(id: "rhr", title: "Resting HR", icon: "met:resting-heart-rate", tint: NunaPalette.alertText, value: f(day.restingHr), delta: p?.0, good: p?.1, route: r("rhr")),
             Row(id: "spo2", title: "Blood Oxygen", icon: "vital:spo2", tint: NunaPalette.effortText, value: f(day.spo2, 0, "%"), route: r("spo2")),

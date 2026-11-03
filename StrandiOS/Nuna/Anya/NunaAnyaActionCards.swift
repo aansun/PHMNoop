@@ -79,8 +79,8 @@ private struct NunaAnyaMetricChart: View {
 
     private var color: Color {
         switch metric?.category {
-        case "Effort": return NunaPalette.effort
-        case "Rest": return NunaPalette.rest
+        case "Strain": return NunaPalette.effort
+        case "Sleep": return NunaPalette.rest
         default: return NunaPalette.charge
         }
     }

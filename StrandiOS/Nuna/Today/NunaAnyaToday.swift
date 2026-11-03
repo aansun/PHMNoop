@@ -191,16 +191,16 @@ struct NunaAnyaTodayCard: View {
         let minutesAgo = max(0, Int(now.timeIntervalSince1970 - Double(row.endTs)) / 60)
         let length = NunaWorkoutFormat.duration(row.durationS ?? Double(row.endTs - row.startTs))
         var lines: [String] = []
-        if let s = row.strain { lines.append(String(localized: "It ran \(length) and added Effort \(shown(s)).")) }
+        if let s = row.strain { lines.append(String(localized: "It ran \(length) and added Strain \(shown(s)).")) }
         else { lines.append(String(localized: "It ran \(length).")) }
         if let effort {
             // Where the day stands: inside the range Charge supports is good news, above it is not.
             let e = shown(effort)
             if let t = target {
                 let word = effort > t.high ? NunaMark.neg(e) : (effort >= t.low ? NunaMark.pos(e) : e)
-                lines.append(String(localized: "It ended \(minutesAgo) min ago, and the day is at Effort \(word) of \(targetText(t)).") )
+                lines.append(String(localized: "It ended \(minutesAgo) min ago, and the day is at Strain \(word) of \(targetText(t)).") )
             } else {
-                lines.append(String(localized: "It ended \(minutesAgo) min ago, and the day is at Effort \(e)."))
+                lines.append(String(localized: "It ended \(minutesAgo) min ago, and the day is at Strain \(e)."))
             }
         } else {
             lines.append(String(localized: "It ended \(minutesAgo) min ago."))
@@ -213,7 +213,7 @@ struct NunaAnyaTodayCard: View {
     private func eveningCard(now: Date, bpm: Int?, hour: Int) -> some View {
         let v = evening(now: now, bpm: bpm, hour: hour, last: workouts.last)
         let title = v?.title ?? String(localized: "Wind down for tonight")
-        var detail = v?.detail ?? String(localized: "An earlier night is the best thing for tomorrow's Charge.")
+        var detail = v?.detail ?? String(localized: "An earlier night is the best thing for tomorrow's Recovery.")
         var more: [NunaAnyaCardAction] = []
         if let journalLine {
             detail += "\n\n" + journalLine
@@ -297,7 +297,7 @@ struct NunaAnyaTodayCard: View {
     }
 
     private func suggestionCard(_ n: NextSession, now: Date) -> some View {
-        var detail = [String(format: String(localized: "%@ Effort left for today's target"), shown(n.left))]
+        var detail = [String(format: String(localized: "%@ Strain left for today's target"), shown(n.left))]
         if let lo = n.effortLow, let hi = n.effortHigh {
             detail.append(String(format: String(localized: "about +%@–%@"), shown(lo), shown(hi)))
             if hi < n.left * 0.8 { detail.append(String(localized: "not all of it in one go")) }
@@ -314,13 +314,13 @@ struct NunaAnyaTodayCard: View {
 
     private var planDetail: String? {
         guard let t = target else { return nil }
-        return String(format: String(localized: "Today's Effort target %@"), targetText(t))
+        return String(format: String(localized: "Today's Strain target %@"), targetText(t))
     }
 
     private var eveningDetail: String? {
         guard let effort else { return nil }
-        if let t = target { return String(format: String(localized: "Effort %@ of %@ today"), shown(effort), targetText(t)) }
-        return String(format: String(localized: "Effort %@ today"), shown(effort))
+        if let t = target { return String(format: String(localized: "Strain %@ of %@ today"), shown(effort), targetText(t)) }
+        return String(format: String(localized: "Strain %@ today"), shown(effort))
     }
 }
 
@@ -338,7 +338,7 @@ private struct RunningSessionCard: View {
             let time = secs >= 3600 ? String(format: "%d:%02d:%02d", secs / 3600, (secs % 3600) / 60, secs % 60) : String(format: "%d:%02d", secs / 60, secs % 60)
             var parts = [time]
             if let bpm = model.bpm { parts.append(String(format: String(localized: "%d bpm"), bpm)) }
-            parts.append(String(format: String(localized: "Effort +%@"), effort))
+            parts.append(String(format: String(localized: "Strain +%@"), effort))
             return NunaAnyaCard(verbatim: String(localized: "Session in progress"),
                                 detail: String(localized: String.LocalizationValue(running.sport)) + " · " + parts.joined(separator: " · "),
                                 progress: nil, buttonTitle: "Resume", onButton: onResume, action: onCoach)

@@ -28,7 +28,7 @@ final class NunaBehaviorModel: ObservableObject {
         let series = await repo.exploreSeries(key: "recovery", source: "my-whoop", days: 400)
         charge = Dictionary(series.map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l })
         answers = map
-        rows = BehaviorSummary.rows(answers: map, outcomeByDay: charge, since: Self.sinceKey(), outcome: "Charge")
+        rows = BehaviorSummary.rows(answers: map, outcomeByDay: charge, since: Self.sinceKey(), outcome: "Recovery")
         loaded = true
     }
 
@@ -129,7 +129,7 @@ struct NunaBehaviorInsightsView: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Log your behaviors to reveal personalized insights").font(.nuna(size: 22, weight: .regular))
                 .foregroundStyle(Color.white).textCase(nil).lineSpacing(5).fixedSize(horizontal: false, vertical: true)
-            Text("Record at least 5 yes's and no's in your journal to see how behaviors impact your Charge.")
+            Text("Record at least 5 yes's and no's in your journal to see how behaviors impact your Recovery.")
                 .font(.nuna(size: 14.5, weight: .regular)).foregroundStyle(Color.white.opacity(0.5)).textCase(nil).lineSpacing(3).fixedSize(horizontal: false, vertical: true)
         }
         .frame(maxWidth: .infinity, alignment: .leading).padding(.horizontal, 6).padding(.bottom, 10)
@@ -174,7 +174,7 @@ struct NunaBehaviorInsightsView: View {
             VStack(alignment: .leading, spacing: 14) {
                     HStack(spacing: 12) {
                         Image(systemName: "person.2").font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
-                        Text("What moves your Charge").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                        Text("What moves your Recovery").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                     }
                     HStack {
                         Label("Hurts", systemImage: "arrowtriangle.down.fill").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel)
@@ -282,7 +282,7 @@ struct NunaBehaviorDetailView: View {
         VStack(alignment: .leading, spacing: 14) {
             Button { withAnimation(.easeInOut(duration: 0.2)) { open.toggle() } } label: {
                 HStack {
-                    Text("Charge impact").font(.nuna(size: 13, weight: .heavy)).tracking(1.4).textCase(.uppercase).foregroundStyle(Color.white)
+                    Text("Recovery impact").font(.nuna(size: 13, weight: .heavy)).tracking(1.4).textCase(.uppercase).foregroundStyle(Color.white)
                     Spacer()
                     Text(verbatim: row?.percent == nil ? String(localized: "Not available") : String(localized: "Your data"))
                         .font(.nuna(size: 12, weight: .medium)).foregroundStyle(Color.white.opacity(0.6)).textCase(nil)
@@ -310,7 +310,7 @@ struct NunaBehaviorDetailView: View {
                                        cohensD: e.cohensD, pApprox: e.pApprox, significant: e.significant)
             return BehaviorInsights.sentence(named)
         }
-        if row.unlocked { return String(localized: "No clear effect on your Charge yet. It stays hidden until the difference is large enough to trust.") }
+        if row.unlocked { return String(localized: "No clear effect on your Recovery yet. It stays hidden until the difference is large enough to trust.") }
         return String(localized: "Continue logging to unlock insights. At least 5 yes's and no's are required in the past 90 days.")
     }
 

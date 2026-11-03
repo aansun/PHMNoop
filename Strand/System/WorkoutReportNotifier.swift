@@ -49,7 +49,7 @@ enum WorkoutReportNotifier {
         if let effort = row.strain {
             let scale = UnitPrefs.resolveEffortScale(
                 UserDefaults.standard.string(forKey: UnitPrefs.effortScaleKey) ?? "")
-            details.append(String(localized: "Effort \(UnitFormatter.effortDisplay(effort, scale: scale))/\(UnitFormatter.effortScaleMax(scale))"))
+            details.append(String(localized: "Strain \(UnitFormatter.effortDisplay(effort, scale: scale))/\(UnitFormatter.effortScaleMax(scale))"))
         }
         if let duration = row.durationS, duration > 0 {
             details.append(durationLabel(duration))

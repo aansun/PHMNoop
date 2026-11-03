@@ -113,17 +113,17 @@ enum NunaAnyaReader {
             let n = Int(abs(d).rounded())
             bits.append(d > 0 ? String(localized: "HRV up \(n) ms") : String(localized: "HRV down \(n) ms"))
         }
-        var read = ["Charge"]
+        var read = ["Recovery"]
         if m.restingHr != nil { read.append("Resting HR") }
         if m.hrv != nil { read.append("HRV") }
-        if let e = m.effort { read.append("Effort"); bits.append(String(localized: "Effort so far \(UnitFormatter.effortDisplay(e, scale: scale))")) }
-        if m.rest != nil { read.append("Rest") }
+        if let e = m.effort { read.append("Strain"); bits.append(String(localized: "Strain so far \(UnitFormatter.effortDisplay(e, scale: scale))")) }
+        if m.rest != nil { read.append("Sleep") }
         var vals: [String: Double] = ["charge": charge]
         if let v = m.effort { vals["effort"] = Double(UnitFormatter.effortDisplay(v, scale: scale)) ?? v }
         if let v = m.rest { vals["rest"] = v }
         if let v = m.hrv { vals["hrv"] = v }
         if let v = m.restingHr { vals["rhr"] = v }
-        var out = remembering(NunaAnyaRead(headline: String(localized: "Charge \(c)%, \(tail)"),
+        var out = remembering(NunaAnyaRead(headline: String(localized: "Recovery \(c)%, \(tail)"),
                                            detail: bits.isEmpty ? nil : bits.joined(separator: ". ") + ".",
                                            read: read, module: module, questions: questions(.today)), values: vals)
         // The weather and air, when they are on: what they mean for training today, in plain words (the memory above keeps only the figures).
@@ -150,7 +150,7 @@ enum NunaAnyaReader {
             let parts = NunaInsightText.sleepParts(read, factors: context, wakeDay: night.dayKey)
             var vals: [String: Double] = ["rest": rest]
             if let v = m.sleepMinutes { vals["sleepMin"] = v }
-            return remembering(NunaAnyaRead(headline: parts.why, detail: parts.action, read: ["Rest", "Sleep duration", "Sleep stages"],
+            return remembering(NunaAnyaRead(headline: parts.why, detail: parts.action, read: ["Sleep", "Sleep duration", "Sleep stages"],
                                             module: .sleep, questions: questions(.sleep)), values: vals)
         }
         let hours = m.sleepMinutes.map { NunaAnyaReader.hm($0) }
@@ -158,8 +158,8 @@ enum NunaAnyaReader {
         if let e = m.day?.efficiency { bits.append(String(localized: "Sleep efficiency \(Int(e.rounded()))%")) }
         if let d = m.day?.deepMin, d > 0 { bits.append(String(localized: "Deep sleep \(hm(d))")) }
         if let n = m.day?.disturbances { bits.append(String(localized: "\(n) wake-ups")) }
-        var read = ["Rest"]; if hours != nil { read.append("Sleep duration") }
-        let head = hours.map { String(localized: "Rest \(Int(rest.rounded()))% after \($0) of sleep") } ?? String(localized: "Rest \(Int(rest.rounded()))%")
+        var read = ["Sleep"]; if hours != nil { read.append("Sleep duration") }
+        let head = hours.map { String(localized: "Sleep score \(Int(rest.rounded()))% after \($0) of sleep") } ?? String(localized: "Sleep \(Int(rest.rounded()))%")
         var vals: [String: Double] = ["rest": rest]
         if let v = m.sleepMinutes { vals["sleepMin"] = v }
         if let v = m.day?.efficiency { vals["efficiency"] = v }
@@ -248,7 +248,7 @@ enum NunaAnyaReader {
         let week = training.recent(days: 7)
         if !week.isEmpty {
             let e = training.effort(week)
-            head.append(String(localized: "\(week.count) sessions this week (Effort \(UnitFormatter.effortDisplay(e, scale: scale)))"))
+            head.append(String(localized: "\(week.count) sessions this week (Strain \(UnitFormatter.effortDisplay(e, scale: scale)))"))
             read.append("Training"); vals["weekEffort"] = Double(UnitFormatter.effortDisplay(e, scale: scale)) ?? e
         }
         if let ratio = TrendInsights.loadRatio(blocks: training.weeklyEffort(weeks: 6)) {
@@ -345,9 +345,9 @@ enum NunaAnyaReader {
         let a = last7.reduce(0, +) / Double(last7.count), b = prior.reduce(0, +) / Double(prior.count)
         let diff = Int((a - b).rounded())
         let word = diff == 0 ? String(localized: "level with") : (diff > 0 ? String(localized: "\(diff) points above") : String(localized: "\(-diff) points below"))
-        return remembering(NunaAnyaRead(headline: String(localized: "Charge averaged \(Int(a.rounded()))% this week, \(word) the month before"),
+        return remembering(NunaAnyaRead(headline: String(localized: "Recovery averaged \(Int(a.rounded()))% this week, \(word) the month before"),
                                         detail: String(localized: "Compared with \(prior.count) earlier days (\(Int(b.rounded()))% on average)."),
-                                        read: ["Charge", "30 days"], module: .trends, questions: questions(.trends)), values: ["week": a, "before": b])
+                                        read: ["Recovery", "30 days"], module: .trends, questions: questions(.trends)), values: ["week": a, "before": b])
     }
 
     // MARK: Breathing
@@ -372,9 +372,9 @@ enum NunaAnyaReader {
         guard !week.isEmpty else { return nil }
         let effort = week.compactMap(\.strain).reduce(0, +)
         let minutes = Int(week.reduce(0.0) { $0 + ($1.durationS ?? Double($1.endTs - $1.startTs)) } / 60)
-        return remembering(NunaAnyaRead(headline: String(localized: "\(week.count) sessions this week, Effort \(UnitFormatter.effortDisplay(effort, scale: scale))"),
+        return remembering(NunaAnyaRead(headline: String(localized: "\(week.count) sessions this week, Strain \(UnitFormatter.effortDisplay(effort, scale: scale))"),
                                         detail: String(localized: "\(minutes) minutes of training in the last 7 days."),
-                                        read: ["Workouts 7 days", "Effort"], module: .workouts, questions: questions(.workouts)),
+                                        read: ["Workouts 7 days", "Strain"], module: .workouts, questions: questions(.workouts)),
                            values: ["sessions": Double(week.count), "minutes": Double(minutes), "weekEffort": Double(UnitFormatter.effortDisplay(effort, scale: scale)) ?? effort])
     }
 
@@ -449,7 +449,7 @@ enum NunaAnyaReader {
         switch module {
         case .today:
             return [NunaAnyaQuestion(title: String(localized: "Build today's plan"), prompt: "", kind: .plan),
-                    NunaAnyaQuestion(title: String(localized: "Why did Charge change?"), prompt: "Why did my Charge change compared with yesterday? Use my sleep, HRV and resting heart rate."),
+                    NunaAnyaQuestion(title: String(localized: "Why did Recovery change?"), prompt: "Why did my Recovery change compared with yesterday? Use my sleep, HRV and resting heart rate."),
                     NunaAnyaQuestion(title: String(localized: "Summarise my day"), prompt: "Summarise my day so far in a few sentences, using my numbers.")]
         case .health:
             return [NunaAnyaQuestion(title: String(localized: "Explain my HRV"), prompt: "Explain what my HRV is telling me today, compared with my own baseline."),
@@ -460,11 +460,11 @@ enum NunaAnyaReader {
                     NunaAnyaQuestion(title: String(localized: "Compare with last week"), prompt: "Compare my sleep this week with last week."),
                     NunaAnyaQuestion(title: String(localized: "How can I sleep better tonight?"), prompt: "Give me one practical step to sleep better tonight, based on my recent nights.")]
         case .trends:
-            return [NunaAnyaQuestion(title: String(localized: "Why did Charge move?"), prompt: "Why did my Charge move over the last month? Point to the behaviours in my data."),
+            return [NunaAnyaQuestion(title: String(localized: "Why did Recovery move?"), prompt: "Why did my Recovery move over the last month? Point to the behaviours in my data."),
                     NunaAnyaQuestion(title: String(localized: "My hardest day"), prompt: "Which day was hardest on my body this month and what followed it?"),
                     NunaAnyaQuestion(title: String(localized: "Plan next week"), prompt: "Suggest how to spread training across next week given my recent load and recovery.")]
         case .workouts:
-            return [NunaAnyaQuestion(title: String(localized: "Today's recommendation"), prompt: "Recommend the best workout for today using my Charge, Effort, Rest and recent workouts."),
+            return [NunaAnyaQuestion(title: String(localized: "Today's recommendation"), prompt: "Recommend the best workout for today using my Recovery, Strain, Sleep and recent workouts."),
                     NunaAnyaQuestion(title: String(localized: "Plan this week"), prompt: "Plan my training for this week from my current load and recovery."),
                     NunaAnyaQuestion(title: String(localized: "Recover faster"), prompt: "What helps me recover faster after my recent sessions?")]
         case .nutrition:
@@ -472,7 +472,7 @@ enum NunaAnyaReader {
                     NunaAnyaQuestion(title: String(localized: "Dinner suggestion"), prompt: "Suggest what to eat tonight given what I have eaten today, my target and today's activity."),
                     NunaAnyaQuestion(title: String(localized: "How much protein do I need?"), prompt: "How much protein should I aim for, given my training and my weight?")]
         case .breathing:
-            return [NunaAnyaQuestion(title: String(localized: "Which exercise fits me now?"), prompt: "Which breathing exercise fits me right now? Use my live heart rate, HRV, stress and Charge, and what worked in my earlier breathing sessions."),
+            return [NunaAnyaQuestion(title: String(localized: "Which exercise fits me now?"), prompt: "Which breathing exercise fits me right now? Use my live heart rate, HRV, stress and Recovery, and what worked in my earlier breathing sessions."),
                     NunaAnyaQuestion(title: String(localized: "How did my last sessions go?"), prompt: "How did my recent breathing sessions go? Look at the HRV and heart rate change in each and tell me what is working."),
                     NunaAnyaQuestion(title: String(localized: "How do I breathe better?"), prompt: "Give me one practical tip to get more from my breathing sessions, given how my body responded before.")]
         case .device:

@@ -403,7 +403,7 @@ struct NunaCycleView: View {
                         .onChange(of: tracking) { _, _ in Task { await model.refreshV5Signals() } }
                 }
                 NunaDivider()
-                NunaListRow("Effect on Charge", description: "HRV baseline adjusted per phase") {
+                NunaListRow("Effect on Recovery", description: "HRV baseline adjusted per phase") {
                     NunaChip(tracking ? "On" : "Off", color: tracking ? NunaPalette.charge : nil)
                 }
             }

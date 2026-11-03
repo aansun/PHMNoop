@@ -70,7 +70,7 @@ enum NunaAnyaDayRead {
         if sleepShort || overshoot || strained {
             var why: [String] = []
             if sleepShort, let s = i.sleepMin { why.append(String(localized: "last night was \(hm(s)) against the \(hm(need)) you need")) }
-            if overshoot, let e = i.effort, let hi = i.targetHigh { why.append(String(localized: "Effort \(effortShown(e)) is above today's band (up to \(effortShown(hi)))")) }
+            if overshoot, let e = i.effort, let hi = i.targetHigh { why.append(String(localized: "Strain \(effortShown(e)) is above today's band (up to \(effortShown(hi)))")) }
             if strained {
                 if let d = i.hrvDelta, d <= -8 { why.append(String(localized: "HRV is \(Int(abs(d).rounded())) ms under your baseline")) }
                 else if let d = i.restingHrDelta, d >= 4 { why.append(String(localized: "resting heart rate is up \(Int(d.rounded())) bpm")) }
@@ -82,7 +82,7 @@ enum NunaAnyaDayRead {
         // 4. Calm and rested: straight to sleep.
         if facts.isEmpty && i.effort == nil { return nil }
         var calm = facts
-        if let e = i.effort, let lo = i.targetLow, let hi = i.targetHigh, e >= lo { calm.append(String(localized: "Effort \(effortShown(e)) is in today's band")) }
+        if let e = i.effort, let lo = i.targetLow, let hi = i.targetHigh, e >= lo { calm.append(String(localized: "Strain \(effortShown(e)) is in today's band")) }
         return .init(title: String(localized: "You can go straight to sleep"),
                      detail: sentence(calm) + " " + String(localized: "Nothing in your numbers asks for more."),
                      action: .none)
@@ -93,16 +93,16 @@ enum NunaAnyaDayRead {
         guard let e = i.effort, let hi = i.targetHigh else { return nil }
         if e > hi * 1.15 {
             return .init(title: String(localized: "That is more than enough for today"),
-                         detail: String(localized: "Effort \(effortShown(e)) is above the \(band) band. More training now costs tomorrow's Charge: drink, eat well and sleep early."),
+                         detail: String(localized: "Strain \(effortShown(e)) is above the \(band) band. More training now costs tomorrow's Recovery: drink, eat well and sleep early."),
                          action: .windDown)
         }
         if let d = i.hrvDelta, d <= -8 {
             return .init(title: String(localized: "Target reached, so stop here"),
-                         detail: String(localized: "Effort \(effortShown(e)) is in the \(band) band, and HRV is \(Int(abs(d).rounded())) ms under your baseline. Keep the rest of the day easy."),
+                         detail: String(localized: "Strain \(effortShown(e)) is in the \(band) band, and HRV is \(Int(abs(d).rounded())) ms under your baseline. Keep the rest of the day easy."),
                          action: .none)
         }
         return .init(title: String(localized: "Target reached, you are done for today"),
-                     detail: String(localized: "Effort \(effortShown(e)) is in the \(band) band. The rest of the day is for eating, drinking and an early night."),
+                     detail: String(localized: "Strain \(effortShown(e)) is in the \(band) band. The rest of the day is for eating, drinking and an early night."),
                      action: .none)
     }
 

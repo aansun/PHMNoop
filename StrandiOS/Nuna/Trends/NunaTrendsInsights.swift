@@ -22,7 +22,7 @@ struct NunaInsightsView: View {
 
     var body: some View {
         NunaDetailScreen("Insights") {
-            Text("What moves your Charge, from your own habits.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
+            Text("What moves your Recovery, from your own habits.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
             NunaCard(small: true) {
                 NunaListRow(ready ? "Enough data" : "Not enough data yet",
                             subtitle: LocalizedStringKey(String(localized: "\(m.charge.count) days recorded. At least 14 needed.")), systemImage: ready ? "checkmark" : "hourglass") {
@@ -52,9 +52,9 @@ struct NunaInsightsView: View {
             return BehaviorInsights.sentence(e)
         }
         if let c = CorrelationEngine.pearson(CorrelationEngine.alignByDay(m.rest, m.charge)), abs(c.r) >= 0.3 {
-            return String(localized: "Your Charge follows your Rest closely (r = \(String(format: "%.2f", locale: AppLanguage.activeLocale, c.r))). Protecting sleep is your biggest lever.")
+            return String(localized: "Your Recovery follows your Sleep closely (r = \(String(format: "%.2f", locale: AppLanguage.activeLocale, c.r))). Protecting sleep is your biggest lever.")
         }
-        return String(localized: "Keep logging habits in your journal. After a few weeks this page shows what moves your Charge.")
+        return String(localized: "Keep logging habits in your journal. After a few weeks this page shows what moves your Recovery.")
     }
 
     // MARK: Behaviour effects
@@ -70,7 +70,7 @@ struct NunaInsightsView: View {
             NunaCard {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("No behaviour effects yet").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    Text("Log yes or no habits in your journal (caffeine, alcohol, hydration, late workouts). Once a habit has days with and without it, its effect on Charge shows here.")
+                    Text("Log yes or no habits in your journal (caffeine, alcohol, hydration, late workouts). Once a habit has days with and without it, its effect on Recovery shows here.")
                         .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -87,7 +87,7 @@ struct NunaInsightsView: View {
                         HStack {
                             Text(verbatim: String(localized: "\(e.nWith) days with, \(e.nWithout) days without")).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                             Spacer()
-                            Text("Charge, points").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                            Text("Recovery, points").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                         NunaChip(confidence(e), color: e.significant ? NunaScoreStyle.restSeries : nil)
                     }
@@ -133,10 +133,10 @@ struct NunaInsightsView: View {
             let pairs = TrendInsights.pairs(driver: a, outcome: b, lag: lag)
             if let c = CorrelationEngine.pearson(pairs.map { ($0.x, $0.y) }), c.n >= 7 { out.append(Rel(id: id, title: t, r: c.r)) }
         }
-        add("hrv", "HRV ↔ Charge", m.hrv, m.charge)
-        add("rhr", "Resting HR ↔ Charge", m.rhr, m.charge)
-        add("stress", "Stress ↔ Rest", m.stress, m.rest)
-        add("steps", "Steps ↔ Rest", m.steps, m.rest)
+        add("hrv", "HRV ↔ Recovery", m.hrv, m.charge)
+        add("rhr", "Resting HR ↔ Recovery", m.rhr, m.charge)
+        add("stress", "Stress ↔ Sleep", m.stress, m.rest)
+        add("steps", "Steps ↔ Sleep", m.steps, m.rest)
         return out
     }
 
@@ -187,7 +187,7 @@ struct NunaInsightsView: View {
         loggedDays = yes.mapValues(\.count)
         journalDays = Set(entries.map(\.day)).count
         let outcome = Dictionary(m.charge.map { ($0.day, $0.value) }, uniquingKeysWith: { _, l in l })
-        effects = BehaviorInsights.rank(behaviors: yes, controls: no, outcomeByDay: outcome, outcome: String(localized: "Charge"))
+        effects = BehaviorInsights.rank(behaviors: yes, controls: no, outcomeByDay: outcome, outcome: String(localized: "Recovery"))
         costs = InsightsView.computeActivityCosts(workouts: await repo.workoutRows(), days: repo.days)
     }
 }
@@ -206,9 +206,9 @@ struct NunaSignal: Identifiable, Hashable {
 
 enum NunaSignals {
     static let all: [NunaSignal] = [
-        .init(id: "recovery", source: "my-whoop", title: String(localized: "Charge"), group: "Scores", unit: "%", digits: 0),
-        .init(id: "strain", source: "my-whoop", title: String(localized: "Effort"), group: "Scores", unit: "", digits: 1),
-        .init(id: "sleep_performance", source: "my-whoop", title: String(localized: "Rest"), group: "Scores", unit: "%", digits: 0),
+        .init(id: "recovery", source: "my-whoop", title: String(localized: "Recovery"), group: "Scores", unit: "%", digits: 0),
+        .init(id: "strain", source: "my-whoop", title: String(localized: "Strain"), group: "Scores", unit: "", digits: 1),
+        .init(id: "sleep_performance", source: "my-whoop", title: String(localized: "Sleep"), group: "Scores", unit: "%", digits: 0),
         .init(id: "hrv", source: "my-whoop", title: String(localized: "HRV"), group: "Heart", unit: "ms", digits: 0),
         .init(id: "rhr", source: "my-whoop", title: String(localized: "Resting HR"), group: "Heart", unit: "bpm", digits: 0),
         .init(id: "max_hr", source: "my-whoop", title: String(localized: "Max heart rate"), group: "Heart", unit: "bpm", digits: 0),

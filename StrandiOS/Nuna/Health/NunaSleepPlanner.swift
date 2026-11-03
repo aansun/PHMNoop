@@ -197,7 +197,7 @@ struct NunaSmartAlarmView: View {
         switch mode {
         case .exact: return String(localized: "Your strap will buzz at \(wake).")
         case .goal: return String(localized: "Your strap will buzz at \(wake). Be in bed by \(bed) to have time for \(behavior.smartAlarmGoal)% of your Sleep Need.")
-        case .green: return String(localized: "Your strap will buzz at \(wake). Be in bed by \(bed) for the best chance of a green Charge.")
+        case .green: return String(localized: "Your strap will buzz at \(wake). Be in bed by \(bed) for the best chance of a green Recovery.")
         }
     }
 
@@ -222,7 +222,7 @@ struct NunaSmartAlarmView: View {
                 switch mode {
                 case .exact: stat(NunaAlarmFormat.clock(wakeMinutes), unit: nil, "Your wake time").position(x: w * 0.777, y: 35.5)
                 case .goal: stat("\(goalPercent)", unit: "%", "Sleep need goal").position(x: w * 0.777, y: 35.5)
-                case .green: stat(">66", unit: "%", "Charge goal").position(x: w * 0.777, y: 35.5)
+                case .green: stat(">66", unit: "%", "Recovery goal").position(x: w * 0.777, y: 35.5)
                 }
             }
             .frame(width: w, height: 64.5)
@@ -364,7 +364,7 @@ struct NunaSmartAlarmView: View {
             VStack(spacing: 11) {
                 modeCard("Exact time", "Wake up at a specific time.", .exact)
                 modeCard("Sleep goal", "Be in bed long enough for your sleep goal.", .goal)
-                modeCard("In the green", "Be in bed for the best chance of a green Charge.", .green)
+                modeCard("In the green", "Be in bed for the best chance of a green Recovery.", .green)
             }
             .padding(.horizontal, w * 0.122)
         }

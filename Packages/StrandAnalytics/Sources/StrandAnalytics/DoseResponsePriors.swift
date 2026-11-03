@@ -62,7 +62,7 @@ public enum DoseResponsePriors {
     /// Alcohol's headline effect is on Charge; caffeine's is on HRV (timing proxy).
     public static func defaultOutcome(for behavior: DosedBehavior) -> String {
         switch behavior {
-        case .alcohol: return "Charge"
+        case .alcohol: return "Recovery"
         case .caffeine: return "HRV"
         }
     }
@@ -74,7 +74,7 @@ public enum DoseResponsePriors {
     /// - Alcohol → Charge: ≈ −5 Charge points per extra drink (clamped −15…+2).
     /// - Caffeine → HRV:   ≈ −4 ms per step later in the day (clamped −20…+4).
     static let table: [DoseResponsePrior] = [
-        DoseResponsePrior(behavior: .alcohol, outcome: "Charge",
+        DoseResponsePrior(behavior: .alcohol, outcome: "Recovery",
                           slopePerUnit: -5.0, clampLow: -15.0, clampHigh: 2.0),
         DoseResponsePrior(behavior: .caffeine, outcome: "HRV",
                           slopePerUnit: -4.0, clampLow: -20.0, clampHigh: 4.0),

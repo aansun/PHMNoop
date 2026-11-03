@@ -678,7 +678,7 @@ struct LiquidTodayView: View {
             .background(NoopPanelSurface(cornerRadius: 18, surfaceOpacity: cardOpacity))
         }
         .buttonStyle(LiquidPressStyle())
-        .accessibilityLabel("Start a live session. Beta. Silent strap coaching against today's Charge.")
+        .accessibilityLabel("Start a live session. Beta. Silent strap coaching against today's Recovery.")
     }
 
     private var heroCard: some View {
@@ -687,7 +687,7 @@ struct LiquidTodayView: View {
             // the state pill) rather than an empty vessel, matching the classic Today, the widget/watch/Live
             // Activity (`Repository.widgetAnchor`) and Android. Effort deliberately does NOT carry — it is
             // today's own accumulation, so yesterday's number would be a false statement, not a stale one.
-            HeroScoreCell(label: String(localized: "Charge"), score: chargeDisplay.pct,
+            HeroScoreCell(label: String(localized: "Recovery"), score: chargeDisplay.pct,
                           tint: chargeDisplay.pct.map { StrandPalette.recoveryColor($0) } ?? StrandPalette.chargeColor,
                           animated: dataLoaded, onGuide: { guideSection = .charge },
                           detailMetricKey: HeroRingMetric.charge)
@@ -695,14 +695,14 @@ struct LiquidTodayView: View {
             // Show the value on the chosen scale (0–100 or WHOOP 0–21) with the matching vessel max, and
             // one decimal on the compressed 0–21 axis to match the app-wide `effortDisplay` convention
             // (12.6, not a rounded "13"); the 0–100 hero stays a whole number as before.
-            HeroScoreCell(label: String(localized: "Effort"),
+            HeroScoreCell(label: String(localized: "Strain"),
                           score: effortStrain(displayDay).map { UnitFormatter.effortValue($0, scale: effortScale) },
                           tint: StrandPalette.effortColor, animated: dataLoaded,
                           onGuide: { guideSection = .effort },
                           maxValue: effortScale == .whoop ? 21 : 100,
                           decimals: effortScale == .whoop ? 1 : 0,
                           detailMetricKey: HeroRingMetric.effort)
-            HeroScoreCell(label: String(localized: "Rest"), score: restScore, tint: StrandPalette.restColor,
+            HeroScoreCell(label: String(localized: "Sleep"), score: restScore, tint: StrandPalette.restColor,
                           animated: dataLoaded, onGuide: { guideSection = .rest },
                           detailMetricKey: HeroRingMetric.rest)
                 .overlay(alignment: .top) {
@@ -1132,7 +1132,7 @@ struct LiquidTodayView: View {
     /// String Catalog entry verbatim — one key serves both Today screens.
     private var effortZeroNote: String? {
         guard EffortDisplay.showsZeroNote(strain: effortStrain(displayDay), isToday: selectedDayOffset == 0) else { return nil }
-        return String(localized: "No cardio load yet. Effort builds once your heart rate climbs into your effort zone (around 50% of your heart-rate reserve). A calm day honestly reads near zero.")
+        return String(localized: "No cardio load yet. Strain builds once your heart rate climbs into your effort zone (around 50% of your heart-rate reserve). A calm day honestly reads near zero.")
     }
 
     private var synthesisSection: some View {
@@ -1405,7 +1405,7 @@ struct LiquidTodayView: View {
             // rows use, so all three now agree by construction.
             ktile(String(localized: "Strain"), icon: keyMetricIcon(metric), effortText(effortStrain(displayDay)), "", StrandPalette.effortColor, frac(effortStrain(displayDay)), key: HeroRingMetric.effort)
         case .rest:
-            ktile(String(localized: "Rest"), icon: keyMetricIcon(metric), intText(restScore), "%", StrandPalette.restColor, frac(restScore), key: HeroRingMetric.rest)
+            ktile(String(localized: "Sleep"), icon: keyMetricIcon(metric), intText(restScore), "%", StrandPalette.restColor, frac(restScore), key: HeroRingMetric.rest)
         case .hrv:
             ktile("HRV", icon: keyMetricIcon(metric), intText(hrv), "ms", StrandPalette.metricCyan, fracOver(hrv, 120), key: "hrv")
         case .restingHr:
@@ -1577,7 +1577,7 @@ struct LiquidTodayView: View {
                     }
                     Spacer()
                     (Text(effortText(w.strain)).font(StrandFont.number(15))
-                        + Text(" EFFORT").font(StrandFont.overlineScaled(9)))
+                        + Text(" STRAIN").font(StrandFont.overlineScaled(9)))
                         .foregroundStyle(StrandPalette.textPrimary)
                 }
                 LiquidTube(frac: (w.strain ?? 0) / 100, tint: StrandPalette.effortColor, height: 12, animated: false)

@@ -194,7 +194,7 @@ struct NunaGymAnyaCard: View {
             switch cond {
             case .poor?:
                 let a = GymCoach.adjust(for: .poor)
-                return String(localized: "It is one of your gym days, but Charge is \(c.map(String.init) ?? "low"). Go lighter today: about \(a.weightCutPct)% less weight and \(-a.repsDelta) fewer reps. Resting is a fine choice too.")
+                return String(localized: "It is one of your gym days, but Recovery is \(c.map(String.init) ?? "low"). Go lighter today: about \(a.weightCutPct)% less weight and \(-a.repsDelta) fewer reps. Resting is a fine choice too.")
             case .fair?:
                 let a = GymCoach.adjust(for: .fair)
                 return String(localized: "It is one of your gym days, and your body is a little under par. Go a bit lighter: about \(a.weightCutPct)% less weight and \(-a.repsDelta) fewer rep.")
@@ -203,7 +203,7 @@ struct NunaGymAnyaCard: View {
                 return String(localized: "It is one of your gym days and you are ready for a normal session.")
             }
         }
-        if cond == .poor { return String(localized: "Not one of your usual gym days, and Charge is low. Rest is a good choice; if you go, keep it light.") }
+        if cond == .poor { return String(localized: "Not one of your usual gym days, and Recovery is low. Rest is a good choice; if you go, keep it light.") }
         return String(localized: "Not one of your usual gym days. If you go, here is a session built from the muscles that are rested.")
     }
 
@@ -278,7 +278,7 @@ struct NunaGymAnyaSheet: View {
                             .frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                     }.buttonStyle(.plain).disabled(saved)
                 }
-                nunaFootnote("Anya reads your own sessions, your Charge and your readiness, on this iPhone. A suggestion, not a prescription.")
+                nunaFootnote("Anya reads your own sessions, your Recovery and your readiness, on this iPhone. A suggestion, not a prescription.")
             }
             .toolbar(.hidden, for: .navigationBar)
         }

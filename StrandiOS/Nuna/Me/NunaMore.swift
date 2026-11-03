@@ -34,8 +34,8 @@ struct NunaAdvancedView: View {
                     Text("Deep sleep pools HRV over slow-wave sleep only. It reads lower and re-scores your history.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }.padding(.vertical, 12)
             }
-            NunaSettingsGroup("Effort") {
-                NunaToggleRow("Exponential intensity scale", subtitle: "Scores Effort with Banister TRIMP instead of heart-rate zones. Re-scores history", systemImage: "chart.line.uptrend.xyaxis",
+            NunaSettingsGroup("Strain") {
+                NunaToggleRow("Exponential intensity scale", subtitle: "Scores Strain with Banister TRIMP instead of heart-rate zones. Re-scores history", systemImage: "chart.line.uptrend.xyaxis",
                               isOn: Binding(get: { banister }, set: { banister = $0; rescore(model) })).padding(.vertical, 8)
             }
             NunaSettingsGroup("Power") {
@@ -122,7 +122,7 @@ struct NunaAboutView: View {
             NunaSettingsGroup("How it works") {
                 NavigationLink { NunaHowItWorksView() } label: { NunaListRow("How the app works", description: "Sleep detection, scores, recording and where numbers come from", systemImage: "questionmark.circle", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
-                NavigationLink { NunaScoringGuideView() } label: { NunaListRow("How scores are worked out", description: "Charge, Effort and Rest", systemImage: "chart.bar.doc.horizontal", showsChevron: true) }.buttonStyle(.plain)
+                NavigationLink { NunaScoringGuideView() } label: { NunaListRow("How scores are worked out", description: "Recovery, Strain and Sleep", systemImage: "chart.bar.doc.horizontal", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
                 NavigationLink(value: NunaDeviceRoute.models) { NunaListRow("Models and support", description: "WHOOP 4.0, 5.0 and MG", systemImage: "square.stack.3d.up", showsChevron: true) }.buttonStyle(.plain)
             }

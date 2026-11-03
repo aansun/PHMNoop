@@ -40,13 +40,13 @@ enum NunaBreathAdviceMaker {
             case .lateEvening(let h):
                 lines.append(String(localized: "It is \(String(format: "%02d:00", h)), close to sleep")); read.append("Time of day")
             case .lowCharge(let pct):
-                lines.append(String(localized: "Charge is \(pct)%")); read.append("Charge")
+                lines.append(String(localized: "Recovery is \(pct)%")); read.append("Recovery")
             case .hrvDown(let ms):
                 lines.append(String(localized: "HRV is \(ms) ms under your baseline")); read.append("HRV")
             case .restingHrUp(let bpm):
                 lines.append(String(localized: "Resting heart rate is up \(bpm) bpm")); read.append("Resting HR")
             case .goodChargeMorning(let pct):
-                lines.append(String(localized: "Charge is \(pct)% this morning")); read.append("Charge")
+                lines.append(String(localized: "Recovery is \(pct)% this morning")); read.append("Recovery")
             case .daytime:
                 lines.append(String(localized: "Nothing in your numbers calls for more")); read.append("Time of day")
             case .noLiveData:

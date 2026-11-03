@@ -56,7 +56,7 @@ struct NunaHealthTraining: View {
                     HStack(alignment: .firstTextBaseline, spacing: 6) {
                         Text(verbatim: UnitFormatter.effortDisplay(total, scale: scale)).font(.nuna(size: 40, weight: .bold, design: NunaType.design)).tracking(nunaTrackingNumber(40)).foregroundStyle(NunaPalette.textPrimary)
                         if let usual { Text(verbatim: "/ " + UnitFormatter.effortDisplay(usual, scale: scale)).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
-                        Text("Effort").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Strain").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
                     NunaColumns(items: days.map { d, rs in
                         let e = m.effort(rs)

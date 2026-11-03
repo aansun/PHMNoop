@@ -12,13 +12,13 @@ enum NunaScoreMetric: String, AppEnum {
 
     static var typeDisplayRepresentation: TypeDisplayRepresentation { "Score" }
     static var caseDisplayRepresentations: [NunaScoreMetric: DisplayRepresentation] {
-        [.charge: "Charge", .effort: "Effort", .rest: "Rest", .heart: "Heart rate"]
+        [.charge: "Recovery", .effort: "Strain", .rest: "Sleep", .heart: "Heart rate"]
     }
 }
 
 struct NunaScoreIntent: WidgetConfigurationIntent {
     static var title: LocalizedStringResource { "Score" }
-    static var description: IntentDescription { "Charge, Effort and Rest at a glance." }
+    static var description: IntentDescription { "Recovery, Strain and Sleep at a glance." }
 
     @Parameter(title: "Lock Screen ring", default: .charge)
     var lockMetric: NunaScoreMetric
@@ -51,7 +51,7 @@ struct NunaScoreWidget: Widget {
             NunaScoreView(entry: entry).widgetURL(NunaWLink.today).nunaWidgetBackground()
         }
         .configurationDisplayName("Score")
-        .description("Charge, Effort and Rest as rings.")
+        .description("Recovery, Strain and Sleep as rings.")
         .supportedFamilies([.systemSmall, .systemMedium, .systemLarge, .accessoryCircular, .accessoryRectangular, .accessoryInline])
         .contentMarginsDisabled()
     }
@@ -109,8 +109,8 @@ private struct NunaScoreView: View {
             HStack(spacing: 10) {
                 scoreRing(Double(charge ?? 0) / 100, NunaW.chargeColor(charge), charge.map(String.init) ?? "–", unit: charge == nil ? nil : "%", size: 74, font: 19, line: 9)
                 VStack(alignment: .leading, spacing: 8) {
-                    miniScore("EFFORT", effortText, effortColor)
-                    miniScore("REST", s.rest.map { "\($0)%" } ?? "–", restTextColor)
+                    miniScore("STRAIN", effortText, effortColor)
+                    miniScore("SLEEP", s.rest.map { "\($0)%" } ?? "–", restTextColor)
                 }
             }.padding(.top, 12)
             Spacer(minLength: 0)
@@ -128,11 +128,11 @@ private struct NunaScoreView: View {
     private var rings: some View {
         HStack {
             Spacer(minLength: 0)
-            ringColumn("Charge", Double(charge ?? 0) / 100, NunaW.chargeColor(charge), charge.map(String.init) ?? "–", unit: charge == nil ? nil : "%")
+            ringColumn("Recovery", Double(charge ?? 0) / 100, NunaW.chargeColor(charge), charge.map(String.init) ?? "–", unit: charge == nil ? nil : "%")
             Spacer(minLength: 0)
-            ringColumn("Effort", effortFraction, effortColor, effortText, unit: nil, gradient: effortGradient, target: effortTarget)
+            ringColumn("Strain", effortFraction, effortColor, effortText, unit: nil, gradient: effortGradient, target: effortTarget)
             Spacer(minLength: 0)
-            ringColumn("Rest", Double(s.rest ?? 0) / 100, restColor, s.rest.map(String.init) ?? "–", unit: s.rest == nil ? nil : "%")
+            ringColumn("Sleep", Double(s.rest ?? 0) / 100, restColor, s.rest.map(String.init) ?? "–", unit: s.rest == nil ? nil : "%")
             Spacer(minLength: 0)
         }
     }
@@ -150,7 +150,7 @@ private struct NunaScoreView: View {
     private var medium: some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack {
-                NunaWCap(text: Text("Charge · Effort · Rest"))
+                NunaWCap(text: Text("Recovery · Strain · Sleep"))
                 Spacer()
                 if let bpm = s.bpm {
                     HStack(spacing: 4) {
@@ -218,9 +218,9 @@ private struct NunaScoreView: View {
 
     private var lockValue: (fraction: Double, text: String, caption: LocalizedStringKey) {
         switch entry.lockMetric {
-        case .charge: return (Double(charge ?? 0) / 100, charge.map(String.init) ?? "–", "CHARGE")
-        case .effort: return (effortFraction, effortText, "EFFORT")
-        case .rest: return (Double(s.rest ?? 0) / 100, s.rest.map(String.init) ?? "–", "REST")
+        case .charge: return (Double(charge ?? 0) / 100, charge.map(String.init) ?? "–", "RECOVERY")
+        case .effort: return (effortFraction, effortText, "STRAIN")
+        case .rest: return (Double(s.rest ?? 0) / 100, s.rest.map(String.init) ?? "–", "SLEEP")
         case .heart: return (min(Double(s.bpm ?? 0) / 200, 1), s.bpm.map(String.init) ?? "–", "BPM")
         }
     }
@@ -246,9 +246,9 @@ private struct NunaScoreView: View {
                 Spacer()
                 Text(s.updated, style: .time).font(.system(size: 10, weight: .semibold)).opacity(0.7)
             }
-            lockLine("Charge", charge.map { "\($0)%" } ?? "–")
-            lockLine("Effort", effortText)
-            lockLine("Rest", s.rest.map { "\($0)%" } ?? "–")
+            lockLine("Recovery", charge.map { "\($0)%" } ?? "–")
+            lockLine("Strain", effortText)
+            lockLine("Sleep", s.rest.map { "\($0)%" } ?? "–")
         }
     }
 
@@ -261,7 +261,7 @@ private struct NunaScoreView: View {
     }
 
     private var inline: some View {
-        let parts = [charge.map { String(localized: "Charge \($0)%") }, s.hrv.map { String(localized: "HRV \($0)") }].compactMap { $0 }
+        let parts = [charge.map { String(localized: "Recovery \($0)%") }, s.hrv.map { String(localized: "HRV \($0)") }].compactMap { $0 }
         return Text(verbatim: parts.isEmpty ? String(localized: "No data") : parts.joined(separator: " · "))
     }
 }

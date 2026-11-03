@@ -195,7 +195,7 @@ struct ManualWorkoutSheet: View {
                 }
             }
             if let validationNote { noteRow(validationNote) }
-            if avgHrEditedNote { noteRow(String(localized: "Avg HR is shown as typed. The HR graph, zones and Effort stay from the recorded session.")) }
+            if avgHrEditedNote { noteRow(String(localized: "Avg HR is shown as typed. The HR graph, zones and Strain stay from the recorded session.")) }
             footer
         }
     }

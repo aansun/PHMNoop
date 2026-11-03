@@ -322,7 +322,7 @@ struct NunaHealthView: View {
                 HStack {
                     Text("Last 7 nights").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                     Spacer()
-                    if let avgRest { NunaChip(verbatim: String(localized: "Average Rest \(Int(avgRest.rounded()))%"), color: NunaPalette.restText) }
+                    if let avgRest { NunaChip(verbatim: String(localized: "Average Sleep \(Int(avgRest.rounded()))%"), color: NunaPalette.restText) }
                 }
                 NunaColumns(items: nights.map { n in
                     NunaColumns.Item(weekday: weekday(n.wakeDate), date: n.wakeDate, fraction: n.asleepMin / top,
@@ -353,7 +353,7 @@ struct NunaHealthView: View {
                 return gap < 0 ? String(localized: "You slept \(dur) a night over the last \(nights.count) nights, \(diff) short of what you need.")
                                : String(localized: "You slept \(dur) a night over the last \(nights.count) nights, \(diff) more than you need.")
             }()
-            let detail: String? = rest.isEmpty ? nil : String(localized: "Average Rest \(Int((rest.reduce(0, +) / Double(rest.count)).rounded()))%")
+            let detail: String? = rest.isEmpty ? nil : String(localized: "Average Sleep \(Int((rest.reduce(0, +) / Double(rest.count)).rounded()))%")
             NunaAnyaCard(verbatim: line, detail: detail) { showSleepCoach = true }
         }
     }

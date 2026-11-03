@@ -918,24 +918,24 @@ private struct ChargeSyncIndicatorHosted: View {
     }
 }
 
-#Preview("Charge to sync morph") {
+#Preview("Recovery to sync morph") {
     ChargeSyncIndicatorPreview()
 }
 
 // Both schemes, deliberately. The ring and numerals read through `StrandPalette.textPrimary`, which
 // flips with the theme — so Light is not a duplicate of Dark, it is the case that actually regressed
 // when the control carried a fixed near-black surface and had to use fixed light glyphs to sit on it.
-#Preview("Charge sync active — Dark") {
+#Preview("Recovery sync active — Dark") {
     ChargeSyncIndicatorHosted()
         .preferredColorScheme(.dark)
 }
 
-#Preview("Charge sync active — Light") {
+#Preview("Recovery sync active — Light") {
     ChargeSyncIndicatorHosted()
         .preferredColorScheme(.light)
 }
 
-#Preview("Charge idle — Light") {
+#Preview("Recovery idle — Light") {
     ChargeSyncIndicatorHosted(syncing: false)
         .preferredColorScheme(.light)
 }

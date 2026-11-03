@@ -222,7 +222,7 @@ public func toolsList() -> JSONValue {
             tool(
                 name: "workout_summary",
                 title: "Workout Summary",
-                description: "Return bounded workout rows and aggregate effort/calorie/duration summaries from local NOOP data.",
+                description: "Return bounded workout rows and aggregate strain/calorie/duration summaries from local NOOP data.",
                 properties: [
                     "days": integerProperty("Trailing days to include, default 90, max 4000."),
                 ]

@@ -165,7 +165,7 @@ struct XiaomiBandView: View {
             .chart("Peak heart rate", "max_hr", roseGradient, 80...170, { "\(Int($0.rounded())) bpm" }),
             .chart("Blood oxygen", "spo2", cyanGradient, 90...100, { String(format: "%.0f%%", $0) }),
             .hypnogram,
-            .header("Sleep", "Rest"),
+            .header("Sleep", "Sleep"),
             .chart("Time asleep", "sleep_total_min", purpleGradient, 240...600, { durationString($0) }),
             .chart("Deep sleep", "sleep_deep_min", purpleGradient, 0...180, { durationString($0) }),
             .chart("REM sleep", "sleep_rem_min", purpleGradient, 0...180, { durationString($0) }),

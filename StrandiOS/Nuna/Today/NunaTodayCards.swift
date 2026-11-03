@@ -113,7 +113,7 @@ struct NunaScoreRings: View {
 
     /// The ring names stay in English in every app language, like the chips under the rings.
     private func englishName(_ kind: Kind) -> String {
-        switch kind { case .charge: return "Charge"; case .effort: return "Effort"; case .rest: return "Rest" }
+        switch kind { case .charge: return "Recovery"; case .effort: return "Strain"; case .rest: return "Sleep" }
     }
 
     /// The figure keeps the size it had in the larger ring (30 pt) while the ring itself is smaller.
@@ -164,18 +164,18 @@ struct NunaScoreRings: View {
             let state: LocalizedStringKey = pct.map { $0 >= 67 ? "Ready" : ($0 >= 34 ? "Moderate" : "Low") } ?? "No data"
             return RingValues(fraction: (pct ?? 0) / 100, color: pct.map(nunaChargeColor) ?? NunaPalette.scoreHigh, textColor: pct.map(nunaChargeTextColor) ?? NunaPalette.scoreHigh,
                               number: pct.map { "\(Int($0.rounded()))" } ?? "–", unit: "%",
-                              label: "Charge", state: state, route: HeroRingMetric.charge)
+                              label: "Recovery", state: state, route: HeroRingMetric.charge)
         case .effort:
             let text = effort.map { UnitFormatter.effortDisplay($0, scale: effortScale) } ?? "–"
             let state: LocalizedStringKey = effort.map { $0 < 33 ? "Light" : ($0 < 66 ? "Moderate" : "High") } ?? "No data"
             return RingValues(fraction: (effort ?? 0) / 100, color: effort.map(nunaEffortColor) ?? NunaPalette.effortModerate, textColor: effort.map(nunaEffortTextColor) ?? NunaPalette.effortModerate,
-                              number: text, unit: "", label: "Effort", state: state, route: HeroRingMetric.effort,
+                              number: text, unit: "", label: "Strain", state: state, route: HeroRingMetric.effort,
                               gradient: effort.map(nunaEffortRingColors), target: nunaEffortTargetFractions(charge: charge.pct))
         case .rest:
             let state: LocalizedStringKey = rest.map(nunaRestWord) ?? "No data"
             return RingValues(fraction: (rest ?? 0) / 100, color: NunaRestChart.steel, textColor: NunaRestChart.steel,
                               number: rest.map { "\(Int($0.rounded()))" } ?? "–", unit: "%",
-                              label: "Rest", state: state, route: HeroRingMetric.rest)
+                              label: "Sleep", state: state, route: HeroRingMetric.rest)
         }
     }
 }

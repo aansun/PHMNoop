@@ -152,7 +152,7 @@ struct NunaWorkoutHistoryView: View {
                     Text(verbatim: "\(axisDate(startDate)) – \(axisDate(Date()))").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
                 HStack {
-                    tile("Sessions", "\(list.count)"); tile("Duration", NunaWorkoutFormat.duration(m.minutes(list) * 60)); tile("Effort", UnitFormatter.effortDisplay(m.effort(list), scale: scale))
+                    tile("Sessions", "\(list.count)"); tile("Duration", NunaWorkoutFormat.duration(m.minutes(list) * 60)); tile("Strain", UnitFormatter.effortDisplay(m.effort(list), scale: scale))
                 }
                 HStack {
                     tile("Active days", "\(active)"); tile("Per week", list.isEmpty ? "–" : String(format: "%.1f", locale: AppLanguage.activeLocale, Double(list.count) / perWeekSpan(list)))
@@ -327,7 +327,7 @@ struct NunaWorkoutHistoryView: View {
                     HStack {
                         Text(verbatim: groupTitle(start)).font(.nuna(size: 17, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                         Spacer()
-                        Text(verbatim: String(localized: "\(rs.count) sessions · Effort \(UnitFormatter.effortDisplay(m.effort(rs), scale: scale))")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        Text(verbatim: String(localized: "\(rs.count) sessions · Strain \(UnitFormatter.effortDisplay(m.effort(rs), scale: scale))")).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                         VStack(spacing: 0) {

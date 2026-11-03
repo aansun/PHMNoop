@@ -109,7 +109,7 @@ struct NunaAchievementsView: View {
             spreads
             streaks
             extremes
-            nunaFootnote("Level counts the days your strap scored Charge, 30 for each level. Streaks and extremes only use days with a reading.")
+            nunaFootnote("Level counts the days your strap scored Recovery, 30 for each level. Streaks and extremes only use days with a reading.")
         }
         .task(id: repo.refreshSeq) { workouts = await repo.workoutRows() }
     }
@@ -127,7 +127,7 @@ struct NunaAchievementsView: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(tier).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(tierColor)
                 Text(verbatim: String(localized: "Level \(level)")).font(.nuna(size: 20, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                Text(verbatim: String(localized: "\(recoveries) Charge days")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                Text(verbatim: String(localized: "\(recoveries) Recovery days")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             Spacer(minLength: 8)
             VStack(alignment: .leading, spacing: 10) {
@@ -164,7 +164,7 @@ struct NunaAchievementsView: View {
                     Text(verbatim: peak.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–")
                         .font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
                 }
-                caption("Peak day Effort")
+                caption("Peak day Strain")
             }
             .frame(maxWidth: .infinity)
         }
@@ -222,7 +222,7 @@ struct NunaAchievementsView: View {
                 HStack {
                     caption("Activities")
                     Spacer()
-                    caption("Peak Effort")
+                    caption("Peak Strain")
                 }
                 NunaPlainList {
                     ForEach(Array(shown.enumerated()), id: \.element.id) { i, s in
@@ -315,9 +315,9 @@ struct NunaAchievementsView: View {
     private var streaks: some View {
         let working = Int(UnitFormatter.effortValue(Self.workingEffort, scale: scale).rounded())
         return HStack(alignment: .top, spacing: 0) {
-            streak("dumbbell", longestRun { ($0.strain ?? 0) >= Self.workingEffort }, NunaPalette.effortModerate, LocalizedStringKey("Effort \(working)+ streak"))
-            streak("leaf", longestRun { ($0.recovery ?? 0) >= Self.greenCharge }, NunaPalette.scoreHigh, "Green Charge streak")
-            streak("moon", longestRun { restScore($0) >= Self.goodRest }, NunaPalette.restText, "Rest 70%+ streak")
+            streak("dumbbell", longestRun { ($0.strain ?? 0) >= Self.workingEffort }, NunaPalette.effortModerate, LocalizedStringKey("Strain \(working)+ streak"))
+            streak("leaf", longestRun { ($0.recovery ?? 0) >= Self.greenCharge }, NunaPalette.scoreHigh, "Green Recovery streak")
+            streak("moon", longestRun { restScore($0) >= Self.goodRest }, NunaPalette.restText, "Sleep 70%+ streak")
         }
         .padding(.vertical, 12)
         .overlay(alignment: .bottom) { NunaDivider() }
@@ -352,7 +352,7 @@ struct NunaAchievementsView: View {
                     Text(verbatim: lowest.map { "\(Int($0.rounded()))%" } ?? "–").font(.nuna(size: 26, weight: .bold, design: NunaType.design))
                         .foregroundStyle(lowest.map(nunaChargeColor) ?? NunaPalette.textPrimary)
                 }
-                caption("Lowest Charge")
+                caption("Lowest Recovery")
             }
             .frame(maxWidth: .infinity)
             VStack(spacing: 8) {

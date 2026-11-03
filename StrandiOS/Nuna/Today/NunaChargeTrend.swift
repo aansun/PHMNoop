@@ -163,7 +163,7 @@ extension NunaDaysBreakdown {
     }
 
     static func charge(_ values: [Double]) -> NunaDaysBreakdown {
-        NunaDaysBreakdown(title: "Charge breakdown", bands: chargeBands, values: values)
+        NunaDaysBreakdown(title: "Recovery breakdown", bands: chargeBands, values: values)
     }
 }
 

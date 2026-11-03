@@ -31,7 +31,7 @@ struct CoachLauncherSheet: View {
         #if os(iOS)
         return "I’ll connect the signals, explain what they mean for this moment, and keep the next step simple."
         #else
-        return "Ask about your charge, effort, rest and workouts, grounded in your own numbers."
+        return "Ask about your recovery, strain, sleep and workouts, grounded in your own numbers."
         #endif
     }
 
