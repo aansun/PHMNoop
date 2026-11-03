@@ -43,6 +43,8 @@ struct NunaAnyaSheet: View {
     var cardLine: NunaAnyaCardLine?
     /// Set by a single-metric screen, so the read and the questions are about that metric.
     var metric: NunaAnyaMetric?
+    /// The floating style: a dark sheet with the line, suggestion chips and one box to ask in (the one the floating Anya button opens).
+    var floating = false
     @EnvironmentObject private var coach: AICoachEngine
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
@@ -57,6 +59,8 @@ struct NunaAnyaSheet: View {
     @State private var draft = ""
     @State private var sending = false
     @FocusState private var focused: Bool
+    /// 1 helpful, -1 not helpful, 0 none: for the line on show (floating style).
+    @State private var feedback = 0
     @State private var path = NavigationPath()
     /// What the sheet shows: Anya's read of the line that was tapped, or a conversation about it. Each sheet has its own conversation.
     @State private var tab = "read"
@@ -76,27 +80,12 @@ struct NunaAnyaSheet: View {
 
     var body: some View {
         NavigationStack(path: $path) {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 16) {
-                    top
-                    if tab == "read" {
-                        if let read { card(read) } else if loaded { empty }
-                        connectState
-                    } else {
-                        asking
-                    }
-                }
-                .padding(.horizontal, NunaSpacing.screenH).padding(.top, 20).padding(.bottom, 24)
-            }
-            .scrollIndicators(.hidden).scrollDismissesKeyboard(.immediately)
-            .simultaneousGesture(TapGesture().onEnded { focused = false })
-            .textCase(nil)
-            .background(NunaBackdrop())
-            .toolbar(.hidden, for: .navigationBar)
-            .nunaAnyaDestinations()
+            Group { if floating { floatingContent } else { classicContent } }
+                .toolbar(.hidden, for: .navigationBar)
+                .nunaAnyaDestinations()
         }
-        .presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
-        .preferredColorScheme(NunaTheme.colorScheme)
+        .presentationDetents(floating ? [.large] : [.medium, .large]).presentationDragIndicator(.visible)
+        .preferredColorScheme(floating ? .dark : NunaTheme.colorScheme)
         .task(id: "\(context)|\(metric?.key ?? "")") {
             read = await NunaAnyaReader.read(context: context, metric: metric, repo: repo, profile: profile, scale: UnitPrefs.resolveEffortScale(effortScaleRaw))
             // The questions stay the screen's; the line and the signals are the card's.
@@ -110,6 +99,25 @@ struct NunaAnyaSheet: View {
             }
             loaded = true
         }
+    }
+
+    private var classicContent: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                top
+                if tab == "read" {
+                    if let read { card(read) } else if loaded { empty }
+                    connectState
+                } else {
+                    asking
+                }
+            }
+            .padding(.horizontal, NunaSpacing.screenH).padding(.top, 20).padding(.bottom, 24)
+        }
+        .scrollIndicators(.hidden).scrollDismissesKeyboard(.immediately)
+        .simultaneousGesture(TapGesture().onEnded { focused = false })
+        .textCase(nil)
+        .background(NunaBackdrop())
     }
 
     // MARK: Parts
@@ -289,6 +297,184 @@ struct NunaAnyaSheet: View {
         if let last = turns.last(where: { $0.role == .user })?.text, coach.pendingPrompt == nil, turns.count == 1 { coach.pendingPrompt = last }
         dismiss()
         router.requestedDestination = .coach
+    }
+}
+
+// MARK: - Floating style
+
+/// The dark sheet the floating Anya button and its pill open: the line in large type, what to do with it, suggestion chips, and one box to ask in.
+extension NunaAnyaSheet {
+    private static let ink = Color(red: 0.03, green: 0.04, blue: 0.07)
+    private static let sky = Color(red: 0.10, green: 0.13, blue: 0.21)
+
+    @ViewBuilder var floatingContent: some View {
+        VStack(spacing: 0) {
+            floatingHeader
+            ScrollViewReader { proxy in
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 22) {
+                        floatingMessage
+                        floatingTurns
+                        connectNote
+                        Color.clear.frame(height: 1).id("end")
+                    }
+                    .padding(.horizontal, 20).padding(.top, 34).padding(.bottom, 16)
+                }
+                .scrollIndicators(.hidden).scrollDismissesKeyboard(.interactively)
+                .onChange(of: turns.count) { _, _ in withAnimation { proxy.scrollTo("end", anchor: .bottom) } }
+                .onChange(of: sending) { _, _ in withAnimation { proxy.scrollTo("end", anchor: .bottom) } }
+            }
+            floatingChips
+            floatingComposer
+        }
+        .background(LinearGradient(colors: [Self.sky, Self.ink, Self.ink], startPoint: .topLeading, endPoint: .bottom).ignoresSafeArea())
+        .foregroundStyle(.white).textCase(nil)
+    }
+
+    private var floatingHeader: some View {
+        HStack(spacing: 10) {
+            HStack(spacing: 8) {
+                ZStack {
+                    Circle().strokeBorder(NunaAnyaWing.gradient, lineWidth: 2)
+                    AnyaMark(size: 17)
+                }
+                .frame(width: 34, height: 34)
+                Text("Anya").font(.nuna(size: 15, weight: .semibold))
+            }
+            .padding(.leading, 6).padding(.trailing, 14).frame(height: 40)
+            .background(Color.white.opacity(0.09), in: Capsule())
+            Spacer(minLength: 0)
+            Button { path.append(NunaAnyaRoute.memory) } label: {
+                HStack(spacing: 8) {
+                    Text("Memory").font(.nuna(size: 15, weight: .semibold))
+                    Image(systemName: "lightbulb.max").font(.system(size: 20, weight: .regular))
+                }
+                .frame(minHeight: 44).contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.horizontal, 20).padding(.top, 22)
+    }
+
+    @ViewBuilder private var floatingMessage: some View {
+        if let read {
+            Text(NunaMark.attributed(NunaMark.compose(headline: read.headline, detail: read.detail), size: 20))
+                .font(.nuna(size: 20, weight: .regular)).lineSpacing(9).fixedSize(horizontal: false, vertical: true)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            if explaining {
+                HStack(spacing: 8) { ProgressView().controlSize(.small).tint(.white.opacity(0.7)); Text("Anya is thinking…").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(.white.opacity(0.7)) }
+            } else if let explanation {
+                Text(Self.markdown(AnyaActions.proseOnly(explanation))).font(.nuna(size: 18, weight: .regular)).lineSpacing(8)
+                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+            }
+            if turns.isEmpty { feedbackRow(copying: NunaMark.plain(NunaMark.compose(headline: read.headline, detail: read.detail)), note: read.headline) }
+        } else if loaded {
+            Text("Anya shows a line only when it has figures to cite. Wear the strap and sync, then ask again.")
+                .font(.nuna(size: 18, weight: .regular)).foregroundStyle(.white.opacity(0.7)).lineSpacing(6)
+        }
+    }
+
+    @ViewBuilder private var floatingTurns: some View {
+        ForEach(turns) { t in
+            if t.role == .user {
+                HStack { Spacer(minLength: 56)
+                    Text(verbatim: t.text).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaAnyaWing.ink)
+                        .padding(.horizontal, 16).padding(.vertical, 10).background(NunaAnyaWing.gradient, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+                }
+            } else {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text(Self.markdown(AnyaActions.proseOnly(t.text))).font(.nuna(size: 18, weight: .regular)).lineSpacing(8)
+                        .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                    if t.id == turns.last?.id { feedbackRow(copying: AnyaActions.proseOnly(t.text), note: String(t.text.prefix(80))) }
+                }
+            }
+        }
+        if sending {
+            HStack(spacing: 8) { ProgressView().controlSize(.small).tint(.white.opacity(0.7)); Text("Anya is thinking…").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(.white.opacity(0.7)) }
+        }
+    }
+
+    /// Copy, helpful and not helpful. The last two are kept in Anya's memory of this module, so what was not useful is not repeated.
+    private func feedbackRow(copying text: String, note: String) -> some View {
+        HStack(spacing: 22) {
+            Button { UIPasteboard.general.string = text } label: { Image(systemName: "doc.on.clipboard").font(.system(size: 21, weight: .regular)) }
+                .accessibilityLabel(Text("Copy"))
+            Button { NunaAnyaMemory.remember(module, "Found this helpful: \(note)"); feedback = 1 } label: { Image(systemName: feedback == 1 ? "hand.thumbsup.fill" : "hand.thumbsup").font(.system(size: 21, weight: .regular)) }
+                .accessibilityLabel(Text("Helpful"))
+            Button { NunaAnyaMemory.remember(module, "Did not find this helpful: \(note)"); feedback = -1 } label: { Image(systemName: feedback == -1 ? "hand.thumbsdown.fill" : "hand.thumbsdown").font(.system(size: 21, weight: .regular)) }
+                .accessibilityLabel(Text("Not helpful"))
+        }
+        .buttonStyle(.plain).foregroundStyle(.white.opacity(0.9)).padding(.top, 2)
+    }
+
+    @ViewBuilder private var connectNote: some View {
+        if !coach.isConfigured {
+            Button { path.append(NunaAnyaRoute.connect) } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: "link")
+                    Text("Connect Anya to ask questions about your data").font(.nuna(size: 15, weight: .semibold)).multilineTextAlignment(.leading)
+                    Spacer(minLength: 0)
+                    Image(systemName: "chevron.right").font(.system(size: 13, weight: .bold))
+                }
+                .padding(16).background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }.buttonStyle(.plain)
+        } else if !coach.dataConsent {
+            Toggle(isOn: $coach.dataConsent) { Text("Let Anya use my numbers").font(.nuna(size: 15, weight: .semibold)) }
+                .tint(NunaAnyaWing.colors[1]).padding(16).background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+    }
+
+    /// The questions this page offers, as white pills in a row that scrolls sideways.
+    @ViewBuilder private var floatingChips: some View {
+        let qs = read?.questions ?? []
+        if !qs.isEmpty {
+            ScrollView(.horizontal) {
+                HStack(spacing: 12) {
+                    ForEach(qs) { q in
+                        Button { chipTapped(q) } label: {
+                            Text(verbatim: q.title).font(.nuna(size: 15, weight: .medium)).foregroundStyle(Self.ink)
+                                .padding(.horizontal, 20).frame(height: 46).background(.white, in: Capsule())
+                        }.buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 20)
+            }
+            .scrollIndicators(.hidden).padding(.bottom, 14)
+        }
+    }
+
+    private func chipTapped(_ q: NunaAnyaQuestion) {
+        if !coach.isConfigured { path.append(NunaAnyaRoute.connect); return }
+        Task { await ask(q.prompt, shown: q.title) }
+    }
+
+    private var floatingComposer: some View {
+        HStack(spacing: 12) {
+            Menu {
+                Button { openFull() } label: { Label("Continue in the Anya tab", systemImage: "bubble.left.and.bubble.right") }
+                Button { path.append(NunaAnyaRoute.memory) } label: { Label("Memory", systemImage: "lightbulb") }
+                Button { path.append(NunaAnyaRoute.settings) } label: { Label("Anya settings", systemImage: "gearshape") }
+            } label: {
+                Image(systemName: "plus").font(.system(size: 22, weight: .regular))
+                    .frame(width: 52, height: 52).background(Color.white.opacity(0.10), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            }
+            .buttonStyle(.plain).accessibilityLabel(Text("More"))
+            HStack(spacing: 8) {
+                TextField("", text: $draft, prompt: Text("Ask Anya anything").foregroundStyle(.white.opacity(0.45)), axis: .vertical)
+                    .font(.nuna(size: 18, weight: .regular)).lineLimit(1...3).focused($focused).tint(NunaAnyaWing.colors[0])
+                    .disabled(!coach.isConfigured).onSubmit { submit() }
+                let empty = draft.trimmingCharacters(in: .whitespaces).isEmpty
+                Button { submit() } label: {
+                    Image(systemName: "arrow.up").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaAnyaWing.ink)
+                        .frame(width: 34, height: 34).background(NunaAnyaWing.gradient, in: Circle())
+                }
+                .buttonStyle(.plain).disabled(empty || sending || !coach.isConfigured).opacity(empty ? 0 : 1)
+            }
+            .padding(.leading, 20).padding(.trailing, 9).frame(minHeight: 52)
+            .background(LinearGradient(colors: [Color.white.opacity(0.07), Color.white.opacity(0.03)], startPoint: .top, endPoint: .bottom), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(NunaAnyaWing.gradient.opacity(0.8), lineWidth: 1))
+        }
+        .padding(.horizontal, 20).padding(.bottom, 12)
     }
 }
 

@@ -231,10 +231,6 @@ struct NunaEffortDetailView: View {
                     .fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
             signalPanel
-            if coachEnabled, router.todayDayOffset == 0, let e = day.effort {
-                NunaAnyaCard(verbatim: NunaInsightText.effort(effort: e, chargePct: day.charge.pct)
-                             ?? String(localized: "Your Strain is \(UnitFormatter.effortDisplay(e, scale: scale)) of \(UnitFormatter.effortScaleMax(scale)) so far today.")) { showCoach = true }
-            }
             // Only the activities that gave Effort, as bare rows under a plain title, as on the WHOOP page.
             NunaTodayActivities(workouts: todayWorkouts, effortScale: scale,
                                 dayStart: NunaSelectedDay.date(offset: router.todayDayOffset), sleepMinutes: nil,
@@ -254,8 +250,16 @@ struct NunaEffortDetailView: View {
         .task(id: "zones-\(repo.refreshSeq)-\(router.todayDayOffset)") {
             await zones.load(repo: repo, profile: profile, endingOffset: router.todayDayOffset)
         }
-        .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "Strain") }
+        // Anya floats over the page, with today's read as a pill; on a past day she is only the button.
+        .nunaAnyaFloating(context: "Strain", line: anyaFloatLine)
         .environment(\.nunaDetailSwitch, nil)
+    }
+
+    /// What the floating pill says about today's Strain.
+    private var anyaFloatLine: String? {
+        guard router.todayDayOffset == 0, let e = day.effort else { return nil }
+        return NunaInsightText.effort(effort: e, chargePct: day.charge.pct)
+            ?? String(localized: "Your Strain is \(UnitFormatter.effortDisplay(e, scale: scale)) of \(UnitFormatter.effortScaleMax(scale)) so far today.")
     }
 
     /// Steps by day: the estimate and Apple Health's count, the larger of the two for a day that has both.
