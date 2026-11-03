@@ -581,7 +581,7 @@ struct NunaTodayView: View {
         case .synthesis: return "Highlights"
         case .recoveryVitals: return "Stress monitor"
         case .vitalMonitor: return "Vital and stress monitors"
-        case .weekCompare: return "Recovery & Strain"
+        case .weekCompare: return "Strain & Recovery"
         case .keyMetrics: return "Key metrics"
         case .workouts: return "Activity"
         case .journal: return "Quick log"
@@ -695,7 +695,7 @@ struct NunaTodayView: View {
         case .recoveryVitals:
             previewRow("wind", NunaPalette.charge, model.stress.map { String(localized: "Stress \(String(format: "%.1f", locale: AppLanguage.activeLocale, $0)) / 3") } ?? String(localized: "Stress"), "Intraday curve").background(inner)
         case .weekCompare:
-            previewRow("chart.bar.xaxis", NunaPalette.charge, String(localized: "Recovery & Strain"), "Last 7 days").background(inner)
+            previewRow("chart.bar.xaxis", NunaPalette.charge, String(localized: "Strain & Recovery"), "Last 7 days").background(inner)
         case .vitalMonitor:
             HStack(spacing: 8) {
                 previewRow("heart.text.square", NunaPalette.charge, String(localized: "Vital signs"), "Within range").background(inner)
@@ -900,6 +900,12 @@ struct NunaTodayView: View {
             } else if model.stress != nil || model.stressCurve != nil {
                 NunaStressCard(score: model.stress, curve: model.stressCurve, baseline: model.stressBaseline, isToday: model.isToday, workouts: model.workouts)
             }
+#if DEBUG
+            // `--demo-stress`: the demo year has no intraday stress, so the card is drawn from a made-up day to look at it.
+            if CommandLine.arguments.contains("--demo-stress"), model.isToday {
+                NunaStressCard(score: 1.0, curve: NunaStressDemo.curve(), baseline: 1.2, isToday: true, workouts: NunaStressDemo.workouts())
+            }
+#endif
         case .weekCompare:
             NunaWeekCompare(endDay: model.displayDate, effortScale: effortScale)
         case .vitalMonitor:

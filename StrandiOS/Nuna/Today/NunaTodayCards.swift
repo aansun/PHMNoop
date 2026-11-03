@@ -442,6 +442,41 @@ struct NunaAnyaCard: View {
     }
 }
 
+#if DEBUG
+/// A made-up day of stress for `--demo-stress`: a jagged line every five minutes over the last 14 hours, high at the start, calm through the night,
+/// with a few spikes, and a short walk at the end.
+enum NunaStressDemo {
+    static func curve(now: Date = Date()) -> DaytimeStress.Result {
+        let end = Int(now.timeIntervalSince1970)
+        var pts: [DaytimeStress.HourPoint] = []
+        var seed: UInt64 = 7
+        func rnd() -> Double { seed = seed &* 6364136223846793005 &+ 1442695040888963407; return Double((seed >> 33) & 0xFFFF) / 65535 }
+        var t = end - 14 * 3600
+        while t <= end {
+            let h = Double(end - t) / 3600          // hours before now
+            var base: Double
+            switch h {
+            case 10...: base = 1.6 + 0.9 * rnd()
+            case 7..<10: base = 1.1 + 0.5 * rnd()
+            case 2..<7: base = 0.45 + 0.25 * rnd()
+            default: base = 0.8 + 0.7 * rnd()
+            }
+            if abs(h - 4.0) < 0.12 { base = 1.3 }
+            if abs(h - 1.4) < 0.12 { base = 2.0 }
+            pts.append(.init(hour: Calendar.current.component(.hour, from: Date(timeIntervalSince1970: TimeInterval(t))), startTs: t, level: min(base, 3), meanHR: 70, rmssd: 40))
+            t += 300
+        }
+        return DaytimeStress.Result(hours: pts, sustainedHigh: false, sustainedRun: 0, dayMean: 1.0, peak: nil, timeline: pts)
+    }
+
+    static func workouts(now: Date = Date()) -> [WorkoutRow] {
+        let end = Int(now.timeIntervalSince1970) - 600
+        return [WorkoutRow(startTs: end - 1500, endTs: end, sport: "Walking", source: "manual", durationS: 1500, energyKcal: nil, avgHr: nil, maxHr: nil,
+                           strain: nil, distanceM: nil, zonesJSON: nil, notes: nil, steps: nil)]
+    }
+}
+#endif
+
 // MARK: - Stress card (NOOP's own intraday curve, in a Nuna card)
 
 /// Today's high stress as a time, the comparison with a typical day of the week, and the day's curve with a marker on the latest reading.
@@ -468,6 +503,30 @@ struct NunaStressCard: View {
         return f.string(from: Date(timeIntervalSince1970: TimeInterval(ts)))
     }
 
+    @EnvironmentObject private var repo: Repository
+    @State private var sleepSpan: ClosedRange<Int>?
+
+    /// The window the card draws: twelve hours ending at the latest reading (today). A past day draws what it has.
+    private var window: ClosedRange<Int>? {
+        guard isToday, let end = curve?.timeline.last(where: { $0.level != nil })?.startTs else { return nil }
+        return (end - 12 * 3600)...end
+    }
+
+    /// The night inside the window, for the moon and the band over it.
+    private func loadSleep() async {
+        guard let window else { sleepSpan = nil; return }
+#if DEBUG
+        // `--demo-stress` has no night in the data, so it gets one: from four and a half hours into the window to just before its end.
+        if CommandLine.arguments.contains("--demo-stress") { sleepSpan = (window.lowerBound + 4 * 3600 + 1800)...(window.upperBound - 2400 - 3600); return }
+#endif
+        let bounds = Date(timeIntervalSince1970: TimeInterval(window.lowerBound))...Date(timeIntervalSince1970: TimeInterval(window.upperBound))
+        let sleeps: [OverviewHRChart.SleepSpan] = await repo.allSleepSessions(days: 3).map { s in
+            .init(start: Date(timeIntervalSince1970: TimeInterval(s.effectiveStartTs)), end: Date(timeIntervalSince1970: TimeInterval(s.endTs)), label: "")
+        }
+        guard !Task.isCancelled else { return }
+        sleepSpan = OverviewHRChart.mainSleep(sleeps, overlapping: bounds).map { Int($0.start.timeIntervalSince1970)...Int($0.end.timeIntervalSince1970) }
+    }
+
     private var levelWord: LocalizedStringKey? {
         level.map { $0 < 1 ? "Low" : ($0 < 2 ? "Medium" : "High") }
     }
@@ -482,22 +541,27 @@ struct NunaStressCard: View {
                         Spacer(minLength: 8)
                         Image(systemName: "chevron.right").font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
                     }
+                    // Small type, as on the reference: the time of the last reading at the left, the level word and its figure (16 pt DIN) at the right.
                     HStack(alignment: .firstTextBaseline) {
                         Text(verbatim: isToday ? (lastUpdated.map { String(localized: "Last updated \($0)") } ?? "") : String(localized: "Day average"))
-                            .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                            .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         Spacer(minLength: 8)
                         if let level, let levelWord {
                             HStack(alignment: .firstTextBaseline, spacing: 10) {
                                 Text(levelWord).font(.nuna(size: 13.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaStressBand.color(for: level))
-                                Text(verbatim: Self.format(level)).font(.nuna(size: 26, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                                Text(verbatim: Self.format(level)).font(.nunaBoldFigure(size: 16)).foregroundStyle(NunaPalette.textPrimary)
                             }
                         }
                     }
-                    NunaStressMonitorChart(points: curve?.timeline ?? [], workouts: workouts, showsNow: isToday).frame(height: 260)
+                    .padding(.top, 5)
+                    // Today: the last twelve hours up to the latest reading, with the night and the activities over them.
+                    NunaStressMonitorChart(points: curve?.timeline ?? [], workouts: workouts, showsNow: isToday, sleep: sleepSpan, domain: window, compact: true)
+                        .frame(height: 204)
                 }
             }
         }
         .buttonStyle(.plain)
+        .task(id: "\(window?.upperBound ?? 0)-\(repo.refreshSeq)") { await loadSleep() }
     }
 
     static func format(_ v: Double) -> String { String(format: "%.1f", locale: AppLanguage.activeLocale, v) }
@@ -605,6 +669,8 @@ struct NunaStressMonitorChart: View {
     /// The window the chart covers, in unix seconds. Without it the chart runs from the first scored point to the last one. With it the
     /// chart is exactly this window (today: the last 24 hours up to now), whatever part of it has data.
     var domain: ClosedRange<Int>?
+    /// The Today card's cut of the chart: smaller figures (DIN Bold), a shorter plot and the line running to the edge of the card.
+    var compact = false
 
     @State private var scrubX: CGFloat?
 
@@ -615,7 +681,8 @@ struct NunaStressMonitorChart: View {
 
     var body: some View {
         GeometryReader { geo in
-            let left: CGFloat = 38, right: CGFloat = 14, top: CGFloat = 54, bottom: CGFloat = 34
+            let left: CGFloat = compact ? 24 : 38, right: CGFloat = compact ? 0 : 14, top: CGFloat = compact ? 20 : 54, bottom: CGFloat = compact ? 32 : 34
+            let axisFont: Font = compact ? .nunaBoldFigure(size: 10) : .nuna(size: 12.5, weight: .heavy)
             let w = geo.size.width, h = geo.size.height
             let plot = CGRect(x: left, y: top, width: w - left - right, height: h - top - bottom)
             let allScored = points.filter { $0.level != nil }
@@ -630,37 +697,40 @@ struct NunaStressMonitorChart: View {
                 ForEach(0..<4, id: \.self) { i in
                     Rectangle().fill(NunaPalette.hairline.opacity(0.7)).frame(width: plot.width, height: 1)
                         .position(x: plot.midX, y: y(Double(i)))
-                    Text(verbatim: String(format: "%.1f", locale: AppLanguage.activeLocale, Double(i))).font(.nuna(size: 12.5, weight: .heavy))
-                        .foregroundStyle(NunaPalette.textMuted).position(x: left / 2 - 2, y: y(Double(i)))
+                    Text(verbatim: String(format: "%.1f", locale: AppLanguage.activeLocale, Double(i))).font(axisFont)
+                        .foregroundStyle(compact ? Color(red: 0.59, green: 0.60, blue: 0.62) : NunaPalette.textMuted).position(x: left / 2 - 2, y: y(Double(i)))
                 }
                 if scored.count >= 2 {
                     // A vertical line and its time at the whole hours that suit the span (every 8 hours over a day, every 2 over part of one, then
                     // every hour), kept clear of both ends.
                     ForEach(hourMarks(t0, t1, x: x, plotWidth: plot.width), id: \.self) { ts in
                         Rectangle().fill(NunaPalette.hairline.opacity(0.7)).frame(width: 1, height: plot.height).position(x: x(ts), y: plot.midY)
-                        Text(verbatim: clock(ts)).font(.nuna(size: 12.5, weight: .heavy)).foregroundStyle(NunaPalette.textMuted)
+                        Text(verbatim: clock(ts)).font(axisFont).foregroundStyle(compact ? Color(red: 0.59, green: 0.60, blue: 0.62) : NunaPalette.textMuted)
                             .fixedSize().position(x: x(ts), y: plot.maxY + 22)
                     }
-                    Text(verbatim: clock(t0)).font(.nuna(size: 12.5, weight: .heavy)).foregroundStyle(NunaPalette.textMuted)
-                        .fixedSize().position(x: plot.minX + 14, y: plot.maxY + 22)
+                    Text(verbatim: clock(t0)).font(axisFont).foregroundStyle(compact ? Color(red: 0.59, green: 0.60, blue: 0.62) : NunaPalette.textMuted)
+                        .fixedSize().position(x: plot.minX + (compact ? 0 : 14), y: plot.maxY + 22)
                     if let sleep {
                         let a = max(sleep.lowerBound, t0), b = min(sleep.upperBound, t1)
                         if b > a {
                             let x0 = x(a), width = max(x(b) - x0, 6)
-                            Rectangle().fill(Color.white.opacity(0.05)).frame(width: width, height: plot.height).position(x: x0 + width / 2, y: plot.midY)
-                            Rectangle().fill(NunaRestChart.steel).frame(width: width, height: 3).position(x: x0 + width / 2, y: plot.minY)
+                            Rectangle().fill(LinearGradient(colors: [Color.white.opacity(compact ? 0.07 : 0.05), Color.white.opacity(compact ? 0.02 : 0.05)], startPoint: .top, endPoint: .bottom))
+                                .frame(width: width, height: plot.height).position(x: x0 + width / 2, y: plot.midY)
+                            Rectangle().fill(compact ? Color(red: 0.52, green: 0.62, blue: 0.72) : NunaRestChart.steel).frame(width: width, height: compact ? 2 : 3).position(x: x0 + width / 2, y: plot.minY)
                             Image(systemName: "moon.fill").font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
-                                .position(x: x0 + width / 2, y: plot.minY - 22)
+                                .position(x: x0 + width / 2, y: plot.minY - (compact ? 18 : 22))
                         }
                     }
                     ForEach(Array(workouts.enumerated()), id: \.offset) { _, wo in
                         let a = max(wo.startTs, t0), b = min(wo.endTs, t1)
                         if b > a {
                             let x0 = x(a), width = max(x(b) - x0, 6)
-                            Rectangle().fill(Color.white.opacity(0.07)).frame(width: width, height: plot.height).position(x: x0 + width / 2, y: plot.midY)
-                            Rectangle().fill(NunaRestChart.steel).frame(width: width, height: 3).position(x: x0 + width / 2, y: plot.minY)
+                            Rectangle().fill(compact ? AnyShapeStyle(LinearGradient(colors: [Color(red: 0.24, green: 0.57, blue: 0.88).opacity(0.28), Color(red: 0.24, green: 0.57, blue: 0.88).opacity(0.06)], startPoint: .top, endPoint: .bottom))
+                                                     : AnyShapeStyle(Color.white.opacity(0.07)))
+                                .frame(width: width, height: plot.height).position(x: x0 + width / 2, y: plot.midY)
+                            Rectangle().fill(compact ? Color(red: 0.24, green: 0.57, blue: 0.88) : NunaRestChart.steel).frame(width: width, height: compact ? 2 : 3).position(x: x0 + width / 2, y: plot.minY)
                             Image(systemName: ActivitySport.symbol(for: wo.sport)).font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
-                                .position(x: x0 + width / 2, y: plot.minY - 22)
+                                .position(x: x0 + width / 2, y: plot.minY - (compact ? 18 : 22))
                         }
                     }
                     // The line is coloured by the level itself (blue low, green, then yellow and amber), not by where it sits in its own range: the
@@ -673,18 +743,23 @@ struct NunaStressMonitorChart: View {
                             let pt = CGPoint(x: x(p.startTs), y: y(level))
                             if open { path.addLine(to: pt) } else { path.move(to: pt); open = true }
                         }
-                        let ramp = Gradient(stops: [.init(color: NunaStressBand.high, location: 0), .init(color: NunaPalette.effort, location: 0.2),
-                                                    .init(color: NunaStressBand.medium, location: 0.5), .init(color: NunaStressBand.low, location: 1)])
+                        // Amber at the top of the scale through yellow-green and green down to a light teal blue at the bottom, as sampled from the reference.
+                        func c(_ r: Double, _ g: Double, _ b: Double) -> Color { Color(red: r / 255, green: g / 255, blue: b / 255) }
+                        let ramp = Gradient(stops: [.init(color: c(225, 180, 90), location: 0), .init(color: c(217, 188, 99), location: 0.06), .init(color: c(195, 204, 121), location: 0.2),
+                                                    .init(color: c(163, 220, 141), location: 0.33), .init(color: c(118, 232, 168), location: 0.46), .init(color: c(116, 217, 184), location: 0.59),
+                                                    .init(color: c(118, 202, 197), location: 0.72), .init(color: c(121, 186, 210), location: 0.85), .init(color: c(119, 180, 217), location: 1)])
                         ctx.stroke(path, with: .linearGradient(ramp, startPoint: CGPoint(x: 0, y: y(3)), endPoint: CGPoint(x: 0, y: y(0))),
                                    style: StrokeStyle(lineWidth: 2.2, lineCap: .round, lineJoin: .round))
                     }
                     .frame(width: w, height: h)
                     if showsNow {
-                        Path { p in p.move(to: CGPoint(x: x(t1), y: plot.minY - 8)); p.addLine(to: CGPoint(x: x(t1), y: plot.maxY)) }
-                            .stroke(NunaPalette.textPrimary, style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
-                        Circle().fill(NunaPalette.textPrimary).frame(width: 7, height: 7).position(x: x(t1), y: plot.maxY)
-                        Text(verbatim: clock(t1)).font(.nuna(size: 13, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
-                            .fixedSize().position(x: min(x(t1), w - 24), y: plot.maxY + 22)
+                        // The compact card runs the dashed line a little past the plot at both ends and closes it with a small dot, as on the reference.
+                        let nowTop = plot.minY - (compact ? 12 : 8), nowBottom = plot.maxY + (compact ? 8.7 : 0)
+                        Path { p in p.move(to: CGPoint(x: x(t1), y: nowTop)); p.addLine(to: CGPoint(x: x(t1), y: nowBottom)) }
+                            .stroke(NunaPalette.textPrimary, style: StrokeStyle(lineWidth: 1, dash: compact ? [4.5, 3.5] : [3, 3]))
+                        Circle().fill(NunaPalette.textPrimary).frame(width: compact ? 5 : 7, height: compact ? 5 : 7).position(x: x(t1), y: nowBottom)
+                        Text(verbatim: clock(t1)).font(compact ? .nunaBoldFigure(size: 11) : .nuna(size: 13, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary)
+                            .fixedSize().position(x: compact ? x(t1) - 6 : min(x(t1), w - 24), y: plot.maxY + 22)
                     }
                     if let scrubX, let p = nearest(scored, to: scrubX, x: x), let level = p.level {
                         let px = x(p.startTs), py = y(level)
@@ -727,8 +802,19 @@ struct NunaStressMonitorChart: View {
     /// first end is a label, so it gets a wider berth than the last.
     private func hourMarks(_ t0: Int, _ t1: Int, x: (Int) -> CGFloat, plotWidth: CGFloat) -> [Int] {
         let span = t1 - t0
-        let step = span > 13 * 3600 ? 8 : (span > 4 * 3600 ? 3 : 1)
         let cal = Calendar.current
+        // Between eight and thirteen hours (the card's twelve): every four hours from the first whole hour after the start, so 17:58 shows 22:00 and 02:00.
+        if span >= 8 * 3600, span <= 13 * 3600 {
+            var out: [Int] = []
+            guard let anchor = cal.date(bySetting: .minute, value: 0, of: Date(timeIntervalSince1970: TimeInterval(t0))) else { return [] }
+            var ts = Int(anchor.timeIntervalSince1970)
+            while ts < t1 {
+                if x(ts) - x(t0) > 62, x(t1) - x(ts) > 34 { out.append(ts) }
+                ts += 4 * 3600
+            }
+            return out
+        }
+        let step = span > 13 * 3600 ? 8 : (span > 4 * 3600 ? 3 : 1)
         guard let first = cal.date(bySetting: .minute, value: 0, of: Date(timeIntervalSince1970: TimeInterval(t0))) else { return [] }
         var out: [Int] = []
         var d = first
