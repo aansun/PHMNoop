@@ -37,7 +37,7 @@ enum NunaAnyaModule: String, Equatable {
         if c.contains("breath") { self = .breathing }
         else if c.contains("sleep") || c.contains("nap") || c.contains("body clock") || c.contains("rest") { self = .sleep }
         else if c.contains("trend") { self = .trends }
-        else if c.contains("workout") || c.contains("effort") || c.contains("training") { self = .workouts }
+        else if c.contains("workout") || c.contains("effort") || c.contains("strain") || c.contains("training") { self = .workouts }
         else if c.contains("health") || c.contains("stress") || c.contains("warning") || c.contains("hrv") || c.contains("heart") || c.contains("oxygen") || c.contains("respir") || c.contains("weight") || c.contains("body") { self = .health }
         else if c.contains("nutrition") || c.contains("water") || c.contains("calor") { self = .nutrition }
         else if c.contains("device") || c.contains("battery") || c.contains("strap") { self = .device }
@@ -67,6 +67,7 @@ enum NunaAnyaReader {
     static func read(context: String, metric: NunaAnyaMetric? = nil, repo: Repository, profile: ProfileStore, scale: EffortScale) async -> NunaAnyaRead? {
         if let metric { return await metricRead(metric, repo: repo, profile: profile) }
         if context.lowercased() == "body" { return await body(repo: repo, profile: profile, scale: scale) }
+        if context.lowercased() == "strain" { return await strain(repo: repo, profile: profile, scale: scale) }
         let module = NunaAnyaModule(context: context)
         switch module {
         case .nutrition: return await nutrition(repo: repo, profile: profile)
@@ -364,6 +365,28 @@ enum NunaAnyaReader {
     }
 
     // MARK: Workouts
+
+    /// The Strain page: today's Strain against what today's Recovery supports, with the week's sessions behind it. Without a Strain for today it
+    /// falls back to the week alone.
+    private static func strain(repo: Repository, profile: ProfileStore, scale: EffortScale) async -> NunaAnyaRead? {
+        let m = NunaTodayModel()
+        await m.load(repo: repo, profile: profile)
+        let week = await workouts(repo: repo, scale: scale)
+        guard let e = m.effort else {
+            return week ?? NunaAnyaRead(headline: String(localized: "No Strain yet today"),
+                                        detail: String(localized: "Anya reads it as soon as your heart rate has spent time in the zones."),
+                                        read: ["Strain"], module: .workouts, questions: questions(.workouts))
+        }
+        let shown = UnitFormatter.effortDisplay(e, scale: scale)
+        let headline = String(localized: "Strain \(shown) of \(UnitFormatter.effortScaleMax(scale)) so far today")
+        var parts: [String] = []
+        if let line = NunaInsightText.effort(effort: e, chargePct: m.charge.pct) { parts.append(line) }
+        if let w = week { parts.append(w.headline + ".") }
+        var read = ["Strain"]
+        if m.charge.pct != nil { read.append("Recovery") }
+        if week != nil { read.append("Workouts 7 days") }
+        return NunaAnyaRead(headline: headline, detail: parts.isEmpty ? nil : parts.joined(separator: " "), read: read, module: .workouts, questions: questions(.workouts))
+    }
 
     private static func workouts(repo: Repository, scale: EffortScale) async -> NunaAnyaRead? {
         let rows = await repo.workoutRows()

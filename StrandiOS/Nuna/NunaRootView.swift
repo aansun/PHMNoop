@@ -3,7 +3,7 @@ import SwiftUI
 import UIKit
 import StrandDesign
 
-/// The Nuna navigation shell: five tabs (Today, Health, Trends, Anya, Me) in one floating tab bar.
+/// The Nuna navigation shell: three tabs (Today, Health, More) in one floating tab bar, with Anya as a floating button beside it.
 ///
 /// Phase 0 of docs/nuna/IMPLEMENTATION_PLAN.md. The tab roots still host the existing screens; later
 /// phases replace them one by one. The shell is only used when `ExperienceMode` is `.nuna`; the default
@@ -33,11 +33,13 @@ struct NunaRootView: View {
         }
     }
 
-    private enum Tab: Int, CaseIterable { case today = 0, health, trends, anya, me }
+    private enum Tab: Int, CaseIterable { case today = 0, health, me }
 
     @State private var selection = Tab.today.rawValue
     @State private var paths: [NavigationPath] = Array(repeating: NavigationPath(), count: Tab.allCases.count)
     @State private var showDevices = false
+    /// Anya's sheet, opened by the round button beside the tab bar.
+    @State private var showAnya = false
     @State private var routed: NavRouter.Destination?
     /// While the keyboard is up the tab bar steps aside: it floats over the content, so above a keyboard it would sit on top of whatever is being typed.
     @State private var keyboardUp = false
@@ -45,17 +47,25 @@ struct NunaRootView: View {
     @AppStorage(NunaTabBarPrefs.autoHideKey) private var autoHide = false
     @State private var barHidden = false
 
-    /// One bar: Today, Health, Trends, Anya (while it is on) and More.
+    /// One bar: Today, Health and More. Anya is the round button beside it.
     private var items: [NunaTabItem] {
-        var out = [
+        [
             NunaTabItem(id: Tab.today.rawValue, title: "Today", systemImage: "square.grid.2x2.fill"),
             NunaTabItem(id: Tab.health.rawValue, title: "Health", systemImage: "heart.text.square"),
-            NunaTabItem(id: Tab.trends.rawValue, title: "Trends", systemImage: "chart.line.uptrend.xyaxis"),
+            NunaTabItem(id: Tab.me.rawValue, title: "More", systemImage: "line.3.horizontal"),
         ]
-        if coachEnabled { out.append(NunaTabItem(id: Tab.anya.rawValue, title: "Anya", systemImage: NunaGlyph.anya)) }
-        out.append(NunaTabItem(id: Tab.me.rawValue, title: "More", systemImage: "line.3.horizontal"))
-        return out
     }
+
+    /// Anya's button: her mark in a ring, on the same glass as the bar. It opens her sheet over the page; it is not a tab.
+    private var anyaButton: AnyView {
+        AnyView(ZStack {
+            Circle().strokeBorder(NunaAnyaWing.gradient, lineWidth: 3)
+            AnyaMark(size: 20)
+        }.frame(width: 40, height: 40))
+    }
+
+    /// What Anya reads for the tab that is open.
+    private var anyaContext: String { selection == Tab.health.rawValue ? "Health" : "Today" }
 
     /// The tab bar belongs to the main page of a tab. Once a page is pushed the bar steps away and the page's own back button is the way out.
     private var atTabRoot: Bool { selection < paths.count ? paths[selection].isEmpty : true }
@@ -64,8 +74,6 @@ struct NunaRootView: View {
         TabView(selection: $selection) {
             stack(.today) { NunaTodayView() }
             stack(.health) { NunaHealthTabView() }
-            stack(.trends) { NunaTrendsView() }
-            if coachEnabled { stack(.anya) { NunaAnyaView() } }
             stack(.me) { NunaMeView() }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -74,7 +82,10 @@ struct NunaRootView: View {
                     NunaWorkoutBar()
                     NunaLiftBar()
                     if atTabRoot {
-                        NunaTabBar(items: items, selection: $selection, minimized: autoHide && barHidden,
+                        NunaTabBar(items: items,
+                                   trailing: coachEnabled ? NunaTabItem(id: -1, title: "Anya", systemImage: NunaGlyph.anya) : nil,
+                                   trailingView: coachEnabled ? anyaButton : nil, onTrailing: coachEnabled ? { showAnya = true } : nil,
+                                   selection: $selection, minimized: autoHide && barHidden,
                                    onExpand: { barHidden = false }) { id in
                             // Re-tapping the active tab pops it to its root.
                             if id < paths.count { paths[id] = NavigationPath() }
@@ -148,6 +159,7 @@ struct NunaRootView: View {
             }
         }
         .sheet(isPresented: $showDevices) { sheetStack { NunaDevicesView() } }
+        .sheet(isPresented: $showAnya) { NunaAnyaSheet(context: anyaContext, floating: true) }
         .sheet(item: $routed) { dest in sheetStack { destinationView(dest) } }
         .onChange(of: router.requestedDestination) { _, dest in handle(dest) }
         .onChange(of: router.pendingMetricKey) { _, key in openMetric(key) }
@@ -217,7 +229,7 @@ struct NunaRootView: View {
         case .fusedRecord: FusedRecordHost()
         case .rhythm: RhythmHost(onClose: { routed = nil })
         case .devices: NunaDevicesView()
-        case .trends: TrendsView()
+        case .trends: NunaTrendsView()
         case .workouts: NunaWorkoutsView()
         case .activeWorkout: NunaWorkoutsView(autoOpenStart: true)
         case .liveSession: LiquidTodayView()
@@ -253,12 +265,10 @@ struct NunaRootView: View {
         case .devices:
             showDevices = true
         case .coach:
+            // The full conversation opens over the page (a moment after Anya's sheet has gone, when that is where it came from).
             if coachEnabled {
-                selection = Tab.anya.rawValue
-                paths[Tab.anya.rawValue] = NavigationPath()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) { routed = dest }
             }
-        case .trends:
-            selection = Tab.trends.rawValue
         case .health:
             // There is no Health tab: what opened it (the vital sign widget) lands on the vital signs page of Today.
             selection = Tab.today.rawValue

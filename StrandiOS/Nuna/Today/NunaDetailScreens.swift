@@ -251,7 +251,7 @@ struct NunaEffortDetailView: View {
             await zones.load(repo: repo, profile: profile, endingOffset: router.todayDayOffset)
         }
         // Anya floats over the page, with today's read as a pill; on a past day she is only the button.
-        .nunaAnyaFloating(context: "Strain", line: anyaFloatLine)
+        .nunaAnyaFloating(context: "Strain", line: anyaFloatLine, analyses: router.todayDayOffset == 0)
         .environment(\.nunaDetailSwitch, nil)
     }
 
