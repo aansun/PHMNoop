@@ -12,7 +12,7 @@ extension TodaySection {
         case .synthesis: return String(localized: "Highlights")
         case .recoveryVitals: return String(localized: "Stress monitor")
         case .vitalMonitor: return String(localized: "Vital and stress monitors")
-        case .weekCompare: return String(localized: "Recovery & Strain")
+        case .weekCompare: return String(localized: "Strain & Recovery")
         case .keyMetrics: return String(localized: "Key metrics")
         case .workouts: return String(localized: "Activity")
         case .journal: return String(localized: "Quick log")
