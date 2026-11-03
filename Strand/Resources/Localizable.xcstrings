@@ -7849,9 +7849,9 @@
  "Helpful": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Membantu"}}}},
  "Not helpful": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kurang membantu"}}}},
  "Opens Anya": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Membuka Anya"}}}},
- "Anya is analysing…": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Anya sedang menganalisis…"}}}},
  "No Strain yet today": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Belum ada Strain hari ini"}}}},
  "Anya reads it as soon as your heart rate has spent time in the zones.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Anya membacanya begitu detak jantungmu sudah berada di zona latihan."}}}},
  "Strain %@ of %@ so far today": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Strain %1$@ dari %2$@ sejauh ini hari ini"}}}},
- "Recovery, Strain and Sleep over time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Recovery, Strain, dan Sleep dari waktu ke waktu"}}}}
+ "Recovery, Strain and Sleep over time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Recovery, Strain, dan Sleep dari waktu ke waktu"}}}},
+ "Analyzing…": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Menganalisis…"}}}}
 }, "version":"1.0" }
