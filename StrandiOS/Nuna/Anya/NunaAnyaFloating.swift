@@ -25,6 +25,10 @@ final class NunaAnyaFloatingModel: ObservableObject {
             local = hit.local; explanation = hit.explanation; phase = .done; return
         }
         phase = .analysing
+#if DEBUG
+        // `--demo-anya-slow` keeps her "analyzing" for a while, so that state can be looked at.
+        if CommandLine.arguments.contains("--demo-anya-slow") { try? await Task.sleep(nanoseconds: 60_000_000_000) }
+#endif
         let read = await NunaAnyaReader.read(context: context, metric: metric, repo: repo, profile: profile, scale: scale)
         local = read.map { NunaMark.plain(NunaMark.compose(headline: $0.headline, detail: $0.detail)) } ?? pageLine
         if coach.isConfigured, coach.dataConsent {
@@ -72,6 +76,43 @@ struct NunaAnyaRing: View {
     }
 }
 
+/// "Analyzing…" in grey with a light that sweeps across the letters, as on the reference.
+private struct NunaAnyaShimmerText: View {
+    let text: String
+    @State private var phase: CGFloat = -0.4
+    var body: some View {
+        Text(verbatim: text).font(.nuna(size: 15.5, weight: .semibold)).foregroundStyle(Color.white.opacity(0.52))
+            .overlay {
+                GeometryReader { g in
+                    LinearGradient(colors: [.clear, .white, .clear], startPoint: .leading, endPoint: .trailing)
+                        .frame(width: g.size.width * 0.45)
+                        .offset(x: phase * g.size.width)
+                }
+                .mask(Text(verbatim: text).font(.nuna(size: 15.5, weight: .semibold)))
+            }
+            .onAppear { withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) { phase = 1.0 } }
+    }
+}
+
+/// The glowing blue line that slides along the foot of the pill while she works.
+private struct NunaAnyaProgressLine: View {
+    @State private var x: CGFloat = 0
+    var body: some View {
+        GeometryReader { g in
+            let w: CGFloat = 70
+            ZStack {
+                Capsule().fill(LinearGradient(colors: [Color(red: 0.36, green: 0.42, blue: 0.9), Color(red: 0.55, green: 0.62, blue: 1.0)], startPoint: .leading, endPoint: .trailing))
+                    .frame(width: w, height: 3).blur(radius: 3).opacity(0.9)
+                Capsule().fill(LinearGradient(colors: [Color(red: 0.36, green: 0.42, blue: 0.9), Color(red: 0.62, green: 0.7, blue: 1.0)], startPoint: .leading, endPoint: .trailing))
+                    .frame(width: w, height: 2.5)
+            }
+            .frame(width: w).position(x: w / 2 + x * (g.size.width - w), y: g.size.height - 1.5)
+            .onAppear { withAnimation(.easeInOut(duration: 1.3).repeatForever(autoreverses: true)) { x = 1 } }
+        }
+        .allowsHitTesting(false)
+    }
+}
+
 /// Anya floating over a page: a small button at the bottom corner, or, when she has a line for the page, a pill with that line and a chevron
 /// (swipe it down to fold it into the button). Either opens the dark Anya sheet, which holds the line, suggestion chips and one box to ask in.
 struct NunaAnyaFloating: ViewModifier {
@@ -115,6 +156,7 @@ struct NunaAnyaFloating: ViewModifier {
                     .frame(maxWidth: .infinity, alignment: .bottomTrailing)
                     .padding(.horizontal, 16).padding(.bottom, 12)
                     .animation(.spring(response: 0.38, dampingFraction: 0.82), value: showsPill)
+                    .animation(.spring(response: 0.45, dampingFraction: 0.85), value: analysing)
                 }
             }
             .task { if analyses { await model.analyse(context: context, metric: metric, pageLine: givenLine, repo: repo, profile: profile, coach: coach, scale: UnitPrefs.resolveEffortScale(effortScaleRaw)) } }
@@ -139,28 +181,26 @@ struct NunaAnyaFloating: ViewModifier {
         .transition(.scale(scale: 0.6, anchor: .bottomTrailing).combined(with: .opacity))
     }
 
-    /// `line` nil means she is still analysing.
+    /// `line` nil means she is still analysing: a small pill with "Analyzing…" at the right, which opens out to the full line once it is there.
     private func pill(_ line: String?) -> some View {
-        Button { open = true } label: {
+        let shape = RoundedRectangle(cornerRadius: 28, style: .continuous)
+        return Button { open = true } label: {
             HStack(spacing: 14) {
                 NunaAnyaRing(size: 34)
-                Group {
-                    if let line {
-                        Text(verbatim: NunaMark.plain(line)).font(.nuna(size: 15.5, weight: .medium)).lineLimit(2).multilineTextAlignment(.leading)
-                    } else {
-                        HStack(spacing: 10) {
-                            ProgressView().controlSize(.small).tint(.white.opacity(0.8))
-                            Text("Anya is analysing…").font(.nuna(size: 15.5, weight: .medium)).foregroundStyle(.white.opacity(0.8))
-                        }
-                    }
+                if let line {
+                    Text(verbatim: NunaMark.plain(line)).font(.nuna(size: 15.5, weight: .medium)).foregroundStyle(.white).textCase(nil)
+                        .lineLimit(2).multilineTextAlignment(.leading).frame(maxWidth: .infinity, alignment: .leading)
+                    Image(systemName: "chevron.up").font(.system(size: 17, weight: .regular)).foregroundStyle(.white.opacity(0.7)).padding(.trailing, 4)
+                } else {
+                    NunaAnyaShimmerText(text: String(localized: "Analyzing…")).textCase(nil).padding(.trailing, 8)
                 }
-                .foregroundStyle(.white).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
-                Image(systemName: "chevron.up").font(.system(size: 17, weight: .regular)).foregroundStyle(.white.opacity(0.7)).padding(.trailing, 4)
             }
             .padding(.leading, 15).padding(.trailing, 16).padding(.vertical, 13)
-            .background(Self.surface, in: RoundedRectangle(cornerRadius: 32, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 32, style: .continuous).strokeBorder(
-                LinearGradient(colors: [Color.white.opacity(0.28), Color.white.opacity(0.06)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1))
+            .frame(maxWidth: line == nil ? nil : .infinity)
+            .background(Self.surface, in: shape)
+            .overlay(shape.strokeBorder(
+                LinearGradient(colors: [Color(red: 0.55, green: 0.5, blue: 0.85).opacity(0.5), Color.white.opacity(0.06)], startPoint: .topLeading, endPoint: .bottomTrailing), lineWidth: 1))
+            .overlay { if line == nil { NunaAnyaProgressLine().clipShape(shape) } }
             .shadow(color: .black.opacity(0.35), radius: 14, y: 6)
         }
         .buttonStyle(.plain)
@@ -171,6 +211,7 @@ struct NunaAnyaFloating: ViewModifier {
                 if v.translation.height > 40 { folded = true }
                 withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) { drag = 0 }
             })
+        .accessibilityLabel(line.map { Text(verbatim: NunaMark.plain($0)) } ?? Text("Analyzing…"))
         .accessibilityHint(Text("Opens Anya"))
         .transition(.move(edge: .bottom).combined(with: .opacity))
     }
