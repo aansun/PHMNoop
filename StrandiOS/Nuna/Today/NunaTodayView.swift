@@ -186,6 +186,7 @@ struct NunaTodayView: View {
     @State private var showDate = false
     @State private var showInbox = false
     @State private var showCoach = false
+    @State private var showOutlook = false
     @State private var editing = false
     @State private var showManual = false
     /// The saved session the Anya card opens straight to.
@@ -301,7 +302,11 @@ struct NunaTodayView: View {
                             if !model.isToday { pastDayBanner }
                             ForEach(sections) { section in
                                 sectionView(section)
-                                if model.isToday && section == myDayAnchor { myDayRow }
+                                if model.isToday && section == myDayAnchor {
+                                    myDayRow
+                                    // Under "My Day", close to it: once there are enough days of data to know the person's habits.
+                                    if NunaOutlookGate.ready(repo.days) { NunaDailyOutlookCard { showOutlook = true }.padding(.top, -NunaSpacing.section + 12) }
+                                }
                             }
                             customizeButton
                         }
@@ -453,6 +458,7 @@ struct NunaTodayView: View {
         .sheet(isPresented: $showAddCard) { addCardSheet }
         .sheet(isPresented: $showInbox) { NunaUpdatesInbox(onClose: { showInbox = false }).nunaSheetChrome(detents: [.large]) }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "today") }
+        .sheet(isPresented: $showOutlook) { NunaAnyaSheet(context: "today", floating: true, outlook: true) }
         .environment(\.nunaAnyaCardContext, "today")
         .environment(\.nunaAnyaRow, true)
     }
@@ -885,7 +891,7 @@ struct NunaTodayView: View {
                                    effort: model.effort, stressNow: model.stressCurve.flatMap(StressDayCurve.latestLevel),
                                    stressHighMin: model.stressCurve.map(StressDayCurve.highMinutes),
                                    rest: model.rest, workouts: model.workouts, calibrating: calibrationStages, feed: highlightsFeed,
-                                   onBreathe: { showBreath = true }, onWindDown: { pushToday(.windDown) })
+                                   onBreathe: { showBreath = true }, onWindDown: { pushToday(.windDown) }, onOutlook: { showOutlook = true })
             }
         case .recoveryVitals:
             if !model.stressStatus.isReady {

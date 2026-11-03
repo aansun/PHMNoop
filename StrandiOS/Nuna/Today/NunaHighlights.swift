@@ -11,7 +11,7 @@ struct NunaHighlight: Identifiable, Equatable {
     let message: String
     var actionTitle: String?
     var action: Action?
-    enum Action: Equatable { case breathe, windDown }
+    enum Action: Equatable { case breathe, windDown, outlook }
 }
 
 /// What the highlights are worked out from. Plain numbers, so the rules can be read (and tested) without the app around them.
@@ -49,6 +49,8 @@ struct NunaHighlightInputs {
     var naps: [NunaHighlightNap] = []
     /// Last night's sleep, until the middle of the day.
     var sleepRecorded: (duration: String, score: Int?)?
+    /// The Daily Outlook just opened up and has not been looked at yet.
+    var outlookFirst = false
 }
 
 struct NunaCalibrationStage: Equatable {
@@ -80,6 +82,13 @@ enum NunaHighlightEngine {
         // 1. The early warning, when it has something to say.
         if let r = i.illness, r.level != .quiet {
             out.append(.init(id: "illness", title: String(localized: "Early warning"), message: localizedIllnessCopy(r)))
+        }
+
+        // 1b. The first Daily Outlook, waiting to be opened.
+        if i.outlookFirst {
+            out.append(.init(id: "outlook-first", title: String(localized: "Your First Daily Outlook"),
+                             message: String(localized: "Your personalized daily insights and recommendations are here! Track progress, spot trends, and make informed decisions."),
+                             actionTitle: String(localized: "Get my outlook"), action: .outlook))
         }
 
         // 2. Baselines: still being built, or finished today.
@@ -230,6 +239,7 @@ struct NunaHighlightsCard: View {
     @ObservedObject var feed: NunaHighlightsFeed
     let onBreathe: () -> Void
     let onWindDown: () -> Void
+    let onOutlook: () -> Void
 
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var appModel: AppModel
@@ -305,7 +315,8 @@ struct NunaHighlightsCard: View {
             stressNow: stressNow, stressHighMin: stressHighMin, illness: appModel.illnessSignal,
             calibrating: calibrating, calibrationDone: ["recovery", "stress"].filter { feed.doneStages.contains($0) },
             workouts: Array(announced), dayStrainShown: effort.map { UnitFormatter.effortDisplay($0, scale: scale) },
-            naps: freshNaps, sleepRecorded: slept)
+            naps: freshNaps, sleepRecorded: slept,
+            outlookFirst: NunaOutlookGate.ready(repo.days) && !UserDefaults.standard.bool(forKey: NunaOutlookGate.openedKey))
 #if DEBUG
         Self.demo(&result)
 #endif
@@ -381,13 +392,28 @@ struct NunaHighlightsCard: View {
                     }
                     if let t = h.actionTitle, let a = h.action {
                         Button { perform(a) } label: {
-                            Text(verbatim: t).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                                .foregroundStyle(NunaPalette.textPrimary)
-                                .padding(.horizontal, 12).padding(.vertical, 6)
-                                .background(Capsule().fill(NunaPalette.cardHighlight))
+                            if a == .outlook {
+                                // The Outlook's own call to action: gradient letters and an arrow, no pill.
+                                HStack(spacing: 10) {
+                                    Text(verbatim: t).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                                    Image(systemName: "arrow.right").font(.system(size: 16, weight: .regular))
+                                }
+                                .foregroundStyle(Self.outlookGradient).frame(minHeight: 32)
+                            } else {
+                                Text(verbatim: t).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                                    .foregroundStyle(NunaPalette.textPrimary)
+                                    .padding(.horizontal, 12).padding(.vertical, 6)
+                                    .background(Capsule().fill(NunaPalette.cardHighlight))
+                            }
                         }
                         .buttonStyle(.plain).padding(.top, 4)
                     }
+                }
+            }
+            .overlay {
+                // The first Outlook is framed in the Outlook's violet to sky blue.
+                if h.id == "outlook-first" {
+                    RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous).strokeBorder(Self.outlookGradient, lineWidth: 2)
                 }
             }
             .overlay(alignment: .topTrailing) {
@@ -425,14 +451,20 @@ struct NunaHighlightsCard: View {
         .padding(.bottom, remaining > 1 ? 12 : 0)
     }
 
+    private static let outlookGradient = LinearGradient(colors: [Color(red: 0.62, green: 0.40, blue: 0.96), Color(red: 0.25, green: 0.72, blue: 0.98)],
+                                                        startPoint: .leading, endPoint: .trailing)
+
     private func perform(_ a: NunaHighlight.Action) {
         switch a {
         case .breathe: onBreathe()
         case .windDown: onWindDown()
+        case .outlook: onOutlook()
         }
     }
 
     private func put(away id: String) {
+        // Put away unopened, the first Outlook is not announced again; the card under "My Day" stays.
+        if id == "outlook-first" { UserDefaults.standard.set(true, forKey: NunaOutlookGate.openedKey) }
         var entries = dismissedRaw.split(separator: ",").map(String.init).filter { $0.hasPrefix(dayKey + "|") }
         entries.append("\(dayKey)|\(id)")
         withAnimation(.easeInOut(duration: 0.25)) { dismissedRaw = entries.joined(separator: ",") }
