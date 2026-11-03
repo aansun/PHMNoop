@@ -29,6 +29,10 @@ struct NunaHighlightInputs {
     var debtBeforeMin: Double?
     var effort: Double?
     var effortTargetHigh: Double?
+    var effortTargetLow: Double?
+    var effortTargetHighShown: String?
+    /// "green", "yellow" or "red" when today's scored Recovery is the first of that colour the person has had.
+    var firstColour: String?
     var effortTargetText: String?
     var effortShown: String?
     var stressNow: Double?
@@ -82,33 +86,33 @@ enum NunaHighlightEngine {
         for stage in i.calibrating {
             if stage.id == "recovery" {
                 out.append(.init(id: "calib-recovery", title: String(localized: "Calibrating Recovery"),
-                                 message: String(localized: "\(stage.nights) of \(stage.total) nights recorded. Wear your strap to sleep each night; your Recovery score and usual ranges appear once your baseline is ready.")))
+                                 message: String(localized: "\(stage.nights) of \(stage.total) nights recorded. Wear your strap to bed each night so Recovery can learn your normal.")))
             } else {
                 out.append(.init(id: "calib-stress", title: String(localized: "Calibrating Stress monitor"),
-                                 message: String(localized: "\(stage.nights) of \(stage.total) nights recorded. The Stress monitor shows readings once your baseline is complete.")))
+                                 message: String(localized: "\(stage.nights) of \(stage.total) nights recorded. Stress readings start once your baseline is complete, so keep wearing your strap.")))
             }
         }
         for id in i.calibrationDone {
             out.append(.init(id: "calib-done-\(id)", title: String(localized: "Calibration complete"),
                              message: id == "recovery"
-                                ? String(localized: "Your baseline is ready. Recovery now compares each night with your own usual.")
-                                : String(localized: "Your stress baseline is ready. The Stress monitor now shows readings against your own usual.")))
+                                ? String(localized: "Your baseline is ready. Recovery now compares each night with your own usual, so scores are more accurate.")
+                                : String(localized: "Your stress baseline is ready. The Stress monitor now judges each day against your own usual, so readings fit you.")))
         }
 
         // 3. A workout that just ended, or one added by hand.
         for w in i.workouts {
             if w.manual {
-                let msg = w.strain.map { String(localized: "\(w.sport) was added to your day: \(w.duration), Strain \($0).") }
-                    ?? String(localized: "\(w.sport) was added to your day: \(w.duration).")
+                let msg = w.strain.map { String(localized: "\(w.sport) was added to your day: \(w.duration), Strain \($0). Its Strain now counts toward today's total.") }
+                    ?? String(localized: "\(w.sport) was added to your day: \(w.duration). Open it from today's activities to check or edit the details.")
                 out.append(.init(id: w.id, title: String(localized: "Activity added"), message: msg))
             } else {
                 let msg: String
                 if let st = w.strain, let day = i.dayStrainShown {
-                    msg = String(localized: "\(w.sport), \(w.duration). It added Strain \(st); the day is at Strain \(day).")
+                    msg = String(localized: "\(w.sport), \(w.duration). Added Strain \(st); the day is at Strain \(day). Give your body time to recover and refuel.")
                 } else if let st = w.strain {
-                    msg = String(localized: "\(w.sport), \(w.duration). It added Strain \(st).")
+                    msg = String(localized: "\(w.sport), \(w.duration). It added Strain \(st). Give your body time to recover and refuel after the session.")
                 } else {
-                    msg = String(localized: "\(w.sport), \(w.duration).")
+                    msg = String(localized: "\(w.sport), \(w.duration). Give your body time to recover and refuel after the session.")
                 }
                 out.append(.init(id: w.id, title: String(localized: "Workout recorded"), message: msg))
             }
@@ -116,12 +120,31 @@ enum NunaHighlightEngine {
 
         // 4. A nap that just ended, and last night's sleep in the morning.
         for n in i.naps {
-            out.append(.init(id: n.id, title: String(localized: "Nap recorded"), message: String(localized: "A \(n.duration) nap was added to your day.")))
+            out.append(.init(id: n.id, title: String(localized: "Nap recorded"), message: String(localized: "A \(n.duration) nap was added to your day. Short naps can top up your energy; keep them early in the day.")))
         }
         if let sl = i.sleepRecorded {
-            let msg = sl.score.map { String(localized: "You slept \(sl.duration) last night, a Sleep score of \($0)%.") }
-                ?? String(localized: "You slept \(sl.duration) last night.")
+            let msg = sl.score.map { String(localized: "You slept \(sl.duration) last night, a Sleep score of \($0)%. Open Sleep for stages and tonight's bedtime.") }
+                ?? String(localized: "You slept \(sl.duration) last night. Open Sleep for your stages, consistency and tonight's recommended bedtime.")
             out.append(.init(id: "sleep-recorded", title: String(localized: "Sleep recorded"), message: msg))
+        }
+
+        // 4b. Recovery: the first of a colour, and being inside today's Strain range.
+        if let c = i.firstColour {
+            switch c {
+            case "green":
+                out.append(.init(id: "first-green", title: String(localized: "Your First Green"),
+                                 message: String(localized: "Green Recovery means your body is well recovered and ready for Strain. A good day to train towards your target.")))
+            case "red":
+                out.append(.init(id: "first-red", title: String(localized: "Your First Red"),
+                                 message: String(localized: "Red Recovery means your body is asking for rest. Keep today light and prioritize sleep and hydration tonight.")))
+            default:
+                out.append(.init(id: "first-yellow", title: String(localized: "Your First Yellow"),
+                                 message: String(localized: "Yellow Recovery is normal and means your body is maintaining. Train steadily rather than pushing hard today.")))
+            }
+        }
+        if let e = i.effort, let lo = i.effortTargetLow, let hi = i.effortTargetHigh, let shown = i.effortTargetHighShown, e >= lo, e <= hi {
+            out.append(.init(id: "optimal-strain", title: String(localized: "Reaching Optimal Strain"),
+                             message: String(localized: "You've hit the optimal Strain range for your Recovery. Keep moving towards your target of \(shown) for more fitness gains.")))
         }
 
         // 5. Resting heart rate above its usual (not while the baseline is still being built).
@@ -132,7 +155,7 @@ enum NunaHighlightEngine {
                                  message: String(localized: "Your RHR is \(pct)% above average, resulting in a \(word) Recovery. If you can, spend some time on recovery activities to boost your health.")))
             } else if pct >= 8 {
                 out.append(.init(id: "rhr", title: String(localized: "Elevated RHR"),
-                                 message: String(localized: "Your RHR is \(pct)% above average. If you can, ease off today and let your body recover.")))
+                                 message: String(localized: "Your RHR is \(pct)% above average. If you can, ease off today and let your body recover. A calm day and an early night usually help.")))
             }
         }
 
@@ -141,7 +164,7 @@ enum NunaHighlightEngine {
             let pct = Int(((avg - hrv) / avg * 100).rounded())
             if pct >= (i.charge.map { $0 < 67 } == true ? 10 : 20) {
                 out.append(.init(id: "hrv", title: String(localized: "Low HRV"),
-                                 message: String(localized: "Your HRV is \(pct)% below your average. Take it easy today and prioritize sleep tonight.")))
+                                 message: String(localized: "Your HRV is \(pct)% below your average. Take it easy today and prioritize sleep tonight; hydration helps too.")))
             }
         }
 
@@ -155,14 +178,14 @@ enum NunaHighlightEngine {
                 debtShown = true
             } else if debt >= 90 {
                 out.append(.init(id: "debt", title: String(localized: "Sleep Debt"),
-                                 message: String(localized: "You are carrying \(hm(debt)) of Sleep Debt. An earlier night will help pay it down."),
+                                 message: String(localized: "You are carrying \(hm(debt)) of Sleep Debt. An earlier night will help pay it down; even 30 extra minutes makes a difference."),
                                  actionTitle: String(localized: "Wind down"), action: .windDown))
                 debtShown = true
             }
         }
         if !debtShown, let slept = i.sleepMinutes, slept > 0, slept <= i.sleepNeedMin - 90 {
             out.append(.init(id: "short", title: String(localized: "Short night"),
-                             message: String(localized: "You slept \(hm(slept)) against the \(hm(i.sleepNeedMin)) you need. Keep today easy and go to bed early."),
+                             message: String(localized: "You slept \(hm(slept)) against the \(hm(i.sleepNeedMin)) you need. Keep today easy and aim for an early night to catch up."),
                              actionTitle: String(localized: "Wind down"), action: .windDown))
         }
 
@@ -176,7 +199,7 @@ enum NunaHighlightEngine {
         if (i.stressHighMin ?? 0) >= 180 || (i.stressNow ?? 0) >= 2.2 {
             let spent = StressTrace.clock(minutes: i.stressHighMin ?? 0)
             out.append(.init(id: "stress", title: String(localized: "High stress today"),
-                             message: String(localized: "You have spent \(spent) in high stress today. A few minutes of slow breathing can bring it down."),
+                             message: String(localized: "You have spent \(spent) in high stress today. A few minutes of slow breathing can bring it down; a short walk helps too."),
                              actionTitle: String(localized: "Breathe"), action: .breathe))
         }
         return out
@@ -192,6 +215,8 @@ enum NunaHighlightEngine {
 /// either side does the same), and the next one behind it. It takes the place Anya's card had; when nothing stands out it is not there.
 struct NunaHighlightsCard: View {
     let charge: Double?
+    /// Whether today's Recovery was scored on its own (not carried from an earlier night).
+    let chargeScored: Bool
     let hrv: Double?
     let restingHr: Double?
     let sleepMinutes: Double?
@@ -233,6 +258,14 @@ struct NunaHighlightsCard: View {
         }
         let band = CoupledView.optimalStrainRange(recovery: charge)
         let hi = band.map { Double($0.upperBound) / UnitFormatter.effortScaleFactor }
+        let lo = band.map { Double($0.lowerBound) / UnitFormatter.effortScaleFactor }
+        func colour(_ v: Double) -> String { v >= 67 ? "green" : (v >= 34 ? "yellow" : "red") }
+        var first: String?
+        if chargeScored, let c = charge {
+            let today = colour(c)
+            let earlierColours = repo.days.filter { $0.day < ((repo.today?.day) ?? dayKey) }.compactMap { $0.recovery }.map(colour)
+            if !earlierColours.isEmpty, !earlierColours.contains(today) { first = today }
+        }
         let bandText = band.map { b -> String in
             let lo = Int(UnitFormatter.effortValue(Double(b.lowerBound) / UnitFormatter.effortScaleFactor, scale: scale).rounded())
             let up = Int(UnitFormatter.effortValue(Double(b.upperBound) / UnitFormatter.effortScaleFactor, scale: scale).rounded())
@@ -265,7 +298,9 @@ struct NunaHighlightsCard: View {
             restingHrAverage: mean(before.compactMap { $0.restingHr.map(Double.init) }),
             sleepMinutes: sleepMinutes, sleepNeedMin: need,
             debtMin: debt(repo.days), debtBeforeMin: debt(earlier),
-            effort: effort, effortTargetHigh: hi, effortTargetText: bandText,
+            effort: effort, effortTargetHigh: hi, effortTargetLow: lo,
+            effortTargetHighShown: hi.map { UnitFormatter.effortDisplay($0, scale: scale) },
+            firstColour: first, effortTargetText: bandText,
             effortShown: effort.map { UnitFormatter.effortDisplay($0, scale: scale) },
             stressNow: stressNow, stressHighMin: stressHighMin, illness: appModel.illnessSignal,
             calibrating: calibrating, calibrationDone: ["recovery", "stress"].filter { feed.doneStages.contains($0) },
@@ -278,7 +313,7 @@ struct NunaHighlightsCard: View {
     }
 
 #if DEBUG
-    /// `--demo-highlights=calibrating,done,workout,manual,nap,sleep` puts that situation into the inputs, since the demo data has none of them.
+    /// `--demo-highlights=calibrating,done,workout,manual,nap,sleep,first,optimal` puts that situation into the inputs, since the demo data has none of them.
     private static func demo(_ i: inout NunaHighlightInputs) {
         guard let arg = CommandLine.arguments.first(where: { $0.hasPrefix("--demo-highlights=") }) else { return }
         for kind in arg.dropFirst("--demo-highlights=".count).split(separator: ",") {
@@ -290,6 +325,8 @@ struct NunaHighlightsCard: View {
             case "manual": i.workouts.append(.init(id: "demo-m", sport: "Padel", duration: "1h 0m", strain: "7.2", manual: true))
             case "nap": i.naps.append(.init(id: "demo-n", duration: "25 min"))
             case "sleep": i.sleepRecorded = ("7 hr 12 min", 82)
+            case "first": i.firstColour = "yellow"
+            case "optimal": i.effort = 11; i.effortTargetLow = 10; i.effortTargetHigh = 14; i.effortTargetHighShown = "14.0"
             default: break
             }
         }
@@ -336,8 +373,12 @@ struct NunaHighlightsCard: View {
             NunaCard(padding: EdgeInsets(top: 18, leading: 20, bottom: 18, trailing: 46)) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(verbatim: h.title).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                    Text(verbatim: h.message).font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        .lineSpacing(3).fixedSize(horizontal: false, vertical: true)
+                    // Always at least three lines tall (a hidden three-line stand-in sets the floor), so every card is four lines with its title.
+                    ZStack(alignment: .topLeading) {
+                        Text(verbatim: "A\nA\nA").font(.nuna(size: 14, weight: .regular)).lineSpacing(3).hidden().accessibilityHidden(true)
+                        Text(verbatim: h.message).font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                            .lineSpacing(3).fixedSize(horizontal: false, vertical: true)
+                    }
                     if let t = h.actionTitle, let a = h.action {
                         Button { perform(a) } label: {
                             Text(verbatim: t).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
