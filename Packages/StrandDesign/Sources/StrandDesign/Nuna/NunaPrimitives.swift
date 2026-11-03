@@ -541,7 +541,7 @@ public struct NunaTabBar: View {
 
     @ViewBuilder private func glyph(_ item: NunaTabItem, size: CGFloat, anyaScale: CGFloat = 1.45) -> some View {
         if let kind = NunaTabIcon.Kind(rawValue: item.systemImage) {
-            NunaTabIcon(kind: kind).frame(width: size, height: size * 0.86)
+            NunaTabIcon(kind: kind)
         } else if item.systemImage == NunaGlyph.anya {
             // Anya is drawn as a template in the bar, so she takes the colour of the other tabs: bright on her own page, dimmed elsewhere.
             Image("AnyaGlyph").renderingMode(.template).resizable().scaledToFit().frame(width: size * anyaScale, height: size * anyaScale)
@@ -558,7 +558,7 @@ public struct NunaTabBar: View {
             if on { onReselect(item.id) } else { selection = item.id }
         } label: {
             VStack(spacing: 5) {
-                glyph(item, size: 27, anyaScale: 1.1).frame(width: 34, height: 25)
+                glyph(item, size: 27, anyaScale: 1.1).frame(width: 34, height: 26)
                 Text(verbatim: item.title).font(.nuna(size: NunaThemePrefs.skin == .whp ? 11.5 : 12, weight: .semibold)).lineLimit(1)
                     .textCase(nil).minimumScaleFactor(0.7).allowsTightening(true)
             }
@@ -578,57 +578,36 @@ public struct NunaTabBar: View {
     }
 }
 
-/// The three tab icons, drawn in one thin rounded line: a house with a trend line in it, a heart with a pulse, and three bars.
+/// The three tab icons, traced from the design reference (`NunaTabIconArt`), drawn at the size they have there.
 struct NunaTabIcon: View {
     enum Kind: String { case home = "tab:home", health = "tab:health", more = "tab:more" }
     let kind: Kind
 
+    private var art: NunaTabIconArt.Art {
+        switch kind { case .home: return NunaTabIconArt.home; case .health: return NunaTabIconArt.health; case .more: return NunaTabIconArt.more }
+    }
+
     var body: some View {
-        GeometryReader { g in
-            let u = min(g.size.width, g.size.height * 24 / 20.6) / 24   // one unit of the 24-point drawing
-            let line = StrokeStyle(lineWidth: max(1.3, 1.22 * u), lineCap: .round, lineJoin: .round)
-            ZStack {
-                switch kind {
-                case .home:
-                    Path { p in
-                        p.move(to: CGPoint(x: 2 * u, y: 11.2 * u)); p.addLine(to: CGPoint(x: 12 * u, y: 3 * u)); p.addLine(to: CGPoint(x: 22 * u, y: 11.2 * u))
-                        p.move(to: CGPoint(x: 5 * u, y: 9.2 * u)); p.addLine(to: CGPoint(x: 5 * u, y: 20.6 * u))
-                        p.addLine(to: CGPoint(x: 19 * u, y: 20.6 * u)); p.addLine(to: CGPoint(x: 19 * u, y: 9.2 * u))
-                        // The trend line inside, with its arrow head.
-                        p.move(to: CGPoint(x: 8.2 * u, y: 16.4 * u)); p.addLine(to: CGPoint(x: 11 * u, y: 13.4 * u))
-                        p.addLine(to: CGPoint(x: 13.4 * u, y: 15.6 * u)); p.addLine(to: CGPoint(x: 16.6 * u, y: 11.8 * u))
-                        p.move(to: CGPoint(x: 14.6 * u, y: 11.6 * u)); p.addLine(to: CGPoint(x: 16.8 * u, y: 11.6 * u)); p.addLine(to: CGPoint(x: 16.8 * u, y: 13.8 * u))
-                    }
-                    .stroke(style: line)
-                case .health:
-                    Path { p in
-                        // Heart: two lobes and a point.
-                        p.move(to: CGPoint(x: 12 * u, y: 21 * u))
-                        p.addCurve(to: CGPoint(x: 2.6 * u, y: 9.2 * u), control1: CGPoint(x: 6 * u, y: 17.4 * u), control2: CGPoint(x: 2.6 * u, y: 13.8 * u))
-                        p.addCurve(to: CGPoint(x: 12 * u, y: 6.2 * u), control1: CGPoint(x: 2.6 * u, y: 4.6 * u), control2: CGPoint(x: 9.4 * u, y: 3.6 * u))
-                        p.addCurve(to: CGPoint(x: 21.4 * u, y: 9.2 * u), control1: CGPoint(x: 14.6 * u, y: 3.6 * u), control2: CGPoint(x: 21.4 * u, y: 4.6 * u))
-                        p.addCurve(to: CGPoint(x: 12 * u, y: 21 * u), control1: CGPoint(x: 21.4 * u, y: 13.8 * u), control2: CGPoint(x: 18 * u, y: 17.4 * u))
-                    }
-                    .stroke(style: line)
-                    Path { p in
-                        // The pulse across it.
-                        p.move(to: CGPoint(x: 6.4 * u, y: 12 * u)); p.addLine(to: CGPoint(x: 9.4 * u, y: 12 * u)); p.addLine(to: CGPoint(x: 11 * u, y: 9.2 * u))
-                        p.addLine(to: CGPoint(x: 13.2 * u, y: 14.8 * u)); p.addLine(to: CGPoint(x: 14.6 * u, y: 12 * u)); p.addLine(to: CGPoint(x: 17.6 * u, y: 12 * u))
-                    }
-                    .stroke(style: StrokeStyle(lineWidth: max(1.2, 1.1 * u), lineCap: .round, lineJoin: .round))
-                case .more:
-                    Path { p in
-                        for y in [6.2, 12.0, 17.8] {
-                            p.move(to: CGPoint(x: 2.2 * u, y: y * u)); p.addLine(to: CGPoint(x: 21.8 * u, y: y * u))
-                        }
-                    }
-                    .stroke(style: line)
-                }
-            }
-            .frame(width: 24 * u, height: 24 * u)
-            .frame(width: g.size.width, height: g.size.height)
+        NunaTabIconShape(art: art)
+            .fill(style: FillStyle(eoFill: true))
+            .frame(width: art.width, height: art.height)
+            .accessibilityHidden(true)
+    }
+}
+
+private struct NunaTabIconShape: Shape {
+    let art: NunaTabIconArt.Art
+    func path(in rect: CGRect) -> Path {
+        // The art is in a unit square on its longer side; scale that side to the longer side of the frame it was measured for.
+        let side = max(rect.width, rect.height)
+        var p = Path()
+        for c in art.contours {
+            guard let first = c.first else { continue }
+            p.move(to: CGPoint(x: rect.minX + first.x * side, y: rect.minY + first.y * side))
+            for pt in c.dropFirst() { p.addLine(to: CGPoint(x: rect.minX + pt.x * side, y: rect.minY + pt.y * side)) }
+            p.closeSubpath()
         }
-        .accessibilityHidden(true)
+        return p
     }
 }
 
