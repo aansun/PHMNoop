@@ -7998,5 +7998,6 @@
  "to unlock your next milestone.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "untuk membuka pencapaian berikutnya."}}}},
  "Don't let your streak fade": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Jangan biarkan rangkaianmu padam"}}}},
  "Looks like you're not wearing your strap. Put it back on before tomorrow night to avoid losing your streak.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Sepertinya kamu tidak memakai strap. Pakai lagi sebelum besok malam agar rangkaianmu tidak hilang."}}}},
- "I'm on a %lld day streak with PHMN.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Aku sudah %lld hari berturut-turut dengan PHMN."}}}}
+ "I'm on a %lld day streak with PHMN.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Aku sudah %lld hari berturut-turut dengan PHMN."}}}},
+ "Every session, its history and training load": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Semua sesi, riwayat, dan beban latihan"}}}}
 }, "version":"1.0" }

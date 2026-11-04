@@ -2,7 +2,7 @@
 import SwiftUI
 import StrandDesign
 
-/// "Application": the screens that are apps in their own right, in one place: the vital signs and stress monitors, the water log, the lab
+/// "Application": the screens that are apps in their own right, in one place (Workouts opens only from here): the vital signs and stress monitors, the water log, the lab
 /// book, nutrition and naps (and the menstrual cycle while cycle awareness has a reading). Sleep has no entry of its own: its detail is the Rest screen.
 struct NunaApplicationsView: View {
     @EnvironmentObject private var appModel: AppModel
@@ -20,6 +20,11 @@ struct NunaApplicationsView: View {
                     // Strength Trainer opens straight to its own page; Trends opens over this one (it has no back button of its own).
                     NavigationLink { NunaGymPage() } label: {
                         NunaListRow("Strength Trainer", subtitle: "Programs, progress and sessions", systemImage: "act:strength-trainer", showsChevron: true)
+                    }.buttonStyle(.plain)
+                    NunaDivider()
+                    // The page with every workout opens over this one, like Trends. This is the only way in to it.
+                    Button { router.requestedDestination = .workouts } label: {
+                        NunaListRow("Workouts", subtitle: "Every session, its history and training load", systemImage: "figure.run", showsChevron: true)
                     }.buttonStyle(.plain)
                     NunaDivider()
                     Button { router.requestedDestination = .trends } label: {
