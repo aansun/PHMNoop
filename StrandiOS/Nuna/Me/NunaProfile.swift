@@ -195,15 +195,14 @@ struct NunaDiamondShape: Shape {
     }
 }
 
-/// One achievement on the profile: a dark badge in the shape of its group, the glyph of what it counts, a lock until it has been earned, and its count.
+/// One achievement: a dark badge in the shape of its group, the glyph of what it counts, a lock until the first level, and the level it has reached.
 struct NunaAchievementBadge: View {
     enum Shape { case hexagon, shield, diamond, seal }
     let shape: Shape
     let icon: String
-    let count: Int
-    let threshold: Int
+    let level: Int
 
-    private var earned: Bool { count >= threshold }
+    private var earned: Bool { level >= 1 }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -212,11 +211,10 @@ struct NunaAchievementBadge: View {
                 Image(systemName: earned ? icon : "lock.fill").font(.system(size: earned ? 28 : 22, weight: earned ? .semibold : .regular))
                     .foregroundStyle(earned ? Color.white : Color(red: 0.42, green: 0.43, blue: 0.45))
             }
-            if earned {
-                Text(verbatim: "\(count)").font(.nunaBoldFigure(size: 30)).foregroundStyle(.white).offset(y: 14).shadow(color: .black.opacity(0.6), radius: 4)
-            }
+            Text(verbatim: "\(level)").font(.nunaBoldFigure(size: 30)).foregroundStyle(earned ? Color.white : Color(red: 0.55, green: 0.56, blue: 0.58))
+                .offset(y: 14).shadow(color: .black.opacity(0.6), radius: 4)
         }
-        .frame(width: 74, height: 84)
+        .frame(width: 74, height: 90)
     }
 
     @ViewBuilder private var badge: some View {
@@ -431,27 +429,13 @@ struct NunaProfileView: View {
 
     // MARK: Achievements
 
-    private struct Achievement: Identifiable {
-        let id: String; let title: LocalizedStringKey; let shape: NunaAchievementBadge.Shape; let icon: String; let count: Int
-    }
-
     private func rest(_ d: DailyMetric) -> Double { AnalyticsEngine.Rest.composite(daily: d) ?? 0 }
 
-    private var achievementList: [Achievement] {
-        let walks = workouts.filter { WorkoutSource.displaySport($0.sport).lowercased().contains("walk") }.count
-        let strength = workouts.filter { NunaWorkoutKind.isStrength($0) }.count
-        return [
-            Achievement(id: "walk", title: "Walk Star", shape: .seal, icon: "figure.walk", count: walks),
-            Achievement(id: "sleep", title: "Sleep Specialist", shape: .hexagon, icon: "moon.fill", count: allDays.filter { rest($0) >= 70 }.count),
-            Achievement(id: "green", title: "Green Monster", shape: .shield, icon: "leaf.fill", count: allDays.filter { ($0.recovery ?? 0) >= 67 }.count),
-            Achievement(id: "strain", title: "Strain Seeker", shape: .diamond, icon: "dumbbell.fill", count: allDays.filter { ($0.strain ?? 0) >= 10.0 / 21 * 100 }.count),
-            Achievement(id: "barbell", title: "Barbell Boss", shape: .seal, icon: "dumbbell", count: strength),
-        ]
-    }
-
     private var achievements: some View {
-        let list = achievementList
-        let earned = list.filter { $0.count >= 5 }.count
+        let list = NunaAchievementCatalog.build(days: allDays, workouts: workouts)
+        // The earned ones first, then the nearest to a first level, so the row opens on what is going on.
+        let shown = list.sorted { ($0.level > 0 ? 1000 + $0.count : $0.count) > ($1.level > 0 ? 1000 + $1.count : $1.count) }.prefix(6)
+        let earned = list.filter { $0.level > 0 }.count
         return VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .firstTextBaseline) {
                 (Text("Achievements") + Text(verbatim: " (\(earned))").foregroundStyle(NunaPalette.textSecondary)).font(.nuna(size: 21, weight: .semibold)).textCase(nil)
@@ -465,11 +449,10 @@ struct NunaProfileView: View {
             }
             ScrollView(.horizontal) {
                 HStack(alignment: .top, spacing: 14) {
-                    ForEach(list) { a in
+                    ForEach(Array(shown)) { a in
                         VStack(spacing: 8) {
-                            NunaAchievementBadge(shape: a.shape, icon: a.icon, count: a.count, threshold: 5)
+                            NunaAchievementBadge(shape: a.shape, icon: a.icon, level: a.level)
                             Text(a.title).font(.nuna(size: 13.5, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).lineLimit(1)
-                            if a.count < 5 { Text(verbatim: "\(a.count) of 5").font(.nuna(size: 12, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                         }.frame(width: 104)
                     }
                 }
