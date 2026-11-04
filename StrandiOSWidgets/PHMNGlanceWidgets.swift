@@ -185,20 +185,27 @@ private struct SingleRingView: View {
     var percent = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            HStack(alignment: .top) { GlanceStreak(days: d.s.dayStreak, stacked: true); Spacer(); GlanceBattery(pct: d.s.batteryPct, stacked: true) }
-            Spacer(minLength: 0)
-            GlanceRing(fraction: fraction, color: color, gradient: gradient, target: target, width: 5.8) {
-                GlanceFigure(value: value, percent: percent, size: 32)
-            }
-            .frame(width: 94.2, height: 94.2).padding(.top, 2)
-            Spacer(minLength: 0)
-            ZStack {
+        // Laid out in fractions of the widget side, measured on the reference: the ring (64.2% across) starts at 14.7% from the top,
+        // level with the streak and battery, and the label sits at 87.8%, so there is a clear gap (about 7% of the side) between
+        // the foot of the ring and the word under it.
+        GeometryReader { g in
+            let s = min(g.size.width, g.size.height)
+            let line: CGFloat = 5.8
+            let outer = s * 0.642
+            ZStack(alignment: .topLeading) {
+                HStack(alignment: .top) { GlanceStreak(days: d.s.dayStreak, stacked: true); Spacer(); GlanceBattery(pct: d.s.batteryPct, stacked: true) }
+                    .padding(.horizontal, 15).padding(.top, 13)
+                GlanceRing(fraction: fraction, color: color, gradient: gradient, target: target, width: line) {
+                    GlanceFigure(value: value, percent: percent, size: 32)
+                }
+                .frame(width: outer - line, height: outer - line)
+                .position(x: g.size.width / 2, y: s * 0.147 + outer / 2)
                 GlanceCaption(text: label, size: 10.5)
-                HStack { PHMNMark(.circle, size: 20, color: Glance.muted); Spacer() }
+                    .position(x: g.size.width / 2, y: s * 0.878)
+                PHMNMark(.circle, size: 20, color: Glance.muted)
+                    .position(x: 15 + 10, y: s * 0.878)
             }
         }
-        .padding(.horizontal, 15).padding(.vertical, 13)
     }
 }
 
