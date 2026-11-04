@@ -14,6 +14,8 @@ struct NOOPWidgetBundle: WidgetBundle {
         NunaStepsWeekWidget()
         PHMNTriRingsWidget()
         PHMNSleepRingWidget()
+        PHMNStrainRingWidget()
+        PHMNRecoveryRingWidget()
         PHMNDualRingSmallWidget()
         PHMNDualRingWideWidget()
         PHMNRingsWidget()

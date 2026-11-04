@@ -12,6 +12,8 @@ private enum Glance {
     static let ink = Color.white
     static let muted = Color(red: 0.62, green: 0.64, blue: 0.66)
     static let track = Color.white.opacity(0.13)
+    /// The lighter stretch of the Strain ring that marks today's aim (109, 114, 116 on the reference).
+    static let targetZone = Color(red: 109.0 / 255, green: 114.0 / 255, blue: 116.0 / 255)
     static let card = LinearGradient(colors: [Color(red: 0.18, green: 0.20, blue: 0.22), Color(red: 0.12, green: 0.14, blue: 0.15)], startPoint: .top, endPoint: .bottom)
     static let open = URL(string: "noop://today")!
     /// The figure face of the reference: DIN Bold, sharp at small sizes (the face bundled with the widget).
@@ -28,6 +30,7 @@ private struct GlanceData {
     var sleepFraction: Double { s.rest.map { Double($0) / 100 } ?? 0 }
     var recoveryFraction: Double { s.recovery.map { Double($0) / 100 } ?? 0 }
     var strainFraction: Double { s.effort.map { Double($0) / 100 } ?? 0 }
+    var strainTarget: ClosedRange<Double>? { NunaScoreStyle.effortTarget(charge: recovery) }
     var summary: String {
         "Sleep \(s.rest.map { "\($0)%" } ?? "–"), Recovery \(s.recovery.map { "\($0)%" } ?? "–"), Strain \(strainText)"
     }
@@ -38,6 +41,8 @@ private struct GlanceRing<Centre: View>: View {
     let fraction: Double
     let color: Color
     var gradient: [Color]? = nil
+    /// Today's Strain aim as a stretch of the ring (lighter grey, a white tick where it begins), as on the reference.
+    var target: ClosedRange<Double>? = nil
     let width: CGFloat
     @ViewBuilder var centre: () -> Centre
 
@@ -46,10 +51,19 @@ private struct GlanceRing<Centre: View>: View {
         let shown = p > 0 ? max(p, 0.015) : 0
         ZStack {
             Circle().stroke(Glance.track, lineWidth: width)
+            if let target {
+                Circle().trim(from: min(max(target.lowerBound, 0), 1), to: min(max(target.upperBound, 0), 1))
+                    .stroke(Glance.targetZone, style: StrokeStyle(lineWidth: width, lineCap: .butt)).rotationEffect(.degrees(-90))
+            }
             Circle().trim(from: 0, to: shown)
                 .stroke(gradient.map { AnyShapeStyle(AngularGradient(colors: $0, center: .center, startAngle: .degrees(0), endAngle: .degrees(max(360 * shown, 1)))) } ?? AnyShapeStyle(color),
                         style: StrokeStyle(lineWidth: width, lineCap: .round))
                 .rotationEffect(.degrees(-90))
+            if let target {
+                let at = min(max(target.lowerBound, 0), 1)
+                Circle().trim(from: max(at - 0.003, 0), to: min(at + 0.003, 1))
+                    .stroke(Glance.ink, style: StrokeStyle(lineWidth: width, lineCap: .butt)).rotationEffect(.degrees(-90))
+            }
             centre()
         }
     }
@@ -156,22 +170,31 @@ private struct TriRingsView: View {
     }
 }
 
-// MARK: - Small: the Sleep ring
+// MARK: - Small: one ring (Sleep, Recovery or Strain)
 
-private struct SleepRingView: View {
+/// A single score as one ring. Measured on the Strain reference (3.3 px per point): the ring is 100 pt across with a 5.8 pt line, the figure
+/// 32 pt DIN Bold, the label 10.5 pt under it, the streak and the battery stacked in the top corners and the mark at the bottom left.
+private struct SingleRingView: View {
     let d: GlanceData
+    let label: String
+    let fraction: Double
+    let color: Color
+    var gradient: [Color]? = nil
+    var target: ClosedRange<Double>? = nil
+    let value: String
+    var percent = false
 
     var body: some View {
         VStack(spacing: 0) {
             HStack(alignment: .top) { GlanceStreak(days: d.s.dayStreak, stacked: true); Spacer(); GlanceBattery(pct: d.s.batteryPct, stacked: true) }
             Spacer(minLength: 0)
-            GlanceRing(fraction: d.sleepFraction, color: Glance.steel, width: 6) {
-                GlanceFigure(value: d.s.rest.map(String.init) ?? "–", percent: d.s.rest != nil, size: 34)
+            GlanceRing(fraction: fraction, color: color, gradient: gradient, target: target, width: 5.8) {
+                GlanceFigure(value: value, percent: percent, size: 32)
             }
-            .frame(width: 98, height: 98).padding(.top, 2)
+            .frame(width: 94.2, height: 94.2).padding(.top, 2)
             Spacer(minLength: 0)
             ZStack {
-                GlanceCaption(text: "Sleep", size: 10.5)
+                GlanceCaption(text: label, size: 10.5)
                 HStack { PHMNMark(.circle, size: 20, color: Glance.muted); Spacer() }
             }
         }
@@ -298,10 +321,42 @@ struct PHMNTriRingsWidget: Widget {
 struct PHMNSleepRingWidget: Widget {
     static let kind = "PHMNSleepRingWidget"
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: Self.kind, provider: PHMNGlanceProvider()) { e in GlanceCard(entry: e) { SleepRingView(d: $0) } }
-            .configurationDisplayName("PHMN Sleep")
-            .description("Last night's Sleep score in one ring.")
-            .supportedFamilies([.systemSmall]).contentMarginsDisabled()
+        StaticConfiguration(kind: Self.kind, provider: PHMNGlanceProvider()) { e in
+            GlanceCard(entry: e) { d in
+                SingleRingView(d: d, label: "Sleep", fraction: d.sleepFraction, color: Glance.steel, value: d.s.rest.map(String.init) ?? "–", percent: d.s.rest != nil)
+            }
+        }
+        .configurationDisplayName("PHMN Sleep")
+        .description("Last night's Sleep score in one ring.")
+        .supportedFamilies([.systemSmall]).contentMarginsDisabled()
+    }
+}
+
+struct PHMNStrainRingWidget: Widget {
+    static let kind = "PHMNStrainRingWidget"
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: Self.kind, provider: PHMNGlanceProvider()) { e in
+            GlanceCard(entry: e) { d in
+                SingleRingView(d: d, label: "Strain", fraction: d.strainFraction, color: d.strainColor, gradient: d.strainGradient, target: d.strainTarget, value: d.strainText)
+            }
+        }
+        .configurationDisplayName("PHMN Strain")
+        .description("Today's Strain in one ring, with the stretch to aim for.")
+        .supportedFamilies([.systemSmall]).contentMarginsDisabled()
+    }
+}
+
+struct PHMNRecoveryRingWidget: Widget {
+    static let kind = "PHMNRecoveryRingWidget"
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: Self.kind, provider: PHMNGlanceProvider()) { e in
+            GlanceCard(entry: e) { d in
+                SingleRingView(d: d, label: "Recovery", fraction: d.recoveryFraction, color: d.recoveryColor, value: d.s.recovery.map(String.init) ?? "–", percent: d.s.recovery != nil)
+            }
+        }
+        .configurationDisplayName("PHMN Recovery")
+        .description("Today's Recovery score in one ring.")
+        .supportedFamilies([.systemSmall]).contentMarginsDisabled()
     }
 }
 
