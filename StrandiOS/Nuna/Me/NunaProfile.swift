@@ -389,18 +389,10 @@ struct NunaProfileView: View {
 
     // MARK: Streak and memory
 
-    /// Days in a row, back from today (or yesterday while today is still empty), that carry any reading.
-    private var dayStreak: Int {
-        let keys = Set(allDays.map(\.day))
-        var day = cal.startOfDay(for: Date())
-        if !keys.contains(Repository.localDayKey(day)) { day = cal.date(byAdding: .day, value: -1, to: day) ?? day }
-        var n = 0
-        while keys.contains(Repository.localDayKey(day)) { n += 1; day = cal.date(byAdding: .day, value: -1, to: day) ?? day }
-        return n
-    }
+    private var dayStreak: Int { NunaStreak.compute(days: allDays).current }
 
     private var streakRow: some View {
-        NavigationLink(value: NunaMeRoute.achievements) {
+        NavigationLink(value: NunaMeRoute.dayStreak) {
             HStack(spacing: 12) {
                 Text("Day streak").font(.nuna(size: 13.5, weight: .heavy)).tracking(nunaTrackingLabel * 1.3).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 Spacer(minLength: 8)
