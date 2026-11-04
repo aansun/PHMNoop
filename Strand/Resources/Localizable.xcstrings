@@ -7974,5 +7974,20 @@
  "Steady Stepper": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pelangkah Stabil"}}}},
  "All Out Day": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Hari Habis-habisan"}}}},
  "Jack of All Trades": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Serba Bisa"}}}},
- "Bubblegum Body": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tubuh Lentur"}}}}
+ "Bubblegum Body": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tubuh Lentur"}}}},
+ "Shape your experience.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Bentuk pengalamanmu."}}}},
+ "Help Anya understand you better.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Bantu Anya memahamimu lebih baik."}}}},
+ "Share something new": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Bagikan hal baru"}}}},
+ "Text": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Teks"}}}},
+ "Chat History": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Riwayat Obrolan"}}}},
+ "My Memory Snapshot": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ringkasan Memoriku"}}}},
+ "Timeline": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Linimasa"}}}},
+ "Nothing in this group yet.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Belum ada apa pun di grup ini."}}}},
+ "Start date: %@": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tanggal mulai: %@"}}}},
+ "Nothing yet. Tell Anya things like “remember I race on 5 December”, or share something above.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Belum ada. Beri tahu Anya hal seperti “ingat aku balapan 5 Desember”, atau bagikan sesuatu di atas."}}}},
+ "For example: I don't eat dairy, or I race on 5 December.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Contoh: aku tidak makan produk susu, atau aku balapan 5 Desember."}}}},
+ "What should Anya know?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Apa yang perlu Anya tahu?"}}}},
+ "Hi %@ — here's what Anya knows about you.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Hai %@ — ini yang Anya ketahui tentangmu."}}}},
+ "Here's what Anya knows about you.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ini yang Anya ketahui tentangmu."}}}},
+ "Nothing yet. Share something and it will show up here.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Belum ada. Bagikan sesuatu dan akan muncul di sini."}}}}
 }, "version":"1.0" }
