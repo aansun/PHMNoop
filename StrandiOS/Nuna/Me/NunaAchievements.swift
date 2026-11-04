@@ -4,368 +4,127 @@ import StrandDesign
 import StrandAnalytics
 import WhoopStore
 
-/// Achievements (Me › Personalize): how long the data has run and where the best and worst of it sit. Level and streaks count only days
-/// the strap really scored; nothing is filled in. Everything is worked out on this phone from the stored days and saved workouts.
+/// One badge a person can earn. Each time `count` reaches another multiple of five the badge goes up a level; `count % 5` is how far the next one is.
+struct NunaAchievementDef: Identifiable {
+    enum Group: String, CaseIterable {
+        case sleep, recovery, strain, other, activities
+        var title: LocalizedStringKey {
+            switch self { case .sleep: "Sleep"; case .recovery: "Recovery"; case .strain: "Strain"; case .other: "Other"; case .activities: "Activities" }
+        }
+    }
+    let id: String
+    let title: LocalizedStringKey
+    let group: Group
+    let shape: NunaAchievementBadge.Shape
+    let icon: String
+    let count: Int
+
+    static let perLevel = 5
+    var level: Int { count / Self.perLevel }
+    var progress: Int { count % Self.perLevel }
+}
+
+/// Works the badges out from the stored days and saved workouts, on this phone. Nothing is filled in: a badge with no days behind it stays locked.
+enum NunaAchievementCatalog {
+    static func build(days: [DailyMetric], workouts: [WorkoutRow]) -> [NunaAchievementDef] {
+        let sorted = days.sorted { $0.day < $1.day }
+        func rest(_ d: DailyMetric) -> Double { AnalyticsEngine.Rest.composite(daily: d) ?? 0 }
+        let strainWorking = 10.0 / 21 * 100, strainAllOut = 18.0 / 21 * 100
+        // Seven green days in a row, counted once each: every time a run of green days reaches another seven.
+        var greenWeeks = 0, run = 0
+        for d in sorted { if (d.recovery ?? 0) >= 67 { run += 1; if run % 7 == 0 { greenWeeks += 1 } } else { run = 0 } }
+        func sport(_ test: (String) -> Bool) -> Int { workouts.filter { test(WorkoutSource.displaySport($0.sport).lowercased()) }.count }
+        let kinds = Set(workouts.map { WorkoutSource.displaySport($0.sport).lowercased() }).count
+        return [
+            .init(id: "sleepSpecialist", title: "Sleep Specialist", group: .sleep, shape: .hexagon, icon: "moon.fill", count: sorted.filter { rest($0) >= 70 }.count),
+            .init(id: "sandman", title: "Sandman", group: .sleep, shape: .hexagon, icon: "bed.double.fill", count: sorted.filter { ($0.totalSleepMin ?? 0) >= 480 }.count),
+            .init(id: "greenMonster", title: "Green Monster", group: .recovery, shape: .shield, icon: "leaf.fill", count: sorted.filter { ($0.recovery ?? 0) >= 67 }.count),
+            .init(id: "greenWeek", title: "Green Week", group: .recovery, shape: .shield, icon: "calendar", count: greenWeeks),
+            .init(id: "peakDay", title: "Peak Day", group: .recovery, shape: .shield, icon: "bolt.fill", count: sorted.filter { ($0.recovery ?? 0) >= 90 }.count),
+            .init(id: "steadyStepper", title: "Steady Stepper", group: .strain, shape: .diamond, icon: "shoeprints.fill", count: sorted.filter { ($0.steps ?? 0) >= 10_000 }.count),
+            .init(id: "strainSeeker", title: "Strain Seeker", group: .strain, shape: .diamond, icon: "dumbbell.fill", count: sorted.filter { ($0.strain ?? 0) >= strainWorking }.count),
+            .init(id: "allOut", title: "All Out Day", group: .strain, shape: .diamond, icon: "flame.fill", count: sorted.filter { ($0.strain ?? 0) >= strainAllOut }.count),
+            .init(id: "jack", title: "Jack of All Trades", group: .other, shape: .diamond, icon: "square.grid.2x2.fill", count: kinds),
+            .init(id: "walkStar", title: "Walk Star", group: .activities, shape: .seal, icon: "figure.walk", count: sport { $0.contains("walk") }),
+            .init(id: "bubblegum", title: "Bubblegum Body", group: .activities, shape: .seal, icon: "figure.flexibility", count: sport { $0.contains("stretch") || $0.contains("yoga") || $0.contains("pilates") }),
+            .init(id: "barbell", title: "Barbell Boss", group: .activities, shape: .seal, icon: "dumbbell", count: workouts.filter { NunaWorkoutKind.isStrength($0) }.count),
+        ]
+    }
+}
+
+/// Achievements: the totals, a row of filters and every badge by group, each with its level and how far the next one is.
 struct NunaAchievementsView: View {
     @EnvironmentObject private var repo: Repository
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
     @State private var workouts: [WorkoutRow] = []
-    @State private var allTime = false
-    @State private var showAllActivities = false
+    @State private var filter: NunaAchievementDef.Group?
 
-    private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
-
-    /// Charge at or above this is a green day; Rest at or above this a good night; Effort from this up counts as a working day (10 of 21).
-    private static let greenCharge = 67.0
-    private static let goodRest = 70.0
-    private static let workingEffort = 10.0 / 21.0 * 100
-
-    // MARK: Days in view
-
-    private var cal: Calendar { Calendar.current }
-
-    private static let dayFormat: DateFormatter = {
-        let f = DateFormatter(); f.dateFormat = "yyyy-MM-dd"; f.locale = Locale(identifier: "en_US_POSIX"); return f
-    }()
-
-    private func date(_ key: String) -> Date? { Self.dayFormat.date(from: key) }
-
-    /// Every stored day, oldest first.
-    private var allDays: [DailyMetric] { repo.days.sorted { $0.day < $1.day } }
-
-    private var daysInView: [DailyMetric] {
-        guard !allTime else { return allDays }
-        let from = Repository.localDayKey(cal.date(byAdding: .day, value: -29, to: cal.startOfDay(for: Date())) ?? Date())
-        return allDays.filter { $0.day >= from }
-    }
-
-    private var workoutsInView: [WorkoutRow] {
-        guard !allTime else { return workouts }
-        let from = Int((cal.date(byAdding: .day, value: -29, to: cal.startOfDay(for: Date())) ?? Date()).timeIntervalSince1970)
-        return workouts.filter { $0.startTs >= from }
-    }
-
-    // MARK: Level
-
-    private var recoveries: Int { allDays.filter { $0.recovery != nil }.count }
-    private static let perLevel = 30
-    private var level: Int { 1 + recoveries / Self.perLevel }
-    private var levelProgress: Double { Double(recoveries % Self.perLevel) / Double(Self.perLevel) }
-    private var tier: LocalizedStringKey { level >= 10 ? "Gold" : (level >= 5 ? "Silver" : "Bronze") }
-    private var tierColor: Color { level >= 10 ? NunaPalette.scoreMid : (level >= 5 ? NunaPalette.textSecondary : NunaPalette.warning) }
-
-    /// Days in a row, counted back from today (or yesterday while today has nothing yet), that carry any reading.
-    private var dataStreak: Int {
-        let keys = Set(allDays.map(\.day))
-        var day = cal.startOfDay(for: Date())
-        if !keys.contains(Repository.localDayKey(day)) { day = cal.date(byAdding: .day, value: -1, to: day) ?? day }
-        var n = 0
-        while keys.contains(Repository.localDayKey(day)) {
-            n += 1
-            day = cal.date(byAdding: .day, value: -1, to: day) ?? day
-        }
-        return n
-    }
-
-    /// The date of the earliest day stored: when data first came into the app (a live night or an import, whichever is older).
-    private var firstData: String? {
-        guard let first = allDays.first, let d = date(first.day) else { return nil }
-        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("d MMM yyyy")
-        return f.string(from: d)
-    }
-
-    // MARK: Streaks and extremes
-
-    /// The longest run of consecutive calendar days in view for which `test` holds.
-    private func longestRun(_ test: (DailyMetric) -> Bool) -> Int {
-        var best = 0, run = 0
-        var previous: Date?
-        for d in daysInView {
-            guard let when = date(d.day) else { continue }
-            if test(d) {
-                if let p = previous, cal.dateComponents([.day], from: p, to: when).day == 1, run > 0 { run += 1 } else { run = 1 }
-                previous = when
-                best = max(best, run)
-            } else { run = 0; previous = nil }
-        }
-        return best
-    }
-
-    private func spread(_ values: [Double]) -> (low: Double, high: Double, median: Double)? {
-        guard let lo = values.min(), let hi = values.max() else { return nil }
-        let s = values.sorted()
-        let mid = s.count % 2 == 1 ? s[s.count / 2] : (s[s.count / 2 - 1] + s[s.count / 2]) / 2
-        return (lo, hi, mid)
-    }
-
-    // MARK: Body
+    private var list: [NunaAchievementDef] { NunaAchievementCatalog.build(days: repo.days, workouts: workouts) }
+    private let columns = Array(repeating: GridItem(.flexible(), spacing: 6, alignment: .top), count: 3)
 
     var body: some View {
-        NunaDetailScreen("Achievements") {
-            header
-            NunaSegmented([(value: false, title: "Last 30 days"), (value: true, title: "All time")], selection: $allTime)
-            figures
-            activities
-            spreads
-            streaks
-            extremes
-            nunaFootnote("Level counts the days your strap scored Recovery, 30 for each level. Streaks and extremes only use days with a reading.")
+        let all = list
+        NunaDetailScreen("Achievements", centersTitle: true) {
+            HStack(spacing: 0) {
+                total(all.reduce(0) { $0 + $1.level }, "Total")
+                Rectangle().fill(NunaPalette.hairline).frame(width: 1, height: 56)
+                total(all.filter { $0.level > 0 }.count, "Unique")
+            }
+            .padding(.top, 6)
+            chips
+            ForEach(NunaAchievementDef.Group.allCases.filter { filter == nil || filter == $0 }, id: \.rawValue) { g in
+                let items = all.filter { $0.group == g }
+                if !items.isEmpty {
+                    VStack(alignment: .leading, spacing: 20) {
+                        HStack(spacing: 14) {
+                            Text(g.title).font(.nuna(size: 13.5, weight: .heavy)).tracking(nunaTrackingLabel * 1.3).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                            Rectangle().fill(NunaPalette.hairline).frame(height: 1)
+                        }
+                        LazyVGrid(columns: columns, spacing: 24) { ForEach(items) { cell($0) } }
+                    }
+                    .padding(.top, 10)
+                }
+            }
         }
         .task(id: repo.refreshSeq) { workouts = await repo.workoutRows() }
     }
 
-    // MARK: Level and streak
-
-    private var header: some View {
-        HStack(alignment: .center, spacing: 16) {
-            ZStack {
-                NunaRingGauge(fraction: levelProgress, color: tierColor, size: 84, lineWidth: 6) {
-                    Text(verbatim: "\(level)").font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                }
-            }
-            .frame(width: 84, height: 84)
-            VStack(alignment: .leading, spacing: 4) {
-                Text(tier).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(tierColor)
-                Text(verbatim: String(localized: "Level \(level)")).font(.nuna(size: 20, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                Text(verbatim: String(localized: "\(recoveries) Recovery days")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            }
-            Spacer(minLength: 8)
-            VStack(alignment: .leading, spacing: 10) {
-                stat("Data streak", String(localized: "\(dataStreak) days"))
-                if let firstData { stat("First data", firstData) }
-            }
-            .padding(.leading, 14)
-            .overlay(alignment: .leading) { Rectangle().fill(NunaPalette.hairline).frame(width: 1) }
-        }
-        .padding(.vertical, 4)
-    }
-
-    private func stat(_ label: LocalizedStringKey, _ value: String) -> some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            Text(verbatim: value).font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-        }
-    }
-
-    // MARK: Number of activities, max heart rate, peak Effort
-
-    private var figures: some View {
-        let ws = workoutsInView
-        let maxHr = ws.compactMap(\.maxHr).max()
-        let peak = daysInView.compactMap(\.strain).max()
-        return HStack(alignment: .top, spacing: 0) {
-            figure(icon: "dumbbell", value: "\(ws.count)", unit: "×", label: "Number of activities")
-            Rectangle().fill(NunaPalette.hairline).frame(width: 1, height: 64)
-            figure(icon: "heart", value: maxHr.map(String.init) ?? "–", unit: "", label: "Max heart rate")
-            Rectangle().fill(NunaPalette.hairline).frame(width: 1, height: 64)
-            VStack(spacing: 8) {
-                NunaRingGauge(fraction: (peak ?? 0) / 100, color: peak.map(nunaEffortColor) ?? NunaPalette.effortModerate,
-                              gradient: peak.map(nunaEffortRingColors), size: 52, lineWidth: 5) {
-                    Text(verbatim: peak.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–")
-                        .font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).minimumScaleFactor(0.6).lineLimit(1)
-                }
-                caption("Peak day Strain")
-            }
-            .frame(maxWidth: .infinity)
-        }
-        .padding(.vertical, 8)
-        .overlay(alignment: .top) { NunaDivider() }
-        .overlay(alignment: .bottom) { NunaDivider() }
-    }
-
-    private func figure(icon: String, value: String, unit: String, label: LocalizedStringKey) -> some View {
-        VStack(spacing: 8) {
-            Image(systemName: icon).font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(height: 24)
-            HStack(alignment: .firstTextBaseline, spacing: 1) {
-                Text(verbatim: value).font(.nuna(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
-                if !unit.isEmpty && value != "–" { Text(verbatim: unit).font(.nuna(size: 13, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }
-            }
-            caption(label)
-        }
-        .frame(maxWidth: .infinity)
-    }
-
-    private func caption(_ t: LocalizedStringKey) -> some View {
-        Text(t).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-            .multilineTextAlignment(.center).lineLimit(2).fixedSize(horizontal: false, vertical: true)
-    }
-
-    // MARK: Activities
-
-    private struct SportRow: Identifiable {
-        let id: String; let count: Int; let peak: Double?
-    }
-
-    private var sports: [SportRow] {
-        Dictionary(grouping: workoutsInView) { WorkoutSource.displaySport($0.sport) }
-            .map { SportRow(id: $0.key, count: $0.value.count, peak: $0.value.compactMap(\.strain).max()) }
-            .sorted { $0.count != $1.count ? $0.count > $1.count : $0.id < $1.id }
-    }
-
-    private func sportIcon(_ name: String) -> String {
-        let s = name.lowercased()
-        if s.contains("run") || s.contains("jog") { return "figure.run" }
-        if s.contains("walk") { return "figure.walk" }
-        if s.contains("hik") || s.contains("ruck") { return "figure.hiking" }
-        if s.contains("cycl") || s.contains("spin") || s.contains("bike") || s.contains("biking") { return "figure.outdoor.cycle" }
-        if s.contains("swim") { return "figure.pool.swim" }
-        if s.contains("yoga") { return "figure.yoga" }
-        if NunaWorkoutKind.isStrengthName(name) { return "dumbbell" }
-        return "figure.mixed.cardio"
-    }
-
-    @ViewBuilder private var activities: some View {
-        let list = sports
-        if !list.isEmpty {
-            let shown = showAllActivities ? list : Array(list.prefix(6))
-            VStack(alignment: .leading, spacing: 4) {
-                HStack {
-                    caption("Activities")
-                    Spacer()
-                    caption("Peak Strain")
-                }
-                NunaPlainList {
-                    ForEach(Array(shown.enumerated()), id: \.element.id) { i, s in
-                        if i > 0 { NunaDivider() }
-                        HStack(spacing: 14) {
-                            Text(verbatim: "\(s.count)×").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                                .frame(width: 44, alignment: .trailing)
-                            Image(systemName: sportIcon(s.id)).font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 28)
-                            Text(verbatim: s.id).font(.nuna(size: 13.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                                .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
-                            Spacer(minLength: 8)
-                            Text(verbatim: s.peak.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–")
-                                .font(.nuna(size: 18, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        }
-                        .padding(.vertical, 14)
-                    }
-                }
-                if list.count > 6 {
-                    Button { withAnimation { showAllActivities.toggle() } } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: showAllActivities ? "chevron.up" : "chevron.down").font(.nuna(size: 11, weight: .bold))
-                            Text(showAllActivities ? "Fewer activities" : "More activities").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                        }
-                        .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 44)
-                    }.buttonStyle(.plain)
-                }
-            }
-        }
-    }
-
-    // MARK: HRV and resting heart rate
-
-    @ViewBuilder private var spreads: some View {
-        let hrv = spread(daysInView.compactMap(\.avgHrv))
-        let rhr = spread(daysInView.compactMap { $0.restingHr.map(Double.init) })
-        if hrv != nil || rhr != nil {
-            HStack(alignment: .top, spacing: 0) {
-                if let hrv { spreadColumn("HRV", "ms", hrv) }
-                if hrv != nil && rhr != nil { Rectangle().fill(NunaPalette.hairline).frame(width: 1) }
-                if let rhr { spreadColumn("Resting HR", "bpm", rhr) }
-            }
-            .padding(.vertical, 6)
-            .overlay(alignment: .top) { NunaDivider() }
-            .overlay(alignment: .bottom) { NunaDivider() }
-        }
-    }
-
-    /// Two bars, the lowest and the highest reading in view, with a dashed line at the median.
-    private func spreadColumn(_ title: LocalizedStringKey, _ unit: String, _ s: (low: Double, high: Double, median: Double)) -> some View {
-        let top = max(s.high, 1)
-        let height: CGFloat = 120
-        func h(_ v: Double) -> CGFloat { max(8, height * CGFloat(v / top)) }
-        return VStack(spacing: 10) {
-            ZStack(alignment: .bottom) {
-                HStack(alignment: .bottom, spacing: 26) {
-                    bar(s.low, h(s.low), "Low")
-                    bar(s.high, h(s.high), "High")
-                }
-                .frame(maxWidth: .infinity)
-                // The median across both bars.
-                HStack(spacing: 6) {
-                    NunaTargetLine().frame(height: 1.5)
-                    Text("Median").font(.nuna(size: 9.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                        .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 6).frame(height: 18)
-                        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 4, style: .continuous))
-                }
-                .padding(.bottom, h(s.median))
-            }
-            .frame(height: height + 34, alignment: .bottom)
-            HStack(spacing: 4) {
-                Text(title).font(.nuna(size: 13, weight: .heavy)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                Text(verbatim: "(\(unit))").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-            }
-        }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 8)
-    }
-
-    private func bar(_ value: Double, _ height: CGFloat, _ label: LocalizedStringKey) -> some View {
+    private func total(_ n: Int, _ label: LocalizedStringKey) -> some View {
         VStack(spacing: 4) {
-            Text(verbatim: "\(Int(value.rounded()))").font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-            RoundedRectangle(cornerRadius: 4, style: .continuous).fill(NunaPalette.textSecondary.opacity(0.55)).frame(width: 46, height: height)
-                .overlay(alignment: .top) { Rectangle().fill(NunaPalette.textPrimary).frame(height: 2) }
-            caption(label)
-        }
+            Text(verbatim: "\(n)").font(.nunaBoldFigure(size: 44)).foregroundStyle(NunaPalette.textPrimary)
+            Text(label).font(.nuna(size: 15, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+        }.frame(maxWidth: .infinity)
     }
 
-    // MARK: Streaks
-
-    private var streaks: some View {
-        let working = Int(UnitFormatter.effortValue(Self.workingEffort, scale: scale).rounded())
-        return HStack(alignment: .top, spacing: 0) {
-            streak("dumbbell", longestRun { ($0.strain ?? 0) >= Self.workingEffort }, NunaPalette.effortModerate, LocalizedStringKey("Strain \(working)+ streak"))
-            streak("leaf", longestRun { ($0.recovery ?? 0) >= Self.greenCharge }, NunaPalette.scoreHigh, "Green Recovery streak")
-            streak("moon", longestRun { restScore($0) >= Self.goodRest }, NunaPalette.restText, "Sleep 70%+ streak")
+    private var chips: some View {
+        ScrollView(.horizontal) {
+            HStack(spacing: 10) {
+                chip("All", on: filter == nil) { filter = nil }
+                ForEach(NunaAchievementDef.Group.allCases, id: \.rawValue) { g in chip(g.title, on: filter == g) { filter = g } }
+            }
+            .padding(.horizontal, NunaSpacing.screenH)
         }
-        .padding(.vertical, 12)
-        .overlay(alignment: .bottom) { NunaDivider() }
+        .scrollIndicators(.hidden).padding(.horizontal, -NunaSpacing.screenH)
     }
 
-    /// The Rest score of a day, from the stored daily totals (the same composite the Rest ring shows), or 0 without sleep.
-    private func restScore(_ d: DailyMetric) -> Double { AnalyticsEngine.Rest.composite(daily: d) ?? 0 }
+    private func chip(_ title: LocalizedStringKey, on: Bool, _ action: @escaping () -> Void) -> some View {
+        Button { withAnimation(.easeInOut(duration: 0.15)) { action() } } label: {
+            Text(title).font(.nuna(size: 16, weight: .semibold)).textCase(nil)
+                .foregroundStyle(on ? Color(red: 0.05, green: 0.06, blue: 0.08) : NunaPalette.textPrimary)
+                .padding(.horizontal, 18).frame(height: 40)
+                .background(on ? Color.white : NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }.buttonStyle(.plain)
+    }
 
-    private func streak(_ icon: String, _ n: Int, _ tint: Color, _ label: LocalizedStringKey) -> some View {
+    private func cell(_ a: NunaAchievementDef) -> some View {
         VStack(spacing: 8) {
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Image(systemName: icon).font(.nuna(size: 15, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
-                HStack(alignment: .firstTextBaseline, spacing: 1) {
-                    Text(verbatim: "\(n)").font(.nuna(size: 26, weight: .bold, design: NunaType.design)).foregroundStyle(tint)
-                    Text(verbatim: "×").font(.nuna(size: 13, weight: .bold)).foregroundStyle(tint)
-                }
+            NunaAchievementBadge(shape: a.shape, icon: a.icon, level: a.level)
+            Text(a.title).font(.nuna(size: 15, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).multilineTextAlignment(.center)
+            if a.progress > 0 {
+                (Text(verbatim: "\(a.progress)").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                 + Text(verbatim: " of \(NunaAchievementDef.perLevel)").font(.nuna(size: 15, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)).textCase(nil)
             }
-            caption(label)
         }
-        .frame(maxWidth: .infinity)
-    }
-
-    // MARK: Lowest Charge, longest sleep
-
-    private var extremes: some View {
-        let lowest = daysInView.compactMap(\.recovery).min()
-        let longest = daysInView.compactMap(\.totalSleepMin).max()
-        return HStack(alignment: .top, spacing: 0) {
-            VStack(spacing: 8) {
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Image(systemName: "bolt.slash").font(.nuna(size: 15, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
-                    Text(verbatim: lowest.map { "\(Int($0.rounded()))%" } ?? "–").font(.nuna(size: 26, weight: .bold, design: NunaType.design))
-                        .foregroundStyle(lowest.map(nunaChargeColor) ?? NunaPalette.textPrimary)
-                }
-                caption("Lowest Recovery")
-            }
-            .frame(maxWidth: .infinity)
-            VStack(spacing: 8) {
-                HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Image(systemName: "moon").font(.nuna(size: 15, weight: .regular)).foregroundStyle(NunaPalette.textSecondary)
-                    Text(verbatim: longest.map { NunaSleepFormat.duration($0) } ?? "–").font(.nuna(size: 26, weight: .bold, design: NunaType.design))
-                        .foregroundStyle(NunaPalette.restText)
-                }
-                caption("Longest sleep")
-            }
-            .frame(maxWidth: .infinity)
-        }
-        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity, alignment: .top)
     }
 }
 #endif

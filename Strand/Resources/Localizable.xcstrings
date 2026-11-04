@@ -7966,5 +7966,13 @@
  "Titanium": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Titanium"}}}},
  "Platinum": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Platinum"}}}},
  "Diamond": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Diamond"}}}},
- "%@'s Daily Outlook": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Daily Outlook %@"}}}}
+ "%@'s Daily Outlook": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Daily Outlook %@"}}}},
+ "Unique": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Unik"}}}},
+ "Sandman": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Si Pembuai Tidur"}}}},
+ "Green Week": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pekan Hijau"}}}},
+ "Peak Day": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Hari Puncak"}}}},
+ "Steady Stepper": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pelangkah Stabil"}}}},
+ "All Out Day": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Hari Habis-habisan"}}}},
+ "Jack of All Trades": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Serba Bisa"}}}},
+ "Bubblegum Body": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tubuh Lentur"}}}}
 }, "version":"1.0" }
