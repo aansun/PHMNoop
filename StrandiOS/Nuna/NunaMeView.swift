@@ -55,7 +55,7 @@ enum NunaMeRoute: Hashable {
     case search
     case applications
     /// The new Settings structure: the profile page, the App Settings list, the levels, and the two Support pages.
-    case profile, appSettings, levels, howItWorks, whatsNew
+    case profile, appSettings, levels, howItWorks, whatsNew, dayStreak
 }
 
 extension View {
@@ -101,6 +101,7 @@ extension View {
             case .levels: NunaLevelsView()
             case .howItWorks: NunaHowItWorksView()
             case .whatsNew: NunaWhatsNewView()
+            case .dayStreak: NunaDayStreakView()
             }
         }
     }

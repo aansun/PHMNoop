@@ -7989,5 +7989,14 @@
  "What should Anya know?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Apa yang perlu Anya tahu?"}}}},
  "Hi %@ — here's what Anya knows about you.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Hai %@ — ini yang Anya ketahui tentangmu."}}}},
  "Here's what Anya knows about you.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ini yang Anya ketahui tentangmu."}}}},
- "Nothing yet. Share something and it will show up here.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Belum ada. Bagikan sesuatu dan akan muncul di sini."}}}}
+ "Nothing yet. Share something and it will show up here.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Belum ada. Bagikan sesuatu dan akan muncul di sini."}}}},
+ "Day Streak": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Rangkaian Hari"}}}},
+ "Wear your strap daily": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pakai strap-mu setiap hari"}}}},
+ "Streak started": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Rangkaian dimulai"}}}},
+ "Max streak": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Rangkaian terpanjang"}}}},
+ "%lld more days": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "%lld hari lagi"}}}},
+ "to unlock your next milestone.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "untuk membuka pencapaian berikutnya."}}}},
+ "Don't let your streak fade": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Jangan biarkan rangkaianmu padam"}}}},
+ "Looks like you're not wearing your strap. Put it back on before tomorrow night to avoid losing your streak.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Sepertinya kamu tidak memakai strap. Pakai lagi sebelum besok malam agar rangkaianmu tidak hilang."}}}},
+ "I'm on a %lld day streak with PHMN.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Aku sudah %lld hari berturut-turut dengan PHMN."}}}}
 }, "version":"1.0" }
