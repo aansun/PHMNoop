@@ -54,8 +54,7 @@ struct NunaAppleHealthView: View {
                 Rectangle().fill(NunaPalette.textMuted.opacity(0.7)).frame(width: 34, height: 1.5)
                 Circle().fill(NunaPalette.textMuted).frame(width: 7, height: 7)
             }
-            Image("PHMNMark").resizable().scaledToFit().frame(width: 84, height: 84)
-                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+            PHMNAppTile(size: 84)
                 .overlay(RoundedRectangle(cornerRadius: 22, style: .continuous).strokeBorder(NunaPalette.hairline, lineWidth: 1))
         }
     }

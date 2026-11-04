@@ -157,3 +157,19 @@ struct PHMNWordmarkShape: Shape {
         return path
     }
 }
+
+/// The app icon as a tile: the colour butterfly in the thin ring on the icon's navy, in a rounded square (for places that show the app as a picture).
+public struct PHMNAppTile: View {
+    public var size: CGFloat
+    public init(size: CGFloat = 84) { self.size = size }
+
+    public var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: size * 0.26, style: .continuous).fill(Color(red: 12 / 255, green: 17 / 255, blue: 27 / 255))
+            Circle().strokeBorder(Color(red: 143 / 255, green: 163 / 255, blue: 192 / 255), lineWidth: max(1, size * 0.016)).frame(width: size * 0.86, height: size * 0.86)
+            PHMNButterfly(size: size * 0.58)
+        }
+        .frame(width: size, height: size)
+        .accessibilityHidden(true)
+    }
+}

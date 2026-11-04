@@ -95,10 +95,7 @@ struct NOOPBannerLockScreen: View {
 
     /// The PHMN mark in the middle, in grey and not in its colours: it carries its own thin ring.
     private var mark: some View {
-        Image("PHMNMarkMono").renderingMode(.template).resizable().scaledToFit()
-            .frame(width: 46, height: 46)
-            .foregroundStyle(NOOPBannerPalette.muted)
-            .accessibilityHidden(true)
+        PHMNMark(.circle, size: 46, color: NOOPBannerPalette.muted)
     }
 
     /// A muted heart before the number, the number large, "bpm" small beside it, all on one baseline.
