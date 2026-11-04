@@ -684,7 +684,6 @@ private struct iOSRootView: View {
     @AppStorage(ExperienceMode.storageKey) private var experienceRaw = ExperienceMode.nuna.rawValue
     @AppStorage("noop.lastSeenChangelogVersion") private var lastSeenChangelog = ""
     @AppStorage("noop.acceptedTermsVersion") private var acceptedTerms = ""
-    @State private var showWhatsNew = false
     /// Starts false so a cold-launch external action can't race this view's onAppear decision about the
     /// automatic What's New sheet. It becomes true only when no sheet is due or its dismissal completes.
     @State private var automaticLaunchSheetResolved = false
@@ -743,12 +742,6 @@ private struct iOSRootView: View {
         }
         .animation(.easeInOut(duration: 0.35), value: onboarded)
         .animation(.easeInOut(duration: 0.35), value: acceptedTerms)
-        .sheet(isPresented: $showWhatsNew, onDismiss: { automaticLaunchSheetResolved = true }) {
-            WhatsNewView(onClose: {
-                lastSeenChangelog = AppChangelog.currentVersion
-                showWhatsNew = false
-            })
-        }
         // The Terms gate must stay "over everything" — don't pop What's New on top of it after a
         // combined terms+version update. Gate on terms being current, and re-check when they're
         // accepted (onAppear already fired before acceptance), so What's New shows right after.
@@ -786,14 +779,12 @@ private struct iOSRootView: View {
             automaticLaunchSheetResolved = true
             return
         }
-        // Existing users who updated: their last-seen version is behind the current one.
-        if onboarded && acceptedTerms == Terms.currentVersion
-            && lastSeenChangelog != AppChangelog.currentVersion {
-            automaticLaunchSheetResolved = false
-            showWhatsNew = true
-        } else {
-            automaticLaunchSheetResolved = true
+        // The What's New sheet no longer opens on launch. The version is marked as seen so nothing else waits on
+        // it; the release notes stay reachable from the updates inbox and About.
+        if onboarded && acceptedTerms == Terms.currentVersion && lastSeenChangelog != AppChangelog.currentVersion {
+            lastSeenChangelog = AppChangelog.currentVersion
         }
+        automaticLaunchSheetResolved = true
     }
 }
 
