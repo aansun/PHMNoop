@@ -16,11 +16,7 @@ struct AnyaMark: View {
     var size: CGFloat = 28
 
     var body: some View {
-        Image("AnyaLogo")
-            .resizable()
-            .scaledToFit()
-            .frame(width: size, height: size)
-            .accessibilityHidden(true)
+        PHMNButterfly(size: size)
     }
 }
 

@@ -123,9 +123,8 @@ private struct NunaPinnedBrand: View {
     var body: some View {
         // The wordmark of the reference: about 17 pt, a regular stroke, wide letters, near white. The tracking is added after the last letter too, so
         // the same amount is taken off the leading side to keep the word on the centre line.
-        Text(verbatim: "PHMN").font(.system(size: 14, weight: .regular).width(.expanded)).tracking(4)
-            .foregroundStyle(NunaPalette.textPrimary.opacity(0.92)).textCase(nil)
-            .padding(.leading, 4).frame(maxWidth: .infinity).frame(height: height * (1 - state.t), alignment: .center).clipped().offset(y: -3 * (1 - state.t))
+        PHMNWordmark(height: 11, color: NunaPalette.textPrimary.opacity(0.92))
+            .frame(maxWidth: .infinity).frame(height: height * (1 - state.t), alignment: .center).clipped().offset(y: -3 * (1 - state.t))
             .opacity(Double(max(0, 1 - state.t * 1.8)))
             .accessibilityHidden(true)
     }

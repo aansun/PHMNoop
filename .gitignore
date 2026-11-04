@@ -132,4 +132,5 @@ docs/nuna/
 docs/design/
 # The AltStore source links this one icon by its raw URL, so it stays tracked.
 PHMN-icon/*
+PHMN-logo/*
 !PHMN-icon/altstore-icon-512.png
