@@ -184,39 +184,37 @@ struct NunaAnyaInstructionsView: View {
 
 struct NunaAnyaMemoryView: View {
     @StateObject private var store = CoachMemoryStore()
+    @EnvironmentObject private var profile: ProfileStore
     @AppStorage(CoachMemoryStore.autoCaptureKey) private var autoCapture = true
     @State private var draft = ""
+    @State private var writing = false
+    @State private var snapshot = false
     @State private var editing: CoachMemory?
     @State private var confirmDeleteAll = false
+    /// nil is the timeline: everything, newest first.
+    @State private var tab: CoachMemoryCategory?
+
+    private var initials: String { String(profile.displayName.split(separator: " ").prefix(2).compactMap(\.first)).uppercased() }
 
     var body: some View {
-        let all = store.memories
+        let all = store.memories.sorted { $0.createdAt > $1.createdAt }
         let active = all.filter(\.isActive), paused = all.filter { !$0.isActive }
-        NunaDetailScreen("Memory") {
-            // How much Anya remembers and where it came from, as plain figures on the page.
-            HStack(spacing: 0) {
-                figure("Active", "\(active.count)")
-                figureDivider
-                figure("From chats", "\(all.filter(\.fromConversation).count)")
-                figureDivider
-                figure("Added by you", "\(all.filter { !$0.fromConversation }.count)")
+        let shown = tab.map { t in all.filter { $0.category == t } } ?? all
+        NunaDetailScreen("My Memory", centersTitle: true) {
+            hero
+            shareCard
+            VStack(spacing: 10) {
+                NavigationLink(value: NunaAnyaRoute.history) { linkRow("clock.arrow.circlepath", "Chat History") }.buttonStyle(.plain)
+                Button { snapshot = true } label: { linkRow("lightbulb.max", "My Memory Snapshot") }.buttonStyle(.plain)
             }
-            .padding(.vertical, 6)
+            tabs(all)
+            if shown.isEmpty {
+                Text(all.isEmpty ? "Nothing yet. Tell Anya things like “remember I race on 5 December”, or share something above." : "Nothing in this group yet.")
+                    .font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading).padding(.top, 6)
+            }
+            VStack(spacing: 14) { ForEach(shown) { m in card(m) } }
             NunaToggleRow("Save from conversations", systemImage: "brain", isOn: $autoCapture)
-            NunaFormField("Add a memory") {
-                HStack {
-                    TextField("", text: $draft, prompt: Text("For example: I don't eat dairy").foregroundStyle(NunaPalette.textMuted)).submitLabel(.done).onSubmit(add)
-                    Button(action: add) { Image(systemName: "plus.circle.fill").font(.nuna(size: 24)).foregroundStyle(NunaPalette.textPrimary) }.buttonStyle(.plain)
-                        .disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty).accessibilityLabel(Text("Add memory"))
-                }
-            }
-            if all.isEmpty {
-                Text("Nothing yet. Tell Anya things like “remember I race on 5 December”, or add one above.")
-                    .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
-            }
-            if !active.isEmpty { section("Active", active) }
-            if !paused.isEmpty { section("Paused", paused) }
-            if !all.isEmpty {
+            if !paused.isEmpty || !active.isEmpty {
                 Button { confirmDeleteAll = true } label: {
                     Text("Delete all memory").font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                         .foregroundStyle(NunaPalette.alertText).frame(maxWidth: .infinity, minHeight: 44)
@@ -226,6 +224,8 @@ struct NunaAnyaMemoryView: View {
         }
         .scrollDismissesKeyboard(.interactively)
         .sheet(item: $editing) { m in NunaMemoryEditSheet(memory: m) { store.update($0) } }
+        .sheet(isPresented: $writing) { NunaMemoryWriteSheet { text in addMemory(text) } }
+        .sheet(isPresented: $snapshot) { NunaMemorySnapshotSheet(memories: active) }
         .alert(deleteTitle, isPresented: $confirmDeleteAll) {
             if paused.isEmpty {
                 Button("OK", role: .cancel) {}
@@ -234,6 +234,126 @@ struct NunaAnyaMemoryView: View {
                 Button("Cancel", role: .cancel) {}
             }
         } message: { Text(deleteMessage) }
+    }
+
+    // MARK: Parts
+
+    private var hero: some View {
+        HStack(alignment: .center, spacing: 12) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Shape your experience.").font(.nuna(size: 26, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).fixedSize(horizontal: false, vertical: true)
+                Text("Help Anya understand you better.").font(.nuna(size: 14.5, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+            }
+            Spacer(minLength: 8)
+            Circle().fill(LinearGradient(colors: [Color(red: 1, green: 0.38, blue: 0.35), Color(red: 1, green: 0.52, blue: 0.35)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                .frame(width: 58, height: 58)
+                .overlay {
+                    if initials.isEmpty { Image(systemName: "person.fill").font(.system(size: 24)).foregroundStyle(.black.opacity(0.7)) }
+                    else { Text(verbatim: initials).font(.nuna(size: 24, weight: .heavy)).foregroundStyle(.black) }
+                }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 8)
+    }
+
+    private var shareCard: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(spacing: 10) {
+                Image(systemName: "sparkles").font(.system(size: 20)).foregroundStyle(Color(red: 0.55, green: 0.55, blue: 0.98))
+                Text("Share something new").font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            }
+            Button { writing = true } label: {
+                HStack(spacing: 12) {
+                    Image(systemName: "keyboard").font(.system(size: 17))
+                    Text("Text").font(.nuna(size: 13.5, weight: .heavy)).tracking(nunaTrackingLabel * 1.3).textCase(.uppercase)
+                }
+                .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 50)
+                .background(Color.white.opacity(0.13), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(RoundedRectangle(cornerRadius: 12, style: .continuous).strokeBorder(Color.white.opacity(0.16), lineWidth: 1))
+            }.buttonStyle(.plain)
+        }
+        .padding(18)
+        .background(LinearGradient(colors: [Color(red: 0.19, green: 0.18, blue: 0.34), Color(red: 0.14, green: 0.20, blue: 0.30)], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).strokeBorder(Color(red: 0.36, green: 0.34, blue: 0.70).opacity(0.8), lineWidth: 1.2))
+    }
+
+    private func linkRow(_ icon: String, _ title: LocalizedStringKey) -> some View {
+        HStack(spacing: 16) {
+            Image(systemName: icon).font(.system(size: 21, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).frame(width: 30)
+            Text(title).font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            Spacer(minLength: 6)
+            Image(systemName: "arrow.right").font(.system(size: 17)).foregroundStyle(Color(red: 0.45, green: 0.50, blue: 0.95))
+        }
+        .padding(.horizontal, 18).frame(height: 56).frame(maxWidth: .infinity)
+        .background(LinearGradient(colors: [Color(red: 0.14, green: 0.15, blue: 0.27), Color(red: 0.12, green: 0.19, blue: 0.28)], startPoint: .leading, endPoint: .trailing), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+
+    private func tabs(_ all: [CoachMemory]) -> some View {
+        ScrollView(.horizontal) {
+            HStack(spacing: 10) {
+                tabPill("Timeline", on: tab == nil) { tab = nil }
+                ForEach(CoachMemoryCategory.allCases.filter { c in all.contains { $0.category == c } }) { c in
+                    tabPill(LocalizedStringKey(c.displayName), on: tab == c) { tab = c }
+                }
+            }
+            .padding(.horizontal, NunaSpacing.screenH)
+        }
+        .scrollIndicators(.hidden).padding(.horizontal, -NunaSpacing.screenH).padding(.top, 6)
+    }
+
+    private func tabPill(_ title: LocalizedStringKey, on: Bool, _ action: @escaping () -> Void) -> some View {
+        Button { withAnimation(.easeInOut(duration: 0.15)) { action() } } label: {
+            Text(title).font(.nuna(size: 16, weight: .semibold)).textCase(nil)
+                .foregroundStyle(on ? Color(red: 0.05, green: 0.06, blue: 0.08) : NunaPalette.textPrimary)
+                .padding(.horizontal, 18).frame(height: 40)
+                .background(on ? Color.white : Color.white.opacity(0.13), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }.buttonStyle(.plain)
+    }
+
+    private func card(_ m: CoachMemory) -> some View {
+        NunaSwipeDeleteRow(onDelete: { store.delete(m) }) {
+            Button { editing = m } label: {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .top, spacing: 8) {
+                        Text(verbatim: m.title).font(.nuna(size: 18, weight: .regular)).foregroundStyle(m.isActive ? NunaPalette.textPrimary : NunaPalette.textMuted)
+                            .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                        Spacer(minLength: 6)
+                        Image(systemName: "chevron.right").font(.system(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).padding(.top, 5)
+                    }
+                    if !m.detail.isEmpty && m.detail != m.title {
+                        Text(verbatim: m.detail).font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).multilineTextAlignment(.leading)
+                            .fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    }
+                    HStack(spacing: 10) {
+                        Text(m.isActive ? "Active" : "Paused").font(.nuna(size: 14, weight: .regular)).textCase(nil)
+                            .foregroundStyle(m.isActive ? Color(red: 0.50, green: 0.55, blue: 0.98) : NunaPalette.textSecondary)
+                            .padding(.horizontal, 14).frame(height: 32)
+                            .background((m.isActive ? Color(red: 0.30, green: 0.34, blue: 0.62) : Color.white.opacity(0.1)).opacity(m.isActive ? 0.55 : 1), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        Text(LocalizedStringKey(m.category.displayName)).font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                            .padding(.horizontal, 12).frame(height: 32)
+                            .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Color.white.opacity(0.35), lineWidth: 1.2))
+                    }
+                    Text(verbatim: String(localized: "Start date: \(Self.date(m.createdAt))")).font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                }
+                .padding(18).frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
+                .background(LinearGradient(colors: [Color(red: 0.14, green: 0.15, blue: 0.27), Color(red: 0.12, green: 0.18, blue: 0.27)], startPoint: .topLeading, endPoint: .bottomTrailing), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+            }.buttonStyle(.plain)
+        }
+        .contextMenu {
+            Button { editing = m } label: { Label("Edit", systemImage: "pencil") }
+            Button { store.setActive(m, !m.isActive) } label: { Label(m.isActive ? "Pause" : "Activate", systemImage: m.isActive ? "pause.circle" : "play.circle") }
+            Button(role: .destructive) { store.delete(m) } label: { Label("Delete", systemImage: "trash") }
+        }
+    }
+
+    private static func date(_ d: Date) -> String {
+        let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.dateFormat = "MMM d, yyyy"; return f.string(from: d)
+    }
+
+    private func addMemory(_ text: String) {
+        let t = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !t.isEmpty else { return }
+        if let found = CoachMemoryExtractor.extract(from: t) { store.add(title: found.title, detail: found.detail, category: found.category) }
+        else { store.add(title: t, detail: "", category: .note) }
     }
 
     // MARK: Warning before deleting
@@ -257,63 +377,68 @@ struct NunaAnyaMemoryView: View {
         }
     }
 
-    // MARK: Pieces
+}
 
-    private var figureDivider: some View { Rectangle().fill(NunaPalette.hairline).frame(width: 1, height: 30) }
+/// "Share something new" in text: one box, and what is written becomes a memory (the kind is read from the words when it can be).
+private struct NunaMemoryWriteSheet: View {
+    let onSave: (String) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var text = ""
+    @FocusState private var focused: Bool
 
-    private func figure(_ label: LocalizedStringKey, _ value: String) -> some View {
-        VStack(spacing: 5) {
-            Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
-            Text(verbatim: value).font(.nuna(size: 24, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-        }.frame(maxWidth: .infinity)
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text("Share something new").font(.nuna(size: 20, weight: .semibold)).foregroundStyle(.white).textCase(nil).padding(.top, 26)
+            Text("For example: I don't eat dairy, or I race on 5 December.").font(.nuna(size: 14.5, weight: .regular)).foregroundStyle(.white.opacity(0.65)).textCase(nil)
+            TextField("", text: $text, prompt: Text("What should Anya know?").foregroundStyle(.white.opacity(0.4)), axis: .vertical)
+                .font(.nuna(size: 18, weight: .regular)).foregroundStyle(.white).lineLimit(3...8).focused($focused)
+                .padding(16).background(Color.white.opacity(0.08), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+            Button { onSave(text); dismiss() } label: {
+                Text("Save").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                    .foregroundStyle(Color(red: 0.05, green: 0.06, blue: 0.08)).frame(maxWidth: .infinity).frame(height: 50)
+                    .background(Color.white, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }.buttonStyle(.plain).disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty).opacity(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? 0.4 : 1)
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 20)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        .background(LinearGradient(colors: [Color(red: 0.12, green: 0.14, blue: 0.24), Color(red: 0.04, green: 0.05, blue: 0.09)], startPoint: .top, endPoint: .bottom).ignoresSafeArea())
+        .textCase(nil)
+        .preferredColorScheme(.dark)
+        .presentationDetents([.height(400), .large]).presentationDragIndicator(.visible)
+        .onAppear { focused = true }
     }
+}
 
-    private func section(_ title: LocalizedStringKey, _ items: [CoachMemory]) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
-            nunaRuledHeader(title, count: items.count)
-            // The lists of active and paused memories are cards; the rest of the page is on the background.
-            NunaCard(small: true, padding: EdgeInsets(top: 0, leading: 16, bottom: 0, trailing: 10)) {
-                VStack(spacing: 0) {
-                    ForEach(Array(items.enumerated()), id: \.element.id) { i, m in
-                        if i > 0 { NunaDivider() }
-                        row(m)
+/// What Anya holds right now, as a short read: the active memories under their kind. Written on this phone from the list, not by a provider.
+private struct NunaMemorySnapshotSheet: View {
+    let memories: [CoachMemory]
+    @EnvironmentObject private var profile: ProfileStore
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                let first = profile.displayName.split(separator: " ").first.map(String.init)
+                Text(verbatim: first.map { String(localized: "Hi \($0) — here's what Anya knows about you.") } ?? String(localized: "Here's what Anya knows about you."))
+                    .font(.nuna(size: 18, weight: .regular)).lineSpacing(6)
+                if memories.isEmpty {
+                    Text("Nothing yet. Share something and it will show up here.").font(.nuna(size: 16, weight: .regular)).foregroundStyle(.white.opacity(0.65))
+                }
+                ForEach(CoachMemoryCategory.allCases.filter { c in memories.contains { $0.category == c } }) { c in
+                    VStack(alignment: .leading, spacing: 6) {
+                        Label(LocalizedStringKey(c.displayName), systemImage: c.symbol).font(.nuna(size: 16, weight: .semibold)).textCase(nil)
+                        ForEach(memories.filter { $0.category == c }) { m in
+                            Text(verbatim: m.detail.isEmpty ? m.title : m.detail).font(.nuna(size: 16, weight: .regular)).foregroundStyle(.white.opacity(0.78)).lineSpacing(4)
+                        }
                     }
                 }
             }
+            .padding(20).frame(maxWidth: .infinity, alignment: .leading)
         }
-    }
-
-    private func row(_ m: CoachMemory) -> some View {
-        HStack(spacing: 12) {
-            Button { editing = m } label: {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(verbatim: m.title).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(m.isActive ? NunaPalette.textPrimary : NunaPalette.textMuted)
-                        .multilineTextAlignment(.leading).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                    if !m.detail.isEmpty && m.detail != m.title {
-                        Text(verbatim: m.detail).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(2)
-                            .multilineTextAlignment(.leading).textCase(nil)
-                    }
-                    Text(verbatim: m.category.displayName + " · " + (m.fromConversation ? String(localized: "From a chat") : String(localized: "Added by you")))
-                        .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading).contentShape(Rectangle())
-            }.buttonStyle(.plain)
-            Toggle("", isOn: Binding(get: { m.isActive }, set: { store.setActive(m, $0) })).labelsHidden().tint(NunaPalette.charge)
-            Menu {
-                Button { editing = m } label: { Label("Edit", systemImage: "pencil") }
-                Button { store.setActive(m, !m.isActive) } label: { Label(m.isActive ? "Pause" : "Activate", systemImage: m.isActive ? "pause.circle" : "play.circle") }
-                Button(role: .destructive) { store.delete(m) } label: { Label("Delete", systemImage: "trash") }
-            } label: { Image(systemName: "ellipsis").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).frame(width: 34, height: 44) }
-        }
-        .padding(.vertical, 12)
-    }
-
-    private func add() {
-        let t = draft.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !t.isEmpty else { return }
-        if let found = CoachMemoryExtractor.extract(from: t) { store.add(title: found.title, detail: found.detail, category: found.category) }
-        else { store.add(title: t, detail: "", category: .note) }
-        draft = ""
+        .foregroundStyle(.white).textCase(nil)
+        .background(LinearGradient(colors: [Color(red: 0.12, green: 0.14, blue: 0.24), Color(red: 0.04, green: 0.05, blue: 0.09)], startPoint: .top, endPoint: .bottom).ignoresSafeArea())
+        .preferredColorScheme(.dark)
+        .presentationDetents([.medium, .large]).presentationDragIndicator(.visible)
     }
 }
 
