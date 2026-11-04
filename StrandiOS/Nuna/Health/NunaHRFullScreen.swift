@@ -204,7 +204,8 @@ struct NunaHRFullScreen: View {
         while Int(d.timeIntervalSince1970) < t1 {
             let h = cal.component(.hour, from: d)
             let ts = Int(d.timeIntervalSince1970)
-            let room = plotWidth * 0.07
+            // Clear of the time written at each end (about 44 pt wide, with the gap before the next).
+            let room = max(plotWidth * 0.07, 56)
             let px = CGFloat(ts - t0) / CGFloat(t1 - t0) * plotWidth
             if h % step == 0, px > room, px < plotWidth - room { out.append(ts) }
             d = d.addingTimeInterval(3_600)
@@ -237,54 +238,97 @@ struct NunaHRFullScreen: View {
         }
     }
 
+    /// One label above the plot: a glyph or a caption, and the figure under it.
+    private struct Mark: Identifiable {
+        enum Kind { case sleep, workout(WorkoutRow), charge(Double), strain(Double) }
+        let id: Int
+        let kind: Kind
+        /// Where it would sit if nothing else were in the way, and how wide it is.
+        let want: CGFloat
+        let width: CGFloat
+    }
+
+    /// Everything that is written above the plot, laid out in one row from the left: each label keeps to its place over its hours, and a label that
+    /// would touch the one before it moves to the right of it. If that pushes the last ones past the edge, they are pulled back from the right.
+    private func laidOut(_ marks: [Mark], from lo: CGFloat, to hi: CGFloat) -> [(Mark, CGFloat)] {
+        let gap: CGFloat = 6
+        var xs: [CGFloat] = []
+        for (i, m) in marks.enumerated() {
+            var cx = max(m.want, lo + m.width / 2)
+            if i > 0 { cx = max(cx, xs[i - 1] + marks[i - 1].width / 2 + gap + m.width / 2) }
+            xs.append(cx)
+        }
+        if let last = marks.indices.last, xs[last] + marks[last].width / 2 > hi {
+            xs[last] = hi - marks[last].width / 2
+            for i in stride(from: last - 1, through: 0, by: -1) { xs[i] = min(xs[i], xs[i + 1] - marks[i + 1].width / 2 - gap - marks[i].width / 2) }
+        }
+        return Array(zip(marks, xs))
+    }
+
+    private static func figureWidth(_ s: String) -> CGFloat { CGFloat(s.count) * 10 + 4 }
+
     /// The moon and its duration, the workouts' glyphs and durations, Charge at the wake-up line and Effort at the line where the data ends.
     private func markers(plot: CGRect, t0: Int, t1: Int, x: @escaping (Int) -> CGFloat) -> some View {
         let iconY = plot.minY - 40, textY = plot.minY - 16
-        return ZStack {
-            if let sleep, let span = clamped(sleep, t0, t1) {
-                let cx = (x(span.lowerBound) + x(span.upperBound)) / 2
-                Image(systemName: "moon.fill").font(.nuna(size: 19, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).position(x: cx, y: iconY)
-                Text(verbatim: Self.duration(sleep.upperBound - sleep.lowerBound)).font(.nuna(size: 17, weight: .bold, design: NunaType.design))
-                    .foregroundStyle(NunaPalette.textPrimary).position(x: cx, y: textY)
-                if sleep.upperBound > t0, sleep.upperBound < t1 {
-                    let wx = x(sleep.upperBound)
-                    Path { p in p.move(to: CGPoint(x: wx, y: plot.minY)); p.addLine(to: CGPoint(x: wx, y: plot.maxY)) }
-                        .stroke(NunaPalette.scoreMid, style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
-                    if let charge {
-                        Text(verbatim: String(format: "%.0f%%", locale: AppLanguage.activeLocale, charge)).font(.nuna(size: 17, weight: .bold, design: NunaType.design))
-                            .foregroundStyle(NunaScoreStyle.chargeColor(charge)).position(x: wx - 22, y: textY)
-                    }
+        let scale = UnitPrefs.resolveEffortScale(effortScaleRaw)
+        var marks: [Mark] = []
+        var wakeX: CGFloat?
+        if let sleep, let span = clamped(sleep, t0, t1) {
+            marks.append(Mark(id: marks.count, kind: .sleep, want: (x(span.lowerBound) + x(span.upperBound)) / 2, width: Self.figureWidth(Self.duration(sleep.upperBound - sleep.lowerBound))))
+            if sleep.upperBound > t0, sleep.upperBound < t1 {
+                wakeX = x(sleep.upperBound)
+                if let charge, let wx = wakeX {
+                    // Charge is written to the left of the line it belongs to, ending just short of it.
+                    let w = Self.figureWidth(String(format: "%.0f%%", charge))
+                    marks.append(Mark(id: marks.count, kind: .charge(charge), want: wx - 6 - w / 2, width: w))
                 }
             }
-            ForEach(Array(workoutMarks(t0, t1, x: x).enumerated()), id: \.offset) { _, m in
-                Image(systemName: ActivitySport.symbol(for: m.workout.sport)).font(.nuna(size: 19, weight: .regular))
-                    .foregroundStyle(NunaPalette.textSecondary).position(x: m.cx, y: iconY)
-                Text(verbatim: Self.duration(m.workout.endTs - m.workout.startTs)).font(.nuna(size: 17, weight: .bold, design: NunaType.design))
-                    .foregroundStyle(NunaPalette.textPrimary).position(x: m.cx, y: textY)
+        }
+        for wo in workouts.sorted(by: { $0.startTs < $1.startTs }) {
+            guard let span = clamped(wo.startTs...wo.endTs, t0, t1) else { continue }
+            marks.append(Mark(id: marks.count, kind: .workout(wo), want: (x(span.lowerBound) + x(span.upperBound)) / 2, width: Self.figureWidth(Self.duration(wo.endTs - wo.startTs))))
+        }
+        var strainX: CGFloat?
+        if isLatest, let effort, window.upperBound >= t1 {
+            strainX = x(t1)
+            let text = UnitFormatter.effortDisplay(effort, scale: scale)
+            marks.append(Mark(id: marks.count, kind: .strain(effort), want: x(t1), width: max(Self.figureWidth(text), 52)))
+        }
+        marks.sort { $0.want < $1.want }
+        let placed = laidOut(marks, from: plot.minX, to: plot.maxX + 40)
+        return ZStack {
+            if let wx = wakeX {
+                Path { p in p.move(to: CGPoint(x: wx, y: plot.minY)); p.addLine(to: CGPoint(x: wx, y: plot.maxY)) }
+                    .stroke(NunaPalette.scoreMid, style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
             }
-            if isLatest, let effort, window.upperBound >= t1 {
-                let ex = x(t1)
+            if let ex = strainX {
                 Path { p in p.move(to: CGPoint(x: ex, y: plot.minY - 22)); p.addLine(to: CGPoint(x: ex, y: plot.maxY)) }
                     .stroke(NunaPalette.effortModerate, style: StrokeStyle(lineWidth: 1.5, dash: [4, 3]))
-                Text("Strain").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                    .foregroundStyle(NunaPalette.effortModerate).fixedSize().position(x: ex, y: iconY + 2)
-                Text(verbatim: UnitFormatter.effortDisplay(effort, scale: UnitPrefs.resolveEffortScale(effortScaleRaw)))
-                    .font(.nuna(size: 17, weight: .bold, design: NunaType.design))
-                    .foregroundStyle(NunaPalette.effortModerate).fixedSize().position(x: ex, y: textY)
+            }
+            ForEach(placed, id: \.0.id) { m, cx in
+                switch m.kind {
+                case .sleep:
+                    if let sleep {
+                        Image(systemName: "moon.fill").font(.nuna(size: 19, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).position(x: cx, y: iconY)
+                        figure(Self.duration(sleep.upperBound - sleep.lowerBound), NunaPalette.textPrimary).position(x: cx, y: textY)
+                    }
+                case .charge(let c):
+                    figure(String(format: "%.0f%%", locale: AppLanguage.activeLocale, c), NunaScoreStyle.chargeColor(c)).position(x: cx, y: textY)
+                case .workout(let wo):
+                    // The same picture the activity has on Today.
+                    NunaActivityGlyph(name: wo.sport, size: 25).foregroundStyle(NunaPalette.textSecondary).position(x: cx, y: iconY)
+                    figure(Self.duration(wo.endTs - wo.startTs), NunaPalette.textPrimary).position(x: cx, y: textY)
+                case .strain(let e):
+                    Text("Strain").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        .foregroundStyle(NunaPalette.effortModerate).fixedSize().position(x: cx, y: iconY + 2)
+                    figure(UnitFormatter.effortDisplay(e, scale: scale), NunaPalette.effortModerate).position(x: cx, y: textY)
+                }
             }
         }
     }
 
-    /// Where each workout's glyph and duration sit: over the middle of its hours, pushed apart when two workouts are close so the labels do not overlap.
-    private func workoutMarks(_ t0: Int, _ t1: Int, x: (Int) -> CGFloat) -> [(workout: WorkoutRow, cx: CGFloat)] {
-        var out: [(workout: WorkoutRow, cx: CGFloat)] = []
-        for wo in workouts.sorted(by: { $0.startTs < $1.startTs }) {
-            guard let span = clamped(wo.startTs...wo.endTs, t0, t1) else { continue }
-            var cx = (x(span.lowerBound) + x(span.upperBound)) / 2
-            if let last = out.last { cx = max(cx, last.cx + 48) }
-            out.append((wo, cx))
-        }
-        return out
+    private func figure(_ text: String, _ color: Color) -> some View {
+        Text(verbatim: text).font(.nuna(size: 17, weight: .bold, design: NunaType.design)).foregroundStyle(color).fixedSize()
     }
 
     /// Hold and drag to read the heart rate at a time.
