@@ -11,7 +11,7 @@ extension Notification.Name {
 
 /// "Today's activities": one card with a row for the night's sleep and every workout of the day in the order they happened. Each row is a
 /// coloured tile with the figure that matters (sleep time, Effort), the name, and when it began and ended. A row opens its own detail; the
-/// chevron at the top right opens all workouts. Nothing is cut off: a day with six activities shows six rows.
+/// Nothing is cut off: a day with six activities shows six rows.
 struct NunaTodayActivities: View {
     let workouts: [WorkoutRow]
     let effortScale: EffortScale
@@ -93,18 +93,13 @@ struct NunaTodayActivities: View {
         let rows = items
         return NunaCard(padding: EdgeInsets(top: 10, leading: 12, bottom: 12, trailing: 12)) {
         VStack(alignment: .leading, spacing: 10) {
-            // A small heading, and at the right the way into every workout.
+            // A small heading. The page with every workout is opened from Application in More, not from here.
             HStack {
                 Text(isToday ? "Today's activities" : LocalizedStringKey(Self.dayTitle(dayStart)))
                     .font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 Spacer(minLength: 8)
-                Button { router.requestedDestination = .workouts } label: {
-                    Image(systemName: "arrow.up.left.and.arrow.down.right").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                        .frame(width: 36, height: 36).contentShape(Rectangle())
-                }
-                .buttonStyle(.plain).accessibilityLabel(Text("All workouts"))
             }
-            .padding(.horizontal, 6).padding(.top, 4)
+            .padding(.horizontal, 6).padding(.top, 4).padding(.bottom, 8)
             VStack(spacing: 7) {
                 if rows.isEmpty {
                     HStack(spacing: 10) {
