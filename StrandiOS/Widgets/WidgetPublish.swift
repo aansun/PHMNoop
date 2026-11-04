@@ -168,7 +168,8 @@ extension WidgetSnapshot {
             // exist for steps alone while last night's HRV and resting heart rate still sit on the anchor).
             vitals: Self.vitalReadings(days: days, row: [todayRow, day].compactMap { $0 }.first(where: { $0.avgHrv != nil || $0.restingHr != nil }) ?? day),
             stepGoal: Self.configuredStepGoal,
-            weekSteps: Self.weekSteps(days: days, apple: await model.repo.appleDailyRows(days: 9), today: steps, now: now)
+            weekSteps: Self.weekSteps(days: days, apple: await model.repo.appleDailyRows(days: 9), today: steps, now: now),
+            dayStreak: NunaStreak.compute(days: days, now: now).current
         )
         saveAndReloadIfChanged(snap)
     }
@@ -292,6 +293,7 @@ extension WidgetSnapshot {
         }
         snap.stepGoal = Self.configuredStepGoal
         snap.weekSteps = Self.weekSteps(days: model.repo.days, apple: await model.repo.appleDailyRows(days: 9), today: snap.steps, now: now)
+        snap.dayStreak = NunaStreak.compute(days: model.repo.days, now: now).current
         snap.bpm = model.bpm ?? model.live.heartRate
         snap.batteryPct = Self.activeBatteryPct(from: model)
         snap.bonded = model.live.bonded

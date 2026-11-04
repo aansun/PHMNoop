@@ -91,13 +91,15 @@ public struct WidgetSnapshot: Codable, Equatable {
     public var stepGoal: Int?
     /// Steps for each day of the current week, Monday first; nil for a day with no figure yet (a day still to come, or no reading).
     public var weekSteps: [Int?]?
+    /// Days in a row with a reading, for the flame on the glance widgets. Optional so an older snapshot still decodes.
+    public var dayStreak: Int?
 
     public init(recovery: Int?, bpm: Int?, batteryPct: Int?, bonded: Bool, updated: Date,
                 effort: Int? = nil, rest: Int? = nil, hrv: Int? = nil, restingHr: Int? = nil,
                 effortDisplay: String? = nil, effortWhoop: Bool? = nil,
                 hrSeries: [HrPoint]? = nil, stressSeries: [StressPoint]? = nil,
                 stressDay: Int? = nil, stressHighMin: Int? = nil, stressTypicalMin: Int? = nil, steps: Int? = nil, caloriesKcal: Int? = nil,
-                workoutsToday: Int? = nil, vitals: [WidgetVital]? = nil, stepGoal: Int? = nil, weekSteps: [Int?]? = nil) {
+                workoutsToday: Int? = nil, vitals: [WidgetVital]? = nil, stepGoal: Int? = nil, weekSteps: [Int?]? = nil, dayStreak: Int? = nil) {
         self.recovery = recovery
         self.bpm = bpm
         self.batteryPct = batteryPct
@@ -120,6 +122,7 @@ public struct WidgetSnapshot: Codable, Equatable {
         self.vitals = vitals
         self.stepGoal = stepGoal
         self.weekSteps = weekSteps
+        self.dayStreak = dayStreak
     }
 
     /// The curve to DRAW: what was published, unless it belongs to a day that is over.
@@ -319,6 +322,8 @@ public struct WidgetSnapshot: Codable, Equatable {
             || previous.vitals != next.vitals
             || previous.stepGoal != next.stepGoal
             || previous.weekSteps != next.weekSteps
+            || previous.dayStreak != next.dayStreak
+            || previous.caloriesKcal != next.caloriesKcal
             // The curve joins the comparison (#2040): a publish that scored a fresh hour and changed
             // nothing else would otherwise be deduped away, and the widget would sit an hour behind
             // until some unrelated field moved. The DAY joins it too, so the first publish after
