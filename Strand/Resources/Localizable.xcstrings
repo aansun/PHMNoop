@@ -8018,5 +8018,9 @@
  "PHMN Recovery and Strain": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Recovery dan Strain PHMN"}}}},
  "Recovery and Strain as two rings.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Recovery dan Strain sebagai dua cincin."}}}},
  "PHMN Rings with HRV": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Cincin PHMN dengan HRV"}}}},
- "Recovery and Strain rings with HRV and Calories beside them.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Cincin Recovery dan Strain dengan HRV dan Kalori di sampingnya."}}}}
+ "Recovery and Strain rings with HRV and Calories beside them.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Cincin Recovery dan Strain dengan HRV dan Kalori di sampingnya."}}}},
+ "PHMN Strain": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Strain PHMN"}}}},
+ "Today's Strain in one ring, with the stretch to aim for.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Strain hari ini dalam satu cincin, dengan zona target."}}}},
+ "PHMN Recovery": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Recovery PHMN"}}}},
+ "Today's Recovery score in one ring.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Skor Recovery hari ini dalam satu cincin."}}}}
 }, "version":"1.0" }
