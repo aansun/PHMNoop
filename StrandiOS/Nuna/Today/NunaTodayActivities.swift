@@ -37,6 +37,8 @@ struct NunaTodayActivities: View {
     /// Ideas committed to in the Daily Outlook, shown after today's rows until they are added, started or removed.
     @AppStorage(NunaOutlookGate.plannedKey) private var plannedRaw = ""
     @State private var openPlan: NunaPlannedActivity?
+    /// The heart-rate day across the whole screen, opened by the arrow at the top right of the card.
+    @State private var showHeartRate = false
 
     private struct Item: Identifiable {
         enum Kind { case sleep, workout(WorkoutRow), nap(String, NunaNap) }
@@ -91,23 +93,31 @@ struct NunaTodayActivities: View {
 
     private var cardBody: some View {
         let rows = items
-        return NunaCard(padding: EdgeInsets(top: 10, leading: 12, bottom: 12, trailing: 12)) {
-        VStack(alignment: .leading, spacing: 10) {
-            // A small heading. The page with every workout is opened from Application in More, not from here.
+        // Measured on the reference (3x): the card is 244 pt tall, its title is centred 23 pt under the top edge, the rows are 56 pt high with 12 pt
+        // between them and 12 pt in from the card's sides, the buttons are 40 pt high and 20 pt under the last row.
+        return NunaCard(padding: EdgeInsets(top: 5, leading: 12, bottom: 16, trailing: 12)) {
+        VStack(alignment: .leading, spacing: 0) {
             HStack {
                 Text(isToday ? "Today's activities" : LocalizedStringKey(Self.dayTitle(dayStart)))
-                    .font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                    .font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 Spacer(minLength: 8)
+                // Opens the heart-rate day, turned on its side across the whole screen.
+                Button { showHeartRate = true } label: {
+                    NunaExpandGlyph().stroke(Color(red: 0.58, green: 0.59, blue: 0.60), style: StrokeStyle(lineWidth: 1.8, lineCap: .round, lineJoin: .round))
+                        .frame(width: 14.5, height: 14.5)
+                        .frame(width: 40, height: 36, alignment: .trailing).contentShape(Rectangle())
+                }
+                .buttonStyle(.plain).accessibilityLabel(Text("Heart rate"))
             }
-            .padding(.horizontal, 6).padding(.top, 4).padding(.bottom, 8)
-            VStack(spacing: 7) {
+            .padding(.leading, 4).padding(.trailing, 1).frame(height: 36)
+            VStack(spacing: 12) {
                 if rows.isEmpty {
                     HStack(spacing: 10) {
                         Image(systemName: "figure.run").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(NunaPalette.textMuted)
                         Text("No activities logged today").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                         Spacer(minLength: 0)
                     }
-                    .padding(.horizontal, 12).frame(minHeight: 52)
+                    .padding(.horizontal, 12).frame(minHeight: 56)
                     .background(NunaPalette.ink.opacity(0.09), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                 } else {
                     ForEach(rows) { item in row(item) }
@@ -117,12 +127,13 @@ struct NunaTodayActivities: View {
                     Button { openPlan = plan } label: { NunaPlannedRow(plan: plan, effortScale: effortScale) }.buttonStyle(.plain)
                 } }
             }
+            .padding(.top, 3)
             if onAdd != nil || onStart != nil {
-                HStack(spacing: 8) {
+                HStack(spacing: 12) {
                     if let onAdd { actionButton("Add activity", icon: "plus", action: onAdd) }
                     if let onStart { actionButton("Start activity", icon: "stopwatch", action: onStart) }
                 }
-                .padding(.top, 3)
+                .padding(.top, 20)
             }
         }
         }
@@ -132,6 +143,7 @@ struct NunaTodayActivities: View {
             else { night = nil; naps = [] }
         }
         .task(id: "\(autoDetect)-\(repo.refreshSeq)-\(dayStart.timeIntervalSince1970)") { await loadDetected() }
+        .fullScreenCover(isPresented: $showHeartRate) { NunaHRFullScreen { showHeartRate = false } }
         .sheet(item: $openPlan) { plan in
             NunaPlannedSheet(plan: plan, effortScale: effortScale, onAdd: onAdd, onStart: onStart, onRemove: { NunaOutlookGate.remove(plan) })
         }
@@ -171,8 +183,8 @@ struct NunaTodayActivities: View {
     private func detectedRow(_ s: AutoWorkoutSuggestion) -> some View {
         HStack(spacing: 12) {
             Image(systemName: "figure.arms.open").font(.nuna(size: 24, weight: .regular)).foregroundStyle(Color.white)
-                .frame(width: 100, height: 40)
-                .background(Color.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
+                .frame(width: 95, height: 40)
+                .background(Color.black.opacity(0.55), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).strokeBorder(Color.white.opacity(0.35), lineWidth: 1))
             Text("Activity detected").font(.nuna(size: 12.5, weight: .heavy)).tracking(1.1).foregroundStyle(NunaPalette.textPrimary)
                 .lineLimit(2).multilineTextAlignment(.leading)
@@ -183,7 +195,7 @@ struct NunaTodayActivities: View {
                     .overlay(RoundedRectangle(cornerRadius: 9, style: .continuous).strokeBorder(NunaPalette.textPrimary, lineWidth: 1.5))
             }.buttonStyle(.plain)
         }
-        .padding(.horizontal, 6).padding(.vertical, 6)
+        .padding(8)
         .background(NunaPalette.ink.opacity(0.09), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 
@@ -196,8 +208,8 @@ struct NunaTodayActivities: View {
             }
             .foregroundStyle(NunaPalette.textPrimary)
             .padding(.horizontal, 8)
-            .frame(maxWidth: .infinity, minHeight: 42, maxHeight: 42)
-            .background(NunaPalette.ink.opacity(0.09), in: RoundedRectangle(cornerRadius: NunaRadius.chip + 2, style: .continuous))
+            .frame(maxWidth: .infinity, minHeight: 40, maxHeight: 40)
+            .background(NunaPalette.ink.opacity(0.09), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
         }
         .buttonStyle(.plain)
     }
@@ -232,35 +244,34 @@ struct NunaTodayActivities: View {
     /// A tile in neutral grey (icon and figure), the name, when it began and ended, and a thin line with a dot at each end whose colour
     /// follows the Effort of the workout (sleep keeps the Rest colour).
     private func rowBody(tint: Color, tile: Color, icon: String, drawn: String? = nil, figure: String, name: Text, start: Date, end: Date) -> some View {
-        HStack(spacing: 12) {
-            // Icon and figure start at the same place in every row, whatever the figure's width, so the column of figures reads as one line.
-            HStack(spacing: 7) {
-                if let drawn, NunaActivityIcons.has(drawn) { NunaActivityGlyph(name: drawn, size: 20).frame(width: 20) }
-                else { Image(systemName: icon).font(.nuna(size: 15, weight: .semibold)).frame(width: 20) }
+        // Row 56 pt: a 95 x 40 pt tile 8 pt in (icon and figure centred in it), the name 16 pt after it, the two times at the right in grey DIN Bold,
+        // and a 28 pt line with a dot at each end, its right edge 12 pt from the row's.
+        HStack(spacing: 0) {
+            HStack(spacing: 12) {
+                if let drawn, NunaActivityIcons.has(drawn) { NunaActivityGlyph(name: drawn, size: 22).frame(width: 22) }
+                else { Image(systemName: icon).font(.nuna(size: 19, weight: .regular)).frame(width: 22) }
                 Text(verbatim: figure).font(.nuna(size: 17, weight: .bold, design: NunaType.design)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.8)
-                    .frame(maxWidth: .infinity, alignment: .leading)
             }
-            .padding(.horizontal, 11)
             .foregroundStyle(Color.white)
-            .frame(width: 100, height: 40, alignment: .leading)
-            .background(tile, in: RoundedRectangle(cornerRadius: 9, style: .continuous))
-            name.font(.nuna(size: 12.5, weight: .heavy)).tracking(1.1).foregroundStyle(NunaPalette.textPrimary)
-                .lineLimit(2).minimumScaleFactor(0.85).multilineTextAlignment(.leading)
+            .frame(width: 95, height: 40)
+            .background(tile, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            name.font(.nuna(size: 13, weight: .heavy)).tracking(1.3).foregroundStyle(NunaPalette.textPrimary)
+                .lineLimit(2).minimumScaleFactor(0.85).multilineTextAlignment(.leading).padding(.leading, 16)
             Spacer(minLength: 6)
-            VStack(alignment: .trailing, spacing: 3) {
+            VStack(alignment: .trailing, spacing: 6) {
                 Text(verbatim: Self.stamp(start, relativeTo: dayStart))
                 Text(verbatim: Self.stamp(end, relativeTo: dayStart))
             }
-            .font(.nuna(size: 12, weight: .semibold)).monospacedDigit().foregroundStyle(NunaPalette.textSecondary)
+            .font(.nunaBoldFigure(size: 12)).monospacedDigit().foregroundStyle(Color(red: 0.63, green: 0.64, blue: 0.64))
             VStack(spacing: 0) {
-                Circle().fill(NunaPalette.textPrimary.opacity(0.85)).frame(width: 3.5, height: 3.5)
-                Rectangle().fill(LinearGradient(colors: [tint.opacity(0.55), tint], startPoint: .top, endPoint: .bottom)).frame(width: 2.5, height: 24)
-                Circle().fill(NunaPalette.textPrimary.opacity(0.85)).frame(width: 3.5, height: 3.5)
+                Circle().fill(Color.white).frame(width: 3, height: 3)
+                Rectangle().fill(LinearGradient(colors: [tint.opacity(0.55), tint], startPoint: .top, endPoint: .bottom)).frame(width: 2.7, height: 22)
+                Circle().fill(Color.white).frame(width: 3, height: 3)
             }
-            .padding(.trailing, 2)
+            .padding(.leading, 9).padding(.trailing, 4)
         }
-        .padding(.horizontal, 6).padding(.vertical, 6)
-        // A shade darker than the card it sits on (a thin wash of the text colour): it follows the active look.
+        .padding(8)
+        // A shade lighter than the card it sits on (a thin wash of the text colour): it follows the active look.
         .background(NunaPalette.ink.opacity(0.09), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
         .contentShape(Rectangle())
     }
@@ -312,6 +323,22 @@ struct NunaTodayActivities: View {
             night = nil; return
         }
         night = (Date(timeIntervalSince1970: TimeInterval(first.effectiveStartTs)), Date(timeIntervalSince1970: TimeInterval(last.endTs)))
+    }
+}
+
+/// The expand arrow of the reference: a diagonal with a head at each end (upper right and lower left) and a gap in the middle.
+struct NunaExpandGlyph: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        let a = CGPoint(x: r.minX, y: r.maxY), b = CGPoint(x: r.maxX, y: r.minY), head = r.width * 0.46
+        func along(_ t: CGFloat) -> CGPoint { CGPoint(x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t) }
+        // The two halves of the line.
+        p.move(to: a); p.addLine(to: along(0.36))
+        p.move(to: along(0.64)); p.addLine(to: b)
+        // The heads.
+        p.move(to: CGPoint(x: b.x - head, y: b.y)); p.addLine(to: b); p.addLine(to: CGPoint(x: b.x, y: b.y + head))
+        p.move(to: CGPoint(x: a.x + head, y: a.y)); p.addLine(to: a); p.addLine(to: CGPoint(x: a.x, y: a.y - head))
+        return p
     }
 }
 #endif
