@@ -729,7 +729,7 @@ struct NunaStressMonitorChart: View {
                                                      : AnyShapeStyle(Color.white.opacity(0.07)))
                                 .frame(width: width, height: plot.height).position(x: x0 + width / 2, y: plot.midY)
                             Rectangle().fill(compact ? Color(red: 0.24, green: 0.57, blue: 0.88) : NunaRestChart.steel).frame(width: width, height: compact ? 2 : 3).position(x: x0 + width / 2, y: plot.minY)
-                            Image(systemName: ActivitySport.symbol(for: wo.sport)).font(.nuna(size: 17, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
+                            NunaActivityGlyph(name: wo.sport, size: 18).foregroundStyle(NunaPalette.textPrimary)
                                 .position(x: x0 + width / 2, y: plot.minY - (compact ? 18 : 22))
                         }
                     }

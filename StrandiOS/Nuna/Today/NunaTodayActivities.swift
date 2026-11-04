@@ -103,8 +103,8 @@ struct NunaTodayActivities: View {
                 Spacer(minLength: 8)
                 // Opens the heart-rate day, turned on its side across the whole screen.
                 Button { showHeartRate = true } label: {
-                    NunaExpandGlyph().stroke(Color(red: 0.58, green: 0.59, blue: 0.60), style: StrokeStyle(lineWidth: 1.8, lineCap: .round, lineJoin: .round))
-                        .frame(width: 14.5, height: 14.5)
+                    NunaExpandGlyph().stroke(Color(red: 0.58, green: 0.59, blue: 0.60), style: StrokeStyle(lineWidth: 1.6, lineCap: .round, lineJoin: .round))
+                        .frame(width: 13, height: 13)
                         .frame(width: 40, height: 36, alignment: .trailing).contentShape(Rectangle())
                 }
                 .buttonStyle(.plain).accessibilityLabel(Text("Heart rate"))
