@@ -14,6 +14,8 @@ private enum Glance {
     static let track = Color.white.opacity(0.13)
     static let card = LinearGradient(colors: [Color(red: 0.18, green: 0.20, blue: 0.22), Color(red: 0.12, green: 0.14, blue: 0.15)], startPoint: .top, endPoint: .bottom)
     static let open = URL(string: "noop://today")!
+    /// The figure face of the reference: DIN Bold, sharp at small sizes (the face bundled with the widget).
+    static func din(_ size: CGFloat) -> Font { .custom("D-DIN-PRO-Bold", size: size) }
 }
 
 private struct GlanceData {
@@ -53,7 +55,7 @@ private struct GlanceRing<Centre: View>: View {
     }
 }
 
-/// Figure with its small percent sign, in the bold figure face.
+/// Figure with its small percent sign (60% of the figure's size), in DIN Bold.
 private struct GlanceFigure: View {
     let value: String
     var percent = false
@@ -61,9 +63,9 @@ private struct GlanceFigure: View {
     var color: Color = Glance.ink
 
     var body: some View {
-        HStack(alignment: .lastTextBaseline, spacing: 1) {
-            Text(verbatim: value).font(.nunaBoldFigure(size: size)).foregroundStyle(color).lineLimit(1).minimumScaleFactor(0.6)
-            if percent { Text(verbatim: "%").font(.nunaBoldFigure(size: size * 0.5)).foregroundStyle(color) }
+        HStack(alignment: .lastTextBaseline, spacing: 0.5) {
+            Text(verbatim: value).font(Glance.din(size)).foregroundStyle(color).lineLimit(1).minimumScaleFactor(0.6)
+            if percent { Text(verbatim: "%").font(Glance.din(size * 0.6)).foregroundStyle(color) }
         }
     }
 }
@@ -71,9 +73,9 @@ private struct GlanceFigure: View {
 private struct GlanceCaption: View {
     let text: String
     var color: Color = Glance.ink
-    var size: CGFloat = 11
+    var size: CGFloat = 9.5
     var body: some View {
-        Text(verbatim: text.uppercased()).font(.system(size: size, weight: .heavy)).tracking(size * 0.14).foregroundStyle(color).lineLimit(1)
+        Text(verbatim: text.uppercased()).font(.system(size: size, weight: .heavy)).tracking(size * 0.13).foregroundStyle(color).lineLimit(1)
     }
 }
 
@@ -82,34 +84,40 @@ private struct GlanceStreak: View {
     var stacked = false
     var body: some View {
         Group {
-            if stacked { VStack(spacing: 2) { flame; count } } else { HStack(spacing: 4) { flame; count } }
+            if stacked { VStack(spacing: 1) { flame; count } } else { HStack(spacing: 8) { flame; count } }
         }
         .accessibilityLabel(Text(verbatim: days.map { "Day streak \($0)" } ?? "Day streak"))
     }
     private var flame: some View {
-        Image(systemName: "flame.fill").font(.system(size: stacked ? 15 : 14, weight: .bold)).foregroundStyle(Glance.flame)
+        Image(systemName: "flame.fill").font(.system(size: 11, weight: .semibold)).foregroundStyle(Glance.flame)
     }
     private var count: some View {
-        Text(verbatim: days.map(String.init) ?? "–").font(.nunaBoldFigure(size: stacked ? 14 : 14)).foregroundStyle(Glance.ink)
+        Text(verbatim: days.map(String.init) ?? "–").font(Glance.din(10.5)).foregroundStyle(Glance.ink)
     }
 }
 
+/// The strap battery: its percentage and a small outline with the charge filled in grey, 14 x 7.4 pt as on the reference.
 private struct GlanceBattery: View {
     let pct: Int?
     var stacked = false
     var body: some View {
         Group {
-            if stacked { VStack(spacing: 2) { icon; text } } else { HStack(spacing: 5) { text; icon } }
+            if stacked { VStack(spacing: 2) { icon; text } } else { HStack(spacing: 4.8) { text; icon } }
         }
         .accessibilityLabel(Text(verbatim: pct.map { "Battery \($0)%" } ?? "Battery unavailable"))
     }
-    private var text: some View { Text(verbatim: pct.map { "\($0)%" } ?? "–").font(.nunaBoldFigure(size: 14)).foregroundStyle(Glance.ink) }
+    private var text: some View { Text(verbatim: pct.map { "\($0)%" } ?? "–").font(Glance.din(10.5)).foregroundStyle(Glance.ink) }
     private var icon: some View {
-        Image(systemName: Self.symbol(pct)).font(.system(size: stacked ? 15 : 14, weight: .semibold)).foregroundStyle(Glance.ink)
-    }
-    static func symbol(_ p: Int?) -> String {
-        guard let p else { return "battery.0" }
-        return p >= 88 ? "battery.100" : (p >= 63 ? "battery.75" : (p >= 38 ? "battery.50" : (p >= 13 ? "battery.25" : "battery.0")))
+        let f = CGFloat(min(max(pct ?? 0, 0), 100)) / 100
+        return HStack(spacing: 0.8) {
+            RoundedRectangle(cornerRadius: 1.8, style: .continuous).strokeBorder(Glance.ink, lineWidth: 1)
+                .overlay(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 0.8, style: .continuous).fill(Color(red: 0.62, green: 0.63, blue: 0.64))
+                        .frame(width: max(0, 11.4 * f), height: 4.6).padding(.leading, 1.5)
+                }
+                .frame(width: 13, height: 7.4)
+            RoundedRectangle(cornerRadius: 0.5).fill(Glance.ink).frame(width: 1.2, height: 3)
+        }
     }
 }
 
@@ -118,28 +126,33 @@ private struct GlanceBattery: View {
 private struct TriRingsView: View {
     let d: GlanceData
 
+    // Measured on the reference (3.1 px per point): the header row is centred 23 pt under the top edge, the rings are 75.5 pt across with a
+    // 4.6 pt line and start 42 pt down, three columns 104 pt apart, and each label sits about 8 pt under its ring.
     var body: some View {
         VStack(spacing: 0) {
             ZStack {
-                PHMNWordmark(height: 11, color: Glance.muted)
+                PHMNWordmark(height: 9.4, color: Color(red: 0.62, green: 0.64, blue: 0.66)).scaleEffect(x: 1.3)
                 HStack { GlanceStreak(days: d.s.dayStreak); Spacer(); GlanceBattery(pct: d.s.batteryPct) }
+                    .padding(.leading, 20).padding(.trailing, 15.5)
             }
-            Spacer(minLength: 6)
+            .frame(height: 12).padding(.top, 17)
             HStack(spacing: 0) {
                 column(ring: ring(d.sleepFraction, Glance.steel, nil, d.s.rest.map(String.init) ?? "–", percent: d.s.rest != nil), "Sleep")
                 column(ring: ring(d.recoveryFraction, d.recoveryColor, nil, d.s.recovery.map(String.init) ?? "–", percent: d.s.recovery != nil), "Recovery")
                 column(ring: ring(d.strainFraction, d.strainColor, d.strainGradient, d.strainText, percent: false), "Strain")
             }
+            .padding(.top, 13)
+            Spacer(minLength: 0)
         }
-        .padding(.horizontal, 16).padding(.vertical, 14)
+        .frame(maxHeight: .infinity, alignment: .top)
     }
 
     private func ring(_ f: Double, _ c: Color, _ g: [Color]?, _ value: String, percent: Bool) -> some View {
-        GlanceRing(fraction: f, color: c, gradient: g, width: 5.5) { GlanceFigure(value: value, percent: percent, size: 24) }.frame(width: 79, height: 79)
+        GlanceRing(fraction: f, color: c, gradient: g, width: 4.6) { GlanceFigure(value: value, percent: percent, size: 23) }.frame(width: 75.5, height: 75.5)
     }
 
     private func column<R: View>(ring: R, _ label: String) -> some View {
-        VStack(spacing: 8) { ring; GlanceCaption(text: label) }.frame(maxWidth: .infinity)
+        VStack(spacing: 0) { ring; GlanceCaption(text: label).frame(height: 12).padding(.top, 8.5) }.frame(width: 104)
     }
 }
 
@@ -152,13 +165,13 @@ private struct SleepRingView: View {
         VStack(spacing: 0) {
             HStack(alignment: .top) { GlanceStreak(days: d.s.dayStreak, stacked: true); Spacer(); GlanceBattery(pct: d.s.batteryPct, stacked: true) }
             Spacer(minLength: 0)
-            GlanceRing(fraction: d.sleepFraction, color: Glance.steel, width: 7) {
-                GlanceFigure(value: d.s.rest.map(String.init) ?? "–", percent: d.s.rest != nil, size: 38)
+            GlanceRing(fraction: d.sleepFraction, color: Glance.steel, width: 6) {
+                GlanceFigure(value: d.s.rest.map(String.init) ?? "–", percent: d.s.rest != nil, size: 34)
             }
             .frame(width: 98, height: 98).padding(.top, 2)
             Spacer(minLength: 0)
             ZStack {
-                GlanceCaption(text: "Sleep", size: 11.5)
+                GlanceCaption(text: "Sleep", size: 10.5)
                 HStack { PHMNMark(.circle, size: 20, color: Glance.muted); Spacer() }
             }
         }
@@ -171,14 +184,16 @@ private struct SleepRingView: View {
 private struct DualRing: View {
     let d: GlanceData
     let size: CGFloat
+    /// The outer ring is `size` across, the inner one 77% of it, each with a line 6% of `size` (102 pt, 78.7 pt and 6.2 pt on the reference).
     var body: some View {
-        let outer = size * 0.085, inner = size * 0.075
+        let line = size * 0.061
         ZStack {
             // The outer ring is Strain, the inner ring Recovery, the same order as the app's day rings.
-            GlanceRing(fraction: d.strainFraction, color: d.strainColor, gradient: d.strainGradient, width: outer) { Color.clear }.frame(width: size, height: size)
-            GlanceRing(fraction: d.recoveryFraction, color: d.recoveryColor, width: inner) { Color.clear }.frame(width: size * 0.74, height: size * 0.74)
-            PHMNButterflyShape().fill(Glance.ink).frame(width: size * 0.26, height: size * 0.26)
+            GlanceRing(fraction: d.strainFraction, color: d.strainColor, gradient: d.strainGradient, width: line) { Color.clear }.frame(width: size - line, height: size - line)
+            GlanceRing(fraction: d.recoveryFraction, color: d.recoveryColor, width: line) { Color.clear }.frame(width: size * 0.77 - line, height: size * 0.77 - line)
+            PHMNButterflyShape().fill(Glance.ink).frame(width: size * 0.18, height: size * 0.18)
         }
+        .frame(width: size, height: size)
     }
 }
 
@@ -191,9 +206,9 @@ private struct SmallDualView: View {
             DualRing(d: d, size: 100).padding(.top, 2)
             Spacer(minLength: 0)
             HStack {
-                GlanceFigure(value: d.s.recovery.map(String.init) ?? "–", percent: d.s.recovery != nil, size: 19, color: d.recoveryColor)
+                GlanceFigure(value: d.s.recovery.map(String.init) ?? "–", percent: d.s.recovery != nil, size: 17, color: d.recoveryColor)
                 Spacer()
-                GlanceFigure(value: d.strainText, size: 19, color: d.strainColor)
+                GlanceFigure(value: d.strainText, size: 17, color: d.strainColor)
             }
         }
         .padding(.horizontal, 15).padding(.vertical, 13)
@@ -202,32 +217,36 @@ private struct SmallDualView: View {
 
 private struct WideDualView: View {
     let d: GlanceData
+    // Measured on the reference: the rings are 102 pt across (the inner one 78.7 pt), centred 75 pt under the top edge; the figures are 16 pt, the
+    // captions 9.5 pt, HRV and Calories 14 pt in grey; the columns end 17 pt from the rings.
     var body: some View {
         VStack(spacing: 0) {
-            HStack(alignment: .firstTextBaseline) { GlanceStreak(days: d.s.dayStreak); Spacer(); GlanceBattery(pct: d.s.batteryPct) }
-            Spacer(minLength: 0)
-            HStack(spacing: 14) {
-                VStack(alignment: .trailing, spacing: 0) {
-                    GlanceFigure(value: d.s.recovery.map(String.init) ?? "–", percent: d.s.recovery != nil, size: 24, color: d.recoveryColor)
-                    GlanceCaption(text: "Recovery", color: d.recoveryColor, size: 12).padding(.top, 2)
-                    Rectangle().fill(Color.clear).frame(height: 14)
-                    GlanceCaption(text: "HRV", color: Glance.muted, size: 12)
-                    Text(verbatim: d.s.hrv.map(String.init) ?? "–").font(.nunaBoldFigure(size: 21)).foregroundStyle(Glance.muted).padding(.top, 2)
-                }
-                .frame(maxWidth: .infinity, alignment: .trailing)
-                DualRing(d: d, size: 118)
-                VStack(alignment: .leading, spacing: 0) {
-                    GlanceFigure(value: d.strainText, size: 24, color: d.strainColor)
-                    GlanceCaption(text: "Strain", color: d.strainColor, size: 12).padding(.top, 2)
-                    Rectangle().fill(Color.clear).frame(height: 14)
-                    GlanceCaption(text: "Calories", color: Glance.muted, size: 12)
-                    Text(verbatim: d.s.caloriesKcal?.formatted() ?? "–").font(.nunaBoldFigure(size: 21)).foregroundStyle(Glance.muted).padding(.top, 2)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+            HStack { GlanceStreak(days: d.s.dayStreak); Spacer(); GlanceBattery(pct: d.s.batteryPct) }
+                .padding(.leading, 20).padding(.trailing, 15.5).frame(height: 12).padding(.top, 17)
+            HStack(spacing: 0) {
+                column(alignment: .trailing, figure: GlanceFigure(value: d.s.recovery.map(String.init) ?? "–", percent: d.s.recovery != nil, size: 16, color: d.recoveryColor),
+                       caption: "Recovery", captionColor: d.recoveryColor, second: "HRV", value: d.s.hrv.map(String.init) ?? "–")
+                    .frame(maxWidth: .infinity, alignment: .trailing).padding(.trailing, 17)
+                DualRing(d: d, size: 102)
+                column(alignment: .leading, figure: GlanceFigure(value: d.strainText, size: 16, color: d.strainColor),
+                       caption: "Strain", captionColor: d.strainColor, second: "Calories", value: d.s.caloriesKcal?.formatted() ?? "–")
+                    .frame(maxWidth: .infinity, alignment: .leading).padding(.leading, 16.5)
             }
+            .padding(.top, -5)
             Spacer(minLength: 0)
         }
-        .padding(.horizontal, 16).padding(.vertical, 14)
+        .frame(maxHeight: .infinity, alignment: .top)
+    }
+
+    private func column(alignment: HorizontalAlignment, figure: GlanceFigure, caption: String, captionColor: Color, second: String, value: String) -> some View {
+        VStack(alignment: alignment, spacing: 0) {
+            figure.frame(height: 19)
+            GlanceCaption(text: caption, color: captionColor).frame(height: 12)
+            GlanceCaption(text: second, color: Glance.muted).frame(height: 12).padding(.top, 9)
+            Text(verbatim: value).font(Glance.din(14.3)).foregroundStyle(Glance.muted).frame(height: 17).padding(.top, 2.6)
+        }
+        .padding(.top, 19.3)
+        .frame(height: 102, alignment: .top)
     }
 }
 
