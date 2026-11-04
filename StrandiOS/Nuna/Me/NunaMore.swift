@@ -110,9 +110,9 @@ struct NunaAboutView: View {
         NunaDetailScreen("About and help") {
             NunaCard(highlight: true) {
                 HStack(spacing: 14) {
-                    NunaIconTile("waveform.path.ecg")
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text("PHMN").font(.nuna(size: 22, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    PHMNMark(.puck, size: 48, color: NunaPalette.textPrimary)
+                    VStack(alignment: .leading, spacing: 6) {
+                        PHMNWordmark(height: 15, color: NunaPalette.textPrimary).accessibilityLabel(Text("PHMN"))
                         Text(verbatim: "v\(version) · build \(build)").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                     }
                     Spacer()
