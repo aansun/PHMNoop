@@ -41,6 +41,8 @@ struct NunaRootView: View {
     /// Anya's sheet, opened by the round button beside the tab bar.
     @State private var showAnya = false
     @State private var routed: NavRouter.Destination?
+    /// The Journal fills the screen, as on the reference, instead of rising as a sheet.
+    @State private var journalOpen = false
     /// While the keyboard is up the tab bar steps aside: it floats over the content, so above a keyboard it would sit on top of whatever is being typed.
     @State private var keyboardUp = false
     /// "Hide bar when scrolling": the bar steps down while the page is scrolled and returns on the way back (same preference as the Default design).
@@ -164,7 +166,18 @@ struct NunaRootView: View {
         .sheet(isPresented: $showDevices) { sheetStack { NunaDevicesView() } }
         .sheet(isPresented: $showAnya) { NunaAnyaSheet(context: anyaContext, floating: true) }
         .sheet(item: $routed) { dest in sheetStack { destinationView(dest) } }
+        .fullScreenCover(isPresented: $journalOpen) {
+            NavigationStack { NunaJournalView().nunaTodayDestinations().nunaMeDestinations() }.preferredColorScheme(NunaTheme.colorScheme)
+        }
         .onChange(of: router.requestedDestination) { _, dest in handle(dest) }
+        #if DEBUG
+        // `--open-journal`: a debug build opens the Journal once at launch, to look at it without finding the card on Today.
+        .task {
+            guard CommandLine.arguments.contains("--open-journal") else { return }
+            try? await Task.sleep(nanoseconds: 1_500_000_000)
+            journalOpen = true
+        }
+        #endif
         .onChange(of: router.pendingMetricKey) { _, key in openMetric(key) }
         .onChange(of: router.openNotificationSettings) { _, on in
             guard on else { return }
@@ -278,6 +291,8 @@ struct NunaRootView: View {
             paths[Tab.today.rawValue] = NavigationPath([NunaTodayRoute.vitalSigns])
         case .liveSession:
             selection = Tab.today.rawValue
+        case .journal:
+            journalOpen = true
         default:
             routed = dest
         }

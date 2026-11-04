@@ -7999,5 +7999,16 @@
  "Don't let your streak fade": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Jangan biarkan rangkaianmu padam"}}}},
  "Looks like you're not wearing your strap. Put it back on before tomorrow night to avoid losing your streak.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Sepertinya kamu tidak memakai strap. Pakai lagi sebelum besok malam agar rangkaianmu tidak hilang."}}}},
  "I'm on a %lld day streak with PHMN.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Aku sudah %lld hari berturut-turut dengan PHMN."}}}},
- "Every session, its history and training load": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Semua sesi, riwayat, dan beban latihan"}}}}
+ "Every session, its history and training load": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Semua sesi, riwayat, dan beban latihan"}}}},
+ "Smart log with Anya": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Smart log dengan Anya"}}}},
+ "Behaviors": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Perilaku"}}}},
+ "Add a note…": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tambah catatan…"}}}},
+ "How many servings of caffeine did you have?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Berapa porsi kafein yang kamu konsumsi?"}}}},
+ "When was your last serving?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kapan porsi terakhirmu?"}}}},
+ "How many drinks did you have?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Berapa gelas yang kamu minum?"}}}},
+ "When was your last drink?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kapan gelas terakhirmu?"}}}},
+ "Write what happened, like “two coffees, no alcohol, ate dinner late”. Matching answers are filled in for you to check.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tulis apa yang terjadi, misalnya “dua kopi, tanpa alkohol, makan malam terlambat”. Jawaban yang cocok akan diisi untuk kamu periksa."}}}},
+ "What happened today?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Apa yang terjadi hari ini?"}}}},
+ "Nothing in that matched a behavior. It was kept as a note.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidak ada yang cocok dengan perilaku mana pun. Disimpan sebagai catatan."}}}},
+ "Logged %lld from what you wrote. Check them below.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "%lld dicatat dari tulisanmu. Periksa di bawah."}}}}
 }, "version":"1.0" }
