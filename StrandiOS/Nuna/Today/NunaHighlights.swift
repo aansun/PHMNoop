@@ -11,7 +11,9 @@ struct NunaHighlight: Identifiable, Equatable {
     let message: String
     var actionTitle: String?
     var action: Action?
-    enum Action: Equatable { case breathe, windDown, outlook, journal }
+    /// Recovery scores drawn as bars on the right of the card (the earlier days in grey, the last one in its colour).
+    var bars: [Double]?
+    enum Action: Equatable { case breathe, windDown, outlook, journal, trend }
 }
 
 /// What the highlights are worked out from. Plain numbers, so the rules can be read (and tested) without the app around them.
@@ -51,6 +53,8 @@ struct NunaHighlightInputs {
     var sleepRecorded: (duration: String, score: Int?)?
     /// Yesterday's journal has no answers yet. It is filled in after waking, so the sleep highlight offers the way in.
     var journalYesterdayOpen = false
+    /// Today's Recovery is red and the 30 days before had none: the five scores before it, then today's. Nil otherwise.
+    var newlyRedBars: [Double]?
     /// The Daily Outlook just opened up and has not been looked at yet.
     var outlookFirst = false
 }
@@ -155,6 +159,11 @@ enum NunaHighlightEngine {
                                  message: String(localized: "Yellow Recovery is normal and means your body is maintaining. Train steadily rather than pushing hard today.")))
             }
         }
+        if let bars = i.newlyRedBars, i.firstColour != "red" {
+            out.append(.init(id: "newly-red", title: String(localized: "Newly Red"),
+                             message: String(localized: "You haven't been in the red in the last 30 days! Don't worry, it's only temporary."),
+                             actionTitle: String(localized: "View trend"), action: .trend, bars: bars))
+        }
         if let e = i.effort, let lo = i.effortTargetLow, let hi = i.effortTargetHigh, let shown = i.effortTargetHighShown, e >= lo, e <= hi {
             out.append(.init(id: "optimal-strain", title: String(localized: "Reaching Optimal Strain"),
                              message: String(localized: "You've hit the optimal Strain range for your Recovery. Keep moving towards your target of \(shown) for more fitness gains.")))
@@ -226,6 +235,23 @@ enum NunaHighlightEngine {
 
 /// The highlights card on Today: one card at a time with what stands out about the day, a check at its side that puts it away (a swipe to
 /// either side does the same), and the next one behind it. It takes the place Anya's card had; when nothing stands out it is not there.
+/// Bars for the recent scores, as on the Newly Red card: grey for the days before, the last one in its own colour, each as tall as its score.
+struct NunaHighlightBars: View {
+    let values: [Double]
+    var body: some View {
+        HStack(alignment: .bottom, spacing: 6) {
+            ForEach(Array(values.enumerated()), id: \.offset) { i, v in
+                let last = i == values.count - 1
+                RoundedRectangle(cornerRadius: 3, style: .continuous)
+                    .fill(last ? NunaScoreStyle.chargeColor(v) : NunaPalette.textMuted.opacity(0.55))
+                    .frame(width: 9, height: max(8, 72 * min(max(v, 0), 100) / 100))
+            }
+        }
+        .frame(height: 72, alignment: .bottom)
+        .accessibilityHidden(true)
+    }
+}
+
 struct NunaHighlightsCard: View {
     let charge: Double?
     /// Whether today's Recovery was scored on its own (not carried from an earlier night).
@@ -245,6 +271,7 @@ struct NunaHighlightsCard: View {
     let onWindDown: () -> Void
     let onOutlook: () -> Void
     let onJournal: () -> Void
+    let onTrend: () -> Void
 
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var appModel: AppModel
@@ -282,6 +309,14 @@ struct NunaHighlightsCard: View {
             let today = colour(c)
             let earlierColours = repo.days.filter { $0.day < ((repo.today?.day) ?? dayKey) }.compactMap { $0.recovery }.map(colour)
             if !earlierColours.isEmpty, !earlierColours.contains(today) { first = today }
+        }
+        // Newly red: red today, after a month (with enough scored days to say so) that had none.
+        var newlyRed: [Double]?
+        if chargeScored, let c = charge, c < 34 {
+            let anchor = repo.today?.day ?? dayKey
+            let monthAgo = Repository.localDayKey(Calendar.current.date(byAdding: .day, value: -30, to: Date()) ?? Date())
+            let recent = repo.days.filter { $0.day < anchor && $0.day >= monthAgo }.compactMap { $0.recovery }
+            if recent.count >= 7, !recent.contains(where: { $0 < 34 }) { newlyRed = Array(recent.suffix(5)) + [c] }
         }
         let bandText = band.map { b -> String in
             let lo = Int(UnitFormatter.effortValue(Double(b.lowerBound) / UnitFormatter.effortScaleFactor, scale: scale).rounded())
@@ -322,7 +357,7 @@ struct NunaHighlightsCard: View {
             stressNow: stressNow, stressHighMin: stressHighMin, illness: appModel.illnessSignal,
             calibrating: calibrating, calibrationDone: ["recovery", "stress"].filter { feed.doneStages.contains($0) },
             workouts: Array(announced), dayStrainShown: effort.map { UnitFormatter.effortDisplay($0, scale: scale) },
-            naps: freshNaps, sleepRecorded: slept, journalYesterdayOpen: !yesterdayLogged,
+            naps: freshNaps, sleepRecorded: slept, journalYesterdayOpen: !yesterdayLogged, newlyRedBars: newlyRed,
             outlookFirst: NunaOutlookGate.ready(repo.days) && !UserDefaults.standard.bool(forKey: NunaOutlookGate.openedKey))
 #if DEBUG
         Self.demo(&result)
@@ -343,6 +378,7 @@ struct NunaHighlightsCard: View {
             case "manual": i.workouts.append(.init(id: "demo-m", sport: "Padel", duration: "1h 0m", strain: "7.2", manual: true))
             case "nap": i.naps.append(.init(id: "demo-n", duration: "25 min"))
             case "sleep": i.sleepRecorded = ("7 hr 12 min", 82); i.journalYesterdayOpen = true
+            case "newlyred": i.newlyRedBars = [62, 48, 55, 71, 66, 12]
             case "first": i.firstColour = "yellow"
             case "optimal": i.effort = 11; i.effortTargetLow = 10; i.effortTargetHigh = 14; i.effortTargetHighShown = "14.0"
             default: break
@@ -388,7 +424,7 @@ struct NunaHighlightsCard: View {
                     .mask(alignment: .bottom) { Rectangle().frame(height: 12) }
                     .frame(maxHeight: .infinity, alignment: .bottom).offset(y: 12)
             }
-            NunaCard(padding: EdgeInsets(top: 18, leading: 20, bottom: 18, trailing: 46)) {
+            NunaCard(padding: EdgeInsets(top: 18, leading: 20, bottom: 18, trailing: h.bars == nil ? 46 : 140)) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(verbatim: h.title).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                     // Always at least three lines tall (a hidden three-line stand-in sets the floor), so every card is four lines with its title.
@@ -399,13 +435,13 @@ struct NunaHighlightsCard: View {
                     }
                     if let t = h.actionTitle, let a = h.action {
                         Button { perform(a) } label: {
-                            if a == .outlook {
+                            if a == .outlook || a == .trend {
                                 // The Outlook's own call to action: gradient letters and an arrow, no pill.
                                 HStack(spacing: 10) {
                                     Text(verbatim: t).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                                     Image(systemName: "arrow.right").font(.system(size: 16, weight: .regular))
                                 }
-                                .foregroundStyle(Self.outlookGradient).frame(minHeight: 32)
+                                .foregroundStyle(a == .trend ? AnyShapeStyle(Color(red: 0.29, green: 0.56, blue: 0.89)) : AnyShapeStyle(Self.outlookGradient)).frame(minHeight: 32)
                             } else {
                                 Text(verbatim: t).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                                     .foregroundStyle(NunaPalette.textPrimary)
@@ -422,6 +458,9 @@ struct NunaHighlightsCard: View {
                 if h.id == "outlook-first" {
                     RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous).strokeBorder(Self.outlookGradient, lineWidth: 2)
                 }
+            }
+            .overlay(alignment: .trailing) {
+                if let b = h.bars { NunaHighlightBars(values: b).padding(.trailing, 40) }
             }
             .overlay(alignment: .topTrailing) {
                 Button { put(away: h.id) } label: {
@@ -476,6 +515,7 @@ struct NunaHighlightsCard: View {
         case .windDown: onWindDown()
         case .outlook: onOutlook()
         case .journal: onJournal()
+        case .trend: onTrend()
         }
     }
 

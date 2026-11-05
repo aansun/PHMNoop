@@ -8025,5 +8025,8 @@
  "Today's Recovery score in one ring.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Skor Recovery hari ini dalam satu cincin."}}}},
  "Log yesterday's journal": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Isi jurnal kemarin"}}}},
  "charge remaining": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "baterai tersisa"}}}},
- "Charge your WHOOP to ensure uninterrupted data collection": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Isi daya WHOOP Anda agar pengumpulan data tidak terputus"}}}}
+ "Charge your WHOOP to ensure uninterrupted data collection": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Isi daya WHOOP Anda agar pengumpulan data tidak terputus"}}}},
+ "Newly Red": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Baru Merah"}}}},
+ "You haven't been in the red in the last 30 days! Don't worry, it's only temporary.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu belum merah dalam 30 hari terakhir! Tenang, ini hanya sementara."}}}},
+ "View trend": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lihat tren"}}}}
 }, "version":"1.0" }
