@@ -13,7 +13,7 @@ private enum Glance {
     static let track = Color.white.opacity(0.13)
     /// The lighter stretch of the Strain ring that marks today's aim (109, 114, 116 on the reference).
     static let targetZone = Color(red: 109.0 / 255, green: 114.0 / 255, blue: 116.0 / 255)
-    static let card = LinearGradient(colors: [Color(red: 0.18, green: 0.20, blue: 0.22), Color(red: 0.12, green: 0.14, blue: 0.15)], startPoint: .top, endPoint: .bottom)
+    static let card = PHMNWidgetBackdrop.gradient
     static let open = URL(string: "noop://today")!
     /// The figure face of the reference: DIN Bold, sharp at small sizes (the face bundled with the widget).
     static func din(_ size: CGFloat) -> Font { .custom("D-DIN-PRO-Bold", size: size) }

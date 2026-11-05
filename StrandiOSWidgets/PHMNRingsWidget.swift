@@ -275,7 +275,7 @@ struct PHMNRingsWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: Self.kind, provider: PHMNRingsProvider()) { entry in
             PHMNRingsWidgetView(entry: entry, secondaryMetric: .steps)
-                .containerBackground(StrandPalette.surfaceBase, for: .widget)
+                .containerBackground(PHMNWidgetBackdrop.gradient, for: .widget)
         }
         .configurationDisplayName("PHMN Rings")
         .description("Recovery, HRV, Strain, Steps and battery at a glance.")
@@ -291,7 +291,7 @@ struct NOOPRing2Widget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: Self.kind, provider: PHMNRingsProvider()) { entry in
             PHMNRingsWidgetView(entry: entry, secondaryMetric: .calories)
-                .containerBackground(StrandPalette.surfaceBase, for: .widget)
+                .containerBackground(PHMNWidgetBackdrop.gradient, for: .widget)
         }
         .configurationDisplayName("PHMN Ring 2")
         .description("Full Recovery and Strain rings with HRV, Calories and battery.")
