@@ -11,8 +11,8 @@ private enum Glance {
     static let ink = Color.white
     static let muted = Color(red: 0.62, green: 0.64, blue: 0.66)
     static let track = Color.white.opacity(0.13)
-    /// The lighter stretch of the Strain ring that marks today's aim (109, 114, 116 on the reference).
-    static let targetZone = Color(red: 109.0 / 255, green: 114.0 / 255, blue: 116.0 / 255)
+    /// The lighter stretch of the Strain ring that marks today's aim (96, 97, 99 on the reference).
+    static let targetZone = Color(red: 96.0 / 255, green: 97.0 / 255, blue: 99.0 / 255)
     static let card = PHMNWidgetBackdrop.gradient
     static let open = URL(string: "noop://today")!
     /// The figure face of the reference: DIN Bold, sharp at small sizes (the face bundled with the widget).
@@ -40,7 +40,7 @@ private struct GlanceRing<Centre: View>: View {
     let fraction: Double
     let color: Color
     var gradient: [Color]? = nil
-    /// Today's Strain aim as a stretch of the ring (lighter grey, a white tick where it begins), as on the reference.
+    /// Today's Strain aim as a stretch of the ring (lighter grey, a white tick in the middle of it), as on the reference.
     var target: ClosedRange<Double>? = nil
     let width: CGFloat
     @ViewBuilder var centre: () -> Centre
@@ -59,7 +59,7 @@ private struct GlanceRing<Centre: View>: View {
                         style: StrokeStyle(lineWidth: width, lineCap: .round))
                 .rotationEffect(.degrees(-90))
             if let target {
-                let at = min(max(target.lowerBound, 0), 1)
+                let at = min(max((target.lowerBound + target.upperBound) / 2, 0), 1)
                 Circle().trim(from: max(at - 0.003, 0), to: min(at + 0.003, 1))
                     .stroke(Glance.ink, style: StrokeStyle(lineWidth: width, lineCap: .butt)).rotationEffect(.degrees(-90))
             }
@@ -152,7 +152,7 @@ private struct TriRingsView: View {
             HStack(spacing: 0) {
                 column(ring: ring(d.sleepFraction, Glance.steel, nil, d.s.rest.map(String.init) ?? "–", percent: d.s.rest != nil), "Sleep")
                 column(ring: ring(d.recoveryFraction, d.recoveryColor, nil, d.s.recovery.map(String.init) ?? "–", percent: d.s.recovery != nil), "Recovery")
-                column(ring: ring(d.strainFraction, d.strainColor, d.strainGradient, d.strainText, percent: false), "Strain")
+                column(ring: ring(d.strainFraction, d.strainColor, d.strainGradient, d.strainText, percent: false, target: d.strainTarget), "Strain")
             }
             .padding(.top, 13)
             Spacer(minLength: 0)
@@ -160,8 +160,8 @@ private struct TriRingsView: View {
         .frame(maxHeight: .infinity, alignment: .top)
     }
 
-    private func ring(_ f: Double, _ c: Color, _ g: [Color]?, _ value: String, percent: Bool) -> some View {
-        GlanceRing(fraction: f, color: c, gradient: g, width: 4.6) { GlanceFigure(value: value, percent: percent, size: 23) }.frame(width: 75.5, height: 75.5)
+    private func ring(_ f: Double, _ c: Color, _ g: [Color]?, _ value: String, percent: Bool, target: ClosedRange<Double>? = nil) -> some View {
+        GlanceRing(fraction: f, color: c, gradient: g, target: target, width: 4.6) { GlanceFigure(value: value, percent: percent, size: 23) }.frame(width: 75.5, height: 75.5)
     }
 
     private func column<R: View>(ring: R, _ label: String) -> some View {
@@ -218,7 +218,7 @@ private struct DualRing: View {
         let line = size * 0.061
         ZStack {
             // The outer ring is Strain, the inner ring Recovery, the same order as the app's day rings.
-            GlanceRing(fraction: d.strainFraction, color: d.strainColor, gradient: d.strainGradient, width: line) { Color.clear }.frame(width: size - line, height: size - line)
+            GlanceRing(fraction: d.strainFraction, color: d.strainColor, gradient: d.strainGradient, target: d.strainTarget, width: line) { Color.clear }.frame(width: size - line, height: size - line)
             GlanceRing(fraction: d.recoveryFraction, color: d.recoveryColor, width: line) { Color.clear }.frame(width: size * 0.77 - line, height: size * 0.77 - line)
             PHMNButterflyShape().fill(Glance.ink).frame(width: size * 0.18, height: size * 0.18)
         }

@@ -305,9 +305,10 @@ struct NunaHighlightsCard: View {
             let l = SleepDebt.ledger(series: days.map { (day: $0.day, totalSleepMin: $0.totalSleepMin) }, needHours: need / 60)
             return l.nightCount > 0 ? l.magnitudeMin : nil
         }
-        let band = CoupledView.optimalStrainRange(recovery: charge)
-        let hi = band.map { Double($0.upperBound) / UnitFormatter.effortScaleFactor }
-        let lo = band.map { Double($0.lowerBound) / UnitFormatter.effortScaleFactor }
+        // The stretch drawn on the Strain ring, so these words and the ring give the same range.
+        let band = NunaScoreStyle.effortTarget(charge: charge)
+        let hi = band.map { $0.upperBound * 100 }
+        let lo = band.map { $0.lowerBound * 100 }
         func colour(_ v: Double) -> String { v >= 67 ? "green" : (v >= 34 ? "yellow" : "red") }
         var first: String?
         if chargeScored, let c = charge {
@@ -324,8 +325,8 @@ struct NunaHighlightsCard: View {
             if recent.count >= 7, !recent.contains(where: { $0 < 34 }) { newlyRed = Array(recent.suffix(5)) + [c] }
         }
         let bandText = band.map { b -> String in
-            let lo = Int(UnitFormatter.effortValue(Double(b.lowerBound) / UnitFormatter.effortScaleFactor, scale: scale).rounded())
-            let up = Int(UnitFormatter.effortValue(Double(b.upperBound) / UnitFormatter.effortScaleFactor, scale: scale).rounded())
+            let lo = Int(UnitFormatter.effortValue(b.lowerBound * 100, scale: scale).rounded())
+            let up = Int(UnitFormatter.effortValue(b.upperBound * 100, scale: scale).rounded())
             return "\(lo)–\(up)"
         }
         let earlier = repo.days.filter { $0.day < ((repo.today?.day) ?? dayKey) }

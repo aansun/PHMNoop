@@ -33,12 +33,29 @@ public enum NunaScoreStyle {
         return c
     }
 
-    /// Today's Effort aim from Charge, as a stretch of the ring (0...1): 14 to 18 of 21 from Charge 67, 10 to 14 from 34, 4 to 10
-    /// below. nil while Charge is unknown.
-    public static func effortTarget(charge: Double?) -> ClosedRange<Double>? {
+    /// Where on the Effort ring (0...1, clockwise from the top) today's aim sits, from Charge: the place of the white mark.
+    ///
+    /// Read off the WHOOP rings at five Charge values, where the mark stands at 121° (Charge 10), 135° (15), 184° (42), 185° (44) and, for the
+    /// highest Charge seen, 279° (about 16.3 of 21). It moves smoothly with Charge, not in three steps, so the figures below are joined by straight
+    /// lines. Between Charge 44 and 85 (where the 16.3 stands) and above 85 the line is assumed, not measured: more readings would refine it.
+    /// nil while Charge is unknown.
+    public static func effortAim(charge: Double?) -> Double? {
         guard let charge else { return nil }
-        let band: ClosedRange<Double> = charge >= 67 ? 14...18 : (charge >= 34 ? 10...14 : 4...10)
-        return (band.lowerBound / 21.0)...(band.upperBound / 21.0)
+        // (Charge, Effort of 21)
+        let points: [(Double, Double)] = [(0, 5.4), (10, 7.06), (15, 7.88), (42, 10.73), (44, 10.79), (85, 16.27), (100, 18.3)]
+        let c = min(max(charge, 0), 100)
+        for i in 1..<points.count where c <= points[i].0 {
+            let (c0, e0) = points[i - 1], (c1, e1) = points[i]
+            return (e0 + (e1 - e0) * (c - c0) / (c1 - c0)) / 21.0
+        }
+        return points[points.count - 1].1 / 21.0
+    }
+
+    /// Today's Effort aim as a stretch of the ring (0...1): the mark of `effortAim`, 36° (about 2.1 of 21) to either side, as measured on the
+    /// WHOOP rings. nil while Charge is unknown.
+    public static func effortTarget(charge: Double?) -> ClosedRange<Double>? {
+        guard let aim = effortAim(charge: charge) else { return nil }
+        return max(aim - 0.1, 0)...min(aim + 0.1, 1)
     }
 
     /// Rest: excellent green from 85, good lime from 70, fair amber from 50, low red below.

@@ -484,7 +484,7 @@ public struct NunaRingGauge<Center: View>: View {
     private let lineWidth: CGFloat
     private let center: Center
     /// `gradient` paints the arc from its start to its end through these colours (Effort: dark blue to light blue); nil keeps `color`.
-    /// `target` (0...1 of the ring) draws the day's aim as a grey stretch of the track with a white mark where it begins.
+    /// `target` (0...1 of the ring) draws the day's aim as a grey stretch of the track with a white mark in the middle of it.
     public init(fraction: Double, color: Color, gradient: [Color]? = nil, target: ClosedRange<Double>? = nil, size: CGFloat = 98, lineWidth: CGFloat = 9,
                 @ViewBuilder center: () -> Center) {
         self.fraction = min(max(fraction, 0), 1); self.color = color; self.gradient = gradient; self.target = target
@@ -503,8 +503,8 @@ public struct NunaRingGauge<Center: View>: View {
                         ?? AnyShapeStyle(color), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
             if let target {
-                // The least to aim for: a short white mark across the ring.
-                let at = min(max(target.lowerBound, 0), 1)
+                // The aim: a short white mark across the ring, in the middle of the grey stretch.
+                let at = min(max((target.lowerBound + target.upperBound) / 2, 0), 1)
                 Circle().trim(from: max(at - 0.004, 0), to: min(at + 0.004, 1))
                     .stroke(Color.white, style: StrokeStyle(lineWidth: lineWidth + 4, lineCap: .butt))
                     .rotationEffect(.degrees(-90))
