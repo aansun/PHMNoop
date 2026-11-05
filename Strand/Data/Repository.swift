@@ -2487,6 +2487,12 @@ final class Repository: ObservableObject {
             for p in (try? await store.metricSeries(deviceId: id, key: key, from: from, to: to)) ?? [] { byDay[p.day] = p.value }
         }
 
+        // A VO₂ max typed in by hand (a lab or another device's result, iOS only) is read next to the estimate and wins for its day, so every reader
+        // of the latest VO₂ max (the trend page, Fitness Age, the Today tile) sees it. It lives under the manual source, away from the estimate.
+        if key == "vo2max_est" {
+            for p in (try? await store.metricSeries(deviceId: "noop-manual", key: key, from: from, to: to)) ?? [] { byDay[p.day] = p.value }
+        }
+
         return Self.oneSkinTempScale(key: key, byDay.sorted { $0.key < $1.key }.map { (day: $0.key, value: $0.value) })
     }
 
