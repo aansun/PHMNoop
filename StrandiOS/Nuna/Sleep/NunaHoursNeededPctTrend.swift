@@ -43,6 +43,8 @@ struct NunaPctTrendView: View {
     /// A month writes the figure of its newest day over its bar; false leaves the bars bare (Effort, Calories).
     var labelsNewestInMonth = true
     var endingDaysAgo = 0
+    /// What sits under the chart and the levels (Steps: the target and what steps are).
+    var footer: AnyView?
 
     @EnvironmentObject private var repo: Repository
     @StateObject private var history = NunaSleepHistory()
@@ -87,6 +89,7 @@ struct NunaPctTrendView: View {
             chart(all, average).padding(.top, 4)
             if excludesToday, all.contains(where: { Calendar.current.isDateInToday($0.date) }) { todayNote }
             if showsBreakdown { NunaDaysBreakdown(title: breakdownTitle, bands: bands, values: values) }
+            if let footer { footer }
         }
         .environment(\.nunaDetailSwitch, nil)
         .task(id: repo.refreshSeq) { await history.load(repo: repo) }
@@ -460,7 +463,8 @@ struct NunaStepsTrendView: View {
                 let span = range == 7 ? String(localized: "the last 7 days") : (range == 30 ? String(localized: "the last 30 days") : String(localized: "the last 6 months"))
                 return String(localized: "Your average steps for \(span) is \(n). Wear your strap all day to unlock personalized insights.")
             },
-            showsBreakdown: false, labelsNewestInMonth: false, endingDaysAgo: endingDaysAgo)
+            showsBreakdown: false, labelsNewestInMonth: false, endingDaysAgo: endingDaysAgo,
+            footer: AnyView(NunaStepsFooter()))
     }
 }
 #endif
