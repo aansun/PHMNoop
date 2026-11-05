@@ -56,6 +56,9 @@ enum NunaGoals {
     static let weeklyEffort = "nuna.goal.weeklyEffort"
     static let sleepMinutes = "nuna.goal.sleepMinutes"
     static let steps = "nuna.goal.steps"
+    /// Weekly minutes in heart-rate zones 1 to 3 and in zones 4 and 5; 0 is not set.
+    static let zonesEasyMinutes = "nuna.goal.zones13Min"
+    static let zonesHardMinutes = "nuna.goal.zones45Min"
     static let waterLitres = "nuna.goal.waterL"
     static let targetWeightKg = "nuna.goal.targetWeightKg"
 

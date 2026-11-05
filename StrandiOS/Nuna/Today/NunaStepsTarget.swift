@@ -2,6 +2,32 @@
 import SwiftUI
 import StrandDesign
 
+/// A link row under a trend page: an icon, an uppercase title with an optional line under it, and a chevron as large as the one on the back button.
+/// Short (about 56 pt), so a pair of them does not take a screen.
+struct NunaFooterLinkRow: View {
+    let icon: String
+    let title: LocalizedStringKey
+    var subtitle: LocalizedStringKey?
+
+    var body: some View {
+        NunaCard(small: true, padding: EdgeInsets(top: 0, leading: 18, bottom: 0, trailing: 14)) {
+            HStack(spacing: 16) {
+                Image(systemName: icon).font(.system(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 30)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title).font(.nuna(size: 13.5, weight: .heavy)).tracking(nunaTrackingLabel * 1.2).textCase(.uppercase)
+                        .foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
+                    if let subtitle {
+                        Text(subtitle).font(.nuna(size: 13, weight: .regular)).tracking(0).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1)
+                    }
+                }
+                Spacer(minLength: 6)
+                Image(systemName: "chevron.right").font(.nuna(size: 23, weight: .bold)).foregroundStyle(NunaPalette.textSecondary)
+            }
+            .frame(minHeight: 56)
+        }
+    }
+}
+
 /// Under the Steps trend page: the way into the daily step target, and a short explanation of what steps are and how this app counts them.
 struct NunaStepsFooter: View {
     @AppStorage(NunaGoals.steps) private var stored = 0
@@ -12,11 +38,8 @@ struct NunaStepsFooter: View {
     var body: some View {
         VStack(spacing: NunaSpacing.section) {
             Button { showTarget = true } label: {
-                NunaCard(small: true) {
-                    NunaListRow(stored > 0 ? "Update your daily step goal" : "Set a daily step goal",
-                                subtitle: LocalizedStringKey(String(localized: "Now \(nunaThousands(Double(goal))) a day")),
-                                systemImage: "checklist", showsChevron: true)
-                }
+                NunaFooterLinkRow(icon: "checklist", title: stored > 0 ? "Update your daily step goal" : "Set a daily step goal",
+                                  subtitle: LocalizedStringKey(String(localized: "Now \(nunaThousands(Double(goal))) a day")))
             }
             .buttonStyle(.plain)
             about
@@ -57,7 +80,6 @@ struct NunaStepsTargetView: View {
     /// Where the benefit levels off for most adults; the goal is led there by 500 a week.
     private static let optimal = 10_000
     private static let weeklyStep = 500
-    private let barHeight: CGFloat = 300, barWidth: CGFloat = 92
 
     /// The 30 days before today, which is not finished.
     private var average: Int? {
@@ -67,7 +89,6 @@ struct NunaStepsTargetView: View {
     }
 
     private var weeksToOptimal: Int { goal >= Self.optimal ? 0 : Int((Double(Self.optimal - goal) / Double(Self.weeklyStep)).rounded(.up)) }
-    private func fraction(_ v: Int) -> CGFloat { CGFloat(min(max(Double(v - low) / Double(max(high - low, 1)), 0), 1)) }
     private func text(_ v: Int) -> String { nunaThousands(Double(v)) }
 
     var body: some View {
@@ -78,7 +99,8 @@ struct NunaStepsTargetView: View {
                     Color.clear.frame(height: 56)
                     Text("Set your daily step target for the coming week").font(.nuna(size: 22, weight: .semibold)).tracking(0).foregroundStyle(NunaPalette.textPrimary)
                         .textCase(nil).frame(maxWidth: .infinity, alignment: .leading).fixedSize(horizontal: false, vertical: true)
-                    gauge.padding(.top, 8)
+                    NunaTargetGauge(goal: $goal, low: low, high: high, step: 100, nudge: 500, tint: NunaPalette.effortModerate,
+                                    average: average, averageLabel: "30-day average", text: text).padding(.top, 8)
                     plan
                     VStack(spacing: 12) {
                         Button(action: save) {
@@ -127,57 +149,6 @@ struct NunaStepsTargetView: View {
         low = lo
         high = max(lo + 10_000, (goal + 1_000 + 99) / 100 * 100)
         scaled = true
-    }
-
-    // MARK: Gauge
-
-    private var gauge: some View {
-        GeometryReader { g in
-            let cx = g.size.width / 2
-            let top = barHeight * (1 - fraction(goal))
-            ZStack(alignment: .topLeading) {
-                // The bar: a dark track and the blue fill up to the goal, with a grip at the top of it.
-                ZStack(alignment: .bottom) {
-                    RoundedRectangle(cornerRadius: 28, style: .continuous).fill(Color.white.opacity(0.10))
-                    RoundedRectangle(cornerRadius: 28, style: .continuous).fill(NunaPalette.effortModerate)
-                        .frame(height: max(24, barHeight * fraction(goal)))
-                        .overlay(alignment: .top) {
-                            VStack(spacing: 3) { Capsule().fill(Color.black.opacity(0.25)).frame(width: 28, height: 2.5); Capsule().fill(Color.black.opacity(0.25)).frame(width: 28, height: 2.5) }.padding(.top, 14)
-                        }
-                }
-                .frame(width: barWidth, height: barHeight)
-                .contentShape(Rectangle())
-                .gesture(DragGesture(minimumDistance: 0).onChanged { d in
-                    let f = 1 - min(max(d.location.y / barHeight, 0), 1)
-                    let raw = Double(low) + Double(f) * Double(high - low)
-                    goal = min(max(Int((raw / 100).rounded()) * 100, low), high)
-                })
-                .position(x: cx, y: barHeight / 2)
-                .accessibilityElement().accessibilityLabel(Text("Your goal")).accessibilityValue(Text(verbatim: text(goal)))
-                .accessibilityAdjustableAction { d in goal = min(max(goal + (d == .increment ? 500 : -500), low), high) }
-                // The goal, beside the top of the fill.
-                VStack(alignment: .trailing, spacing: 2) {
-                    Text(verbatim: text(goal)).font(.nuna(size: 34, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.effortModerate).monospacedDigit()
-                    Text("Your goal").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                }
-                .frame(width: 110, alignment: .trailing).position(x: cx - barWidth / 2 - 14 - 55, y: min(max(top + 24, 30), barHeight - 30))
-                // The ends of the scale.
-                Text(verbatim: text(high)).font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.effortModerate).position(x: cx, y: -16)
-                Text(verbatim: text(low)).font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.effortModerate).position(x: cx, y: barHeight + 18)
-                // The 30-day average: a dashed line out to the right with its figure.
-                if let avg = average, avg >= low, avg <= high {
-                    let y = barHeight * (1 - fraction(avg))
-                    Path { p in p.move(to: CGPoint(x: cx + barWidth / 2 - 6, y: y)); p.addLine(to: CGPoint(x: cx + barWidth / 2 + 70, y: y)) }
-                        .stroke(Color.white.opacity(0.85), style: StrokeStyle(lineWidth: 1.2, dash: [4, 4]))
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(verbatim: text(avg)).font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                        Text("30-day average").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                    }
-                    .frame(width: 130, alignment: .leading).position(x: cx + barWidth / 2 + 12 + 65, y: y + 28)
-                }
-            }
-        }
-        .frame(height: barHeight + 40).padding(.top, 20)
     }
 
     // MARK: Plan
@@ -229,6 +200,75 @@ struct NunaStepsTargetView: View {
     private func save() {
         stored = goal
         onClose()
+    }
+}
+
+/// The tall bar of a "Set your target" screen: drag it to the goal. The goal is written beside the top of the fill, the ends of the scale above and
+/// below, and the recent average as a dashed line to the right of the bar.
+struct NunaTargetGauge: View {
+    @Binding var goal: Int
+    let low: Int
+    let high: Int
+    /// What a drag rounds to.
+    let step: Int
+    /// What one step of the accessibility adjustment moves.
+    let nudge: Int
+    let tint: Color
+    var average: Int?
+    var averageLabel: LocalizedStringKey = ""
+    let text: (Int) -> String
+
+    private let barHeight: CGFloat = 300, barWidth: CGFloat = 92
+
+    private func fraction(_ v: Int) -> CGFloat { CGFloat(min(max(Double(v - low) / Double(max(high - low, 1)), 0), 1)) }
+
+    var body: some View {
+        GeometryReader { g in
+            let cx = g.size.width / 2
+            let top = barHeight * (1 - fraction(goal))
+            ZStack(alignment: .topLeading) {
+                // The bar: a dark track and the fill up to the goal, with a grip at the top of it.
+                ZStack(alignment: .bottom) {
+                    RoundedRectangle(cornerRadius: 28, style: .continuous).fill(Color.white.opacity(0.10))
+                    RoundedRectangle(cornerRadius: 28, style: .continuous).fill(tint)
+                        .frame(height: max(24, barHeight * fraction(goal)))
+                        .overlay(alignment: .top) {
+                            VStack(spacing: 3) { Capsule().fill(Color.black.opacity(0.25)).frame(width: 28, height: 2.5); Capsule().fill(Color.black.opacity(0.25)).frame(width: 28, height: 2.5) }.padding(.top, 14)
+                        }
+                }
+                .frame(width: barWidth, height: barHeight)
+                .contentShape(Rectangle())
+                .gesture(DragGesture(minimumDistance: 0).onChanged { d in
+                    let f = 1 - min(max(d.location.y / barHeight, 0), 1)
+                    let raw = Double(low) + Double(f) * Double(high - low)
+                    goal = min(max(Int((raw / Double(step)).rounded()) * step, low), high)
+                })
+                .position(x: cx, y: barHeight / 2)
+                .accessibilityElement().accessibilityLabel(Text("Your goal")).accessibilityValue(Text(verbatim: text(goal)))
+                .accessibilityAdjustableAction { d in goal = min(max(goal + (d == .increment ? nudge : -nudge), low), high) }
+                // The goal, beside the top of the fill.
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(verbatim: text(goal)).font(.nuna(size: 34, weight: .bold, design: NunaType.design)).foregroundStyle(tint).monospacedDigit().minimumScaleFactor(0.6).lineLimit(1).textCase(nil)
+                    Text("Your goal").font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                }
+                .frame(width: 110, alignment: .trailing).position(x: cx - barWidth / 2 - 14 - 55, y: min(max(top + 24, 30), barHeight - 30))
+                // The ends of the scale.
+                Text(verbatim: text(high)).font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(tint).textCase(nil).position(x: cx, y: -16)
+                Text(verbatim: text(low)).font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(tint).textCase(nil).position(x: cx, y: barHeight + 18)
+                // The recent average: a dashed line out to the right with its figure.
+                if let avg = average, avg >= low, avg <= high {
+                    let y = barHeight * (1 - fraction(avg))
+                    Path { p in p.move(to: CGPoint(x: cx + barWidth / 2 - 6, y: y)); p.addLine(to: CGPoint(x: cx + barWidth / 2 + 70, y: y)) }
+                        .stroke(Color.white.opacity(0.85), style: StrokeStyle(lineWidth: 1.2, dash: [4, 4]))
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(verbatim: text(avg)).font(.nuna(size: 15, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                        Text(averageLabel).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                    }
+                    .frame(width: 130, alignment: .leading).position(x: cx + barWidth / 2 + 12 + 65, y: y + 28)
+                }
+            }
+        }
+        .frame(height: barHeight + 40).padding(.top, 20)
     }
 }
 #endif

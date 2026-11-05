@@ -614,6 +614,12 @@ struct NunaEffortActivityDetailView: View {
             }
             .foregroundStyle(NunaPalette.textSecondary).padding(.horizontal, 2).frame(maxWidth: .infinity, alignment: .leading)
             breakdown
+            if kind == .lowZones || kind == .highZones {
+                NunaZonesFooter(high: kind == .highZones, fourWeekAverage: { await fourWeekZoneAverage() }, onAdded: { await load() })
+            } else if kind == .allZones {
+                // All the zones together have no weekly target of their own, only the explanation.
+                NunaZonesExplainer()
+            }
         }
         .environment(\.nunaDetailSwitch, nil)
         .task(id: "\(repo.refreshSeq)-\(range)-\(pageOffset)-\(kind.icon)") { await load() }
@@ -979,6 +985,16 @@ struct NunaEffortActivityDetailView: View {
             for index in 0..<5 { total[index] += bucket.zones[index] }
         }
         loaded = true
+    }
+
+    /// The weekly total of this page's zones over the four weeks before today, as an average: the figure the target screen sets the goal against.
+    private func fourWeekZoneAverage() async -> Double? {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        let days = (1...28).compactMap { cal.date(byAdding: .day, value: -$0, to: today) }
+        let minutes = await zoneMinutes(for: days)
+        let total = minutes.values.reduce(0.0) { sum, zones in sum + kind.zoneIndexes.reduce(0.0) { $0 + zones[$1] } }
+        return total > 0 ? total / 4 : nil
     }
 
     /// Minutes in each of the five zones for every day, read one day at a time so a long window is never cut short
