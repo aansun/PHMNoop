@@ -31,7 +31,7 @@ enum NunaTrendPage: String, CaseIterable, Identifiable {
 
     var title: LocalizedStringKey {
         switch self {
-        case .effort: return "Strain"
+        case .effort: return "Day Strain"
         case .calories: return "Calories"
         case .steps: return "Steps"
         case .hrZonesLow: return "Heart rate zones 1–3"

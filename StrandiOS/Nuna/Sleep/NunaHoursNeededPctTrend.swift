@@ -397,18 +397,19 @@ struct NunaEffortScoreTrendView: View {
         func edge(_ v: Double) -> String { String(format: "%.1f", v * k) }
         let blue = NunaPalette.effortModerate
         return NunaPctTrendView(
-            name: "Strain", icon: "met:day-strain", noun: "average Strain",
+            name: "Day Strain", icon: "met:day-strain", noun: "average Day Strain",
             bands: [
                 .init(color: NunaPalette.effortAllOut, name: "All out", range: ">\(edge(18))") { $0 > 18 * k },
                 .init(color: NunaPalette.effortModerate, name: "Strenuous", range: "\(edge(14.1))–\(edge(18))") { $0 > 14 * k && $0 <= 18 * k },
                 .init(color: NunaPalette.effortMinimal, name: "Moderate", range: "\(edge(10.1))–\(edge(14))") { $0 >= 10 * k && $0 <= 14 * k },
                 .init(color: NunaPalette.effortMinimal.opacity(0.6), name: "Light", range: "<\(edge(10))") { $0 < 10 * k },
             ],
-            breakdownTitle: "Strain breakdown",
+            breakdownTitle: "Day Strain breakdown",
             value: { h, day in h.effort[day].map { UnitFormatter.effortValue($0, scale: scale) } },
             format: { String(format: "%.1f", $0) }, hidesUnit: true,
             axisTicks: scale == .whoop ? [0, 5, 10, 15, 21] : [0, 25, 50, 75, 100],
-            tint: blue, excludesToday: true, labelsNewestInMonth: false, endingDaysAgo: endingDaysAgo)
+            tint: blue, excludesToday: true, labelsNewestInMonth: false, endingDaysAgo: endingDaysAgo,
+            footer: AnyView(NunaDayStrainFooter()))
     }
 }
 
