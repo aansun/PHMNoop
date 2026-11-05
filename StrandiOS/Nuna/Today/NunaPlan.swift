@@ -236,20 +236,20 @@ private struct NunaPlanRing: View {
     var body: some View {
         ZStack {
             if dashed {
-                Circle().stroke(NunaPalette.ringTrack, style: StrokeStyle(lineWidth: 3.5, dash: [14.2, 3.9]))
+                Circle().stroke(NunaPalette.ringTrack, style: StrokeStyle(lineWidth: 3, dash: [12.3, 3.4]))
             } else {
-                Circle().stroke(NunaPalette.ringTrack, lineWidth: 3.5)
+                Circle().stroke(NunaPalette.ringTrack, lineWidth: 3)
             }
-            Circle().trim(from: 0, to: max(0.01, min(1, fraction))).stroke(tint, style: StrokeStyle(lineWidth: 3.5, lineCap: dashed ? .butt : .round))
+            Circle().trim(from: 0, to: max(0.01, min(1, fraction))).stroke(tint, style: StrokeStyle(lineWidth: 3, lineCap: dashed ? .butt : .round))
                 .rotationEffect(.degrees(-90)).opacity(fraction > 0 ? 1 : 0)
-            Text(verbatim: label).font(.nuna(size: 13, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            Text(verbatim: label).font(.nuna(size: 11.5, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                 .minimumScaleFactor(0.7).lineLimit(1)
         }
-        .frame(width: 46, height: 46)
+        .frame(width: 40, height: 40)
     }
 }
 
-private func nunaPlanBar(_ fraction: Double, tint: Color, height: CGFloat = 8) -> some View {
+private func nunaPlanBar(_ fraction: Double, tint: Color, height: CGFloat = 7) -> some View {
     GeometryReader { geo in
         ZStack(alignment: .leading) {
             Capsule().fill(NunaPalette.ringTrack)
@@ -283,7 +283,7 @@ struct NunaPlanCard: View {
     var body: some View {
         if anySet {
             VStack(alignment: .leading, spacing: 10) {
-                Text("My Plan").font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                Text("My Plan").font(.nuna(size: 19.5, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                     .padding(.horizontal, 4)
                 NunaCard {
                     VStack(alignment: .leading, spacing: 16) {
@@ -291,15 +291,15 @@ struct NunaPlanCard: View {
                         if expanded {
                             ForEach(model.items) { item in
                                 HStack(spacing: 12) {
-                                    Text(verbatim: item.kind.rowTitle).font(.nuna(size: 17, weight: .semibold)).tracking(0).foregroundStyle(NunaPalette.textPrimary)
+                                    Text(verbatim: item.kind.rowTitle).font(.nuna(size: 15, weight: .semibold)).tracking(0).foregroundStyle(NunaPalette.textPrimary)
                                         .textCase(nil).fixedSize(horizontal: false, vertical: true)
                                     Spacer(minLength: 8)
                                     nunaPlanRing(item)
                                 }
                             }
                             NavigationLink(value: NunaTodayRoute.plan) {
-                                Text("View my plan").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                                    .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 52)
+                                Text("View my plan").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                                    .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 42)
                                     .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                             }
                             .buttonStyle(.plain)
@@ -316,22 +316,22 @@ struct NunaPlanCard: View {
             Button { withAnimation(.easeInOut(duration: 0.2)) { expanded.toggle() } } label: {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Custom Plan").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                        Text("Custom Plan").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                         if let left = model.daysLeft {
                             Text(verbatim: left == 1 ? String(localized: "1 day left") : String(localized: "\(left) days left"))
-                                .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                                .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                         }
                     }
                     Spacer()
-                    Image(systemName: expanded ? "chevron.up" : "chevron.down").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Image(systemName: expanded ? "chevron.up" : "chevron.down").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
                 }
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(verbatim: "\(Int((model.accomplished * 100).rounded()))").font(.nuna(size: 26, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                Text(verbatim: "%").font(.nuna(size: 15, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                Text("Accomplished").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary).padding(.leading, 2)
+                Text(verbatim: "\(Int((model.accomplished * 100).rounded()))").font(.nuna(size: 18, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: "%").font(.nuna(size: 11.5, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                Text("Accomplished").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary).padding(.leading, 2)
             }
             nunaPlanBar(model.accomplished, tint: NunaPalette.charge)
         }
@@ -390,15 +390,15 @@ struct NunaPlanOverviewView: View {
         Button { chooseGoal = true } label: {
             NunaCard(small: true) {
                 HStack(spacing: 14) {
-                    Image(systemName: "square.and.pencil").font(.nuna(size: 22, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 32)
+                    Image(systemName: "square.and.pencil").font(.nuna(size: 20, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 32)
                     VStack(alignment: .leading, spacing: 2) {
-                        Text("Current plan").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                        Text("Custom").font(.nuna(size: 20, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).tracking(0)
+                        Text("Current plan").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                        Text("Custom").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).tracking(0)
                     }
                     Spacer()
-                    Image(systemName: "pencil").font(.nuna(size: 18, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
+                    Image(systemName: "pencil").font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
                 }
-                .padding(.vertical, 6)
+                .padding(.vertical, 2)
             }
         }
         .buttonStyle(.plain)
@@ -406,11 +406,11 @@ struct NunaPlanOverviewView: View {
 
     private var progress: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("My Progress").font(.nuna(size: 30, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).tracking(0)
+            Text("My Progress").font(.nuna(size: 23, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).tracking(0)
             HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(verbatim: "\(Int((model.accomplished * 100).rounded()))").font(.nuna(size: 26, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                Text(verbatim: "%").font(.nuna(size: 15, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                Text("Goals accomplished").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary).padding(.leading, 2)
+                Text(verbatim: "\(Int((model.accomplished * 100).rounded()))").font(.nuna(size: 18, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                Text(verbatim: "%").font(.nuna(size: 11.5, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                Text("Goals accomplished").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary).padding(.leading, 2)
             }
             nunaPlanBar(model.accomplished, tint: NunaPalette.charge)
         }
@@ -420,7 +420,7 @@ struct NunaPlanOverviewView: View {
     private func section(_ item: NunaPlanModel.Item) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
-                Text(verbatim: item.kind.sectionTitle).font(.nuna(size: 26, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).tracking(0)
+                Text(verbatim: item.kind.sectionTitle).font(.nuna(size: 19.5, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).tracking(0)
                 Spacer(minLength: 8)
                 Button { editing = item.kind } label: {
                     HStack(spacing: 8) {
@@ -431,7 +431,7 @@ struct NunaPlanOverviewView: View {
                 }
                 .buttonStyle(.plain)
             }
-            .padding(.horizontal, 4).padding(.top, 14)
+            .padding(.horizontal, 4).padding(.top, 10)
             if item.kind == .steps { stepsCard(item) } else { timeCard(item) }
         }
     }
@@ -457,17 +457,17 @@ struct NunaPlanOverviewView: View {
                         ForEach(Array(days.enumerated()), id: \.offset) { i, day in
                             let isToday = Calendar.current.isDate(day, inSameDayAs: today)
                             VStack(spacing: 10) {
-                                Text(verbatim: weekday(day)).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                                Text(verbatim: weekday(day)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                                 dayMark(item.perDay[i] >= item.goal, past: day <= today)
                                 ZStack(alignment: .bottom) {
                                     Color.clear.frame(height: barArea)
                                     VStack(spacing: 4) {
                                         if item.perDay[i] > 0 {
-                                            Text(verbatim: nunaThousands(item.perDay[i])).font(.nuna(size: 12.5, weight: .heavy, design: NunaType.design)).foregroundStyle(item.kind.tint)
+                                            Text(verbatim: nunaThousands(item.perDay[i])).font(.nuna(size: 11, weight: .heavy, design: NunaType.design)).foregroundStyle(item.kind.tint)
                                                 .fixedSize().textCase(nil)
                                         }
                                         RoundedRectangle(cornerRadius: 2, style: .continuous).fill(item.kind.tint.opacity(0.75))
-                                            .frame(width: 20, height: max(item.perDay[i] > 0 ? 3 : 0, barArea * 0.9 * CGFloat(item.perDay[i] / top)))
+                                            .frame(width: 16, height: max(item.perDay[i] > 0 ? 3 : 0, barArea * 0.9 * CGFloat(item.perDay[i] / top)))
                                     }
                                 }
                             }
@@ -478,13 +478,13 @@ struct NunaPlanOverviewView: View {
                     }
                     // The goal line, across the bars.
                     GeometryReader { geo in
-                        let y = 14 + 14 + 10 + 31 + 10 + barArea - barArea * 0.9 * CGFloat(item.goal / top) - 0
+                        let y = 10 + 15 + 10 + 28 + 10 + barArea - barArea * 0.9 * CGFloat(item.goal / top) - 0
                         ZStack(alignment: .topLeading) {
                             Path { p in p.move(to: CGPoint(x: 0, y: y)); p.addLine(to: CGPoint(x: geo.size.width, y: y)) }
                                 .stroke(NunaPalette.textPrimary, style: StrokeStyle(lineWidth: 1.3, dash: [4, 4]))
-                            Text("Goal").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.canvas)
-                                .padding(.horizontal, 12).padding(.vertical, 7).background(NunaPalette.textPrimary, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
-                                .position(x: geo.size.width - 30, y: y)
+                            Text("Goal").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.canvas)
+                                .padding(.horizontal, 10).padding(.vertical, 5).background(NunaPalette.textPrimary, in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                                .position(x: geo.size.width - 26, y: y)
                         }
                     }
                     .allowsHitTesting(false)
@@ -492,7 +492,7 @@ struct NunaPlanOverviewView: View {
                 Text(verbatim: average > 0
                      ? String(localized: "Get \(nunaThousands(item.goal)) steps each day to complete your goal. Your average for this week is \(nunaThousands(average)).")
                      : String(localized: "Get \(nunaThousands(item.goal)) steps each day to complete your goal."))
-                    .font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).lineSpacing(3).textCase(nil).fixedSize(horizontal: false, vertical: true)
+                    .font(.nunaWords(size: 13)).tracking(0).foregroundStyle(NunaPalette.textSecondary).lineSpacing(2).textCase(nil).fixedSize(horizontal: false, vertical: true)
                 Rectangle().fill(NunaPalette.hairline).frame(height: 1)
                 taken(item.value)
             }
@@ -504,12 +504,12 @@ struct NunaPlanOverviewView: View {
             Circle().stroke(hit ? NunaPalette.charge : NunaPalette.textMuted.opacity(0.7), lineWidth: 2)
             if hit {
                 Circle().fill(NunaPalette.charge.opacity(0.18))
-                Image(systemName: "checkmark").font(.system(size: 13, weight: .heavy)).foregroundStyle(NunaPalette.charge)
+                Image(systemName: "checkmark").font(.system(size: 12, weight: .heavy)).foregroundStyle(NunaPalette.charge)
             } else if past {
-                Image(systemName: "xmark").font(.system(size: 12, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
+                Image(systemName: "xmark").font(.system(size: 11, weight: .bold)).foregroundStyle(NunaPalette.textMuted)
             }
         }
-        .frame(width: 31, height: 31)
+        .frame(width: 28, height: 28)
     }
 
     private func weekday(_ d: Date) -> String {
@@ -527,17 +527,17 @@ struct NunaPlanOverviewView: View {
         let lower = passed?.steps ?? 0, upper = next?.steps ?? lower
         let share = next == nil ? 1 : (total - lower) / max(1, upper - lower)
         return VStack(alignment: .leading, spacing: 8) {
-            Text(verbatim: String(localized: "Steps Taken This Week: \(nunaThousands(total))")).font(.nuna(size: 18, weight: .semibold)).tracking(0).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            Text(verbatim: String(localized: "Steps Taken This Week: \(nunaThousands(total))")).font(.nuna(size: 15, weight: .semibold)).tracking(0).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
             Text(verbatim: passed.map { String(localized: "That's further than a \($0.name.lowercased()), which is about \(nunaThousands($0.steps)) steps. Keep it up.") }
                  ?? String(localized: "A 5K is about \(nunaThousands(Self.milestones[0].steps)) steps. Keep going."))
-                .font(.nunaWords(size: 14)).tracking(0).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
+                .font(.nunaWords(size: 12)).tracking(0).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
             HStack {
-                Text(verbatim: passed?.name ?? "0").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
+                Text(verbatim: passed?.name ?? "0").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
                 Spacer()
-                if let next { Text(verbatim: next.name).font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary) }
+                if let next { Text(verbatim: next.name).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary) }
             }
             .padding(.top, 6)
-            nunaPlanBar(share, tint: NunaPlanKind.steps.tint, height: 18)
+            nunaPlanBar(share, tint: NunaPlanKind.steps.tint, height: 9)
         }
     }
 
@@ -553,24 +553,24 @@ struct NunaPlanOverviewView: View {
                     nunaPlanRing(item)
                 }
                 HStack {
-                    Text(verbatim: NunaPlanFormat.clockSeconds(item.value)).font(.nuna(size: 30, weight: .semibold, design: NunaType.design)).foregroundStyle(item.kind.tint)
+                    Text(verbatim: NunaPlanFormat.clockSeconds(item.value)).font(.nuna(size: 18, weight: .semibold, design: NunaType.design)).foregroundStyle(item.kind.tint)
                     Spacer()
-                    Text(verbatim: NunaPlanFormat.clockSeconds(item.goal)).font(.nuna(size: 30, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: NunaPlanFormat.clockSeconds(item.goal)).font(.nuna(size: 18, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                 }
-                nunaPlanBar(item.fraction, tint: item.kind.tint, height: 12)
+                nunaPlanBar(item.fraction, tint: item.kind.tint, height: 8)
                 ForEach(item.lines) { line in
                     HStack(spacing: 12) {
-                        Text(verbatim: NunaPlanFormat.clockSeconds(line.minutes)).font(.nuna(size: 22, weight: .semibold, design: NunaType.design)).foregroundStyle(item.kind.tint)
+                        Text(verbatim: NunaPlanFormat.clockSeconds(line.minutes)).font(.nuna(size: 15, weight: .semibold, design: NunaType.design)).foregroundStyle(item.kind.tint)
                         Group {
-                            if let sport = line.sport { NunaActivityGlyph(name: sport, size: 28) } else { NunaGlyph("figure.walk", pointSize: 22).frame(width: 28, height: 28) }
+                            if let sport = line.sport { NunaActivityGlyph(name: sport, size: 22) } else { NunaGlyph("figure.walk", pointSize: 18).frame(width: 22, height: 22) }
                         }
                         .foregroundStyle(NunaPalette.textSecondary)
-                        Text(verbatim: line.name).font(.nuna(size: 13, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+                        Text(verbatim: line.name).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
                         Spacer(minLength: 0)
                     }
                 }
                 Text(verbatim: hint(item, remaining: remaining))
-                    .font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).lineSpacing(3).textCase(nil).fixedSize(horizontal: false, vertical: true)
+                    .font(.nunaWords(size: 13)).tracking(0).foregroundStyle(NunaPalette.textSecondary).lineSpacing(2).textCase(nil).fixedSize(horizontal: false, vertical: true)
             }
         }
     }

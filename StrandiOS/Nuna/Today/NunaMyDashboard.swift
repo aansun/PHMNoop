@@ -323,7 +323,7 @@ struct NunaDashboardCards: View {
     var body: some View {
         VStack(spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
-                Text("My Dashboard").font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                Text("My Dashboard").font(.nuna(size: 19.5, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                 Spacer(minLength: 8)
                 Button(action: onEdit) {
                     HStack(spacing: 8) {
