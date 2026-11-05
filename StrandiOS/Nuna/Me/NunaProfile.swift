@@ -237,6 +237,8 @@ struct NunaProfileView: View {
     @EnvironmentObject private var profile: ProfileStore
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var router: NavRouter
+    @EnvironmentObject private var updateStore: UpdateStore
+    @State private var showInbox = false
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
     @State private var workouts: [WorkoutRow] = []
     @State private var fitnessAge: Double?
@@ -268,7 +270,7 @@ struct NunaProfileView: View {
     // MARK: Body
 
     var body: some View {
-        NunaDetailScreen("Profile", centersTitle: true) {
+        NunaDetailScreen("Profile", trailing: AnyView(headerActions), centersTitle: true) {
             identity
             memberSince
             levelAndAge
@@ -283,6 +285,7 @@ struct NunaProfileView: View {
             RadialGradient(colors: [Color(red: 0.62, green: 0.30, blue: 0.28).opacity(0.6), .clear], center: UnitPoint(x: 0.5, y: 0.1), startRadius: 0, endRadius: 330)
                 .frame(height: 440).ignoresSafeArea().allowsHitTesting(false)
         }
+        .sheet(isPresented: $showInbox) { NunaUpdatesInbox(onClose: { showInbox = false }).nunaSheetChrome(detents: [.large]) }
         .task(id: repo.refreshSeq) {
             workouts = await repo.workoutRows()
             let m = NunaTodayModel(); await m.load(repo: repo, profile: profile)
@@ -292,23 +295,24 @@ struct NunaProfileView: View {
 
     // MARK: Identity
 
-    private var initials: String {
-        let parts = profile.displayName.split(separator: " ").prefix(2).compactMap(\.first)
-        return String(parts).uppercased()
-    }
+    private var avatar: some View { NunaProfileAvatar(size: 98) }
 
-    private var avatar: some View {
-        Group {
-            if profile.hasAvatar {
-                ProfileAvatarView(imageData: profile.avatarImageData, size: 98)
-            } else {
-                Circle().fill(LinearGradient(colors: [Color(red: 1, green: 0.38, blue: 0.35), Color(red: 1, green: 0.52, blue: 0.35)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                    .frame(width: 98, height: 98)
-                    .overlay {
-                        if initials.isEmpty { Image(systemName: "person.fill").font(.system(size: 40)).foregroundStyle(.black.opacity(0.75)) }
-                        else { Text(verbatim: initials).font(.nuna(size: 40, weight: .heavy)).foregroundStyle(.black) }
+    /// The updates inbox (the bell that used to sit on Today) and the way into Settings.
+    private var headerActions: some View {
+        HStack(spacing: 0) {
+            Button { showInbox = true } label: {
+                Image(systemName: "bell").font(.system(size: 20, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
+                    .frame(width: 44, height: 44)
+                    .overlay(alignment: .topTrailing) {
+                        if updateStore.unreadCount > 0 { Circle().fill(NunaPalette.alert).frame(width: 9, height: 9).offset(x: -9, y: 10) }
                     }
             }
+            .accessibilityLabel(Text("Updates"))
+            NavigationLink(value: NunaMeRoute.settings) {
+                Image(systemName: "gearshape").font(.system(size: 22, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
+                    .frame(width: 44, height: 44)
+            }
+            .buttonStyle(.plain).accessibilityLabel(Text("Settings"))
         }
     }
 
