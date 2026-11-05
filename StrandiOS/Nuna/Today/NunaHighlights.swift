@@ -11,7 +11,7 @@ struct NunaHighlight: Identifiable, Equatable {
     let message: String
     var actionTitle: String?
     var action: Action?
-    enum Action: Equatable { case breathe, windDown, outlook }
+    enum Action: Equatable { case breathe, windDown, outlook, journal }
 }
 
 /// What the highlights are worked out from. Plain numbers, so the rules can be read (and tested) without the app around them.
@@ -49,6 +49,8 @@ struct NunaHighlightInputs {
     var naps: [NunaHighlightNap] = []
     /// Last night's sleep, until the middle of the day.
     var sleepRecorded: (duration: String, score: Int?)?
+    /// Yesterday's journal has no answers yet. It is filled in after waking, so the sleep highlight offers the way in.
+    var journalYesterdayOpen = false
     /// The Daily Outlook just opened up and has not been looked at yet.
     var outlookFirst = false
 }
@@ -134,7 +136,9 @@ enum NunaHighlightEngine {
         if let sl = i.sleepRecorded {
             let msg = sl.score.map { String(localized: "You slept \(sl.duration) last night, a Sleep score of \($0)%. Open Sleep for stages and tonight's bedtime.") }
                 ?? String(localized: "You slept \(sl.duration) last night. Open Sleep for your stages, consistency and tonight's recommended bedtime.")
-            out.append(.init(id: "sleep-recorded", title: String(localized: "Sleep recorded"), message: msg))
+            out.append(.init(id: "sleep-recorded", title: String(localized: "Sleep recorded"), message: msg,
+                             actionTitle: i.journalYesterdayOpen ? String(localized: "Log yesterday's journal") : nil,
+                             action: i.journalYesterdayOpen ? .journal : nil))
         }
 
         // 4b. Recovery: the first of a colour, and being inside today's Strain range.
@@ -240,12 +244,15 @@ struct NunaHighlightsCard: View {
     let onBreathe: () -> Void
     let onWindDown: () -> Void
     let onOutlook: () -> Void
+    let onJournal: () -> Void
 
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var appModel: AppModel
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
     @AppStorage(NunaHighlightPrefs.dismissedKey) private var dismissedRaw = ""
     @State private var dragX: CGFloat = 0
+    /// Whether yesterday already has journal answers. Starts true so the link stays hidden until the check has run.
+    @State private var yesterdayLogged = true
 
     private var dayKey: String { Repository.localDayKey(Date()) }
     private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
@@ -315,7 +322,7 @@ struct NunaHighlightsCard: View {
             stressNow: stressNow, stressHighMin: stressHighMin, illness: appModel.illnessSignal,
             calibrating: calibrating, calibrationDone: ["recovery", "stress"].filter { feed.doneStages.contains($0) },
             workouts: Array(announced), dayStrainShown: effort.map { UnitFormatter.effortDisplay($0, scale: scale) },
-            naps: freshNaps, sleepRecorded: slept,
+            naps: freshNaps, sleepRecorded: slept, journalYesterdayOpen: !yesterdayLogged,
             outlookFirst: NunaOutlookGate.ready(repo.days) && !UserDefaults.standard.bool(forKey: NunaOutlookGate.openedKey))
 #if DEBUG
         Self.demo(&result)
@@ -335,7 +342,7 @@ struct NunaHighlightsCard: View {
                 i.workouts.append(.init(id: "demo-w", sport: "Running", duration: "42 min", strain: "9.4", manual: false)); i.dayStrainShown = "12.1"
             case "manual": i.workouts.append(.init(id: "demo-m", sport: "Padel", duration: "1h 0m", strain: "7.2", manual: true))
             case "nap": i.naps.append(.init(id: "demo-n", duration: "25 min"))
-            case "sleep": i.sleepRecorded = ("7 hr 12 min", 82)
+            case "sleep": i.sleepRecorded = ("7 hr 12 min", 82); i.journalYesterdayOpen = true
             case "first": i.firstColour = "yellow"
             case "optimal": i.effort = 11; i.effortTargetLow = 10; i.effortTargetHigh = 14; i.effortTargetHighShown = "14.0"
             default: break
@@ -449,6 +456,15 @@ struct NunaHighlightsCard: View {
             .accessibilityAction(named: Text("Dismiss highlight")) { put(away: h.id) }
         }
         .padding(.bottom, remaining > 1 ? 12 : 0)
+        .task(id: "\(repo.refreshSeq)-\(dayKey)") { await checkYesterdayJournal() }
+    }
+
+    /// Yesterday's journal is written the morning after, so the sleep highlight offers it until it has answers.
+    private func checkYesterdayJournal() async {
+        let yesterday = Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
+        let key = Repository.localDayKey(yesterday)
+        let logged = await repo.nativeJournalDays(from: key, to: key)
+        yesterdayLogged = logged.contains(key)
     }
 
     private static let outlookGradient = LinearGradient(colors: [Color(red: 0.62, green: 0.40, blue: 0.96), Color(red: 0.25, green: 0.72, blue: 0.98)],
@@ -459,6 +475,7 @@ struct NunaHighlightsCard: View {
         case .breathe: onBreathe()
         case .windDown: onWindDown()
         case .outlook: onOutlook()
+        case .journal: onJournal()
         }
     }
 
