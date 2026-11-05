@@ -306,7 +306,7 @@ struct NunaTodayView: View {
                                 if model.isToday && section == myDayAnchor {
                                     myDayRow
                                     // Under "My Day", close to it: once there are enough days of data to know the person's habits.
-                                    if NunaOutlookGate.ready(repo.days) { NunaDailyOutlookCard { showOutlook = true }.padding(.top, -NunaSpacing.section + 12) }
+                                    if NunaOutlookGate.ready(repo.days) { NunaDailyOutlookCard(review: NunaReviewGate.isEvening()) { showOutlook = true }.padding(.top, -NunaSpacing.section + 12) }
                                 }
                             }
                             customizeButton
@@ -474,7 +474,7 @@ struct NunaTodayView: View {
         }
         .sheet(isPresented: $showAddCard) { addCardSheet }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "today") }
-        .sheet(isPresented: $showOutlook) { NunaAnyaSheet(context: "today", floating: true, outlook: true) }
+        .sheet(isPresented: $showOutlook) { NunaAnyaSheet(context: "today", floating: true, outlook: true, review: NunaReviewGate.isEvening()) }
         .environment(\.nunaAnyaCardContext, "today")
         .environment(\.nunaAnyaRow, true)
     }

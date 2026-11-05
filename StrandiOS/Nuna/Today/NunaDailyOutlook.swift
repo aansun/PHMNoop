@@ -257,34 +257,41 @@ enum NunaOutlookLoader {
 // MARK: - The card under "My Day"
 
 struct NunaDailyOutlookCard: View {
+    /// From the late afternoon the card is the Day In Review: the same card, with the moon and a purple wash.
+    var review = false
     let action: () -> Void
     @AppStorage(NunaOutlookGate.seenDayKey) private var seenDay = ""
+    @AppStorage(NunaReviewGate.seenDayKey) private var reviewSeenDay = ""
     @EnvironmentObject private var profile: ProfileStore
 
     /// "Sui's Daily Outlook" once the profile has a name, "Daily Outlook" before.
     private var title: String {
         let first = profile.displayName.split(separator: " ").first.map(String.init) ?? ""
+        if review { return first.isEmpty ? String(localized: "Day In Review") : String(localized: "\(first)'s Day In Review") }
         return first.isEmpty ? String(localized: "Daily Outlook") : String(localized: "\(first)'s Daily Outlook")
     }
 
     var body: some View {
-        // New today: the brown to blue wash. Once it was opened, it settles into a plain card.
-        let seen = seenDay == Repository.localDayKey(Date())
+        // New today: the brown to blue wash (purple to blue in the evening). Once it was opened, it settles into a plain card.
+        let today = Repository.localDayKey(Date())
+        let seen = (review ? reviewSeenDay : seenDay) == today
+        let wash: [Color] = review
+            ? [Color(red: 0.34, green: 0.27, blue: 0.52), Color(red: 0.29, green: 0.31, blue: 0.56), Color(red: 0.22, green: 0.34, blue: 0.58)]
+            : [Color(red: 0.62, green: 0.54, blue: 0.45), Color(red: 0.38, green: 0.41, blue: 0.47), Color(red: 0.22, green: 0.32, blue: 0.45)]
         Button(action: action) {
             HStack(spacing: 14) {
-                Image(systemName: "sun.max").font(.system(size: 22, weight: .light)).foregroundStyle(seen ? NunaPalette.textSecondary : .white.opacity(0.9)).frame(width: 26)
+                Image(systemName: review ? "moon" : "sun.max").font(.system(size: 22, weight: .light)).foregroundStyle(seen ? NunaPalette.textSecondary : .white.opacity(0.9)).frame(width: 26)
                 Text(verbatim: title).font(.nuna(size: 17, weight: .medium)).foregroundStyle(seen ? NunaPalette.textPrimary : .white).textCase(nil)
                 Spacer(minLength: 8)
                 Image(systemName: "chevron.right").font(.system(size: 15, weight: .semibold)).foregroundStyle(seen ? NunaPalette.textSecondary : .white.opacity(0.9))
             }
             .padding(.horizontal, 18).frame(height: 47).frame(maxWidth: .infinity)
             .background(seen ? AnyShapeStyle(NunaPalette.cardSurface)
-                             : AnyShapeStyle(LinearGradient(colors: [Color(red: 0.62, green: 0.54, blue: 0.45), Color(red: 0.38, green: 0.41, blue: 0.47), Color(red: 0.22, green: 0.32, blue: 0.45)],
-                                                            startPoint: .leading, endPoint: .trailing)),
+                             : AnyShapeStyle(LinearGradient(colors: wash, startPoint: .leading, endPoint: .trailing)),
                         in: RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(Text("Daily Outlook"))
+        .accessibilityLabel(Text(review ? "Day In Review" : "Daily Outlook"))
     }
 }
 
@@ -369,10 +376,23 @@ struct NunaOutlookContent: View {
     }
 
     private func ideaCard(_ idea: NunaOutlookIdea) -> some View {
-        let done = committed.contains(idea.id)
-        return VStack(alignment: .leading, spacing: 18) {
+        NunaOutlookIdeaCard(idea: idea, symbol: nil, done: committed.contains(idea.id), onCommit: { onCommit(idea) })
+    }
+}
+
+
+/// One idea as a dashed card: its tile, a line, and Commit (Committed once it is). The Outlook shows these in a row; the Day In Review shows one.
+struct NunaOutlookIdeaCard: View {
+    let idea: NunaOutlookIdea
+    /// An SF Symbol of its own, when the sport name does not give one (the bedtime card).
+    let symbol: String?
+    let done: Bool
+    let onCommit: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 18) {
             HStack(spacing: 14) {
-                Image(systemName: sportSymbol(idea.sport)).font(.system(size: 19, weight: .regular)).foregroundStyle(.white)
+                Image(systemName: symbol ?? sportSymbol(idea.sport)).font(.system(size: 19, weight: .regular)).foregroundStyle(.white)
                     .frame(width: 39, height: 39).background(Color(red: 0.19, green: 0.21, blue: 0.40), in: RoundedRectangle(cornerRadius: 9, style: .continuous))
                 Text(verbatim: idea.title).font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).lineLimit(1)
                 Spacer(minLength: 0)
@@ -383,7 +403,7 @@ struct NunaOutlookContent: View {
                     .fixedSize(horizontal: false, vertical: true)
             }
             Spacer(minLength: 0)
-            Button { onCommit(idea) } label: {
+            Button(action: onCommit) {
                 HStack(spacing: 8) {
                     Image(systemName: done ? "checkmark" : "plus").font(.system(size: 15, weight: .semibold))
                     Text(done ? "Committed" : "Commit").font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)

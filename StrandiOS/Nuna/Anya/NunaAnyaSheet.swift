@@ -49,6 +49,8 @@ struct NunaAnyaSheet: View {
     var seed: String?
     /// Set by the Daily Outlook card: the sheet opens on the Outlook (the read of the day, ideas and cards to commit to).
     var outlook = false
+    /// Set with `outlook` in the late afternoon: the sheet opens on the Day In Review instead (the day looked back on, and tonight's bedtime to commit to).
+    var review = false
     @EnvironmentObject private var coach: AICoachEngine
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
@@ -73,6 +75,9 @@ struct NunaAnyaSheet: View {
     @State private var outlookInputs: NunaOutlookInputs?
     @State private var outlookOffset = 0
     @State private var outlookCommitted = NunaOutlookGate.committed()
+    /// The Day In Review on show, and whether tonight's bedtime was committed to.
+    @State private var reviewData: NunaDayReview?
+    @State private var reviewCommitted = NunaReviewGate.committedBedtime() != nil
 
     /// Provider replies use light markdown (bold, lists); show it formatted and keep line breaks.
     static func markdown(_ s: String) -> AttributedString {
@@ -109,7 +114,8 @@ struct NunaAnyaSheet: View {
             if explanation == nil, let seed { explanation = seed }
             if outlook { await loadOutlook() }
             loaded = true
-            if outlook { await explainOutlook() }
+            // The review keeps its own figures: the provider's brief is a different shape, so it only answers the follow-ups.
+            if outlook, !review { await explainOutlook() }
         }
     }
 
@@ -456,6 +462,7 @@ extension NunaAnyaSheet {
     }
 
     private func chipTapped(_ q: NunaAnyaQuestion) {
+        if review { chooseReviewChip(q); return }
         if outlook, let idea = outlookData?.ideas.first(where: { q.id == outlookChipTitle($0) }) { chooseIdea(idea, prompt: q.prompt, shown: q.title); return }
         if !coach.isConfigured { path.append(NunaAnyaRoute.connect); return }
         Task { await ask(q.prompt, shown: q.title) }
@@ -495,6 +502,11 @@ extension NunaAnyaSheet {
 
 extension NunaAnyaSheet {
     fileprivate func loadOutlook() async {
+        if review {
+            UserDefaults.standard.set(Repository.localDayKey(Date()), forKey: NunaReviewGate.seenDayKey)
+            reviewData = NunaDayReviewEngine.build(await NunaReviewLoader.inputs(repo: repo, profile: profile))
+            return
+        }
         UserDefaults.standard.set(true, forKey: NunaOutlookGate.openedKey)
         UserDefaults.standard.set(Repository.localDayKey(Date()), forKey: NunaOutlookGate.seenDayKey)
         let i = await NunaOutlookLoader.inputs(repo: repo, profile: profile)
@@ -504,16 +516,18 @@ extension NunaAnyaSheet {
 
     /// When Anya is connected, her own words replace the local paragraph. Without a provider the local read stands.
     fileprivate func explainOutlook() async {
-        guard explanation == nil, coach.isConfigured, coach.dataConsent, let o = outlookData else { return }
+        guard explanation == nil, coach.isConfigured, coach.dataConsent, outlookData != nil || reviewData != nil else { return }
         explaining = true; defer { explaining = false }
-        let page = "today\n\n" + NunaOutlookEngine.summary(o) + (NunaAnyaMemory.summary(module).map { "\n\n" + $0 } ?? "")
+        let read = reviewData.map(NunaDayReviewEngine.summary) ?? outlookData.map(NunaOutlookEngine.summary) ?? ""
+        let page = "today\n\n" + read + (NunaAnyaMemory.summary(module).map { "\n\n" + $0 } ?? "")
         explanation = await coach.generateContextualBrief(pageContext: page).map { AnyaActions.proseOnly($0) }
     }
 
     fileprivate func outlookChipTitle(_ idea: NunaOutlookIdea) -> String { String(localized: "I'll go with \(idea.title.lowercased())") }
 
     fileprivate var outlookChips: [NunaAnyaQuestion] {
-        (outlookData?.ideas ?? []).map { NunaAnyaQuestion(title: outlookChipTitle($0), prompt: "I'll go with \($0.title) today. Help me plan it around my Recovery.") }
+        if review { return reviewData?.chips ?? [] }
+        return (outlookData?.ideas ?? []).map { NunaAnyaQuestion(title: outlookChipTitle($0), prompt: "I'll go with \($0.title) today. Help me plan it around my Recovery.") }
     }
 
     /// Commits to one of the ideas: remembered by Anya for this module, and shown as done on its card.
@@ -538,8 +552,29 @@ extension NunaAnyaSheet {
         withAnimation(.easeInOut(duration: 0.2)) { outlookData = NunaOutlookEngine.build(i, offset: outlookOffset) }
     }
 
+    /// Commits to tonight's bedtime: remembered by Anya for this module, and shown as done on its card.
+    fileprivate func commitBedtime(_ idea: NunaOutlookIdea) {
+        guard let time = reviewData?.bedtime?.title.split(separator: " ").last.map(String.init) else { return }
+        NunaReviewGate.commitBedtime(time)
+        reviewCommitted = true
+        NunaAnyaMemory.remember(module, "Committed to being asleep by \(time) tonight.")
+    }
+
+    /// A review chip: Anya answers when she is connected, and a short local reply stands in when she is not.
+    fileprivate func chooseReviewChip(_ q: NunaAnyaQuestion) {
+        if coach.isConfigured, coach.dataConsent { Task { await ask(q.prompt, shown: q.title) }; return }
+        turns.append(ChatMessage(id: UUID(), role: .user, text: q.title))
+        turns.append(ChatMessage(id: UUID(), role: .assistant, text: NunaDayReviewEngine.reply(to: q.title)))
+    }
+
     @ViewBuilder fileprivate var outlookMessage: some View {
-        if let o = outlookData {
+        if review, let r = reviewData {
+            NunaReviewContent(review: r, provider: explanation, committed: reviewCommitted, onCommit: { if let idea = r.bedtime { commitBedtime(idea) } })
+            if explaining {
+                HStack(spacing: 8) { ProgressView().controlSize(.small).tint(.white.opacity(0.7)); Text("Anya is thinking…").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(.white.opacity(0.7)) }
+            }
+            if turns.isEmpty { feedbackRow(copying: NunaMark.plain(r.opening + "\n" + (explanation ?? r.paragraphs.joined(separator: "\n"))), note: r.opening) }
+        } else if let o = outlookData {
             NunaOutlookContent(outlook: o, provider: explanation, committed: outlookCommitted, onCommit: { commit($0) }, onAlternatives: { alternatives() })
             if explaining {
                 HStack(spacing: 8) { ProgressView().controlSize(.small).tint(.white.opacity(0.7)); Text("Anya is thinking…").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(.white.opacity(0.7)) }
