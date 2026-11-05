@@ -186,7 +186,6 @@ struct NunaTodayView: View {
     @State private var editingQuick = false
     @AppStorage(NunaQuickActions.storageKey) private var quickRaw = ""
     @State private var showDate = false
-    @State private var showInbox = false
     @State private var showCoach = false
     @State private var showOutlook = false
     @State private var editing = false
@@ -459,7 +458,6 @@ struct NunaTodayView: View {
             .nunaSheetChrome(detents: [.large])
         }
         .sheet(isPresented: $showAddCard) { addCardSheet }
-        .sheet(isPresented: $showInbox) { NunaUpdatesInbox(onClose: { showInbox = false }).nunaSheetChrome(detents: [.large]) }
         .sheet(isPresented: $showCoach) { NunaAnyaSheet(context: "today") }
         .sheet(isPresented: $showOutlook) { NunaAnyaSheet(context: "today", floating: true, outlook: true) }
         .environment(\.nunaAnyaCardContext, "today")
@@ -502,16 +500,7 @@ struct NunaTodayView: View {
             ZStack {
                 dayNav
                 HStack(spacing: 8) {
-                Button { showInbox = true } label: {
-                    Image(systemName: "bell").font(.nuna(size: 17, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        .frame(width: 44, height: 44)
-                        .overlay(alignment: .topTrailing) {
-                            if updateStore.unreadCount > 0 {
-                                Circle().fill(NunaPalette.alert).frame(width: 9, height: 9).offset(x: -8, y: 9)
-                            }
-                        }
-                }
-                .accessibilityLabel(Text("Updates"))
+                NunaTodayProfileBadge()
                 Spacer(minLength: 0)
                 Button { router.openDevices() } label: {
                     NunaLiveStrapChip()

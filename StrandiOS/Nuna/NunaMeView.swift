@@ -5,10 +5,14 @@ import StrandDesign
 /// Settings, as the reference lays them out: "Account & settings" (My Account, Device Settings, App Settings, Privacy Settings) and "Support", each row
 /// one card. The long list of what used to sit here lives one level down, in App Settings.
 struct NunaMeView: View {
+    /// Opened from the profile page: it then has a way back, as the Settings tab does not need.
+    var pushed = false
+    @Environment(\.dismiss) private var dismiss
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                NunaHeader("Settings") {
+                NunaHeader("Settings", onBack: pushed ? { dismiss() } : nil) {
                     NavigationLink(value: NunaMeRoute.search) {
                         NunaGlyph("magnifyingglass", pointSize: 16).foregroundStyle(NunaPalette.textPrimary)
                             .frame(width: 44, height: 44)
@@ -37,6 +41,7 @@ struct NunaMeView: View {
         }
         .scrollIndicators(.hidden)
         .nunaScreenBackground()
+        .toolbar(.hidden, for: .navigationBar)
     }
 
     private static var versionLine: String {
@@ -56,6 +61,8 @@ enum NunaMeRoute: Hashable {
     case applications
     /// The new Settings structure: the profile page, the App Settings list, the levels, and the two Support pages.
     case profile, appSettings, levels, howItWorks, whatsNew, dayStreak
+    /// The Settings list, pushed from the profile page.
+    case settings
 }
 
 extension View {
@@ -102,6 +109,7 @@ extension View {
             case .howItWorks: NunaHowItWorksView()
             case .whatsNew: NunaWhatsNewView()
             case .dayStreak: NunaDayStreakView()
+            case .settings: NunaMeView(pushed: true)
             }
         }
     }
