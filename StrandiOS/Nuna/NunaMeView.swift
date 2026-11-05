@@ -43,6 +43,7 @@ struct NunaMeView: View {
 
 enum NunaMeRoute: Hashable {
     case persona, zones, goals, devices, anya, appearance, widgets, theme, achievements
+    /// `language` has no page: it opens the app's language in iOS Settings.
     case units, language, features, notifications, privacy
     case automations, doubleTap, presence, sessionCues, sedentary, shortcuts, alarm
     case data, backup, imports, appleHealth, strava, hevy, environment
@@ -69,7 +70,7 @@ extension View {
             case .theme: NunaAppearanceView()
             case .widgets: NunaWidgetSettingsView()
             case .units: NunaUnitsView()
-            case .language: NunaLanguageView()
+            case .language: EmptyView()   // never pushed: Language opens iOS Settings (see `nunaMeLink`)
             case .features: NunaFeaturesView()
             case .notifications: NunaNotificationsView()
             case .privacy: NunaPrivacyView()

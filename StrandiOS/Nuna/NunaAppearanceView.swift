@@ -32,10 +32,6 @@ struct NunaAppearanceView: View {
                 experienceCard
                 NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 4, trailing: 18)) {
                     VStack(spacing: 0) {
-                        NavigationLink(value: NunaMeRoute.language) {
-                            NunaListRow("Language", subtitle: LocalizedStringKey(languageName), systemImage: "globe", showsChevron: true)
-                        }.buttonStyle(.plain)
-                        NunaDivider()
                         NavigationLink(value: NunaMeRoute.units) { NunaListRow("Units", subtitle: LocalizedStringKey(unitsSummary), systemImage: "ruler.fill", showsChevron: true) }.buttonStyle(.plain)
                     }
                 }
@@ -77,11 +73,6 @@ struct NunaAppearanceView: View {
                 }
             }
         }.buttonStyle(.plain)
-    }
-
-    private var languageName: String {
-        let code = AppLanguage.activeLocale.identifier.split(whereSeparator: { $0 == "_" || $0 == "-" }).first.map(String.init) ?? "en"
-        return (Locale(identifier: code).localizedString(forLanguageCode: code) ?? code).capitalized
     }
 
     private var unitsSummary: String {
