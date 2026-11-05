@@ -441,7 +441,9 @@ final class AppModel: ObservableObject {
                 #endif
                 // Give the demo a plausible strap battery so the Today header badge renders (the live
                 // battery is runtime-only and nil without a connected strap).
-                self.live.batteryPct = 68
+                // `--demo-battery=10` puts the strap at that charge, to see the low-battery banner.
+                let demoBattery = CommandLine.arguments.first(where: { $0.hasPrefix("--demo-battery=") }).flatMap { Double($0.dropFirst("--demo-battery=".count)) }
+                self.live.batteryPct = demoBattery ?? 68
             }
             #endif
             #if DEBUG
