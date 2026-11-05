@@ -8,7 +8,6 @@ import WidgetKit
 
 private enum Glance {
     static let steel = Color(red: 0.51, green: 0.63, blue: 0.74)
-    static let flame = Color(red: 1.0, green: 0.45, blue: 0.16)
     static let ink = Color.white
     static let muted = Color(red: 0.62, green: 0.64, blue: 0.66)
     static let track = Color.white.opacity(0.13)
@@ -103,7 +102,7 @@ private struct GlanceStreak: View {
         .accessibilityLabel(Text(verbatim: days.map { "Day streak \($0)" } ?? "Day streak"))
     }
     private var flame: some View {
-        Image(systemName: "flame.fill").font(.system(size: 11, weight: .semibold)).foregroundStyle(Glance.flame)
+        NunaFlameIcon(height: 15)
     }
     private var count: some View {
         Text(verbatim: days.map(String.init) ?? "–").font(Glance.din(10.5)).foregroundStyle(Glance.ink)
