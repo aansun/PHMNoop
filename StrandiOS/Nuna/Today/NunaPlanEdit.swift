@@ -74,7 +74,8 @@ final class NunaPlanDraft: ObservableObject {
         let recent = (1...30).compactMap { cal.date(byAdding: .day, value: -$0, to: Date()) }.compactMap { st[Repository.localDayKey($0)] }
         if !recent.isEmpty { averages[.steps] = recent.reduce(0, +) / Double(recent.count) }
         resuggest()
-        for kind in NunaPlanKind.allCases where kind != .steps {
+        // The cheap reads first, so a template of sleep scores or steps shows its figures before the heart-rate zones are scanned.
+        for kind in [NunaPlanKind.sleepConsistency, .sleepPerformance, .strength, .zonesEasy, .zonesHard] {
             averages[kind] = await NunaPlanModel.fourWeekAverage(kind, repo: repo, age: age) ?? 0
             resuggest()
         }
@@ -94,7 +95,7 @@ final class NunaPlanDraft: ObservableObject {
         let imported = Array(Set((await repo.importedJournalEntries()).map(\.question)))
         let known = catalog.resolvedItems(imported: imported, includeHidden: true).map { $0.canonical.lowercased() }
         for b in behaviors where !known.contains(b.id.lowercased()) {
-            catalog.addCustom(b.id, group: b.id == NunaPlanBehavior.proteinQuestion ? .nutrition : .other)
+            catalog.addCustom(b.id, group: b.id == NunaPlanBehavior.proteinQuestion || b.id == NunaPlanBehavior.hydrationQuestion ? .nutrition : .other)
             if b.title != b.id { catalog.rename(b.id, to: b.title) }
         }
     }
@@ -115,6 +116,19 @@ private func planLead(_ key: LocalizedStringKey) -> some View {
 private func planSection(_ text: String, count: Int? = nil) -> some View {
     Text(verbatim: count.map { "\(text) (\($0))" } ?? text).font(.nuna(size: 18, weight: .semibold, design: NunaType.design)).tracking(0).textCase(nil)
         .foregroundStyle(NunaPalette.textPrimary)
+}
+
+/// A figure in the plan's number type; a trailing "%" is set smaller beside it.
+@ViewBuilder private func planFigure(_ text: String, size: CGFloat, color: Color) -> some View {
+    if text.hasSuffix("%") {
+        HStack(alignment: .firstTextBaseline, spacing: 1) {
+            Text(verbatim: String(text.dropLast())).font(.nuna(size: size, weight: .semibold, design: NunaType.design)).textCase(nil)
+            Text(verbatim: "%").font(.nuna(size: size * 0.62, weight: .semibold, design: NunaType.design)).textCase(nil)
+        }
+        .foregroundStyle(color)
+    } else {
+        Text(verbatim: text).font(.nuna(size: size, weight: .semibold, design: NunaType.design)).textCase(nil).foregroundStyle(color)
+    }
 }
 
 private func planCaps(_ s: String, size: CGFloat = 12.5, color: Color = NunaPalette.textPrimary) -> some View {
@@ -274,8 +288,7 @@ private struct NunaPlanMetricCard: View {
             }
             HStack(alignment: .center) {
                 VStack(spacing: 3) {
-                    Text(verbatim: average.map(kind.averageText) ?? "–").font(.nuna(size: 23, weight: .semibold, design: NunaType.design)).textCase(nil)
-                        .foregroundStyle(average.map { kind.band($0).color } ?? NunaPalette.textSecondary)
+                    planFigure(average.map(kind.averageText) ?? "–", size: 23, color: average.map { kind.band($0).color } ?? NunaPalette.textSecondary)
                     planCaps(kind.averageLabel, size: 11, color: NunaPalette.textSecondary)
                 }
                 .frame(maxWidth: .infinity)
@@ -283,8 +296,7 @@ private struct NunaPlanMetricCard: View {
                 VStack(spacing: 3) {
                     Button(action: onTarget) {
                         HStack(spacing: 8) {
-                            Text(verbatim: kind.targetText(draft.target(kind))).font(.nuna(size: 26, weight: .semibold, design: NunaType.design)).textCase(nil)
-                                .foregroundStyle(NunaPalette.textPrimary)
+                            planFigure(kind.targetText(draft.target(kind)), size: 26, color: NunaPalette.textPrimary)
                             if editable { Image(systemName: "pencil").font(.system(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textPrimary) }
                         }
                     }
@@ -372,7 +384,7 @@ private struct NunaPlanEditList: View {
     }
 
     private func templateCard(_ t: NunaPlanTemplate) -> some View {
-        planCard(icon: AnyView(NunaIcon(name: t.symbol, size: 17).foregroundStyle(t.accent)), title: t.name, blurb: t.blurb, titleColor: t.accent,
+        planCard(icon: AnyView(NunaIcon(name: t.symbol, size: 17).symbolVariant(.none).foregroundStyle(t.accent)), title: t.name, blurb: t.blurb, titleColor: t.accent,
                  fill: AnyShapeStyle(LinearGradient(colors: [t.wash, NunaPalette.cardSurface], startPoint: .topLeading, endPoint: .trailing)))
     }
 
@@ -414,6 +426,7 @@ private struct NunaPlanDetailsView: View {
             section(String(localized: "Metrics"), count: draft.selectedKinds.count, destination: NunaPlanMetricsPage(draft: draft)) {
                 NunaPlanLegend()
                 ForEach(draft.selectedKinds) { kind in NunaPlanMetricCard(draft: draft, kind: kind) }
+                if draft.selectedKinds.isEmpty { emptyCard(String(localized: "Select your metrics")) }
             }
             section(String(localized: "Behaviors"), count: draft.behaviors.count, destination: NunaPlanBehaviorPage(draft: draft)) {
                 ForEach(draft.behaviors) { b in
@@ -422,11 +435,12 @@ private struct NunaPlanDetailsView: View {
                             planCaps(b.title)
                             Image(systemName: "info.circle").font(.system(size: 16, weight: .regular)).foregroundStyle(NunaPalette.recoveryBlue)
                             Spacer(minLength: 8)
-                            planCaps(daysText(b.days), size: 12.5, color: NunaPalette.textSecondary)
+                            planCaps(b.avoid ? avoidText(b.days) : daysText(b.days), size: 12.5, color: NunaPalette.textSecondary)
                         }
                         .frame(height: 56)
                     }
                 }
+                if draft.behaviors.isEmpty { emptyCard(String(localized: "Select your behaviors")) }
             }
             section(String(localized: "Activities"), count: draft.activities.count, destination: NunaPlanActivityPage(draft: draft)) {
                 ForEach(draft.activities) { a in
@@ -440,6 +454,7 @@ private struct NunaPlanDetailsView: View {
                         .frame(height: 56)
                     }
                 }
+                if draft.activities.isEmpty { emptyCard(String(localized: "Select your activities")) }
             }
         }
         .environment(\.nunaDetailSwitch, nil)
@@ -452,6 +467,12 @@ private struct NunaPlanDetailsView: View {
     }
 
     private func daysText(_ d: Int) -> String { d == 1 ? String(localized: "1 day") : String(localized: "\(d) days") }
+    private func avoidText(_ d: Int) -> String { d == 1 ? String(localized: "Avoid 1 day") : String(localized: "Avoid \(d) days") }
+
+    /// What a section shows while nothing is chosen in it.
+    private func emptyCard(_ text: String) -> some View {
+        NunaPlanRowCard { HStack { planCaps(text, size: 12.5, color: NunaPalette.textSecondary); Spacer(minLength: 0) }.frame(height: 56) }
+    }
 
     @ViewBuilder private func section<D: View, C: View>(_ name: String, count: Int, destination: D, @ViewBuilder content: () -> C) -> some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -730,6 +751,11 @@ private struct NunaPlanBehaviorPicker: View {
         if !out.contains(where: { $0.id.lowercased() == NunaPlanBehavior.proteinQuestion.lowercased() }) {
             out.append(NunaPlanBehavior.protein(days: 4)); map[NunaPlanBehavior.proteinQuestion] = .nutrition
         }
+        if !out.contains(where: { $0.id.lowercased() == NunaPlanBehavior.hydrationQuestion.lowercased() }) {
+            out.append(NunaPlanBehavior.hydration(days: 4)); map[NunaPlanBehavior.hydrationQuestion] = .nutrition
+        }
+        // A behavior already in the plan keeps the name the plan gave it ("Late meal").
+        out = out.map { o in draft.behaviors.first { $0.id == o.id } ?? o }
         // The ones already in the plan come first, with the days they have.
         for b in draft.behaviors where !out.contains(where: { $0.id == b.id }) { out.append(b) }
         out.sort { l, r in

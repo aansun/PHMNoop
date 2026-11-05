@@ -61,6 +61,9 @@ enum NunaGoals {
     static let zonesHardMinutes = "nuna.goal.zones45Min"
     /// Weekly minutes of strength activity; 0 is not set.
     static let strengthMinutes = "nuna.goal.strengthMin"
+    /// Weekly average sleep consistency and sleep performance, in percent; 0 is not set. Only a plan sets them.
+    static let sleepConsistency = "nuna.goal.sleepConsistency"
+    static let sleepPerformance = "nuna.goal.sleepPerformance"
     static let waterLitres = "nuna.goal.waterL"
     static let targetWeightKg = "nuna.goal.targetWeightKg"
 
