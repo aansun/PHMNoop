@@ -8030,5 +8030,22 @@
  "You haven't been in the red in the last 30 days! Don't worry, it's only temporary.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu belum merah dalam 30 hari terakhir! Tenang, ini hanya sementara."}}}},
  "View trend": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lihat tren"}}}},
  "Pushing Limits": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Menembus Batas"}}}},
- "You worked hard today and exceeded your Optimal Strain range. Overreaching will help you get fitter over time.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu bekerja keras hari ini dan melampaui rentang Strain optimalmu. Melampaui batas akan membantu kamu makin bugar seiring waktu."}}}}
+ "You worked hard today and exceeded your Optimal Strain range. Overreaching will help you get fitter over time.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu bekerja keras hari ini dan melampaui rentang Strain optimalmu. Melampaui batas akan membantu kamu makin bugar seiring waktu."}}}},
+ "Update your daily step goal": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Ubah target langkah harianmu"}}}},
+ "Set a daily step goal": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Atur target langkah harian"}}}},
+ "Now %@ a day": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Saat ini %@ per hari"}}}},
+ "About steps": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tentang langkah"}}}},
+ "Steps count the walking and moving that fills your day outside workouts. They are the simplest measure of how much you move, and they catch what heart-rate zones leave out.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Langkah menghitung jalan dan gerak yang mengisi harimu di luar latihan. Ini ukuran paling sederhana untuk seberapa banyak kamu bergerak, dan menangkap hal yang tidak terlihat oleh zona detak jantung."}}}},
+ "In large studies of adults, more daily steps go with a lower risk of heart disease and early death. Most of the gain comes by about 7,000 to 10,000 steps a day, and every extra thousand still helps if you are below that.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Dalam studi besar pada orang dewasa, langkah harian yang lebih banyak berkaitan dengan risiko penyakit jantung dan kematian dini yang lebih rendah. Sebagian besar manfaatnya sudah didapat di sekitar 7.000 sampai 10.000 langkah sehari, dan setiap tambahan seribu langkah tetap membantu bila kamu masih di bawahnya."}}}},
+ "Steps come from Apple Health when it is connected, otherwise from your strap's motion. If the strap's count runs high or low, adjust Step calibration in Persona. Today is left out of the average because the day is not over.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Langkah diambil dari Apple Health bila tersambung, kalau tidak dari gerakan strap. Bila hitungan strap terlalu tinggi atau rendah, atur Step calibration di Persona. Hari ini tidak masuk rata-rata karena harinya belum selesai."}}}},
+ "Set your daily step target for the coming week": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Atur target langkah harianmu untuk minggu depan"}}}},
+ "Save target": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Simpan target"}}}},
+ "Set your target": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Atur targetmu"}}}},
+ "Your goal": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Targetmu"}}}},
+ "30-day average": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Rata-rata 30 hari"}}}},
+ "Reach optimal in %lld weeks": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Capai optimal dalam %lld minggu"}}}},
+ "Raise your goal by %lld steps each week until your average reaches %@ or more.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Naikkan targetmu %lld langkah setiap minggu sampai rata-ratamu mencapai %@ atau lebih."}}}},
+ "You are in the optimal range": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu sudah di rentang optimal"}}}},
+ "Your goal is already %@ or more, the range where most of the benefit is.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Targetmu sudah %@ atau lebih, rentang tempat sebagian besar manfaatnya."}}}},
+ "Weekly increase": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kenaikan mingguan"}}}}
 }, "version":"1.0" }
