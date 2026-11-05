@@ -29,6 +29,11 @@ final class NunaPlanDraft: ObservableObject {
         activities = template.activities
     }
 
+    /// A custom plan with nothing chosen yet.
+    init() { template = nil }
+
+    var isEmpty: Bool { metrics.isEmpty && behaviors.isEmpty && activities.isEmpty }
+
     /// The plan as it is now, to change it; `asCustom` drops the template it came from.
     init(current spec: NunaPlanSpec, asCustom: Bool) {
         template = asCustom ? nil : NunaPlanStore.template(spec)
@@ -168,12 +173,12 @@ private struct NunaPlanPrimaryButton: View {
     var body: some View {
         Button(action: action) {
             Text(title).font(.nuna(size: 13.5, weight: .heavy)).tracking(nunaTrackingHead(1.4)).textCase(.uppercase)
-                .foregroundStyle(outlined ? NunaPalette.textPrimary : NunaPalette.onAccent)
+                .foregroundStyle(outlined ? NunaPalette.textPrimary : (enabled ? NunaPalette.onAccent : NunaPalette.textMuted))
                 .frame(maxWidth: .infinity).frame(height: 49)
-                .background(outlined ? AnyShapeStyle(Color.clear) : AnyShapeStyle(NunaPalette.accent), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                .background(outlined ? AnyShapeStyle(Color.clear) : (enabled ? AnyShapeStyle(NunaPalette.accent) : AnyShapeStyle(NunaPalette.cardHighlight)), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
                 .overlay(RoundedRectangle(cornerRadius: 16, style: .continuous).strokeBorder(outlined ? NunaPalette.textPrimary : Color.clear, lineWidth: 2))
         }
-        .buttonStyle(.plain).disabled(!enabled).opacity(enabled ? 1 : 0.4)
+        .buttonStyle(.plain).disabled(!enabled).opacity(enabled || !outlined ? 1 : 0.4)
         .padding(.horizontal, NunaSpacing.screenH).padding(.top, 14).padding(.bottom, 12)
         .background(LinearGradient(colors: [NunaPalette.canvas.opacity(0), NunaPalette.canvas.opacity(0.92), NunaPalette.canvas], startPoint: .top, endPoint: .init(x: 0.5, y: 0.45)).ignoresSafeArea())
     }
@@ -320,6 +325,20 @@ private struct NunaPlanMetricCard: View {
     }
 }
 
+/// A face in outline: the circle, two closed eyes and a smile.
+private struct NunaSmileOutline: Shape {
+    func path(in r: CGRect) -> Path {
+        var p = Path()
+        p.addEllipse(in: r.insetBy(dx: 1, dy: 1))
+        let w = r.width, h = r.height
+        for cx in [0.35, 0.65] {
+            p.addArc(center: CGPoint(x: r.minX + w * cx, y: r.minY + h * 0.40), radius: w * 0.055, startAngle: .degrees(200), endAngle: .degrees(340), clockwise: true)
+        }
+        p.addArc(center: CGPoint(x: r.midX, y: r.minY + h * 0.50), radius: w * 0.21, startAngle: .degrees(35), endAngle: .degrees(145), clockwise: false)
+        return p
+    }
+}
+
 // MARK: - Edit your weekly plan
 
 /// The editor: it opens over the plan page and has its own stack, so Start plan can close all of it at once.
@@ -363,16 +382,21 @@ private struct NunaPlanEditList: View {
             .padding(.top, 14)
             VStack(alignment: .leading, spacing: 12) {
                 nunaRuledHeader("Choose a plan")
-                if NunaPlanStore.template(spec) != nil {
-                    NavigationLink { NunaPlanDetailsView(draft: NunaPlanDraft(current: spec, asCustom: true), startsTemplate: false, onClose: onClose).toolbar(.hidden, for: .navigationBar) } label: { customCard }
-                        .buttonStyle(.plain)
-                }
                 ForEach(NunaPlanTemplate.allCases.filter { $0 != NunaPlanStore.template(spec) }) { t in
                     NavigationLink { NunaPlanDetailsView(draft: NunaPlanDraft(starting: t), startsTemplate: true, onClose: onClose).toolbar(.hidden, for: .navigationBar) } label: { templateCard(t) }
                         .buttonStyle(.plain)
                 }
             }
             .padding(.top, 14)
+            // A plan of your own, from nothing (shown while a ready-made plan is the current one).
+            if NunaPlanStore.template(spec) != nil {
+                VStack(alignment: .leading, spacing: 12) {
+                    nunaRuledHeader("Custom")
+                    NavigationLink { NunaPlanDetailsView(draft: NunaPlanDraft(), startsTemplate: true, onClose: onClose).toolbar(.hidden, for: .navigationBar) } label: { customCard }
+                        .buttonStyle(.plain)
+                }
+                .padding(.top, 14)
+            }
         }
         .environment(\.nunaDetailSwitch, nil)
     }
@@ -380,11 +404,20 @@ private struct NunaPlanEditList: View {
     private var customCard: some View {
         planCard(icon: AnyView(Image(systemName: "square.and.pencil").font(.nuna(size: 21, weight: .light)).foregroundStyle(NunaPalette.textPrimary)),
                  title: String(localized: "Custom Plan"), blurb: String(localized: "Build your personalized plan by selecting weekly metric, behavior and activity goals."),
-                 titleColor: NunaPalette.textPrimary, fill: AnyShapeStyle(NunaPalette.cardHighlight))
+                 titleColor: NunaPalette.textPrimary, fill: AnyShapeStyle(NunaPalette.glassStrong))
+    }
+
+    /// The picture on a plan card, in the plan's colour. A smile is drawn as an outline, as the symbol set only offers it filled here.
+    @ViewBuilder private func templateIcon(_ t: NunaPlanTemplate) -> some View {
+        if t == .feelBetter {
+            NunaSmileOutline().stroke(t.accent, style: StrokeStyle(lineWidth: 1.6, lineCap: .round)).frame(width: 24, height: 24)
+        } else {
+            NunaIcon(name: t.symbol, size: 17).foregroundStyle(t.accent)
+        }
     }
 
     private func templateCard(_ t: NunaPlanTemplate) -> some View {
-        planCard(icon: AnyView(NunaIcon(name: t.symbol, size: 17).symbolVariant(.none).foregroundStyle(t.accent)), title: t.name, blurb: t.blurb, titleColor: t.accent,
+        planCard(icon: AnyView(templateIcon(t)), title: t.name, blurb: t.blurb, titleColor: t.accent,
                  fill: AnyShapeStyle(LinearGradient(colors: [t.wash, NunaPalette.cardSurface], startPoint: .topLeading, endPoint: .trailing)))
     }
 
@@ -423,12 +456,13 @@ private struct NunaPlanDetailsView: View {
                 planLead(LocalizedStringKey(blurb))
             }
             .frame(maxWidth: .infinity, alignment: .leading).padding(.top, 14)
-            section(String(localized: "Metrics"), count: draft.selectedKinds.count, destination: NunaPlanMetricsPage(draft: draft)) {
-                NunaPlanLegend()
+            section(String(localized: "Metrics"), count: draft.selectedKinds.count, destination: NunaPlanMetricsPage(draft: draft),
+                    empty: String(localized: "Select your metrics"), add: String(localized: "Add metrics")) {
+                if !draft.selectedKinds.isEmpty { NunaPlanLegend() }
                 ForEach(draft.selectedKinds) { kind in NunaPlanMetricCard(draft: draft, kind: kind) }
-                if draft.selectedKinds.isEmpty { emptyCard(String(localized: "Select your metrics")) }
             }
-            section(String(localized: "Behaviors"), count: draft.behaviors.count, destination: NunaPlanBehaviorPage(draft: draft)) {
+            section(String(localized: "Behaviors"), count: draft.behaviors.count, destination: NunaPlanBehaviorPage(draft: draft),
+                    empty: String(localized: "Select your behaviors"), add: String(localized: "Add behaviors")) {
                 ForEach(draft.behaviors) { b in
                     NunaPlanRowCard {
                         HStack {
@@ -440,9 +474,9 @@ private struct NunaPlanDetailsView: View {
                         .frame(height: 56)
                     }
                 }
-                if draft.behaviors.isEmpty { emptyCard(String(localized: "Select your behaviors")) }
             }
-            section(String(localized: "Activities"), count: draft.activities.count, destination: NunaPlanActivityPage(draft: draft)) {
+            section(String(localized: "Activities"), count: draft.activities.count, destination: NunaPlanActivityPage(draft: draft),
+                    empty: String(localized: "Select your activities"), add: String(localized: "Add activities")) {
                 ForEach(draft.activities) { a in
                     NunaPlanRowCard {
                         HStack(spacing: 14) {
@@ -454,13 +488,12 @@ private struct NunaPlanDetailsView: View {
                         .frame(height: 56)
                     }
                 }
-                if draft.activities.isEmpty { emptyCard(String(localized: "Select your activities")) }
             }
         }
         .environment(\.nunaDetailSwitch, nil)
         .task { await draft.loadAverages(repo: repo, age: profile.age) }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            NunaPlanPrimaryButton(title: startsTemplate ? "Start plan" : "Save plan") {
+            NunaPlanPrimaryButton(title: startsTemplate ? "Start plan" : "Save plan", enabled: !draft.isEmpty) {
                 Task { await draft.apply(repo: repo); onClose() }
             }
         }
@@ -469,19 +502,33 @@ private struct NunaPlanDetailsView: View {
     private func daysText(_ d: Int) -> String { d == 1 ? String(localized: "1 day") : String(localized: "\(d) days") }
     private func avoidText(_ d: Int) -> String { d == 1 ? String(localized: "Avoid 1 day") : String(localized: "Avoid \(d) days") }
 
-    /// What a section shows while nothing is chosen in it.
-    private func emptyCard(_ text: String) -> some View {
-        NunaPlanRowCard { HStack { planCaps(text, size: 12.5, color: NunaPalette.textSecondary); Spacer(minLength: 0) }.frame(height: 56) }
-    }
-
-    @ViewBuilder private func section<D: View, C: View>(_ name: String, count: Int, destination: D, @ViewBuilder content: () -> C) -> some View {
+    /// A section: its name and Edit, then its cards. While nothing is chosen in it, a card asks for the choice, with the button that adds one.
+    @ViewBuilder private func section<D: View, C: View>(_ name: String, count: Int, destination: D, empty: String, add: String, @ViewBuilder content: () -> C) -> some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 planSection(name, count: count)
                 Spacer()
-                NavigationLink { destination.toolbar(.hidden, for: .navigationBar) } label: { NunaPlanEditLabel() }.buttonStyle(.plain)
+                if count > 0 {
+                    NavigationLink { destination.toolbar(.hidden, for: .navigationBar) } label: { NunaPlanEditLabel() }.buttonStyle(.plain)
+                }
             }
             .padding(.top, 10)
+            if count == 0 {
+                VStack(alignment: .leading, spacing: 16) {
+                    planCaps(empty, size: 12.5)
+                    NavigationLink { destination.toolbar(.hidden, for: .navigationBar) } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "plus").font(.system(size: 18, weight: .regular))
+                            planCaps(add, size: 12.5)
+                        }
+                        .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 40)
+                        .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(16).frame(maxWidth: .infinity, alignment: .leading)
+                .background(NunaPalette.cardHighlight, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
+            }
             content()
         }
     }

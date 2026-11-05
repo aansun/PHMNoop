@@ -8295,5 +8295,8 @@
  "Avoid %lld days": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Hindari %lld hari"}}}},
  "Select your behaviors": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pilih perilakumu"}}}},
  "Select your metrics": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pilih metrikmu"}}}},
- "Select your activities": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pilih aktivitasmu"}}}}
+ "Select your activities": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pilih aktivitasmu"}}}},
+ "GLP-1 Companion": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pendamping GLP-1"}}}},
+ "Protect your muscle and bone while your weight comes down. Strength train, hit your protein, and keep moving — the habits that make your results last.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lindungi otot dan tulangmu saat berat badan turun. Latihan kekuatan, penuhi proteinmu, dan tetap bergerak — kebiasaan yang membuat hasilmu bertahan."}}}},
+ "Add metrics": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tambah metrik"}}}}
 }, "version":"1.0" }

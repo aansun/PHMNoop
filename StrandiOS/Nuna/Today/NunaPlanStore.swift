@@ -47,7 +47,7 @@ struct NunaPlanSpec: Codable, Equatable {
 
 /// The ready-made plans. Each is a starting point the wearer can edit before starting it.
 enum NunaPlanTemplate: String, CaseIterable, Identifiable {
-    case boostFitness, feelBetter, sleepDeeper
+    case boostFitness, feelBetter, sleepDeeper, glp1Companion
     var id: String { rawValue }
 
     var name: String {
@@ -55,6 +55,7 @@ enum NunaPlanTemplate: String, CaseIterable, Identifiable {
         case .boostFitness: return String(localized: "Boost Fitness")
         case .feelBetter: return String(localized: "Feel Better")
         case .sleepDeeper: return String(localized: "Sleep Deeper")
+        case .glp1Companion: return String(localized: "GLP-1 Companion")
         }
     }
     var blurb: String {
@@ -62,26 +63,28 @@ enum NunaPlanTemplate: String, CaseIterable, Identifiable {
         case .boostFitness: return String(localized: "Improve fitness with high-intensity training, tracking your protein, and recovering like a pro.")
         case .feelBetter: return String(localized: "Feel your best by moving more, focusing on recovery activities, and staying hydrated.")
         case .sleepDeeper: return String(localized: "Turn great nights into a habit. Build a calming nightly routine and stick to a consistent bedtime.")
+        case .glp1Companion: return String(localized: "Protect your muscle and bone while your weight comes down. Strength train, hit your protein, and keep moving — the habits that make your results last.")
         }
     }
     var symbol: String {
-        switch self { case .boostFitness: return "met:heart-rate-zones-4-5"; case .feelBetter: return "face.smiling"; case .sleepDeeper: return "moon" }
+        switch self { case .boostFitness: return "met:heart-rate-zones-4-5"; case .feelBetter: return "face.smiling"; case .sleepDeeper: return "moon"; case .glp1Companion: return "syringe" }
     }
     var accent: Color {
-        switch self { case .boostFitness: return Color(hex: "#F26B2D"); case .feelBetter: return Color(hex: "#4FBF9A"); case .sleepDeeper: return Color(hex: "#8FA8C4") }
+        switch self { case .boostFitness: return Color(hex: "#F26B2D"); case .feelBetter: return Color(hex: "#4FBF9A"); case .sleepDeeper: return Color(hex: "#8FA8C4"); case .glp1Companion: return Color(hex: "#8F7DF0") }
     }
     var wash: Color {
-        switch self { case .boostFitness: return Color(hex: "#4A2112"); case .feelBetter: return Color(hex: "#133B2E"); case .sleepDeeper: return Color(hex: "#1C2A3B") }
+        switch self { case .boostFitness: return Color(hex: "#4A2112"); case .feelBetter: return Color(hex: "#133B2E"); case .sleepDeeper: return Color(hex: "#1C2A3B"); case .glp1Companion: return Color(hex: "#2B2852") }
     }
 
     var metrics: [NunaPlanKind] {
-        switch self { case .boostFitness: return [.zonesHard]; case .feelBetter: return [.steps]; case .sleepDeeper: return [.sleepConsistency, .sleepPerformance] }
+        switch self { case .boostFitness: return [.zonesHard]; case .feelBetter: return [.steps]; case .sleepDeeper: return [.sleepConsistency, .sleepPerformance]; case .glp1Companion: return [.strength, .steps] }
     }
     var behaviors: [NunaPlanBehavior] {
         switch self {
         case .boostFitness: return [NunaPlanBehavior.protein(days: 4)]
         case .feelBetter: return [NunaPlanBehavior.hydration(days: 4)]
         case .sleepDeeper: return [NunaPlanBehavior.lateMeal(days: 3)]
+        case .glp1Companion: return [NunaPlanBehavior.protein(days: 5)]
         }
     }
     var activities: [NunaPlanActivity] {
@@ -89,6 +92,7 @@ enum NunaPlanTemplate: String, CaseIterable, Identifiable {
         case .boostFitness: return [NunaPlanActivity(id: NunaPlanActivity.strength, title: NunaPlanActivity.generic(NunaPlanActivity.strength).title, days: 1)]
         case .feelBetter: return [NunaPlanActivity(id: NunaPlanActivity.recovery, title: NunaPlanActivity.generic(NunaPlanActivity.recovery).title, days: 3)]
         case .sleepDeeper: return []
+        case .glp1Companion: return [NunaPlanActivity(id: NunaPlanActivity.strength, title: NunaPlanActivity.generic(NunaPlanActivity.strength).title, days: 2)]
         }
     }
 }
