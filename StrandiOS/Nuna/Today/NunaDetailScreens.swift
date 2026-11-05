@@ -615,10 +615,14 @@ struct NunaEffortActivityDetailView: View {
             .foregroundStyle(NunaPalette.textSecondary).padding(.horizontal, 2).frame(maxWidth: .infinity, alignment: .leading)
             breakdown
             if kind == .lowZones || kind == .highZones {
-                NunaZonesFooter(high: kind == .highZones, fourWeekAverage: { await fourWeekZoneAverage() }, onAdded: { await load() })
+                NunaWeeklyFooter(target: kind == .highZones ? .zonesHard : .zonesEasy, fourWeekAverage: { await fourWeekZoneAverage() },
+                                 onAdded: { await load() }, explainer: AnyView(NunaZonesExplainer()))
             } else if kind == .allZones {
                 // All the zones together have no weekly target of their own, only the explanation.
                 NunaZonesExplainer()
+            } else if kind == .strength {
+                NunaWeeklyFooter(target: .strength, fourWeekAverage: { await fourWeekStrengthAverage() },
+                                 onAdded: { await load() }, explainer: AnyView(NunaStrengthExplainer()))
             }
         }
         .environment(\.nunaDetailSwitch, nil)
@@ -987,6 +991,15 @@ struct NunaEffortActivityDetailView: View {
         loaded = true
     }
 
+    /// The weekly strength time over the four weeks before today, as an average.
+    private func fourWeekStrengthAverage() async -> Double? {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        let from = Int((cal.date(byAdding: .day, value: -28, to: today) ?? today).timeIntervalSince1970), to = Int(today.timeIntervalSince1970)
+        let total = await repo.workoutRows().filter { $0.startTs >= from && $0.startTs < to && NunaWorkoutKind.isStrength($0) }.reduce(0.0) { $0 + duration($1) }
+        return total > 0 ? total / 4 : nil
+    }
+
     /// The weekly total of this page's zones over the four weeks before today, as an average: the figure the target screen sets the goal against.
     private func fourWeekZoneAverage() async -> Double? {
         let cal = Calendar.current
@@ -1190,6 +1203,7 @@ struct NunaMetricDetailView: View {
                     }
                 }
             }
+            if metric.key == "avg_hr" { NunaAverageHRInfo() }
             NunaExpandRow(title: "What affects it", subtitle: "Common factors", systemImage: "chart.line.uptrend.xyaxis",
                           text: "Sleep, alcohol, hydration, stress, illness and training load all move your daily numbers. Look at the trend over weeks rather than a single day.")
             NunaExpandRow(title: "How it's calculated", subtitle: "Source and method",
