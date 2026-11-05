@@ -400,7 +400,7 @@ struct NunaProfileView: View {
             HStack(spacing: 12) {
                 Text("Day streak").font(.nuna(size: 13.5, weight: .heavy)).tracking(nunaTrackingLabel * 1.3).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                 Spacer(minLength: 8)
-                Image(systemName: "flame.fill").font(.system(size: 18)).foregroundStyle(Color(red: 1, green: 0.5, blue: 0.2))
+                NunaFlameIcon(height: 22)
                 Text(verbatim: String(localized: "\(dayStreak) Days")).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                 Image(systemName: "chevron.right").font(.system(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
             }

@@ -41,11 +41,12 @@ struct NunaTodayProfileBadge: View {
         let streak = NunaStreak.compute(days: repo.days).current
         ZStack(alignment: .leading) {
             Button { pushMe(.dayStreak) } label: {
-                HStack(spacing: 7) {
-                    Image(systemName: "flame.fill").font(.system(size: 16)).foregroundStyle(Color(red: 1, green: 0.5, blue: 0.2))
-                    Text(verbatim: "\(streak)").font(.nunaBoldFigure(size: 16)).foregroundStyle(NunaPalette.textPrimary)
+                HStack(spacing: 10) {
+                    NunaFlameIcon(height: 20)
+                    // DIN Medium at 13 pt: the number is a quiet label beside the flame, not a figure to read at a glance.
+                    Text(verbatim: "\(streak)").font(.nuna(size: 13, weight: .medium, design: NunaType.design)).tracking(0).foregroundStyle(NunaPalette.textPrimary)
                 }
-                .padding(.leading, 17).padding(.trailing, 14).frame(height: 32)
+                .padding(.leading, 19).padding(.trailing, 16).frame(height: 32)
                 .background(NunaPalette.textPrimary.opacity(0.1), in: Capsule())
                 .padding(.leading, Self.avatar - 12).frame(height: 44).contentShape(Rectangle())
             }
