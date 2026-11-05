@@ -44,6 +44,9 @@ struct NunaLowBatteryBanner: View {
 /// ticks with every heartbeat.
 struct NunaLowBatteryWatcher: View {
     @Binding var pct: Int?
+    /// The strap is charging or well above the warning range again (over 25%), so a banner put away may come back next time it runs low. A reading that
+    /// is only missing for a moment, or that wobbles around a level, is not a recovery.
+    let onRecovered: () -> Void
     @EnvironmentObject private var live: LiveState
     var body: some View {
         Color.clear.frame(width: 0, height: 0)
@@ -52,6 +55,7 @@ struct NunaLowBatteryWatcher: View {
             .onChange(of: live.charging) { _, _ in update() }
     }
     private func update() {
+        if live.charging == true || (live.batteryPct ?? 0) > 25 { onRecovered() }
         let low = NunaLowBatteryBanner.level(pct: live.batteryPct, charging: live.charging) != nil ? live.batteryPct.map { Int($0.rounded()) } : nil
         if low != pct { pct = low }
     }

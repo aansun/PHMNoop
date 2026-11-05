@@ -444,6 +444,7 @@ final class AppModel: ObservableObject {
                 // `--demo-battery=10` puts the strap at that charge, to see the low-battery banner.
                 let demoBattery = CommandLine.arguments.first(where: { $0.hasPrefix("--demo-battery=") }).flatMap { Double($0.dropFirst("--demo-battery=".count)) }
                 self.live.batteryPct = demoBattery ?? 68
+                if demoBattery != nil { UserDefaults.standard.removeObject(forKey: "noop.lowBatteryBannerDismissed") }
             }
             #endif
             #if DEBUG
