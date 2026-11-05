@@ -78,6 +78,7 @@ extension NunaTrendPage {
         case .hrZonesHigh: return String(localized: "Heart rate zones 4–5")
         case .hrZonesAll: return String(localized: "Heart rate zones all")
         case .strengthTime: return String(localized: "Strength activity time")
+        case .avgHr: return String(localized: "Average heart rate")
         case .totalVolumeLoad: return String(localized: "Total volume load")
         case .charge: return String(localized: "Recovery")
         case .hrv: return String(localized: "Heart rate variability")
@@ -190,7 +191,7 @@ extension NunaTodayView {
         case .weight: figure = fig(model.extras["weight"], model.previous["weight"], 1, good: nil)
         case .vitality: figure = fig(model.extras["vitality"], model.previous["vitality"], good: true)
         // Not measured every day, or kept in a history this screen does not load: these open their page without a figure.
-        case .hrZonesLow, .hrZonesHigh, .hrZonesAll, .strengthTime, .totalVolumeLoad, .vo2max, .leanBodyMass,
+        case .hrZonesLow, .hrZonesHigh, .hrZonesAll, .strengthTime, .avgHr, .totalVolumeLoad, .vo2max, .leanBodyMass,
              .stressTotal, .stressNonActivity, .stressSleep: break
         }
         return NunaLinkRow(id: "page." + page.rawValue, title: page.titleText, subtitle: page.section.titleText, value: figure.0,

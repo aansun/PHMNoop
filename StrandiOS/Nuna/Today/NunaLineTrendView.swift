@@ -23,6 +23,12 @@ struct NunaLineTrendView: View {
     var also: String?
     /// What the sentence ends with, when it is not about wearing the strap to bed.
     var closing: String?
+    /// Compares the window with the one before it (a chip and a sentence), for readings with no good or bad direction of their own.
+    var comparesWithPrior = false
+    /// Leaves today out: a figure that is still adding up through the day would pull the average down.
+    var excludesToday = false
+    /// Shown under the chart (an explanation card).
+    var footer: AnyView?
     var endingDaysAgo = 0
 
     @EnvironmentObject private var repo: Repository
@@ -54,6 +60,10 @@ struct NunaLineTrendView: View {
         case "skin_temp":
             return NunaLineTrendView(name: "Skin temperature", icon: "vital:temp", noun: "average skin temperature (against your usual)", key: key, unit: "°C", decimals: 1,
                                      endingDaysAgo: endingDaysAgo)
+        case "avg_hr":
+            // The strap's own daily figure when a WHOOP export brought one; Apple Health (Apple Watch) fills the days it has.
+            return NunaLineTrendView(name: "Average heart rate", icon: "met:average-heart-rate", noun: "average heart rate", key: key, unit: "bpm", also: "apple-health",
+                                     comparesWithPrior: true, excludesToday: true, footer: AnyView(NunaAverageHRInfo()), endingDaysAgo: endingDaysAgo)
         case "vo2max_est":
             return NunaLineTrendView(name: "VO₂ max", icon: "met:vo2-max", noun: "average estimated VO₂ max", key: key, unit: "ml/kg/min", decimals: 1, upIsGood: true,
                                      closing: String(localized: "It is worked out once a week from your resting heart rate and your profile."), endingDaysAgo: endingDaysAgo)
@@ -74,8 +84,27 @@ struct NunaLineTrendView: View {
         let w = win, cal = Calendar.current
         return (0..<range).compactMap { i in
             guard let d = cal.date(byAdding: .day, value: i, to: w.start) else { return nil }
+            if excludesToday && cal.isDateInToday(d) { return Day(date: w.noon(d), value: nil) }
             return Day(date: w.noon(d), value: series.byDay[Repository.localDayKey(d)])
         }
+    }
+
+    /// The average of the window just before this one, when it has readings.
+    private var priorAverage: Double? {
+        guard comparesWithPrior else { return nil }
+        let w = win, cal = Calendar.current
+        let vals = (1...range).compactMap { i in cal.date(byAdding: .day, value: -i, to: w.start).flatMap { series.byDay[Repository.localDayKey($0)] } }
+        return vals.isEmpty ? nil : vals.reduce(0, +) / Double(vals.count)
+    }
+
+    /// The change against the window before, in percent; nil under half a percent either way is still returned (the caller words "near").
+    private func change(_ average: Double?) -> Double? {
+        guard let average, let prior = priorAverage, prior > 0 else { return nil }
+        return (average - prior) / prior * 100
+    }
+
+    private var priorLabel: String {
+        range == 7 ? String(localized: "vs. prior week") : (range == 30 ? String(localized: "vs. prior month") : String(localized: "vs. prior six months"))
     }
 
     private var canGoBack: Bool {
@@ -103,6 +132,8 @@ struct NunaLineTrendView: View {
                 .fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.horizontal, 2)
             if range <= 30 { legend }
             chart(all, average)
+            if excludesToday { Text("Average does not include today").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil).padding(.horizontal, 2) }
+            if let footer { footer }
         }
         .environment(\.nunaDetailSwitch, nil)
         .task(id: repo.refreshSeq) { await series.load(repo: repo, key: key, source: source, days: 400, also: also) }
@@ -126,6 +157,14 @@ struct NunaLineTrendView: View {
                     Text(verbatim: shown.map(fmt) ?? "–").font(.nuna(size: 40, weight: .semibold, design: NunaType.design)).foregroundStyle(tint)
                     if shown != nil { Text(verbatim: unit).font(.nuna(size: 16, weight: .semibold)).foregroundStyle(tint).textCase(nil) }
                 }
+                if pickedValue == nil, let c = change(average) {
+                    HStack(spacing: 4) {
+                        Image(systemName: c >= 0 ? "arrow.up" : "arrow.down").font(.system(size: 10, weight: .heavy))
+                        Text(verbatim: String(format: "%.0f%%", locale: AppLanguage.activeLocale, abs(c)) + " " + priorLabel).font(.nuna(size: 12, weight: .bold)).textCase(nil)
+                    }
+                    .foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 9).padding(.vertical, 4)
+                    .background(NunaPalette.glassStrong, in: Capsule())
+                }
             }
             Spacer(minLength: 0)
             VStack(alignment: .trailing, spacing: 14) {
@@ -139,7 +178,15 @@ struct NunaLineTrendView: View {
 
     private func sentence(_ average: Double?) -> String {
         guard let average else {
+            if comparesWithPrior { return String(localized: "Nothing recorded in this period yet.") }
             return closing == nil ? String(localized: "Wear your strap to bed each night to track this over time.") : String(localized: "Nothing recorded in this period yet.")
+        }
+        if comparesWithPrior {
+            let period = range == 7 ? String(localized: "7-day period") : (range == 30 ? String(localized: "30-day period") : String(localized: "six-month period"))
+            guard let c = change(average) else { return String(localized: "Your \(noun) during this \(period) was \(fmt(average)).") }
+            if abs(c) < 2 { return String(localized: "Your \(noun) during this \(period) was near its prior average.") }
+            return c > 0 ? String(localized: "Your \(noun) during this \(period) was higher than its prior average.")
+                         : String(localized: "Your \(noun) during this \(period) was lower than its prior average.")
         }
         let span = range == 7 ? String(localized: "this week was") : (range == 30 ? String(localized: "this month was") : String(localized: "over these six months has been"))
         guard let closing else {

@@ -410,6 +410,14 @@ struct NunaTodayView: View {
             try? await Task.sleep(nanoseconds: 1_200_000_000)
             pushToday(.trend(page))
         }
+        // `--open-metric <key>` opens one metric's page (`avg_hr`, `hrv`), once.
+        .task {
+            let args = CommandLine.arguments
+            guard let i = args.firstIndex(of: "--open-metric"), i + 1 < args.count, !NunaTodayDebug.openedPlanner else { return }
+            NunaTodayDebug.openedPlanner = true
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            router.openMetric(args[i + 1])
+        }
         .task {
             guard CommandLine.arguments.contains("--open-planner"), !NunaTodayDebug.openedPlanner else { return }
             NunaTodayDebug.openedPlanner = true
