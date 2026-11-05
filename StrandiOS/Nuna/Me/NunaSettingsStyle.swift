@@ -38,6 +38,17 @@ struct NunaSettingsCardRow: View {
     }
 }
 
+/// Opens this app's page in the iOS Settings app, where the language of the app is chosen (iOS keeps one language per app there).
+func nunaOpenIOSSettings() {
+    if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+}
+
+/// A link to a Me route. Language has no page of its own in the app: it goes straight to iOS Settings, so every place that lists a route
+/// opens it through here.
+@ViewBuilder func nunaMeLink<Label: View>(_ route: NunaMeRoute, @ViewBuilder label: () -> Label) -> some View {
+    if route == .language { Button(action: nunaOpenIOSSettings, label: label) } else { NavigationLink(value: route, label: label) }
+}
+
 /// A Settings row that opens one of the Me routes (and is remembered for the search page's "recent").
 struct NunaSettingsLink: View {
     let route: NunaMeRoute
@@ -46,7 +57,7 @@ struct NunaSettingsLink: View {
     var subtitle: LocalizedStringKey?
 
     var body: some View {
-        NavigationLink(value: route) { NunaSettingsCardRow(icon: icon, title: title, subtitle: subtitle) }
+        nunaMeLink(route) { NunaSettingsCardRow(icon: icon, title: title, subtitle: subtitle) }
             .buttonStyle(.plain)
             .simultaneousGesture(TapGesture().onEnded { NunaMeRecents.record(route) })
     }

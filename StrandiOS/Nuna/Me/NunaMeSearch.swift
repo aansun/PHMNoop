@@ -23,7 +23,7 @@ enum NunaMeIndex {
         .init(route: .anya, title: "Anya", icon: NunaGlyph.anya, group: "Account and device", keywords: "coach ai key memory voice assistant"),
         .init(route: .appearance, title: "Appearance", icon: "slider.horizontal.3", group: "Appearance", keywords: "theme dark light colour color font style experience nuna icon"),
         .init(route: .units, title: "Units", icon: "ruler", group: "Appearance", keywords: "metric imperial kg lb km miles temperature"),
-        .init(route: .language, title: "Language", icon: "globe", group: "Appearance", keywords: "bahasa english translation"),
+        .init(route: .language, title: "Language Preferences", icon: "globe", group: "More", keywords: "bahasa english translation language iphone"),
         .init(route: .widgets, title: "Widgets and Lock Screen", icon: "square.grid.2x2.fill", group: "Appearance", keywords: "home screen live activity"),
         .init(route: .notifications, title: "Notifications", icon: "bell.fill", group: "Notifications and automation", keywords: "alerts reminder brief journal battery"),
         .init(route: .automations, title: "Strap automations", icon: "applewatch.radiowaves.left.and.right", group: "Notifications and automation", keywords: "wrist haptic buzz"),
@@ -197,7 +197,7 @@ struct NunaMeSearchView: View {
             VStack(spacing: 0) {
                 ForEach(Array(items.enumerated()), id: \.element.id) { i, item in
                     if i > 0 { NunaDivider() }
-                    NavigationLink(value: item.route) { row(item) }
+                    nunaMeLink(item.route) { row(item) }
                     .buttonStyle(.plain)
                     .simultaneousGesture(TapGesture().onEnded { NunaMeRecents.record(item.route) })
                 }
@@ -211,7 +211,7 @@ struct NunaMeSearchView: View {
             VStack(spacing: 0) {
                 ForEach(Array(hits.enumerated()), id: \.element.id) { i, hit in
                     if i > 0 { NunaDivider() }
-                    NavigationLink(value: hit.route) {
+                    nunaMeLink(hit.route) {
                         let base = NunaListRow(LocalizedStringKey(hit.title), subtitle: LocalizedStringKey(hit.isSetting ? hit.parent : hit.group),
                                                systemImage: hit.icon, showsChevron: true)
                         if hit.route == .anya && !hit.isSetting { base.textCase(nil) } else { base }
