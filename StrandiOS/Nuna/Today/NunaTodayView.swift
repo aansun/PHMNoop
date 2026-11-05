@@ -397,8 +397,7 @@ struct NunaTodayView: View {
             await history.load(repo: repo)
         }
         .background(NunaSavedSessionsWatcher(count: $savedSessions))
-        .background(NunaLowBatteryWatcher(pct: $lowBatteryPct))
-        .onChange(of: lowBatteryPct) { _, v in if v == nil { lowBatteryDismissed = 0 } }
+        .background(NunaLowBatteryWatcher(pct: $lowBatteryPct, onRecovered: { if lowBatteryDismissed != 0 { lowBatteryDismissed = 0 } }))
         .background(NunaPullSyncBinder(sync: sync))
         #if DEBUG
         // `--open-planner`: a debug build opens the Sleep planner once, at launch, to look at it without scrolling Today. Once only: a `.task` runs
@@ -478,11 +477,12 @@ struct NunaTodayView: View {
     /// day and the strap, and the space the wordmark's own line leaves above its letters.
     private static let quickTopLimit: CGFloat = 2 + 46 + (brandHeight - 14) / 2
 
-    /// The level (20 or 10) of a low-battery banner that is due: the strap is low and this level was not put away.
+    /// The level (20 or 10) of a low-battery banner that is due: the strap is low, and no banner at this level or a lower one was put away. Putting
+    /// away the 10% banner therefore also silences the 20% one, so a reading that wobbles between 10 and 11 does not bring it back.
     private var lowBatteryLevel: Int? {
         guard showsRings, let p = lowBatteryPct else { return nil }
         let level = p <= 10 ? 10 : 20
-        return lowBatteryDismissed == level ? nil : level
+        return (lowBatteryDismissed != 0 && level >= lowBatteryDismissed) ? nil : level
     }
 
     private func pinnedHeight(collapse t: CGFloat) -> CGFloat {
