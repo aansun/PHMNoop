@@ -61,6 +61,28 @@ struct NunaFlameShape: Shape {
     }
 }
 
+/// The flame as a small icon: the same drawing as the big one, in a tall slim frame (half as wide as it is high), with the lighter flame inside.
+struct NunaFlameIcon: View {
+    var height: CGFloat
+    var outer: [Color] = [Color(red: 1, green: 0.50, blue: 0.20), Color(red: 0.97, green: 0.36, blue: 0.10)]
+    var inner: [Color] = [Color(red: 0.95, green: 0.62, blue: 0.40), Color(red: 0.99, green: 0.78, blue: 0.55)]
+
+    /// The first day of a run, in gold.
+    static let gold: [Color] = [Color(red: 1, green: 0.84, blue: 0.48), Color(red: 1, green: 0.70, blue: 0.28)]
+    /// A flame that is not lit.
+    static let unlit: [Color] = [Color.white.opacity(0.46), Color.white.opacity(0.30)]
+
+    var body: some View {
+        ZStack {
+            NunaFlameShape().fill(LinearGradient(colors: outer, startPoint: .top, endPoint: .bottom))
+            NunaFlameShape(inner: true).fill(LinearGradient(colors: inner, startPoint: .top, endPoint: .bottom))
+                .scaleEffect(x: 0.40, y: 0.42, anchor: .bottom).offset(y: -height * 0.03)
+        }
+        .frame(width: height * 0.5, height: height)
+        .accessibilityHidden(true)
+    }
+}
+
 struct NunaAnimatedFlame: View {
     var lit = true
     var size: CGFloat = 164
@@ -69,7 +91,7 @@ struct NunaAnimatedFlame: View {
         TimelineView(.animation) { tl in
             let t = tl.date.timeIntervalSinceReferenceDate
             let stretch = 1 + 0.03 * sin(t * 3.1), lean = 1.4 * sin(t * 2.2), breath = 1 + 0.07 * sin(t * 5.0 + 1)
-            let w = size * 0.55
+            let w = size * 0.5
             ZStack {
                 Circle().fill(RadialGradient(colors: [Color(red: 1, green: 0.42, blue: 0.1).opacity(0.28 + 0.06 * sin(t * 2.6)), .clear], center: .center, startRadius: 0, endRadius: size * 0.7))
                     .frame(width: size * 1.5, height: size * 1.5).offset(y: size * 0.1)
@@ -122,7 +144,7 @@ struct NunaDayStreakView: View {
     private func hero(_ s: NunaStreak) -> some View {
         VStack(spacing: 6) {
             ZStack(alignment: .bottom) {
-                NunaAnimatedFlame(lit: s.current > 0, size: 168)
+                NunaAnimatedFlame(lit: s.current > 0, size: 176)
                 Text(verbatim: "\(s.current)").font(.nunaBoldFigure(size: 88)).foregroundStyle(.white).shadow(color: .black.opacity(0.45), radius: 10).offset(y: 22)
             }
             .padding(.top, 4).padding(.bottom, 20)
@@ -166,8 +188,9 @@ struct NunaDayStreakView: View {
                             .foregroundStyle(isToday ? NunaPalette.textPrimary : NunaPalette.textMuted)
                         if has {
                             let starts = s.start.map { cal.isDate(d, inSameDayAs: $0) } ?? false
-                            Image(systemName: "flame.fill").font(.system(size: 26)).frame(height: 36)
-                                .foregroundStyle(starts ? Color(red: 1, green: 0.78, blue: 0.40) : Color(red: 1, green: 0.42, blue: 0.14))
+                            NunaFlameIcon(height: 34, outer: starts ? NunaFlameIcon.gold : [Color(red: 1, green: 0.50, blue: 0.20), Color(red: 0.97, green: 0.36, blue: 0.10)],
+                                          inner: starts ? [Color(red: 1, green: 0.93, blue: 0.72), Color(red: 1, green: 0.88, blue: 0.60)] : [Color(red: 0.95, green: 0.62, blue: 0.40), Color(red: 0.99, green: 0.78, blue: 0.55)])
+                                .frame(height: 36)
                         } else {
                             Circle().strokeBorder(NunaPalette.textMuted.opacity(0.7), style: StrokeStyle(lineWidth: 1.3, dash: [3, 3])).frame(width: 36, height: 36)
                         }
@@ -204,7 +227,8 @@ struct NunaDayStreakView: View {
             Circle().fill(RadialGradient(colors: [lit ? Color(red: 0.30, green: 0.10, blue: 0.03) : Color(red: 0.16, green: 0.17, blue: 0.18), Color(red: 0.05, green: 0.05, blue: 0.06)], center: .center, startRadius: 4, endRadius: 40))
                 .overlay(Circle().strokeBorder(lit ? Color(red: 1, green: 0.42, blue: 0.14) : Color.white.opacity(0.35), lineWidth: 2.5))
                 .frame(width: 74, height: 74)
-                .overlay(Image(systemName: "flame.fill").font(.system(size: 30)).foregroundStyle(lit ? Color(red: 1, green: 0.45, blue: 0.18) : Color.white.opacity(0.4)).offset(y: -4))
+                .overlay(NunaFlameIcon(height: 40, outer: lit ? [Color(red: 1, green: 0.50, blue: 0.20), Color(red: 0.97, green: 0.36, blue: 0.10)] : NunaFlameIcon.unlit,
+                                       inner: lit ? [Color(red: 0.95, green: 0.62, blue: 0.40), Color(red: 0.99, green: 0.78, blue: 0.55)] : [Color.white.opacity(0.62), Color.white.opacity(0.5)]).offset(y: -5))
             Text(verbatim: "\(n)").font(.nunaBoldFigure(size: 36)).foregroundStyle(.white).shadow(color: .black.opacity(0.7), radius: 4).offset(y: 18)
         }
         .frame(width: 80, height: 96, alignment: .top)
