@@ -307,13 +307,15 @@ struct NunaPlanCard: View {
                     }
                 }
             }
+            .animation(.easeInOut(duration: 0.2), value: expanded)
             .task(id: "\(steps)-\(easy)-\(hard)-\(strength)-\(repo.refreshSeq)") { await model.load(repo: repo, age: profile.age, weekOffset: 0) }
         }
     }
 
+    /// The compact card: its whole top is the button that folds the card, so there is no small target to miss.
     private var header: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Button { withAnimation(.easeInOut(duration: 0.2)) { expanded.toggle() } } label: {
+        Button { expanded.toggle() } label: {
+            VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Custom Plan").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
@@ -324,17 +326,21 @@ struct NunaPlanCard: View {
                     }
                     Spacer()
                     Image(systemName: expanded ? "chevron.up" : "chevron.down").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .frame(width: 44, height: 28, alignment: .trailing)
                 }
-                .contentShape(Rectangle())
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(verbatim: "\(Int((model.accomplished * 100).rounded()))").font(.nuna(size: 18, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(verbatim: "%").font(.nuna(size: 11.5, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                    Text("Accomplished").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary).padding(.leading, 2)
+                }
+                nunaPlanBar(model.accomplished, tint: NunaPalette.charge)
             }
-            .buttonStyle(.plain)
-            HStack(alignment: .firstTextBaseline, spacing: 4) {
-                Text(verbatim: "\(Int((model.accomplished * 100).rounded()))").font(.nuna(size: 18, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
-                Text(verbatim: "%").font(.nuna(size: 11.5, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                Text("Accomplished").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary).padding(.leading, 2)
-            }
-            nunaPlanBar(model.accomplished, tint: NunaPalette.charge)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text("Custom Plan"))
+        .accessibilityValue(Text(expanded ? "Expanded" : "Collapsed"))
+        .accessibilityHint(Text(expanded ? "Collapses the plan" : "Expands the plan"))
     }
 }
 

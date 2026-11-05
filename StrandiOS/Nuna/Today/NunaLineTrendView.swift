@@ -66,7 +66,7 @@ struct NunaLineTrendView: View {
                                      comparesWithPrior: true, excludesToday: true, footer: AnyView(NunaAverageHRInfo()), endingDaysAgo: endingDaysAgo)
         case "vo2max_est":
             return NunaLineTrendView(name: "VO₂ max", icon: "met:vo2-max", noun: "average estimated VO₂ max", key: key, unit: "ml/kg/min", decimals: 1, upIsGood: true,
-                                     closing: String(localized: "It is worked out once a week from your resting heart rate and your profile."), footer: AnyView(NunaVO2MaxInfo()), endingDaysAgo: endingDaysAgo)
+                                     closing: String(localized: "It is worked out once a week from your resting heart rate and your profile."), footer: AnyView(NunaVO2MaxFooter()), endingDaysAgo: endingDaysAgo)
         case "vitality":
             return NunaLineTrendView(name: "Vitality", icon: "sparkles", noun: "average Vitality", key: key, unit: "", upIsGood: true,
                                      closing: String(localized: "It is worked out once a week from your sleep, activity and recovery."), endingDaysAgo: endingDaysAgo)
@@ -137,6 +137,10 @@ struct NunaLineTrendView: View {
         }
         .environment(\.nunaDetailSwitch, nil)
         .task(id: repo.refreshSeq) { await series.load(repo: repo, key: key, source: source, days: 400, also: also) }
+        .onReceive(NotificationCenter.default.publisher(for: .nunaManualVO2Changed)) { _ in
+            guard key == NunaVO2Manual.key else { return }
+            Task { await series.load(repo: repo, key: key, source: source, days: 400, also: also) }
+        }
         .onChange(of: range) { _, _ in picked = nil }
         .onChange(of: page) { _, _ in picked = nil }
     }
