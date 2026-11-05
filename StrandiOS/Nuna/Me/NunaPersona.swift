@@ -128,35 +128,10 @@ struct NunaPersonaView: View {
                     NunaSegmented([(value: "male", title: "Male"), (value: "female", title: "Female"), (value: "nonbinary", title: "Non-binary")], selection: Binding(get: { let v = profile.sex.lowercased().replacingOccurrences(of: "-", with: ""); return ["male", "female", "nonbinary"].contains(v) ? v : "male" }, set: { profile.sex = $0 }))
                 }.padding(.vertical, 12)
                 NunaDivider()
-                if imperial {
-                    NunaStepRow(label: "Weight", value: String(format: "%.1f lb", locale: AppLanguage.activeLocale, profile.weightKg * 2.20462),
-                                onMinus: { profile.weightKg = max(30, profile.weightKg - 0.45359) }, onPlus: { profile.weightKg = min(250, profile.weightKg + 0.45359) })
-                    NunaDivider()
-                    NunaStepRow(label: "Height", value: Self.feetInches(profile.heightCm),
-                                onMinus: { profile.heightCm = max(120, profile.heightCm - 2.54) }, onPlus: { profile.heightCm = min(230, profile.heightCm + 2.54) })
-                } else {
-                    NunaStepRow(label: "Weight", value: String(format: "%.1f kg", locale: AppLanguage.activeLocale, profile.weightKg),
-                                onMinus: { profile.weightKg = max(30, profile.weightKg - 0.5) }, onPlus: { profile.weightKg = min(250, profile.weightKg + 0.5) })
-                    NunaDivider()
-                    NunaStepRow(label: "Height", value: String(format: "%.0f cm", profile.heightCm),
-                                onMinus: { profile.heightCm = max(120, profile.heightCm - 1) }, onPlus: { profile.heightCm = min(230, profile.heightCm + 1) })
-                }
-                NunaDivider()
                 NunaStepRow(label: "Waist (optional)", value: profile.waistCm > 0 ? (imperial ? String(format: "%.0f in", profile.waistCm / 2.54) : String(format: "%.0f cm", profile.waistCm)) : "–",
                             note: "Unlocks the VO₂max estimate", canDecrement: profile.waistCm > 0,
                             onMinus: { profile.waistCm = profile.waistCm <= 50 ? 0 : profile.waistCm - (imperial ? 2.54 : 1) },
                             onPlus: { profile.waistCm = profile.waistCm <= 0 ? 80 : min(200, profile.waistCm + (imperial ? 2.54 : 1)) })
-            }
-            NunaSettingsGroup("Heart rate") {
-                NunaStepRow(label: "Maximum heart rate", value: "\(profile.hrMax) bpm",
-                            note: LocalizedStringKey(profile.hrMaxOverride > 0 ? String(localized: "Set by you") : String(localized: "Automatic from your age")),
-                            onMinus: { profile.hrMaxOverride = max(100, profile.hrMax - 1) }, onPlus: { profile.hrMaxOverride = min(230, profile.hrMax + 1) })
-                if profile.hrMaxOverride > 0 {
-                    NunaDivider()
-                    Button { profile.hrMaxOverride = 0 } label: { NunaListRow("Back to automatic", description: "Use the estimate from your age", systemImage: "arrow.uturn.backward", showsChevron: true) }.buttonStyle(.plain)
-                }
-                NunaDivider()
-                NavigationLink(value: NunaMeRoute.zones) { NunaListRow("Heart-rate zones", subtitle: LocalizedStringKey(profile.hasCustomHRZones ? String(localized: "Your own limits") : String(localized: "5 zones, percentages of your maximum")), systemImage: "heart.text.square", showsChevron: true) }.buttonStyle(.plain)
             }
             NunaSettingsGroup("Targets") {
                 NavigationLink(value: NunaMeRoute.goals) { NunaListRow("Targets", description: "Weekly and daily goals", systemImage: "target", showsChevron: true) }.buttonStyle(.plain)
@@ -180,7 +155,7 @@ struct NunaPersonaView: View {
                     }.buttonStyle(.plain).disabled(recalibrated)
                 }.padding(.vertical, 14)
             }
-            nunaFootnote("Fitness age only needs resting heart rate and activity. Weight, height and waist only unlock the VO₂max estimate.")
+            nunaFootnote("Weight, height and waist are read from Apple Health. Heart-rate zones have their own page, under Activity Settings.")
         }
         .onChange(of: photoItem) { _, item in
             guard let item else { return }
@@ -194,10 +169,6 @@ struct NunaPersonaView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: { Text("Recovery and your HRV baseline are learned again from tonight, which takes about 4 nights. Your history stays.") }
-    }
-
-    private static func feetInches(_ cm: Double) -> String {
-        let total = Int((cm / 2.54).rounded()); return "\(total / 12)′ \(total % 12)″"
     }
 }
 

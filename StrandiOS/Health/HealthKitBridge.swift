@@ -130,6 +130,9 @@ final class HealthKitBridge: ObservableObject {
         // into DayAgg, so it stays out of the daily series. Kept in this consolidated read request so
         // the user is asked once. === PHM OVERLAY END ===
         .waistCircumference,
+        // === PHM OVERLAY (PHMNOOP) === height, READ-ONLY, for `profile.heightCm` (BMI, waist ratio, calories),
+        // asked in the same consolidated request as the waist. === PHM OVERLAY END ===
+        .height,
         // Water — READ-ONLY (#949), so drinks logged in a dedicated hydration app (or by a smart bottle)
         // show up without being typed in twice. Lands in the hydration source rather than apple-health,
         // because the hydration screen is what consumes it. Never written back.
