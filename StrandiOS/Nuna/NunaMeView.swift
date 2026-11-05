@@ -32,22 +32,12 @@ struct NunaMeView: View {
                     NunaSettingsLink(route: .whatsNew, icon: "graduationcap", title: "What's new")
                     NunaSettingsLink(route: .about, icon: "info.circle", title: "About")
                 }
-                Text(verbatim: Self.versionLine).font(.nuna(size: 12, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                    .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).multilineTextAlignment(.center).padding(.top, 40)
-                Text("PHMN · a fork of NOOP. Not a medical device.")
-                    .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).frame(maxWidth: .infinity).multilineTextAlignment(.center).textCase(nil).padding(.top, 8)
             }
             .padding(.horizontal, 20).padding(.top, 14).padding(.bottom, 130)
         }
         .scrollIndicators(.hidden)
         .nunaScreenBackground()
         .toolbar(.hidden, for: .navigationBar)
-    }
-
-    private static var versionLine: String {
-        let info = Bundle.main.infoDictionary
-        let v = info?["CFBundleShortVersionString"] as? String ?? "?", b = info?["CFBundleVersion"] as? String ?? "?"
-        return String(localized: "App version: \(v) (build \(b))")
     }
 }
 

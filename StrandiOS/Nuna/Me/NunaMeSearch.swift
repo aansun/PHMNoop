@@ -45,7 +45,7 @@ enum NunaMeIndex {
         .init(route: .advanced, title: "Advanced", icon: "flame.fill", group: "More", keywords: "baseline hrv"),
         .init(route: .experiments, title: "Experiments", icon: "flask", group: "More", keywords: "experimental flags"),
         .init(route: .testCentre, title: "Test Centre", icon: "testtube.2", group: "More", keywords: "debug diagnostics logs"),
-        .init(route: .about, title: "About and help", icon: "info.circle.fill", group: "More", keywords: "version credits how it works"),
+        .init(route: .about, title: "About", icon: "info.circle.fill", group: "More", keywords: "version credits licences open source"),
     ]
 
     static let groups = ["Account and device", "Appearance", "Notifications and automation", "Data", "More"]
