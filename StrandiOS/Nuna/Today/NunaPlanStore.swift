@@ -77,14 +77,14 @@ enum NunaPlanTemplate: String, CaseIterable, Identifiable {
     }
 
     var metrics: [NunaPlanKind] {
-        switch self { case .boostFitness: return [.zonesHard]; case .feelBetter: return [.steps]; case .sleepDeeper: return [.sleepConsistency, .sleepPerformance]; case .glp1Companion: return [.strength, .steps] }
+        switch self { case .boostFitness: return [.zonesHard]; case .feelBetter: return [.steps]; case .sleepDeeper: return [.sleepConsistency, .sleepPerformance]; case .glp1Companion: return [.steps] }
     }
     var behaviors: [NunaPlanBehavior] {
         switch self {
         case .boostFitness: return [NunaPlanBehavior.protein(days: 4)]
         case .feelBetter: return [NunaPlanBehavior.hydration(days: 4)]
         case .sleepDeeper: return [NunaPlanBehavior.lateMeal(days: 3)]
-        case .glp1Companion: return [NunaPlanBehavior.protein(days: 5)]
+        case .glp1Companion: return [NunaPlanBehavior.hydration(days: 7), NunaPlanBehavior.protein(days: 7)]
         }
     }
     var activities: [NunaPlanActivity] {
@@ -104,10 +104,16 @@ extension NunaPlanBehavior {
         NunaPlanBehavior(id: proteinQuestion, title: String(localized: "Protein"), subtitle: String(localized: "Consumed protein?"), days: days)
     }
 
+    /// The medication check of the GLP-1 plan: a journal question, as many days a week as the schedule says.
+    static let glp1Question = "Did you take your GLP-1 medication today?"
+    static func glp1Medication(days: Int) -> NunaPlanBehavior {
+        NunaPlanBehavior(id: glp1Question, title: "GLP-1", subtitle: String(localized: "Did you take your GLP-1 medication today?"), days: days)
+    }
+
     /// Hydration is not a starter journal question either; it is added as "Hydration".
     static let hydrationQuestion = "Did you stay hydrated?"
     static func hydration(days: Int) -> NunaPlanBehavior {
-        NunaPlanBehavior(id: hydrationQuestion, title: String(localized: "Hydration"), subtitle: String(localized: "Stayed hydrated?"), days: days)
+        NunaPlanBehavior(id: hydrationQuestion, title: String(localized: "Hydration"), subtitle: String(localized: "Hydrated sufficiently?"), days: days)
     }
     /// A starter journal question, goes by "Late meal" in the plan, and the goal is to avoid it.
     static let lateMealQuestion = "Did you eat close to bedtime?"
@@ -242,7 +248,9 @@ extension NunaPlanKind {
     /// A week's target a step above the average, rounded to what the stepper moves in.
     func suggested(average: Double?) -> Int {
         let raw = (isPercent ? (average ?? 0).rounded() : (average ?? 0)) + increment
-        let stepped = (raw / targetStep).rounded(.up) * targetStep
+        // Steps are suggested to the nearest hundred above, though the stepper moves by five hundred.
+        let grain = self == .steps ? 100 : targetStep
+        let stepped = (raw / grain).rounded(.up) * grain
         return Int(min(max(stepped, targetRange.lowerBound), targetRange.upperBound))
     }
 

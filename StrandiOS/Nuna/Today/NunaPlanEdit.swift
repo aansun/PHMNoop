@@ -100,7 +100,7 @@ final class NunaPlanDraft: ObservableObject {
         let imported = Array(Set((await repo.importedJournalEntries()).map(\.question)))
         let known = catalog.resolvedItems(imported: imported, includeHidden: true).map { $0.canonical.lowercased() }
         for b in behaviors where !known.contains(b.id.lowercased()) {
-            catalog.addCustom(b.id, group: b.id == NunaPlanBehavior.proteinQuestion || b.id == NunaPlanBehavior.hydrationQuestion ? .nutrition : .other)
+            catalog.addCustom(b.id, group: b.id == NunaPlanBehavior.glp1Question ? .health : (b.id == NunaPlanBehavior.proteinQuestion || b.id == NunaPlanBehavior.hydrationQuestion ? .nutrition : .other))
             if b.title != b.id { catalog.rename(b.id, to: b.title) }
         }
     }
@@ -383,7 +383,16 @@ private struct NunaPlanEditList: View {
             VStack(alignment: .leading, spacing: 12) {
                 nunaRuledHeader("Choose a plan")
                 ForEach(NunaPlanTemplate.allCases.filter { $0 != NunaPlanStore.template(spec) }) { t in
-                    NavigationLink { NunaPlanDetailsView(draft: NunaPlanDraft(starting: t), startsTemplate: true, onClose: onClose).toolbar(.hidden, for: .navigationBar) } label: { templateCard(t) }
+                    NavigationLink {
+                        // The GLP-1 plan starts with a few questions about the medication, unless they were answered before.
+                        if t == .glp1Companion, NunaGLP1Setup.load() == nil {
+                            NunaGLP1Flow(onClose: onClose).toolbar(.hidden, for: .navigationBar)
+                        } else if t == .glp1Companion, let setup = NunaGLP1Setup.load() {
+                            NunaPlanDetailsView(draft: NunaPlanDraft(glp1: setup), startsTemplate: true, onClose: onClose).toolbar(.hidden, for: .navigationBar)
+                        } else {
+                            NunaPlanDetailsView(draft: NunaPlanDraft(starting: t), startsTemplate: true, onClose: onClose).toolbar(.hidden, for: .navigationBar)
+                        }
+                    } label: { templateCard(t) }
                         .buttonStyle(.plain)
                 }
             }
@@ -438,7 +447,7 @@ private struct NunaPlanEditList: View {
 
 // MARK: - Plan details
 
-private struct NunaPlanDetailsView: View {
+struct NunaPlanDetailsView: View {
     @ObservedObject var draft: NunaPlanDraft
     /// A template being started (the button says Start plan) or a plan being changed (Save plan).
     let startsTemplate: Bool
