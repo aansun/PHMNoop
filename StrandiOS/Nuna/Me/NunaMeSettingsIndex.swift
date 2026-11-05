@@ -11,17 +11,12 @@ struct NunaMeSetting {
 enum NunaMeSettingsIndex {
     static let all: [NunaMeSetting] = [
         .init(route: .persona, title: "About you", note: ""),
-        .init(route: .persona, title: "Heart rate", note: ""),
         .init(route: .persona, title: "Targets", note: ""),
         .init(route: .persona, title: "Day and steps", note: ""),
         .init(route: .persona, title: "Recovery baseline", note: ""),
-        .init(route: .persona, title: "Back to automatic", note: "Use the estimate from your age"),
-        .init(route: .persona, title: "Heart-rate zones", note: ""),
-        .init(route: .persona, title: "Weight", note: ""),
-        .init(route: .persona, title: "Height", note: ""),
         .init(route: .persona, title: "Waist (optional)", note: ""),
-        .init(route: .persona, title: "Maximum heart rate", note: ""),
         .init(route: .persona, title: "Step calibration", note: ""),
+        .init(route: .zones, title: "Maximum heart rate", note: "Automatic from your age, or your own"),
         .init(route: .zones, title: "Your own zones", note: "Set where each zone starts. Turn off to return to percentages"),
         .init(route: .zones, title: "Zone starts at", note: ""),
         .init(route: .goals, title: "Training and recovery", note: ""),

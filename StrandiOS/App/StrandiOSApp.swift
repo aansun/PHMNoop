@@ -471,9 +471,9 @@ struct StrandiOSApp: App {
                                 hasAppleWatchSourceData: hasAppleWatchSourceData)
                         }
                     )
-                    // === PHM OVERLAY (PHMNOOP) === pull the latest Apple Health waist reading into
-                    // the profile after each sync (no-op unless authorized & a sample exists). === END ===
-                    await model.profile.phmImportWaistFromHealth()
+                    // === PHM OVERLAY (PHMNOOP) === pull the latest Apple Health waist, weight and height
+                    // readings into the profile after each sync (no-op unless authorized & a sample exists). === END ===
+                    await model.profile.phmImportBodyFromHealth()
                     await WidgetSnapshot.publish(from: model)
                     // Push the wrist on the SAME refresh as the Home-screen widget so the watch, the
                     // widget and Today never disagree about which day they describe. Without this the
