@@ -8028,5 +8028,7 @@
  "Charge your WHOOP to ensure uninterrupted data collection": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Isi daya WHOOP Anda agar pengumpulan data tidak terputus"}}}},
  "Newly Red": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Baru Merah"}}}},
  "You haven't been in the red in the last 30 days! Don't worry, it's only temporary.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu belum merah dalam 30 hari terakhir! Tenang, ini hanya sementara."}}}},
- "View trend": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lihat tren"}}}}
+ "View trend": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lihat tren"}}}},
+ "Pushing Limits": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Menembus Batas"}}}},
+ "You worked hard today and exceeded your Optimal Strain range. Overreaching will help you get fitter over time.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu bekerja keras hari ini dan melampaui rentang Strain optimalmu. Melampaui batas akan membantu kamu makin bugar seiring waktu."}}}}
 }, "version":"1.0" }

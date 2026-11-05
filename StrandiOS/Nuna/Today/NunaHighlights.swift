@@ -55,6 +55,8 @@ struct NunaHighlightInputs {
     var journalYesterdayOpen = false
     /// Today's Recovery is red and the 30 days before had none: the five scores before it, then today's. Nil otherwise.
     var newlyRedBars: [Double]?
+    /// Today's Strain has reached 20 on the 21-point scale.
+    var pushingLimits = false
     /// The Daily Outlook just opened up and has not been looked at yet.
     var outlookFirst = false
 }
@@ -211,8 +213,11 @@ enum NunaHighlightEngine {
                              actionTitle: String(localized: "Wind down"), action: .windDown))
         }
 
-        // 8. More Strain than today's Recovery supports.
-        if let e = i.effort, let hi = i.effortTargetHigh, e > hi * 1.15, let shown = i.effortShown, let band = i.effortTargetText {
+        // 8. Strain at 20 or more, then more Strain than today's Recovery supports.
+        if i.pushingLimits {
+            out.append(.init(id: "pushing-limits", title: String(localized: "Pushing Limits"),
+                             message: String(localized: "You worked hard today and exceeded your Optimal Strain range. Overreaching will help you get fitter over time.")))
+        } else if let e = i.effort, let hi = i.effortTargetHigh, e > hi * 1.15, let shown = i.effortShown, let band = i.effortTargetText {
             out.append(.init(id: "strain", title: String(localized: "Strain above your target"),
                              message: String(localized: "Strain \(shown) is above today's range for your Recovery (\(band)). More training now costs tomorrow's Recovery.")))
         }
@@ -358,6 +363,7 @@ struct NunaHighlightsCard: View {
             calibrating: calibrating, calibrationDone: ["recovery", "stress"].filter { feed.doneStages.contains($0) },
             workouts: Array(announced), dayStrainShown: effort.map { UnitFormatter.effortDisplay($0, scale: scale) },
             naps: freshNaps, sleepRecorded: slept, journalYesterdayOpen: !yesterdayLogged, newlyRedBars: newlyRed,
+            pushingLimits: (effort.map { $0 * UnitFormatter.effortScaleFactor } ?? 0) >= 20,
             outlookFirst: NunaOutlookGate.ready(repo.days) && !UserDefaults.standard.bool(forKey: NunaOutlookGate.openedKey))
 #if DEBUG
         Self.demo(&result)
@@ -378,6 +384,7 @@ struct NunaHighlightsCard: View {
             case "manual": i.workouts.append(.init(id: "demo-m", sport: "Padel", duration: "1h 0m", strain: "7.2", manual: true))
             case "nap": i.naps.append(.init(id: "demo-n", duration: "25 min"))
             case "sleep": i.sleepRecorded = ("7 hr 12 min", 82); i.journalYesterdayOpen = true
+            case "pushing": i.pushingLimits = true
             case "newlyred": i.newlyRedBars = [62, 48, 55, 71, 66, 12]
             case "first": i.firstColour = "yellow"
             case "optimal": i.effort = 11; i.effortTargetLow = 10; i.effortTargetHigh = 14; i.effortTargetHighShown = "14.0"
@@ -426,12 +433,12 @@ struct NunaHighlightsCard: View {
             }
             NunaCard(padding: EdgeInsets(top: 18, leading: 20, bottom: 18, trailing: h.bars == nil ? 46 : 140)) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text(verbatim: h.title).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                    Text(verbatim: h.title).font(.nunaWords(size: 14.5, semibold: true)).tracking(0).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                     // Always at least three lines tall (a hidden three-line stand-in sets the floor), so every card is four lines with its title.
                     ZStack(alignment: .topLeading) {
-                        Text(verbatim: "A\nA\nA").font(.nuna(size: 14, weight: .regular)).lineSpacing(3).hidden().accessibilityHidden(true)
-                        Text(verbatim: h.message).font(.nuna(size: 14, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                            .lineSpacing(3).fixedSize(horizontal: false, vertical: true)
+                        Text(verbatim: "A\nA\nA").font(.nunaWords(size: 15)).tracking(0).lineSpacing(2).hidden().accessibilityHidden(true)
+                        Text(verbatim: h.message).font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                            .lineSpacing(2).fixedSize(horizontal: false, vertical: true)
                     }
                     if let t = h.actionTitle, let a = h.action {
                         Button { perform(a) } label: {

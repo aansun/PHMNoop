@@ -18,23 +18,23 @@ struct NunaLowBatteryBanner: View {
     }
 
     var body: some View {
-        HStack(alignment: .center, spacing: 14) {
-            Image(systemName: "battery.0percent").font(.system(size: 26, weight: .light)).foregroundStyle(Color.white.opacity(0.85))
-                .overlay(alignment: .topLeading) { Circle().fill(NunaPalette.alert).frame(width: 11, height: 11).offset(x: -3, y: -3) }
-                .frame(width: 34)
+        HStack(alignment: .center, spacing: 8) {
+            Image(systemName: "battery.0percent").font(.system(size: 15.5, weight: .light)).foregroundStyle(Color.white.opacity(0.85))
+                .overlay(alignment: .topLeading) { Circle().fill(NunaPalette.alert).frame(width: 8, height: 8).offset(x: -3, y: -3) }
+                .frame(width: 21)
             VStack(alignment: .leading, spacing: 3) {
-                Text(verbatim: "\(pct)% \(String(localized: "charge remaining"))").font(.nuna(size: 14.5, weight: .heavy)).tracking(1.4).textCase(.uppercase)
+                Text(verbatim: "\(pct)% \(String(localized: "charge remaining"))").font(.nunaWords(size: 11.3, semibold: true)).tracking(1.13).textCase(.uppercase)
                     .foregroundStyle(Color.white).lineLimit(1).minimumScaleFactor(0.7)
-                Text("Charge your WHOOP to ensure uninterrupted data collection").font(.nuna(size: 14, weight: .regular)).foregroundStyle(Color.white.opacity(0.78))
+                Text("Charge your WHOOP to ensure uninterrupted data collection").font(.nunaWords(size: 12.5)).tracking(0).foregroundStyle(Color.white.opacity(0.78))
                     .textCase(nil).lineLimit(2).fixedSize(horizontal: false, vertical: true)
             }
-            Spacer(minLength: 4)
+            Spacer(minLength: 0)
             Button(action: onDismiss) {
                 Image(systemName: "xmark").font(.system(size: 17, weight: .semibold)).foregroundStyle(Color.white).frame(width: 36, height: 44).contentShape(Rectangle())
             }
             .buttonStyle(.plain).accessibilityLabel(Text("Dismiss"))
         }
-        .padding(.horizontal, 16).frame(height: Self.height)
+        .padding(.leading, 14).padding(.trailing, 4).frame(height: Self.height)
         .background(Color.black, in: RoundedRectangle(cornerRadius: 20, style: .continuous))
         .accessibilityElement(children: .combine)
     }

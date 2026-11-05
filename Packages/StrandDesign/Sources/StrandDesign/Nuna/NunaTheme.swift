@@ -166,6 +166,12 @@ public extension Font {
         NunaThemePrefs.skin == .whp ? NunaWHPFont.strong(size: size) : nuna(size: size, weight: .bold)
     }
 
+    /// Words at the exact set size and cut measured off the reference: in WHP, Proxima Nova Regular or Semibold at `size` as given (no 7% reduction
+    /// and no promotion of body text to Semibold, which `nuna` applies). The other skins keep what `nuna` draws for the size the screens were drawn at.
+    static func nunaWords(size: CGFloat, semibold: Bool = false) -> Font {
+        NunaThemePrefs.skin == .whp ? NunaWHPFont.words(size: size, semibold: semibold) : nuna(size: size / 0.93, weight: semibold ? .semibold : .regular)
+    }
+
     static func nuna(size: CGFloat, weight: Font.Weight = .regular, design: Font.Design = .default) -> Font {
         // WHP follows the WHOOP typography cheat sheet by role. Figures (the call sites that ask for `NunaType.design`) are D-DIN-PRO,
         // the DIN role of the sheet; words are Proxima Nova: main headers (24 to 31) bold, card headers (16 to 23) semibold, body (13 to 15)
@@ -203,6 +209,12 @@ enum NunaWHPFont {
         if dinProOK { return .custom("DINPro-Bold", size: size) }
         if dinOK { return .custom("D-DIN-PRO-Bold", size: size) }
         return .system(size: size, weight: .bold, design: .default).width(.condensed)
+    }
+
+    /// Proxima Nova Regular or Semibold at exactly `size`; the usual path (`font`) when the files are not in the app.
+    static func words(size: CGFloat, semibold: Bool) -> Font {
+        if proximaOK { return .custom(semibold ? "ProximaNova-Semibold" : "ProximaNova-Regular", size: size) }
+        return font(size: size / 0.93, weight: semibold ? .semibold : .regular, design: .default)
     }
 
     /// The heaviest cut of the words face at the same set size `font` gives body text of this size.
