@@ -66,7 +66,7 @@ struct NunaLineTrendView: View {
                                      comparesWithPrior: true, excludesToday: true, footer: AnyView(NunaAverageHRInfo()), endingDaysAgo: endingDaysAgo)
         case "vo2max_est":
             return NunaLineTrendView(name: "VO₂ max", icon: "met:vo2-max", noun: "average estimated VO₂ max", key: key, unit: "ml/kg/min", decimals: 1, upIsGood: true,
-                                     closing: String(localized: "It is worked out once a week from your resting heart rate and your profile."), endingDaysAgo: endingDaysAgo)
+                                     closing: String(localized: "It is worked out once a week from your resting heart rate and your profile."), footer: AnyView(NunaVO2MaxInfo()), endingDaysAgo: endingDaysAgo)
         case "vitality":
             return NunaLineTrendView(name: "Vitality", icon: "sparkles", noun: "average Vitality", key: key, unit: "", upIsGood: true,
                                      closing: String(localized: "It is worked out once a week from your sleep, activity and recovery."), endingDaysAgo: endingDaysAgo)
