@@ -69,8 +69,8 @@ enum NunaPlanKind: String, CaseIterable, Identifiable {
         let amount = NunaPlanFormat.goalClock(Double(goal))
         switch self {
         case .steps: return String(localized: "\(NunaPlanFormat.thousands(Double(goal)))+ Steps")
-        case .zonesEasy: return String(localized: "\(amount)+ HR Zones 1–3 Time")
-        case .zonesHard: return String(localized: "\(amount)+ HR Zones 4–5 Time")
+        case .zonesEasy: return String(localized: "\(amount)+ HR Zones 1-3 Time")
+        case .zonesHard: return String(localized: "\(amount)+ HR Zones 4-5 Time")
         case .strength: return String(localized: "\(amount)+ Strength Activity Time")
         }
     }
@@ -114,7 +114,28 @@ final class NunaPlanModel: ObservableObject {
         var fraction: Double { kind == .steps ? min(1, Double(hitDays) / 7) : (goal > 0 ? min(1, value / goal) : 0) }
     }
 
+    /// A behavior of the plan: the days of the week it was logged (as asked) out of the days it asks for.
+    struct BehaviorItem: Identifiable {
+        let id: String
+        let title: String
+        let goal: Int
+        let done: Int
+        var fraction: Double { goal > 0 ? min(1, Double(done) / Double(goal)) : 0 }
+    }
+    /// An activity of the plan: the days of the week it was done out of the days it asks for.
+    struct ActivityItem: Identifiable {
+        let id: String
+        let title: String
+        let goal: Int
+        let done: Int
+        var fraction: Double { goal > 0 ? min(1, Double(done) / Double(goal)) : 0 }
+        var complete: Bool { done >= goal }
+    }
+
     @Published private(set) var items: [Item] = []
+    @Published private(set) var behaviors: [BehaviorItem] = []
+    @Published private(set) var activities: [ActivityItem] = []
+    @Published private(set) var spec = NunaPlanSpec()
     @Published private(set) var weekDays: [Date] = []
     @Published private(set) var loaded = false
 
@@ -128,7 +149,11 @@ final class NunaPlanModel: ObservableObject {
         return c.date(byAdding: .day, value: -back, to: start) ?? start
     }
 
-    var accomplished: Double { items.isEmpty ? 0 : items.reduce(0) { $0 + $1.fraction } / Double(items.count) }
+    /// The average share done across every goal of the plan: metrics, behaviors and activities.
+    var accomplished: Double {
+        let all = items.map(\.fraction) + behaviors.map(\.fraction) + activities.map(\.fraction)
+        return all.isEmpty ? 0 : all.reduce(0, +) / Double(all.count)
+    }
 
     /// Days of this week still ahead, today included; nil for a week that is over.
     var daysLeft: Int? {
@@ -143,6 +168,7 @@ final class NunaPlanModel: ObservableObject {
         let thisMonday = Self.monday(of: Date())
         let start = cal.date(byAdding: .day, value: -7 * weekOffset, to: thisMonday) ?? thisMonday
         let days = (0..<7).compactMap { cal.date(byAdding: .day, value: $0, to: start) }
+        let plan = NunaPlanStore.load()
         let kinds = NunaPlanKind.allCases.filter(\.isSet)
         let end = cal.date(byAdding: .day, value: 7, to: start) ?? start
         let from = Int(start.timeIntervalSince1970), to = Int(end.timeIntervalSince1970)
@@ -198,8 +224,33 @@ final class NunaPlanModel: ObservableObject {
             out.append(Item(kind: .strength, goal: Double(NunaPlanKind.strength.goal), value: per.reduce(0, +), perDay: per, lines: lines))
         }
 
-        let order = NunaPlanKind.allCases
-        items = out.sorted { order.firstIndex(of: $0.kind)! < order.firstIndex(of: $1.kind)! }
+        let order = NunaPlanStore.orderedKinds(plan)
+        items = out.sorted { (order.firstIndex(of: $0.kind) ?? 99) < (order.firstIndex(of: $1.kind) ?? 99) }
+
+        // Behaviors: the days up to today that the journal says yes to (or no, when the goal is to avoid it).
+        let today = cal.startOfDay(for: Date())
+        var answersByDay: [String: [String: Bool]] = [:]
+        if !plan.behaviors.isEmpty {
+            for d in days where d <= today { answersByDay[Repository.localDayKey(d)] = await repo.nativeJournalAnswers(day: Repository.localDayKey(d)) }
+        }
+        behaviors = plan.behaviors.map { b in
+            let done = answersByDay.values.filter { $0[b.id] == !b.avoid }.count
+            return BehaviorItem(id: b.id, title: b.title, goal: b.days, done: done)
+        }
+
+        // Activities: the days with a workout that counts.
+        func dayKey(_ r: WorkoutRow) -> String { Repository.localDayKey(Date(timeIntervalSince1970: TimeInterval(r.startTs))) }
+        activities = plan.activities.map { a in
+            let matching: [WorkoutRow]
+            switch a.id {
+            case NunaPlanActivity.strain: matching = rows.filter { !NunaActivityKind.isCharge(WorkoutSource.displaySport($0.sport)) && !NunaActivityKind.isRest(WorkoutSource.displaySport($0.sport)) }
+            case NunaPlanActivity.strength: matching = rows.filter(NunaWorkoutKind.isStrength)
+            case NunaPlanActivity.recovery: matching = rows.filter { NunaActivityKind.isCharge(WorkoutSource.displaySport($0.sport)) }
+            default: matching = rows.filter { WorkoutSource.displaySport($0.sport).caseInsensitiveCompare(a.sportName ?? "") == .orderedSame }
+            }
+            return ActivityItem(id: a.id, title: a.title, goal: a.days, done: Set(matching.map(dayKey)).count)
+        }
+        spec = plan
         weekDays = days
         loaded = true
     }
@@ -261,8 +312,8 @@ private func nunaPlanBar(_ fraction: Double, tint: Color, height: CGFloat = 7) -
 
 private func nunaPlanRing(_ item: NunaPlanModel.Item) -> NunaPlanRing {
     item.kind == .steps
-        ? NunaPlanRing(fraction: item.fraction, label: "\(item.hitDays)/7", tint: item.kind.tint, dashed: true)
-        : NunaPlanRing(fraction: item.fraction, label: NunaPlanFormat.clock(item.value), tint: item.kind.tint)
+        ? NunaPlanRing(fraction: item.fraction, label: "\(item.hitDays)/7", tint: NunaPalette.charge, dashed: true)
+        : NunaPlanRing(fraction: item.fraction, label: NunaPlanFormat.clock(item.value), tint: NunaPalette.charge)
 }
 
 // MARK: - Today
@@ -277,8 +328,9 @@ struct NunaPlanCard: View {
     @AppStorage(NunaGoals.zonesEasyMinutes) private var easy = 0
     @AppStorage(NunaGoals.zonesHardMinutes) private var hard = 0
     @AppStorage(NunaGoals.strengthMinutes) private var strength = 0
+    @AppStorage(NunaPlanStore.key) private var planRaw = ""
 
-    private var anySet: Bool { steps > 0 || easy > 0 || hard > 0 || strength > 0 }
+    private var anySet: Bool { NunaPlanStore.hasPlan(NunaPlanStore.load(planRaw)) }
 
     var body: some View {
         if anySet {
@@ -290,11 +342,15 @@ struct NunaPlanCard: View {
                         header
                         if expanded {
                             ForEach(model.items) { item in
-                                HStack(spacing: 12) {
-                                    Text(verbatim: item.kind.rowTitle).font(.nuna(size: 15, weight: .semibold)).tracking(0).foregroundStyle(NunaPalette.textPrimary)
-                                        .textCase(nil).fixedSize(horizontal: false, vertical: true)
-                                    Spacer(minLength: 8)
-                                    nunaPlanRing(item)
+                                planRow(item.kind.rowTitle, ring: nunaPlanRing(item))
+                            }
+                            ForEach(model.behaviors) { b in
+                                planRow(b.title, ring: NunaPlanRing(fraction: b.fraction, label: "\(min(b.done, b.goal))/\(b.goal)", tint: NunaPalette.charge, dashed: true))
+                            }
+                            if !model.activities.isEmpty {
+                                Rectangle().fill(NunaPalette.hairline).frame(height: 1)
+                                ForEach(model.activities) { a in
+                                    planRow(a.title, done: a.complete, ring: NunaPlanRing(fraction: a.fraction, label: "\(min(a.done, a.goal))/\(a.goal)", tint: NunaPalette.charge))
                                 }
                             }
                             NavigationLink(value: NunaTodayRoute.plan) {
@@ -308,7 +364,17 @@ struct NunaPlanCard: View {
                 }
             }
             .animation(.easeInOut(duration: 0.2), value: expanded)
-            .task(id: "\(steps)-\(easy)-\(hard)-\(strength)-\(repo.refreshSeq)") { await model.load(repo: repo, age: profile.age, weekOffset: 0) }
+            .task(id: "\(steps)-\(easy)-\(hard)-\(strength)-\(planRaw)-\(repo.refreshSeq)") { await model.load(repo: repo, age: profile.age, weekOffset: 0) }
+        }
+    }
+
+    /// One goal of the plan: its words and its ring. A finished activity is set in green.
+    private func planRow(_ title: String, done: Bool = false, ring: NunaPlanRing) -> some View {
+        HStack(spacing: 12) {
+            Text(verbatim: title).font(.nuna(size: 15, weight: .semibold)).tracking(0).foregroundStyle(done ? NunaPalette.charge : NunaPalette.textPrimary)
+                .textCase(nil).fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 8)
+            ring
         }
     }
 
@@ -318,7 +384,7 @@ struct NunaPlanCard: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Custom Plan").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                        Text(verbatim: NunaPlanStore.displayName(model.spec)).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
                         if let left = model.daysLeft {
                             Text(verbatim: left == 1 ? String(localized: "1 day left") : String(localized: "\(left) days left"))
                                 .font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
@@ -338,7 +404,7 @@ struct NunaPlanCard: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(Text("Custom Plan"))
+        .accessibilityLabel(Text(verbatim: NunaPlanStore.displayName(model.spec)))
         .accessibilityValue(Text(expanded ? "Expanded" : "Collapsed"))
         .accessibilityHint(Text(expanded ? "Collapses the plan" : "Expands the plan"))
     }
@@ -352,11 +418,15 @@ struct NunaPlanOverviewView: View {
     @StateObject private var model = NunaPlanModel()
     @State private var week = 0
     @State private var editing: NunaPlanKind?
-    @State private var chooseGoal = false
+    /// The plan editor, open over this page: from the Current plan row (the list of plans) or from an Edit beside behaviors and activities (the details).
+    @State private var editor: Editor?
     @AppStorage(NunaGoals.steps) private var steps = 0
     @AppStorage(NunaGoals.zonesEasyMinutes) private var easy = 0
     @AppStorage(NunaGoals.zonesHardMinutes) private var hard = 0
     @AppStorage(NunaGoals.strengthMinutes) private var strength = 0
+    @AppStorage(NunaPlanStore.key) private var planRaw = ""
+
+    private enum Editor: Identifiable { case list, details; var id: Int { self == .list ? 0 : 1 } }
 
     private var weekLabel: String {
         guard let first = model.weekDays.first, let last = model.weekDays.last else { return "" }
@@ -375,13 +445,13 @@ struct NunaPlanOverviewView: View {
             currentPlan
             progress
             ForEach(model.items) { item in section(item) }
+            if !model.behaviors.isEmpty { listSection(String(localized: "Behaviors"), rows: model.behaviors.map { ($0.id, $0.title, $0.done, $0.goal, false) }) }
+            if !model.activities.isEmpty { listSection(String(localized: "Activities"), rows: model.activities.map { ($0.id, $0.title, $0.done, $0.goal, $0.complete) }) }
         }
         .environment(\.nunaDetailSwitch, nil)
-        .task(id: "\(week)-\(steps)-\(easy)-\(hard)-\(strength)-\(repo.refreshSeq)") { await model.load(repo: repo, age: profile.age, weekOffset: week) }
-        .confirmationDialog("Edit plan", isPresented: $chooseGoal, titleVisibility: .visible) {
-            ForEach(NunaPlanKind.allCases) { kind in
-                Button(kind.menuTitle) { editing = kind }
-            }
+        .task(id: "\(week)-\(steps)-\(easy)-\(hard)-\(strength)-\(planRaw)-\(repo.refreshSeq)") { await model.load(repo: repo, age: profile.age, weekOffset: week) }
+        .fullScreenCover(item: $editor) { which in
+            NunaPlanEditFlow(opensDetails: which == .details) { editor = nil }
         }
         .fullScreenCover(item: $editing) { kind in
             if let weekly = kind.weekly {
@@ -393,13 +463,13 @@ struct NunaPlanOverviewView: View {
     }
 
     private var currentPlan: some View {
-        Button { chooseGoal = true } label: {
+        Button { editor = .list } label: {
             NunaCard(small: true) {
                 HStack(spacing: 14) {
                     Image(systemName: "square.and.pencil").font(.nuna(size: 20, weight: .regular)).foregroundStyle(NunaPalette.textSecondary).frame(width: 32)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("Current plan").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                        Text("Custom").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).tracking(0)
+                        Text(verbatim: NunaPlanStore.shortName(model.spec)).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).tracking(0)
                     }
                     Spacer()
                     Image(systemName: "pencil").font(.nuna(size: 16, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
@@ -408,6 +478,37 @@ struct NunaPlanOverviewView: View {
             }
         }
         .buttonStyle(.plain)
+    }
+
+    /// Behaviors or activities: one card, a row for each with the days done out of the days asked.
+    private func listSection(_ name: String, rows: [(id: String, title: String, done: Int, goal: Int, complete: Bool)]) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(verbatim: name).font(.nuna(size: 19.5, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).tracking(0)
+                Spacer(minLength: 8)
+                Button { editor = .details } label: {
+                    HStack(spacing: 8) {
+                        Text("Edit").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        Image(systemName: "pencil").font(.nuna(size: 15, weight: .regular))
+                    }
+                    .foregroundStyle(NunaPalette.textPrimary).frame(height: 36).contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 4).padding(.top, 10)
+            NunaCard {
+                VStack(alignment: .leading, spacing: 16) {
+                    ForEach(rows, id: \.id) { r in
+                        HStack(spacing: 12) {
+                            Text(verbatim: r.title).font(.nuna(size: 15, weight: .semibold)).tracking(0).textCase(nil)
+                                .foregroundStyle(r.complete ? NunaPalette.charge : NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                            Spacer(minLength: 8)
+                            NunaPlanRing(fraction: r.goal > 0 ? min(1, Double(r.done) / Double(r.goal)) : 0, label: "\(min(r.done, r.goal))/\(r.goal)", tint: NunaPalette.charge, dashed: name == String(localized: "Behaviors"))
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private var progress: some View {
