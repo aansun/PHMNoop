@@ -8023,5 +8023,7 @@
  "Today's Strain in one ring, with the stretch to aim for.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Strain hari ini dalam satu cincin, dengan zona target."}}}},
  "PHMN Recovery": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Recovery PHMN"}}}},
  "Today's Recovery score in one ring.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Skor Recovery hari ini dalam satu cincin."}}}},
- "Log yesterday's journal": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Isi jurnal kemarin"}}}}
+ "Log yesterday's journal": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Isi jurnal kemarin"}}}},
+ "charge remaining": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "baterai tersisa"}}}},
+ "Charge your WHOOP to ensure uninterrupted data collection": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Isi daya WHOOP Anda agar pengumpulan data tidak terputus"}}}}
 }, "version":"1.0" }

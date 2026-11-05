@@ -152,6 +152,9 @@ struct NunaTodayView: View {
     /// How many gym sessions have been saved. The live session itself is NOT observed here: it ticks every second while it runs, and a screen that
     /// observed it would be re-evaluated whole, cards and all, each second, which is what made scrolling Today stutter during a session.
     @State private var savedSessions = 0
+    /// The strap's charge while it is low (20% or less, not charging), else nil; and the level whose banner was put away.
+    @State private var lowBatteryPct: Int?
+    @AppStorage("noop.lowBatteryBannerDismissed") private var lowBatteryDismissed = 0
     @EnvironmentObject var profile: ProfileStore
     @EnvironmentObject private var updateStore: UpdateStore
     @EnvironmentObject private var intelligence: IntelligenceEngine
@@ -394,6 +397,8 @@ struct NunaTodayView: View {
             await history.load(repo: repo)
         }
         .background(NunaSavedSessionsWatcher(count: $savedSessions))
+        .background(NunaLowBatteryWatcher(pct: $lowBatteryPct))
+        .onChange(of: lowBatteryPct) { _, v in if v == nil { lowBatteryDismissed = 0 } }
         .background(NunaPullSyncBinder(sync: sync))
         #if DEBUG
         // `--open-planner`: a debug build opens the Sleep planner once, at launch, to look at it without scrolling Today. Once only: a `.task` runs
@@ -473,11 +478,19 @@ struct NunaTodayView: View {
     /// day and the strap, and the space the wordmark's own line leaves above its letters.
     private static let quickTopLimit: CGFloat = 2 + 46 + (brandHeight - 14) / 2
 
+    /// The level (20 or 10) of a low-battery banner that is due: the strap is low and this level was not put away.
+    private var lowBatteryLevel: Int? {
+        guard showsRings, let p = lowBatteryPct else { return nil }
+        let level = p <= 10 ? 10 : 20
+        return lowBatteryDismissed == level ? nil : level
+    }
+
     private func pinnedHeight(collapse t: CGFloat) -> CGFloat {
         let bar: CGFloat = 52
         guard showsRings else { return bar + 8 }
         let banner: CGFloat = sync.phase == nil ? 0 : (NunaSyncBanner.height + 33) * (1 - t)
-        return bar + 6 + banner + Self.brandHeight * (1 - t) + NunaScoreRings.fullHeight + (NunaScoreRings.compactHeight - NunaScoreRings.fullHeight) * t + 8
+        let low: CGFloat = lowBatteryLevel == nil ? 0 : (NunaLowBatteryBanner.height + 16) * (1 - t)
+        return bar + 6 + banner + low + Self.brandHeight * (1 - t) + NunaScoreRings.fullHeight + (NunaScoreRings.compactHeight - NunaScoreRings.fullHeight) * t + 8
     }
 
     /// Bell, the day (with arrows to step it) and the strap on one slim row, then the three score rings. Stays at the top while
@@ -510,6 +523,10 @@ struct NunaTodayView: View {
             .frame(height: 46)
             if let phase = sync.phase, collapse.t < 0.05 {
                 NunaSyncBanner(phase: phase).padding(.horizontal, 4).padding(.top, 28).padding(.bottom, 5).transition(.opacity.combined(with: .move(edge: .top)))
+            }
+            if let level = lowBatteryLevel, let p = lowBatteryPct, collapse.t < 0.05 {
+                NunaLowBatteryBanner(pct: p) { withAnimation(.easeOut(duration: 0.2)) { lowBatteryDismissed = level } }
+                    .padding(.horizontal, 4).padding(.top, 10).padding(.bottom, 6).transition(.opacity.combined(with: .move(edge: .top)))
             }
             if showsRings {
                 NunaPinnedBrand(state: collapse, height: Self.brandHeight)
