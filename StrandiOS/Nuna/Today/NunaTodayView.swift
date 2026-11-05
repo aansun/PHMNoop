@@ -418,6 +418,13 @@ struct NunaTodayView: View {
             try? await Task.sleep(nanoseconds: 1_200_000_000)
             router.openMetric(args[i + 1])
         }
+        // `--open-plan` opens the plan overview, once.
+        .task {
+            guard CommandLine.arguments.contains("--open-plan"), !NunaTodayDebug.openedPlanner else { return }
+            NunaTodayDebug.openedPlanner = true
+            try? await Task.sleep(nanoseconds: 1_200_000_000)
+            pushToday(.plan)
+        }
         .task {
             guard CommandLine.arguments.contains("--open-planner"), !NunaTodayDebug.openedPlanner else { return }
             NunaTodayDebug.openedPlanner = true
@@ -983,8 +990,12 @@ struct NunaTodayView: View {
             .buttonStyle(.nuna(.primary, height: 52, fullWidth: true))
         case .yourCards:
             let rows = yourCardRows()
-            if !rows.isEmpty {
-                NunaDashboardCards(rows: rows, onCoach: { showCoach = true }, onEdit: { customize = .yourCards })
+            VStack(spacing: NunaSpacing.section) {
+                // The plan sits above My Dashboard and draws nothing until a goal is set.
+                NunaPlanCard()
+                if !rows.isEmpty {
+                    NunaDashboardCards(rows: rows, onCoach: { showCoach = true }, onEdit: { customize = .yourCards })
+                }
             }
         case .addedCards:
             let rows = addedCardRows()

@@ -8,6 +8,8 @@ import StrandAnalytics
 enum NunaTodayRoute: Hashable {
     case metric(MetricDescriptor)
     case allMetrics
+    /// The week's plan: every goal that is set and how far it has come.
+    case plan
     case earlyWarning
     /// What the Charge-state chip or the readiness chip under the rings means right now.
     case chargeState
@@ -56,6 +58,7 @@ extension View {
             switch route {
             case .metric(let m): NunaMetricHost(initial: m)
             case .allMetrics: NunaAllMetricsView()
+            case .plan: NunaPlanOverviewView()
             case .earlyWarning: NunaEarlyWarningView()
             case .chargeState: NunaDayStateView(kind: .charge)
             case .readiness: NunaDayStateView(kind: .readiness)
