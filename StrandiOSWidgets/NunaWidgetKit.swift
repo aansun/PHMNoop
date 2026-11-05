@@ -45,7 +45,7 @@ struct NunaWRing<Centre: View>: View {
     let color: Color
     /// Paints the arc through these colours from its start to its end (Effort: dark blue to light blue), like the app's ring.
     var gradient: [Color]? = nil
-    /// The day's Effort aim (0...1 of the ring): a grey stretch of the track with a white mark where it begins, like the app's ring.
+    /// The day's Effort aim (0...1 of the ring): a grey stretch of the track with a white mark in the middle of it, like the app's ring.
     var target: ClosedRange<Double>? = nil
     var lineWidth: CGFloat = 9
     @ViewBuilder var centre: () -> Centre
@@ -64,7 +64,7 @@ struct NunaWRing<Centre: View>: View {
                         ?? AnyShapeStyle(color), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                 .rotationEffect(.degrees(-90))
             if let target {
-                let at = min(max(target.lowerBound, 0), 1)
+                let at = min(max((target.lowerBound + target.upperBound) / 2, 0), 1)
                 Circle().trim(from: max(at - 0.004, 0), to: min(at + 0.004, 1))
                     .stroke(Color.white, style: StrokeStyle(lineWidth: lineWidth + 3, lineCap: .butt)).rotationEffect(.degrees(-90))
             }

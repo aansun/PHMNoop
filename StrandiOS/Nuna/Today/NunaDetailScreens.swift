@@ -408,8 +408,8 @@ struct NunaEffortDetailView: View {
 
     /// "Today's target 67–86, from your Charge": the grey stretch of the ring, in the scale the wearer chose.
     private var targetNote: String? {
-        guard let band = CoupledView.optimalStrainRange(recovery: day.charge.pct) else { return nil }
-        func shown(_ whoop: Int) -> Int { Int(UnitFormatter.effortValue(Double(whoop) / 21.0 * 100, scale: scale).rounded()) }
+        guard let band = NunaScoreStyle.effortTarget(charge: day.charge.pct) else { return nil }
+        func shown(_ fraction: Double) -> Int { Int(UnitFormatter.effortValue(fraction * 100, scale: scale).rounded()) }
         return String(localized: "Today's target \(shown(band.lowerBound))–\(shown(band.upperBound)), from your Recovery")
     }
 

@@ -71,18 +71,23 @@ private struct NunaStepsWeekView: View {
         }
     }
 
+    /// The bars as the app draws its weekly bars: slim (30% of a day's column), rounded only at the top and standing on a baseline, with no
+    /// track behind them.
     private var bars: some View {
         GeometryReader { geo in
             let h = geo.size.height - 22
             let w = geo.size.width
+            let column = w / 7
             ZStack(alignment: .topLeading) {
-                HStack(alignment: .bottom, spacing: 6) {
+                Rectangle().fill(NunaPalette.hairline).frame(width: w, height: 1).offset(y: h)
+                HStack(alignment: .bottom, spacing: 0) {
                     ForEach(0..<7, id: \.self) { i in
                         VStack(spacing: 4) {
                             ZStack(alignment: .bottom) {
-                                Capsule().fill(Color.primary.opacity(0.07))
+                                Color.clear
                                 if let v = days[i], v > 0 {
-                                    Capsule().fill(NunaPalette.restText).frame(height: max(8, h * CGFloat(Double(v) / top)))
+                                    UnevenRoundedRectangle(topLeadingRadius: 3, bottomLeadingRadius: 0, bottomTrailingRadius: 0, topTrailingRadius: 3, style: .continuous)
+                                        .fill(NunaPalette.restText).frame(width: column * 0.30, height: max(3, h * CGFloat(Double(v) / top)))
                                 }
                             }
                             .frame(height: h)
@@ -92,6 +97,7 @@ private struct NunaStepsWeekView: View {
                                     .foregroundStyle(i == todayIndex ? NunaPalette.card : NunaPalette.textPrimary)
                             }.frame(height: 18)
                         }
+                        .frame(width: column)
                     }
                 }
                 if let average { line(at: h * (1 - CGFloat(Double(average) / top)), width: w, color: NunaPalette.restText) }
