@@ -323,7 +323,13 @@ struct NunaPlanCard: View {
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var profile: ProfileStore
     @StateObject private var model = NunaPlanModel()
-    @AppStorage("nuna.plan.expanded") private var expanded = true
+    /// Whether the card is open. It lives in view state so folding it touches nothing else: writing a default straight away runs every
+    /// listener on the whole app (journal reminders, motion policy, audio coaching) in the middle of the animation. It is saved when the card
+    /// leaves the screen or the app goes to the background.
+    @State private var expanded: Bool
+    @Environment(\.scenePhase) private var scenePhase
+    private static let expandedKey = "nuna.plan.expanded"
+    init() { _expanded = State(initialValue: UserDefaults.standard.object(forKey: Self.expandedKey) as? Bool ?? true) }
     @AppStorage(NunaGoals.steps) private var steps = 0
     @AppStorage(NunaGoals.zonesEasyMinutes) private var easy = 0
     @AppStorage(NunaGoals.zonesHardMinutes) private var hard = 0
@@ -341,6 +347,7 @@ struct NunaPlanCard: View {
                     VStack(alignment: .leading, spacing: 16) {
                         header
                         if expanded {
+                          VStack(alignment: .leading, spacing: 16) {
                             ForEach(model.items) { item in
                                 planRow(item.kind.rowTitle, ring: nunaPlanRing(item))
                             }
@@ -359,14 +366,19 @@ struct NunaPlanCard: View {
                                     .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
                             }
                             .buttonStyle(.plain)
+                          }
+                          .transition(.opacity)
                         }
                     }
                 }
             }
-            .animation(.easeInOut(duration: 0.2), value: expanded)
+            .onDisappear(perform: saveExpanded)
+            .onChange(of: scenePhase) { _, phase in if phase != .active { saveExpanded() } }
             .task(id: "\(steps)-\(easy)-\(hard)-\(strength)-\(planRaw)-\(repo.refreshSeq)") { await model.load(repo: repo, age: profile.age, weekOffset: 0) }
         }
     }
+
+    private func saveExpanded() { UserDefaults.standard.set(expanded, forKey: Self.expandedKey) }
 
     /// One goal of the plan: its words and its ring. A finished activity is set in green.
     private func planRow(_ title: String, done: Bool = false, ring: NunaPlanRing) -> some View {
@@ -380,7 +392,7 @@ struct NunaPlanCard: View {
 
     /// The compact card: its whole top is the button that folds the card, so there is no small target to miss.
     private var header: some View {
-        Button { expanded.toggle() } label: {
+        Button { withAnimation(.smooth(duration: 0.25)) { expanded.toggle() } } label: {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
@@ -391,7 +403,8 @@ struct NunaPlanCard: View {
                         }
                     }
                     Spacer()
-                    Image(systemName: expanded ? "chevron.up" : "chevron.down").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    Image(systemName: "chevron.up").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                        .rotationEffect(.degrees(expanded ? 0 : 180))
                         .frame(width: 44, height: 28, alignment: .trailing)
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
