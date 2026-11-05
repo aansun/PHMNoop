@@ -5,7 +5,7 @@ import WhoopStore
 
 /// The goals a plan is made of. A plan exists as soon as one of them is set; the same stored goals the target screens write.
 enum NunaPlanKind: String, CaseIterable, Identifiable {
-    case steps, zonesEasy, zonesHard, strength
+    case steps, zonesEasy, zonesHard, strength, sleepConsistency, sleepPerformance
     var id: String { rawValue }
 
     var storageKey: String {
@@ -14,6 +14,8 @@ enum NunaPlanKind: String, CaseIterable, Identifiable {
         case .zonesEasy: return NunaGoals.zonesEasyMinutes
         case .zonesHard: return NunaGoals.zonesHardMinutes
         case .strength: return NunaGoals.strengthMinutes
+        case .sleepConsistency: return NunaGoals.sleepConsistency
+        case .sleepPerformance: return NunaGoals.sleepPerformance
         }
     }
     /// Steps a day, or minutes a week.
@@ -21,7 +23,7 @@ enum NunaPlanKind: String, CaseIterable, Identifiable {
     var isSet: Bool { goal > 0 }
     var weekly: NunaWeeklyTarget? {
         switch self {
-        case .steps: return nil
+        case .steps, .sleepConsistency, .sleepPerformance: return nil
         case .zonesEasy: return .zonesEasy
         case .zonesHard: return .zonesHard
         case .strength: return .strength
@@ -33,6 +35,7 @@ enum NunaPlanKind: String, CaseIterable, Identifiable {
         case .zonesEasy: return NunaZoneWeeklyCard.color(1)
         case .zonesHard: return NunaZoneWeeklyCard.color(3)
         case .strength: return NunaPalette.effort
+        case .sleepConsistency, .sleepPerformance: return NunaPalette.rest
         }
     }
     var zoneIndexes: [Int] { self == .zonesEasy ? [0, 1, 2] : (self == .zonesHard ? [3, 4] : []) }
@@ -44,6 +47,8 @@ enum NunaPlanKind: String, CaseIterable, Identifiable {
         case .zonesEasy: return String(localized: "HR Zones 1–3")
         case .zonesHard: return String(localized: "HR Zones 4–5")
         case .strength: return String(localized: "Strength Activity Time")
+        case .sleepConsistency: return String(localized: "Sleep Consistency")
+        case .sleepPerformance: return String(localized: "Sleep Performance")
         }
     }
     /// The title of the page section.
@@ -53,6 +58,8 @@ enum NunaPlanKind: String, CaseIterable, Identifiable {
         case .zonesEasy: return String(localized: "HR Zones 1–3 Training")
         case .zonesHard: return String(localized: "HR Zones 4–5 Training")
         case .strength: return String(localized: "Strength Training")
+        case .sleepConsistency: return String(localized: "Sleep Consistency")
+        case .sleepPerformance: return String(localized: "Sleep Performance")
         }
     }
     /// The label above the figures.
@@ -62,6 +69,8 @@ enum NunaPlanKind: String, CaseIterable, Identifiable {
         case .zonesEasy: return String(localized: "HR Zones 1–3 Time")
         case .zonesHard: return String(localized: "HR Zones 4–5 Time")
         case .strength: return String(localized: "Strength Activity Time")
+        case .sleepConsistency: return String(localized: "Sleep Consistency")
+        case .sleepPerformance: return String(localized: "Sleep Performance")
         }
     }
     /// The row on Today: the goal with its name.
@@ -72,6 +81,8 @@ enum NunaPlanKind: String, CaseIterable, Identifiable {
         case .zonesEasy: return String(localized: "\(amount)+ HR Zones 1-3 Time")
         case .zonesHard: return String(localized: "\(amount)+ HR Zones 4-5 Time")
         case .strength: return String(localized: "\(amount)+ Strength Activity Time")
+        case .sleepConsistency: return String(localized: "\(goal)%+ Sleep Consistency")
+        case .sleepPerformance: return String(localized: "\(goal)%+ Sleep Performance")
         }
     }
 }
@@ -224,6 +235,14 @@ final class NunaPlanModel: ObservableObject {
             out.append(Item(kind: .strength, goal: Double(NunaPlanKind.strength.goal), value: per.reduce(0, +), perDay: per, lines: lines))
         }
 
+        for kind in kinds where kind.isPercent {
+            let series = await Self.percentSeries(kind, repo: repo)
+            let per = days.map { series[Repository.localDayKey($0)] ?? 0 }
+            let present = per.filter { $0 > 0 }
+            let average = present.isEmpty ? 0 : present.reduce(0, +) / Double(present.count)
+            out.append(Item(kind: kind, goal: Double(kind.goal), value: average, perDay: per, lines: []))
+        }
+
         let order = NunaPlanStore.orderedKinds(plan)
         items = out.sorted { (order.firstIndex(of: $0.kind) ?? 99) < (order.firstIndex(of: $1.kind) ?? 99) }
 
@@ -255,12 +274,25 @@ final class NunaPlanModel: ObservableObject {
         loaded = true
     }
 
+    /// A sleep score by day, in percent, as the strap and the sleep model keep it.
+    static func percentSeries(_ kind: NunaPlanKind, repo: Repository) async -> [String: Double] {
+        let key = kind == .sleepConsistency ? "sleep_consistency" : "sleep_performance"
+        var out: [String: Double] = [:]
+        for p in await repo.exploreSeries(key: key, source: "my-whoop", days: 400) where p.value > 0 { out[p.day] = p.value <= 1 ? p.value * 100 : p.value }
+        return out
+    }
+
     /// The weekly minutes of the four weeks before today, averaged: the figure the target screen sets a goal against.
     static func fourWeekAverage(_ kind: NunaPlanKind, repo: Repository, age: Int) async -> Double? {
         let cal = Calendar.current
         let today = cal.startOfDay(for: Date())
         switch kind {
         case .steps: return nil
+        case .sleepConsistency, .sleepPerformance:
+            // Not minutes: the mean of the last thirty days that have a score, today left out.
+            let series = await percentSeries(kind, repo: repo)
+            let recent = (1...30).compactMap { cal.date(byAdding: .day, value: -$0, to: today) }.compactMap { series[Repository.localDayKey($0)] }
+            return recent.isEmpty ? nil : recent.reduce(0, +) / Double(recent.count)
         case .strength:
             let from = Int((cal.date(byAdding: .day, value: -28, to: today) ?? today).timeIntervalSince1970), to = Int(today.timeIntervalSince1970)
             let total = await repo.workoutRows().filter { $0.startTs >= from && $0.startTs < to && NunaWorkoutKind.isStrength($0) }
@@ -311,9 +343,9 @@ private func nunaPlanBar(_ fraction: Double, tint: Color, height: CGFloat = 7) -
 }
 
 private func nunaPlanRing(_ item: NunaPlanModel.Item) -> NunaPlanRing {
-    item.kind == .steps
-        ? NunaPlanRing(fraction: item.fraction, label: "\(item.hitDays)/7", tint: NunaPalette.charge, dashed: true)
-        : NunaPlanRing(fraction: item.fraction, label: NunaPlanFormat.clock(item.value), tint: NunaPalette.charge)
+    if item.kind == .steps { return NunaPlanRing(fraction: item.fraction, label: "\(item.hitDays)/7", tint: NunaPalette.charge, dashed: true) }
+    if item.kind.isPercent { return NunaPlanRing(fraction: item.fraction, label: "\(Int(item.value.rounded()))%", tint: NunaPalette.charge) }
+    return NunaPlanRing(fraction: item.fraction, label: NunaPlanFormat.clock(item.value), tint: NunaPalette.charge)
 }
 
 // MARK: - Today
@@ -433,6 +465,8 @@ struct NunaPlanOverviewView: View {
     @State private var editing: NunaPlanKind?
     /// The plan editor, open over this page: from the Current plan row (the list of plans) or from an Edit beside behaviors and activities (the details).
     @State private var editor: Editor?
+    /// A sleep score goal being changed: a plain number sheet, since these have no target screen of their own.
+    @State private var percentEditing: NunaPlanKind?
     @AppStorage(NunaGoals.steps) private var steps = 0
     @AppStorage(NunaGoals.zonesEasyMinutes) private var easy = 0
     @AppStorage(NunaGoals.zonesHardMinutes) private var hard = 0
@@ -463,6 +497,12 @@ struct NunaPlanOverviewView: View {
         }
         .environment(\.nunaDetailSwitch, nil)
         .task(id: "\(week)-\(steps)-\(easy)-\(hard)-\(strength)-\(planRaw)-\(repo.refreshSeq)") { await model.load(repo: repo, age: profile.age, weekOffset: week) }
+        .sheet(item: $percentEditing) { kind in
+            NunaNumberSheet(title: LocalizedStringKey(kind.editTitle), unit: "%", initial: Double(max(kind.goal, 1)), range: kind.targetRange, step: kind.targetStep, decimals: 0) {
+                UserDefaults.standard.set(Int($0), forKey: kind.storageKey)
+            }
+            .presentationDetents([.medium])
+        }
         .fullScreenCover(item: $editor) { which in
             NunaPlanEditFlow(opensDetails: which == .details) { editor = nil }
         }
@@ -542,7 +582,7 @@ struct NunaPlanOverviewView: View {
             HStack(alignment: .firstTextBaseline) {
                 Text(verbatim: item.kind.sectionTitle).font(.nuna(size: 19.5, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).tracking(0)
                 Spacer(minLength: 8)
-                Button { editing = item.kind } label: {
+                Button { if item.kind.isPercent { percentEditing = item.kind } else { editing = item.kind } } label: {
                     HStack(spacing: 8) {
                         Text("Edit").font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                         Image(systemName: "pencil").font(.nuna(size: 15, weight: .regular))
@@ -552,7 +592,7 @@ struct NunaPlanOverviewView: View {
                 .buttonStyle(.plain)
             }
             .padding(.horizontal, 4).padding(.top, 10)
-            if item.kind == .steps { stepsCard(item) } else { timeCard(item) }
+            if item.kind == .steps { stepsCard(item) } else if item.kind.isPercent { percentCard(item) } else { timeCard(item) }
         }
     }
 
@@ -658,6 +698,32 @@ struct NunaPlanOverviewView: View {
             }
             .padding(.top, 6)
             nunaPlanBar(share, tint: NunaPlanKind.steps.tint, height: 9)
+        }
+    }
+
+    // MARK: Sleep scores
+
+    /// A sleep score goal: the week's average against the target.
+    private func percentCard(_ item: NunaPlanModel.Item) -> some View {
+        let reached = item.value >= item.goal
+        return NunaCard {
+            VStack(alignment: .leading, spacing: 16) {
+                HStack {
+                    Text(verbatim: item.kind.cardLabel).font(.nuna(size: 12.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
+                    Spacer()
+                    nunaPlanRing(item)
+                }
+                HStack {
+                    Text(verbatim: item.value > 0 ? "\(Int(item.value.rounded()))%" : "–").font(.nuna(size: 18, weight: .semibold, design: NunaType.design)).foregroundStyle(item.kind.tint)
+                    Spacer()
+                    Text(verbatim: "\(Int(item.goal))%").font(.nuna(size: 18, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                }
+                nunaPlanBar(item.fraction, tint: item.kind.tint, height: 8)
+                Text(verbatim: item.value <= 0 ? String(localized: "Wear your strap to bed to track this.")
+                     : (reached ? String(localized: "You hit your goal this week. Anything more is a bonus.")
+                        : String(localized: "Your average this week is \(Int(item.value.rounded()))%. Aim for \(Int(item.goal))% or more.")))
+                    .font(.nunaWords(size: 13)).tracking(0).foregroundStyle(NunaPalette.textSecondary).lineSpacing(2).textCase(nil).fixedSize(horizontal: false, vertical: true)
+            }
         }
     }
 

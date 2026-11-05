@@ -47,18 +47,50 @@ struct NunaPlanSpec: Codable, Equatable {
 
 /// The ready-made plans. Each is a starting point the wearer can edit before starting it.
 enum NunaPlanTemplate: String, CaseIterable, Identifiable {
-    case boostFitness
+    case boostFitness, feelBetter, sleepDeeper
     var id: String { rawValue }
 
-    var name: String { String(localized: "Boost Fitness") }
-    var blurb: String { String(localized: "Improve fitness with high-intensity training, tracking your protein, and recovering like a pro.") }
-    var symbol: String { "met:heart-rate-zones-4-5" }
-    var accent: Color { Color(hex: "#F26B2D") }
-    var wash: Color { Color(hex: "#4A2112") }
+    var name: String {
+        switch self {
+        case .boostFitness: return String(localized: "Boost Fitness")
+        case .feelBetter: return String(localized: "Feel Better")
+        case .sleepDeeper: return String(localized: "Sleep Deeper")
+        }
+    }
+    var blurb: String {
+        switch self {
+        case .boostFitness: return String(localized: "Improve fitness with high-intensity training, tracking your protein, and recovering like a pro.")
+        case .feelBetter: return String(localized: "Feel your best by moving more, focusing on recovery activities, and staying hydrated.")
+        case .sleepDeeper: return String(localized: "Turn great nights into a habit. Build a calming nightly routine and stick to a consistent bedtime.")
+        }
+    }
+    var symbol: String {
+        switch self { case .boostFitness: return "met:heart-rate-zones-4-5"; case .feelBetter: return "face.smiling"; case .sleepDeeper: return "moon" }
+    }
+    var accent: Color {
+        switch self { case .boostFitness: return Color(hex: "#F26B2D"); case .feelBetter: return Color(hex: "#4FBF9A"); case .sleepDeeper: return Color(hex: "#8FA8C4") }
+    }
+    var wash: Color {
+        switch self { case .boostFitness: return Color(hex: "#4A2112"); case .feelBetter: return Color(hex: "#133B2E"); case .sleepDeeper: return Color(hex: "#1C2A3B") }
+    }
 
-    var metrics: [NunaPlanKind] { [.zonesHard] }
-    var behaviors: [NunaPlanBehavior] { [NunaPlanBehavior.protein(days: 4)] }
-    var activities: [NunaPlanActivity] { [NunaPlanActivity(id: NunaPlanActivity.strength, title: NunaPlanActivity.generic(NunaPlanActivity.strength).title, days: 1)] }
+    var metrics: [NunaPlanKind] {
+        switch self { case .boostFitness: return [.zonesHard]; case .feelBetter: return [.steps]; case .sleepDeeper: return [.sleepConsistency, .sleepPerformance] }
+    }
+    var behaviors: [NunaPlanBehavior] {
+        switch self {
+        case .boostFitness: return [NunaPlanBehavior.protein(days: 4)]
+        case .feelBetter: return [NunaPlanBehavior.hydration(days: 4)]
+        case .sleepDeeper: return [NunaPlanBehavior.lateMeal(days: 3)]
+        }
+    }
+    var activities: [NunaPlanActivity] {
+        switch self {
+        case .boostFitness: return [NunaPlanActivity(id: NunaPlanActivity.strength, title: NunaPlanActivity.generic(NunaPlanActivity.strength).title, days: 1)]
+        case .feelBetter: return [NunaPlanActivity(id: NunaPlanActivity.recovery, title: NunaPlanActivity.generic(NunaPlanActivity.recovery).title, days: 3)]
+        case .sleepDeeper: return []
+        }
+    }
 }
 
 extension NunaPlanBehavior {
@@ -66,6 +98,17 @@ extension NunaPlanBehavior {
     static let proteinQuestion = "Did you consume protein?"
     static func protein(days: Int) -> NunaPlanBehavior {
         NunaPlanBehavior(id: proteinQuestion, title: String(localized: "Protein"), subtitle: String(localized: "Consumed protein?"), days: days)
+    }
+
+    /// Hydration is not a starter journal question either; it is added as "Hydration".
+    static let hydrationQuestion = "Did you stay hydrated?"
+    static func hydration(days: Int) -> NunaPlanBehavior {
+        NunaPlanBehavior(id: hydrationQuestion, title: String(localized: "Hydration"), subtitle: String(localized: "Stayed hydrated?"), days: days)
+    }
+    /// A starter journal question, goes by "Late meal" in the plan, and the goal is to avoid it.
+    static let lateMealQuestion = "Did you eat close to bedtime?"
+    static func lateMeal(days: Int) -> NunaPlanBehavior {
+        NunaPlanBehavior(id: lateMealQuestion, title: String(localized: "Late meal"), subtitle: String(localized: "Ate close to bedtime?"), days: days, avoid: true)
     }
 
     /// "Did you drink any alcohol?" → "Drink any alcohol": the short name a question goes by in the plan.
@@ -127,13 +170,17 @@ enum NunaPlanBand {
 }
 
 extension NunaPlanKind {
-    var isTime: Bool { self != .steps }
+    var isTime: Bool { self == .zonesEasy || self == .zonesHard || self == .strength }
+    /// A sleep score in percent: the week's average against the target.
+    var isPercent: Bool { self == .sleepConsistency || self == .sleepPerformance }
     var editTitle: String {
         switch self {
         case .steps: return String(localized: "Daily Steps")
         case .zonesEasy: return String(localized: "Heart Rate Zones 1-3")
         case .zonesHard: return String(localized: "Heart Rate Zones 4-5")
         case .strength: return String(localized: "Strength Activity Time")
+        case .sleepConsistency: return String(localized: "Sleep Consistency")
+        case .sleepPerformance: return String(localized: "Sleep Performance")
         }
     }
     var editIcon: String {
@@ -142,10 +189,12 @@ extension NunaPlanKind {
         case .zonesEasy: return "met:heart-rate-zones-1-3"
         case .zonesHard: return "met:heart-rate-zones-4-5"
         case .strength: return "act:strength-trainer"
+        case .sleepConsistency: return "met:sleep-consistency"
+        case .sleepPerformance: return "met:sleep-performance"
         }
     }
-    var averageLabel: String { self == .steps ? String(localized: "30-day avg.") : String(localized: "4-week avg.") }
-    var unit: String { self == .steps ? String(localized: "steps") : String(localized: "min") }
+    var averageLabel: String { self == .steps || isPercent ? String(localized: "30-day avg.") : String(localized: "4-week avg.") }
+    var unit: String { self == .steps ? String(localized: "steps") : (isPercent ? "%" : String(localized: "min")) }
     /// What the target stepper moves through.
     var targetRange: ClosedRange<Double> {
         switch self {
@@ -153,12 +202,13 @@ extension NunaPlanKind {
         case .zonesEasy: return 10...300
         case .zonesHard: return 1...60
         case .strength: return 10...720
+        case .sleepConsistency, .sleepPerformance: return 40...100
         }
     }
-    var targetStep: Double { self == .steps ? 500 : (self == .zonesHard ? 1 : 5) }
+    var targetStep: Double { self == .steps ? 500 : (self == .zonesHard || isPercent ? 1 : 5) }
     /// How much a week's target moves up from the average.
     var increment: Double {
-        switch self { case .steps: return 500; case .zonesEasy: return 10; case .zonesHard: return 1; case .strength: return 15 }
+        switch self { case .steps: return 500; case .zonesEasy: return 10; case .zonesHard: return 1; case .strength: return 15; case .sleepConsistency, .sleepPerformance: return 5 }
     }
 
     /// Poor, sufficient or optimal for an average (steps a day, or minutes a week).
@@ -169,22 +219,25 @@ extension NunaPlanKind {
         case .zonesEasy: (poor, good) = (75, 150)
         case .zonesHard: (poor, good) = (10, 20)
         case .strength: (poor, good) = (45, 90)
+        case .sleepConsistency: (poor, good) = (60, 80)
+        case .sleepPerformance: (poor, good) = (70, 85)
         }
         return average < poor ? .poor : (average < good ? .sufficient : .optimal)
     }
 
-    func averageText(_ v: Double) -> String { self == .steps ? nunaThousands(v) : NunaPlanFormat.clock(v) }
+    func averageText(_ v: Double) -> String { self == .steps ? nunaThousands(v) : (isPercent ? "\(Int(v.rounded()))%" : NunaPlanFormat.clock(v)) }
     /// "6,700", "50 min", "1:30 hrs".
     func targetText(_ v: Int) -> String {
         if self == .steps { return nunaThousands(Double(v)) }
+        if isPercent { return "\(v)%" }
         return v >= 60 ? String(format: "%d:%02d hrs", v / 60, v % 60) : "\(v) min"
     }
     /// The line of a value row: "6,200 steps", "0:41 hours".
-    func valueText(_ v: Double) -> String { self == .steps ? "\(nunaThousands(v)) " + String(localized: "steps") : NunaPlanFormat.clock(v) + " " + String(localized: "hours") }
+    func valueText(_ v: Double) -> String { isPercent ? averageText(v) : self == .steps ? "\(nunaThousands(v)) " + String(localized: "steps") : NunaPlanFormat.clock(v) + " " + String(localized: "hours") }
 
     /// A week's target a step above the average, rounded to what the stepper moves in.
     func suggested(average: Double?) -> Int {
-        let raw = (average ?? 0) + increment
+        let raw = (isPercent ? (average ?? 0).rounded() : (average ?? 0)) + increment
         let stepped = (raw / targetStep).rounded(.up) * targetStep
         return Int(min(max(stepped, targetRange.lowerBound), targetRange.upperBound))
     }

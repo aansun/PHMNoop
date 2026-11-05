@@ -8279,5 +8279,21 @@
  "Start plan": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Mulai rencana"}}}},
  "Save plan": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Simpan rencana"}}}},
  "%@+ HR Zones 1-3 Time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "%@+ Waktu Zona HR 1-3"}}}},
- "%@+ HR Zones 4-5 Time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "%@+ Waktu Zona HR 4-5"}}}}
+ "%@+ HR Zones 4-5 Time": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "%@+ Waktu Zona HR 4-5"}}}},
+ "Feel Better": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lebih Bugar"}}}},
+ "Sleep Deeper": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidur Lebih Nyenyak"}}}},
+ "Feel your best by moving more, focusing on recovery activities, and staying hydrated.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Rasakan kondisi terbaikmu dengan lebih banyak bergerak, fokus pada aktivitas recovery, dan tetap terhidrasi."}}}},
+ "Turn great nights into a habit. Build a calming nightly routine and stick to a consistent bedtime.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Jadikan malam yang baik sebagai kebiasaan. Bangun rutinitas malam yang menenangkan dan jaga jam tidur yang konsisten."}}}},
+ "Stayed hydrated?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tetap terhidrasi?"}}}},
+ "Late meal": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Makan larut malam"}}}},
+ "Ate close to bedtime?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Makan dekat jam tidur?"}}}},
+ "%lld%%+ Sleep Consistency": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "%lld%%+ Konsistensi Tidur"}}}},
+ "%lld%%+ Sleep Performance": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "%lld%%+ Performa Tidur"}}}},
+ "Wear your strap to bed to track this.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pakai strap saat tidur untuk melacak ini."}}}},
+ "Your average this week is %lld%%. Aim for %lld%% or more.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Rata-ratamu minggu ini %1$lld%%. Targetkan %2$lld%% atau lebih."}}}},
+ "Avoid 1 day": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Hindari 1 hari"}}}},
+ "Avoid %lld days": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Hindari %lld hari"}}}},
+ "Select your behaviors": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pilih perilakumu"}}}},
+ "Select your metrics": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pilih metrikmu"}}}},
+ "Select your activities": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pilih aktivitasmu"}}}}
 }, "version":"1.0" }
