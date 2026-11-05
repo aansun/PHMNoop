@@ -94,22 +94,13 @@ struct NunaHowItWorksView: View {
         case .provenance: return NunaPalette.accent
         }
     }
-    private func methodTint(_ m: HowNoopWorksView.ScoreMethod) -> Color {
-        switch m {
-        case .charge: return NunaPalette.charge
-        case .effort: return NunaPalette.effort
-        case .rest: return NunaPalette.rest
-        case .fitnessAge: return NunaPalette.accent
-        }
-    }
-
     var body: some View {
         NunaDetailScreen("How the app works") {
             NunaCard(highlight: true) {
                 VStack(alignment: .leading, spacing: 8) {
                     nunaTrendsCap("The one rule")
                     Text("NOOP never shows you a number it had to make up. If a score isn't ready, it tells you why and what to do next. Everything here runs on your device, from your strap.")
-                        .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                        .font(.nuna(size: 15, weight: .semibold)).tracking(0).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }.frame(maxWidth: .infinity, alignment: .leading)
             }
             ForEach(HowNoopWorksView.Section.allCases) { s in
@@ -126,24 +117,9 @@ struct NunaHowItWorksView: View {
                     }.frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
-            NunaSettingsGroup("How your scores are computed") {
-                Text("Each score follows a published method, computed on your device. We name the method family so you can read up on it, and we never claim to reproduce another company's number exactly.")
-                    .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).padding(.vertical, 12).textCase(nil)
-                ForEach(HowNoopWorksView.ScoreMethod.allCases) { m in
-                    NunaDivider()
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack(alignment: .firstTextBaseline, spacing: 8) {
-                            Text(verbatim: m.name).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                            Text(verbatim: m.family).font(.nuna(size: 10.5, weight: .heavy)).tracking(0.4).foregroundStyle(methodTint(m))
-                        }
-                        Text(verbatim: m.method).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                    }.frame(maxWidth: .infinity, alignment: .leading).padding(.vertical, 12)
-                }
-            }
             NavigationLink { NunaScoringGuideView() } label: {
                 NunaCard(small: true) { NunaListRow("How scores are worked out", description: "Recovery, Strain and Sleep", systemImage: "chart.bar.doc.horizontal", showsChevron: true) }
             }.buttonStyle(.plain)
-            nunaFootnote("NOOP never makes up a number. When it can't compute one honestly it tells you what's missing and what to do, rather than showing a fake value.")
         }
     }
 }
@@ -168,7 +144,7 @@ struct NunaScoringGuideView: View {
                     VStack(alignment: .leading, spacing: 10) {
                         nunaRuledHeader("The three scores")
                         Text("NOOP gives you three daily scores (Recovery, Strain and Sleep), each on a 0-100 scale. They're built from your strap's raw signals using published, peer-reviewed sport science, and computed entirely on your device. They are NOT WHOOP's scores: we don't have WHOOP's private algorithms and don't pretend to. They aim at the same three questions using open science, so they'll usually track WHOOP's in direction, but won't match number-for-number. And that's the point.")
-                            .font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
+                            .font(.nuna(size: 14.5, weight: .semibold)).tracking(0).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                         HStack(spacing: 16) {
                             ForEach(ScoreSection.allCases) { s in
                                 HStack(spacing: 6) { Circle().fill(color(s)).frame(width: 8, height: 8); Text(verbatim: s.displayName).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
