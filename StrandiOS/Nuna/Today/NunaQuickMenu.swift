@@ -93,6 +93,15 @@ struct NunaQuickRunner: View {
                 NavigationStack { NunaBreathView().toolbar(.hidden, for: .navigationBar) }
                     .preferredColorScheme(NunaTheme.colorScheme)
             }
+            #if DEBUG
+            // `--open-breathing`: a debug build opens Breathing once at launch, to look at it without going through the menu.
+            .task {
+                guard CommandLine.arguments.contains("--open-breathing"), !NunaTodayDebug.openedPlanner else { return }
+                NunaTodayDebug.openedPlanner = true
+                try? await Task.sleep(nanoseconds: 1_500_000_000)
+                breathing = true
+            }
+            #endif
     }
 
     private func run(_ a: NunaQuickAction) {
