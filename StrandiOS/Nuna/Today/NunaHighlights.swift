@@ -450,13 +450,15 @@ struct NunaHighlightsCard: View {
                     .mask(alignment: .bottom) { Rectangle().frame(height: 12) }
                     .frame(maxHeight: .infinity, alignment: .bottom).offset(y: 12)
             }
-            NunaCard(padding: EdgeInsets(top: 18, leading: 20, bottom: 18, trailing: h.bars == nil && h.art == nil ? 46 : 140)) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(verbatim: h.title).font(.nunaWords(size: 14.5, semibold: true)).tracking(0).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            NunaCard(padding: EdgeInsets(top: 18, leading: 20, bottom: 18, trailing: h.art != nil ? 160 : (h.bars == nil ? 46 : 140))) {
+                // A card with a picture is the compact one: smaller words, no three-line floor, 138 pt tall with its words centred.
+                let compact = h.art != nil
+                VStack(alignment: .leading, spacing: compact ? 8 : 6) {
+                    Text(verbatim: h.title).font(.nunaWords(size: compact ? 13.5 : 14.5, semibold: true)).tracking(0).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                     // Always at least three lines tall (a hidden three-line stand-in sets the floor), so every card is four lines with its title.
                     ZStack(alignment: .topLeading) {
-                        Text(verbatim: "A\nA\nA").font(.nunaWords(size: 15)).tracking(0).lineSpacing(2).hidden().accessibilityHidden(true)
-                        Text(verbatim: h.message).font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                        if !compact { Text(verbatim: "A\nA\nA").font(.nunaWords(size: 15)).tracking(0).lineSpacing(2).hidden().accessibilityHidden(true) }
+                        Text(verbatim: h.message).font(.nunaWords(size: compact ? 12 : 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                             .lineSpacing(2).fixedSize(horizontal: false, vertical: true)
                     }
                     if let t = h.actionTitle, let a = h.action {
@@ -464,10 +466,10 @@ struct NunaHighlightsCard: View {
                             if a == .outlook || a == .trend || a == .plan {
                                 // The Outlook's own call to action: gradient letters and an arrow, no pill.
                                 HStack(spacing: 10) {
-                                    Text(verbatim: t).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                                    Image(systemName: "arrow.right").font(.system(size: 16, weight: .regular))
+                                    Text(verbatim: t).font(.nuna(size: compact ? 12 : 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                                    Image(systemName: "arrow.right").font(.system(size: compact ? 14 : 16, weight: .regular))
                                 }
-                                .foregroundStyle(a == .trend || a == .plan ? AnyShapeStyle(Color(red: 0.29, green: 0.56, blue: 0.89)) : AnyShapeStyle(Self.outlookGradient)).frame(minHeight: 32)
+                                .foregroundStyle(a == .trend || a == .plan ? AnyShapeStyle(Color(red: 0.29, green: 0.56, blue: 0.89)) : AnyShapeStyle(Self.outlookGradient)).frame(minHeight: compact ? 20 : 32)
                             } else {
                                 Text(verbatim: t).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                                     .foregroundStyle(NunaPalette.textPrimary)
@@ -475,9 +477,10 @@ struct NunaHighlightsCard: View {
                                     .background(Capsule().fill(NunaPalette.cardHighlight))
                             }
                         }
-                        .buttonStyle(.plain).padding(.top, 4)
+                        .buttonStyle(.plain).padding(.top, compact ? 2 : 4)
                     }
                 }
+                .frame(minHeight: compact ? 102 : nil, alignment: .leading)
             }
             .overlay {
                 // The first Outlook is framed in the Outlook's violet to sky blue.
@@ -487,7 +490,7 @@ struct NunaHighlightsCard: View {
             }
             .overlay(alignment: .trailing) {
                 if let b = h.bars { NunaHighlightBars(values: b).padding(.trailing, 40) }
-                if h.art == .dart { NunaDartBoard().padding(.trailing, 46).offset(y: 16) }
+                if h.art == .dart { NunaDartBoard().padding(.trailing, 52) }
             }
             .overlay(alignment: .topTrailing) {
                 Button { put(away: h.id) } label: {
