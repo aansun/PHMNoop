@@ -8398,5 +8398,13 @@
  "Avg. weight": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Rata-rata berat"}}}},
  "What day?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Hari apa?"}}}},
  "Measurements": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pengukuran"}}}},
- "Add measurement": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tambah pengukuran"}}}}
+ "Add measurement": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tambah pengukuran"}}}},
+ "During a workout": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Saat berolahraga"}}}},
+ "Activity detection": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Deteksi aktivitas"}}}},
+ "Heart rate settings": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pengaturan detak jantung"}}}},
+ "Maximum heart rate and zones": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Detak jantung maksimum dan zona"}}}},
+ "Suggests a workout when your heart rate stays up. Never saves on its own": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Menyarankan olahraga saat detak jantungmu tetap tinggi. Tidak pernah menyimpan sendiri"}}}},
+ "Choose which alerts PHMN sends. If the iOS permission is off, none of them arrive.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Pilih notifikasi yang dikirim PHMN. Jika izin iOS mati, tidak ada satu pun yang masuk."}}}},
+ "Vibration on the strap, with its quiet hours, is under Strap automations. The alarm is set from Tonight's sleep in Today.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Getaran di strap, beserta jam tenangnya, ada di Otomatisasi strap. Alarm diatur dari Tidur malam ini di Today."}}}},
+ "Data & Integrations": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Data & Integrasi"}}}}
 }, "version":"1.0" }

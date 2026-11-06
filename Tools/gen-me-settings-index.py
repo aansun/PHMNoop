@@ -8,7 +8,7 @@ import re, subprocess, pathlib, sys
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC = ROOT / "StrandiOS"
 VIEWS = {
-    "persona": "NunaPersonaView", "zones": "NunaZonesView", "goals": "NunaGoalsView", "devices": ["NunaDevicesView", "NunaDevicesContent", "NunaDeviceDetailView"],
+    "persona": "NunaPersonaView", "zones": "NunaZonesView", "activity": "NunaActivitySettingsView", "devices": ["NunaDevicesView", "NunaDevicesContent", "NunaDeviceDetailView"],
     "anya": "NunaAnyaSettingsView", "appearance": "NunaAppearanceView", "widgets": "NunaWidgetSettingsView",
     "units": "NunaUnitsView", "language": "NunaLanguageView", "features": "NunaFeaturesView",
     "notifications": "NunaNotificationsView", "privacy": "NunaPrivacyView", "automations": "NunaAutomationsView",

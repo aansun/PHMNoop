@@ -79,13 +79,7 @@ struct NunaUnitsView: View {
 
 struct NunaFeaturesView: View {
     @AppStorage(HydrationStore.enabledKey) private var hydration = false
-    @AppStorage(PuffinExperiment.autoDetectWorkoutsKey) private var autoDetect = false
-    @AppStorage(PuffinExperiment.journalReminderKey) private var journal = true
-    @AppStorage(JournalReminderNotifier.minuteKey) private var journalMinute = JournalReminderNotifier.defaultMinute
-    @AppStorage("workoutKeepScreenOn") private var keepOn = false
     @AppStorage(ScreenIdle.strapSyncKeepAwakeKey) private var syncKeepOn = false
-    @AppStorage(UnitPrefs.liveActivityKey) private var liveActivity = true
-    @AppStorage(LiveActivityController.designKey) private var liveDesign = "standard"
     @AppStorage(AppModel.cycleAwarenessKey) private var cycle = false
     @AppStorage(AppModel.cycleAwarenessHiddenKey) private var cycleHidden = false
     @EnvironmentObject private var profile: ProfileStore
@@ -96,21 +90,35 @@ struct NunaFeaturesView: View {
             NunaSettingsGroup {
                 NunaToggleRow("Water tracker", subtitle: "A drink log with a daily target", systemImage: "drop", isOn: $hydration).padding(.vertical, 8)
                 NunaDivider()
-                NunaToggleRow("Auto-detect workouts", subtitle: "Only suggests, never saves on its own", systemImage: "figure.run", isOn: $autoDetect).padding(.vertical, 8)
-                NunaDivider()
-                NunaToggleRow("Journal reminder", subtitle: "A notification in the evening and a card in Today", systemImage: "book", isOn: $journal).padding(.vertical, 8)
-                if journal {
+                NunaToggleRow("Screen on while syncing", subtitle: "So a long sync finishes without locking", systemImage: "arrow.triangle.2.circlepath", isOn: $syncKeepOn).padding(.vertical, 8)
+                if profile.cycleAwarenessApplies {
                     NunaDivider()
-                    HStack {
-                        Text("Reminder time").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-                        Spacer()
-                        DatePicker("", selection: Binding(
-                            get: { Calendar.current.date(bySettingHour: journalMinute / 60, minute: journalMinute % 60, second: 0, of: Date()) ?? Date() },
-                            set: { let c = Calendar.current.dateComponents([.hour, .minute], from: $0); journalMinute = (c.hour ?? 21) * 60 + (c.minute ?? 0) }),
-                                   displayedComponents: .hourAndMinute).labelsHidden()
-                    }.padding(.vertical, 8)
+                    NunaToggleRow("Cycle awareness", subtitle: "Optional, only on this iPhone", systemImage: "circle.dotted", isOn: $cycle).padding(.vertical, 8)
                 }
-                NunaDivider()
+            }
+            nunaFootnote("Everything here stays on this iPhone.")
+        }
+    }
+}
+
+// MARK: - Activity settings
+
+/// What happens around a workout: whether the app suggests one by itself, the heart-rate zones, and how the phone behaves while one is recorded.
+struct NunaActivitySettingsView: View {
+    @AppStorage(PuffinExperiment.autoDetectWorkoutsKey) private var autoDetect = false
+    @AppStorage("workoutKeepScreenOn") private var keepOn = false
+    @AppStorage(UnitPrefs.liveActivityKey) private var liveActivity = true
+    @AppStorage(LiveActivityController.designKey) private var liveDesign = "standard"
+
+    var body: some View {
+        NunaDetailScreen("Activity Settings", centersTitle: true) {
+            NunaSettingsGroup("Detection") {
+                NunaToggleRow("Activity detection", subtitle: "Suggests a workout when your heart rate stays up. Never saves on its own", systemImage: "figure.run", isOn: $autoDetect).padding(.vertical, 8)
+            }
+            NunaSettingsGroup("Heart rate") {
+                NavigationLink(value: NunaMeRoute.zones) { NunaListRow("Heart rate settings", description: "Maximum heart rate and zones", systemImage: "heart", showsChevron: true) }.buttonStyle(.plain)
+            }
+            NunaSettingsGroup("During a workout") {
                 NunaToggleRow("Screen on during workouts", subtitle: "Heart rate stays visible while recording", systemImage: "sun.max", isOn: $keepOn).padding(.vertical, 8)
                 NunaDivider()
                 NunaToggleRow("Live Activity", subtitle: "Heart rate and your session on the Lock Screen and Dynamic Island", systemImage: "iphone.gen3", isOn: $liveActivity).padding(.vertical, 8)
@@ -126,27 +134,21 @@ struct NunaFeaturesView: View {
                     Text("Banner: the clock, the PHMN mark and the heart rate on top; the five zones and two figures below.")
                         .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }.padding(.vertical, 10)
-                NunaDivider()
-                NunaToggleRow("Screen on while syncing", subtitle: "So a long sync finishes without locking", systemImage: "arrow.triangle.2.circlepath", isOn: $syncKeepOn).padding(.vertical, 8)
-                if profile.cycleAwarenessApplies {
-                    NunaDivider()
-                    NunaToggleRow("Cycle awareness", subtitle: "Optional, only on this iPhone", systemImage: "circle.dotted", isOn: $cycle).padding(.vertical, 8)
-                }
             }
-            nunaFootnote("Everything here stays on this iPhone.")
         }
     }
 }
 
 // MARK: - Notifications (Notifications.dc)
 
+/// The alerts PHMN sends. They are all made on this iPhone (no server): the switches here choose which ones the app schedules, and the iOS permission
+/// at the top is the master that lets any of them through. Vibration on the strap is a different thing and lives under Strap automations.
 struct NunaNotificationsView: View {
     @EnvironmentObject private var behavior: BehaviorStore
-    @EnvironmentObject private var coach: AICoachEngine
     @EnvironmentObject private var model: AppModel
     @AppStorage("coachBrief.enabled") private var brief = false
     @AppStorage(PuffinExperiment.journalReminderKey) private var journal = true
-    @AppStorage("notif.masterEnabled") private var wrist = false
+    @AppStorage(JournalReminderNotifier.minuteKey) private var journalMinute = JournalReminderNotifier.defaultMinute
     @AppStorage(WorkoutReportNotifier.enabledKey) private var workoutReport = false
     @State private var status: UNAuthorizationStatus = .notDetermined
 
@@ -163,26 +165,32 @@ struct NunaNotificationsView: View {
                     if status == .denied { Button("Open") { openIOSSettings() }.font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary) }
                 }
             }
-            NunaSettingsGroup("Recovery and sleep") {
+            Text("Choose which alerts PHMN sends. If the iOS permission is off, none of them arrive.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+            NunaSettingsGroup {
                 NavigationLink(value: NunaAnyaRoute.brief) { NunaListRow("Morning brief", subtitle: LocalizedStringKey(brief ? String(localized: "Every day at \(NunaAnyaSettingsView.clock(CoachBriefScheduler.timeMinutes))") : String(localized: "Off")), systemImage: "sunrise", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
-                NavigationLink(value: NunaMeRoute.alarm) { NunaListRow("Alarms and bedtime", description: "Smart alarm and wind-down", systemImage: "alarm", showsChevron: true) }.buttonStyle(.plain)
-                NunaDivider()
                 NunaToggleRow("Early-illness warning", subtitle: "When two signals drift together", systemImage: "waveform.path.ecg", isOn: Binding(get: { behavior.illnessWatch }, set: { behavior.illnessWatch = $0; if $0 { IllnessNotifier.requestAuthorization() } })).padding(.vertical, 8)
-            }
-            NunaSettingsGroup("Workouts and notes") {
-                NunaToggleRow("Summary after a workout", subtitle: "Strain, duration and heart rate", systemImage: "list.bullet.clipboard", isOn: Binding(get: { workoutReport }, set: { workoutReport = $0; if $0 { WorkoutReportNotifier.requestAuthorization() } })).padding(.vertical, 8)
-                NunaDivider()
-                NunaToggleRow("Journal reminder", subtitle: "A card in Today", systemImage: "book", isOn: $journal).padding(.vertical, 8)
                 NunaDivider()
                 NunaToggleRow("Strain target reached", subtitle: "Once a day, after the strap syncs", systemImage: "target", isOn: Binding(get: { behavior.strainTargetNudge }, set: { behavior.strainTargetNudge = $0; if $0 { StrainTargetNotifier.requestAuthorization(); model.evaluateStrainTarget() } })).padding(.vertical, 8)
-            }
-            NunaSettingsGroup("Device") {
-                NunaToggleRow("Strap battery", subtitle: "Low and full, plus the estimate", systemImage: "battery.25percent", isOn: Binding(get: { behavior.batteryAlerts }, set: { behavior.batteryAlerts = $0; if $0 { BatteryNotifier.requestAuthorization() } })).padding(.vertical, 8)
                 NunaDivider()
-                NunaToggleRow("Wrist alerts", subtitle: "The master switch for every strap vibration", systemImage: "applewatch.radiowaves.left.and.right", isOn: $wrist).padding(.vertical, 8)
+                NunaToggleRow("Summary after a workout", subtitle: "Strain, duration and heart rate", systemImage: "list.bullet.clipboard", isOn: Binding(get: { workoutReport }, set: { workoutReport = $0; if $0 { WorkoutReportNotifier.requestAuthorization() } })).padding(.vertical, 8)
+                NunaDivider()
+                NunaToggleRow("Journal reminder", subtitle: "A notification in the evening and a card in Today", systemImage: "book", isOn: $journal).padding(.vertical, 8)
+                if journal {
+                    NunaDivider()
+                    HStack {
+                        Text("Reminder time").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                        Spacer()
+                        DatePicker("", selection: Binding(
+                            get: { Calendar.current.date(bySettingHour: journalMinute / 60, minute: journalMinute % 60, second: 0, of: Date()) ?? Date() },
+                            set: { let c = Calendar.current.dateComponents([.hour, .minute], from: $0); journalMinute = (c.hour ?? 21) * 60 + (c.minute ?? 0) }),
+                                   displayedComponents: .hourAndMinute).labelsHidden()
+                    }.padding(.vertical, 8)
+                }
+                NunaDivider()
+                NunaToggleRow("Strap battery", subtitle: "Low and full, plus the estimate", systemImage: "battery.25percent", isOn: Binding(get: { behavior.batteryAlerts }, set: { behavior.batteryAlerts = $0; if $0 { BatteryNotifier.requestAuthorization() } })).padding(.vertical, 8)
             }
-            nunaFootnote("Quiet hours for the wrist reminders are under Strap automations > Sitting too long.")
+            nunaFootnote("Vibration on the strap, with its quiet hours, is under Strap automations. The alarm is set from Tonight's sleep in Today.")
         }
         .task { status = await UNUserNotificationCenter.current().notificationSettings().authorizationStatus }
     }
