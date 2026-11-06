@@ -4,7 +4,7 @@ import StrandDesign
 
 /// The explanation card under a trend page: what the reading is and how to read it. Generated from one table so the catalog keys match.
 enum NunaTrendInfoKind: String {
-    case stressNonActivity, stressSleep, stressTotal, weight, leanBodyMass, debt, efficiency, restorative, consistency, hoursNeeded, timeInBed, restPerformance, respiratory, rhr, hrv, charge
+    case calories, stressNonActivity, stressSleep, stressTotal, weight, leanBodyMass, debt, efficiency, restorative, consistency, hoursNeeded, timeInBed, restPerformance, respiratory, rhr, hrv, charge
 }
 
 struct NunaTrendInfo: View {
@@ -14,6 +14,12 @@ struct NunaTrendInfo: View {
 
     private var entry: (title: String, items: [Item]) {
         switch kind {
+        case .calories:
+            return ("What are Calories?", [
+                .paragraph("Calories measure the energy you burn in a day. PHMN works it out from an estimate of your Basal Metabolic Rate (BMR), the energy your body uses at rest, and from your heart rate through the day, which shows when you burned more."),
+                .paragraph("Your BMR is estimated from the height, weight, sex and age in your profile. In general, the more active you are, the more calories you burn."),
+                .paragraph("Eat more calories than you burn and you gain weight (muscle or fat). Eat fewer and you lose weight. Match the two and your weight holds steady."),
+            ])
         case .stressNonActivity:
             return ("What is Non-Activity Stress?", [
                 .paragraph("Stress is your body's natural response to a physical or mental demand. It shows how alert or switched on your body is at a given moment. Outside of chronic stress it is not good or bad in itself: what matters is having the right amount for what you are doing."),
