@@ -50,11 +50,11 @@ struct NunaLineTrendView: View {
     static func forMetric(_ key: String, endingDaysAgo: Int) -> NunaLineTrendView? {
         switch key {
         case "hrv":
-            return NunaLineTrendView(name: "Heart rate variability", icon: "met:heart-rate-variability", noun: "average HRV", key: key, unit: "ms", upIsGood: true, endingDaysAgo: endingDaysAgo)
+            return NunaLineTrendView(name: "Heart rate variability", icon: "met:heart-rate-variability", noun: "average HRV", key: key, unit: "ms", upIsGood: true, footer: AnyView(NunaTrendInfo(kind: .hrv)), endingDaysAgo: endingDaysAgo)
         case "rhr":
-            return NunaLineTrendView(name: "Resting heart rate", icon: "met:resting-heart-rate", noun: "average resting heart rate", key: key, unit: "bpm", upIsGood: false, endingDaysAgo: endingDaysAgo)
+            return NunaLineTrendView(name: "Resting heart rate", icon: "met:resting-heart-rate", noun: "average resting heart rate", key: key, unit: "bpm", upIsGood: false, footer: AnyView(NunaTrendInfo(kind: .rhr)), endingDaysAgo: endingDaysAgo)
         case "resp_rate":
-            return NunaLineTrendView(name: "Respiratory rate", icon: "met:respiratory-rate", noun: "average respiratory rate", key: key, unit: "rpm", decimals: 1, endingDaysAgo: endingDaysAgo)
+            return NunaLineTrendView(name: "Respiratory rate", icon: "met:respiratory-rate", noun: "average respiratory rate", key: key, unit: "rpm", decimals: 1, footer: AnyView(NunaTrendInfo(kind: .respiratory)), endingDaysAgo: endingDaysAgo)
         case "spo2":
             return NunaLineTrendView(name: "Blood oxygen", icon: "vital:spo2", noun: "average blood oxygen", key: key, unit: "%", upIsGood: true, endingDaysAgo: endingDaysAgo)
         case "skin_temp":
@@ -72,7 +72,7 @@ struct NunaLineTrendView: View {
                                      closing: String(localized: "It is worked out once a week from your sleep, activity and recovery."), endingDaysAgo: endingDaysAgo)
         case "weight":
             return NunaLineTrendView(name: "Weight", icon: "met:weight", noun: "average weight", key: key, unit: "kg", decimals: 1, source: "apple-health", also: nunaManualSource,
-                                     closing: String(localized: "Log it from Quick actions or connect Apple Health to track how it changes over time."), endingDaysAgo: endingDaysAgo)
+                                     closing: String(localized: "Log it from Quick actions or connect Apple Health to track how it changes over time."), footer: AnyView(NunaTrendInfo(kind: .weight)), endingDaysAgo: endingDaysAgo)
         default:
             return nil
         }

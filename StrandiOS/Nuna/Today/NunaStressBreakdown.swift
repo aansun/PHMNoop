@@ -495,6 +495,7 @@ struct NunaStressTrendView: View {
                     .font(.nuna(size: 12, weight: .semibold)).fixedSize(horizontal: false, vertical: true).textCase(nil)
             }
             .foregroundStyle(NunaPalette.textSecondary).padding(.horizontal, 2).frame(maxWidth: .infinity, alignment: .leading)
+            NunaTrendInfo(kind: category == .total ? .stressTotal : (category == .nonActivity ? .stressNonActivity : .stressSleep))
         }
         .environment(\.nunaDetailSwitch, nil)
         .task(id: "\(repo.refreshSeq)-\(range)-\(pageOffset)") {

@@ -53,6 +53,7 @@ struct NunaLeanMassTrendView: View {
             chart(current, w)
             footer
             rows
+            NunaTrendInfo(kind: .leanBodyMass)
         }
         .environment(\.nunaDetailSwitch, nil)
         .task(id: repo.refreshSeq) { await load() }

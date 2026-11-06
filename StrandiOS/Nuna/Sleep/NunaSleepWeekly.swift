@@ -267,7 +267,7 @@ struct NunaRestTrendView: View {
                 .init(color: Color(hex: "#F5A623"), name: "Poor", range: "<70%") { $0 < 70 },
             ],
             breakdownTitle: "Sleep breakdown",
-            value: { $0.performance[$1] }, endingDaysAgo: endingDaysAgo)
+            value: { $0.performance[$1] }, endingDaysAgo: endingDaysAgo, footer: AnyView(NunaTrendInfo(kind: .restPerformance)))
     }
 }
 #endif

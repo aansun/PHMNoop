@@ -63,6 +63,7 @@ struct NunaTimeInBedTrendView: View {
             Text(verbatim: sentence(average, beds: beds)).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
                 .fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.horizontal, 2)
             chart(all, averageBed: averageBed, averageWake: averageWake)
+            NunaTrendInfo(kind: .timeInBed)
         }
         .environment(\.nunaDetailSwitch, nil)
         .task(id: repo.refreshSeq) { await history.load(repo: repo) }

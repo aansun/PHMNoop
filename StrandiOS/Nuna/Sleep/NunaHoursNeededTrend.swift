@@ -75,6 +75,7 @@ struct NunaHoursNeededTrendView: View {
                     .fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.horizontal, 2)
             }
             chart(plotted(all), avgNeed, avgSlept).padding(.top, 8)
+            NunaTrendInfo(kind: .hoursNeeded)
         }
         .environment(\.nunaDetailSwitch, nil)
         .task(id: repo.refreshSeq) { await model.load(repo: repo) }

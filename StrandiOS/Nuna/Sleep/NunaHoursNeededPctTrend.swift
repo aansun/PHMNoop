@@ -318,7 +318,7 @@ struct NunaHoursNeededPctTrendView: View {
                 .init(color: Color(hex: "#F5A623"), name: "Poor", range: "<70%") { $0 < 70 },
             ],
             breakdownTitle: "Hours vs. needed (%) breakdown",
-            value: { $0.hoursVsNeeded($1) }, endingDaysAgo: endingDaysAgo)
+            value: { $0.hoursVsNeeded($1) }, endingDaysAgo: endingDaysAgo, footer: AnyView(NunaTrendInfo(kind: .hoursNeeded)))
     }
 }
 
@@ -334,7 +334,7 @@ struct NunaConsistencyTrendView: View {
                 .init(color: Color(hex: "#F5A623"), name: "Poor", range: "<70%") { $0 < 70 },
             ],
             breakdownTitle: "Sleep consistency breakdown",
-            value: { $0.consistency[$1] }, endingDaysAgo: endingDaysAgo)
+            value: { $0.consistency[$1] }, endingDaysAgo: endingDaysAgo, footer: AnyView(NunaTrendInfo(kind: .consistency)))
     }
 }
 
@@ -350,7 +350,7 @@ struct NunaEfficiencyTrendView: View {
                 .init(color: Color(hex: "#F5A623"), name: "Poor", range: "<70%") { $0 < 70 },
             ],
             breakdownTitle: "Sleep efficiency breakdown",
-            value: { $0.efficiency[$1] }, line: true, endingDaysAgo: endingDaysAgo)
+            value: { $0.efficiency[$1] }, line: true, endingDaysAgo: endingDaysAgo, footer: AnyView(NunaTrendInfo(kind: .efficiency)))
     }
 }
 
@@ -366,7 +366,7 @@ struct NunaSleepDebtTrendView: View {
                 .init(color: Color(hex: "#3F5C75"), name: "Low", range: "<0:30") { $0 < 30 },
             ],
             breakdownTitle: "Sleep debt breakdown",
-            value: { $0.debtMin[$1] }, duration: true, endingDaysAgo: endingDaysAgo)
+            value: { $0.debtMin[$1] }, duration: true, endingDaysAgo: endingDaysAgo, footer: AnyView(NunaTrendInfo(kind: .debt)))
     }
 }
 
@@ -378,7 +378,7 @@ struct NunaChargeScoreTrendView: View {
             name: "Recovery", icon: "met:recovery", noun: "average Recovery",
             bands: NunaDaysBreakdown.chargeBands,
             breakdownTitle: "Recovery breakdown",
-            value: { $0.charge[$1] }, zones: { nunaChargeColor($0) }, endingDaysAgo: endingDaysAgo)
+            value: { $0.charge[$1] }, zones: { nunaChargeColor($0) }, endingDaysAgo: endingDaysAgo, footer: AnyView(NunaTrendInfo(kind: .charge)))
     }
 }
 
