@@ -12,8 +12,6 @@ struct NunaLeanMassTrendView: View {
     @StateObject private var fatS = NunaSeriesModel()
     @State private var range = 7
     @State private var page = 0
-    @State private var showAdd = false
-    @State private var latestFat: Double = 20
     /// The days whose reading was typed in by hand.
     @State private var manualDays: Set<String> = []
 
@@ -52,16 +50,12 @@ struct NunaLeanMassTrendView: View {
             legend
             chart(current, w)
             footer
-            rows
+            NunaBodyRows()
             NunaTrendInfo(kind: .leanBodyMass)
         }
         .environment(\.nunaDetailSwitch, nil)
         .task(id: repo.refreshSeq) { await load() }
-        .sheet(isPresented: $showAdd) {
-            NunaNumberSheet(title: "Add a measurement", unit: "% body fat", initial: latestFat, range: 3...60, step: 0.1, decimals: 1) { v in
-                Task { await saveFat(v) }
-            }
-        }
+        .onReceive(NotificationCenter.default.publisher(for: .nunaBodyMeasurementChanged)) { _ in Task { await load() } }
     }
 
     // MARK: Header, sentence, legend
@@ -204,39 +198,11 @@ struct NunaLeanMassTrendView: View {
         .padding(.horizontal, 2)
     }
 
-    // MARK: Rows
-
-    private var rows: some View {
-        VStack(spacing: 12) {
-            Button { showAdd = true } label: { row("plus", "Add manual measurement") }.buttonStyle(.plain)
-            NavigationLink { NunaBodyRecordingsView() } label: { row("list.bullet", "See all recordings") }.buttonStyle(.plain)
-        }
-    }
-
-    private func row(_ symbol: String, _ title: LocalizedStringKey) -> some View {
-        HStack(spacing: 16) {
-            Image(systemName: symbol).font(.system(size: 22, weight: .light)).foregroundStyle(NunaPalette.textSecondary).frame(width: 34)
-            Text(title).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingHead(1.4)).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-            Spacer(minLength: 0)
-        }
-        .padding(.horizontal, 16).frame(height: 64).frame(maxWidth: .infinity)
-        .background(NunaPalette.cardSurface, in: RoundedRectangle(cornerRadius: NunaRadius.cardSmall, style: .continuous))
-        .contentShape(Rectangle())
-    }
-
     // MARK: Data
 
     private func load() async {
         await fatS.load(repo: repo, key: "body_fat", source: "apple-health", days: 400, also: nunaManualSource)
-        if let v = fatS.byDay.keys.sorted().last.flatMap({ fatS.byDay[$0] }) { latestFat = v }
         manualDays = Set(await repo.exploreSeries(key: "body_fat", source: nunaManualSource, days: 400).map(\.day))
-    }
-
-    /// A hand entry is body fat for today, kept under the manual source, which the page reads next to Apple Health.
-    private func saveFat(_ v: Double) async {
-        guard let store = await repo.storeHandle() else { return }
-        _ = try? await store.upsertMetricSeries([MetricPoint(day: Repository.localDayKey(Date()), key: "body_fat", value: v)], deviceId: nunaManualSource)
-        await load()
     }
 }
 
