@@ -256,6 +256,12 @@ struct NunaAnyaSheet: View {
         }
     }
 
+    /// The question an answer replies to: the last thing the person said before it.
+    private func question(before turn: ChatMessage) -> String? {
+        guard let i = turns.firstIndex(where: { $0.id == turn.id }) else { return nil }
+        return turns[..<i].last(where: { $0.role == .user })?.text
+    }
+
     private var conversation: some View {
         VStack(alignment: .leading, spacing: 12) {
             ForEach(turns) { t in
@@ -263,7 +269,7 @@ struct NunaAnyaSheet: View {
                     HStack { Spacer(minLength: 40)
                         Text(verbatim: t.text).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 14).padding(.vertical, 9).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: 12, style: .continuous)) }
                 } else {
-                    NunaAnyaReply(text: t.text, font: .nuna(size: 14.5, weight: .semibold)).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
+                    NunaAnyaReply(text: t.text, font: .nuna(size: 14.5, weight: .semibold), question: question(before: t)).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
             if sending { HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) } }
@@ -400,7 +406,7 @@ extension NunaAnyaSheet {
                 }
             } else {
                 VStack(alignment: .leading, spacing: 14) {
-                    NunaAnyaReply(text: t.text, font: .nuna(size: 18, weight: .regular), lineSpacing: 8, color: nil)
+                    NunaAnyaReply(text: t.text, font: .nuna(size: 18, weight: .regular), lineSpacing: 8, color: nil, question: question(before: t))
                         .frame(maxWidth: .infinity, alignment: .leading)
                     if t.id == turns.last?.id { feedbackRow(copying: AnyaActions.proseOnly(t.text), note: String(t.text.prefix(80))) }
                 }

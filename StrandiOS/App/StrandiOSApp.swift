@@ -897,7 +897,7 @@ struct NunaAnyaReplyDemo: View {
                         Text(verbatim: script.question).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.onAccent)
                             .padding(.horizontal, 16).padding(.vertical, 11).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
-                    NunaAnyaReply(text: script.reply).frame(maxWidth: .infinity, alignment: .leading)
+                    NunaAnyaReply(text: script.reply, question: script.question).frame(maxWidth: .infinity, alignment: .leading)
                 }
                 .padding(.horizontal, 20).padding(.top, 70)
             }

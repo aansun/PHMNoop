@@ -449,6 +449,20 @@ public enum AnyaActions {
         return out
     }
 
+    /// How many days the person asked a chart to cover, when their question says: "a week" (or "minggu", "pekan") is 7 days, "2 weeks" 14. Nil when it says
+    /// nothing about weeks, so the window the reply chose stands. Whatever the model wrote, a weekly chart is a 7-day chart.
+    public static func requestedDays(in question: String?) -> Int? {
+        guard let q = question?.lowercased(), !q.isEmpty else { return nil }
+        let unit = "(?:weeks?|weekly|mingguan|minggu|pekan)\\b"
+        let counts = ["one": 1, "satu": 1, "two": 2, "dua": 2, "three": 3, "tiga": 3, "four": 4, "empat": 4]
+        if let m = q.range(of: "\\b(\\d+|one|satu|two|dua|three|tiga|four|empat)\\s*" + unit, options: .regularExpression) {
+            let lead = String(q[m].prefix { $0.isLetter || $0.isNumber })
+            let n = Int(lead) ?? counts[lead] ?? 1
+            return min(max(n, 1) * 7, 365)
+        }
+        return q.range(of: "\\b" + unit, options: .regularExpression) != nil ? 7 : nil
+    }
+
     /// The first bare JSON object in `text` that names metrics to chart (no fence around it), with where it sits.
     static func looseChart(in text: String) -> (Range<String.Index>, AnyaChartSpec)? {
         var from = text.startIndex

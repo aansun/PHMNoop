@@ -12,8 +12,18 @@ struct NunaAnyaReply: View {
     var font: Font = .nuna(size: 15.5, weight: .regular)
     var lineSpacing: CGFloat = 0
     var color: Color? = NunaPalette.textPrimary
+    /// What the person asked. A question about a week draws a 7-day chart, whatever window the reply named.
+    var question: String?
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var router: NavRouter
+
+    /// The chart over the window the question asked for (a week is 7 days), with no title that could still name another window.
+    private func windowed(_ c: AnyaChartSpec) -> AnyaChartSpec {
+        guard let days = AnyaActions.requestedDays(in: question), days != c.days else { return c }
+        var out = c
+        out.days = days; out.title = nil
+        return out
+    }
 
     var body: some View {
         let blocks = AnyaActions.parse(text)
@@ -23,7 +33,7 @@ struct NunaAnyaReply: View {
                 case .text(let t):
                     Text(NunaAnyaSheet.markdown(t)).font(font).lineSpacing(lineSpacing).foregroundStyle(color ?? .primary)
                         .textSelection(.enabled).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
-                case .chart(let c): NunaAnyaChartCard(spec: c)
+                case .chart(let c): NunaAnyaChartCard(spec: windowed(c))
                 case .program(let p): NunaAnyaProgramCard(spec: p)
                 case .workout(let w): NunaAnyaWorkoutCard(spec: w)
                 case .lab(let l): NunaAnyaLabCard(spec: l)

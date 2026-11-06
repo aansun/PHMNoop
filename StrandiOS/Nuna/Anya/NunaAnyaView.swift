@@ -330,6 +330,12 @@ struct NunaAnyaView: View {
         }
     }
 
+    /// The question an answer replies to: the last thing the person said before it.
+    private func question(before m: ChatMessage) -> String? {
+        guard let i = coach.messages.firstIndex(where: { $0.id == m.id }) else { return nil }
+        return coach.messages[..<i].last(where: { $0.role == .user })?.text
+    }
+
     @ViewBuilder private func bubble(_ m: ChatMessage) -> some View {
         switch m.role {
         case .user:
@@ -340,7 +346,7 @@ struct NunaAnyaView: View {
             }
         case .assistant:
             VStack(alignment: .leading, spacing: 10) {
-                NunaAnyaReply(text: m.text).frame(maxWidth: .infinity, alignment: .leading)
+                NunaAnyaReply(text: m.text, question: question(before: m)).frame(maxWidth: .infinity, alignment: .leading)
                 HStack(spacing: 8) {
                     if coach.dataConsent {
                         Text("Read:").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
