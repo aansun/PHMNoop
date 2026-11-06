@@ -12,6 +12,8 @@ struct NunaPctTrendView: View {
     let icon: String
     /// "Hours vs. Needed", "Sleep Consistency Score": the words the sentence says the figure with.
     let noun: String
+    /// The noun in the language of the page, for the sentences that carry it.
+    private var nounText: String { String(localized: String.LocalizationValue(noun)) }
     let bands: [NunaDaysBreakdown.Band]
     let breakdownTitle: LocalizedStringKey
     /// The figure of a day (its key), nil when the night has none.
@@ -146,7 +148,7 @@ struct NunaPctTrendView: View {
         guard let average else { return String(localized: "Wear your strap to bed each night to track this over time.") }
         if let customSentence { return customSentence(average, range) }
         let span = range == 7 ? String(localized: "this week was") : (range == 30 ? String(localized: "this month was") : String(localized: "over these six months has been"))
-        return String(localized: "Your \(noun) \(span) \(fmt(average)). Wear your strap to bed each night to track how this changes over time.")
+        return String(localized: "Your \(nounText) \(span) \(fmt(average)). Wear your strap to bed each night to track how this changes over time.")
     }
 
     private func isPicked(_ date: Date) -> Bool { picked.map { Calendar.current.isDate($0, inSameDayAs: date) } ?? false }

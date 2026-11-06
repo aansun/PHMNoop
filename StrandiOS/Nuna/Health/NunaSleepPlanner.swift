@@ -481,10 +481,10 @@ struct NunaSmartAlarmView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 Text("Sleep planner").font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-                note("The strap buzzes at your wake time. In Sleep goal and In the green the goal decides the bedtime to aim for, the time in bed it leaves, and the Tonight's sleep card on Today: NOOP cannot see your sleep as it happens, so the buzz is never earlier than the time you set.")
+                note("The strap buzzes at your wake time. In Sleep goal and In the green the goal decides the bedtime to aim for, the time in bed it leaves, and the Tonight's sleep card on Today: PHMN cannot see your sleep as it happens, so the buzz is never earlier than the time you set.")
                 note("Optimal is the window your sleep need itself asks for, ending at your wake time. The suggested bedtime starts a little earlier, to leave time to fall asleep.")
                 note("The buzz is the same one as your other wrist alerts, so it follows the Wrist alerts switch in Strap automations: with it off the strap stays silent and only the phone notification wakes you. To turn the alarm off, double-tap your strap while it buzzes.")
-                note("The buzz is silent, from the strap's own firmware, so it works even if your phone is asleep or NOOP is closed. A backup notification is scheduled too, but Focus or silent mode can mute it. Keep your phone's Clock alarm as your real backup.")
+                note("The buzz is silent, from the strap's own firmware, so it works even if your phone is asleep or PHMN is closed. A backup notification is scheduled too, but Focus or silent mode can mute it. Keep your phone's Clock alarm as your real backup.")
                 if model.whoop5Detected && !PuffinExperiment.isEnabled {
                     note("Your WHOOP 5/MG won't arm this until Experimental mode is on (Settings, Experimental). Right now your wake time is saved but the strap is NOT armed.", warn: true)
                 } else if model.whoop5Detected {
@@ -496,7 +496,7 @@ struct NunaSmartAlarmView: View {
                     }.buttonStyle(.plain)
                 }
                 if behavior.smartAlarmEnabled && rejectStreak >= 2 {
-                    note("Your strap keeps reporting a different time than NOOP sends, so its alarm won't fire at your wake time. Reset the strap in the official WHOOP app (or fully charge it and reconnect), and keep your phone's Clock alarm as your wake until it takes.", warn: true)
+                    note("Your strap keeps reporting a different time than PHMN sends, so its alarm won't fire at your wake time. Reset the strap in the official WHOOP app (or fully charge it and reconnect), and keep your phone's Clock alarm as your wake until it takes.", warn: true)
                 }
             }
             .padding(22).frame(maxWidth: .infinity, alignment: .leading)
