@@ -8,6 +8,10 @@ import StrandImport
 /// An assistant reply drawn as prose plus native cards for the charts, programs and workouts it carries.
 struct NunaAnyaReply: View {
     let text: String
+    /// The type of the prose, for the sheets that set their own (the cards stay as they are).
+    var font: Font = .nuna(size: 15.5, weight: .regular)
+    var lineSpacing: CGFloat = 0
+    var color: Color? = NunaPalette.textPrimary
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var router: NavRouter
 
@@ -17,7 +21,7 @@ struct NunaAnyaReply: View {
             ForEach(Array(blocks.enumerated()), id: \.offset) { _, b in
                 switch b {
                 case .text(let t):
-                    Text(NunaAnyaSheet.markdown(t)).font(.nuna(size: 15.5, weight: .regular)).foregroundStyle(NunaPalette.textPrimary)
+                    Text(NunaAnyaSheet.markdown(t)).font(font).lineSpacing(lineSpacing).foregroundStyle(color ?? .primary)
                         .textSelection(.enabled).fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
                 case .chart(let c): NunaAnyaChartCard(spec: c)
                 case .program(let p): NunaAnyaProgramCard(spec: p)

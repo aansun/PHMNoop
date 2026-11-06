@@ -195,7 +195,7 @@ struct NunaAnyaSheet: View {
                     HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
                 } else if let explanation {
                     NunaDivider()
-                    Text(Self.markdown(AnyaActions.proseOnly(explanation))).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
+                    NunaAnyaReply(text: explanation, font: .nuna(size: 14.5, weight: .semibold)).textCase(nil)
                 }
                 if coach.isConfigured, coach.dataConsent, explanation == nil, !explaining {
                     Button { Task { await explain() } } label: {
@@ -263,7 +263,7 @@ struct NunaAnyaSheet: View {
                     HStack { Spacer(minLength: 40)
                         Text(verbatim: t.text).font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 14).padding(.vertical, 9).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: 12, style: .continuous)) }
                 } else {
-                    Text(Self.markdown(AnyaActions.proseOnly(t.text))).font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
+                    NunaAnyaReply(text: t.text, font: .nuna(size: 14.5, weight: .semibold)).textCase(nil).frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
             if sending { HStack(spacing: 8) { ProgressView().controlSize(.small).tint(NunaPalette.textSecondary); Text("Anya is thinking…").font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) } }
@@ -377,8 +377,8 @@ extension NunaAnyaSheet {
             HStack(spacing: 8) { ProgressView().controlSize(.small).tint(.white.opacity(0.7)); Text("Anya is thinking…").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(.white.opacity(0.7)) }
         } else if let explanation {
             // Her written analysis is the message; the local read stays behind it.
-            Text(Self.markdown(AnyaActions.proseOnly(explanation))).font(.nuna(size: 20, weight: .regular)).lineSpacing(9)
-                .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+            NunaAnyaReply(text: explanation, font: .nuna(size: 20, weight: .regular), lineSpacing: 9, color: nil)
+                .frame(maxWidth: .infinity, alignment: .leading)
             if turns.isEmpty { feedbackRow(copying: AnyaActions.proseOnly(explanation), note: String(explanation.prefix(80))) }
         } else if let read {
             Text(NunaMark.attributed(NunaMark.compose(headline: read.headline, detail: read.detail), size: 20))
@@ -400,8 +400,8 @@ extension NunaAnyaSheet {
                 }
             } else {
                 VStack(alignment: .leading, spacing: 14) {
-                    Text(Self.markdown(AnyaActions.proseOnly(t.text))).font(.nuna(size: 18, weight: .regular)).lineSpacing(8)
-                        .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading)
+                    NunaAnyaReply(text: t.text, font: .nuna(size: 18, weight: .regular), lineSpacing: 8, color: nil)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     if t.id == turns.last?.id { feedbackRow(copying: AnyaActions.proseOnly(t.text), note: String(t.text.prefix(80))) }
                 }
             }
