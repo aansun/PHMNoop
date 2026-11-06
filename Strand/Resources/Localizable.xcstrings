@@ -8326,5 +8326,8 @@
  "PHMN will use your GLP-1 information to personalize your tracking and help you see it alongside your weight, sleep, Recovery, activity, and other health trends.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "PHMN akan memakai informasi GLP-1-mu untuk mempersonalisasi pencatatan dan membantumu melihatnya bersama berat badan, tidur, Recovery, aktivitas, dan tren kesehatan lainnya."}}}},
  "Days a week": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Hari seminggu"}}}},
  "Hydrated sufficiently?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Cukup terhidrasi?"}}}},
- "Did you take your GLP-1 medication today?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Apakah kamu memakai obat GLP-1 hari ini?"}}}}
+ "Did you take your GLP-1 medication today?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Apakah kamu memakai obat GLP-1 hari ini?"}}}},
+ "Weekly Plan Check-In": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Check-In Plan Mingguan"}}}},
+ "You've completed %lld%% of your Weekly Plan so far.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu sudah menyelesaikan %lld%% Plan Mingguanmu sejauh ini."}}}},
+ "View my progress": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lihat progresku"}}}}
 }, "version":"1.0" }

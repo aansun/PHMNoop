@@ -13,7 +13,10 @@ struct NunaHighlight: Identifiable, Equatable {
     var action: Action?
     /// Recovery scores drawn as bars on the right of the card (the earlier days in grey, the last one in its colour).
     var bars: [Double]?
-    enum Action: Equatable { case breathe, windDown, outlook, journal, trend }
+    /// A picture on the right of the card.
+    var art: Art?
+    enum Art: Equatable { case dart }
+    enum Action: Equatable { case breathe, windDown, outlook, journal, trend, plan }
 }
 
 /// What the highlights are worked out from. Plain numbers, so the rules can be read (and tested) without the app around them.
@@ -59,6 +62,8 @@ struct NunaHighlightInputs {
     var pushingLimits = false
     /// The Daily Outlook just opened up and has not been looked at yet.
     var outlookFirst = false
+    /// The share of the week's plan done so far, in the morning of a day with a plan; nil otherwise.
+    var planCheckIn: Int?
 }
 
 struct NunaCalibrationStage: Equatable {
@@ -90,6 +95,13 @@ enum NunaHighlightEngine {
         // 1. The early warning, when it has something to say.
         if let r = i.illness, r.level != .quiet {
             out.append(.init(id: "illness", title: String(localized: "Early warning"), message: localizedIllnessCopy(r)))
+        }
+
+        // 1a. The Weekly Plan Check-In, the morning after the night.
+        if let p = i.planCheckIn {
+            out.append(.init(id: "plan-checkin", title: String(localized: "Weekly Plan Check-In"),
+                             message: String(localized: "You've completed \(p)% of your Weekly Plan so far."),
+                             actionTitle: String(localized: "View my progress"), action: .plan, art: .dart))
         }
 
         // 1b. The first Daily Outlook, waiting to be opened.
@@ -277,7 +289,11 @@ struct NunaHighlightsCard: View {
     let onOutlook: () -> Void
     let onJournal: () -> Void
     let onTrend: () -> Void
+    var onPlan: () -> Void = {}
 
+    @StateObject private var planModel = NunaPlanModel()
+    @EnvironmentObject private var profile: ProfileStore
+    @AppStorage(NunaPlanStore.key) private var planRaw = ""
     @EnvironmentObject private var repo: Repository
     @EnvironmentObject private var appModel: AppModel
     @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
@@ -365,7 +381,9 @@ struct NunaHighlightsCard: View {
             workouts: Array(announced), dayStrainShown: effort.map { UnitFormatter.effortDisplay($0, scale: scale) },
             naps: freshNaps, sleepRecorded: slept, journalYesterdayOpen: !yesterdayLogged, newlyRedBars: newlyRed,
             pushingLimits: (effort.map { $0 * UnitFormatter.effortScaleFactor } ?? 0) >= 20,
-            outlookFirst: NunaOutlookGate.ready(repo.days) && !UserDefaults.standard.bool(forKey: NunaOutlookGate.openedKey))
+            outlookFirst: NunaOutlookGate.ready(repo.days) && !UserDefaults.standard.bool(forKey: NunaOutlookGate.openedKey),
+            planCheckIn: NunaCheckInGate.visible(woke: (sleepMinutes ?? 0) >= 60, hasPlan: NunaPlanStore.hasPlan(NunaPlanStore.load(planRaw)), now: nowDate)
+                ? Int((planModel.accomplished * 100).rounded()) : nil)
 #if DEBUG
         Self.demo(&result)
 #endif
@@ -432,7 +450,7 @@ struct NunaHighlightsCard: View {
                     .mask(alignment: .bottom) { Rectangle().frame(height: 12) }
                     .frame(maxHeight: .infinity, alignment: .bottom).offset(y: 12)
             }
-            NunaCard(padding: EdgeInsets(top: 18, leading: 20, bottom: 18, trailing: h.bars == nil ? 46 : 140)) {
+            NunaCard(padding: EdgeInsets(top: 18, leading: 20, bottom: 18, trailing: h.bars == nil && h.art == nil ? 46 : 140)) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text(verbatim: h.title).font(.nunaWords(size: 14.5, semibold: true)).tracking(0).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
                     // Always at least three lines tall (a hidden three-line stand-in sets the floor), so every card is four lines with its title.
@@ -443,13 +461,13 @@ struct NunaHighlightsCard: View {
                     }
                     if let t = h.actionTitle, let a = h.action {
                         Button { perform(a) } label: {
-                            if a == .outlook || a == .trend {
+                            if a == .outlook || a == .trend || a == .plan {
                                 // The Outlook's own call to action: gradient letters and an arrow, no pill.
                                 HStack(spacing: 10) {
                                     Text(verbatim: t).font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                                     Image(systemName: "arrow.right").font(.system(size: 16, weight: .regular))
                                 }
-                                .foregroundStyle(a == .trend ? AnyShapeStyle(Color(red: 0.29, green: 0.56, blue: 0.89)) : AnyShapeStyle(Self.outlookGradient)).frame(minHeight: 32)
+                                .foregroundStyle(a == .trend || a == .plan ? AnyShapeStyle(Color(red: 0.29, green: 0.56, blue: 0.89)) : AnyShapeStyle(Self.outlookGradient)).frame(minHeight: 32)
                             } else {
                                 Text(verbatim: t).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                                     .foregroundStyle(NunaPalette.textPrimary)
@@ -469,6 +487,7 @@ struct NunaHighlightsCard: View {
             }
             .overlay(alignment: .trailing) {
                 if let b = h.bars { NunaHighlightBars(values: b).padding(.trailing, 40) }
+                if h.art == .dart { NunaDartBoard().frame(width: 96, height: 100).padding(.trailing, 44) }
             }
             .overlay(alignment: .topTrailing) {
                 Button { put(away: h.id) } label: {
@@ -504,6 +523,7 @@ struct NunaHighlightsCard: View {
         }
         .padding(.bottom, remaining > 1 ? 12 : 0)
         .task(id: "\(repo.refreshSeq)-\(dayKey)") { await checkYesterdayJournal() }
+        .task(id: "\(planRaw)-\(repo.refreshSeq)") { await planModel.load(repo: repo, age: profile.age, weekOffset: 0) }
     }
 
     /// Yesterday's journal is written the morning after, so the sleep highlight offers it until it has answers.
@@ -524,6 +544,7 @@ struct NunaHighlightsCard: View {
         case .outlook: onOutlook()
         case .journal: onJournal()
         case .trend: onTrend()
+        case .plan: onPlan()
         }
     }
 
