@@ -222,37 +222,55 @@ struct NunaZonesExplainer: View {
         }
     }
 
-    /// Five layers, zone 5 at the top and narrowest, zone 1 at the foot and widest, each in the colour of its zone.
+    /// One triangle cut into five bands by thin gaps: zone 5 is the point at the top, zone 1 the wide foot, each band in the muted tone of its zone with the zone number in the bright one.
     private var pyramid: some View {
-        let width: CGFloat = 250, layer: CGFloat = 40, gap: CGFloat = 3
-        func foot(_ zone: Int) -> CGFloat { width * CGFloat(6 - zone) / 5 + 30 }
-        return VStack(spacing: gap) {
-            ForEach((1...5).reversed(), id: \.self) { zone in
-                ZStack {
-                    NunaZonePyramidLayer(topWidth: zone == 5 ? 22 : foot(zone + 1), bottomWidth: foot(zone))
-                        .fill(NunaZoneWeeklyCard.color(zone - 1).opacity(0.55))
-                    Text(verbatim: "\(zone)").font(.nuna(size: 18, weight: .bold, design: NunaType.design)).foregroundStyle(NunaZoneWeeklyCard.color(zone - 1))
-                }
-                .frame(width: foot(zone), height: layer)
+        let width: CGFloat = 274, height: CGFloat = 240, gap: CGFloat = 3
+        let layer = (height - gap * 4) / 5
+        let slope = (width / 2) / height
+        return ZStack(alignment: .topLeading) {
+            ForEach(0..<5, id: \.self) { i in
+                let zone = 5 - i
+                let top = CGFloat(i) * (layer + gap)
+                let c = NunaZoneWeeklyCard.color(zone - 1)
+                NunaZonePyramidLayer(top: top, bottom: top + layer, slope: slope, width: width, rounding: 3)
+                    .opacity(0.32)
+                    .foregroundStyle(c)
+                Text(verbatim: "\(zone)")
+                    .font(.nuna(size: 22, weight: .bold, design: NunaType.design))
+                    .foregroundStyle(c)
+                    .position(x: width / 2, y: top + layer / 2 + (zone == 5 ? 7 : 0))
             }
         }
+        .frame(width: width, height: height)
         .accessibilityHidden(true)
     }
 }
 
-/// A band of the pyramid: narrower at the top than at the foot, with the corners softened a little.
-private struct NunaZonePyramidLayer: Shape {
-    let topWidth: CGFloat
-    let bottomWidth: CGFloat
-    func path(in r: CGRect) -> Path {
-        let cx = r.midX, top = r.minY, bottom = r.maxY
-        var p = Path()
-        p.move(to: CGPoint(x: cx - topWidth / 2, y: top))
-        p.addLine(to: CGPoint(x: cx + topWidth / 2, y: top))
-        p.addLine(to: CGPoint(x: cx + bottomWidth / 2, y: bottom))
-        p.addLine(to: CGPoint(x: cx - bottomWidth / 2, y: bottom))
-        p.closeSubpath()
-        return p
+/// A slice of one continuous triangle (point at the top), with the corners rounded a little.
+private struct NunaZonePyramidLayer: View {
+    let top: CGFloat, bottom: CGFloat, slope: CGFloat, width: CGFloat, rounding: CGFloat
+    var body: some View {
+        let shape = Slice(top: top + rounding, bottom: bottom - rounding, slope: slope, width: width, inset: rounding * 1.2)
+        ZStack {
+            shape.fill()
+            shape.stroke(style: StrokeStyle(lineWidth: rounding * 2, lineJoin: .round))
+        }
+        .compositingGroup()
+    }
+
+    private struct Slice: Shape {
+        let top: CGFloat, bottom: CGFloat, slope: CGFloat, width: CGFloat, inset: CGFloat
+        func path(in r: CGRect) -> Path {
+            let cx = width / 2
+            let t = max(0, slope * top - inset), b = max(0, slope * bottom - inset)
+            var p = Path()
+            p.move(to: CGPoint(x: cx - t, y: top))
+            p.addLine(to: CGPoint(x: cx + t, y: top))
+            p.addLine(to: CGPoint(x: cx + b, y: bottom))
+            p.addLine(to: CGPoint(x: cx - b, y: bottom))
+            p.closeSubpath()
+            return p
+        }
     }
 }
 #endif
