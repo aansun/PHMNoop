@@ -141,9 +141,6 @@ struct NunaPersonaView: View {
                             onMinus: { profile.waistCm = profile.waistCm <= 50 ? 0 : profile.waistCm - (imperial ? 2.54 : 1) },
                             onPlus: { profile.waistCm = profile.waistCm <= 0 ? 80 : min(200, profile.waistCm + (imperial ? 2.54 : 1)) })
             }
-            NunaSettingsGroup("Targets") {
-                NavigationLink(value: NunaMeRoute.goals) { NunaListRow("Targets", description: "Weekly and daily goals", systemImage: "target", showsChevron: true) }.buttonStyle(.plain)
-            }
             NunaSettingsGroup("Day and steps") {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("The day starts").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
@@ -362,68 +359,6 @@ struct NunaZonesView: View {
         profile.hrMaxOverride = maxHR == tanaka ? 0 : maxHR
         profile.hrZoneThresholds = manual ? mins : []
         dismiss()
-    }
-}
-
-// MARK: - Goals (PersonaGoals.dc)
-
-struct NunaGoalsView: View {
-    @EnvironmentObject private var repo: Repository
-    @EnvironmentObject private var profile: ProfileStore
-    @AppStorage(NunaGoals.weeklyEffort) private var effort = 0.0
-    @AppStorage(NunaGoals.sleepMinutes) private var sleep = 0
-    @AppStorage(NunaGoals.steps) private var steps = 0
-    @AppStorage(NunaGoals.waterLitres) private var water = 0.0
-    @AppStorage(NunaGoals.targetWeightKg) private var targetWeight = 0.0
-    @AppStorage(UnitPrefs.effortScaleKey) private var effortScaleRaw = EffortScale.hundred.rawValue
-
-    private var scale: EffortScale { UnitPrefs.resolveEffortScale(effortScaleRaw) }
-    private var weekAvg: Double? {
-        let v = repo.days.suffix(7).compactMap(\.strain); return v.isEmpty ? nil : v.reduce(0, +)
-    }
-    private var avgSteps: Int? {
-        let v = repo.days.suffix(7).compactMap { $0.steps }; return v.isEmpty ? nil : v.reduce(0, +) / v.count
-    }
-
-    var body: some View {
-        NunaDetailScreen("Targets") {
-            if let w = weekAvg, effort == 0 {
-                NunaCard(highlight: true) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        nunaTrendsCap("Suggested from your numbers")
-                        Text(verbatim: String(localized: "Your Strain over the last 7 days was \(UnitFormatter.effortDisplay(w, scale: scale)). A weekly target of \(UnitFormatter.effortDisplay(w * 1.1, scale: scale)) to \(UnitFormatter.effortDisplay(w * 1.2, scale: scale)) is a realistic step up."))
-                            .font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true)
-                        Button { effort = (w * 1.15).rounded() } label: {
-                            Text("Use it").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 20).frame(height: 40).background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                        }.buttonStyle(.plain)
-                    }.frame(maxWidth: .infinity, alignment: .leading)
-                }
-            }
-            NunaSettingsGroup("Training and recovery") {
-                NunaStepRow(label: "Weekly Strain", value: effort > 0 ? UnitFormatter.effortDisplay(effort, scale: scale) : "–", note: LocalizedStringKey(weekAvg.map { String(localized: "Last 7 days: \(UnitFormatter.effortDisplay($0, scale: scale))") } ?? ""), canDecrement: effort > 0,
-                            onMinus: { effort = max(0, effort - 5) }, onPlus: { effort = effort + 5 })
-                NunaDivider()
-                NunaStepRow(label: "Sleep", value: sleep > 0 ? "\(sleep / 60)h \(String(format: "%02d", sleep % 60))m" : "–", note: "Same as your sleep need", canDecrement: sleep > 0,
-                            onMinus: { sleep = max(0, sleep - 15) }, onPlus: { sleep = sleep == 0 ? 480 : min(720, sleep + 15) })
-            }
-            NunaSettingsGroup("Body and nutrition") {
-                NunaStepRow(label: "Steps per day", value: steps > 0 ? NunaTrendsFormat.num(Double(steps)) : "–", note: LocalizedStringKey(avgSteps.map { String(localized: "Average \(NunaTrendsFormat.num(Double($0)))") } ?? ""), canDecrement: steps > 0,
-                            onMinus: { steps = max(0, steps - 500) }, onPlus: { steps = steps == 0 ? 8000 : steps + 500 })
-                NunaDivider()
-                NunaStepRow(label: "Water per day", value: water > 0 ? String(format: "%.1f L", locale: AppLanguage.activeLocale, water) : "–", note: "Water tracking adjusts it with Strain", canDecrement: water > 0,
-                            onMinus: { water = max(0, water - 0.25) }, onPlus: { water = water == 0 ? 2.0 : water + 0.25 })
-                NunaDivider()
-                NunaStepRow(label: "Target weight", value: targetWeight > 0 ? String(format: "%.1f kg", locale: AppLanguage.activeLocale, targetWeight) : "–",
-                            note: LocalizedStringKey(targetWeight > 0 ? String(format: String(localized: "%.1f kg to go"), abs(profile.weightKg - targetWeight)) : ""), canDecrement: targetWeight > 0,
-                            onMinus: { targetWeight = max(0, targetWeight - 0.5) }, onPlus: { targetWeight = targetWeight == 0 ? profile.weightKg : targetWeight + 0.5 })
-            }
-            if effort > 0 || sleep > 0 || steps > 0 || water > 0 || targetWeight > 0 {
-                Button { effort = 0; sleep = 0; steps = 0; water = 0; targetWeight = 0 } label: {
-                    Text("Clear all targets").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.alertText).frame(maxWidth: .infinity).frame(height: 52).background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.pill, style: .continuous))
-                }.buttonStyle(.plain)
-            }
-            nunaFootnote("Your targets stay on this iPhone. Anya reads them when you ask for advice, once you allow it to use your numbers.")
-        }
     }
 }
 #endif
