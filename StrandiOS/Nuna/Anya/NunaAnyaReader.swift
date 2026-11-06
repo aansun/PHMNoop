@@ -239,7 +239,7 @@ enum NunaAnyaReader {
             let pts = weightS.readings(30)
             if pts.count >= 2 {
                 let d = pts[pts.count - 1].value - pts[0].value
-                if abs(d) >= 0.05 { detail.append(String(localized: "Weight \(f(w)) kg, \(d < 0 ? "down" : "up") \(f(abs(d))) kg over 30 days.")) }
+                if abs(d) >= 0.05 { detail.append(String(localized: "Weight \(f(w)) kg, \(d < 0 ? String(localized: "down") : String(localized: "up")) \(f(abs(d))) kg over 30 days.")) }
                 else { detail.append(String(localized: "Weight \(f(w)) kg, steady over 30 days.")) }
             } else { detail.append(String(localized: "Weight \(f(w)) kg.")) }
         }
@@ -325,7 +325,7 @@ enum NunaAnyaReader {
            first.day != last.day {
             let diff = last.kg - first.kg
             detail.append(abs(diff) < 0.1 ? String(localized: "Trend weight \(String(format: "%.1f", locale: AppLanguage.activeLocale, last.kg)) kg, steady.")
-                          : String(localized: "Trend weight \(String(format: "%.1f", locale: AppLanguage.activeLocale, last.kg)) kg, \(diff < 0 ? "down" : "up") \(String(format: "%.1f", locale: AppLanguage.activeLocale, abs(diff))) kg in four weeks."))
+                          : String(localized: "Trend weight \(String(format: "%.1f", locale: AppLanguage.activeLocale, last.kg)) kg, \(diff < 0 ? String(localized: "down") : String(localized: "up")) \(String(format: "%.1f", locale: AppLanguage.activeLocale, abs(diff))) kg in four weeks."))
             read.append("Weight")
         }
         if let burn = NunaFoodStore.maintenance(intake: await NunaFoodStore.intakeByDay(days: 30, repo: repo), weights: await NunaFoodStore.weights(days: 120, repo: repo), profile: profile) {

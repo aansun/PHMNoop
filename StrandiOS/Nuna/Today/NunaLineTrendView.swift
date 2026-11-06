@@ -12,6 +12,8 @@ struct NunaLineTrendView: View {
     let icon: String
     /// "average HRV", "average resting heart rate": the words the sentence says the figure with.
     let noun: String
+    /// The noun in the language of the page, for the sentences that carry it.
+    private var nounText: String { String(localized: String.LocalizationValue(noun)) }
     let key: String
     let unit: String
     var decimals = 0
@@ -193,16 +195,16 @@ struct NunaLineTrendView: View {
         }
         if comparesWithPrior {
             let period = range == 7 ? String(localized: "7-day period") : (range == 30 ? String(localized: "30-day period") : String(localized: "six-month period"))
-            guard let c = change(average) else { return String(localized: "Your \(noun) during this \(period) was \(fmt(average)).") }
-            if abs(c) < 2 { return String(localized: "Your \(noun) during this \(period) was near its prior average.") }
-            return c > 0 ? String(localized: "Your \(noun) during this \(period) was higher than its prior average.")
-                         : String(localized: "Your \(noun) during this \(period) was lower than its prior average.")
+            guard let c = change(average) else { return String(localized: "Your \(nounText) during this \(period) was \(fmt(average)).") }
+            if abs(c) < 2 { return String(localized: "Your \(nounText) during this \(period) was near its prior average.") }
+            return c > 0 ? String(localized: "Your \(nounText) during this \(period) was higher than its prior average.")
+                         : String(localized: "Your \(nounText) during this \(period) was lower than its prior average.")
         }
         let span = range == 7 ? String(localized: "this week was") : (range == 30 ? String(localized: "this month was") : String(localized: "over these six months has been"))
         guard let closing else {
-            return String(localized: "Your \(noun) \(span) \(fmt(average)). Wear your strap to bed each night to track how this changes over time.")
+            return String(localized: "Your \(nounText) \(span) \(fmt(average)). Wear your strap to bed each night to track how this changes over time.")
         }
-        return String(localized: "Your \(noun) \(span) \(fmt(average)).") + " " + closing
+        return String(localized: "Your \(nounText) \(span) \(fmt(average)).") + " " + closing
     }
 
     private var legend: some View {
