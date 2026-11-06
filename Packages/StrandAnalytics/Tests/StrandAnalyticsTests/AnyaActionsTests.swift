@@ -106,4 +106,16 @@ final class AnyaLabBlockTests: XCTestCase {
         XCTAssertEqual(blocks.count, 1)
         if case .text = blocks[0] {} else { XCTFail("prose") }
     }
+
+    func testAWeekInTheQuestionMeansSevenDays() {
+        XCTAssertEqual(AnyaActions.requestedDays(in: "make grafik sleep performance last week"), 7)
+        XCTAssertEqual(AnyaActions.requestedDays(in: "buat grafik mingguan hrv"), 7)
+        XCTAssertEqual(AnyaActions.requestedDays(in: "grafik HRV 1 minggu terakhir"), 7)
+        XCTAssertEqual(AnyaActions.requestedDays(in: "grafik hrv pekan ini"), 7)
+        XCTAssertEqual(AnyaActions.requestedDays(in: "show recovery for 2 weeks"), 14)
+        XCTAssertEqual(AnyaActions.requestedDays(in: "grafik dua minggu"), 14)
+        XCTAssertNil(AnyaActions.requestedDays(in: "buat grafik hrv"))
+        XCTAssertNil(AnyaActions.requestedDays(in: "what did I do on the weekend"))
+        XCTAssertNil(AnyaActions.requestedDays(in: nil))
+    }
 }
