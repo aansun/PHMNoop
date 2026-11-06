@@ -247,7 +247,8 @@ struct NunaRootView: View {
         case .devices: NunaDevicesView()
         case .trends: NunaTrendsView()
         case .workouts: NunaWorkoutsView()
-        case .activeWorkout: NunaWorkoutsView(autoOpenStart: true)
+        // Start activity opens the start screen itself, not the Workouts page with the start screen pushed on it: closing it returns to where it was opened.
+        case .activeWorkout: NunaWorkoutStartView(sport: nil, resume: true).nunaWorkoutDestinations()
         case .liveSession: LiquidTodayView()
         case .journal: NunaJournalView()
         case .coach: NunaAnyaView()
