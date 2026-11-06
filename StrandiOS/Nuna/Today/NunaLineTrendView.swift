@@ -23,6 +23,8 @@ struct NunaLineTrendView: View {
     var also: String?
     /// What the sentence ends with, when it is not about wearing the strap to bed.
     var closing: String?
+    /// The small title over the average, when it is not just "Average".
+    var averageTitle: String?
     /// Compares the window with the one before it (a chip and a sentence), for readings with no good or bad direction of their own.
     var comparesWithPrior = false
     /// Leaves today out: a figure that is still adding up through the day would pull the average down.
@@ -72,7 +74,7 @@ struct NunaLineTrendView: View {
                                      closing: String(localized: "It is worked out once a week from your sleep, activity and recovery."), endingDaysAgo: endingDaysAgo)
         case "weight":
             return NunaLineTrendView(name: "Weight", icon: "met:weight", noun: "average weight", key: key, unit: "kg", decimals: 1, source: "apple-health", also: nunaManualSource,
-                                     closing: String(localized: "Log it from Quick actions or connect Apple Health to track how it changes over time."), footer: AnyView(NunaTrendInfo(kind: .weight)), endingDaysAgo: endingDaysAgo)
+                                     closing: String(localized: "Keep tracking your weight to see how this changes over time."), averageTitle: String(localized: "Avg. weight"), footer: AnyView(NunaWeightFooter()), endingDaysAgo: endingDaysAgo)
         default:
             return nil
         }
@@ -141,6 +143,10 @@ struct NunaLineTrendView: View {
             guard key == NunaVO2Manual.key else { return }
             Task { await series.load(repo: repo, key: key, source: source, days: 400, also: also) }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .nunaBodyMeasurementChanged)) { _ in
+            guard key == "weight" else { return }
+            Task { await series.load(repo: repo, key: key, source: source, days: 400, also: also) }
+        }
         .onChange(of: range) { _, _ in picked = nil }
         .onChange(of: page) { _, _ in picked = nil }
     }
@@ -155,7 +161,7 @@ struct NunaLineTrendView: View {
         let tint = pickedValue == nil ? NunaPalette.textPrimary : color
         return HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(verbatim: pickedValue == nil ? String(localized: "Average") : pickedTitle).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                Text(verbatim: pickedValue == nil ? averageTitle ?? String(localized: "Average") : pickedTitle).font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                     .foregroundStyle(pickedValue == nil ? NunaPalette.textPrimary : NunaPalette.textSecondary)
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
                     Text(verbatim: shown.map(fmt) ?? "–").font(.nuna(size: 40, weight: .semibold, design: NunaType.design)).foregroundStyle(tint)

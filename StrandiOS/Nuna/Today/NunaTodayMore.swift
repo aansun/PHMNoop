@@ -95,22 +95,22 @@ extension NunaTodayView {
             case .respiratory: made = (num(model.respiratory, 1), desc("resp_rate"), "met:respiratory-rate", nil)
             case .steps:       made = (num(model.steps), steps, "met:steps", nil)
             case .stepsAverage30: made = (nil, steps, "met:steps", nil)
-            case .stress:      made = (num(model.stress, 1), NunaRowTarget(kind: .tab(.stress)), "wind", NunaPalette.charge)
+            case .stress:      made = (num(model.stress, 1), NunaRowTarget(kind: .nuna(.trend(.stressTotal))), "met:total-day-stress", NunaPalette.charge)
             case .fitnessAge:  made = (num(ex["fitness_age"]), desc("fitness_age"), "figure.run", nil)
             case .vo2max:      made = (num(ex["vo2max_est"], 1), desc("vo2max_est"), "met:vo2-max", nil)
             case .vitality:    made = (num(ex["vitality"]), desc("vitality"), "sparkles", nil)
-            case .bloodOxygen: made = (num(model.spo2), desc("spo2"), "drop.fill", nil)
+            case .bloodOxygen: made = (num(model.spo2), desc("spo2"), "vital:spo2", nil)
             case .skinTemp:    made = (num(ex["skin_temp"], 1), desc("skin_temp"), "vital:temp", nil)
             case .sleep:
                 // The card reads as Sleep performance: the score of the night on show, with the night before under it.
-                made = (model.rest.map { String(format: "%.0f%%", locale: AppLanguage.activeLocale, $0) }, NunaRowTarget(kind: .nuna(.sleep(0))), "met:sleep-performance", NunaPalette.restText)
+                made = (model.rest.map { String(format: "%.0f%%", locale: AppLanguage.activeLocale, $0) }, NunaRowTarget(kind: .nuna(.trend(.restPerformance))), "met:sleep-performance", NunaPalette.restText)
             case .calories:    made = (num(model.calories), desc("energy_kcal"), "met:calories", nil)
             case .hydration:
                 guard hydrationEnabled else { return nil }
                 made = (nil, NunaRowTarget(kind: .nuna(.hydration)), "drop.fill", NunaPalette.effortText)
             case .weight:
                 // The latest reading (Apple Health or one added on the Weight page), else the weight in the profile.
-                made = (num(ex["weight"] ?? (profile.weightKg > 0 ? profile.weightKg : nil), 1), NunaRowTarget(kind: .nuna(.weight)), "met:weight", nil)
+                made = (num(ex["weight"] ?? (profile.weightKg > 0 ? profile.weightKg : nil), 1), NunaRowTarget(kind: .nuna(.trend(.weight))), "met:weight", nil)
             case .coupled:     made = (nil, NunaRowTarget(kind: .tab(.coupled)), "square.split.2x1.fill", nil)
             case .coach:
                 guard coachEnabled else { return nil }
