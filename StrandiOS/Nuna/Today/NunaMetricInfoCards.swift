@@ -4,7 +4,7 @@ import Charts
 import StrandDesign
 
 /// One explanation card: a title and paragraphs, in the type the other explanation cards use.
-private struct NunaInfoCard<Content: View>: View {
+struct NunaInfoCard<Content: View>: View {
     let title: LocalizedStringKey
     @ViewBuilder let content: Content
 

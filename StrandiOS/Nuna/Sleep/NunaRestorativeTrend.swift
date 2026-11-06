@@ -69,6 +69,7 @@ struct NunaRestorativeTrendView: View {
                 .fixedSize(horizontal: false, vertical: true).textCase(nil).padding(.horizontal, 2)
             key
             chart(all, average)
+            NunaTrendInfo(kind: .restorative)
         }
         .environment(\.nunaDetailSwitch, nil)
         .task(id: repo.refreshSeq) { await history.load(repo: repo) }
