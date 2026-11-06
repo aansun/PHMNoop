@@ -487,7 +487,7 @@ struct NunaHighlightsCard: View {
             }
             .overlay(alignment: .trailing) {
                 if let b = h.bars { NunaHighlightBars(values: b).padding(.trailing, 40) }
-                if h.art == .dart { NunaDartBoard().frame(width: 96, height: 100).padding(.trailing, 44) }
+                if h.art == .dart { NunaDartBoard().padding(.trailing, 46).offset(y: 16) }
             }
             .overlay(alignment: .topTrailing) {
                 Button { put(away: h.id) } label: {
