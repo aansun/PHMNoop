@@ -50,6 +50,9 @@ struct NunaDartBoard: View {
             .position(x: cx + 2 + 38, y: cy - 14)
         }
         .frame(width: w, height: h)
+        // The picture is 0.8 of the size it is drawn at.
+        .scaleEffect(0.8)
+        .frame(width: w * 0.8, height: h * 0.8)
         .accessibilityHidden(true)
     }
 }
