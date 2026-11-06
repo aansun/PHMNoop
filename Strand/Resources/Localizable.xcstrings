@@ -8673,5 +8673,9 @@
  "Saving activity…": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Menyimpan aktivitas…"}}}},
  "Waiting for HR": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Menunggu HR"}}}},
  "Total calories": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Total kalori"}}}},
- "Total workout": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Total latihan"}}}}
+ "Total workout": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Total latihan"}}}},
+ "What are Calories?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Apa itu Kalori?"}}}},
+ "Calories measure the energy you burn in a day. PHMN works it out from an estimate of your Basal Metabolic Rate (BMR), the energy your body uses at rest, and from your heart rate through the day, which shows when you burned more.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kalori mengukur energi yang kamu bakar dalam sehari. PHMN menghitungnya dari perkiraan Basal Metabolic Rate (BMR), yaitu energi yang dipakai tubuhmu saat istirahat, dan dari detak jantungmu sepanjang hari, yang menunjukkan kapan kamu membakar lebih banyak."}}}},
+ "Your BMR is estimated from the height, weight, sex and age in your profile. In general, the more active you are, the more calories you burn.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "BMR-mu diperkirakan dari tinggi, berat, jenis kelamin, dan usia di profilmu. Secara umum, makin aktif kamu, makin banyak kalori yang terbakar."}}}},
+ "Eat more calories than you burn and you gain weight (muscle or fat). Eat fewer and you lose weight. Match the two and your weight holds steady.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Makan lebih banyak kalori dari yang kamu bakar, berat badan naik (otot atau lemak). Makan lebih sedikit, berat badan turun. Kalau seimbang, berat badanmu tetap."}}}}
 }, "version":"1.0" }

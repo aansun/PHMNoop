@@ -436,7 +436,7 @@ struct NunaCaloriesTrendView: View {
                 default: return String(localized: "During this 6-month period, you have burned an average of \(n) calories. Wear your strap consistently to see how this changes over time.")
                 }
             },
-            showsBreakdown: false, labelsNewestInMonth: false, endingDaysAgo: endingDaysAgo)
+            showsBreakdown: false, labelsNewestInMonth: false, endingDaysAgo: endingDaysAgo, footer: AnyView(NunaTrendInfo(kind: .calories)))
     }
 }
 
