@@ -151,7 +151,7 @@ public enum AnyaActions {
     {"title":"HRV, last 14 days","metrics":["hrv"],"days":14}
     ```
     metrics are keys from: recovery (Recovery), strain (Strain), sleep_performance (Sleep), hrv, rhr, resp_rate, spo2, skin_temp, stress, weight, steps; at most 3; days 7 to 365. \
-    The app draws the chart from the person's stored data.
+    The app draws the chart from the person's stored data. Always put the block in the fence, and use only these keys.
     ```anya-program
     {"name":"Beginner full body","note":"3 days a week","days":[{"title":"Day A","items":[{"exercise":"Goblet squat","sets":3,"repsLow":8,"repsHigh":10,"restSec":90}]}]}
     ```
@@ -233,11 +233,27 @@ public enum AnyaActions {
 
     // MARK: Parsing one block
 
+    /// Other names a model reaches for, and the metric each one stands for.
+    static let metricAliases: [String: String] = [
+        "sleep": "sleep_performance", "sleep_duration": "sleep_performance", "sleep_stages": "sleep_performance", "sleep_quality": "sleep_performance",
+        "sleep_score": "sleep_performance", "sleep_efficiency": "sleep_performance", "rest": "sleep_performance",
+        "heart_rate_variability": "hrv", "resting_heart_rate": "rhr", "resting_hr": "rhr", "respiratory_rate": "resp_rate", "respiration": "resp_rate",
+        "blood_oxygen": "spo2", "oxygen": "spo2", "skin_temperature": "skin_temp", "temperature": "skin_temp",
+        "day_strain": "strain", "effort": "strain", "charge": "recovery",
+    ]
+
+    /// The metric a name stands for, when it is one the app can draw.
+    static func canonicalMetric(_ name: String) -> String? {
+        let k = name.lowercased().trimmingCharacters(in: .whitespaces).replacingOccurrences(of: " ", with: "_").replacingOccurrences(of: "-", with: "_")
+        if chartMetrics.contains(k) { return k }
+        return metricAliases[k]
+    }
+
     static func chart(_ o: [String: Any]) -> AnyaChartSpec? {
         var keys: [String] = []
         let raw = (o["metrics"] as? [Any]) ?? (o["metric"] as? String).map { [$0] } ?? []
         for m in raw {
-            guard let k = (m as? String)?.lowercased(), chartMetrics.contains(k), !keys.contains(k) else { continue }
+            guard let name = m as? String, let k = canonicalMetric(name), !keys.contains(k) else { continue }
             keys.append(k)
         }
         guard !keys.isEmpty else { return nil }
@@ -396,8 +412,15 @@ public enum AnyaActions {
         var out: [AnyaBlock] = []
         var rest = Substring(reply)
         func flush(_ s: Substring) {
-            let t = s.trimmingCharacters(in: .whitespacesAndNewlines)
-            if !t.isEmpty { out.append(.text(t)) }
+            var text = s.trimmingCharacters(in: .whitespacesAndNewlines)
+            // A small model often skips the fence and writes the chart as a bare JSON object: draw it, and keep it out of the prose.
+            while let (range, spec) = looseChart(in: text) {
+                let before = text[text.startIndex..<range.lowerBound].trimmingCharacters(in: .whitespacesAndNewlines)
+                if !before.isEmpty { out.append(.text(before)) }
+                out.append(.chart(spec))
+                text = text[range.upperBound...].trimmingCharacters(in: .whitespacesAndNewlines)
+            }
+            if !text.isEmpty { out.append(.text(text)) }
         }
         while let open = rest.range(of: "```anya-") {
             flush(rest[rest.startIndex..<open.lowerBound])
@@ -424,6 +447,29 @@ public enum AnyaActions {
         }
         flush(rest)
         return out
+    }
+
+    /// The first bare JSON object in `text` that names metrics to chart (no fence around it), with where it sits.
+    static func looseChart(in text: String) -> (Range<String.Index>, AnyaChartSpec)? {
+        var from = text.startIndex
+        while let open = text[from...].firstIndex(of: "{") {
+            var depth = 0
+            var end: String.Index?
+            var i = open
+            while i < text.endIndex {
+                let c = text[i]
+                if c == "{" { depth += 1 } else if c == "}" { depth -= 1; if depth == 0 { end = text.index(after: i); break } }
+                i = text.index(after: i)
+            }
+            guard let close = end else { return nil }
+            let candidate = String(text[open..<close])
+            if candidate.contains("\"metric"), let data = candidate.data(using: .utf8),
+               let obj = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any], let spec = chart(obj) {
+                return (open..<close, spec)
+            }
+            from = text.index(after: open)
+        }
+        return nil
     }
 
     /// The program in a reply, from a fenced block or, for a small model that skipped the fence, from a bare JSON object with `days`.

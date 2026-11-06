@@ -90,4 +90,20 @@ final class AnyaLabBlockTests: XCTestCase {
         XCTAssertEqual(l.results.count, 200)
         XCTAssertTrue(AnyaActions.instruction.contains("anya-lab"))
     }
+
+    func testBareChartJSONWithOtherNamesIsDrawnAndKeptOutOfProse() {
+        let reply = "You've had solid sleep recently.\n\n{\"title\":\"Sleep Performance - Last 14 Days\",\"metrics\":[\"sleep_duration\",\"sleep_stages\"],\"days\":14}"
+        let blocks = AnyaActions.parse(reply)
+        XCTAssertEqual(blocks.count, 2)
+        if case .text(let t) = blocks[0] { XCTAssertEqual(t, "You've had solid sleep recently.") } else { XCTFail("prose first") }
+        if case .chart(let c) = blocks[1] {
+            XCTAssertEqual(c.metrics, ["sleep_performance"]); XCTAssertEqual(c.days, 14)
+        } else { XCTFail("a chart") }
+    }
+
+    func testBraceTextWithoutMetricsStaysProse() {
+        let blocks = AnyaActions.parse("Use {curly} braces {\"a\":1} freely.")
+        XCTAssertEqual(blocks.count, 1)
+        if case .text = blocks[0] {} else { XCTFail("prose") }
+    }
 }

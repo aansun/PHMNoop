@@ -862,7 +862,7 @@ private struct OuraOnboardingDemoHost: View {
 #endif
 
 #if DEBUG && os(iOS)
-/// DEBUG-only: `--demo-screen anyareply --demo-reply chart|program|food` shows one question and Anya's reply through the same `NunaAnyaReply` the chat uses.
+/// DEBUG-only: `--demo-screen anyareply --demo-reply chart|program|food|loose` shows one question and Anya's reply through the same `NunaAnyaReply` the chat uses.
 /// The chart is still drawn from the readings stored on the phone; only the model's answer is fixed.
 struct NunaAnyaReplyDemo: View {
     private var kind: String {
@@ -878,6 +878,10 @@ struct NunaAnyaReplyDemo: View {
         case "food":
             return ("I had nasi goreng with a fried egg for lunch.",
                     "Logged as an estimate for lunch: check the portion before you add it.\n```anya-food\n{\"meal\":\"lunch\",\"items\":[{\"name\":\"Nasi goreng\",\"amount\":\"1 plate\",\"kcal\":520,\"proteinG\":14,\"carbsG\":68,\"fatG\":21},{\"name\":\"Fried egg\",\"amount\":\"1\",\"kcal\":90,\"proteinG\":6,\"carbsG\":0,\"fatG\":7}]}\n```")
+        case "loose":
+            // What a small model wrote: no fence, and names the app does not know.
+            return ("make grafik sleep performance last week",
+                    "You've had solid sleep recently. The data suggests consistency.\n\n{\"title\":\"Sleep Performance - Last 14 Days\",\"metrics\":[\"sleep_duration\",\"sleep_stages\"],\"days\":14}")
         default:
             return ("Show my Recovery and Strain for the last 14 days as a chart.",
                     "Here are your Recovery and Strain over the last two weeks, drawn from your own readings.\n```anya-chart\n{\"title\":\"Recovery and Strain, last 14 days\",\"metrics\":[\"recovery\",\"strain\"],\"days\":14}\n```")
