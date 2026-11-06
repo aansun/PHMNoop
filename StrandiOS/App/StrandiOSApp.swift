@@ -679,7 +679,20 @@ struct StrandiOSApp: App {
 /// excluded `RootView()` sidebar for `RootTabView()`. The shared `OnboardingWizard`, `TermsGateView`,
 /// `WhatsNewView`, `AppChangelog`, and `Terms` symbols all compile into the iOS target unchanged.
 private struct iOSRootView: View {
-    @AppStorage("noop.onboarded") private var onboarded = false
+    @AppStorage("noop.onboarded") private var storedOnboarded = false
+    #if DEBUG
+    /// `--first-run`: a debug build behaves as a brand-new install for this launch (the saved flags are left as they are), to walk through the first-run pages.
+    @State private var firstRun = CommandLine.arguments.contains("--first-run")
+    private var onboarded: Bool {
+        get { storedOnboarded && !firstRun }
+        nonmutating set { storedOnboarded = newValue; if newValue { firstRun = false } }
+    }
+    #else
+    private var onboarded: Bool {
+        get { storedOnboarded }
+        nonmutating set { storedOnboarded = newValue }
+    }
+    #endif
     /// Which look the app uses. Default keeps `RootTabView`; Nuna uses `NunaRootView` (docs/nuna).
     @AppStorage(ExperienceMode.storageKey) private var experienceRaw = ExperienceMode.nuna.rawValue
     @AppStorage("noop.lastSeenChangelogVersion") private var lastSeenChangelog = ""
