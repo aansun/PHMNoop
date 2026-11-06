@@ -718,26 +718,28 @@ private struct iOSRootView: View {
                 RootTabView(homeScreenQuickActionsEnabled: quickActionsEnabled)
             }
             if !onboarded && !demoBypass {
-                OnboardingWizard(onFinished: {
-                    onboarded = true
-                    // A brand-new user just saw the expectations in onboarding — don't also pop the
-                    // changelog at them; mark them current.
-                    lastSeenChangelog = AppChangelog.currentVersion
-                })
+                Group {
+                    if ExperienceMode(rawValue: experienceRaw) == .nuna {
+                        NunaOnboardingWizard(onFinished: finishOnboarding)
+                    } else {
+                        OnboardingWizard(onFinished: finishOnboarding)
+                    }
+                }
                 .transition(.opacity)
                 .zIndex(1)
             }
             // Terms acknowledgment gate — over EVERYTHING (before onboarding/pairing/Bluetooth) until
             // the current terms version is accepted; re-appears if the terms materially change.
             if acceptedTerms != Terms.currentVersion && !demoBypass {
-                TermsGateView(onAccept: {
-                    // Keep any external action behind the gate while the accepted-terms change decides
-                    // whether What's New must present next. This write must precede acceptedTerms.
-                    automaticLaunchSheetResolved = false
-                    acceptedTerms = Terms.currentVersion
-                })
-                    .transition(.opacity)
-                    .zIndex(2)
+                Group {
+                    if ExperienceMode(rawValue: experienceRaw) == .nuna {
+                        NunaTermsGate(onAccept: acceptTerms)
+                    } else {
+                        TermsGateView(onAccept: acceptTerms)
+                    }
+                }
+                .transition(.opacity)
+                .zIndex(2)
             }
         }
         .animation(.easeInOut(duration: 0.35), value: onboarded)
@@ -762,6 +764,19 @@ private struct iOSRootView: View {
             }
         }
         .onChange(of: acceptedTerms) { _, _ in showWhatsNewIfDue() }
+    }
+
+    private func finishOnboarding() {
+        onboarded = true
+        // A brand-new user just saw the expectations in onboarding — don't also pop the changelog at them; mark them current.
+        lastSeenChangelog = AppChangelog.currentVersion
+    }
+
+    private func acceptTerms() {
+        // Keep any external action behind the gate while the accepted-terms change decides
+        // whether What's New must present next. This write must precede acceptedTerms.
+        automaticLaunchSheetResolved = false
+        acceptedTerms = Terms.currentVersion
     }
 
     /// DEBUG: launched with --demo-seed, skip the first-run gates (onboarding / terms / What's New) so the
@@ -797,6 +812,9 @@ enum DemoScreens {
         let args = CommandLine.arguments
         guard let i = args.firstIndex(of: "--demo-screen"), i + 1 < args.count else { return nil }
         switch args[i + 1].lowercased() {
+        // The first-run pages in the Nuna look, to look at without accepting the terms or leaving the gate.
+        case "nunaterms": return AnyView(NunaTermsGate(onAccept: {}))
+        case "nunaonboarding": return AnyView(NunaOnboardingWizard(onFinished: {}))
         case "today":    return AnyView(TodayView())
         // The DEFAULT iOS Today (`noop.liquidTodayEnabled` ships true), so it needs its own entry — plain
         // "today" renders the CLASSIC screen, which is exactly the screen whose behaviour Liquid was found
