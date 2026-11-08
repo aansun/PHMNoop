@@ -24,10 +24,18 @@ import StrandAnalytics
 /// them. The L3 `StressNudgeCenter` is OPTIONAL via the environment: Wave 3 injects a shared instance;
 /// absent that we fall back to a local one, so the view always compiles + the card surface always exists.
 struct BreathingView: View {
-    var body: some View { BreathingContent() }
+    /// Called when a session the wearer actually breathed through ends: when it began (unix seconds) and how many seconds it lasted.
+    /// The Nuna shell uses it to log the session as a recovery activity; the macOS shell leaves it nil.
+    var onSessionEnd: ((_ startTs: Int, _ seconds: Int) -> Void)? = nil
+    var body: some View { BreathingContent(onSessionEnd: onSessionEnd) }
 }
 
 private struct BreathingContent: View {
+    var onSessionEnd: ((_ startTs: Int, _ seconds: Int) -> Void)?
+    /// When a resonance sweep or a Calm me session began, so its end can be reported with its length.
+    @State private var controllerStartedAt: Date?
+
+    init(onSessionEnd: ((_ startTs: Int, _ seconds: Int) -> Void)? = nil) { self.onSessionEnd = onSessionEnd }
 
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var live: LiveState
@@ -223,6 +231,14 @@ private struct BreathingContent: View {
             // Leaving a mode stops any session it owns so two clocks never run at once.
             if running { stop() }
             controller.stop()
+        }
+        .onChangeCompat(of: controller.running) { isRunning in
+            // Resonance sweeps and Calm me run on the controller, not on the paced timer: report them when they end, too.
+            if isRunning { controllerStartedAt = Date(); return }
+            guard let began = controllerStartedAt else { return }
+            controllerStartedAt = nil
+            let secs = Int(Date().timeIntervalSince(began))
+            if secs >= 20 { onSessionEnd?(Int(began.timeIntervalSince1970), secs) }
         }
         .onChangeCompat(of: audioCues) { on in
             // Spin the audio engine up the moment the user opts in (so the first phase tone isn't
@@ -785,6 +801,9 @@ private struct BreathingContent: View {
         // actually buzzing, so a stop on an idle trainer stays silent.
         if wasRunning { model.stopHaptics() }
         if wasRunning { captureOutcome() }
+        if wasRunning, sessionSeconds >= 20 {
+            onSessionEnd?(Int(Date().timeIntervalSince1970) - sessionSeconds, sessionSeconds)
+        }
         if reduceMotion {
             orbProgress = 0
         } else {

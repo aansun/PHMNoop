@@ -41,6 +41,7 @@ struct NunaBreathSessionView: View {
 
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var live: LiveState
+    @EnvironmentObject private var repo: Repository
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ObservedObject private var motion = NoopMotionState.shared
     @AppStorage(NunaBreathPrefs.hapticsKey) private var haptics = true
@@ -345,6 +346,7 @@ struct NunaBreathSessionView: View {
             rmssdPeak: rmssdCount > 0 ? rmssdPeak : nil, hrSeries: hrSeries, rmssdSeries: rmssdSeries,
             haptics: haptics && live.bonded, step: step)
         NunaBreathLog.append(record)
+        NunaBreathRecovery.log(repo: repo, startTs: record.startTs, seconds: record.seconds, title: title)
         NunaAnyaMemory.remember(.breathing, Self.memoryLine(record, title: title))
         onEnd(record)
     }

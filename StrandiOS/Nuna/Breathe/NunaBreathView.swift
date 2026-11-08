@@ -13,7 +13,6 @@ struct NunaBreathView: View {
     @EnvironmentObject private var live: LiveState
     @AppStorage(NunaBreathPrefs.anyaKey) private var anyaOn = true
     @AppStorage(NunaBreathPrefs.lengthKey) private var lengthPref = 0
-    @AppStorage("noop.coachEnabled") private var coachEnabled = true
 
     @State private var goal: BreathGoal = .calm
     @State private var pickedGoal = false
@@ -21,7 +20,6 @@ struct NunaBreathView: View {
     @State private var request: NunaBreathRequest?
     @State private var showSettings = false
     @State private var showHistory = false
-    @State private var showAnya = false
     @State private var showAdvanced = false
     @State private var showMake = false
     @State private var tab = 1
@@ -37,7 +35,7 @@ struct NunaBreathView: View {
 
     var body: some View {
         NunaDetailScreen("Breathing", trailing: AnyView(settingsButton), centersTitle: true) {
-            NunaPageTabs([(value: 0, title: "Progress"), (value: 1, title: "Breathe"), (value: 2, title: "Explore")], selection: $tab)
+            NunaPageTabs([(value: 0, title: "Progress"), (value: 1, title: "Breathe")], selection: $tab)
             tabContent
         }
         .onAppear { model.startRealtimeHR(); mirrorLive(); mine = NunaCustomBreath.all() }
@@ -53,7 +51,6 @@ struct NunaBreathView: View {
             NunaBreathSettingsView { showSettings = false; showAdvanced = true } onClose: { showSettings = false }.nunaSheetChrome(detents: [.large])
         }
         .sheet(isPresented: $showHistory) { NunaBreathHistoryView { showHistory = false }.nunaSheetChrome(detents: [.large]) }
-        .sheet(isPresented: $showAnya) { NunaAnyaSheet(context: "Breathing") }
         .sheet(isPresented: $showMake, onDismiss: { mine = NunaCustomBreath.all() }) {
             ScrollView {
                 NunaBreathAskAnya(inputs: suggestion?.inputs)
@@ -65,17 +62,16 @@ struct NunaBreathView: View {
             .nunaSheetChrome(detents: [.large])
         }
         .sheet(isPresented: $showAdvanced) {
-            NavigationStack { BreathingView().toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { showAdvanced = false } } } }
+            NavigationStack { BreathingView(onSessionEnd: { start, secs in NunaBreathRecovery.log(repo: repo, startTs: start, seconds: secs, title: nil); history = NunaBreathLog.all() }).toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { showAdvanced = false } } } }
                 .preferredColorScheme(NunaTheme.colorScheme)
         }
     }
 
-    /// The three tabs, as on the Strength Trainer: Progress (what you have done), Breathe (start one, make your own), Explore (every goal and ready exercise).
+    /// Two tabs: Progress (what you have done) and Breathe (start one, pick one by goal, make your own).
     @ViewBuilder private var tabContent: some View {
         switch tab {
         case 0: progressTab
-        case 1: breatheTab
-        default: exploreTab
+        default: breatheTab
         }
     }
 
@@ -85,8 +81,9 @@ struct NunaBreathView: View {
         VStack(spacing: NunaSpacing.section) {
             topActions
             NunaDivider()
+            explore
+            NunaDivider()
             myExercises
-            if anyaOn { anyaCard }
         }
     }
 
@@ -98,8 +95,17 @@ struct NunaBreathView: View {
     private var topActions: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Start a Session").font(.nuna(size: 20, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
-            Text(anyaOn ? "Take a guided breath. Anya picks one that fits how you are right now." : "Take a guided breath at your own pace.")
-                .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
+            if anyaOn {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(verbatim: suggestion?.headline ?? String(localized: "Reading your numbers…")).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+                    if let d = suggestion?.detail {
+                        Text(verbatim: d).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+                    }
+                }.fixedSize(horizontal: false, vertical: true)
+            } else {
+                Text("Take a guided breath at your own pace.")
+                    .font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).fixedSize(horizontal: false, vertical: true)
+            }
             Button { if let t = quickStartTemplate { start(t) } } label: {
                 Text("Quick start").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
                     .foregroundStyle(NunaPalette.onAccent).frame(maxWidth: .infinity).frame(height: 54)
@@ -142,12 +148,6 @@ struct NunaBreathView: View {
         VStack(alignment: .leading, spacing: 12) {
             NunaTitleRow(title: "My Exercises") { EmptyView() }
             NunaBreathGenerateCard(title: "Generate with Anya", text: "Say what you need and Anya will make a breathing exercise for you.") { showMake = true }
-            Button { showAdvanced = true } label: {
-                Text("Resonance and Calm me").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
-                    .foregroundStyle(NunaPalette.textPrimary).frame(maxWidth: .infinity).frame(height: 54)
-                    .background(NunaPalette.cardSurface, in: RoundedRectangle(cornerRadius: 14, style: .continuous))
-            }.buttonStyle(.plain)
-            NunaDivider().padding(.vertical, 6)
             if mine.isEmpty {
                 Text("No exercises yet. Ask Anya to make one and it is kept here.")
                     .font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
@@ -184,42 +184,10 @@ struct NunaBreathView: View {
         }.padding(.vertical, 10)
     }
 
-    private var anyaCard: some View {
-        NunaAnyaNote {
-            VStack(alignment: .leading, spacing: 12) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Anya suggests").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                    Text(verbatim: suggestion?.headline ?? String(localized: "Reading your numbers…")).font(.nuna(size: 18, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                }
-                if let d = suggestion?.detail {
-                    Text(verbatim: d).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                }
-                if let read = suggestion?.read, !read.isEmpty {
-                    HStack(spacing: 6) {
-                        Text("Read:").font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        ForEach(read, id: \.self) { Text(LocalizedStringKey($0)).font(.nuna(size: 12, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
-                    }
-                }
-                HStack(spacing: 10) {
-                    Button { if let s = suggestion { start(s.advice.template) } } label: {
-                        HStack(spacing: 6) { Image(systemName: "play.fill").font(.nuna(size: 13, weight: .bold)); Text("Start this") }
-                            .font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.onAccent).padding(.horizontal, 18).frame(height: 44)
-                            .background(NunaPalette.accent, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
-                    }.buttonStyle(.plain).disabled(suggestion == nil).opacity(suggestion == nil ? 0.4 : 1)
-                    if coachEnabled {
-                        Button { showAnya = true } label: {
-                            Text("Ask Anya").font(.nuna(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).padding(.horizontal, 18).frame(height: 44)
-                                .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
-                        }.buttonStyle(.plain)
-                    }
-                }
-            }
-        }
-    }
-
     // MARK: Explore
 
-    private var exploreTab: some View {
+    /// Every goal and its ready exercises, and the two hands-on tools (Resonance and Calm me) as the last row.
+    private var explore: some View {
         VStack(spacing: NunaSpacing.section) {
             goalPicker
             templates
@@ -264,9 +232,25 @@ struct NunaBreathView: View {
                         if i > 0 { NunaDivider() }
                         Button { start(t) } label: { templateRow(t) }.buttonStyle(.plain)
                     }
+                    NunaDivider()
+                    Button { showAdvanced = true } label: { toolsRow }.buttonStyle(.plain)
                 }
             }
         }
+    }
+
+    /// The hands-on tools of the older Breathing screen: find your own resonance pace, or let the strap settle your heart rate.
+    private var toolsRow: some View {
+        HStack(spacing: 12) {
+            NunaActivityGlyph(name: "Breathwork", size: 28).foregroundStyle(NunaPalette.recoveryBlue).frame(width: 34)
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Resonance and Calm me").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                Text("Find your own pace, or settle your heart rate with the strap.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(2)
+            }
+            Spacer(minLength: 6)
+            Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+        }
+        .padding(.vertical, 10).contentShape(Rectangle())
     }
 
     private func templateRow(_ t: BreathTemplate) -> some View {

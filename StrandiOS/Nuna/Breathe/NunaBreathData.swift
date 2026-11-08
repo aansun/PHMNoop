@@ -2,6 +2,7 @@
 import SwiftUI
 import StrandDesign
 import StrandAnalytics
+import WhoopStore
 
 /// One finished breathing session, as it is kept in the history and shown in the report. Every figure is measured during the
 /// session; a number the strap did not give (no heart rate, too few beats for HRV) is nil, never filled in.
@@ -60,6 +61,19 @@ enum NunaBreathLog {
     /// For the advisor: how each template has moved HRV for this wearer.
     static func pastEffect() -> [String: Double] {
         BreathAdvisor.pastEffect(all().compactMap { r in r.templateId.map { ($0, r.rmssdStart, r.rmssdAvg) } })
+    }
+}
+
+/// Every breathing session, wherever it was done, is also kept as a recovery activity ("Breathwork"), so it shows in Today's activities,
+/// counts toward a plan's recovery days and is read like any other activity.
+enum NunaBreathRecovery {
+    static let sport = "Breathwork"
+
+    @MainActor static func log(repo: Repository, startTs: Int, seconds: Int, title: String?) {
+        guard seconds >= 20 else { return }
+        let row = WorkoutRow(startTs: startTs, endTs: startTs + seconds, sport: sport, source: "manual", durationS: Double(seconds),
+                             energyKcal: nil, avgHr: nil, maxHr: nil, strain: nil, distanceM: nil, zonesJSON: nil, notes: title, steps: nil)
+        Task { await repo.saveManualWorkout(row) }
     }
 }
 

@@ -11,6 +11,7 @@
  "Personal Records": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Rekor pribadi"}}}},
  "Time breathed": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Waktu bernapas"}}}},
  "Avg. daily minutes": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Rata-rata menit per hari"}}}},
+ "Find your own pace, or settle your heart rate with the strap.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Temukan temponya sendiri, atau tenangkan detak jantungmu lewat strap."}}}},
  "Avg. volume load": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Rata-rata beban volume"}}}},
  "Today's Activities": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Aktivitas Hari Ini"}}}},
  "Weekly Trends": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tren Mingguan"}}}},
