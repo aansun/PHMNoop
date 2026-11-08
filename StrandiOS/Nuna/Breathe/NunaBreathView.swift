@@ -287,18 +287,11 @@ struct NunaBreathView: View {
     private var chartWindow: NunaTrendWindow { NunaTrendWindow(range: chartRange, page: chartPage, endingDaysAgo: 0) }
 
     private var progressTab: some View {
-        let week = history.filter { $0.startTs >= Int(Date().addingTimeInterval(-7 * 86_400).timeIntervalSince1970) }
-        let moves = week.compactMap(\.rmssdChangePct)
-        return VStack(spacing: NunaSpacing.section) {
+        VStack(spacing: NunaSpacing.section) {
             if history.isEmpty {
                 NunaCard(small: true) { Text("Finish a session and its report is kept here.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
             } else {
                 minutesSection
-                HStack(spacing: 10) {
-                    statTile("Sessions", "\(week.count)", "7 days")
-                    statTile("Time", "\(week.reduce(0) { $0 + $1.seconds } / 60)", "min")
-                    statTile("HRV move", moves.isEmpty ? "–" : String(format: "%+.0f", moves.reduce(0, +) / Double(moves.count)), "%")
-                }
             }
             sessions
         }
@@ -314,11 +307,9 @@ struct NunaBreathView: View {
             return (w.noon(d), m)
         }
         let average: Double? = days.isEmpty ? nil : days.map(\.minutes).reduce(0, +) / Double(days.count)
-        let most = days.map(\.minutes).max() ?? 0
-        // Steps of a round size, so the axis never has more than five labels: 0 to 30 by 10 until a day goes past it.
-        let step = [10.0, 20, 25, 50, 100, 200].first { ceil(max(most, 30) / $0) <= 4 } ?? 200
-        let top = step * max(3, ceil(most / step))
-        let ticks = stride(from: 0.0, through: top, by: step).map { $0 }
+        // A fixed scale, 0 to 15 minutes in steps of 5; a day with more than that fills the bar and its real figure shows when touched.
+        let top = 15.0
+        let ticks = [0.0, 5, 10, 15]
         let oldest = byDay.keys.min()
         let pickedMin: Double? = chartPicked.flatMap { p in days.first { cal.isDate($0.date, inSameDayAs: p) }?.minutes }
         let shown = pickedMin ?? average
@@ -353,7 +344,7 @@ struct NunaBreathView: View {
             }
             Chart {
                 ForEach(days, id: \.date) { d in
-                    BarMark(x: .value("Day", d.date, unit: .day), y: .value("min", d.minutes), width: .fixed(chartRange == 30 ? 8 : 3))
+                    BarMark(x: .value("Day", d.date, unit: .day), y: .value("min", min(d.minutes, top)), width: .fixed(chartRange == 30 ? 8 : 3))
                         .foregroundStyle(NunaPalette.rest).cornerRadius(1.5).opacity(lit(d.date) ? 1 : 0.3)
                 }
                 if let p = chartPicked, days.contains(where: { cal.isDate($0.date, inSameDayAs: p) }) {
@@ -395,19 +386,6 @@ struct NunaBreathView: View {
             }
             .frame(height: 260)
             .accessibilityLabel(Text("Time breathed"))
-        }
-    }
-
-    private func statTile(_ label: LocalizedStringKey, _ value: String, _ unit: String) -> some View {
-        NunaCard(small: true) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(label).font(.nuna(size: 10.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.8)
-                HStack(alignment: .firstTextBaseline, spacing: 3) {
-                    Text(verbatim: value).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
-                    Text(verbatim: unit).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textMuted).textCase(nil)
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
