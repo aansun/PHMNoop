@@ -20,6 +20,7 @@ struct NunaBreathView: View {
     @State private var request: NunaBreathRequest?
     @State private var showSettings = false
     @State private var showHistory = false
+    @State private var opened: NunaBreathRecord?
     @State private var showAdvanced = false
     @State private var showMake = false
     @State private var tab = 1
@@ -49,6 +50,9 @@ struct NunaBreathView: View {
         }
         .sheet(isPresented: $showSettings, onDismiss: { history = NunaBreathLog.all() }) {
             NunaBreathSettingsView { showSettings = false; showAdvanced = true } onClose: { showSettings = false }.nunaSheetChrome(detents: [.large])
+        }
+        .sheet(item: $opened) { r in
+            NunaBreathReportView(record: r, readOnly: true, onDone: { opened = nil }).nunaSheetChrome(detents: [.large])
         }
         .sheet(isPresented: $showHistory) { NunaBreathHistoryView { showHistory = false }.nunaSheetChrome(detents: [.large]) }
         .sheet(isPresented: $showMake, onDismiss: { mine = NunaCustomBreath.all() }) {
@@ -394,33 +398,41 @@ struct NunaBreathView: View {
             NunaTitleRow(title: "Your sessions") {
                 if !history.isEmpty { Button { showHistory = true } label: { Text("All").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textSecondary) }.buttonStyle(.plain) }
             }
-            if !history.isEmpty {
-                NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 14, bottom: 4, trailing: 14)) {
-                    VStack(spacing: 0) {
-                        ForEach(Array(history.prefix(5).enumerated()), id: \.element.id) { i, r in
-                            if i > 0 { NunaDivider() }
-                            Button { showHistory = true } label: { sessionRow(r) }.buttonStyle(.plain)
-                        }
-                    }
-                }
+            ForEach(history.prefix(5)) { r in
+                Button { opened = r } label: { sessionRow(r) }.buttonStyle(.plain)
             }
         }
     }
 
+    /// One session as its own card, like a Personal Record on the Strength Trainer: a tile for the goal, the name and when, the minutes
+    /// at the right. A touch opens its report.
     private func sessionRow(_ r: NunaBreathRecord) -> some View {
         let g = BreathGoal(rawValue: r.goal) ?? .calm
-        let name = r.templateId.flatMap { BreathTemplates.template(id: $0)?.title } ?? r.protocolId
+        let name = r.templateId.flatMap { BreathTemplates.template(id: $0)?.title } ?? BreathProtocolCatalog.protocolById(r.protocolId).map { String(localized: String.LocalizationValue($0.title)) } ?? r.protocolId
         let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("d MMM HH:mm")
-        return HStack(spacing: 12) {
-            NunaIconTile(g.icon, tint: g.tint)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(verbatim: name).font(.nuna(size: 15.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                Text(verbatim: "\(f.string(from: r.date)) · \(r.durationText)").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
+        let when = f.string(from: r.date)
+        let hrv = r.rmssdChangePct.map { String(format: "%+.0f%% HRV", locale: AppLanguage.activeLocale, $0) }
+        let long = r.seconds >= 60
+        return NunaCard(small: true, padding: EdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 14)) {
+            HStack(spacing: 12) {
+                RoundedRectangle(cornerRadius: 10, style: .continuous).fill(g.tint.opacity(0.16)).frame(width: 72, height: 54)
+                    .overlay(NunaActivityGlyph(name: g.activity, size: 28).foregroundStyle(g.tint))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(verbatim: name).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
+                        .lineLimit(2).minimumScaleFactor(0.85).multilineTextAlignment(.leading).textCase(nil)
+                    Text(verbatim: when).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).textCase(nil)
+                    if let hrv {
+                        Text(verbatim: hrv).font(.nuna(size: 11.5, weight: .bold)).foregroundStyle((r.rmssdChangePct ?? 0) >= 5 ? NunaPalette.charge : NunaPalette.textSecondary).lineLimit(1).textCase(nil)
+                    }
+                }
+                Spacer(minLength: 8)
+                Text(verbatim: "\(long ? r.seconds / 60 : r.seconds)").font(.nuna(size: 26, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+                    .lineLimit(1).minimumScaleFactor(0.6).frame(width: 52, alignment: .trailing)
+                Text(verbatim: long ? "min" : "s").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).frame(width: 26, alignment: .leading)
+                Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
             }
-            Spacer(minLength: 6)
-            if let p = r.rmssdChangePct { NunaChip(verbatim: String(format: "%+.0f%% HRV", locale: AppLanguage.activeLocale, p), color: p >= 5 ? NunaPalette.charge : nil) }
         }
-        .padding(.vertical, 10).contentShape(Rectangle())
+        .contentShape(Rectangle())
     }
 
     private var settingsButton: some View {
