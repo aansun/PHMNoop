@@ -28,6 +28,10 @@ struct NunaBreathView: View {
     @State private var mine = NunaCustomBreath.all()
     @State private var rrBuffer: [Int] = []
     @State private var history = NunaBreathLog.all()
+    @State private var chartRange = 30
+    @State private var chartPage = 0
+    @State private var chartPicked: Date?
+    @State private var chartTouchBeganOnPicked: Bool?
 
     private var liveBpm: Int? { live.worn ? model.bpm : nil }
 
@@ -288,40 +292,24 @@ struct NunaBreathView: View {
 
     // MARK: Progress
 
-    private static let chartDays = 14
-
-    /// Minutes breathed on each of the last days, today last.
-    private var dayMinutes: [(date: Date, minutes: Double)] {
-        let cal = Calendar.current, today = cal.startOfDay(for: Date())
-        return (0..<Self.chartDays).reversed().map { back in
-            let day = cal.date(byAdding: .day, value: -back, to: today) ?? today
-            let secs = history.filter { cal.isDate($0.date, inSameDayAs: day) }.reduce(0) { $0 + $1.seconds }
-            return (day, Double(secs) / 60)
-        }
+    /// Minutes breathed on each calendar day that has a session.
+    private var minutesByDay: [Date: Double] {
+        let cal = Calendar.current
+        var out: [Date: Double] = [:]
+        for r in history { out[cal.startOfDay(for: r.date), default: 0] += Double(r.seconds) / 60 }
+        return out
     }
 
+    private var chartWindow: NunaTrendWindow { NunaTrendWindow(range: chartRange, page: chartPage, endingDaysAgo: 0) }
+
     private var progressTab: some View {
-        let days = dayMinutes
-        let since = Calendar.current.date(byAdding: .day, value: -(Self.chartDays - 1), to: Calendar.current.startOfDay(for: Date())) ?? Date()
-        let recent = history.filter { $0.date >= since }
-        let total = Int((days.reduce(0) { $0 + $1.minutes }).rounded())
         let week = history.filter { $0.startTs >= Int(Date().addingTimeInterval(-7 * 86_400).timeIntervalSince1970) }
         let moves = week.compactMap(\.rmssdChangePct)
         return VStack(spacing: NunaSpacing.section) {
             if history.isEmpty {
                 NunaCard(small: true) { Text("Finish a session and its report is kept here.").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil) }
             } else {
-                VStack(alignment: .leading, spacing: 14) {
-                    Text("Last 14 days").font(.nuna(size: 11.5, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                    HStack(alignment: .firstTextBaseline, spacing: 6) {
-                        Text(verbatim: "\(total)").font(.nuna(size: 44, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
-                        Text(verbatim: "min").font(.nuna(size: 15, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                        Spacer(minLength: 0)
-                        Text(verbatim: String(localized: "\(recent.count) sessions")).font(.nuna(size: 13.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
-                    }
-                    minutesChart(days)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                minutesSection
                 HStack(spacing: 10) {
                     statTile("Sessions", "\(week.count)", "7 days")
                     statTile("Time", "\(week.reduce(0) { $0 + $1.seconds } / 60)", "min")
@@ -332,23 +320,98 @@ struct NunaBreathView: View {
         }
     }
 
-    private func minutesChart(_ days: [(date: Date, minutes: Double)]) -> some View {
-        Chart(days, id: \.date) { d in
-            BarMark(x: .value("Day", d.date, unit: .day), y: .value("Minutes", d.minutes), width: .ratio(0.62))
-                .foregroundStyle(NunaPalette.rest).cornerRadius(3)
+    /// Minutes breathed per day, laid out like the Strength Trainer's volume chart: an average on the left, the M / 6M switch and
+    /// the date stepper on the right, bars you can touch to read one day.
+    private var minutesSection: some View {
+        let w = chartWindow, cal = Calendar.current
+        let byDay = minutesByDay
+        let days: [(date: Date, minutes: Double)] = (0..<chartRange).compactMap { i in
+            guard let d = cal.date(byAdding: .day, value: i, to: w.start), let m = byDay[cal.startOfDay(for: d)], m > 0 else { return nil }
+            return (w.noon(d), m)
         }
-        .chartXAxis {
-            AxisMarks(values: .stride(by: .day, count: 2)) { _ in
-                AxisValueLabel(format: .dateTime.day(), centered: true).font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+        let average: Double? = days.isEmpty ? nil : days.map(\.minutes).reduce(0, +) / Double(days.count)
+        let most = days.map(\.minutes).max() ?? 0
+        // Steps of a round size, so the axis never has more than five labels: 0 to 30 by 10 until a day goes past it.
+        let step = [10.0, 20, 25, 50, 100, 200].first { ceil(max(most, 30) / $0) <= 4 } ?? 200
+        let top = step * max(3, ceil(most / step))
+        let ticks = stride(from: 0.0, through: top, by: step).map { $0 }
+        let oldest = byDay.keys.min()
+        let pickedMin: Double? = chartPicked.flatMap { p in days.first { cal.isDate($0.date, inSameDayAs: p) }?.minutes }
+        let shown = pickedMin ?? average
+        let pickedTitle: String = {
+            guard let p = chartPicked else { return "" }
+            let f = DateFormatter(); f.locale = AppLanguage.activeLocale; f.setLocalizedDateFormatFromTemplate("EEE, MMM d")
+            return f.string(from: p)
+        }()
+        func nearest(_ x: CGFloat, _ proxy: ChartProxy, _ frame: CGRect) -> Date? {
+            guard let touched: Date = proxy.value(atX: x - frame.minX) else { return nil }
+            return days.min { abs($0.date.timeIntervalSince(touched)) < abs($1.date.timeIntervalSince(touched)) }?.date
+        }
+        func lit(_ d: Date) -> Bool { chartPicked == nil || cal.isDate(d, inSameDayAs: chartPicked!) }
+        return VStack(alignment: .leading, spacing: 14) {
+            Text("Time breathed").font(.nuna(size: 20, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).textCase(nil)
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(verbatim: pickedMin == nil ? String(localized: "Avg. daily minutes") : pickedTitle).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase)
+                        .foregroundStyle(pickedMin == nil ? NunaPalette.textPrimary : NunaPalette.textSecondary)
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(verbatim: shown.map { String(format: "%.0f", $0.rounded()) } ?? "–").font(.nuna(size: 32, weight: .semibold, design: NunaType.design))
+                            .foregroundStyle(pickedMin == nil ? NunaPalette.textPrimary : NunaPalette.rest)
+                        if shown != nil { Text(verbatim: "min").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(pickedMin == nil ? NunaPalette.textPrimary : NunaPalette.rest).textCase(nil) }
+                    }
+                }
+                Spacer(minLength: 0)
+                VStack(alignment: .trailing, spacing: 14) {
+                    NunaRangeSwitch(choices: [(30, "M"), (180, "6M")], range: $chartRange) { chartPage = 0; chartPicked = nil }
+                    NunaDateStepper(label: w.label, canGoBack: oldest.map { w.start > cal.startOfDay(for: $0) } ?? false, canGoForward: chartPage > 0,
+                                    back: { chartPage += 1; chartPicked = nil }, forward: { chartPage = max(0, chartPage - 1); chartPicked = nil })
+                }
             }
-        }
-        .chartYAxis {
-            AxisMarks(position: .leading, values: .automatic(desiredCount: 3)) { _ in
-                AxisGridLine().foregroundStyle(NunaPalette.hairlineSoft)
-                AxisValueLabel().font(.nuna(size: 11, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+            Chart {
+                ForEach(days, id: \.date) { d in
+                    BarMark(x: .value("Day", d.date, unit: .day), y: .value("min", d.minutes), width: .fixed(chartRange == 30 ? 8 : 3))
+                        .foregroundStyle(NunaPalette.rest).cornerRadius(1.5).opacity(lit(d.date) ? 1 : 0.3)
+                }
+                if let p = chartPicked, days.contains(where: { cal.isDate($0.date, inSameDayAs: p) }) {
+                    RuleMark(x: .value("Picked", w.noon(p))).foregroundStyle(Color.white.opacity(0.85)).lineStyle(StrokeStyle(lineWidth: 1, dash: [2, 3]))
+                }
             }
+            .chartYScale(domain: 0...top)
+            .chartXScale(domain: w.domain)
+            .chartYAxis {
+                AxisMarks(position: .leading, values: ticks) { v in
+                    AxisGridLine(stroke: StrokeStyle(lineWidth: 1)).foregroundStyle(Color.white.opacity(0.09))
+                    AxisValueLabel { if let d = v.as(Double.self) { Text(verbatim: String(format: "%.0f", d)).font(.nuna(size: 11.5, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textMuted) } }
+                }
+            }
+            .chartXAxis(.hidden)
+            .chartPlotStyle { $0.padding(.bottom, 46) }
+            .chartOverlay { proxy in
+                GeometryReader { geo in
+                    if let frame = proxy.plotFrame.map({ geo[$0] }) {
+                        ZStack {
+                            ForEach(w.axisDates, id: \.self) { d in
+                                if let x = proxy.position(forX: d) { w.axisLabel(d).position(x: frame.minX + x, y: frame.maxY + 25).allowsHitTesting(false) }
+                            }
+                            Rectangle().fill(Color.clear).contentShape(Rectangle()).frame(width: frame.width, height: frame.height)
+                                .position(x: frame.midX, y: frame.midY)
+                                .gesture(DragGesture(minimumDistance: 0)
+                                    .onChanged { g in
+                                        let hit = nearest(g.location.x, proxy, frame)
+                                        if chartTouchBeganOnPicked == nil { chartTouchBeganOnPicked = chartPicked != nil && hit.map { cal.isDate($0, inSameDayAs: chartPicked!) } == true }
+                                        if let hit { chartPicked = hit }
+                                    }
+                                    .onEnded { g in
+                                        if chartTouchBeganOnPicked == true, abs(g.translation.width) < 6 { chartPicked = nil }
+                                        chartTouchBeganOnPicked = nil
+                                    })
+                        }
+                    }
+                }
+            }
+            .frame(height: 260)
+            .accessibilityLabel(Text("Time breathed"))
         }
-        .frame(height: 170)
     }
 
     private func statTile(_ label: LocalizedStringKey, _ value: String, _ unit: String) -> some View {
