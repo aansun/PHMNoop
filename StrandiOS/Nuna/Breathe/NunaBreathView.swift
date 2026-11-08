@@ -21,6 +21,7 @@ struct NunaBreathView: View {
     @State private var showSettings = false
     @State private var showHistory = false
     @State private var opened: NunaBreathRecord?
+    @State private var route: NunaBreathRoute?
     @State private var showAdvanced = false
     @State private var showMake = false
     @State private var tab = 1
@@ -51,6 +52,7 @@ struct NunaBreathView: View {
         .sheet(isPresented: $showSettings, onDismiss: { history = NunaBreathLog.all() }) {
             NunaBreathSettingsView { showSettings = false; showAdvanced = true } onClose: { showSettings = false }.nunaSheetChrome(detents: [.large])
         }
+        .sheet(item: $route) { r in detailSheet(r) }
         .sheet(item: $opened) { r in
             NunaBreathReportView(record: r, readOnly: true, onDone: { opened = nil }).nunaSheetChrome(detents: [.large])
         }
@@ -206,7 +208,7 @@ struct NunaBreathView: View {
                 HStack(spacing: 8) {
                     ForEach(BreathGoal.allCases, id: \.self) { g in
                         let on = g == goal
-                        Button { goal = g; pickedGoal = true } label: {
+                        Button { goal = g; pickedGoal = true; route = .goal(g) } label: {
                             VStack(alignment: .leading, spacing: 8) {
                                 NunaActivityGlyph(name: g.activity, size: 26).foregroundStyle(on ? NunaPalette.onAccent : g.tint)
                                 VStack(alignment: .leading, spacing: 2) {
@@ -227,55 +229,47 @@ struct NunaBreathView: View {
         }
     }
 
+    /// Each ready exercise is its own card; a touch opens what it is, what it does for you and how long it takes, with Start at the bottom.
     private var templates: some View {
         VStack(alignment: .leading, spacing: 10) {
             NunaTitleRow(title: "Ready to start") { EmptyView() }
-            NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 14, bottom: 4, trailing: 14)) {
-                VStack(spacing: 0) {
-                    ForEach(Array(BreathTemplates.templates(for: goal).enumerated()), id: \.element.id) { i, t in
-                        if i > 0 { NunaDivider() }
-                        Button { start(t) } label: { templateRow(t) }.buttonStyle(.plain)
-                    }
-                    NunaDivider()
-                    Button { showAdvanced = true } label: { toolsRow }.buttonStyle(.plain)
-                }
+            ForEach(BreathTemplates.templates(for: goal)) { t in
+                let picked = suggestion?.advice.template.id == t.id && anyaOn
+                Button { route = .template(t) } label: {
+                    NunaBreathPickRow(glyph: t.goal.activity, tint: t.goal.tint, title: t.title, line: t.blurb,
+                                      figure: "\(lengthPref > 0 ? lengthPref : t.minutes)", chip: picked ? "Anya's pick" : nil)
+                }.buttonStyle(.plain)
             }
+            Button { showAdvanced = true } label: {
+                NunaBreathPickRow(glyph: "Breathwork", tint: NunaPalette.recoveryBlue, title: String(localized: "Resonance and Calm me"),
+                                  line: String(localized: "Find your own pace, or settle your heart rate with the strap."))
+            }.buttonStyle(.plain)
         }
     }
 
-    /// The hands-on tools of the older Breathing screen: find your own resonance pace, or let the strap settle your heart rate.
-    private var toolsRow: some View {
-        HStack(spacing: 12) {
-            NunaActivityGlyph(name: "Breathwork", size: 28).foregroundStyle(NunaPalette.recoveryBlue).frame(width: 34)
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Resonance and Calm me").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                Text("Find your own pace, or settle your heart rate with the strap.").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(2)
-            }
-            Spacer(minLength: 6)
-            Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+    /// The page a card opens. Start closes it first, then the session takes the screen.
+    @ViewBuilder private func detailSheet(_ r: NunaBreathRoute) -> some View {
+        switch r {
+        case .goal(let g):
+            NunaBreathGoalDetail(goal: g, recommended: recommended(for: g), lengthPref: lengthPref,
+                                 onStart: { startFromDetail($0) }, onOpen: { route = .template($0) }, onClose: { route = nil })
+                .nunaSheetChrome(detents: [.large])
+        case .template(let t):
+            NunaBreathTemplateDetail(template: t, minutes: lengthPref > 0 ? lengthPref : t.minutes,
+                                     onStart: { startFromDetail(t) }, onClose: { route = nil })
+                .nunaSheetChrome(detents: [.large])
         }
-        .padding(.vertical, 10).contentShape(Rectangle())
     }
 
-    private func templateRow(_ t: BreathTemplate) -> some View {
-        let mins = lengthPref > 0 ? lengthPref : t.minutes
-        let picked = suggestion?.advice.template.id == t.id
-        return HStack(spacing: 12) {
-            NunaActivityGlyph(name: t.goal.activity, size: 28).foregroundStyle(t.goal.tint).frame(width: 34)
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
-                    Text(verbatim: t.title).font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    if picked && anyaOn { NunaChip("Anya's pick", color: NunaPalette.charge) }
-                }
-                Text(verbatim: "\(mins) min · \(t.blurb)").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(2)
-                if let c = BreathProtocolCatalog.protocolById(t.protocolId)?.caution {
-                    Text(verbatim: String(localized: String.LocalizationValue(c))).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(NunaPalette.warning).fixedSize(horizontal: false, vertical: true).textCase(nil)
-                }
-            }
-            Spacer(minLength: 6)
-            Image(systemName: "play.circle.fill").font(.nuna(size: 28, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary)
-        }
-        .padding(.vertical, 10).contentShape(Rectangle())
+    /// Anya's pick when it belongs to the goal, otherwise the goal's first exercise.
+    private func recommended(for g: BreathGoal) -> BreathTemplate {
+        if anyaOn, let t = suggestion?.advice.template, t.goal == g { return t }
+        return BreathTemplates.templates(for: g).first ?? BreathTemplates.all[0]
+    }
+
+    private func startFromDetail(_ t: BreathTemplate) {
+        route = nil
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { start(t) }
     }
 
     // MARK: Progress
@@ -336,7 +330,7 @@ struct NunaBreathView: View {
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
                         Text(verbatim: shown.map { String(format: "%.0f", $0.rounded()) } ?? "–").font(.nuna(size: 32, weight: .semibold, design: NunaType.design))
                             .foregroundStyle(pickedMin == nil ? NunaPalette.textPrimary : NunaPalette.rest)
-                        if shown != nil { Text(verbatim: "min").font(.nuna(size: 14, weight: .semibold)).foregroundStyle(pickedMin == nil ? NunaPalette.textPrimary : NunaPalette.rest).textCase(nil) }
+                        if shown != nil { Text(verbatim: String(localized: "min")).font(.nuna(size: 14, weight: .semibold)).foregroundStyle(pickedMin == nil ? NunaPalette.textPrimary : NunaPalette.rest).textCase(nil) }
                     }
                 }
                 Spacer(minLength: 0)
@@ -428,7 +422,7 @@ struct NunaBreathView: View {
                 Spacer(minLength: 8)
                 Text(verbatim: "\(long ? r.seconds / 60 : r.seconds)").font(.nuna(size: 26, weight: .semibold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
                     .lineLimit(1).minimumScaleFactor(0.6).frame(width: 52, alignment: .trailing)
-                Text(verbatim: long ? "min" : "s").font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).frame(width: 26, alignment: .leading)
+                Text(verbatim: long ? String(localized: "min") : String(localized: "s")).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil).fixedSize()
                 Image(systemName: "chevron.right").font(.nuna(size: 14, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
             }
         }
