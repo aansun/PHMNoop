@@ -1320,7 +1320,12 @@ struct NunaLiveWorkoutView: View {
 
     private func content(_ w: AppModel.ActiveWorkout, now: Date) -> some View {
         let elapsed = w.elapsed(at: now)
+        #if DEBUG
+        // `--demo-bpm=140` shows the live screen with that heart rate, to look at a zone without a strap.
+        let bpm = CommandLine.arguments.first(where: { $0.hasPrefix("--demo-bpm=") }).flatMap { Int($0.dropFirst("--demo-bpm=".count)) } ?? model.bpm
+        #else
         let bpm = model.bpm
+        #endif
         let zone = bpm.map { zoneSet.zoneNumber(forBPM: Double($0)) } ?? 0
         let gps = model.gpsRecorder
         let state = zoneState(bpm: bpm, zone: zone)
@@ -1339,8 +1344,9 @@ struct NunaLiveWorkoutView: View {
                 ScrollView {
                     VStack(spacing: NunaSpacing.section) {
                         if selectedTab == .heartRate {
-                            heartRateBeat(bpm: bpm, zone: zone, color: tone, height: viewport.size.height,
-                                          showMap: hideBpm && usesRoute(w) && gps.isRecording)
+                            heartRateBeat(bpm: bpm, zone: zone, width: viewport.size.width, height: viewport.size.height,
+                                          showMap: hideBpm && usesRoute(w) && gps.isRecording,
+                                          guidance: goal.zoneOn ? guidance(bpm: bpm, state: state).map { ($0, state == .inZone ? NunaPalette.textPrimary : tone) } : nil)
                         } else {
                             activityRing(w, bpm: bpm, zone: zone, color: tone,
                                          size: min(330,
@@ -1358,7 +1364,6 @@ struct NunaLiveWorkoutView: View {
             .transaction(value: selectedTab) { $0.animation = nil }
             VStack(spacing: NunaSpacing.section) {
                 if selectedTab == .heartRate {
-                    heartZoneSection(bpm: bpm, zone: zone, state: state, tone: tone)
                     heartStatistics(w, calories: calories)
                 } else {
                     metricRow(w, calories: calories)
@@ -1395,21 +1400,29 @@ struct NunaLiveWorkoutView: View {
 
     /// The Heart rate tab: the beating disc in the colour of the current zone (see `NunaHeartBeat`). With the heart rate hidden and a route being
     /// recorded, the tab shows the map of the run instead.
-    private func heartRateBeat(bpm: Int?, zone: Int, color: Color, height: CGFloat, showMap: Bool) -> some View {
+    private func heartRateBeat(bpm: Int?, zone: Int, width: CGFloat, height: CGFloat, showMap: Bool, guidance: (text: String, color: Color)?) -> some View {
         let range = zoneSet.zones.first(where: { $0.number == zone })
         let caption = range.map { String(localized: "Zone \(zone) · \(Int($0.lower.rounded()))–\(Int($0.upper.rounded())) bpm") }
         let level = bpm.map { NunaLiveMetrics.barPosition(bpm: $0, zoneSet: zoneSet) }
+        // The ring takes the room the zone bar used to: as wide as the page allows, and as tall as the page leaves.
+        let room = height - NunaSpacing.section * 2 - (guidance == nil ? 8 : 44)
+        let ring = max(200, min(width - NunaSpacing.screenH * 2 - 8, room))
         return Group {
             if showMap {
                 NunaLiveRouteMap(gps: model.gpsRecorder)
                     .frame(maxWidth: .infinity).frame(height: max(height - NunaSpacing.section * 2, 220))
                     .clipShape(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
             } else {
-                // The disc is always the colour of the zone the bar below shows; whether that zone is the one aimed for is said in words.
-                NunaHeartBeat(bpm: bpm, color: bpm == nil ? NunaPalette.effortModerate : Self.zoneColors[min(max(zone, 1), 5) - 1], zone: zone,
-                              numberText: hideBpm ? "•••" : nil, size: min(250, max(170, (height - NunaSpacing.section * 2 - 40) / 1.2)),
-                              caption: hideBpm ? nil : caption, level: level)
-                    .frame(maxWidth: .infinity, minHeight: max(height - NunaSpacing.section * 2, 0), alignment: .center)
+                VStack(spacing: 14) {
+                    // The ring and the disc are the colour of the zone the heart rate is in; whether that is the zone aimed for is said in words.
+                    NunaZoneRing(bpm: bpm, zone: zone, level: hideBpm ? nil : level, numberText: hideBpm ? "•••" : nil,
+                                 caption: hideBpm ? nil : caption, size: ring)
+                    if let guidance {
+                        Text(verbatim: guidance.text).font(.nuna(size: NunaTypeSize.sub, weight: .semibold)).foregroundStyle(guidance.color)
+                            .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .frame(maxWidth: .infinity, minHeight: max(height - NunaSpacing.section * 2, 0), alignment: .center)
             }
         }
         .overlay(alignment: .topTrailing) {
@@ -1552,68 +1565,7 @@ struct NunaLiveWorkoutView: View {
 
     // MARK: heart rate
 
-    private func heartZoneSection(bpm: Int?, zone: Int, state: ZoneState, tone: Color) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Text("Heart rate zones")
-                    .font(.nuna(size: NunaTypeSize.caption, weight: .heavy))
-                    .tracking(nunaTrackingLabel)
-                    .textCase(.uppercase)
-                    .foregroundStyle(NunaPalette.textSecondary)
-                Spacer()
-                if let range = zoneSet.zones.first(where: { $0.number == zone }), bpm != nil {
-                    Text(verbatim: "\(Int(range.lower.rounded()))–\(Int(range.upper.rounded())) bpm")
-                        .font(.nuna(size: NunaTypeSize.caption, weight: .semibold, design: NunaType.design))
-                        .foregroundStyle(NunaPalette.textSecondary)
-                        .monospacedDigit()
-                }
-            }
-            zoneBar(bpm: bpm, zone: zone)
-            HStack(spacing: 2) {
-                ForEach(1...5, id: \.self) { number in
-                    let active = bpm != nil && number == zone
-                    Text("Zone \(number)")
-                        .font(.nuna(size: NunaTypeSize.caption, weight: active ? .heavy : .semibold))
-                        .foregroundStyle(active ? Self.zoneColors[number - 1] : NunaPalette.textMuted.opacity(0.5))
-                        .frame(maxWidth: .infinity)
-                        .animation(reduceMotion ? nil : .easeInOut(duration: 0.5), value: zone)
-                }
-            }
-            if goal.zoneOn, let line = guidance(bpm: bpm, state: state) {
-                Text(verbatim: line)
-                    .font(.nuna(size: NunaTypeSize.sub, weight: .semibold))
-                    .foregroundStyle(state == .inZone ? NunaPalette.textPrimary : tone)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-    }
-
     /// Five visible segments follow the profile's canonical HR zones; below-range values stay at the beginning.
-    private func zoneBar(bpm: Int?, zone: Int) -> some View {
-        let position = bpm.map { NunaLiveMetrics.barPosition(bpm: $0, zoneSet: zoneSet) }
-        return GeometryReader { geo in
-            let gap: CGFloat = 2
-            let segment = (geo.size.width - gap * 4) / 5
-            ZStack(alignment: .topLeading) {
-                HStack(spacing: gap) {
-                    ForEach(1...5, id: \.self) { number in
-                        RoundedRectangle(cornerRadius: NunaRadius.chip, style: .continuous)
-                            .fill(Self.zoneColors[number - 1].opacity(bpm != nil && number == zone ? 1 : 0.22))
-                            .frame(width: segment, height: 8)
-                            .animation(reduceMotion ? nil : .easeInOut(duration: 0.5), value: zone)
-                    }
-                }
-                if let position, !hideBpm {
-                    Triangle().fill(NunaPalette.textPrimary)
-                        .frame(width: 12, height: 8)
-                        .offset(x: min(max(CGFloat(position) * geo.size.width - 6, 0), geo.size.width - 12), y: 12)
-                        .animation(reduceMotion ? nil : StrandMotion.gentle, value: position)
-                }
-            }
-        }
-        .frame(height: 24)
-    }
-
     private func heartStatistics(_ w: AppModel.ActiveWorkout, calories: Int?) -> some View {
         statisticsRow([
             Statistic(label: "Avg HR", value: w.avgHr > 0 ? "\(w.avgHr)" : "–", unit: "bpm", icon: NunaIcons.avgHr),
