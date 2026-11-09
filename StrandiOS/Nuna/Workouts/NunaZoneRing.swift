@@ -3,7 +3,7 @@ import SwiftUI
 import StrandDesign
 
 /// The heart rate of a running activity as a thin ring round a disc. The ring is the five heart-rate zones; only the zone the heart is in is lit, in its
-/// own colour, with a white mark at the heart rate itself, and the other four are barely there. A zone aimed for keeps its colour like any other and has a
+/// own colour, with a white mark at the heart rate itself, and the other four are faint but visible. A zone aimed for keeps its colour like any other and has a
 /// thin grey line along the outside of its arc to mark where it is. The disc inside is the colour of the zone, with the number on it, and a soft aura of the same colour swells behind it with
 /// every beat. The colour eases from zone to zone; with no reading the ring stays dark and the disc is the idle blue.
 struct NunaZoneRing: View {
@@ -65,8 +65,14 @@ struct NunaZoneRing: View {
                 ForEach(0..<5, id: \.self) { z in
                     let color = NunaHeartBeat.zoneColors[z]
                     Circle().inset(by: ringInset + lineWidth / 2).trim(from: arcStart(z), to: arcStart(z) + arcLength)
-                        .stroke(color.opacity(isActive(z) ? 1 : 0.09), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                        .stroke(color.opacity(isActive(z) ? 1 : 0.26), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                         .rotationEffect(.degrees(-90))
+                }
+                // A white dot on each boundary between two zones, as on the ring it follows; the first sits at the top.
+                ForEach(0..<5, id: \.self) { k in
+                    let a = (72 * Double(k) - 90) * .pi / 180
+                    Circle().fill(Color.white.opacity(0.92)).frame(width: size * 0.024, height: size * 0.024)
+                        .offset(x: ringRadius * cos(a), y: ringRadius * sin(a))
                 }
                 // The zone aimed for: one thin grey line along the outside of its arc.
                 if let target = targetZone, (1...5).contains(target) {
