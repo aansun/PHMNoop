@@ -20,7 +20,7 @@ struct NunaBreathView: View {
     @AppStorage(NunaBreathPrefs.anyaKey) private var anyaOn = true
     @AppStorage(NunaBreathPrefs.lengthKey) private var lengthPref = 0
 
-    @State private var goal: BreathGoal = .calm
+    @State private var group: NunaBreathGroup = .calm
     @State private var pickedGoal = false
     @State private var suggestion: NunaBreathSuggestion?
     @State private var request: NunaBreathRequest?
@@ -49,7 +49,7 @@ struct NunaBreathView: View {
         }
         .onAppear { model.startRealtimeHR(); mirrorLive(); mine = NunaCustomBreath.all() }
 #if DEBUG
-        // `--open-breath-detail tool:resonance | tool:calmMe | goal:calm | template:<id>` opens that page, to look at it.
+        // `--open-breath-detail tool:resonance | tool:calmMe | group:calm | template:<id>` opens that page, to look at it.
         .task {
             let args = CommandLine.arguments
             guard let i = args.firstIndex(of: "--open-breath-detail"), i + 1 < args.count else { return }
@@ -58,7 +58,7 @@ struct NunaBreathView: View {
             try? await Task.sleep(nanoseconds: 800_000_000)
             switch parts[0] {
             case "tool": if let t = NunaBreathTool(rawValue: parts[1]) { route = .tool(t) }
-            case "goal": if let g = BreathGoal(rawValue: parts[1]) { route = .goal(g) }
+            case "group": if let g = NunaBreathGroup(rawValue: parts[1]) { route = .group(g) }
             case "template": if let t = NunaBreathLibrary.template(id: parts[1]) { route = .template(t) }
             default: break
             }
@@ -120,7 +120,7 @@ struct NunaBreathView: View {
     }
 
     private var quickStartTemplate: BreathTemplate? {
-        anyaOn ? suggestion?.advice.template : NunaBreathLibrary.templates(for: goal).first
+        anyaOn ? suggestion?.advice.template : group.firstTemplate
     }
 
     /// One white button, as Quick start on the Strength Trainer: Anya's pick (or the first ready exercise when she is off) and go.
@@ -229,14 +229,14 @@ struct NunaBreathView: View {
             ScrollViewReader { proxy in
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    ForEach(BreathGoal.allCases, id: \.self) { g in
-                        let on = g == goal
-                        Button { goal = g; pickedGoal = true; route = .goal(g) } label: {
+                    ForEach(NunaBreathGroup.allCases) { g in
+                        let on = g == group
+                        Button { group = g; pickedGoal = true; route = .group(g) } label: {
                             VStack(alignment: .leading, spacing: 8) {
-                                NunaActivityGlyph(name: g.activity, size: 26).foregroundStyle(on ? NunaPalette.onAccent : g.tint)
+                                NunaActivityGlyph(name: g.icon, size: 26).foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary)
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(g.title).font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary).lineLimit(2).multilineTextAlignment(.leading)
-                                    Text(g.blurb).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(on ? NunaPalette.onAccent.opacity(0.7) : NunaPalette.textSecondary).lineLimit(2).multilineTextAlignment(.leading).textCase(nil)
+                                    Text(verbatim: g.title).font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary).lineLimit(2).multilineTextAlignment(.leading)
+                                    Text(verbatim: g.blurb).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(on ? NunaPalette.onAccent.opacity(0.7) : NunaPalette.textSecondary).lineLimit(2).multilineTextAlignment(.leading).textCase(nil)
                                 }
                             }
                             .padding(12).frame(width: 150, height: 120, alignment: .topLeading)
@@ -247,40 +247,39 @@ struct NunaBreathView: View {
                 }
             }
             .padding(.horizontal, -NunaSpacing.screenH).contentMargins(.horizontal, NunaSpacing.screenH, for: .scrollContent)
-            .onChange(of: goal) { _, g in withAnimation { proxy.scrollTo(g, anchor: .center) } }
+            .onChange(of: group) { _, g in withAnimation { proxy.scrollTo(g, anchor: .center) } }
             }
         }
     }
 
-    /// Explore: every technique of the chosen goal as a card in a two-column grid, like WHOOP's workouts; a touch opens its page, with Start at the bottom.
+    /// Explore: every technique of the chosen group as a card in a two-column grid, like WHOOP's workouts; a touch opens its page, with Start at the bottom.
     private var templates: some View {
         let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
         return VStack(alignment: .leading, spacing: 12) {
             NunaTitleRow(title: "Explore") { EmptyView() }
             LazyVGrid(columns: columns, spacing: 12) {
-                ForEach(NunaBreathLibrary.templates(for: goal)) { t in
-                    let picked = suggestion?.advice.template.id == t.id && anyaOn
-                    Button { route = .template(t) } label: {
-                        NunaBreathExploreCard(icon: NunaBreathIcon.name(for: t), title: t.title, level: NunaBreathLevel.of(t.protocolId).title,
-                                              minutes: "\(lengthPref > 0 ? lengthPref : t.minutes) \(String(localized: "min"))",
+                ForEach(group.items) { item in
+                    let picked: Bool = { if case .template(let t) = item { return suggestion?.advice.template.id == t.id && anyaOn }; return false }()
+                    Button { open(item) } label: {
+                        NunaBreathExploreCard(icon: item.icon, title: item.title, level: item.levelTitle,
+                                              minutes: "\(item.minutesText(lengthPref: lengthPref)) \(String(localized: "min"))",
                                               badge: picked ? String(localized: "Anya's pick") : nil)
-                    }.buttonStyle(.plain)
-                }
-                ForEach([NunaBreathTool.resonance, .calmMe]) { tool in
-                    Button { route = .tool(tool) } label: {
-                        NunaBreathExploreCard(icon: tool.glyph, title: tool.title, level: NunaBreathLevel.gentle.title, minutes: "\(tool.duration) \(String(localized: "min"))")
                     }.buttonStyle(.plain)
                 }
             }
         }
     }
 
+    private func open(_ item: NunaBreathItem) {
+        switch item { case .template(let t): route = .template(t); case .tool(let k): route = .tool(k) }
+    }
+
     /// The page a card opens. Start closes it first, then the session takes the screen.
     @ViewBuilder private func detailSheet(_ r: NunaBreathRoute) -> some View {
         switch r {
-        case .goal(let g):
-            NunaBreathGoalDetail(goal: g, recommended: recommended(for: g), lengthPref: lengthPref,
-                                 onStart: { startFromDetail($0) }, onOpen: { route = .template($0) }, onClose: { route = nil })
+        case .group(let g):
+            NunaBreathGroupDetail(group: g, recommended: recommended(for: g), lengthPref: lengthPref,
+                                  onStart: { startFromDetail($0) }, onOpen: { open($0) }, onClose: { route = nil })
                 .nunaSheetChrome(detents: [.large])
         case .tool(let tool):
             NunaBreathToolDetail(tool: tool, onStart: { openTool(tool) }, onClose: { route = nil })
@@ -292,10 +291,10 @@ struct NunaBreathView: View {
         }
     }
 
-    /// Anya's pick when it belongs to the goal, otherwise the goal's first exercise.
-    private func recommended(for g: BreathGoal) -> BreathTemplate {
-        if anyaOn, let t = suggestion?.advice.template, t.goal == g { return t }
-        return NunaBreathLibrary.templates(for: g).first ?? BreathTemplates.all[0]
+    /// Anya's pick when it belongs to the group, otherwise the group's first exercise.
+    private func recommended(for g: NunaBreathGroup) -> NunaBreathItem? {
+        if anyaOn, let t = suggestion?.advice.template, let hit = g.items.first(where: { $0 == .template(t) }) { return hit }
+        return g.items.first
     }
 
     /// Resonance and Calm me run on their own session screen.
@@ -304,10 +303,15 @@ struct NunaBreathView: View {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { toolRun = tool }
     }
 
-    private func startFromDetail(_ t: BreathTemplate) {
+    private func startFromDetail(_ item: NunaBreathItem) {
         route = nil
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { start(t) }
+        switch item {
+        case .template(let t): DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { start(t) }
+        case .tool(let k): openTool(k)
+        }
     }
+
+    private func startFromDetail(_ t: BreathTemplate) { startFromDetail(.template(t)) }
 
     // MARK: Progress
 
@@ -507,7 +511,7 @@ struct NunaBreathView: View {
         guard anyaOn else { return }
         let s = await NunaBreathAdviceMaker.make(repo: repo, profile: profile)
         suggestion = s
-        if !pickedGoal { goal = s.advice.goal }
+        if !pickedGoal { group = NunaBreathGroup.of(s.advice.goal) }
     }
 
     private func mirrorLive() {
@@ -543,11 +547,12 @@ struct NunaBreathFlow: View {
 
     var body: some View {
         if let record {
-            NunaBreathReportView(record: record, onDone: onClose) {
-                self.record = nil
-                var again = request; again = NunaBreathRequest(goal: again.goal, templateId: again.templateId, protocolId: again.protocolId, seconds: again.seconds)
-                request = again
+            // The saved session opens on the same page as a Strain activity (no map: breathing has no route).
+            let row = NunaBreathRecovery.row(startTs: record.startTs, seconds: record.seconds, title: record.displayTitle)
+            NavigationStack {
+                NunaWorkoutSummaryView(key: NunaWorkoutKey(startTs: row.startTs, sport: row.sport, source: row.source), initialRow: row)
             }
+            .preferredColorScheme(NunaTheme.colorScheme)
         } else {
             NunaBreathSessionView(request: request) { r in
                 if let r { record = r } else { onClose() }

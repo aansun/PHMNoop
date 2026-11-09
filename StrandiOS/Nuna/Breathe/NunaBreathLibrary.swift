@@ -194,7 +194,7 @@ enum NunaBreathGuide {
             ("figure.mind.and.body", String(localized: "Sit upright and quiet, and relax your face and shoulders.")),
             ("nose", String(localized: "Breathe in very slowly and silently through your nose.")),
             ("pause.circle", String(localized: "Hold gently low in your belly, without any strain.")),
-            ("feather", String(localized: "Breathe out so slowly and softly that a feather in front of your nose would not move."))]
+            ("leaf", String(localized: "Breathe out so slowly and softly that a feather in front of your nose would not move."))]
         case "ibuki": return [
             ("figure.stand", String(localized: "Stand with your feet apart and your core ready to tighten.")),
             ("nose", String(localized: "Take a full breath in.")),
@@ -265,6 +265,133 @@ enum NunaBreathGuide {
             ("hand.raised", String(localized: "Keep the intensity at a level that feels safe, and ease off whenever you want."))]
         default: return nil
         }
+    }
+}
+
+// MARK: Groups
+
+/// One thing in the Explore grid: a ready exercise, or Resonance / Calm me.
+enum NunaBreathItem: Identifiable, Equatable {
+    case template(BreathTemplate)
+    case tool(NunaBreathTool)
+    var id: String {
+        switch self { case .template(let t): return "t-" + t.id; case .tool(let t): return "k-" + t.rawValue }
+    }
+    var title: String { switch self { case .template(let t): return t.title; case .tool(let t): return t.title } }
+    var icon: String { switch self { case .template(let t): return NunaBreathIcon.name(for: t); case .tool(let t): return t.glyph } }
+    var levelTitle: String {
+        switch self { case .template(let t): return NunaBreathLevel.of(t.protocolId).title; case .tool: return NunaBreathLevel.gentle.title }
+    }
+    var level: NunaBreathLevel {
+        switch self { case .template(let t): return NunaBreathLevel.of(t.protocolId); case .tool: return .gentle }
+    }
+    var blurb: String { switch self { case .template(let t): return t.blurb; case .tool(let t): return t.subtitle } }
+    func minutesText(lengthPref: Int) -> String {
+        switch self {
+        case .template(let t): return "\(lengthPref > 0 ? lengthPref : t.minutes)"
+        case .tool(let t): return t.duration
+        }
+    }
+}
+
+/// The cards of "What is it for?": what a breath is for, and the kind of breathing, so no group has a long list. The first five follow the goals the
+/// advisor knows; the others group the techniques by where they come from.
+enum NunaBreathGroup: String, CaseIterable, Identifiable {
+    case calm, sleep, focus, energize, recover, budoCalm, budoPower, intense, mindful, biofeedback
+    var id: String { rawValue }
+
+    private var goal: BreathGoal? {
+        switch self { case .calm: return .calm; case .sleep: return .sleep; case .focus: return .focus; case .energize: return .energize; case .recover: return .recover; default: return nil }
+    }
+    static func of(_ goal: BreathGoal) -> NunaBreathGroup {
+        switch goal { case .calm: return .calm; case .sleep: return .sleep; case .focus: return .focus; case .energize: return .energize; case .recover: return .recover }
+    }
+
+    var title: String {
+        if let goal { return goal.shortTitle }
+        switch self {
+        case .budoCalm: return String(localized: "Japanese calm")
+        case .budoPower: return String(localized: "Japanese power")
+        case .intense: return String(localized: "Intense breathwork")
+        case .mindful: return String(localized: "Mindful rhythm")
+        default: return String(localized: "Biofeedback")
+        }
+    }
+    var blurb: String {
+        if let goal { return goal.blurbText }
+        switch self {
+        case .budoCalm: return String(localized: "Long, silent breaths")
+        case .budoPower: return String(localized: "Sharp, strong breaths")
+        case .intense: return String(localized: "For the experienced")
+        case .mindful: return String(localized: "Slow and present")
+        default: return String(localized: "Guided by your heart")
+        }
+    }
+    /// The picture of the group, from the activity set.
+    var icon: String {
+        switch self {
+        case .calm: return "Meditation"; case .sleep: return "Sleep"; case .focus: return "Breathwork"; case .energize: return "HIIT"; case .recover: return "Restorative Yoga"
+        case .budoCalm: return "Tai Chi"; case .budoPower: return "Martial Arts"; case .intense: return "Ice Bath"; case .mindful: return "QiGong"; case .biofeedback: return "Non-sleep, deep rest"
+        }
+    }
+    /// The photograph behind its page.
+    var background: String { "breath-bg-" + rawValue }
+
+    var about: String {
+        if let goal { return goal.about }
+        switch self {
+        case .budoCalm: return String(localized: "Quiet techniques from karate, aikido and the shinobi tradition. They breathe long and silent, with the belly doing the work, to settle the heart and sharpen attention.")
+        case .budoPower: return String(localized: "Forceful techniques from budo: sharp exhales, a tight core and a rhythm that goes with movement. They wake the body fast and are meant for short rounds.")
+        case .intense: return String(localized: "Powerful breathwork with fast or held breaths. They are for people who already know them: short, seated, and never in water or while driving.")
+        case .mindful: return String(localized: "Slow, steady rhythms to pair with presence: Qi Gong pacing and the Presence tempos. Good for longer, quieter sessions.")
+        default: return String(localized: "Let your strap guide you. Resonance finds the slow pace that suits your body, and Calm me buzzes just under your heart rate and eases it down.")
+        }
+    }
+    var benefits: [String] {
+        if let goal { return goal.benefits }
+        switch self {
+        case .budoCalm: return [String(localized: "Settles the heart with long, silent breaths"), String(localized: "Trains steady attention and a quiet body"), String(localized: "Brings the heart rate down after effort or a scare")]
+        case .budoPower: return [String(localized: "Wakes the body and firms the core"), String(localized: "Pairs breath with movement"), String(localized: "Quick and short, with no equipment")]
+        case .intense: return [String(localized: "Strong effects in a few minutes"), String(localized: "Trains control of the breath"), String(localized: "Needs care: follow every caution on the page")]
+        case .mindful: return [String(localized: "A slow rhythm that is easy to hold"), String(localized: "Works for longer sessions"), String(localized: "Pairs well with sitting still and paying attention")]
+        default: return [String(localized: "Finds the pace that suits your body"), String(localized: "Gives a restless mind a steady beat to follow"), String(localized: "Uses your strap's heart reading and buzz")]
+        }
+    }
+
+    private var templateIds: [String] {
+        switch self {
+        case .calm: return ["calm_slow", "calm_coherence", "calm_deep", "calm_pursed", "calm_bhramari"]
+        case .sleep: return ["sleep_478", "sleep_exhale", "sleep_belly", "sleep_48", "sleep_buteyko"]
+        case .focus: return ["focus_box", "focus_alternate", "focus_66", "focus_soma", "focus_buteyko"]
+        case .energize: return ["energize_ocean", "energize_box", "energize_bhastrika", "energize_kapala"]
+        case .recover: return ["recover_66", "recover_belly", "recover_coherence", "recover_sitali"]
+        case .budoCalm: return ["focus_okinaga", "recover_nogare", "recover_kiko", "focus_kokyuho"]
+        case .budoPower: return ["energize_misogi", "energize_torifune", "energize_ibuki", "energize_kiai"]
+        case .intense: return ["energize_tummo", "energize_wimhof", "energize_holotropic", "energize_shamanic", "energize_punching"]
+        case .mindful: return ["calm_qigong", "calm_presence", "focus_presence"]
+        case .biofeedback: return []
+        }
+    }
+    private var tools: [NunaBreathTool] { self == .biofeedback ? [.calmMe, .resonance] : [] }
+
+    /// The group a ready exercise belongs to (the first that lists it).
+    static func containing(templateId: String) -> NunaBreathGroup {
+        allCases.first { $0.templateIds.contains(templateId) } ?? .calm
+    }
+
+    var firstTemplate: BreathTemplate? {
+        for i in items { if case .template(let t) = i { return t } }
+        return nil
+    }
+
+    var items: [NunaBreathItem] {
+        templateIds.compactMap { NunaBreathLibrary.template(id: $0) }.map(NunaBreathItem.template) + tools.map(NunaBreathItem.tool)
+    }
+
+    /// The most demanding technique in it, as the group's level.
+    var level: NunaBreathLevel {
+        let all = items.map(\.level)
+        return all.contains(.intense) ? .intense : (all.contains(.moderate) ? .moderate : .gentle)
     }
 }
 #endif

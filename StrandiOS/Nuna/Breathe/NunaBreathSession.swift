@@ -139,7 +139,8 @@ struct NunaBreathSessionView: View {
         .onAppear { begin() }
         .onDisappear { cue.deactivate(); ScreenIdle.keepAwake(false) }
         .confirmationDialog("End this session?", isPresented: $confirmEnd, titleVisibility: .visible) {
-            Button("End and see report") { finish() }
+            Button("End and save") { finish() }
+            Button("Discard", role: .destructive) { cancel() }
             Button("Keep breathing", role: .cancel) {}
         }
     }

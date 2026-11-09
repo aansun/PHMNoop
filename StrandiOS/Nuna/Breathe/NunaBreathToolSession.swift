@@ -2,6 +2,7 @@
 import SwiftUI
 import StrandDesign
 import StrandAnalytics
+import WhoopStore
 
 /// Resonance and Calm me on the same session screen as every other technique, run by the biofeedback controller the older screen used.
 /// Calm me buzzes the strap just under the heart rate and eases it down; Resonance runs the short sweep that finds the slow pace where the
@@ -37,6 +38,9 @@ private struct NunaToolSessionBody: View {
     @State private var confirmEnd = false
     @State private var tab = 0
     @State private var notStarted: String?
+    @State private var discarding = false
+    @State private var lastRow: WorkoutRow?
+    @State private var saved: NunaWorkoutKey?
 
     private var c: BiofeedbackController { controller }
     private var finished: Bool { hasRun && !c.running }
@@ -53,6 +57,14 @@ private struct NunaToolSessionBody: View {
     }
 
     var body: some View {
+        NavigationStack {
+            content
+                .toolbar(.hidden, for: .navigationBar)
+                .navigationDestination(item: $saved) { key in NunaWorkoutSummaryView(key: key, initialRow: lastRow) }
+        }
+    }
+
+    private var content: some View {
         VStack(spacing: 0) {
             VStack(spacing: 8) {
                 header
@@ -96,7 +108,8 @@ private struct NunaToolSessionBody: View {
         }
         .onChange(of: c.phase) { _, _ in movePhase() }
         .confirmationDialog("End this session?", isPresented: $confirmEnd, titleVisibility: .visible) {
-            Button("End and see report") { c.stop() }
+            Button("End and save") { c.stop() }
+            Button("Discard", role: .destructive) { discarding = true; c.stop() }
             Button("Keep breathing", role: .cancel) {}
         }
     }
@@ -126,8 +139,12 @@ private struct NunaToolSessionBody: View {
     private func record() {
         guard !logged else { return }
         logged = true
+        if discarding { onEnd(); return }
         let secs = c.elapsedSeconds
-        if secs >= 20 { NunaBreathRecovery.logExternal(repo: repo, startTs: Int(startedAt.timeIntervalSince1970), seconds: secs, kind: kind) }
+        guard secs >= 20 else { return }
+        let start = Int(startedAt.timeIntervalSince1970)
+        NunaBreathRecovery.logExternal(repo: repo, startTs: start, seconds: secs, kind: kind)
+        lastRow = NunaBreathRecovery.row(startTs: start, seconds: secs, title: tool.title)
     }
 
     // MARK: Parts
@@ -271,6 +288,13 @@ private struct NunaToolSessionBody: View {
                         Text("Breathe at this pace").font(.nuna(size: NunaTypeSize.h3, weight: .bold)).foregroundStyle(NunaPalette.onAccent)
                             .frame(maxWidth: .infinity).frame(height: 60)
                             .background(NunaPalette.textPrimary, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
+                    }.buttonStyle(.plain)
+                }
+                if let row = lastRow, finished {
+                    Button { saved = NunaWorkoutKey(startTs: row.startTs, sport: row.sport, source: row.source) } label: {
+                        Text("View activity").font(.nuna(size: NunaTypeSize.h3, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
+                            .padding(.horizontal, 20).frame(height: 60)
+                            .background(NunaPalette.glassStrong, in: RoundedRectangle(cornerRadius: NunaRadius.button, style: .continuous))
                     }.buttonStyle(.plain)
                 }
                 Button(action: onEnd) {
