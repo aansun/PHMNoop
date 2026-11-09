@@ -384,6 +384,14 @@ enum NunaBreathGroup: String, CaseIterable, Identifiable {
         return nil
     }
 
+    /// Everything in Explore when no group is chosen: each group's items in turn, none twice, then any ready exercise no group names.
+    static var allItems: [NunaBreathItem] {
+        var seen = Set<String>(), out: [NunaBreathItem] = []
+        for item in allCases.flatMap(\.items) where seen.insert(item.id).inserted { out.append(item) }
+        for t in NunaBreathLibrary.allTemplates where seen.insert("t-" + t.id).inserted { out.append(.template(t)) }
+        return out
+    }
+
     var items: [NunaBreathItem] {
         templateIds.compactMap { NunaBreathLibrary.template(id: $0) }.map(NunaBreathItem.template) + tools.map(NunaBreathItem.tool)
     }
