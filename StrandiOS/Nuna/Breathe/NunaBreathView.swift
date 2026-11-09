@@ -21,6 +21,8 @@ struct NunaBreathView: View {
     @AppStorage(NunaBreathPrefs.lengthKey) private var lengthPref = 0
 
     @State private var group: NunaBreathGroup = .calm
+    /// What Explore is narrowed to; nil shows everything.
+    @State private var filter: NunaBreathGroup?
     @State private var pickedGoal = false
     @State private var suggestion: NunaBreathSuggestion?
     @State private var request: NunaBreathRequest?
@@ -215,50 +217,28 @@ struct NunaBreathView: View {
 
     // MARK: Explore
 
-    /// Every goal and its ready exercises, and the two hands-on tools (Resonance and Calm me) as the last row.
+    /// One section: a row of filters (All, then what the breath is for) over a two-column grid of techniques, like WHOOP's workouts. A touch on a
+    /// card opens its page, with Start at the bottom. A chosen group has its own page too, reached from the line under the filters.
     private var explore: some View {
-        VStack(spacing: NunaSpacing.section) {
-            goalPicker
-            templates
-        }
-    }
-
-    private var goalPicker: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            NunaTitleRow(title: "What is it for?") { EmptyView() }
-            ScrollViewReader { proxy in
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 8) {
-                    ForEach(NunaBreathGroup.allCases) { g in
-                        let on = g == group
-                        Button { group = g; pickedGoal = true; route = .group(g) } label: {
-                            VStack(alignment: .leading, spacing: 8) {
-                                NunaActivityGlyph(name: g.icon, size: 26).foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(verbatim: g.title).font(.nuna(size: 14.5, weight: .bold)).foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary).lineLimit(2).multilineTextAlignment(.leading)
-                                    Text(verbatim: g.blurb).font(.nuna(size: 11.5, weight: .semibold)).foregroundStyle(on ? NunaPalette.onAccent.opacity(0.7) : NunaPalette.textSecondary).lineLimit(2).multilineTextAlignment(.leading).textCase(nil)
-                                }
-                            }
-                            .padding(12).frame(width: 150, height: 120, alignment: .topLeading)
-                            .background(on ? NunaPalette.accent : NunaPalette.card, in: RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous))
-                            .overlay(RoundedRectangle(cornerRadius: NunaRadius.card, style: .continuous).strokeBorder(on ? Color.clear : NunaPalette.hairlineSoft, lineWidth: 1))
-                        }.buttonStyle(.plain).id(g)
-                    }
-                }
-            }
-            .padding(.horizontal, -NunaSpacing.screenH).contentMargins(.horizontal, NunaSpacing.screenH, for: .scrollContent)
-            .onChange(of: group) { _, g in withAnimation { proxy.scrollTo(g, anchor: .center) } }
-            }
-        }
-    }
-
-    /// Explore: every technique of the chosen group as a card in a two-column grid, like WHOOP's workouts; a touch opens its page, with Start at the bottom.
-    private var templates: some View {
         let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
+        let items = filter?.items ?? NunaBreathGroup.allItems
         return VStack(alignment: .leading, spacing: 12) {
             NunaTitleRow(title: "Explore") { EmptyView() }
+            filters
+            if let g = filter {
+                HStack(alignment: .firstTextBaseline, spacing: 12) {
+                    Text(verbatim: g.blurb).font(.nunaWords(size: NunaTypeSize.sub)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(2)
+                    Spacer(minLength: 8)
+                    Button { route = .group(g) } label: {
+                        HStack(spacing: 4) {
+                            Text("Details").font(.nuna(size: NunaTypeSize.caption, weight: .heavy)).tracking(nunaTrackingLabel)
+                            Image(systemName: "chevron.right").font(.system(size: 11, weight: .bold))
+                        }.foregroundStyle(NunaPalette.textPrimary).contentShape(Rectangle())
+                    }.buttonStyle(.plain)
+                }
+            }
             LazyVGrid(columns: columns, spacing: 12) {
-                ForEach(group.items) { item in
+                ForEach(items) { item in
                     let picked: Bool = { if case .template(let t) = item { return suggestion?.advice.template.id == t.id && anyaOn }; return false }()
                     Button { open(item) } label: {
                         NunaBreathExploreCard(icon: item.icon, title: item.title, level: item.levelTitle,
@@ -268,6 +248,29 @@ struct NunaBreathView: View {
                 }
             }
         }
+    }
+
+    /// All, then one chip for each group. Choosing one narrows the grid; it does not open anything.
+    private var filters: some View {
+        let options: [NunaBreathGroup?] = [nil] + NunaBreathGroup.allCases.map { Optional($0) }
+        return ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(options, id: \.?.rawValue) { g in
+                    let on = g == filter
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.15)) { filter = g }
+                        if let g { group = g; pickedGoal = true }
+                    } label: {
+                        Text(verbatim: g?.title ?? String(localized: "All")).font(.nuna(size: 14, weight: .bold))
+                            .foregroundStyle(on ? NunaPalette.onAccent : NunaPalette.textPrimary).lineLimit(1)
+                            .padding(.horizontal, 14).frame(height: 36)
+                            .background(on ? NunaPalette.accent : NunaPalette.card, in: Capsule())
+                            .overlay(Capsule().strokeBorder(on ? Color.clear : NunaPalette.hairlineSoft, lineWidth: 1))
+                    }.buttonStyle(.plain)
+                }
+            }
+        }
+        .padding(.horizontal, -NunaSpacing.screenH).contentMargins(.horizontal, NunaSpacing.screenH, for: .scrollContent)
     }
 
     private func open(_ item: NunaBreathItem) {
