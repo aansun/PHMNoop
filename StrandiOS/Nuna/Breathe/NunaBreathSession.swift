@@ -25,6 +25,9 @@ struct NunaBreathPacer: View {
             ZStack {
                 Circle().strokeBorder(NunaPalette.hairline, lineWidth: 1).frame(width: d, height: d)
                 Circle().strokeBorder(tint.opacity(0.22), lineWidth: 1).frame(width: d * 0.7, height: d * 0.7)
+                // The aura: a soft glow that swells with the breath.
+                Circle().fill(RadialGradient(colors: [tint.opacity(0.45), tint.opacity(0)], center: .center, startRadius: inner * 0.3, endRadius: inner * 0.95))
+                    .frame(width: inner * 1.5, height: inner * 1.5).blur(radius: 14)
                 Circle().fill(tint.opacity(0.16)).frame(width: inner, height: inner)
                 Circle().strokeBorder(tint, lineWidth: 3).frame(width: inner, height: inner)
             }
@@ -87,7 +90,7 @@ struct NunaBreathSessionView: View {
     private var stages: [BreathStage] { proto?.stages.filter { $0.durationMs > 0 } ?? [] }
     private var guided: Bool { proto?.mode == .guided }
     private var still: Bool { motion.poseStill(reduceMotion) }
-    private var title: String { request.templateId.flatMap { BreathTemplates.template(id: $0)?.title } ?? proto.map { String(localized: String.LocalizationValue($0.title)) } ?? "" }
+    private var title: String { request.templateId.flatMap { NunaBreathLibrary.template(id: $0)?.title } ?? proto.map { String(localized: String.LocalizationValue($0.title)) } ?? "" }
 
     var body: some View {
         VStack(spacing: 16) {
@@ -139,7 +142,7 @@ struct NunaBreathSessionView: View {
                     .frame(width: 44, height: 44)
             }.buttonStyle(.plain).accessibilityLabel(Text("Close"))
             VStack(alignment: .leading, spacing: 2) {
-                Text(verbatim: title).font(.nuna(size: 18, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
+                Text(verbatim: title).font(.nuna(size: 18, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
                 Text(request.goal.title).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             }
             Spacer()

@@ -27,8 +27,10 @@ struct BreathingView: View {
     /// Called when a session the wearer actually breathed through ends: when it began (unix seconds), how many seconds it lasted and what it was
     /// ("resonance", "calm_me", or the id of the paced catalogue exercise). The Nuna shell keeps it in its history and as a recovery activity; the
     /// macOS shell leaves it nil.
+    /// "resonance" or "calm" opens that tab instead of the paced one.
+    var initialMode: String? = nil
     var onSessionEnd: ((_ startTs: Int, _ seconds: Int, _ kind: String) -> Void)? = nil
-    var body: some View { BreathingContent(onSessionEnd: onSessionEnd) }
+    var body: some View { BreathingContent(initialMode: initialMode, onSessionEnd: onSessionEnd) }
 }
 
 private struct BreathingContent: View {
@@ -37,7 +39,14 @@ private struct BreathingContent: View {
     @State private var controllerStartedAt: Date?
     @State private var controllerKind = "resonance"
 
-    init(onSessionEnd: ((_ startTs: Int, _ seconds: Int, _ kind: String) -> Void)? = nil) { self.onSessionEnd = onSessionEnd }
+    init(initialMode: String? = nil, onSessionEnd: ((_ startTs: Int, _ seconds: Int, _ kind: String) -> Void)? = nil) {
+        self.onSessionEnd = onSessionEnd
+        switch initialMode {
+        case "resonance": _mode = State(initialValue: .resonance)
+        case "calm": _mode = State(initialValue: .calm)
+        default: break
+        }
+    }
 
     @EnvironmentObject private var model: AppModel
     @EnvironmentObject private var live: LiveState

@@ -82,7 +82,7 @@ extension NunaBreathRecord {
     }
     /// What the session is called: the ready exercise, Resonance, Calm me, or the catalogue exercise.
     var displayTitle: String {
-        if let t = templateId.flatMap({ BreathTemplates.template(id: $0)?.title }) { return t }
+        if let t = templateId.flatMap({ NunaBreathLibrary.template(id: $0)?.title }) { return t }
         switch kind {
         case .resonance, .calmMe: return kind.name
         case .guided: return BreathProtocolCatalog.protocolById(protocolId).map { String(localized: String.LocalizationValue($0.title)) } ?? protocolId
