@@ -64,8 +64,17 @@ struct NunaZoneRing: View {
                 // The ring: five thin arcs, one per zone. The zone the heart is in is lit; the rest are barely visible.
                 ForEach(0..<5, id: \.self) { z in
                     let color = NunaHeartBeat.zoneColors[z]
+                    if isActive(z) {
+                        // The aura of the lit line: a soft, wider copy of it that swells with the beat.
+                        Circle().inset(by: ringInset + lineWidth / 2).trim(from: arcStart(z), to: arcStart(z) + arcLength)
+                            .stroke(color, style: StrokeStyle(lineWidth: lineWidth * 3, lineCap: .round))
+                            .blur(radius: lineWidth * 2.4)
+                            .opacity(0.32 + 0.42 * swell)
+                            .rotationEffect(.degrees(-90))
+                    }
                     Circle().inset(by: ringInset + lineWidth / 2).trim(from: arcStart(z), to: arcStart(z) + arcLength)
                         .stroke(color.opacity(isActive(z) ? 1 : 0.26), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                        .shadow(color: isActive(z) ? color.opacity(0.55 + 0.35 * swell) : .clear, radius: lineWidth * (1.2 + 1.6 * swell))
                         .rotationEffect(.degrees(-90))
                 }
                 // A white dot on each boundary between two zones, as on the ring it follows; the first sits at the top.
@@ -86,9 +95,18 @@ struct NunaZoneRing: View {
                     let scaled = min(max(level, 0), 1) * 5
                     let z = min(Int(scaled), 4)
                     let angle = (72 * Double(z) + gapDegrees / 2 + (scaled - Double(z)) * (72 - gapDegrees) - 90) * .pi / 180
-                    Circle().fill(Color.white).frame(width: size * 0.034, height: size * 0.034)
-                        .shadow(color: tint.opacity(0.7), radius: 6)
-                        .offset(x: ringRadius * cos(angle), y: ringRadius * sin(angle))
+                    let dot = size * 0.034
+                    // The aura of the mark: a soft glow and a ring that spreads and fades once per two beats.
+                    let spread = (clock.phase * 0.5).truncatingRemainder(dividingBy: 1)
+                    ZStack {
+                        Circle().fill(tint).frame(width: dot * 3.4, height: dot * 3.4).blur(radius: dot * 0.9)
+                            .opacity(0.45 + 0.4 * swell).scaleEffect(1 + 0.22 * swell)
+                        Circle().stroke(tint.opacity(0.7 * (1 - spread)), lineWidth: max(1.5, dot * 0.12))
+                            .frame(width: dot * 1.6, height: dot * 1.6).scaleEffect(1 + 1.8 * spread)
+                        Circle().fill(Color.white).frame(width: dot, height: dot)
+                            .shadow(color: tint.opacity(0.8), radius: dot * (0.5 + 0.7 * swell))
+                    }
+                    .offset(x: ringRadius * cos(angle), y: ringRadius * sin(angle))
                 }
                 // The disc.
                 Circle()
