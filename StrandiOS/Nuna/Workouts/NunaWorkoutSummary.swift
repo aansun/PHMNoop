@@ -160,12 +160,12 @@ struct NunaWorkoutSummaryView: View {
         var items: [NunaSessionMetrics.Item] = []
         if let lo = data.hr.map(\.minBpm).min() { items.append(.init(id: "min", icon: "arrow.down.heart", label: "Min HR", value: "\(Int(lo.rounded()))")) }
         if let hr = r.avgHr {
-            var t = NunaSessionMetrics.Item(id: "avg", icon: "met:average-heart-rate", label: "Avg HR", value: "\(hr)")
+            var t = NunaSessionMetrics.Item(id: "avg", icon: NunaIcons.avgHr, label: "Avg HR", value: "\(hr)")
             if let avg = averages?.avgHr { t.pill = (Double(hr), avg, "\(Int(avg.rounded()))bpm") }
             items.append(t)
         }
         if let hr = r.maxHr {
-            var t = NunaSessionMetrics.Item(id: "max", icon: "bolt.heart", label: "Max HR", value: "\(hr)")
+            var t = NunaSessionMetrics.Item(id: "max", icon: NunaIcons.maxHr, label: "Max HR", value: "\(hr)")
             if let avg = averages?.maxHr { t.pill = (Double(hr), avg, "\(Int(avg.rounded()))bpm") }
             items.append(t)
         }

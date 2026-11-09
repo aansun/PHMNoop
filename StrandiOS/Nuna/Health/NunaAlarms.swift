@@ -115,7 +115,7 @@ struct NunaSleepAlarmRows: View {
                 NunaDivider()
                 HStack(spacing: 8) {
                     NavigationLink(value: NunaTodayRoute.windDown) {
-                        NunaListRow("Bedtime reminder", subtitle: reminderSubtitle, systemImage: "moon.zzz.fill")
+                        NunaListRow("Bedtime reminder", subtitle: reminderSubtitle, systemImage: NunaIcons.windDown)
                     }.buttonStyle(.plain)
                     Toggle("", isOn: Binding(get: { wind.isOn }, set: { wind.setOn($0) })).labelsHidden().tint(NunaPalette.charge)
                         .accessibilityLabel(Text("Bedtime reminder"))
@@ -184,7 +184,7 @@ struct NunaWindDownView: View {
         NunaCard(small: true, padding: EdgeInsets(top: 4, leading: 18, bottom: 14, trailing: 18)) {
             VStack(alignment: .leading, spacing: 0) {
                 NunaListRow("Remind me to wind down", description: "A calm evening reminder, timed from your wake time and usual sleep need. It's a suggestion, not an alarm.",
-                            systemImage: "moon.zzz.fill") {
+                            systemImage: NunaIcons.windDown) {
                     Toggle("", isOn: Binding(get: { wind.isOn }, set: { wind.setOn($0) })).labelsHidden().tint(NunaPalette.charge)
                 }
                 if wind.isOn {

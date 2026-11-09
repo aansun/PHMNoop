@@ -21,10 +21,10 @@ struct NunaAdvancedView: View {
                 NavigationLink(value: NunaMeRoute.persona) { NunaListRow("Restart the baseline", description: "Under Persona. History stays", systemImage: "arrow.triangle.2.circlepath", showsChevron: true) }.buttonStyle(.plain)
             }
             NunaSettingsGroup("HRV") {
-                NunaToggleRow("Continuous HRV", subtitle: "Record R-R all day", systemImage: "waveform.path.ecg", isOn: Binding(get: { continuous }, set: { continuous = $0; model.ble.setKeepRealtimeForData($0) })).padding(.vertical, 8)
+                NunaToggleRow("Continuous HRV", subtitle: "Record R-R all day", systemImage: NunaIcons.hrv, isOn: Binding(get: { continuous }, set: { continuous = $0; model.ble.setKeepRealtimeForData($0) })).padding(.vertical, 8)
                 if continuous {
                     NunaDivider()
-                    NunaToggleRow("Overnight only", subtitle: "Saves power, only while asleep", systemImage: "moon", isOn: Binding(get: { overnight }, set: { overnight = $0; model.ble.setKeepRealtimeForData(PuffinExperiment.keepRealtimeForDataEnabled) })).padding(.vertical, 8)
+                    NunaToggleRow("Overnight only", subtitle: "Saves power, only while asleep", systemImage: NunaIcons.sleep, isOn: Binding(get: { overnight }, set: { overnight = $0; model.ble.setKeepRealtimeForData(PuffinExperiment.keepRealtimeForDataEnabled) })).padding(.vertical, 8)
                 }
                 NunaDivider()
                 VStack(alignment: .leading, spacing: 10) {
@@ -82,13 +82,13 @@ struct NunaExperimentsView: View {
                 NunaDivider()
                 NunaToggleRow("Live Sessions", subtitle: "A quiet coach during a workout. The strap only vibrates to correct you · beta", systemImage: "figure.run", isOn: $liveSessions).padding(.vertical, 8)
                 NunaDivider()
-                NunaToggleRow("Sleep staging V2", subtitle: "Cardiorespiratory recipe, better at separating deep and REM", systemImage: "moon.zzz", isOn: $sleepV2).padding(.vertical, 8)
+                NunaToggleRow("Sleep staging V2", subtitle: "Cardiorespiratory recipe, better at separating deep and REM", systemImage: NunaIcons.sleep, isOn: $sleepV2).padding(.vertical, 8)
                 NunaDivider()
                 NunaToggleRow("Estimated SpO₂ from the strap", subtitle: "WHOOP 5/MG. Not verified", systemImage: "drop", isOn: Binding(get: { spo2 }, set: { spo2 = $0; rescore(model) })).padding(.vertical, 8)
                 NunaDivider()
                 NunaToggleRow("Wake refinement from motion", subtitle: "Uses motion to refine the wake time", systemImage: "alarm", isOn: $motionWake).padding(.vertical, 8)
                 NunaDivider()
-                NunaToggleRow("Personal stress baseline", subtitle: "Scores the day's stress against your own baseline", systemImage: "waveform.path.ecg", isOn: $stressBaseline).padding(.vertical, 8)
+                NunaToggleRow("Personal stress baseline", subtitle: "Scores the day's stress against your own baseline", systemImage: NunaIcons.stress, isOn: $stressBaseline).padding(.vertical, 8)
             }
             NunaSettingsGroup("Device research") {
                 NavigationLink(value: NunaMeRoute.testCentre) { NunaListRow("Test Centre", description: "WHOOP 5/MG probes, ECG and diagnostics", systemImage: "stethoscope", showsChevron: true) }.buttonStyle(.plain)

@@ -121,7 +121,7 @@ struct NunaWorkoutsView: View {
             Text("Workouts").font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
             Spacer()
             roundLink(.gym, "act:strength-trainer", "Strength Trainer")
-            roundLink(.settings, "slider.horizontal.3", "Workout settings")
+            roundLink(.settings, NunaIcons.featureSettings, "Workout settings")
         }
     }
 

@@ -718,7 +718,7 @@ struct NunaAnyaVoiceCoachView: View {
                         VStack(spacing: 0) {
                             NunaToggleRow("Start, pause and finish", subtitle: "Confirms each change and when you reach your target", systemImage: "play.circle", isOn: $lifecycle).padding(.vertical, 8)
                             NunaDivider()
-                            NunaToggleRow("Out of the target zone", subtitle: "When your heart rate leaves the zone", systemImage: "heart", isOn: $heartRate).padding(.vertical, 8)
+                            NunaToggleRow("Out of the target zone", subtitle: "When your heart rate leaves the zone", systemImage: NunaIcons.heartRate, isOn: $heartRate).padding(.vertical, 8)
                             NunaDivider()
                             NunaToggleRow("Every kilometre", subtitle: "Distance, time and heart rate", systemImage: "figure.run", isOn: $distance).padding(.vertical, 8)
                             NunaDivider()

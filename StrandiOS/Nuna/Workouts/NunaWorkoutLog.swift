@@ -519,7 +519,7 @@ struct NunaWorkoutLogStats: View {
             out.append(t)
         }
         if onFoot {
-            var t = Tile(id: "steps", icon: "shoeprints.fill", label: "Steps", value: steps.map { NunaTrendsFormat.num(Double($0)) } ?? "–", unit: "")
+            var t = Tile(id: "steps", icon: NunaIcons.steps, label: "Steps", value: steps.map { NunaTrendsFormat.num(Double($0)) } ?? "–", unit: "")
             if let s = steps, let avg = averages?.steps { t.pill = (Double(s), avg, NunaTrendsFormat.num(avg)) }
             out.append(t)
         }
@@ -535,17 +535,17 @@ struct NunaWorkoutLogStats: View {
             }
         }
         if let kcal = row.energyKcal {
-            var t = Tile(id: "kcal", icon: "met:calories", label: "Calories", value: NunaTrendsFormat.num(kcal), unit: "cal")
+            var t = Tile(id: "kcal", icon: NunaIcons.calories, label: "Calories", value: NunaTrendsFormat.num(kcal), unit: "cal")
             if let avg = averages?.kcal { t.pill = (kcal, avg, NunaTrendsFormat.num(avg)) }
             out.append(t)
         }
         if let hr = row.avgHr {
-            var t = Tile(id: "avg", icon: "met:average-heart-rate", label: "Avg HR", value: "\(hr)", unit: "bpm")
+            var t = Tile(id: "avg", icon: NunaIcons.avgHr, label: "Avg HR", value: "\(hr)", unit: "bpm")
             if let avg = averages?.avgHr { t.pill = (Double(hr), avg, "\(Int(avg.rounded())) bpm") }
             out.append(t)
         }
         if let hr = row.maxHr {
-            var t = Tile(id: "max", icon: "bolt.heart", label: "Max HR", value: "\(hr)", unit: "bpm")
+            var t = Tile(id: "max", icon: NunaIcons.maxHr, label: "Max HR", value: "\(hr)", unit: "bpm")
             if let avg = averages?.maxHr { t.pill = (Double(hr), avg, "\(Int(avg.rounded())) bpm") }
             out.append(t)
         }

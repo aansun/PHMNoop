@@ -84,7 +84,7 @@ struct NunaSkinTempView: View {
                 }
             }
             NavigationLink(value: NunaTodayRoute.earlyWarning) {
-                NunaCard(small: true) { NunaListRow("Early warning", description: "It takes two signals away from your range", systemImage: "bell", showsChevron: true) }
+                NunaCard(small: true) { NunaListRow("Early warning", description: "It takes two signals away from your range", systemImage: NunaIcons.earlyWarning, showsChevron: true) }
             }.buttonStyle(.plain)
             NunaExpandRow(title: "How it's calculated", systemImage: "sparkles", plain: howText)
         }

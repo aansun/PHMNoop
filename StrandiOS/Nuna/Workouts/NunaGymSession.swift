@@ -200,17 +200,17 @@ struct NunaGymSessionView: View {
         if secs > 0, let avg = averages?.durationS { dur.pill = (Double(secs), avg, clock(Int(avg.rounded()))) }
         tiles.append(dur)
         if let hr = workout?.avgHr {
-            var t = StatTile(id: "avg", icon: "met:average-heart-rate", label: "Avg HR", value: "\(hr)", unit: "bpm")
+            var t = StatTile(id: "avg", icon: NunaIcons.avgHr, label: "Avg HR", value: "\(hr)", unit: "bpm")
             if let avg = averages?.avgHr { t.pill = (Double(hr), avg, "\(Int(avg.rounded())) bpm") }
             tiles.append(t)
         }
         if let hr = workout?.maxHr {
-            var t = StatTile(id: "max", icon: "bolt.heart", label: "Max HR", value: "\(hr)", unit: "bpm")
+            var t = StatTile(id: "max", icon: NunaIcons.maxHr, label: "Max HR", value: "\(hr)", unit: "bpm")
             if let avg = averages?.maxHr { t.pill = (Double(hr), avg, "\(Int(avg.rounded())) bpm") }
             tiles.append(t)
         }
         if let kcal = workout?.energyKcal {
-            var t = StatTile(id: "kcal", icon: "met:calories", label: "Calories", value: NunaTrendsFormat.num(kcal), unit: "kcal")
+            var t = StatTile(id: "kcal", icon: NunaIcons.calories, label: "Calories", value: NunaTrendsFormat.num(kcal), unit: "kcal")
             if let avg = averages?.kcal { t.pill = (kcal, avg, NunaTrendsFormat.num(avg)) }
             tiles.append(t)
         }

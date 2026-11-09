@@ -248,14 +248,17 @@ struct NunaActivityGlyph: View {
     }
 }
 
-/// An icon given either as an SF Symbol name or as `met:<id>`, a drawn metric picture from Assets.xcassets/MetricIcons (thin line, template image,
+/// An icon given either as an SF Symbol name, as Anya's mark, as `act:<id>` or as `met:<id>`, a drawn metric picture from Assets.xcassets/MetricIcons (thin line, template image,
 /// so it takes the colour of the text around it). `size` is the point size of the symbol; a picture is drawn a little larger to match its weight.
 struct NunaIcon: View {
     let name: String
     var size: CGFloat = 18
     var weight: Font.Weight = .regular
     var body: some View {
-        if name.hasPrefix("met:") {
+        if name == NunaGlyph.anya || name.hasPrefix("act:") {
+            // Anya's mark and the activity pictures are drawn by `NunaGlyph`, so a settings row can carry either.
+            NunaGlyph(name, pointSize: size, weight: weight)
+        } else if name.hasPrefix("met:") {
             Image("met-" + name.dropFirst(4)).renderingMode(.template).resizable().scaledToFit()
                 .frame(width: size * 1.3, height: size * 1.3).accessibilityHidden(true)
         } else if let vital = NunaVitalGlyph(name: name, size: size * 1.15) {

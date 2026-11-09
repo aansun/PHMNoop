@@ -24,13 +24,13 @@ struct NunaMeView: View {
                     NunaSettingsLink(route: .profile, icon: "person.crop.circle", title: "My Account")
                     NunaSettingsLink(route: .devices, icon: "applewatch", title: "Device Settings")
                     NunaSettingsLink(route: .appSettings, icon: "doc.text", title: "App Settings")
-                    NunaSettingsLink(route: .privacy, icon: "eye", title: "Privacy Settings")
+                    NunaSettingsLink(route: .privacy, icon: NunaIcons.privacy, title: "Privacy Settings")
                 }
                 NunaSettingsHeading("Support").padding(.top, 34).padding(.bottom, 12)
                 VStack(spacing: 10) {
                     NunaSettingsLink(route: .howItWorks, icon: "questionmark.circle", title: "How it works", subtitle: "How your scores are worked out")
                     NunaSettingsLink(route: .whatsNew, icon: "graduationcap", title: "What's new")
-                    NunaSettingsLink(route: .about, icon: "info.circle", title: "About")
+                    NunaSettingsLink(route: .about, icon: NunaIcons.about, title: "About")
                 }
             }
             .padding(.horizontal, 20).padding(.top, 14).padding(.bottom, 130)

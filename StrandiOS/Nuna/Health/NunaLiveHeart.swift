@@ -485,13 +485,13 @@ struct NunaDeepTimelineView: View {
 
     private func icon(_ m: Repository.TimelineMetric) -> String {
         switch m {
-        case .hr: return "heart"
+        case .hr: return NunaIcons.heartRate
         case .hrv: return "met:heart-rate-variability"
         case .spo2: return "vital:spo2"
         case .skinTemp: return "vital:temp"
         case .respiration: return "met:respiratory-rate"
         case .motion, .ouraMovement: return "figure.walk.motion"
-        case .bandSleepState: return "moon.zzz"
+        case .bandSleepState: return NunaIcons.sleep
         }
     }
 

@@ -9,15 +9,15 @@ struct NunaAppSettingsView: View {
         NunaDetailScreen("App Settings", centersTitle: true) {
             VStack(spacing: 10) {
                 NunaSettingsLink(route: .activity, icon: "heart.text.square", title: "Activity Settings")
-                NunaSettingsLink(route: .anya, icon: "sparkles", title: "AI Settings")
-                NunaSettingsLink(route: .appearance, icon: "slider.horizontal.3", title: "Appearance")
-                NunaSettingsLink(route: .data, icon: "link", title: "Data & Integrations")
-                NunaSettingsLink(route: .features, icon: "square.and.pencil", title: "Optional features")
-                NunaSettingsLink(route: .notifications, icon: "bell", title: "Notifications")
+                NunaSettingsLink(route: .anya, icon: NunaIcons.ai, title: "AI Settings")
+                NunaSettingsLink(route: .appearance, icon: NunaIcons.appearance, title: "Appearance")
+                NunaSettingsLink(route: .data, icon: NunaIcons.data, title: "Data & Integrations")
+                NunaSettingsLink(route: .features, icon: NunaIcons.features, title: "Optional features")
+                NunaSettingsLink(route: .notifications, icon: NunaIcons.notifications, title: "Notifications")
                 NunaSettingsLink(route: .automations, icon: "applewatch.radiowaves.left.and.right", title: "Strap automations")
                 NunaSettingsLink(route: .language, icon: "globe", title: "Language Preferences")
                 NunaSettingsLink(route: .applications, icon: "square.grid.2x2", title: "Application")
-                NunaSettingsLink(route: .advanced, icon: "flame", title: "Advanced and experiments")
+                NunaSettingsLink(route: .advanced, icon: NunaIcons.advanced, title: "Advanced and experiments")
             }
             .padding(.top, 10)
         }
