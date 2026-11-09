@@ -131,7 +131,7 @@ struct NunaActivitySettingsView: View {
                     NOOPBannerLockScreen(state: .bannerDemo())
                         .frame(height: 156).clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
                         .opacity(liveDesign == "banner" ? 1 : 0.55)
-                    Text("Banner: the clock, the PHMN mark and the heart rate on top; the five zones and two figures below.")
+                    Text("Banner: the heart rate and the clock on top; the six zones and two figures below.")
                         .font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
                 }.padding(.vertical, 10)
             }

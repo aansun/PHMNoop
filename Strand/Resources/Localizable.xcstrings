@@ -9068,5 +9068,6 @@
  "Show %lld": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tampilkan %lld"}}}},
  "No technique matches": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidak ada teknik yang cocok"}}}},
  "You will lose all of your data from this session. Are you sure you want to discard it?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu akan kehilangan semua data sesi ini. Yakin mau membuangnya?"}}}},
- "You will lose all of your data from this workout. Are you sure you want to discard it?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu akan kehilangan semua data latihan ini. Yakin mau membuangnya?"}}}}
+ "You will lose all of your data from this workout. Are you sure you want to discard it?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu akan kehilangan semua data latihan ini. Yakin mau membuangnya?"}}}},
+ "Banner: the heart rate and the clock on top; the six zones and two figures below.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Banner: detak jantung dan jam di atas; enam zona dan dua angka di bawah."}}}}
 }, "version":"1.0" }

@@ -57,7 +57,7 @@ final class LiveActivityController {
                 distance: String? = nil, pace: String? = nil, speed: String? = nil,
                 calories: Int? = nil, subtitle: String? = nil, progress: Double? = nil, targetZone: Int? = nil,
                 zonePosition: Double? = nil, zoneSeconds: Int? = nil, pausedAt: Date? = nil, effortLabel: String? = nil, steps: Int? = nil,
-                workoutActive: Bool = false) {
+                zoneLevel: Double? = nil, workoutActive: Bool = false) {
         guard activitiesEnabled else { return }
 
         // Re-adopt an activity that outlived a previous app session. ActivityKit keeps Live Activities
@@ -98,11 +98,11 @@ final class LiveActivityController {
         if !connected && !workoutActive && activity == nil { return }
         guard workoutActive || bpm != nil || activity != nil else { return }
 
-        var bpm = bpm, heartRateZone = heartRateZone, zonePosition = zonePosition
+        var bpm = bpm, heartRateZone = heartRateZone, zonePosition = zonePosition, zoneLevel = zoneLevel
         #if DEBUG
         // A debug build launched with `--demo-seed` has no strap, so a session would show no heart rate and no zone. Give it a made-up reading to look at.
         if activityName != nil, bpm == nil, CommandLine.arguments.contains("--demo-seed") {
-            bpm = 138; heartRateZone = 3; zonePosition = 0.56
+            bpm = 138; heartRateZone = 3; zonePosition = 0.56; zoneLevel = 0.56
         }
         #endif
         let state = NOOPActivityAttributes.ContentState(
@@ -128,7 +128,8 @@ final class LiveActivityController {
             pausedAt: pausedAt,
             effortLabel: effortLabel,
             steps: steps,
-            design: UserDefaults.standard.string(forKey: Self.designKey))
+            design: UserDefaults.standard.string(forKey: Self.designKey),
+            zoneLevel: zoneLevel)
         // A workout owns this activity until End/Discard. Do not let a temporary strap disconnect or
         // quiet GPS stream make the Lock Screen activity stale while the workout clock is still live.
         // Ordinary live-HR activity keeps the shorter freshness date as a safety net.
