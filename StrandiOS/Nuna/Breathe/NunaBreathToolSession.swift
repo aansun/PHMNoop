@@ -84,8 +84,13 @@ private struct NunaToolSessionBody: View {
                         } else if finished || notStarted != nil {
                             resultCard
                         } else {
-                            visual(size: min(300, max(200, viewport.size.height - 150)))
-                            heartReadout
+                            // The heart rate sits at the foot of the page, next to the figures under it.
+                            VStack(spacing: 0) {
+                                visual(size: min(300, max(200, viewport.size.height - 150)))
+                                Spacer(minLength: NunaSpacing.section)
+                                heartReadout
+                            }
+                            .frame(minHeight: max(viewport.size.height - NunaSpacing.section * 2, 0))
                         }
                     }
                     .padding(.vertical, NunaSpacing.section).padding(.horizontal, NunaSpacing.screenH)
@@ -117,11 +122,7 @@ private struct NunaToolSessionBody: View {
             if now { hasRun = true; logged = false; startedAt = Date(); movePhase() } else if hasRun { record() }
         }
         .onChange(of: c.phase) { _, _ in movePhase() }
-        .confirmationDialog("End this session?", isPresented: $confirmEnd, titleVisibility: .visible) {
-            Button("End and save") { c.stop() }
-            Button("Discard", role: .destructive) { discarding = true; c.stop() }
-            Button("Keep breathing", role: .cancel) {}
-        }
+        .nunaEndFlow(isPresented: $confirmEnd, save: { c.stop() }, discard: { discarding = true; c.stop() })
     }
 
     // MARK: Flow
@@ -159,9 +160,8 @@ private struct NunaToolSessionBody: View {
     private var header: some View {
         let buzz = live.bonded ? String(localized: "strap buzz on") : String(localized: "silent session")
         return HStack(alignment: .center) {
-            Button { c.running ? (confirmEnd = true) : onEnd() } label: {
-                Image(systemName: "xmark").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44).contentShape(Rectangle())
-            }.buttonStyle(.plain).accessibilityLabel(Text("Close"))
+            // A running session has no way out but End, so there is one window to be in; this keeps the title centred.
+            Color.clear.frame(width: 44, height: 44)
             Spacer(minLength: 8)
             VStack(spacing: 2) {
                 Text(verbatim: tool.title).font(.nuna(size: NunaTypeSize.sub, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)

@@ -1228,11 +1228,7 @@ struct NunaLiveWorkoutView: View {
         .onChange(of: model.activeWorkout == nil) { _, ended in
             if ended { ScreenIdle.keepAwake(false) }
         }
-        .confirmationDialog("End this workout?", isPresented: $confirmEnd, titleVisibility: .visible) {
-            Button("End and save") { finishAndOpenActivity() }
-            Button("Discard", role: .destructive) { model.discardWorkout(); onClose() }
-            Button("Keep going", role: .cancel) {}
-        }
+        .nunaEndFlow(isPresented: $confirmEnd, subject: .workout, save: { finishAndOpenActivity() }, discard: { model.discardWorkout(); onClose() })
     }
 
     /// Wait for the saved row before opening its detail; unsaved sessions retain a clear way back.
@@ -1398,18 +1394,15 @@ struct NunaLiveWorkoutView: View {
         let buzzText = zoneBuzz && !goal.isFree ? String(localized: "target alerts on") : String(localized: "silent session")
         let title = String(localized: String.LocalizationValue(w.sport))
         return HStack(alignment: .center) {
-            Button(action: onClose) {
-                Image(systemName: "chevron.down").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    .frame(width: 44, height: 44)
-            }.buttonStyle(.plain).accessibilityLabel(Text("Minimise"))
+            // A running session has no way out but End (reached through Pause), so there is one window to be in.
             Spacer(minLength: 8)
             VStack(spacing: 2) {
                 Text(verbatim: title).font(.nuna(size: NunaTypeSize.sub, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary).lineLimit(1)
                 Text(verbatim: gpsText + " · " + buzzText).font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil).lineLimit(1).minimumScaleFactor(0.8)
             }
             Spacer(minLength: 8)
-            Color.clear.frame(width: NoopButtonMetrics.minHitTarget, height: NoopButtonMetrics.minHitTarget)
         }
+        .frame(minHeight: 44)
     }
 
     /// The Heart rate tab: the beating disc in the colour of the current zone (see `NunaHeartBeat`). With the heart rate hidden and a route being

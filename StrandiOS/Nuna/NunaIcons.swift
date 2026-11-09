@@ -39,6 +39,8 @@ enum NunaIcons {
     static let featureSettings = "slider.horizontal.3"
     static let units = "ruler"
     static let filter = "line.3.horizontal.decrease"
+    static let finish = "flag.checkered"
+    static let discard = "trash"
     static let ai = NunaGlyph.anya
     static let data = "link"
     static let features = "square.and.pencil"

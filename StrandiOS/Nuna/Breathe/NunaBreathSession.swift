@@ -92,8 +92,13 @@ struct NunaBreathSessionView: View {
                             NunaHeartBeat(bpm: model.bpm, color: zoneColor, zone: zone, size: min(250, max(170, (viewport.size.height - 80) / 1.2)))
                                 .frame(maxWidth: .infinity, minHeight: max(viewport.size.height - NunaSpacing.section * 2, 0), alignment: .center)
                         } else {
-                            pacer(size: min(300, max(200, viewport.size.height - 150)))
-                            heartReadout
+                            // The heart rate sits at the foot of the page, next to the figures under it.
+                            VStack(spacing: 0) {
+                                pacer(size: min(300, max(200, viewport.size.height - 150)))
+                                Spacer(minLength: NunaSpacing.section)
+                                heartReadout
+                            }
+                            .frame(minHeight: max(viewport.size.height - NunaSpacing.section * 2, 0))
                         }
                     }
                     .padding(.vertical, NunaSpacing.section).padding(.horizontal, NunaSpacing.screenH)
@@ -123,11 +128,7 @@ struct NunaBreathSessionView: View {
         .onRRPackets(live) { ingest($0) }
         .onAppear { begin() }
         .onDisappear { cue.deactivate(); ScreenIdle.keepAwake(false) }
-        .confirmationDialog("End this session?", isPresented: $confirmEnd, titleVisibility: .visible) {
-            Button("End and save") { finish() }
-            Button("Discard", role: .destructive) { cancel() }
-            Button("Keep breathing", role: .cancel) {}
-        }
+        .nunaEndFlow(isPresented: $confirmEnd, save: { finish() }, discard: { cancel() })
     }
 
     // MARK: Parts
@@ -135,9 +136,8 @@ struct NunaBreathSessionView: View {
     private var header: some View {
         let buzz = live.bonded && haptics ? String(localized: "strap buzz on") : String(localized: "silent session")
         return HStack(alignment: .center) {
-            Button { seconds >= 20 ? (confirmEnd = true) : cancel() } label: {
-                Image(systemName: "xmark").font(.system(size: 15, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44).contentShape(Rectangle())
-            }.buttonStyle(.plain).accessibilityLabel(Text("Close"))
+            // A running session has no way out but End (reached through Pause), so there is one window to be in; this keeps the title centred.
+            Color.clear.frame(width: 84, height: 44)
             Spacer(minLength: 8)
             VStack(spacing: 2) {
                 Text(verbatim: title).font(.nuna(size: NunaTypeSize.sub, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.7)
