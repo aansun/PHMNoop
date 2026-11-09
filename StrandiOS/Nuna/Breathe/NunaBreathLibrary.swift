@@ -4,8 +4,8 @@ import StrandDesign
 import StrandAnalytics
 
 /// The techniques the Breathe tab offers beyond the first ten ready exercises: every bundled catalogue protocol that had no ready exercise
-/// (Buteyko, Tummo, Qi Gong, Soma, Kapalabhati, Wim Hof, Presence and the rest), and a few well-known gentle ones the catalogue does not carry
-/// (pursed-lip, Okinawa belly breath, humming bee, cooling breath, long 4-8 exhale). The new protocols are registered like a kept Anya exercise, so
+/// (Buteyko, Tummo, Qi Gong, Soma, Kapalabhati, Wim Hof, Presence and the rest) and the Japanese techniques of the two guides (Misogi, Torifune, Kiko, Nogare, Okinaga, Ibuki, Kiai, Kokyuho), and a few well-known gentle ones the catalogue does not carry
+/// (pursed-lip, humming bee, cooling breath, long 4-8 exhale). The new protocols are registered like a kept Anya exercise, so
 /// the session, the report and the history treat them like any other.
 enum NunaBreathLibrary {
     /// Techniques added here, in the app's own words and gentle timings.
@@ -16,10 +16,47 @@ enum NunaBreathLibrary {
             caution: nil, sessionHint: "About 5 minutes; ease off if you feel dizzy.", mode: .playable, category: .ans, recommendedDurationMs: 5 * 60_000,
             stages: [BreathStage(type: .inhale, durationMs: 2_000), BreathStage(type: .exhale, durationMs: 5_000)]),
         BreathProtocol(
-            id: "okinawa", title: "Okinawa belly breath", subtitle: "Low belly · slow steady out",
-            edu: "A slow, deep belly breath in the spirit of the abdominal breathing taught in Okinawan karate. Breathe in through the nose into the lower belly, rest a moment, then breathe out slowly while gently drawing the lower belly in. The timing here is a gentle pace chosen for this app.",
-            caution: nil, sessionHint: "5–10 minutes.", mode: .playable, category: .ans, recommendedDurationMs: 10 * 60_000,
-            stages: [BreathStage(type: .inhale, durationMs: 4_000), BreathStage(type: .hold, durationMs: 1_000), BreathStage(type: .exhale, durationMs: 7_000)]),
+            id: "misogi_kokyuho", title: "Misogi Kokyuho", subtitle: "Slow in · strong “Haa” out",
+            edu: "A purifying breath from Shinto practice and Aikido. Breathe in slowly through the nose, picturing energy gathering at the tanden (the centre of the belly), then breathe out firmly through the mouth with a “Haa” or “Ou” sound, picturing tension leaving. A strong exhale empties the lungs and invites a fresh, oxygen-rich breath.",
+            caution: "Stop if you feel dizzy.", sessionHint: "About 5 minutes.", mode: .playable, category: .ans, recommendedDurationMs: 5 * 60_000,
+            stages: [BreathStage(type: .inhale, durationMs: 5_000), BreathStage(type: .exhale, durationMs: 4_000)]),
+        BreathProtocol(
+            id: "torifune_kokyuho", title: "Torifune Kokyuho", subtitle: "Rowing-boat breath · lean and pull back",
+            edu: "A practice from the Misogi tradition, also used in budo. Stand in a wide stance and rock your body forward and back as if rowing a boat. Breathe out sharply as you lean forward and breathe in deeply toward the tanden as you pull back. Pairing rhythmic movement with the breath trains the two to move together and can wake you up quickly.",
+            caution: "Keep your knees soft. Stop if you feel dizzy, or if you have back, balance or blood-pressure concerns.", sessionHint: "2–5 minutes.",
+            mode: .playable, category: .ans, recommendedDurationMs: 3 * 60_000,
+            stages: [BreathStage(type: .exhale, durationMs: 2_000, label: "Lean forward · out"), BreathStage(type: .inhale, durationMs: 4_000, label: "Pull back · in")]),
+        BreathProtocol(
+            id: "kiko_kokyuho", title: "Kiko Kokyuho", subtitle: "Hands on the belly · slow in · soft hold",
+            edu: "The Japanese take on Qigong, used for inner health. Rest both hands below the navel (the tanden), breathe in very slowly through the nose and let the belly swell like a balloon, hold softly for three to five seconds, then breathe out gently.",
+            caution: nil, sessionHint: "5–10 minutes.", mode: .playable, category: .ans, recommendedDurationMs: 8 * 60_000,
+            stages: [BreathStage(type: .inhale, durationMs: 6_000), BreathStage(type: .hold, durationMs: 4_000), BreathStage(type: .exhale, durationMs: 6_000)]),
+        BreathProtocol(
+            id: "nogare", title: "Nogare", subtitle: "Recovery breath · deep in · silent out",
+            edu: "A recovery breath from traditional karate and from the discipline of stealth training (shinobi). Breathe in deeply and gently through the nose, pause for a moment low in the belly, then breathe out slowly through an open mouth without any sound, controlling the whole exhale with your diaphragm. It is used to bring the heart rate down after hard effort or a scare.",
+            caution: nil, sessionHint: "3–5 minutes.", mode: .playable, category: .ans, recommendedDurationMs: 5 * 60_000,
+            stages: [BreathStage(type: .inhale, durationMs: 4_000), BreathStage(type: .hold, durationMs: 1_000), BreathStage(type: .exhale, durationMs: 8_000)]),
+        BreathProtocol(
+            id: "okinaga", title: "Okinaga", subtitle: "Long breath · silent in · barely audible out",
+            edu: "Okinaga means “long breath” and is a core technique of the shinobi, used to stay focused and quiet while watching. Breathe in very slowly and silently through the nose, hold gently low in the belly without strain, then breathe out extremely slowly and evenly until the sound disappears. Think of exhaling so softly that a feather in front of your nose would not stir.",
+            caution: "Keep every phase comfortable and never strain on the hold.", sessionHint: "3–5 minutes.", mode: .playable, category: .ans, recommendedDurationMs: 5 * 60_000,
+            stages: [BreathStage(type: .inhale, durationMs: 6_000), BreathStage(type: .hold, durationMs: 3_000), BreathStage(type: .exhale, durationMs: 10_000)]),
+        BreathProtocol(
+            id: "ibuki", title: "Ibuki", subtitle: "Full in · hissing forceful out",
+            edu: "A hard-breathing practice from budo and karate (Goju-ryu, Kyokushin). Take a full breath in, then breathe out forcefully through narrowed lips with a sharp hiss while tightening your whole core. It firms the body at once and prepares it to absorb a blow.",
+            caution: "Intense. Skip with high blood pressure, pregnancy or a hernia, and stop if you feel dizzy. Not for beginners without guidance.", sessionHint: "A few breaths at a time, with rests in between.",
+            mode: .playable, category: .ans, recommendedDurationMs: 3 * 60_000,
+            stages: [BreathStage(type: .inhale, durationMs: 3_000), BreathStage(type: .exhale, durationMs: 4_000)]),
+        BreathProtocol(
+            id: "kiai", title: "Kiai", subtitle: "Guided · sharp breath out with a shout",
+            edu: "The instant release of energy in martial arts. Breathe in quickly as you prepare, then breathe out sharply with a strong shout from the diaphragm as you strike or push, tightening your core. It locks the body steady at the point of effort. This entry is guided: it times the session and shows reminders without pacing the shouts.",
+            caution: "Practise where a loud shout is fine. Skip if you are pregnant or have high blood pressure, and stop if you feel dizzy.", sessionHint: "A few short rounds.",
+            mode: .guided, category: .ans, recommendedDurationMs: 3 * 60_000, stages: []),
+        BreathProtocol(
+            id: "kokyuho", title: "Kokyuho", subtitle: "Breath that moves with the spine",
+            edu: "The foundation of breathing in Aikido and jujutsu: let the breath drive the movement instead of muscle. Breathe out as you fold or round your back, emptying the air, and breathe in as you open your chest and lengthen your spine.",
+            caution: nil, sessionHint: "About 5 minutes.", mode: .playable, category: .ans, recommendedDurationMs: 5 * 60_000,
+            stages: [BreathStage(type: .inhale, durationMs: 4_000, label: "Open chest · in"), BreathStage(type: .exhale, durationMs: 5_000, label: "Round back · out")]),
         BreathProtocol(
             id: "bhramari", title: "Humming bee breath", subtitle: "Nose in · hum out",
             edu: "Breathe in through your nose, then hum softly on the exhale with your lips closed, like a bee. The gentle vibration gives your attention something steady to follow.",
@@ -54,7 +91,14 @@ enum NunaBreathLibrary {
         .init(id: "energize_wimhof", goal: .energize, protocolId: "wim_hof", minutes: 10, advisable: false),
         .init(id: "energize_holotropic", goal: .energize, protocolId: "holotropic", minutes: 10, advisable: false),
         .init(id: "energize_shamanic", goal: .energize, protocolId: "shamanic", minutes: 10, advisable: false),
-        .init(id: "recover_okinawa", goal: .recover, protocolId: "okinawa", minutes: 10, advisable: true),
+        .init(id: "recover_kiko", goal: .recover, protocolId: "kiko_kokyuho", minutes: 8, advisable: true),
+        .init(id: "recover_nogare", goal: .recover, protocolId: "nogare", minutes: 5, advisable: true),
+        .init(id: "focus_okinaga", goal: .focus, protocolId: "okinaga", minutes: 5, advisable: true),
+        .init(id: "focus_kokyuho", goal: .focus, protocolId: "kokyuho", minutes: 5, advisable: true),
+        .init(id: "energize_misogi", goal: .energize, protocolId: "misogi_kokyuho", minutes: 5, advisable: true),
+        .init(id: "energize_torifune", goal: .energize, protocolId: "torifune_kokyuho", minutes: 3, advisable: true),
+        .init(id: "energize_ibuki", goal: .energize, protocolId: "ibuki", minutes: 3, advisable: false),
+        .init(id: "energize_kiai", goal: .energize, protocolId: "kiai", minutes: 3, advisable: false),
         .init(id: "recover_sitali", goal: .recover, protocolId: "sitali", minutes: 5, advisable: true),
     ]
 
@@ -77,8 +121,8 @@ enum NunaBreathLevel {
     }
     static func of(_ protocolId: String) -> NunaBreathLevel {
         switch protocolId {
-        case "tummo", "bhastrika", "kapalabhati", "wim_hof", "holotropic", "shamanic", "presence_punching": return .intense
-        case "box_4_4_4_4", "four_seven_eight", "buteyko", "buteyko_reduced", "nadi_shodhana", "ujjayi": return .moderate
+        case "tummo", "bhastrika", "kapalabhati", "wim_hof", "holotropic", "shamanic", "presence_punching", "ibuki", "kiai": return .intense
+        case "box_4_4_4_4", "four_seven_eight", "buteyko", "buteyko_reduced", "nadi_shodhana", "ujjayi", "misogi_kokyuho", "torifune_kokyuho", "kiko_kokyuho", "okinaga": return .moderate
         default: return .gentle
         }
     }
@@ -126,11 +170,46 @@ enum NunaBreathGuide {
             ("nose", String(localized: "Breathe in slowly through your nose for 2 seconds.")),
             ("mouth", String(localized: "Purse your lips as though you are about to blow out a candle.")),
             ("wind", String(localized: "Breathe out slowly through your pursed lips for four to six counts."))]
-        case "okinawa": return [
-            ("figure.stand", String(localized: "Sit or stand tall and rest one hand low on your belly.")),
-            ("nose", String(localized: "Breathe in through your nose for 4 seconds and let your lower belly rise.")),
-            ("pause.circle", String(localized: "Rest for a moment at the top, without any tension.")),
-            ("wind", String(localized: "Breathe out slowly for 7 seconds while gently drawing your lower belly in."))]
+        case "misogi_kokyuho": return [
+            ("figure.mind.and.body", String(localized: "Sit upright, on a cushion or on your heels, with your back tall.")),
+            ("nose", String(localized: "Breathe in slowly through your nose and picture energy gathering in the centre of your belly.")),
+            ("mouth", String(localized: "Breathe out firmly through your mouth with a “Haa” or “Ou” sound.")),
+            ("sparkles", String(localized: "Picture tension and stale air leaving with the sound, then take the next fresh breath."))]
+        case "torifune_kokyuho": return [
+            ("figure.stand", String(localized: "Stand with your feet wide and your knees soft, like a horse stance.")),
+            ("arrow.forward", String(localized: "Rock forward like rowing a boat and breathe out sharply as you lean.")),
+            ("arrow.backward", String(localized: "Pull back and breathe in deeply toward the centre of your belly.")),
+            ("repeat", String(localized: "Keep the rocking rhythmic, and stop if you feel dizzy."))]
+        case "kiko_kokyuho": return [
+            ("hand.raised", String(localized: "Rest both hands below your navel, over the centre of your belly.")),
+            ("nose", String(localized: "Breathe in very slowly through your nose and let your belly swell like a balloon.")),
+            ("pause.circle", String(localized: "Hold softly for 3 to 5 seconds, as if locking the energy in.")),
+            ("wind", String(localized: "Breathe out gently and let the belly settle."))]
+        case "nogare": return [
+            ("figure.mind.and.body", String(localized: "Stand or sit tall and let your shoulders drop.")),
+            ("nose", String(localized: "Breathe in deeply and gently through your nose.")),
+            ("pause.circle", String(localized: "Pause for a moment low in your belly.")),
+            ("wind", String(localized: "Breathe out slowly through an open mouth without any sound, controlling it with your diaphragm."))]
+        case "okinaga": return [
+            ("figure.mind.and.body", String(localized: "Sit upright and quiet, and relax your face and shoulders.")),
+            ("nose", String(localized: "Breathe in very slowly and silently through your nose.")),
+            ("pause.circle", String(localized: "Hold gently low in your belly, without any strain.")),
+            ("feather", String(localized: "Breathe out so slowly and softly that a feather in front of your nose would not move."))]
+        case "ibuki": return [
+            ("figure.stand", String(localized: "Stand with your feet apart and your core ready to tighten.")),
+            ("nose", String(localized: "Take a full breath in.")),
+            ("wind", String(localized: "Breathe out forcefully through narrowed lips with a sharp hiss while you tighten your whole core.")),
+            ("pause.circle", String(localized: "Rest and breathe normally between rounds. Stop if you feel dizzy."))]
+        case "kiai": return [
+            ("figure.martial.arts", String(localized: "Stand in your stance somewhere a loud shout is fine.")),
+            ("nose", String(localized: "Breathe in quickly as you prepare your movement.")),
+            ("megaphone", String(localized: "Breathe out sharply with a strong shout from your diaphragm as you strike or push, and tighten your core.")),
+            ("pause.circle", String(localized: "Rest between rounds and breathe normally."))]
+        case "kokyuho": return [
+            ("figure.flexibility", String(localized: "Sit or stand with your spine long and your hands relaxed.")),
+            ("arrow.up.left.and.arrow.down.right", String(localized: "Breathe in as you open your chest and lengthen your spine.")),
+            ("arrow.down.right.and.arrow.up.left", String(localized: "Breathe out as you fold or round your back, emptying the air.")),
+            ("repeat", String(localized: "Let the breath move you, not your muscles."))]
         case "ujjayi": return [sit,
             ("nose", String(localized: "Breathe in through your nose and narrow the back of your throat a little, as if fogging a mirror with your mouth closed.")),
             ("water.waves", String(localized: "Let the breath sound like soft ocean waves, about 4.5 seconds in and 4.5 seconds out.")),
