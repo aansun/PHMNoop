@@ -207,10 +207,7 @@ struct NunaLiftSessionView: View {
 
     private func header(_ engine: LiftSessionEngine) -> some View {
         HStack(spacing: 10) {
-            Button { dismiss() } label: {
-                Image(systemName: "chevron.down").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
-                    .frame(width: 44, height: 44)
-            }.buttonStyle(.plain).accessibilityLabel(Text("Minimise"))
+            // A running session has no way out but Finish, so there is one window to be in.
             Text(session.programName == nil ? "Strength Trainer" : "Program strength trainer")
                 .font(.nuna(size: 24, weight: .heavy, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.8)
             Spacer(minLength: 8)
@@ -783,10 +780,10 @@ struct NunaLiftSessionView: View {
         }
         .preferredColorScheme(NunaTheme.colorScheme)
         .task { await loadSetCountChanges() }
-        .confirmationDialog("Discard this session?", isPresented: $confirmingDiscard, titleVisibility: .visible) {
-            Button("Discard", role: .destructive) { Task { await closeScreen(); session.discard(); showingFinish = false } }
-            Button("Keep going", role: .cancel) {}
-        } message: { Text("\(engine?.completedWorkingSets ?? 0) recorded sets will be thrown away. Nothing is saved and no workout is created.") }
+        .nunaDiscardModal(isPresented: $confirmingDiscard, title: "Discard workout",
+                          message: "\(engine?.completedWorkingSets ?? 0) recorded sets will be thrown away. Nothing is saved and no workout is created.") {
+            Task { await closeScreen(); session.discard(); showingFinish = false }
+        }
     }
 
     // MARK: Loading and saving (same rules as the Default sheet)

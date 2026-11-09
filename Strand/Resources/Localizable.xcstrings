@@ -9066,5 +9066,7 @@
  "Search for a technique…": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Cari teknik…"}}}},
  "Purpose": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tujuan"}}}},
  "Show %lld": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tampilkan %lld"}}}},
- "No technique matches": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidak ada teknik yang cocok"}}}}
+ "No technique matches": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tidak ada teknik yang cocok"}}}},
+ "You will lose all of your data from this session. Are you sure you want to discard it?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu akan kehilangan semua data sesi ini. Yakin mau membuangnya?"}}}},
+ "You will lose all of your data from this workout. Are you sure you want to discard it?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Kamu akan kehilangan semua data latihan ini. Yakin mau membuangnya?"}}}}
 }, "version":"1.0" }
