@@ -6,11 +6,6 @@ import Charts
 
 /// Breathing, first screen: say what the breath is for, take Anya's pick or a ready template, and go. After the session comes the
 /// report, which is kept in the history. The settings button at the top right holds the module's options.
-/// The older Breathing screen as a sheet, opened on a tab ("resonance", "calm") or on its default one.
-struct NunaAdvancedRoute: Identifiable {
-    let id = UUID()
-    let mode: String?
-}
 
 struct NunaBreathView: View {
     @EnvironmentObject private var repo: Repository
@@ -30,7 +25,6 @@ struct NunaBreathView: View {
     @State private var showHistory = false
     @State private var opened: NunaBreathRecord?
     @State private var route: NunaBreathRoute?
-    @State private var advanced: NunaAdvancedRoute?
     @State private var toolRun: NunaBreathTool?
     @State private var showMake = false
     @State private var tab = 1
@@ -75,7 +69,7 @@ struct NunaBreathView: View {
             NunaBreathFlow(first: req) { request = nil }
         }
         .sheet(isPresented: $showSettings, onDismiss: { history = NunaBreathLog.all() }) {
-            NunaBreathSettingsView { showSettings = false; advanced = NunaAdvancedRoute(mode: nil) } onClose: { showSettings = false }.nunaSheetChrome(detents: [.large])
+            NunaBreathSettingsView { showSettings = false }.nunaSheetChrome(detents: [.large])
         }
         .sheet(item: $route) { r in detailSheet(r) }
         .sheet(item: $opened) { r in
@@ -94,10 +88,6 @@ struct NunaBreathView: View {
         }
         .fullScreenCover(item: $toolRun, onDismiss: { history = NunaBreathLog.all() }) { t in
             NunaBreathToolSessionView(tool: t, onEnd: { toolRun = nil })
-        }
-        .sheet(item: $advanced) { route in
-            NavigationStack { BreathingView(initialMode: route.mode, onSessionEnd: { start, secs, kind in NunaBreathRecovery.logExternal(repo: repo, startTs: start, seconds: secs, kind: kind); history = NunaBreathLog.all() }).toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Done") { advanced = nil } } } }
-                .preferredColorScheme(NunaTheme.colorScheme)
         }
     }
 
