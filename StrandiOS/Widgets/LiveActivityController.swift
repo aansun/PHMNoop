@@ -102,7 +102,7 @@ final class LiveActivityController {
         #if DEBUG
         // A debug build launched with `--demo-seed` has no strap, so a session would show no heart rate and no zone. Give it a made-up reading to look at.
         if activityName != nil, bpm == nil, CommandLine.arguments.contains("--demo-seed") {
-            bpm = 138; heartRateZone = 3; zonePosition = 0.56; zoneLevel = 0.56
+            bpm = 138; heartRateZone = 3; zonePosition = 0.56; zoneLevel = 0.51
         }
         #endif
         let state = NOOPActivityAttributes.ContentState(

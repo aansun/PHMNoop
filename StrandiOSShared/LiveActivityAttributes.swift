@@ -42,7 +42,7 @@ public struct NOOPActivityAttributes: ActivityAttributes {
         public var targetZone: Int?
         /// Where the heart rate sits across the five-zone bar, 0 to 1.
         public var zonePosition: Double?
-        /// Where the heart rate sits across six segments, Zone 0 (below Zone 1) to Zone 5, 0 to 1: the Banner design draws its bar from this.
+        /// Where the heart rate sits across five segments, Zone 1 to Zone 5, 0 to 1: the Banner design draws its bar from this.
         public var zoneLevel: Double?
         /// Seconds spent in the current zone, for sports without a route.
         public var zoneSeconds: Int?
