@@ -248,21 +248,25 @@ struct NunaBreathView: View {
         }
     }
 
-    /// Each ready exercise is its own card; a touch opens what it is, what it does for you and how long it takes, with Start at the bottom.
+    /// Explore: every technique of the chosen goal as a card in a two-column grid, like WHOOP's workouts; a touch opens its page, with Start at the bottom.
     private var templates: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            NunaTitleRow(title: "Ready to start") { EmptyView() }
-            ForEach(NunaBreathLibrary.templates(for: goal)) { t in
-                let picked = suggestion?.advice.template.id == t.id && anyaOn
-                Button { route = .template(t) } label: {
-                    NunaBreathPickRow(glyph: t.goal.activity, tint: t.goal.tint, title: t.title, line: t.blurb,
-                                      figure: "\(lengthPref > 0 ? lengthPref : t.minutes)", chip: picked ? "Anya's pick" : nil)
-                }.buttonStyle(.plain)
-            }
-            ForEach([NunaBreathTool.resonance, .calmMe]) { tool in
-                Button { route = .tool(tool) } label: {
-                    NunaBreathPickRow(glyph: tool.glyph, tint: tool.tint, title: tool.title, line: tool.subtitle)
-                }.buttonStyle(.plain)
+        let columns = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
+        return VStack(alignment: .leading, spacing: 12) {
+            NunaTitleRow(title: "Explore") { EmptyView() }
+            LazyVGrid(columns: columns, spacing: 12) {
+                ForEach(NunaBreathLibrary.templates(for: goal)) { t in
+                    let picked = suggestion?.advice.template.id == t.id && anyaOn
+                    Button { route = .template(t) } label: {
+                        NunaBreathExploreCard(icon: NunaBreathIcon.name(for: t), title: t.title, level: NunaBreathLevel.of(t.protocolId).title,
+                                              minutes: "\(lengthPref > 0 ? lengthPref : t.minutes) \(String(localized: "min"))",
+                                              badge: picked ? String(localized: "Anya's pick") : nil)
+                    }.buttonStyle(.plain)
+                }
+                ForEach([NunaBreathTool.resonance, .calmMe]) { tool in
+                    Button { route = .tool(tool) } label: {
+                        NunaBreathExploreCard(icon: tool.glyph, title: tool.title, level: NunaBreathLevel.gentle.title, minutes: "\(tool.duration) \(String(localized: "min"))")
+                    }.buttonStyle(.plain)
+                }
             }
         }
     }

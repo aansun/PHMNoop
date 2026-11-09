@@ -9015,5 +9015,10 @@
  "Breath that moves with the spine": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Napas yang bergerak bersama tulang belakang"}}}},
  "The foundation of breathing in Aikido and jujutsu: let the breath drive the movement instead of muscle. Breathe out as you fold or round your back, emptying the air, and breathe in as you open your chest and lengthen your spine.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Dasar pernapasan dalam Aikido dan jujutsu: biarkan napas yang menggerakkan tubuh, bukan otot. Buang napas saat kamu membungkuk atau membulatkan punggung sampai udara kosong, dan tarik napas saat kamu membuka dada dan memanjangkan tulang belakang."}}}},
  "Open chest · in": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Buka dada · tarik napas"}}}},
- "Round back · out": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Bulatkan punggung · buang"}}}}
+ "Round back · out": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Bulatkan punggung · buang"}}}},
+ "Breathing details": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Detail pernapasan"}}}},
+ "Best for": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Cocok untuk"}}}},
+ "Suggested length": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Durasi yang disarankan"}}}},
+ "Time left": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Sisa waktu"}}}},
+ "strap buzz on": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "getar strap aktif"}}}}
 }, "version":"1.0" }

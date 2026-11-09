@@ -152,6 +152,12 @@ extension BreathGoal {
         case .energize: return "A gentle lift"; case .recover: return "After effort or a poor night"
         }
     }
+    var blurbText: String {
+        switch self {
+        case .calm: return String(localized: "Slow a racing heart"); case .sleep: return String(localized: "Ease into the night"); case .focus: return String(localized: "Steady and clear")
+        case .energize: return String(localized: "A gentle lift"); case .recover: return String(localized: "After effort or a poor night")
+        }
+    }
     var icon: String {
         switch self {
         case .calm: return "leaf"; case .sleep: return "moon.zzz"; case .focus: return "scope"
