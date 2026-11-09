@@ -9056,5 +9056,7 @@
  "Pairs well with sitting still and paying attention": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Cocok dipadukan dengan duduk diam dan memperhatikan"}}}},
  "Finds the pace that suits your body": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Menemukan tempo yang cocok untuk tubuhmu"}}}},
  "Gives a restless mind a steady beat to follow": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Memberi pikiran yang gelisah ketukan stabil untuk diikuti"}}}},
- "Uses your strap's heart reading and buzz": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Memakai bacaan jantung dan getaran strap-mu"}}}}
+ "Uses your strap's heart reading and buzz": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Memakai bacaan jantung dan getaran strap-mu"}}}},
+ "Full screen": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Layar penuh"}}}},
+ "Exit full screen": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Keluar dari layar penuh"}}}}
 }, "version":"1.0" }
