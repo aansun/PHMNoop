@@ -423,6 +423,14 @@ struct NunaBreathView: View {
                             ForEach(w.axisDates, id: \.self) { d in
                                 if let x = proxy.position(forX: d) { w.axisLabel(d).position(x: frame.minX + x, y: frame.maxY + 25).allowsHitTesting(false) }
                             }
+                            // The touched day's time, over its bar as on the heart-rate zone charts; a bar that fills the scale carries it at the top edge.
+                            if let m = pickedMin, let p = chartPicked, let x = proxy.position(forX: w.noon(p)), let y = proxy.position(forY: min(m, top)) {
+                                Text(verbatim: m < 1 ? "<1" : String(format: "%.0f", m.rounded())).font(.nuna(size: 13, weight: .heavy, design: NunaType.design))
+                                    .foregroundStyle(NunaPalette.textPrimary).monospacedDigit().fixedSize()
+                                    .padding(.horizontal, 7).padding(.vertical, 2).background(NunaPalette.canvas.opacity(0.85), in: Capsule())
+                                    .position(x: min(max(frame.minX + x, frame.minX + 18), frame.maxX - 18), y: max(frame.minY + y - 14, frame.minY + 10))
+                                    .allowsHitTesting(false)
+                            }
                             Rectangle().fill(Color.clear).contentShape(Rectangle()).frame(width: frame.width, height: frame.height)
                                 .position(x: frame.midX, y: frame.midY)
                                 .gesture(DragGesture(minimumDistance: 0)
