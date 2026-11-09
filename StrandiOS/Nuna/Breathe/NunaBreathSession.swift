@@ -248,7 +248,8 @@ struct NunaBreathSessionView: View {
             }.buttonStyle(.plain).disabled(countdown != nil).opacity(countdown != nil ? 0.4 : 1)
             // End is offered only while the session is paused, as in a workout: a running one cannot be ended by a stray tap.
             if paused {
-                Button { seconds >= 20 ? finish() : cancel() } label: {
+                // Ending a session that would be kept asks first (save, discard or keep going), as the close button does; one under 20 s is not kept.
+                Button { seconds >= 20 ? (confirmEnd = true) : cancel() } label: {
                     HStack(spacing: 8) {
                         Image(systemName: "stop.fill").font(.nuna(size: NunaTypeSize.sub, weight: .bold))
                         Text("End").font(.nuna(size: NunaTypeSize.h3, weight: .bold))
