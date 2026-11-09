@@ -239,7 +239,6 @@ private struct NunaToolSessionBody: View {
 
     private var heartReadout: some View {
         VStack(alignment: .leading, spacing: 6) {
-            NunaGlyph(NunaIcons.heartRate, pointSize: 22, weight: .semibold).foregroundStyle(model.bpm == nil ? NunaPalette.textMuted : zoneColor)
             Text("Heart rate").font(.nuna(size: NunaTypeSize.caption, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             HStack(alignment: .firstTextBaseline, spacing: 5) {
                 Text(verbatim: model.bpm.map(String.init) ?? "–").font(.nuna(size: NunaTypeSize.numberL, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)

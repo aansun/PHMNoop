@@ -75,13 +75,12 @@ struct NunaBreathSessionView: View {
     private var zone: Int { model.bpm.map { model.profile.hrZoneSet.zoneNumber(forBPM: Double($0)) } ?? 0 }
     private var zoneColor: Color { model.bpm == nil ? NunaPalette.effortModerate : NunaHeartBeat.zoneColors[min(max(zone, 1), 5) - 1] }
 
-    /// Laid out like the live screen of a Strain activity: a header with the name and what is on, a progress line, two tabs, the big picture
+    /// Laid out like the live screen of a Strain activity: a header with the name and what is on, two tabs, the big picture
     /// (here the glow of the breath), the heart rate, three figures, and Pause (with End once paused) on a bar of its own.
     var body: some View {
         VStack(spacing: 0) {
             VStack(spacing: 8) {
                 header
-                progressLine
                 NunaPageTabs([(value: 0, title: "Breathing"), (value: 1, title: "Heart rate")], selection: $tab)
                     .transaction { if reduceMotion { $0.disablesAnimations = true } }
             }
@@ -162,20 +161,6 @@ struct NunaBreathSessionView: View {
         }
     }
 
-    /// The time target and how far along the session is.
-    private var progressLine: some View {
-        let fraction = min(max(Double(seconds) / Double(max(request.seconds, 1)), 0), 1)
-        return HStack(alignment: .center, spacing: 16) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Time target").font(.nuna(size: NunaTypeSize.caption, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
-                Text(verbatim: "\(request.seconds / 60) \(String(localized: "min"))").font(.nuna(size: NunaTypeSize.h3, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
-            }
-            Capsule().fill(NunaPalette.glassStrong).frame(height: 6)
-                .overlay(alignment: .leading) { GeometryReader { g in Capsule().fill(NunaPalette.charge).frame(width: g.size.width * fraction) } }
-        }
-        .padding(.vertical, 4)
-    }
-
     /// The breath as a line under the step's count and name. The count is the big figure, as on the breathing pacers it follows.
     private func pacer(size: CGFloat, big: Bool = false) -> some View {
         let t = track, idx = stageIndex, follows = running && !guided
@@ -199,10 +184,9 @@ struct NunaBreathSessionView: View {
         }
     }
 
-    /// The heart rate under the glow, at the left: the heart, its name and the reading.
+    /// The heart rate under the line, at the left: its name and the reading.
     private var heartReadout: some View {
         VStack(alignment: .leading, spacing: 6) {
-            NunaGlyph(NunaIcons.heartRate, pointSize: 22, weight: .semibold).foregroundStyle(model.bpm == nil ? NunaPalette.textMuted : zoneColor)
             Text("Heart rate").font(.nuna(size: NunaTypeSize.caption, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             HStack(alignment: .firstTextBaseline, spacing: 5) {
                 Text(verbatim: model.bpm.map(String.init) ?? "–").font(.nuna(size: NunaTypeSize.numberL, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
