@@ -32,7 +32,7 @@ struct NunaAutoDetectView: View {
                 VStack(spacing: 0) {
                     NunaListRow("Minimum length", description: "Heart rate must stay up", systemImage: "timer") { value("\(Int(AutoWorkoutDetector.minSustainedMin)) min") }
                     NunaDivider()
-                    NunaListRow("Heart-rate threshold", description: "Above your resting heart rate", systemImage: "heart") { value("+\(AutoWorkoutDetector.elevatedMarginBPM) bpm") }
+                    NunaListRow("Heart-rate threshold", description: "Above your resting heart rate", systemImage: NunaIcons.heartRate) { value("+\(AutoWorkoutDetector.elevatedMarginBPM) bpm") }
                     NunaDivider()
                     NunaListRow("Tolerated dip", description: "A short drop does not end the session", systemImage: "bolt") { value("\(AutoWorkoutDetector.maxDipS) s") }
                     NunaDivider()

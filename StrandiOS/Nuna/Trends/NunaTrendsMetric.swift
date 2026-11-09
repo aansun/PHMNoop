@@ -90,7 +90,7 @@ struct NunaTrendsMetricView: View {
         .environment(\.nunaDetailSwitch, NunaDetailSwitch(current: kindKey, items: [
             .init(key: "charge", title: String(localized: "Recovery"), icon: "heart.circle"),
             .init(key: "effort", title: String(localized: "Strain"), icon: "flame"),
-            .init(key: "rest", title: String(localized: "Sleep"), icon: "moon.stars"),
+            .init(key: "rest", title: String(localized: "Sleep"), icon: NunaIcons.sleep),
         ]) { key in kind = key == "charge" ? .charge : (key == "effort" ? .effort : .rest) })
         .task(id: repo.refreshSeq) {
             await m.load(repo: repo)
@@ -281,11 +281,11 @@ struct NunaTrendsMetricView: View {
                     }
                     if let a = rhrNow.now, let b = rhrNow.before {
                         NunaDivider()
-                        driver("heart", a <= b ? String(localized: "Resting HR down \(Int(abs(a - b).rounded())) bpm") : String(localized: "Resting HR up \(Int(abs(a - b).rounded())) bpm"))
+                        driver(NunaIcons.restingHr, a <= b ? String(localized: "Resting HR down \(Int(abs(a - b).rounded())) bpm") : String(localized: "Resting HR up \(Int(abs(a - b).rounded())) bpm"))
                     }
                     if let r = restNow.now {
                         NunaDivider()
-                        NavigationLink(value: NunaTrendsRoute.rest) { driver("moon", String(localized: "Sleep averaged \(Int(r.rounded()))%"), chevron: true) }.buttonStyle(.plain)
+                        NavigationLink(value: NunaTrendsRoute.rest) { driver(NunaIcons.sleep, String(localized: "Sleep averaged \(Int(r.rounded()))%"), chevron: true) }.buttonStyle(.plain)
                     }
                 }
             }

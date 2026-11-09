@@ -498,7 +498,7 @@ struct NunaHealthView: View {
                 ForEach(Array(napItems.enumerated()), id: \.offset) { idx, item in
                     if idx > 0 { NunaDivider() }
                     NavigationLink(value: NunaTodayRoute.nap(item.night.dayKey, Int(item.nap.start.timeIntervalSince1970))) {
-                        NunaListRow(LocalizedStringKey(napTitle(item.nap)), subtitle: LocalizedStringKey(NunaSleepFormat.duration(item.nap.asleepMin)), systemImage: "moon", showsChevron: true) {
+                        NunaListRow(LocalizedStringKey(napTitle(item.nap)), subtitle: LocalizedStringKey(NunaSleepFormat.duration(item.nap.asleepMin)), systemImage: NunaIcons.nap, showsChevron: true) {
                             NunaChip(item.nap.manual ? "Manual" : "Auto")
                         }
                     }.buttonStyle(.plain)

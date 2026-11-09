@@ -497,7 +497,7 @@ struct NunaBreathView: View {
 
     private var settingsButton: some View {
         Button { showSettings = true } label: {
-            NunaBareIcon("slider.horizontal.3")
+            NunaBareIcon(NunaIcons.featureSettings)
         }.buttonStyle(.plain).accessibilityLabel(Text("Breathing settings"))
     }
 

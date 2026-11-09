@@ -267,7 +267,7 @@ struct NunaTrendsView: View {
                     NunaMultiLineChart(start: windowStart, days: range, lines: [.init(series: rs, max: 100, color: NunaScoreStyle.pairBlue, title: String(localized: "Sleep"), text: { "\(Int($0.rounded()))%" }), .init(series: ch, max: 100, color: NunaScoreStyle.pairGrey, title: String(localized: "Recovery"), text: { "\(Int($0.rounded()))%" })], height: 110)
                     HStack(spacing: 14) { NunaLegendItem(color: NunaScoreStyle.pairGrey, text: "Recovery"); NunaLegendItem(color: NunaScoreStyle.pairBlue, text: "Sleep") }
                     if let hi = b[2].meanOutcome, let lo = b[0].meanOutcome {
-                        insightRow("moon", Text("Nights with Sleep above 86% are followed by Recovery \(Int(hi.rounded()))%, versus \(Int(lo.rounded()))% when Sleep is below 78%."))
+                        insightRow(NunaIcons.sleep, Text("Nights with Sleep above 86% are followed by Recovery \(Int(hi.rounded()))%, versus \(Int(lo.rounded()))% when Sleep is below 78%."))
                     }
                 }
             }

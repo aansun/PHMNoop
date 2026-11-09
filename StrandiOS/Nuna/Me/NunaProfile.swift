@@ -512,18 +512,18 @@ struct NunaProfileView: View {
                 }
                 ruled("Streaks")
                 HStack(alignment: .top, spacing: 0) {
-                    streak("moon", longestRun(list) { rest($0) >= 70 }, "70%+ Sleep", NunaPalette.restText)
+                    streak(NunaIcons.sleep, longestRun(list) { rest($0) >= 70 }, "70%+ Sleep", NunaPalette.restText)
                     streak("figure.mind.and.body", longestRun(list) { ($0.recovery ?? 0) >= 67 }, "Green Recovery", NunaPalette.scoreHigh)
                     streak("dumbbell", longestRun(list) { ($0.strain ?? 0) >= working }, "10+ Strain", NunaPalette.effortModerate)
                 }
                 ruled("Notable stats")
                 VStack(spacing: 0) {
-                    stat("heart.text.square", "Lowest RHR", rhr.min().map { "\(Int($0))" }, "bpm")
-                    stat("heart.text.square", "Highest RHR", rhr.max().map { "\(Int($0))" }, "bpm")
-                    stat("waveform.path.ecg", "Lowest HRV", hrv.min().map { "\(Int($0.rounded()))" }, "ms")
-                    stat("waveform.path.ecg", "Highest HRV", hrv.max().map { "\(Int($0.rounded()))" }, "ms")
-                    stat("heart", "Max Heart Rate", maxHr.map(String.init), "bpm")
-                    stat("moon", "Longest Sleep", longest.map { String(format: "%d:%02d", Int($0) / 60, Int($0) % 60) }, "hr")
+                    stat(NunaIcons.restingHr, "Lowest RHR", rhr.min().map { "\(Int($0))" }, "bpm")
+                    stat(NunaIcons.restingHr, "Highest RHR", rhr.max().map { "\(Int($0))" }, "bpm")
+                    stat(NunaIcons.hrv, "Lowest HRV", hrv.min().map { "\(Int($0.rounded()))" }, "ms")
+                    stat(NunaIcons.hrv, "Highest HRV", hrv.max().map { "\(Int($0.rounded()))" }, "ms")
+                    stat(NunaIcons.heartRate, "Max Heart Rate", maxHr.map(String.init), "bpm")
+                    stat(NunaIcons.sleep, "Longest Sleep", longest.map { String(format: "%d:%02d", Int($0) / 60, Int($0) % 60) }, "hr")
                     stat("figure.mind.and.body", "Lowest Recovery", lowestRecovery.map { "\(Int($0.rounded()))" }, "%", last: true)
                 }
             }
@@ -542,7 +542,7 @@ struct NunaProfileView: View {
 
     private func seal(_ icon: String, _ color: Color, size: CGFloat = 42) -> some View {
         NunaSealShape().stroke(color.opacity(0.9), style: StrokeStyle(lineWidth: 1.4, dash: [2.5, 1.5])).frame(width: size, height: size)
-            .overlay(Image(systemName: icon).font(.system(size: size * 0.42, weight: .regular)).foregroundStyle(color))
+            .overlay(NunaGlyph(icon, pointSize: size * 0.42, weight: .regular).foregroundStyle(color))
     }
 
     private func streak(_ icon: String, _ n: Int, _ label: LocalizedStringKey, _ tint: Color) -> some View {

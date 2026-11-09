@@ -713,13 +713,13 @@ struct NunaTodayView: View {
         case .synthesis:
             previewRow("sparkles", nil, String(localized: "Highlights"), "What stands out today").background(inner)
         case .recoveryVitals:
-            previewRow("wind", NunaPalette.charge, model.stress.map { String(localized: "Stress \(String(format: "%.1f", locale: AppLanguage.activeLocale, $0)) / 3") } ?? String(localized: "Stress"), "Intraday curve").background(inner)
+            previewRow(NunaIcons.stress, NunaPalette.charge, model.stress.map { String(localized: "Stress \(String(format: "%.1f", locale: AppLanguage.activeLocale, $0)) / 3") } ?? String(localized: "Stress"), "Intraday curve").background(inner)
         case .weekCompare:
             previewRow("chart.bar.xaxis", NunaPalette.charge, String(localized: "Strain & Recovery"), "Last 7 days").background(inner)
         case .vitalMonitor:
             HStack(spacing: 8) {
                 previewRow("heart.text.square", NunaPalette.charge, String(localized: "Vital signs"), "Within range").background(inner)
-                previewRow("gauge.with.dots.needle.50percent", NunaPalette.warning, String(localized: "Stress monitor"), "Latest reading").background(inner)
+                previewRow(NunaIcons.stress, NunaPalette.warning, String(localized: "Stress monitor"), "Latest reading").background(inner)
             }
         case .keyMetrics:
             LazyVGrid(columns: [GridItem(.flexible(), spacing: 8), GridItem(.flexible(), spacing: 8)], spacing: 8) {
@@ -740,8 +740,8 @@ struct NunaTodayView: View {
                 miniChip("Journal"); Spacer(minLength: 0)
             }
         case .yourCards: previewRow("rectangle.stack", nil, String(localized: "My Dashboard"), "Cards you chose").background(inner)
-        case .menstrualCycle: previewRow("drop", NunaPalette.alertText, String(localized: "Menstrual cycle"), "Cycle awareness").background(inner)
-        case .heartRate: previewRow("heart", NunaPalette.alertText, String(localized: "Heart rate"), "Live").background(inner)
+        case .menstrualCycle: previewRow(NunaIcons.cycle, NunaPalette.alertText, String(localized: "Menstrual cycle"), "Cycle awareness").background(inner)
+        case .heartRate: previewRow(NunaIcons.heartRate, NunaPalette.alertText, String(localized: "Heart rate"), "Live").background(inner)
         case .liveSession: previewRow("play", NunaPalette.charge, String(localized: "Start session"), "Live session").background(inner)
         case .addedCards: previewRow("square.stack", nil, String(localized: "Added cards"), "From Sleep and Trends").background(inner)
         }
@@ -974,7 +974,7 @@ struct NunaTodayView: View {
             NunaLiveHR(isToday: model.isToday) { hr in
                 NavigationLink(value: NunaTodayRoute.deepTimeline) {
                     NunaCard(small: true) {
-                        NunaListRow("Heart Rate", systemImage: "heart.fill", tint: NunaPalette.alertText, showsChevron: true) {
+                        NunaListRow("Heart Rate", systemImage: NunaIcons.heartRate, tint: NunaPalette.alertText, showsChevron: true) {
                             Text(verbatim: "\(hr)").font(.nuna(size: 16, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         }
                     }
@@ -1004,7 +1004,7 @@ struct NunaTodayView: View {
             NunaCycleGate {
                 NavigationLink(value: NunaTodayRoute.cycle) {
                     NunaCard(small: true) {
-                        NunaListRow("Menstrual Cycle", description: "Cycle awareness", systemImage: "drop.fill",
+                        NunaListRow("Menstrual Cycle", description: "Cycle awareness", systemImage: NunaIcons.cycle,
                                     tint: NunaPalette.alertText, showsChevron: true)
                     }
                 }
@@ -1132,19 +1132,19 @@ struct NunaTodayView: View {
             case .bloodOxygen:
                 return tile(m, "Blood Oxygen", fmt(model.spo2), "%", route("spo2"), "vital:spo2", NunaPalette.effortText, trend: cmp(model.spo2, before(model.spo2, model.spo2Delta), good: true))
             case .respiratory:
-                return tile(m, "Respiratory", fmt(model.respiratory, 1), "/min", route("resp_rate"), "wind", NunaPalette.effortText, trend: cmp(model.respiratory, before(model.respiratory, model.respiratoryDelta), 1, good: nil))
+                return tile(m, "Respiratory", fmt(model.respiratory, 1), "/min", route("resp_rate"), NunaIcons.respiratory, NunaPalette.effortText, trend: cmp(model.respiratory, before(model.respiratory, model.respiratoryDelta), 1, good: nil))
             case .steps:
-                return tile(m, "Steps", fmt(model.steps), "", stepsRoute, "figure.walk", NunaPalette.charge, trend: cmp(model.steps, model.previous["steps"], good: true))
+                return tile(m, "Steps", fmt(model.steps), "", stepsRoute, NunaIcons.steps, NunaPalette.charge, trend: cmp(model.steps, model.previous["steps"], good: true))
             case .calories:
-                return tile(m, "Calories", fmt(model.calories), "kcal", route("energy_kcal"), "flame", NunaPalette.effortText, trend: cmp(model.calories, model.previous["calories"], good: nil))
+                return tile(m, "Calories", fmt(model.calories), "kcal", route("energy_kcal"), NunaIcons.calories, NunaPalette.effortText, trend: cmp(model.calories, model.previous["calories"], good: nil))
             case .weight:
-                return tile(m, "Weight", fmt(model.extras["weight"], 1), "kg", route("weight", "apple-health"), "scalemass", NunaPalette.effortText,
+                return tile(m, "Weight", fmt(model.extras["weight"], 1), "kg", route("weight", "apple-health"), NunaIcons.weight, NunaPalette.effortText,
                             trend: cmp(model.extras["weight"], model.previous["weight"], 1, good: nil))
             case .skinTemp:
                 return tile(m, "Skin Temp", fmt(model.extras["skin_temp"], 1), "°C", route("skin_temp"), "vital:temp", NunaPalette.alertText,
                             trend: cmp(model.extras["skin_temp"], model.previous["skin_temp"], 1, good: nil))
             case .rest:
-                return tile(m, "Sleep", model.sleepMinutes.map { NunaSleepFormat.duration($0) } ?? "–", "", .sleep(0), "moon", NunaPalette.restText,
+                return tile(m, "Sleep", model.sleepMinutes.map { NunaSleepFormat.duration($0) } ?? "–", "", .sleep(0), NunaIcons.sleep, NunaPalette.restText,
                             trend: cmp(model.sleepMinutes, model.previous["sleep"], good: true, format: { NunaSleepFormat.duration($0) }))
             case .charge, .effort: return NunaMetricTile(id: m.rawValue, label: "", value: "", unit: "", route: nil)
             }

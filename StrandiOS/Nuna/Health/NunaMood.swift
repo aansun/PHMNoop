@@ -61,7 +61,7 @@ struct NunaMoodView: View {
             if let stress {
                 NunaCard(small: true) {
                     NunaListRow(LocalizedStringKey(String(localized: "Stress today \(String(format: "%.1f", locale: AppLanguage.activeLocale, stress)) · \(stress < 1 ? String(localized: "low") : (stress < 2 ? String(localized: "medium") : String(localized: "high")))")),
-                                subtitle: "Saved together with your mood", systemImage: "wind")
+                                subtitle: "Saved together with your mood", systemImage: NunaIcons.breathing)
                 }
             }
             Button { Task { await save() } } label: {

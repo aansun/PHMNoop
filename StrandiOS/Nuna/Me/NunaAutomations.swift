@@ -23,7 +23,7 @@ struct NunaAutomationsView: View {
         NunaDetailScreen("Strap automations") {
             Text("Let the strap act: a tap does something, a vibration coaches you, and it tells you things without opening the phone.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).fixedSize(horizontal: false, vertical: true).textCase(nil)
             NunaCard(highlight: wrist) {
-                NunaToggleRow("Wrist alerts", subtitle: "The master switch for all vibrations, the wake alarm included. Off means the strap stays silent", systemImage: "bell.badge", isOn: $wrist).padding(.vertical, 8)
+                NunaToggleRow("Wrist alerts", subtitle: "The master switch for all vibrations, the wake alarm included. Off means the strap stays silent", systemImage: "applewatch.radiowaves.left.and.right", isOn: $wrist).padding(.vertical, 8)
             }
             .onChange(of: wrist) { _, _ in model.applySmartAlarm() }
             NunaSettingsGroup("Gestures and presence") {
@@ -38,9 +38,9 @@ struct NunaAutomationsView: View {
             NunaSettingsGroup("Vibration during activity") {
                 NavigationLink(value: NunaMeRoute.sessionCues) { NunaListRow("Session cues", description: "Breathing, intervals, live session, workout start and end", systemImage: "waveform.path", showsChevron: true) { NunaChip(verbatim: String(localized: "\(sessionCues) on")) } }.buttonStyle(.plain)
                 NunaDivider()
-                NunaToggleRow("Heart-rate zone coaching", subtitle: "Vibrates in the top zone and when you recover", systemImage: "heart", isOn: $behavior.zoneCoaching).padding(.vertical, 8)
+                NunaToggleRow("Heart-rate zone coaching", subtitle: "Vibrates in the top zone and when you recover", systemImage: NunaIcons.heartRate, isOn: $behavior.zoneCoaching).padding(.vertical, 8)
                 NunaDivider()
-                NunaToggleRow("Stress check with vibration", subtitle: "A minute of guided breathing when HRV drops while you are still", systemImage: "wind", isOn: $behavior.stressCheckIn).padding(.vertical, 8)
+                NunaToggleRow("Stress check with vibration", subtitle: "A minute of guided breathing when HRV drops while you are still", systemImage: NunaIcons.breathing, isOn: $behavior.stressCheckIn).padding(.vertical, 8)
             }
             NunaSettingsGroup("Reminders") {
                 NavigationLink(value: NunaMeRoute.sedentary) {
@@ -140,7 +140,7 @@ struct NunaSessionCuesView: View {
         NunaDetailScreen("Session cues") {
             Text("Choose which cues vibrate the strap during a session you start.").font(.nuna(size: 14.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
             NunaSettingsGroup {
-                NunaToggleRow("Breathing pacer", subtitle: "Each breath in and out", systemImage: "wind", isOn: $breathing).padding(.vertical, 8)
+                NunaToggleRow("Breathing pacer", subtitle: "Each breath in and out", systemImage: NunaIcons.breathing, isOn: $breathing).padding(.vertical, 8)
                 NunaDivider()
                 NunaToggleRow("Interval timer", subtitle: "Each change of interval", systemImage: "timer", isOn: $intervals).padding(.vertical, 8)
                 NunaDivider()
@@ -215,7 +215,7 @@ struct NunaShortcutsView: View {
             NunaSettingsGroup {
                 NunaListRow("Sync Strap", description: "Pulls the history from the strap", systemImage: "arrow.triangle.2.circlepath")
                 NunaDivider()
-                NunaListRow("Start breathing", description: "Opens Breathe with vibration", systemImage: "wind")
+                NunaListRow("Start breathing", description: "Opens Breathe with vibration", systemImage: NunaIcons.breathing)
                 NunaDivider()
                 NunaListRow("Mark a moment", description: "Marks the current time", systemImage: "mappin.and.ellipse")
                 NunaDivider()

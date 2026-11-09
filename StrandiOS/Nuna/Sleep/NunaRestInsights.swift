@@ -345,7 +345,7 @@ struct NunaSleepSettingsView: View {
                     }.buttonStyle(.plain)
                     NunaDivider()
                     NunaToggleRow("Detect naps automatically", subtitle: "Naps found from your strap are listed. Naps you add yourself always are.",
-                                  systemImage: "moon.zzz", isOn: $autoNaps).padding(.vertical, 8)
+                                  systemImage: NunaIcons.nap, isOn: $autoNaps).padding(.vertical, 8)
                 }
             }
             Text("Turning nap detection off only changes what is listed. Your strap keeps recording as before.")

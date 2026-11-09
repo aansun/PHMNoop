@@ -1122,7 +1122,7 @@ struct NunaMetricDetailView: View {
             higherIsBetter: metric.higherIsBetter ?? true, bars: isColumns, range: $range, page: $page)
         if ["spo2", "resp_rate", "hrv", "rhr"].contains(metric.key) {
             NavigationLink(value: NunaTodayRoute.earlyWarning) {
-                NunaCard(small: true) { NunaListRow("Part of the early warning", description: "Breathing, SpO₂, HRV and resting heart rate are watched too", systemImage: "bell", showsChevron: true) }
+                NunaCard(small: true) { NunaListRow("Part of the early warning", description: "Breathing, SpO₂, HRV and resting heart rate are watched too", systemImage: NunaIcons.earlyWarning, showsChevron: true) }
             }.buttonStyle(.plain)
         }
         NunaExpandRow(title: "What affects it", subtitle: "Common factors", systemImage: "chart.line.uptrend.xyaxis",
@@ -1340,7 +1340,7 @@ struct NunaStressDetailView: View {
             }
             NunaCard(small: true, highlight: true, padding: EdgeInsets(top: 16, leading: 18, bottom: 16, trailing: 18)) {
                 HStack(spacing: 14) {
-                    NunaIconTile("wind", tint: NunaPalette.charge)
+                    NunaIconTile(NunaIcons.breathing, tint: NunaPalette.charge)
                     VStack(alignment: .leading, spacing: 2) {
                         Text("2-minute breathing").font(.nuna(size: 16.5, weight: .bold)).foregroundStyle(NunaPalette.textPrimary)
                         Text("A gentle buzz on the strap helps the rhythm").font(.nuna(size: 12.5, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
@@ -1553,15 +1553,15 @@ struct NunaAllMetricsView: View {
         return [
             Row(id: "charge", title: "Recovery", icon: "bolt", tint: NunaPalette.charge, value: f(day.charge.pct, 0, "%"), route: r("recovery")),
             Row(id: "effort", title: "Strain", icon: "flame", tint: NunaPalette.effortText, value: day.effort.map { UnitFormatter.effortDisplay($0, scale: scale) } ?? "–", route: r("strain")),
-            Row(id: "rest", title: "Sleep", icon: "moon", tint: NunaPalette.restText, value: f(day.rest, 0, "%"), route: .sleep(0)),
+            Row(id: "rest", title: "Sleep", icon: NunaIcons.sleep, tint: NunaPalette.restText, value: f(day.rest, 0, "%"), route: .sleep(0)),
             Row(id: "hrv", title: "HRV", icon: "met:heart-rate-variability", tint: NunaPalette.charge, value: f(day.hrv, 0, " ms"), delta: h?.0, good: h?.1, route: r("hrv")),
             Row(id: "rhr", title: "Resting HR", icon: "met:resting-heart-rate", tint: NunaPalette.alertText, value: f(day.restingHr), delta: p?.0, good: p?.1, route: r("rhr")),
             Row(id: "spo2", title: "Blood Oxygen", icon: "vital:spo2", tint: NunaPalette.effortText, value: f(day.spo2, 0, "%"), route: r("spo2")),
             Row(id: "resp", title: "Respiratory", icon: "met:respiratory-rate", tint: NunaPalette.effortText, value: f(day.respiratory, 1), route: r("resp_rate")),
-            Row(id: "steps", title: "Steps", icon: "figure.walk", tint: NunaPalette.charge, value: f(day.steps),
+            Row(id: "steps", title: "Steps", icon: NunaIcons.steps, tint: NunaPalette.charge, value: f(day.steps),
                 route: MetricCatalog.todayStepsMetric(hasMeasuredSteps: day.steps != nil).map { .metric($0) }),
-            Row(id: "weight", title: "Weight", icon: "scalemass", tint: NunaPalette.effortText, value: f(day.extras["weight"], 1, " kg"), route: r("weight", "apple-health")),
-            Row(id: "kcal", title: "Calories", icon: "flame.fill", tint: NunaPalette.effortText, value: f(day.calories), route: r("energy_kcal")),
+            Row(id: "weight", title: "Weight", icon: NunaIcons.weight, tint: NunaPalette.effortText, value: f(day.extras["weight"], 1, " kg"), route: r("weight", "apple-health")),
+            Row(id: "kcal", title: "Calories", icon: NunaIcons.calories, tint: NunaPalette.effortText, value: f(day.calories), route: r("energy_kcal")),
             Row(id: "skin", title: "Skin Temp", icon: "vital:temp", tint: NunaPalette.alertText, value: f(day.extras["skin_temp"], 1, "°"), route: r("skin_temp")),
         ]
     }

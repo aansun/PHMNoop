@@ -13,10 +13,10 @@ struct NunaWidgetSettingsView: View {
     private let items: [Item] = [
         Item(title: "Scores", note: "Recovery, Strain and Sleep", sizes: "S · M · L · Lock Screen", icon: "circle.dashed"),
         Item(title: "Vital sign", note: "HRV, resting heart rate, SpO₂, breathing, skin temperature. Choose which ones when you add it.", sizes: "S · M · L · Lock Screen", icon: "waveform.path.ecg.rectangle"),
-        Item(title: "Heart rate", note: "Live heart rate and the last 3 hours", sizes: "M", icon: "heart"),
-        Item(title: "Stress", note: "Stress curve by hour", sizes: "M", icon: "waveform.path.ecg"),
+        Item(title: "Heart rate", note: "Live heart rate and the last 3 hours", sizes: "M", icon: NunaIcons.heartRate),
+        Item(title: "Stress", note: "Stress curve by hour", sizes: "M", icon: NunaIcons.stress),
         Item(title: "Anya brief", note: "The morning brief from Anya", sizes: "S · Lock Screen", icon: NunaGlyph.anya),
-        Item(title: "Steps", note: "Today's steps and your target", sizes: "S · Lock Screen", icon: "figure.walk"),
+        Item(title: "Steps", note: "Today's steps and your target", sizes: "S · Lock Screen", icon: NunaIcons.steps),
     ]
 
     private var age: TimeInterval? { snapshot.map { Date().timeIntervalSince($0.updated) } }

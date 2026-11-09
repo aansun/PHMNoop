@@ -202,7 +202,7 @@ struct NunaBreathSessionView: View {
     /// The heart rate under the glow, at the left: the heart, its name and the reading.
     private var heartReadout: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Image(systemName: "heart.fill").font(.nuna(size: 22, weight: .semibold)).foregroundStyle(model.bpm == nil ? NunaPalette.textMuted : zoneColor)
+            NunaGlyph(NunaIcons.heartRate, pointSize: 22, weight: .semibold).foregroundStyle(model.bpm == nil ? NunaPalette.textMuted : zoneColor)
             Text("Heart rate").font(.nuna(size: NunaTypeSize.caption, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
             HStack(alignment: .firstTextBaseline, spacing: 5) {
                 Text(verbatim: model.bpm.map(String.init) ?? "–").font(.nuna(size: NunaTypeSize.numberL, weight: .bold, design: NunaType.design)).monospacedDigit().foregroundStyle(NunaPalette.textPrimary)
@@ -216,14 +216,14 @@ struct NunaBreathSessionView: View {
     private var statistics: some View {
         let tiles: [(icon: String, label: LocalizedStringKey, value: String, unit: String)] = [
             ("timer", "Time left", clock(max(0, request.seconds - seconds)), ""),
-            ("lungs", "Breaths", "\(breaths)", ""),
-            ("waveform.path.ecg", "HRV (RMSSD)", rmssd.map { String(format: "%.0f", $0) } ?? "–", "ms"),
+            (NunaIcons.respiratory, "Breaths", "\(breaths)", ""),
+            (NunaIcons.hrv, "HRV (RMSSD)", rmssd.map { String(format: "%.0f", $0) } ?? "–", "ms"),
         ]
         return HStack(alignment: .top, spacing: 12) {
             ForEach(tiles.indices, id: \.self) { i in
                 if i > 0 { Rectangle().fill(NunaPalette.hairline).frame(width: 1, height: 96) }
                 VStack(alignment: .leading, spacing: 8) {
-                    Image(systemName: tiles[i].icon).font(.nuna(size: NunaTypeSize.h2, weight: .semibold)).foregroundStyle(NunaPalette.textSecondary)
+                    NunaGlyph(tiles[i].icon, pointSize: NunaTypeSize.h2, weight: .semibold).foregroundStyle(NunaPalette.textSecondary)
                     Text(tiles[i].label).font(.nuna(size: NunaTypeSize.caption, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary).lineLimit(1).minimumScaleFactor(0.7)
                     VStack(alignment: .leading, spacing: 4) {
                         Text(verbatim: tiles[i].value).font(.nuna(size: NunaTypeSize.numberL, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit().lineLimit(1).minimumScaleFactor(0.75)

@@ -116,7 +116,7 @@ struct NunaActivitySettingsView: View {
                 NunaToggleRow("Activity detection", subtitle: "Suggests a workout when your heart rate stays up. Never saves on its own", systemImage: "figure.run", isOn: $autoDetect).padding(.vertical, 8)
             }
             NunaSettingsGroup("Heart rate") {
-                NavigationLink(value: NunaMeRoute.zones) { NunaListRow("Heart rate settings", description: "Maximum heart rate and zones", systemImage: "heart", showsChevron: true) }.buttonStyle(.plain)
+                NavigationLink(value: NunaMeRoute.zones) { NunaListRow("Heart rate settings", description: "Maximum heart rate and zones", systemImage: NunaIcons.heartRate, showsChevron: true) }.buttonStyle(.plain)
             }
             NunaSettingsGroup("During a workout") {
                 NunaToggleRow("Screen on during workouts", subtitle: "Heart rate stays visible while recording", systemImage: "sun.max", isOn: $keepOn).padding(.vertical, 8)
@@ -169,13 +169,13 @@ struct NunaNotificationsView: View {
             NunaSettingsGroup {
                 NavigationLink(value: NunaAnyaRoute.brief) { NunaListRow("Morning brief", subtitle: LocalizedStringKey(brief ? String(localized: "Every day at \(NunaAnyaSettingsView.clock(CoachBriefScheduler.timeMinutes))") : String(localized: "Off")), systemImage: "sunrise", showsChevron: true) }.buttonStyle(.plain)
                 NunaDivider()
-                NunaToggleRow("Early-illness warning", subtitle: "When two signals drift together", systemImage: "waveform.path.ecg", isOn: Binding(get: { behavior.illnessWatch }, set: { behavior.illnessWatch = $0; if $0 { IllnessNotifier.requestAuthorization() } })).padding(.vertical, 8)
+                NunaToggleRow("Early-illness warning", subtitle: "When two signals drift together", systemImage: NunaIcons.earlyWarning, isOn: Binding(get: { behavior.illnessWatch }, set: { behavior.illnessWatch = $0; if $0 { IllnessNotifier.requestAuthorization() } })).padding(.vertical, 8)
                 NunaDivider()
                 NunaToggleRow("Strain target reached", subtitle: "Once a day, after the strap syncs", systemImage: "target", isOn: Binding(get: { behavior.strainTargetNudge }, set: { behavior.strainTargetNudge = $0; if $0 { StrainTargetNotifier.requestAuthorization(); model.evaluateStrainTarget() } })).padding(.vertical, 8)
                 NunaDivider()
                 NunaToggleRow("Summary after a workout", subtitle: "Strain, duration and heart rate", systemImage: "list.bullet.clipboard", isOn: Binding(get: { workoutReport }, set: { workoutReport = $0; if $0 { WorkoutReportNotifier.requestAuthorization() } })).padding(.vertical, 8)
                 NunaDivider()
-                NunaToggleRow("Journal reminder", subtitle: "A notification in the evening and a card in Today", systemImage: "book", isOn: $journal).padding(.vertical, 8)
+                NunaToggleRow("Journal reminder", subtitle: "A notification in the evening and a card in Today", systemImage: NunaIcons.journal, isOn: $journal).padding(.vertical, 8)
                 if journal {
                     NunaDivider()
                     HStack {

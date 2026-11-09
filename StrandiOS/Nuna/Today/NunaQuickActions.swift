@@ -32,38 +32,38 @@ enum NunaQuickActions {
     static let all: [NunaQuickAction] = [
         // Log
         .init(id: "add", title: "Add activity", icon: "plus", group: "Log", kind: .addActivity),
-        .init(id: "journal", title: "Journal", icon: "bookmark", group: "Log", kind: .route(.journal)),
+        .init(id: "journal", title: "Journal", icon: NunaIcons.journal, group: "Log", kind: .route(.journal)),
         .init(id: "mood", title: "Mood", icon: "face.smiling", group: "Log", kind: .today(.mood)),
-        .init(id: "weight", title: "Weight", icon: "scalemass", group: "Log", kind: .today(.weight)),
+        .init(id: "weight", title: "Weight", icon: NunaIcons.weight, group: "Log", kind: .today(.weight)),
         .init(id: "logFood", title: "Log food", icon: "fork.knife", group: "Log", kind: .foodAdd),
         .init(id: "nutrition", title: "Nutrition", icon: "fork.knife", group: "Log", kind: .today(.nutrition)),
-        .init(id: "cycle", title: "Menstrual cycle", icon: "calendar", group: "Log", kind: .today(.cycle)),
+        .init(id: "cycle", title: "Menstrual cycle", icon: NunaIcons.cycle, group: "Log", kind: .today(.cycle)),
         // Train
         .init(id: "start", title: "Start session", icon: "play", group: "Train", kind: .route(.activeWorkout)),
         .init(id: "gym", title: "Strength Trainer", icon: "act:strength-trainer", group: "Train", kind: .workout(.gym)),
         .init(id: "history", title: "History", icon: "clock.arrow.circlepath", group: "Train", kind: .workout(.history)),
         .init(id: "load", title: "Training load", icon: "chart.bar", group: "Train", kind: .workout(.load)),
-        .init(id: "liveHeart", title: "Live heart rate", icon: "heart", group: "Train", kind: .today(.deepTimeline)),
+        .init(id: "liveHeart", title: "Live heart rate", icon: NunaIcons.heartRate, group: "Train", kind: .today(.deepTimeline)),
         // Calm and sleep
-        .init(id: "breathing", title: "Breathing", icon: "wind", group: "Sleep", kind: .breathing),
-        .init(id: "nap", title: "Nap", icon: "moon", group: "Sleep", kind: .today(.sleepNaps(0))),
-        .init(id: "sleep", title: "Sleep", icon: "bed.double", group: "Sleep", kind: .today(.sleep(0))),
+        .init(id: "breathing", title: "Breathing", icon: NunaIcons.breathing, group: "Sleep", kind: .breathing),
+        .init(id: "nap", title: "Nap", icon: NunaIcons.nap, group: "Sleep", kind: .today(.sleepNaps(0))),
+        .init(id: "sleep", title: "Sleep", icon: NunaIcons.sleep, group: "Sleep", kind: .today(.sleep(0))),
         .init(id: "bodyClock", title: "Body clock", icon: "clock", group: "Sleep", kind: .today(.bodyClock)),
         .init(id: "smartAlarm", title: "Smart alarm", icon: "alarm", group: "Sleep", kind: .today(.smartAlarm)),
-        .init(id: "windDown", title: "Wind down", icon: "moon.stars", group: "Sleep", kind: .today(.windDown)),
+        .init(id: "windDown", title: "Wind down", icon: NunaIcons.windDown, group: "Sleep", kind: .today(.windDown)),
         // Read
-        .init(id: "hrv", title: "Heart Rate Variability", icon: "waveform.path.ecg", group: "Read", kind: .metric("hrv")),
-        .init(id: "stress", title: "Stress monitor", icon: "gauge.with.dots.needle.50percent", group: "Read", kind: .metric("stress")),
-        .init(id: "earlyWarning", title: "Early warning", icon: "bell", group: "Read", kind: .today(.earlyWarning)),
+        .init(id: "hrv", title: "Heart Rate Variability", icon: NunaIcons.hrv, group: "Read", kind: .metric("hrv")),
+        .init(id: "stress", title: "Stress monitor", icon: NunaIcons.stress, group: "Read", kind: .metric("stress")),
+        .init(id: "earlyWarning", title: "Early warning", icon: NunaIcons.earlyWarning, group: "Read", kind: .today(.earlyWarning)),
         .init(id: "fitnessAge", title: "Fitness age", icon: "figure.run", group: "Read", kind: .today(.fitnessAge)),
         .init(id: "trends", title: "Trends", icon: "chart.line.uptrend.xyaxis", group: "Read", kind: .route(.trends)),
         .init(id: "labBook", title: "Lab book", icon: "testtube.2", group: "Read", kind: .route(.labBook)),
         // App
-        .init(id: "theme", title: "Theme", icon: "paintpalette", group: "App", kind: .me(.theme)),
+        .init(id: "theme", title: "Theme", icon: NunaIcons.appearance, group: "App", kind: .me(.theme)),
         .init(id: "devices", title: "Strap", icon: "applewatch", group: "App", kind: .route(.devices)),
-        .init(id: "notifications", title: "Notifications", icon: "bell.badge", group: "App", kind: .me(.notifications)),
-        .init(id: "units", title: "Units", icon: "ruler", group: "App", kind: .me(.units)),
-        .init(id: "workoutSettings", title: "Workout settings", icon: "gearshape", group: "App", kind: .workout(.settings)),
+        .init(id: "notifications", title: "Notifications", icon: NunaIcons.notifications, group: "App", kind: .me(.notifications)),
+        .init(id: "units", title: "Units", icon: NunaIcons.units, group: "App", kind: .me(.units)),
+        .init(id: "workoutSettings", title: "Workout settings", icon: NunaIcons.featureSettings, group: "App", kind: .workout(.settings)),
     ]
 
     static func action(_ id: String) -> NunaQuickAction? { all.first { $0.id == id } }

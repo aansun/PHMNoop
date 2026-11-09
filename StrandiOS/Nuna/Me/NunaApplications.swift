@@ -33,19 +33,19 @@ struct NunaApplicationsView: View {
                     NunaDivider()
                     app(.vitalSigns, "Vital signs", "HRV, resting heart rate, blood oxygen and more", "heart.text.square")
                     NunaDivider()
-                    app(stressRoute, "Stress monitor", "Level now and through the day", "gauge.with.dots.needle.50percent")
+                    app(stressRoute, "Stress monitor", "Level now and through the day", NunaIcons.stress)
                     NunaDivider()
-                    app(.hydration, "Water", hydration ? "Drink log with a daily target" : "Turn on in Optional features", "drop")
+                    app(.hydration, "Water", hydration ? "Drink log with a daily target" : "Turn on in Optional features", NunaIcons.water)
                     NunaDivider()
                     app(.labBook, "Lab book", "Your records", "testtube.2")
                     NunaDivider()
                     app(.nutrition, "Nutrition", "Calories and macros", "fork.knife")
                     NunaDivider()
-                    app(.sleepNaps(0), "Nap", "Daytime sleep", "moon.zzz")
+                    app(.sleepNaps(0), "Nap", "Daytime sleep", NunaIcons.nap)
                     // Only when cycle awareness is on and has a reading.
                     if appModel.cyclePhase != nil {
                         NunaDivider()
-                        app(.cycle, "Menstrual cycle", "Cycle awareness", "drop.fill")
+                        app(.cycle, "Menstrual cycle", "Cycle awareness", NunaIcons.cycle)
                     }
                 }
             }

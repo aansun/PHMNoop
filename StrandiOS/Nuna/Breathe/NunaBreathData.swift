@@ -165,7 +165,7 @@ extension BreathGoal {
     }
     var icon: String {
         switch self {
-        case .calm: return "leaf"; case .sleep: return "moon.zzz"; case .focus: return "scope"
+        case .calm: return "leaf"; case .sleep: return NunaIcons.sleep; case .focus: return "scope"
         case .energize: return "bolt"; case .recover: return "heart.circle"
         }
     }

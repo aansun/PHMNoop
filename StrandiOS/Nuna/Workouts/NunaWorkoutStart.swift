@@ -1660,9 +1660,9 @@ struct NunaLiveWorkoutView: View {
 
     private func heartStatistics(_ w: AppModel.ActiveWorkout, calories: Int?) -> some View {
         statisticsRow([
-            Statistic(label: "Avg HR", value: w.avgHr > 0 ? "\(w.avgHr)" : "–", unit: "bpm", icon: "heart.fill"),
-            Statistic(label: "Max HR", value: w.peakHr > 0 ? "\(w.peakHr)" : "–", unit: "bpm", icon: "heart.circle"),
-            Statistic(label: "Calories", value: calories.map(String.init) ?? "–", unit: String(localized: "kcal"), icon: "flame")
+            Statistic(label: "Avg HR", value: w.avgHr > 0 ? "\(w.avgHr)" : "–", unit: "bpm", icon: NunaIcons.avgHr),
+            Statistic(label: "Max HR", value: w.peakHr > 0 ? "\(w.peakHr)" : "–", unit: "bpm", icon: NunaIcons.maxHr),
+            Statistic(label: "Calories", value: calories.map(String.init) ?? "–", unit: String(localized: "kcal"), icon: NunaIcons.calories)
         ])
     }
 
@@ -1683,8 +1683,7 @@ struct NunaLiveWorkoutView: View {
                 }
                 let tile = tiles[index]
                 VStack(alignment: isSingle ? .center : .leading, spacing: 8) {
-                    Image(systemName: tile.icon)
-                        .font(.nuna(size: NunaTypeSize.h2, weight: .semibold))
+                    NunaGlyph(tile.icon, pointSize: NunaTypeSize.h2, weight: .semibold)
                         .foregroundStyle(NunaPalette.textSecondary)
                     Text(tile.label)
                         .font(.nuna(size: NunaTypeSize.caption, weight: .heavy))
@@ -1759,11 +1758,11 @@ struct NunaLiveWorkoutView: View {
             switch field {
             case .distance: return Statistic(label: "Distance", value: dist.0, unit: dist.1, icon: "point.topleft.down.to.point.bottomright.curvepath")
             case .pace: return Statistic(label: "Pace", value: pace.0, unit: pace.1, icon: "speedometer")
-            case .steps: return Statistic(label: "Steps", value: sessionSteps.map { $0.formatted(.number.locale(AppLanguage.activeLocale)) } ?? dash, unit: "", icon: "shoeprints.fill")
+            case .steps: return Statistic(label: "Steps", value: sessionSteps.map { $0.formatted(.number.locale(AppLanguage.activeLocale)) } ?? dash, unit: "", icon: NunaIcons.steps)
             case .cadence: return Statistic(label: "Cadence", value: cadence, unit: "spm", icon: "figure.run")
             case .speed: return Statistic(label: "Speed", value: speed.0, unit: speed.1, icon: "speedometer")
             case .elevation: return Statistic(label: "Elevation", value: gps.pointCount > 0 ? "+\(Int(gain.rounded()))" : dash, unit: sys == .imperial ? "ft" : "m", icon: "mountain.2")
-            case .calories: return Statistic(label: "Calories", value: calories.map(String.init) ?? dash, unit: String(localized: "kcal"), icon: "flame")
+            case .calories: return Statistic(label: "Calories", value: calories.map(String.init) ?? dash, unit: String(localized: "kcal"), icon: NunaIcons.calories)
             }
         }
         if fields == [.calories], calories == nil {

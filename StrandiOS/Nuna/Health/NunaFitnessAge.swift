@@ -362,7 +362,7 @@ struct NunaFitnessAgeView: View {
                     NunaDivider()
                     NunaListRow("Short intervals", description: "1× per week, 4 × 4 minutes", systemImage: "bolt")
                     NunaDivider()
-                    NunaListRow("Enough sleep", description: "Resting heart rate falls when Sleep is high", systemImage: "moon")
+                    NunaListRow("Enough sleep", description: "Resting heart rate falls when Sleep is high", systemImage: NunaIcons.sleep)
                 }
             }
         }

@@ -178,7 +178,7 @@ struct NunaBreathFullLayer<Content: View>: View {
                 content.padding(.horizontal, NunaSpacing.screenH)
                 Spacer(minLength: 0)
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
-                    Image(systemName: "heart.fill").font(.nuna(size: 16, weight: .semibold)).foregroundStyle(bpm == nil ? NunaPalette.textMuted : NunaPalette.alertText)
+                    NunaGlyph(NunaIcons.heartRate, pointSize: 16, weight: .semibold).foregroundStyle(bpm == nil ? NunaPalette.textMuted : NunaPalette.alertText)
                     Text(verbatim: bpm.map(String.init) ?? "–").font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).monospacedDigit()
                     Text("bpm").font(.nuna(size: NunaTypeSize.caption, weight: .bold)).foregroundStyle(NunaPalette.textSecondary).textCase(nil)
                 }
