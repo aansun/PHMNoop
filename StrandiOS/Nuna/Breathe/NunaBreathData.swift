@@ -95,11 +95,16 @@ extension NunaBreathRecord {
 enum NunaBreathRecovery {
     static let sport = "Breathwork"
 
+    /// The recovery activity a session is kept as; the summary page opens from it.
+    static func row(startTs: Int, seconds: Int, title: String?) -> WorkoutRow {
+        WorkoutRow(startTs: startTs, endTs: startTs + seconds, sport: sport, source: "manual", durationS: Double(seconds),
+                   energyKcal: nil, avgHr: nil, maxHr: nil, strain: nil, distanceM: nil, zonesJSON: nil, notes: title, steps: nil)
+    }
+
     @MainActor static func log(repo: Repository, startTs: Int, seconds: Int, title: String?) {
         guard seconds >= 20 else { return }
-        let row = WorkoutRow(startTs: startTs, endTs: startTs + seconds, sport: sport, source: "manual", durationS: Double(seconds),
-                             energyKcal: nil, avgHr: nil, maxHr: nil, strain: nil, distanceM: nil, zonesJSON: nil, notes: title, steps: nil)
-        Task { await repo.saveManualWorkout(row) }
+        let r = row(startTs: startTs, seconds: seconds, title: title)
+        Task { await repo.saveManualWorkout(r) }
     }
 
     /// A session from the Resonance / Calm me / paced screen, which has no strap series of its own: it goes into the history (so the

@@ -5,11 +5,11 @@ import StrandAnalytics
 
 /// What a touch on the Breathe tab opens: a goal ("What is it for?") or one ready exercise ("Ready to start").
 enum NunaBreathRoute: Identifiable, Equatable {
-    case goal(BreathGoal)
+    case group(NunaBreathGroup)
     case template(BreathTemplate)
     case tool(NunaBreathTool)
     var id: String {
-        switch self { case .goal(let g): return "goal-" + g.rawValue; case .template(let t): return "template-" + t.id; case .tool(let t): return "tool-" + t.rawValue }
+        switch self { case .group(let g): return "group-" + g.rawValue; case .template(let t): return "template-" + t.id; case .tool(let t): return "tool-" + t.rawValue }
     }
 }
 
@@ -136,10 +136,11 @@ struct NunaBreathPickRow: View {
 
 // MARK: Detail page
 
-/// The page of a technique, laid out like WHOOP's workout details: a close button and the page name on top, a picture area with the name on it,
-/// three plain figures, the text, the steps, and one outlined Start button at the bottom. Nothing moves here: the animation begins with the session.
+/// The page of a technique, laid out like WHOOP's workout details: a photograph behind a close button, the page name, the name of the technique and three
+/// plain figures; under it the text, the steps and one outlined Start button. Nothing moves here: the animation begins with the session.
 private struct NunaBreathDetailShell<Content: View>: View {
     let icon: String
+    var background: String?
     let title: String
     let subtitle: String
     let stats: [(value: String, unit: String, label: LocalizedStringKey)]
@@ -150,31 +151,11 @@ private struct NunaBreathDetailShell<Content: View>: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
-                ZStack {
-                    Text("Breathing details").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textPrimary)
-                    HStack {
-                        Button(action: onClose) {
-                            Image(systemName: "xmark").font(.nuna(size: 17, weight: .bold)).foregroundStyle(NunaPalette.textPrimary).frame(width: 44, height: 44).contentShape(Rectangle())
-                        }.buttonStyle(.plain).accessibilityLabel(Text("Close"))
-                        Spacer()
-                    }
-                }
-                hero
-                HStack(alignment: .top, spacing: 8) {
-                    ForEach(Array(stats.enumerated()), id: \.offset) { _, st in
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack(alignment: .firstTextBaseline, spacing: 3) {
-                                Text(verbatim: st.value).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary).lineLimit(1).minimumScaleFactor(0.6)
-                                if !st.unit.isEmpty { Text(verbatim: st.unit).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(NunaPalette.textPrimary).textCase(nil) }
-                            }
-                            Text(st.label).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(NunaPalette.textSecondary)
-                        }.frame(maxWidth: .infinity, alignment: .leading)
-                    }
-                }
-                content
+            VStack(alignment: .leading, spacing: 0) {
+                top
+                VStack(alignment: .leading, spacing: 22) { content }
+                    .padding(.horizontal, NunaSpacing.screenH).padding(.top, 8).padding(.bottom, 24)
             }
-            .padding(.horizontal, NunaSpacing.screenH).padding(.top, 14).padding(.bottom, 24)
         }
         .scrollIndicators(.hidden)
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -194,19 +175,54 @@ private struct NunaBreathDetailShell<Content: View>: View {
         .preferredColorScheme(NunaTheme.colorScheme)
     }
 
-    /// The picture area: the technique's picture, large and pale, and under it the name and one line. The picture and the name never share a row.
-    private var hero: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            NunaActivityGlyph(name: icon, size: 92).foregroundStyle(NunaPalette.textPrimary.opacity(0.92))
-                .frame(maxWidth: .infinity, alignment: .trailing)
-            Text(verbatim: title).font(.nuna(size: 28, weight: .bold, design: NunaType.design)).foregroundStyle(NunaPalette.textPrimary)
+    /// The top of the page: the photograph (a dark gradient where there is none) with the close button, the page name, the title and the figures over it.
+    private var top: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            ZStack {
+                Text("Breathing details").font(.nuna(size: 14, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(.white)
+                HStack {
+                    Button(action: onClose) {
+                        Image(systemName: "xmark").font(.nuna(size: 17, weight: .bold)).foregroundStyle(.white).frame(width: 44, height: 44).contentShape(Rectangle())
+                    }.buttonStyle(.plain).accessibilityLabel(Text("Close"))
+                    Spacer()
+                }
+            }
+            Spacer(minLength: 150)
+            Text(verbatim: title).font(.nuna(size: 30, weight: .bold, design: NunaType.design)).foregroundStyle(.white)
                 .lineLimit(3).minimumScaleFactor(0.7).fixedSize(horizontal: false, vertical: true)
-            Text(verbatim: subtitle).font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).lineSpacing(3).textCase(nil)
-                .fixedSize(horizontal: false, vertical: true)
+            Text(verbatim: subtitle).font(.nunaWords(size: 15)).tracking(0).foregroundStyle(.white.opacity(0.8)).lineSpacing(3).textCase(nil)
+                .fixedSize(horizontal: false, vertical: true).padding(.top, 8)
+            HStack(alignment: .top, spacing: 8) {
+                ForEach(Array(stats.enumerated()), id: \.offset) { _, st in
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(alignment: .firstTextBaseline, spacing: 3) {
+                            Text(verbatim: st.value).font(.nuna(size: 22, weight: .bold, design: NunaType.design)).foregroundStyle(.white).lineLimit(1).minimumScaleFactor(0.6)
+                            if !st.unit.isEmpty { Text(verbatim: st.unit).font(.nuna(size: 13, weight: .semibold)).foregroundStyle(.white).textCase(nil) }
+                        }
+                        Text(st.label).font(.nuna(size: 11, weight: .heavy)).tracking(nunaTrackingLabel).textCase(.uppercase).foregroundStyle(.white.opacity(0.65))
+                    }.frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            .padding(.top, 22)
         }
-        .padding(18).frame(maxWidth: .infinity, alignment: .leading)
-        .background(LinearGradient(colors: [NunaPalette.glassStrong, NunaPalette.cardSurface.opacity(0.4)], startPoint: .topTrailing, endPoint: .bottomLeading))
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .padding(.horizontal, NunaSpacing.screenH).padding(.top, 18).padding(.bottom, 22)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(alignment: .top) { photo }
+    }
+
+    @ViewBuilder private var photo: some View {
+        ZStack {
+            if let background, UIImage(named: background) != nil {
+                GeometryReader { geo in
+                    Image(background).resizable().scaledToFill().frame(width: geo.size.width, height: geo.size.height).clipped()
+                }
+            } else {
+                LinearGradient(colors: [NunaPalette.glassStrong, NunaPalette.cardSurface], startPoint: .topTrailing, endPoint: .bottomLeading)
+            }
+            // A little dark over the whole photograph so the white text reads, then the photograph fades into the page below.
+            Color.black.opacity(0.32)
+        }
+        .mask(LinearGradient(stops: [.init(color: .black, location: 0), .init(color: .black, location: 0.7), .init(color: .clear, location: 1)], startPoint: .top, endPoint: .bottom))
     }
 }
 
@@ -320,7 +336,7 @@ struct NunaBreathTemplateDetail: View {
     var body: some View {
         let p = proto
         NunaBreathDetailShell(
-            icon: NunaBreathIcon.name(for: template),
+            icon: NunaBreathIcon.name(for: template), background: NunaBreathGroup.containing(templateId: template.id).background,
             title: template.title, subtitle: template.blurb,
             stats: [("\(minutes)", String(localized: "min"), "Duration"), (pattern.value, pattern.unit, "Pace"), (NunaBreathLevel.of(template.protocolId).title, "", "Level")],
             startNote: nil, onStart: onStart, onClose: onClose) {
@@ -351,7 +367,7 @@ struct NunaBreathToolDetail: View {
     let onClose: () -> Void
     var body: some View {
         NunaBreathDetailShell(
-            icon: tool.glyph, title: tool.title, subtitle: tool.subtitle,
+            icon: tool.glyph, background: NunaBreathGroup.biofeedback.background, title: tool.title, subtitle: tool.subtitle,
             stats: [(tool.duration, String(localized: "min"), "Duration"),
                     (tool == .resonance ? "5.5" : String(localized: "Below HR"), tool == .resonance ? String(localized: "br/min") : "", "Pace"),
                     (NunaBreathLevel.gentle.title, "", "Level")],
@@ -365,36 +381,37 @@ struct NunaBreathToolDetail: View {
     }
 }
 
-/// One goal: what it is for, what it does, how long its exercises run, the exercises themselves, and Start on the one suggested.
-struct NunaBreathGoalDetail: View {
-    let goal: BreathGoal
-    let recommended: BreathTemplate
+/// One group of techniques: what it is for, what it does, how long its exercises run, the exercises themselves, and Start on the one suggested.
+struct NunaBreathGroupDetail: View {
+    let group: NunaBreathGroup
+    let recommended: NunaBreathItem?
     let lengthPref: Int
-    let onStart: (BreathTemplate) -> Void
-    let onOpen: (BreathTemplate) -> Void
+    let onStart: (NunaBreathItem) -> Void
+    let onOpen: (NunaBreathItem) -> Void
     let onClose: () -> Void
 
-    private var templates: [BreathTemplate] { NunaBreathLibrary.templates(for: goal) }
-    private func mins(_ t: BreathTemplate) -> Int { lengthPref > 0 ? lengthPref : t.minutes }
+    private var items: [NunaBreathItem] { group.items }
+    private func mins(_ i: NunaBreathItem) -> String { i.minutesText(lengthPref: lengthPref) }
     private var range: String {
-        let m = templates.map(mins)
-        guard let lo = m.min(), let hi = m.max() else { return "–" }
+        let m = items.map { mins($0) }
+        let nums = m.flatMap { $0.split(whereSeparator: { !$0.isNumber }).compactMap { Int($0) } }
+        guard let lo = nums.min(), let hi = nums.max() else { return "–" }
         return lo == hi ? "\(lo)" : "\(lo)–\(hi)"
     }
 
     var body: some View {
         NunaBreathDetailShell(
-            icon: goal.activity, title: goal.shortTitle, subtitle: goal.blurbText,
-            stats: [(range, String(localized: "min"), "Duration"), ("\(templates.count)", "", "Exercises"), (goal.shortTitle, "", "For")],
-            startNote: "\(recommended.title) · \(mins(recommended)) \(String(localized: "min"))", onStart: { onStart(recommended) }, onClose: onClose) {
-            Text(verbatim: goal.about).font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).lineSpacing(3).textCase(nil).fixedSize(horizontal: false, vertical: true)
+            icon: group.icon, background: group.background, title: group.title, subtitle: group.blurb,
+            stats: [(range, String(localized: "min"), "Duration"), ("\(items.count)", "", "Exercises"), (group.level.title, "", "Level")],
+            startNote: recommended.map { "\($0.title) · \(mins($0)) \(String(localized: "min"))" }, onStart: { if let recommended { onStart(recommended) } }, onClose: onClose) {
+            Text(verbatim: group.about).font(.nunaWords(size: 15)).tracking(0).foregroundStyle(NunaPalette.textSecondary).lineSpacing(3).textCase(nil).fixedSize(horizontal: false, vertical: true)
             NunaDivider()
-            nunaBreathBlock("What it does for you") { nunaBreathBenefits(goal.benefits) }
+            nunaBreathBlock("What it does for you") { nunaBreathBenefits(group.benefits) }
             nunaBreathRuled("Exercises")
             VStack(spacing: 10) {
-                ForEach(templates) { t in
-                    Button { onOpen(t) } label: {
-                        NunaBreathPickRow(glyph: NunaBreathIcon.name(for: t), title: t.title, line: t.blurb, figure: "\(mins(t))")
+                ForEach(items) { item in
+                    Button { onOpen(item) } label: {
+                        NunaBreathPickRow(glyph: item.icon, title: item.title, line: item.blurb, figure: mins(item))
                     }.buttonStyle(.plain)
                 }
             }
