@@ -1416,7 +1416,7 @@ struct NunaLiveWorkoutView: View {
                 VStack(spacing: 14) {
                     // The ring and the disc are the colour of the zone the heart rate is in; whether that is the zone aimed for is said in words.
                     NunaZoneRing(bpm: bpm, zone: zone, level: hideBpm ? nil : level, numberText: hideBpm ? "•••" : nil,
-                                 caption: hideBpm ? nil : caption, size: ring)
+                                 caption: hideBpm ? nil : caption, targetZone: goal.zoneOn ? goal.zone : nil, size: ring)
                     if let guidance {
                         Text(verbatim: guidance.text).font(.nuna(size: NunaTypeSize.sub, weight: .semibold)).foregroundStyle(guidance.color)
                             .multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)

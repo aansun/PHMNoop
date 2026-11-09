@@ -2,10 +2,10 @@
 import SwiftUI
 import StrandDesign
 
-/// The heart rate of a running activity as a ring round a disc. The ring is the five heart-rate zones, each an arc in its own colour, filled as far as
-/// the heart rate has climbed through them, with a white mark at the heart rate itself. The disc inside is the colour of the zone the heart is in, with
-/// the number on it, and a soft aura of the same colour swells behind it with every beat. The colour eases from zone to zone; with no reading the
-/// ring stays dark and the disc is the idle blue.
+/// The heart rate of a running activity as a thin ring round a disc. The ring is the five heart-rate zones; only the zone the heart is in is lit, in its
+/// own colour, with a white mark at the heart rate itself, and the other four are barely there. A zone aimed for is crossed with a fine grey-white mesh and
+/// a thin line along its edge. The disc inside is the colour of the zone, with the number on it, and a soft aura of the same colour swells behind it with
+/// every beat. The colour eases from zone to zone; with no reading the ring stays dark and the disc is the idle blue.
 struct NunaZoneRing: View {
     let bpm: Int?
     /// The zone the heart rate is in (0 when it is below the first).
@@ -15,6 +15,8 @@ struct NunaZoneRing: View {
     var numberText: String?
     /// Under the number: the zone and its range.
     var caption: String?
+    /// The zone being aimed for, if the session has a target zone.
+    var targetZone: Int?
     let size: CGFloat
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @StateObject private var clock = NunaPulseClock()
@@ -38,20 +40,16 @@ struct NunaZoneRing: View {
         return 26 + 40 * min(max(l, 0), 1)
     }
 
-    /// How much of the arc of zone `z` (0...4) is lit.
-    private func lit(_ z: Int) -> Double {
-        guard bpm != nil else { return 0 }
-        guard let level else { return z + 1 == min(zone, 5) ? 1 : 0 }
-        return min(max(level * 5 - Double(z), 0), 1)
-    }
+    /// Whether the arc of zone `z` (0...4) is the one lit: the zone the heart rate is in.
+    private func isActive(_ z: Int) -> Bool { bpm != nil && z + 1 == min(max(zone, 1), 5) }
 
     private func arcStart(_ z: Int) -> Double { (72 * Double(z) + gapDegrees / 2) / 360 }
     private var arcLength: Double { (72 - gapDegrees) / 360 }
 
     var body: some View {
-        let lineWidth = size * 0.03
+        let lineWidth = size * 0.014
         let ringRadius = (size - lineWidth) / 2
-        let disc = size * 0.80
+        let disc = size * 0.91
         TimelineView(.animation(minimumInterval: 1.0 / 60, paused: reduceMotion)) { timeline in
             let _ = clock.advance(to: timeline.date, target: tempo)
             let swell = NunaBeat.swell(clock.phase) * (0.7 + 0.3 * clock.presence)
@@ -60,23 +58,30 @@ struct NunaZoneRing: View {
                 Circle().fill(tint).frame(width: disc * 1.04, height: disc * 1.04).blur(radius: size * 0.085)
                     .opacity(bpm == nil ? 0.18 : 0.26 + 0.05 * Double(min(zone, 5)) + 0.22 * swell)
                     .scaleEffect(1 + 0.05 * swell)
-                // The ring: five zones, each dim until the heart rate has been through it.
+                // The ring: five thin arcs, one per zone. The zone the heart is in is lit; the rest are barely visible.
                 ForEach(0..<5, id: \.self) { z in
                     let color = NunaHeartBeat.zoneColors[z]
                     Circle().inset(by: lineWidth / 2).trim(from: arcStart(z), to: arcStart(z) + arcLength)
-                        .stroke(color.opacity(0.22), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                        .stroke(color.opacity(isActive(z) ? 1 : 0.09), style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
                         .rotationEffect(.degrees(-90))
-                    Circle().inset(by: lineWidth / 2).trim(from: arcStart(z), to: arcStart(z) + arcLength * lit(z))
-                        .stroke(color, style: StrokeStyle(lineWidth: lineWidth, lineCap: .round))
+                }
+                // The zone aimed for: a fine mesh across its arc and a thin line along its outer edge, in a grey-white that sits on any zone colour.
+                if let target = targetZone, (1...5).contains(target) {
+                    let z = target - 1
+                    let mesh = Color(white: 0.86)
+                    Circle().inset(by: lineWidth / 2).trim(from: arcStart(z), to: arcStart(z) + arcLength)
+                        .stroke(mesh.opacity(0.55), style: StrokeStyle(lineWidth: lineWidth, lineCap: .butt, dash: [1.2, 2.4]))
                         .rotationEffect(.degrees(-90))
-                        .opacity(lit(z) > 0 ? 1 : 0)
+                    Circle().inset(by: lineWidth * 0.12).trim(from: arcStart(z), to: arcStart(z) + arcLength)
+                        .stroke(mesh.opacity(0.85), style: StrokeStyle(lineWidth: max(1, lineWidth * 0.28), lineCap: .round))
+                        .rotationEffect(.degrees(-90))
                 }
                 // The mark where the heart rate is.
                 if let level, bpm != nil {
                     let scaled = min(max(level, 0), 1) * 5
                     let z = min(Int(scaled), 4)
                     let angle = (72 * Double(z) + gapDegrees / 2 + (scaled - Double(z)) * (72 - gapDegrees) - 90) * .pi / 180
-                    Circle().fill(Color.white).frame(width: lineWidth * 1.9, height: lineWidth * 1.9)
+                    Circle().fill(Color.white).frame(width: size * 0.034, height: size * 0.034)
                         .shadow(color: tint.opacity(0.7), radius: 6)
                         .offset(x: ringRadius * cos(angle), y: ringRadius * sin(angle))
                 }
