@@ -9058,5 +9058,9 @@
  "Gives a restless mind a steady beat to follow": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Memberi pikiran yang gelisah ketukan stabil untuk diikuti"}}}},
  "Uses your strap's heart reading and buzz": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Memakai bacaan jantung dan getaran strap-mu"}}}},
  "Full screen": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Layar penuh"}}}},
- "Exit full screen": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Keluar dari layar penuh"}}}}
+ "Exit full screen": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Keluar dari layar penuh"}}}},
+ "%lld notes": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "%lld catatan"}}}},
+ "Forget Anya's notes?": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lupakan catatan Anya?"}}}},
+ "Forget Anya's notes": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Lupakan catatan Anya"}}}},
+ "This cannot be undone.": {"localizations": {"id": {"stringUnit": {"state": "translated", "value": "Tindakan ini tidak bisa dibatalkan."}}}}
 }, "version":"1.0" }
